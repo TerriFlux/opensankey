@@ -1180,15 +1180,12 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
 
   // Tableau d'elements de sous-menu attribut de noeuds
   return <>
-    <React.Fragment key={'style_node'}>{style_node}</React.Fragment>,
-
-    <React.Fragment key={'sep_1'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
+    <React.Fragment key={'style_node'}>{style_node}</React.Fragment>
+    <React.Fragment key={'sep_1'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
     <React.Fragment key={'app'}>{content_appearence}</React.Fragment>,
-
-    <React.Fragment key={'sep_2'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
-    <React.Fragment key={'lab'}>{content_label}</React.Fragment>,
-
-    <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
+    <React.Fragment key={'sep_2'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
+    <React.Fragment key={'lab'}>{content_label}</React.Fragment>
+    <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
     <React.Fragment key={'val'}>{content_label_value}</React.Fragment>
   </>
 }
