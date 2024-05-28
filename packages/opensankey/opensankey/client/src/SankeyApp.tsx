@@ -265,7 +265,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     additional_nav_item:[],
 
     example_menu:{},
-    formations_menu:{}
+    formations_menu:{},
+
+    cards_template:<></>
   }
 
   initializeAdditionalMenus(
@@ -505,7 +507,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             applicationDraw={applicationDraw}
             configurations_menus={menu_configuration}
             menus={sankey_menus}
-            cardsTemplate={<></>}
+            cardsTemplate={additionalMenus.cards_template}
             external_modal={[
               <React.Fragment key={'modale_style_link'}><SankeyModalStyleLink
                 applicationContext={applicationContext}
