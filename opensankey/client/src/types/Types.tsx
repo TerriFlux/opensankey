@@ -683,7 +683,9 @@ export type AdditionalMenusType = {
   additional_nav_item:JSX.Element[],
 
   example_menu:{ [k: string]: JSX.Element; }
-  formations_menu:{ [k: string]: JSX.Element; }
+  formations_menu:{ [k: string]: JSX.Element; },
+
+  cards_template: JSX.Element
 }
 
 export type initializeAdditionalMenusType = (
