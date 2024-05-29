@@ -1400,7 +1400,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   ref_setter_show_modal_transparent_view_attr.current=set_show_modal
   if(master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && applicationData.data!==undefined){
 
-    return  <Modal size='xl' isOpen={show_modal} onClose={()=>{
+    return  <Modal size='2xl' isOpen={show_modal} onClose={()=>{
       RecomputeViews(data,data,set_data as (d: OSPData | undefined) => void)
       set_show_modal(false)}}>
       <ModalContent>
