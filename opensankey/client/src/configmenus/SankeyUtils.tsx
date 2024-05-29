@@ -600,6 +600,9 @@ export const TestLinkValue:TestLinkValueFuncType = (
   if (val === undefined) {
     return 0
   }
+  if (val.value === '') {
+    return val.value
+  }
   if ( data.maximum_flux && scale((val as SankeyLinkValue).value as number) > data.maximum_flux) {
     return inv_scale(data.maximum_flux)
   }
