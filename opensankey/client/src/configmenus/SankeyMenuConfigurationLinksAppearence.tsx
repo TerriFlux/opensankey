@@ -765,7 +765,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
       Position
         </Box>
         {/* Button to adjust label position in case the label is bigger than the link */}
-        <OSTooltip label={t('Flux.tooltips.ajust_label')}>
+
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
             iconColor={list_value['label_pos_auto'][1]?'#78C2AD':'white'}
@@ -783,8 +783,12 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   delete d.drag_label_offset
                 })
                 updateMenuConfigLink()
-              }}>{t('Flux.ajust_label')}</Checkbox>
-        </OSTooltip>
+              }}>        
+              <OSTooltip label={t('Flux.tooltips.ajust_label')}>
+                {t('Flux.ajust_label')}
+              </OSTooltip>
+          </Checkbox>
+
         {/* Positionnement lateral des label */}
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>

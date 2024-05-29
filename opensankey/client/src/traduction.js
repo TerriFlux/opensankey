@@ -1173,7 +1173,7 @@ export const open_resources = {
         as:'Réinitialiser',
         IB:'Info-bulle',
         IS:'Info sup.',
-        ajust_label:'Positionner les labels au-dessus des flux s\'ils sont plus épais que les flux',
+        ajust_label:'Position vertical ajusté',
         FS:'Flux',
         tooltips: {
           src:'Choix du noeud de départ pour le/les flux sélectionné(s)',
