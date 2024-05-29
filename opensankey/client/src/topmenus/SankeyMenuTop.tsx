@@ -882,7 +882,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
-      {!window.SankeyToolsStatic || window.sankey.footer ? <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em'}} >
+      {!window.SankeyToolsStatic || window.sankey.footer ? <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em',zIndex:1}} >
         <Container className='sankeyFooter' >
 
           <span style={{display:'inline'}}>
@@ -918,7 +918,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
             }}
           >
-            <DrawerBody zIndex={1}>
+            <DrawerBody zIndex={2}>
               <SankeyConfigurationMenu
                 configuration_menus={configurations_menus}
               />
