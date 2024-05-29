@@ -641,7 +641,7 @@ def _html_to_image(
             'margin-right': '1cm',
             'margin-bottom': '1cm',
             'margin-left': '1cm',
-            'content': 'Landscape',
+            'orientation': 'Landscape',
             'disable-smart-shrinking': ''})
         if output_height_px is not None:
             options['page-height'] = output_height_px + 'px'
