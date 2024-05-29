@@ -640,9 +640,8 @@ def _html_to_image(
             'margin-top': '1cm',
             'margin-right': '1cm',
             'margin-bottom': '1cm',
-            'margin-left': '1cm',
-            'orientation': 'Landscape',
-            'disable-smart-shrinking': ''})
+            'margin-left': '1cm'
+        })
         if output_height_px is not None:
             options['page-height'] = output_height_px + 'px'
         if output_width_px is not None:
