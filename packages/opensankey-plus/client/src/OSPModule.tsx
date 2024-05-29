@@ -360,9 +360,21 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
     } 
   } as unknown as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
+    const osp_nodes_to_update=nodes_to_update as OSPNode[]
+
     updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)
     RedrawNodesLabel(applicationData,nodes_to_update,link_function.GetLinkValue,applicationContext.t,_)
     reDrawIllustration(nodes_to_update as OSPNode[])
+    OSPNodeClickEvent(
+      applicationData as OSPApplicationDataType,
+      applicationState as OSPElementsSelectedType,
+      uiElementsRef,
+      animating,
+      accept_simple_click,
+      link_function.GetLinkValue,
+      ComponentUpdater,
+      osp_nodes_to_update
+    )
     return null
   }
   _.DrawAllNodes  = (
@@ -381,6 +393,8 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
     GetSankeyMinWidthAndHeight,
     resizeCanvas
   ) => {
+    const osp_nodes_to_update=Object.values(applicationData.display_nodes) as OSPNode[]
+
     DrawAllNodes(
       contextMenu,
       applicationData,
@@ -397,7 +411,17 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
       GetSankeyMinWidthAndHeight,
       resizeCanvas      
     )
-    reDrawIllustration(Object.values(applicationData.display_nodes) as OSPNode[])    
+    reDrawIllustration(osp_nodes_to_update)    
+    OSPNodeClickEvent(
+      applicationData as OSPApplicationDataType,
+      applicationState as OSPElementsSelectedType,
+      uiElementsRef,
+      animating,
+      accept_simple_click,
+      link_function.GetLinkValue,
+      ComponentUpdater,
+      osp_nodes_to_update
+    )
   }
   return _ as OSPNodeFuntionType
 }

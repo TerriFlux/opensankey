@@ -78,7 +78,7 @@ import {
 } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { OpenSankeyDiagramSelectorFType} from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
 import {ApplySaveJSONTypes} from 'open-sankey/src/dialogs/SankeyMenuDialogs'
-import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType,
+import { computeHorizontalIndexFuncType, reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType,
   synchronizeNodesandLinksIdFuncType,
   updateLayoutFuncType,
 } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
@@ -315,3 +315,5 @@ export const selectOpenSankeyElementsInSelectionZone : selectOpenSankeyElementsI
 export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType =OSModule.initializeCloseAllMenuContext
 export const initializeKeyHandler:initializeKeyHandlerType = OSModule.initializeKeyHandler
 export const ClickSaveDiagram:ClickSaveDiagramFuncType = SankeyPersistence.ClickSaveDiagram
+
+export const computeHorizontalIndex:computeHorizontalIndexFuncType=SankeyLayout.computeHorizontalIndex
