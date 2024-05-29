@@ -68,6 +68,7 @@ import {
   actualizeDrawAreaFrame,
   hideLinkOnDragElement,
   OSTooltip,
+  computeHorizontalIndex,
 } from './import/OpenSankey'
 
 // OpenSankey types
@@ -537,26 +538,6 @@ export const OSPHyperLink : FunctionComponent<OSPHyperLinkFType> = ({
   </TabPanel>
 }
 
-const calcPath = (
-  data: SankeyData,
-  nodes: { [node_id: string]: SankeyNode },
-  node: SankeyNode,
-  new_links: string[],
-) => {
-  // let number_new_path=0
-  let long = 0
-  const links_present = node.outputLinksId.filter(o => new_links.includes(o))
-  if (links_present.length > 0) {
-    long += 1
-    links_present.forEach(d => {
-      const n = nodes[data.links[d].idTarget]
-      const lng = calcPath(data,nodes, n, new_links.filter(i=>!ReturnValueLink(data,data.links[i],'recycling'))) as number
-      long += isNaN(lng) ? 0 : lng
-
-    })
-    return long
-  }
-}
 
 const node_mouse_click=(
   applicationData:OSPApplicationDataType,
@@ -569,10 +550,10 @@ const node_mouse_click=(
   GetLinkValue:GetLinkValueFuncType,
   ComponentUpdater:ComponentUpdaterType,
 )=>{
-  const {data,display_links,display_nodes}=applicationData
+  const {data,display_nodes}=applicationData
 
   const sankeyTooltip=d3.select('.sankey-tooltip')
-  const data_plus =data as OSPData
+  // shift + click on a node launch a animation that show all sub path from this node
   if (event.shiftKey) {
     event.preventDefault()
     animating.current = true
@@ -588,19 +569,30 @@ const node_mouse_click=(
     const node_visible=Object.values(display_nodes).map(n=>n.idNode)
 
     branchAnimate(data,d,nodeDisplay,node_visible,GetLinkValue)
-    const visible_links = Object.values(display_links).map(l=>l.idLink)
-    const start_point = Object.values(data.nodes).filter(f => (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0))
     let time_to_animate = 500
-    Object.values(data.nodes).filter(f => {
-      return (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0)})
     //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
-    if (start_point.length > 0) {
-      let nb_animation = calcPath(data,data_plus.nodes, d, visible_links)
-      nb_animation = (nb_animation !== undefined) ? nb_animation : 0
-      time_to_animate += nb_animation * 2000
-    }
+    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
+    const possible_recycling_links_ids: string[] = []
+
+    computeHorizontalIndex(
+      d,
+      0,
+      Object.keys(display_nodes),
+      [],
+      possible_recycling_links_ids,
+      horizontal_indexes_per_nodes_ids,
+      data.links,
+      data.nodes)
+
+    // Get longest path to animate possible (number of path before we get to a node without output link  )
+    // so we can determinate a timeout before reseting the sankey 
+    let nb_animation = Object.values(horizontal_indexes_per_nodes_ids).reduce((a, b) => Math.max(a, b), -Infinity)
+    nb_animation = (nb_animation !== undefined) ? nb_animation : 0
+    time_to_animate += nb_animation * 2000
+
     setTimeout(function () {
       animating.current = false
+      applicationData.set_data({...data})
     }, time_to_animate)
   }else if(window.SankeyToolsStatic===true){
     const n=d as OSPNode
@@ -639,8 +631,8 @@ const branchAnimate = (
     .filter(function (d) {
       return d.idSource === nodeStart
     })
-  // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
-  const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+  // On fait une copie du link pour son animation, le flux originel reste en claire et la copie 'remplie' le path
+  const tmpLinks = glinks.clone(true).raise()
   tmpLinks.selectAll('.link')
     .each(function () {
       const totalLength = (this as SVGGeometryElement).getTotalLength()
