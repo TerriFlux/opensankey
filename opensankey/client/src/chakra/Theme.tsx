@@ -74,6 +74,7 @@ import {
 } from './TableStyle'
 import { heading_base_style, heading_welcome_style } from './HeadingStyles'
 import { card_base_style, card_icon_not_selected, card_icon_selected, card_import_icon } from './CardStyle'
+import { tag_base_style, tag_dev_navbar } from './TagStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -165,6 +166,10 @@ export const opensankey_theme = extendTheme({
         table_edit_tag_data,
         table_edit_grp_tag_node_link
       }
+    },
+    Tag:{
+      baseStyle:tag_base_style,
+      variants:{tag_dev_navbar}
     },
     TextArea: {
       baseStyle: textarea_base_style
