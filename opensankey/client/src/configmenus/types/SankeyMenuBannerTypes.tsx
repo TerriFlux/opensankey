@@ -61,3 +61,12 @@ export type stretchButtonsFType=(
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction
 )=>JSX.Element
+
+
+export type DataTagSelectorType={
+  applicationData:applicationDataType,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
+}

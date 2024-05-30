@@ -9,7 +9,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType} from '../types/Types'
+import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import {
   FindMaxLinkValue,
@@ -34,6 +34,7 @@ import { TFunction } from 'i18next'
 import { ConvertDataFuncType } from './types/SankeyConvertTypes'
 import {
   addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType,
+  DataTagSelectorType,
   setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType
 } from './types/SankeyMenuBannerTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from './types/SankeyUtilsTypes'
@@ -698,7 +699,14 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
       {legend_filter}
       <FormGroup as={Row}>
         <Col xs={10}>
-          {addAllDropDownLinks(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function,ComponentUpdater)}
+          <DataTagSelector
+          
+            applicationData={applicationData}
+            GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
+            node_function={node_function}
+            link_function={link_function}
+            ComponentUpdater={ComponentUpdater}
+          />
         </Col>
         <Col xs={2}>
           <FormCheck
@@ -1133,12 +1141,12 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
 
 /** Function that return a simple or multiple dropdown of groupTag of data and links
  This allow us to choose wich grouptag to select and wich tag of these group to display*/
-export const addAllDropDownLinks = (
-  applicationData:applicationDataType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+export const DataTagSelector:FunctionComponent<DataTagSelectorType> = ({
+  applicationData,
+  GetSankeyMinWidthAndHeight,
+  node_function,
+  link_function,
+  ComponentUpdater}
 ) => {
   const {data}=applicationData
   const [forceUpdate,setForceUpdate]=useState(false)
