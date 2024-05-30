@@ -97,6 +97,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
                       ref_selected_style_node.current = d
                       set_selected_style_node(d)
                       ref_input_name.current!.value=data.style_node[d].name
+                      updateComponentMenuConfigNodeAppearence.current()
                       setForceUpdate(!forceUpdate)
                     }}
                   >
@@ -216,7 +217,6 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
           const new_id = 'style_link_' + String(new Date().getTime())
           new_style.idLink = new_id
           data.style_link[new_id] = new_style
-          setForceUpdate(!forceUpdate)
           updateComponentMenuConfigLink.current()
           set_selected_style_link(new_style.idLink)
           ref_input_name.current!.value=data.style_link[new_id].name
@@ -264,7 +264,6 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
           delete data.style_link[selected_style_link]
           set_selected_style_link('default')
           ref_selected_style_link.current='default'
-          setForceUpdate(!forceUpdate)
           updateComponentMenuConfigLink.current()
           link_function.RedrawLinks(Object.values(applicationData.display_links))
         }}

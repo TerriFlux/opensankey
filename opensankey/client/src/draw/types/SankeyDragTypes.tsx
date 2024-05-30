@@ -24,10 +24,11 @@ export type ReturnOutOfBoundElementFuncType = (dragged: SankeyNode,
  * @param {{ current: SankeyNode[]}} multi_selected_nodes
  */
 export type opposing_DragElementsFuncType = (
-  out_of_zone_item: (SankeyNode)[], event: {dx: number;dy: number;x: number;y: number;}, 
+  out_of_zone_item: (SankeyNode)[], 
+  event: {dx: number;dy: number;x: number;y: number;}, 
   dragged: SankeyNode, 
   applicationData:applicationDataType,
-   multi_selected_nodes: {current: SankeyNode[];}
+  applicationState:applicationStateType,
 ) => void
 
 export type DragElementsFuncType = (
@@ -36,14 +37,11 @@ export type DragElementsFuncType = (
   applicationState:applicationStateType,
   applicationContext:applicationContextType,
   event: {dx: number;dy: number;x: number;y: number;},
-  LinkText: LinkTextFuncType,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue: GetLinkValueFuncType,
-  DrawArrows: DrawArrowsType,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
-  ComponentUpdater:ComponentUpdaterType
-
+  ComponentUpdater:ComponentUpdaterType,
+  link_function:LinkFunctionTypes
 ) => void
 
 export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<Element, unknown, unknown>) => void
@@ -279,8 +277,9 @@ export type DragNodesFType = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   node_visible:string[],
-  ComponentUpdater:ComponentUpdaterType
-
+  ComponentUpdater:ComponentUpdaterType,
+  link_function:LinkFunctionTypes,
+  node_function:NodeFunctionTypes
 ) => void
 
 /**

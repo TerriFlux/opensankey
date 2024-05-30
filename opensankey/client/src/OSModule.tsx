@@ -75,6 +75,7 @@ import { keyHandler } from './draw/SankeyDraw'
 import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
 import { Form, Popover } from 'react-bootstrap'
 import { windowSankey } from './configmenus/SankeyUtils'
+import { OpposingDragElements } from './draw/SankeyDragNodes'
 
 let logo = ''
 try {
@@ -222,11 +223,11 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
     //if(!windowSankey.SankeyToolsStatic){ TODO
     const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
     g_legend.call( drag_legend(
-      applicationData.data,
       resizeCanvas,
       node_function,
       link_function,
-      applicationData
+      applicationData,
+      applicationState
     ))
   }
   return {
@@ -346,6 +347,7 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
     RedrawNodes: (()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
     recomputeDisplayedElement,
     CreateNodesOnSVG:(()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
+    OpposingDragElements:OpposingDragElements
   }
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)
