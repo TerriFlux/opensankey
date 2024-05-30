@@ -363,6 +363,9 @@ export const DrawArrows : DrawArrowsType = (
 
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l = data.links[n.inputLinksId[i]]
+    // Suppression de noeud (si il est present)
+    d3.select('#gg_' + l.idLink + ' .arrow').remove()
+
     const ori= ReturnValueLink(data,l,'orientation')
     const recy= ReturnValueLink(data,l,'recycling')
     const l_arrow= ReturnValueLink(data,l,'arrow')
@@ -434,7 +437,6 @@ export const DrawArrows : DrawArrowsType = (
 
     if ((!display_style.filter || link_value >= display_style.filter )&& l_arrow && !is_link_unvalued) {
       //selection
-      d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
