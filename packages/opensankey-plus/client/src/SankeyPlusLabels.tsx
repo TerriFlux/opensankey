@@ -92,7 +92,7 @@ export const OSPDrawLabels : OSPDrawLabelsFType = (
           .attr('stroke', d.color_border)
           .attr('rx', 5)
 
-        draw_text_zone_handles(applicaTionData,d,multi_selected_label,applicationDraw,ComponentUpdater,link_function)
+        draw_text_zone_handles(applicaTionData,d,applicationState,applicationDraw,ComponentUpdater,link_function)
 
         gg_label.on('click', (event) => eventLabelClick(
           event,d,uiElementsRef,applicationState,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater
@@ -260,7 +260,7 @@ const dragLabelEvent = (
   start_point:{current:number[]},
   resizeCanvas:()=>void
 )=>{
-  const { LinkText,GetLinkValue,DrawArrows,RedrawLinks}=link_function
+  const { RedrawLinks}=link_function
   const {data}=applicationData
   const {multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=applicationState
   const {updateComponenSaveInCache}= ComponentUpdater
@@ -305,14 +305,14 @@ const dragLabelEvent = (
         const out_of_zone_item=OSPReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
         if(out_of_zone_item.length>0){
-          OpposingDragElementsPlus(out_of_zone_item,event,d,applicationData,multi_selected_nodes,multi_selected_label)
+          OpposingDragElementsPlus(out_of_zone_item,event,d,applicationData,applicationState)
         }
         OSPDragElements(
           applicationData,
           applicationState,
           applicationContext,
-          d,event,LinkText,
-          GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
+          d,event,
+          GetSankeyMinWidthAndHeight,scale,inv_scale,ComponentUpdater,link_function
         )
       }
     })
@@ -398,14 +398,15 @@ export const zone_selection_label : zone_selection_labelFType = (
 const draw_text_zone_handles=(
   applicationData:OSPApplicationDataType,
   zdt:OSPLabel,
-  multi_selected_label:{current:OSPLabel[]},
+  applicationState:OSPElementsSelectedType,
   applicationDraw:OSPApplicationDrawType,
   ComponentUpdater:OSPComponentUpdaterType,
   link_function:LinkFunctionTypes
 )=>{
+  const {multi_selected_label}=applicationState
   d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel).attr('class','gg_zdt_handles').classed('selected',multi_selected_label.current.includes(zdt));
   ['top','bottom','left','right'].forEach(pos=>{
-    add_zdt_handle(zdt,pos,applicationData,applicationDraw,ComponentUpdater,link_function)
+    add_zdt_handle(zdt,pos,applicationData,applicationDraw,ComponentUpdater,link_function,applicationState)
   })
 }
 const size_zdt_handle=10
@@ -414,7 +415,9 @@ const add_zdt_handle=(
   applicationData:OSPApplicationDataType,
   applicationDraw:OSPApplicationDrawType,
   ComponentUpdater:OSPComponentUpdaterType,
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  applicationState:OSPElementsSelectedType
+
 )=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
@@ -435,7 +438,7 @@ const add_zdt_handle=(
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
     .call(drag_text_zone_hande(
-      zdt,pos,applicationData,applicationDraw,ComponentUpdater,link_function
+      zdt,pos,applicationData,applicationDraw,ComponentUpdater,link_function,applicationState
     ))
   // Position the handle
   switch (pos){
@@ -471,7 +474,8 @@ const drag_text_zone_hande=(
   applicationData:OSPApplicationDataType,
   applicationDraw:OSPApplicationDrawType,
   ComponentUpdater:OSPComponentUpdaterType,
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  applicationState:OSPElementsSelectedType
 )=>{
   const {data}=applicationData
   const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
@@ -498,7 +502,7 @@ const drag_text_zone_hande=(
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
 
         if(zdt.y<0){
-          OpposingDragElementsPlus([zdt],event,zdt,applicationData,{current:[]},{current:[]})
+          OpposingDragElementsPlus([zdt],event,zdt,applicationData,applicationState)
           d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('y',zdt.y+ zdt.label_height)
 
         }
@@ -531,7 +535,7 @@ const drag_text_zone_hande=(
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         if(zdt.x<0){
-          OpposingDragElementsPlus([zdt],event,zdt,applicationData,{current:[]},{current:[]})
+          OpposingDragElementsPlus([zdt],event,zdt,applicationData,applicationState)
           d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('x',zdt.x+ zdt.label_width)
         }
         break

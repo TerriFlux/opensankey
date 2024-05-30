@@ -1,7 +1,6 @@
 import { TFunction } from 'i18next'
 import { OSPApplicationContextType, OSPComponentUpdaterType, OSPElementsSelectedType, OSPLinkFuntionType, OSPNodeFuntionType, OSPApplicationDataType, OSPData, OSPLabel, OSPNode, OSPShowMenuComponentsType } from './Types'
-import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { applicationDataType, contextMenuType, uiElementsRefType, ComponentUpdaterType, applicationDrawType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
@@ -67,8 +66,8 @@ export type OpposingDragElementsPlusFType = (
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:OSPNode|OSPLabel,
   applicationData:OSPApplicationDataType,
-  multi_selected_nodes:{current:OSPNode[]},
-  multi_selected_label:{current:OSPLabel[]},
+  applicationState:OSPElementsSelectedType,
+
 )=> void
 
 export type OSPNodeDragEventFType = (
@@ -76,9 +75,6 @@ export type OSPNodeDragEventFType = (
   applicationState:OSPElementsSelectedType,
   applicationContext:OSPApplicationContextType,
   alt_key_pressed:boolean,
-  LinkText: LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:OSPNodeFuntionType,
   link_function:OSPLinkFuntionType,
@@ -92,13 +88,11 @@ export type OSPDragElementsFType = (
   applicationContext:OSPApplicationContextType,
   dragged:OSPNode|OSPLabel,
   event:{ dx: number; dy: number,x:number,y:number },
-  LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  link_function:OSPLinkFuntionType
 
 )=> void
 

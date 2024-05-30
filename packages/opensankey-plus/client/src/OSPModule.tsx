@@ -13,7 +13,6 @@ import {
   module_dialogsType,  
   DrawAllType,
   InstallEventsOnSVGType,
-  NodeFunctionTypes,
   SankeyNode,
   InitalizeSelectorDetailNodesType
 } from 'open-sankey/src/types/Types'
@@ -41,8 +40,7 @@ import {
   OSPLink, 
   OSPNode, 
   OSPShowMenuComponentsType,
-  OSPShowMenuComponentsVarType
-} from '../types/Types'
+  OSPShowMenuComponentsVarType} from '../types/Types'
 
 import { 
   MenuDraggable, closeAllMenu, 
@@ -58,14 +56,13 @@ import {
   RedrawNodesLabel,
   DrawAllNodes,
   AddAllDropDownNode,
-  AdjustSankeyZone
-} from './import/OpenSankey'
+  AdjustSankeyZone} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
 import { OSPNodeFO } from './SankeyPlusForeignObject'
 import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { OSPMenuPreferenceLabels, ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
-import { OSPDrawNodesIllustration, OSPNodeClickEvent, OSPNodeIcon, OSPHyperLink } from './SankeyPlusNodes'
+import { OSPDrawNodesIllustration, OSPNodeClickEvent, OSPNodeIcon, OSPHyperLink, OpposingDragElementsPlus } from './SankeyPlusNodes'
 import { DefaultOSPStyleLink,  ImportImageAsSvgBg, OSPItemExport, OSPLinkSabotColor, SetSvgBg } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import { 
@@ -79,6 +76,7 @@ import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 import { Col, Form, FormGroup, Popover, Row } from 'react-bootstrap'
 import { t } from 'i18next'
 import { windowSankey } from 'open-sankey/dist/configmenus/SankeyUtils'
+import { opposing_DragElementsFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -358,7 +356,10 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
         nodes_to_update
       )
     } 
-  } as unknown as NodeFunctionTypes
+  } as OSPNodeFuntionType
+
+  _.OpposingDragElements=OpposingDragElementsPlus as opposing_DragElementsFuncType
+
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
     const osp_nodes_to_update=nodes_to_update as OSPNode[]
 
@@ -423,6 +424,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
       osp_nodes_to_update
     )
   }
+
   return _ as OSPNodeFuntionType
 }
 
