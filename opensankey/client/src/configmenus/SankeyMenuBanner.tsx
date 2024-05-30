@@ -9,7 +9,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType} from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import {
   FindMaxLinkValue,
@@ -82,10 +82,8 @@ const delete_local_aggregation=(data:SankeyData)=>{
 export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
   applicationData,
   GetSankeyMinWidthAndHeight,
-  redrawNodeLinkLegend,
   node_function,
   link_function,
-  recomputeDisplayedElement
 ) => {
   const {data}=applicationData
   const {levelTags} = data
@@ -108,8 +106,6 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
               redrawSankeyWithSelectedTag(
                 applicationData,
                 GetSankeyMinWidthAndHeight,
-                recomputeDisplayedElement,
-                redrawNodeLinkLegend,
                 node_function,
                 link_function
               )
@@ -158,7 +154,6 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
   const {data}=applicationData
   const {t}=applicationContext
   const {nodeTags,levelTags} = data
-  const {recomputeDisplayedElement}=node_function
   const {GetSankeyMinWidthAndHeight,reDrawLegend}=applicationDraw
   const [forceUpdate,setForceUpdate]=useState(false)
   let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
@@ -198,7 +193,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                   key={tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, tags_group)
-                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function)
                     setForceUpdate(!forceUpdate)
 
                   }}>{
@@ -230,7 +225,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                       data.nodesColorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
-                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}
                 />
@@ -262,8 +257,6 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                   redrawSankeyWithSelectedTag(
                     applicationData,
                     GetSankeyMinWidthAndHeight,
-                    recomputeDisplayedElement,
-                    redrawNodeLinkLegend,
                     node_function,
                     link_function
                   )
@@ -288,7 +281,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                     // Opposed to current tag group
                     tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
                     redrawSankeyWithSelectedTag(
-                      applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function
+                      applicationData,GetSankeyMinWidthAndHeight,node_function,link_function
                     )
                     setForceUpdate(!forceUpdate)
                   }}
@@ -327,7 +320,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, tags_group, data)
-                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}
                 />
@@ -705,7 +698,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
       {legend_filter}
       <FormGroup as={Row}>
         <Col xs={10}>
-          {addAllDropDownLinks(applicationData,redrawNodeLinkLegend,recomputeDisplayedElement)}
+          {addAllDropDownLinks(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function,ComponentUpdater)}
         </Col>
         <Col xs={2}>
           <FormCheck
@@ -1026,7 +1019,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   key={the_tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, the_tags_group)
-                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}>{
                     Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
@@ -1095,7 +1088,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, the_tags_group, data)
-                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,node_function,link_function)
                     setForceUpdate(!forceUpdate)
 
                   }}
@@ -1140,15 +1133,16 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
 
 /** Function that return a simple or multiple dropdown of groupTag of data and links
  This allow us to choose wich grouptag to select and wich tag of these group to display*/
-const addAllDropDownLinks = (
+export const addAllDropDownLinks = (
   applicationData:applicationDataType,
-  redrawNodeLinkLegend:()=>void,
-  recomputeDisplayedElement:()=>void
-
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
 ) => {
   const {data}=applicationData
   const [forceUpdate,setForceUpdate]=useState(false)
-
+  const {updateComponentMenu}=ComponentUpdater
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     if (tags_group.banner == 'one') {
@@ -1191,9 +1185,14 @@ const addAllDropDownLinks = (
                   data.linkZIndex=Object.keys(pureLinks)
                 }
                 handleSimpleDropdown(evt, tags_group)
-                recomputeDisplayedElement()
+                redrawSankeyWithSelectedTag(
+                  applicationData,
+                  GetSankeyMinWidthAndHeight,
+                  node_function,
+                  link_function
+                )
                 setForceUpdate(!forceUpdate)
-                redrawNodeLinkLegend()
+                updateComponentMenu.current()
               }}>
                 {
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -1247,9 +1246,14 @@ const addAllDropDownLinks = (
                 data.links=new_links
                 data.linkZIndex=Object.keys(new_links)
 
+                redrawSankeyWithSelectedTag(
+                  applicationData,
+                  GetSankeyMinWidthAndHeight,
+                  node_function,
+                  link_function
+                )
                 setForceUpdate(!forceUpdate)
-
-                redrawNodeLinkLegend()
+                updateComponentMenu.current()
               }
             }} />
         </>)
@@ -1258,11 +1262,9 @@ const addAllDropDownLinks = (
   return allDD
 }
 
-const redrawSankeyWithSelectedTag=(
+export const redrawSankeyWithSelectedTag=(
   applicationData:applicationDataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  recomputeDisplayedElement:()=>void,
-  redrawNodeLinkLegend:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes
 )=>{
@@ -1270,7 +1272,7 @@ const redrawSankeyWithSelectedTag=(
   const old_displayed_nodes=Object.values(applicationData.display_nodes).map(n=>n.idNode)
   const old_displayed_links=Object.values(applicationData.display_links).map(l=>l.idLink)
 
-  recomputeDisplayedElement()
+  node_function.recomputeDisplayedElement()
 
   const new_displayed_nodes=Object.values(applicationData.display_nodes).map(n=>n.idNode)
   const new_displayed_links=Object.values(applicationData.display_links).map(l=>l.idLink)
@@ -1283,6 +1285,8 @@ const redrawSankeyWithSelectedTag=(
   const node_to_add_svg=new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>applicationData.data.nodes[id])
   node_function.CreateNodesOnSVG(node_to_add_svg)
   const ll = new_displayed_links.filter(lid=>!old_displayed_links.includes(lid))
+  node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+  link_function.RedrawLinks(Object.values(applicationData.display_links))
   if (ll.length !=0) {
     link_function.CreateLinksOnSVG(ll.map(id=>data.links[id]))
     // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
