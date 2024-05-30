@@ -62,7 +62,7 @@ import { faFileExport} from '@fortawesome/free-solid-svg-icons'
 import FileSaver from 'file-saver'
 import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
 import { Drawer, DrawerBody, DrawerContent } from '@chakra-ui/react'
-import {addAllDropDownLinks} from '../configmenus/SankeyMenuBanner'
+import {DataTagSelector} from '../configmenus/SankeyMenuBanner'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -1031,7 +1031,13 @@ const  DataTagsDDNavBar = (
     return (
       <><Form.Group>
         <Col>
-          {addAllDropDownLinks(applicationData,applicationDraw.GetSankeyMinWidthAndHeight,node_function,link_function,ComponentUpdater)}
+          <DataTagSelector
+            applicationData={applicationData}
+            GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
+            node_function={node_function}
+            link_function={link_function}
+            ComponentUpdater={ComponentUpdater}
+          />
         </Col>
       </Form.Group>
       </>)

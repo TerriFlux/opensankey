@@ -187,7 +187,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
   display_nodes : display_nodes,
   display_links : display_links,
   function_on_wait:useRef(()=>null),
-  min_link_thickness:5,
+  min_link_thickness:2,
   dataVarToUpdate:useRef(['']),
   setDiagram:setDiagram
 
