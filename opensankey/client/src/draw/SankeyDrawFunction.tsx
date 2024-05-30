@@ -361,7 +361,6 @@ export const DrawArrows : DrawArrowsType = (
   const res = ComputeTotalOffsets(inv_scale,n, applicationData, TestLinkValue,undefined,GetLinkValue)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
-
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l = data.links[n.inputLinksId[i]]
     const ori= ReturnValueLink(data,l,'orientation')
@@ -411,8 +410,6 @@ export const DrawArrows : DrawArrowsType = (
       is_v = false
     }
 
-
-
     if(node_shape==='arrow'){
       // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
       let node_face_size=total_height_left
@@ -435,7 +432,6 @@ export const DrawArrows : DrawArrowsType = (
       }
     }
 
-
     if ((!display_style.filter || link_value >= display_style.filter )&& l_arrow && !is_link_unvalued) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
@@ -449,13 +445,16 @@ export const DrawArrows : DrawArrowsType = (
           let p5
 
           if (ori === 'hh' || ori === 'vh') {
+          // If link come horizontally to the node
             if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
+              // If node source of the link is to his left (arrow pointing right)
               xt = +n.x
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(+link_value), scale(cum_v_left), true, false,arrow_length,node_arrow_shift)
             } else {
+              // If node source of the link is to his right (arrow pointing left)
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width')
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
@@ -463,13 +462,16 @@ export const DrawArrows : DrawArrowsType = (
               return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(+link_value), scale(cum_v_right), true, true,arrow_length,node_arrow_shift)
             }
           } else if (ori === 'vv' || ori === 'hv') {
+          // If link come vertically to the node (arrow pointing down)
             if (n.y > source_node.y || is_exportation_node) {
+              // If node source of the link is above
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
               yt = +n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false,arrow_length,node_arrow_shift)
             } else {
+              // If node source of the link is below (arrow pointing top)
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height')
               p5 = [xt, yt]
@@ -483,16 +485,18 @@ export const DrawArrows : DrawArrowsType = (
         .attr('fill-opacity',  ReturnValueLink(data,l,'opacity'))
         .attr('stroke',LinkColor(l, data,GetLinkValue))
         .attr('stroke-width',0.1)
+
+      if ((is_v && !recy && n.x > source_node.x ) || (is_v && recy && n.x < source_node.x) ) {
+        cum_v_left += link_value
+      } else if ((is_v && !recy &&n.x < source_node.x) || (is_v && recy && n.x > source_node.x)) {
+        cum_v_right += link_value
+      } else if ((!is_v && !recy && n.y > source_node.y) || (!is_v && recy && n.y < source_node.y)) {
+        cum_h_top += link_value
+      } else if ((!is_v && !recy && n.y < source_node.y) || (!is_v && recy && n.y > source_node.y)) {
+        cum_h_bottom += link_value
+      }
     }
-    if ((is_v && !recy && n.x > source_node.x ) || (is_v && recy && n.x < source_node.x) ) {
-      cum_v_left += link_value
-    } else if ((is_v && !recy &&n.x < source_node.x) || (is_v && recy && n.x > source_node.x)) {
-      cum_v_right += link_value
-    } else if ((!is_v && !recy && n.y > source_node.y) || (!is_v && recy && n.y < source_node.y)) {
-      cum_h_top += link_value
-    } else if ((!is_v && !recy && n.y < source_node.y) || (!is_v && recy && n.y > source_node.y)) {
-      cum_h_bottom += link_value
-    }
+    
   }
 }
 
