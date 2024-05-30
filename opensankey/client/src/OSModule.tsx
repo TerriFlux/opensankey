@@ -926,11 +926,9 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
       <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
         {addSimpleLevelDropDown(
           applicationData,
-          GetSankeyMinWidthAndHeight,
-          ()=>null,
+          applicationDraw.GetSankeyMinWidthAndHeight,
           node_function,
           link_function,
-          node_function.recomputeDisplayedElement
         )}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
