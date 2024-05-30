@@ -4,7 +4,6 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from '../configmenus/SankeyUtils'
-import { OpposingDragElements } from './SankeyDragNodes'
 import { NodeVisibleOnsSvg, SelectVisualyLinks, returnScaleOfDrawArea } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from './types/SankeyDrawLegendTypes'
@@ -354,26 +353,28 @@ export const DrawLegend : DrawLegendFType= (
 }
 
 export const drag_legend : drag_legendFType = (
-  data,
   resizeCanvas,
   node_function,
   link_function,
-  applicationData
+  applicationData,
+  applicationState
 
-)=>d3.drag<SVGGElement, unknown>()
-  .subject(Object).on('drag', function (event) {
+)=>{
+  const{data}=applicationData
+  return d3.drag<SVGGElement, unknown>()
+    .subject(Object).on('drag', function (event) {
 
-    if(d3.select('.opensankey #svg').nodes().length>0){
-      DragLegendGElement(data,event)
-      if(data.legend_position[0]==0 ||data.legend_position[1]==0){
-        OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),applicationData,{current:[]})
+      if(d3.select('.opensankey #svg').nodes().length>0){
+        DragLegendGElement(data,event)
+        if(data.legend_position[0]==0 ||data.legend_position[1]==0){
+          node_function.OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),applicationData,applicationState)
+        }
       }
-    }
-  }).on('end',()=>{
-    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-    link_function.RedrawLinks(Object.values(applicationData.display_links))
-    resizeCanvas(applicationData)
-  })
+    }).on('end',()=>{
+      node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+      link_function.RedrawLinks(Object.values(applicationData.display_links))
+      resizeCanvas(applicationData)
+    })}
 
 export const DragLegendGElement:drag_legend_g_elementFuncType=(
   data:SankeyData,

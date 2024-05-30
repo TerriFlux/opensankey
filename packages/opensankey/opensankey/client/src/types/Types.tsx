@@ -12,6 +12,7 @@ import { DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType } from '../dra
 import { DrawAllNodesFType, drawNodeShapeFType } from '../draw/types/SankeyDrawNodesTypes'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
+import { opposing_DragElementsFuncType } from '../draw/types/SankeyDragTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -575,7 +576,8 @@ export type NodeFunctionTypes = {
   drawAddNodes : drawNodeShapeFType,
   CreateNodesOnSVG:drawNodesFType,
   RedrawNodes:RedrawNodesFType,
-  recomputeDisplayedElement:()=>void
+  recomputeDisplayedElement:()=>void,
+  OpposingDragElements:opposing_DragElementsFuncType
 }
 export type initializeNodeFunctionsType = (
   applicationData: applicationDataType,

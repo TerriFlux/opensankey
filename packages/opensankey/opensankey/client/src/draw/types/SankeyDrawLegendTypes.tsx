@@ -14,11 +14,11 @@ export type DrawLegendFType = (
 ) => JSX.Element
 
 export type drag_legendFType=(
-  data:SankeyData,
   resizeCanvas:(applicationData:applicationDataType)=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  applicationData:applicationDataType
+  applicationData:applicationDataType,
+  applicationState:applicationStateType
 
 )=> (selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
