@@ -14,10 +14,8 @@ export type setDiagramFuncType = (
 export type addSimpleLevelDropDownFType = (
   applicationData:applicationDataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  redrawNodeLinkLegend:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  recomputeDisplayedElement:()=>void
 ) => JSX.Element
  
 export type col_title_level_filterFType=(
