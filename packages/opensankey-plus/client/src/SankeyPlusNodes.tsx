@@ -53,7 +53,6 @@ import {
   AssignNodeValueToCorrectVar,
   drag_node_text,
   DragElements,
-  DrawArrows,
   IsAllNodeAttrSameValue,
   IsNodeDisplayingValueLocal,
   LinkStrokeOSTyped,
@@ -81,11 +80,8 @@ import {
 } from 'open-sankey/src/types/Types'
 import {
   GetLinkValueFuncType,
-  GetSankeyMinWidthAndHeightFuncType,
-  LinkTextFuncType
-} from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+  GetSankeyMinWidthAndHeightFuncType} from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 // OpenSankey js-code
 import { TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
@@ -904,11 +900,12 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyNode|OSPLabel,
   applicationData,
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_label:{current:OSPLabel[]},
+  applicationState,
+
 )=>{
   const {data}=applicationData
-  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,applicationData,multi_selected_nodes)
+  const {multi_selected_label}=applicationState
+  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,applicationData,applicationState)
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected zdt to opposing direction
@@ -949,9 +946,6 @@ export const OSPNodeDragEvent : OSPNodeDragEventFType =(
   applicationState,
   applicationContext,
   alt_key_pressed:boolean,
-  LinkText: LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater,
   node_function,
   link_function,
@@ -971,7 +965,7 @@ export const OSPNodeDragEvent : OSPNodeDragEventFType =(
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,OSPNode,d3.BaseType, unknown> ).call(
       OSPDragGNodeEvent(applicaTionData,applicationState,
         applicationContext,
-        alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight,ComponentUpdater,node_function,link_function,
+        alt_key_pressed,scale,inv_scale,ComponentUpdater,node_function,link_function,
         applicationDraw
       )
     )
@@ -1011,7 +1005,7 @@ export const OSPNodeDragEvent : OSPNodeDragEventFType =(
       })
       node_function.RedrawNodes(node_to_update)
       link_function.RedrawLinks(link_to_update)
-      actualizeDrawAreaFrame(applicaTionData,GetSankeyMinWidthAndHeight)
+      actualizeDrawAreaFrame(applicaTionData,applicationDraw.GetSankeyMinWidthAndHeight)
     })
   )
 }
@@ -1021,11 +1015,8 @@ const OSPDragGNodeEvent = (
   applicationState:OSPElementsSelectedType,
   applicationContext:OSPApplicationContextType,
   alt_key_pressed:boolean,
-  LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:OSPNodeFuntionType,
   link_function:OSPLinkFuntionType,
@@ -1050,9 +1041,8 @@ const OSPDragGNodeEvent = (
             applicationState,applicationContext,
             node,
             event,
-            LinkText,
-            GetSankeyMinWidthAndHeight,
-            GetLinkValue,DrawArrows,scale,inv_scale,node_visible,ComponentUpdater
+            applicationDraw.GetSankeyMinWidthAndHeight,
+            scale,inv_scale,node_visible,ComponentUpdater,link_function
           )
         }
       }
@@ -1072,18 +1062,16 @@ const OSPDragNodes = (
   applicationContext:OSPApplicationContextType,
   node:OSPNode,
   event: { dx: number; dy: number,x:number,y:number },
-  LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   node_visible:string[],
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  link_function:OSPLinkFuntionType
 ) => {
   RemoveAnimate()
   const {data,}=applicationData
-  const {multi_selected_nodes,multi_selected_label}=applicationState
+  const {multi_selected_nodes}=applicationState
 
   // Cherche si des element seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
@@ -1091,10 +1079,10 @@ const OSPDragNodes = (
 
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    OpposingDragElementsPlus(out_of_zone_item,event,node,applicationData,multi_selected_nodes,multi_selected_label)
+    OpposingDragElementsPlus(out_of_zone_item,event,node,applicationData,applicationState)
   }
   OSPDragElements(
-    applicationData,applicationState,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
+    applicationData,applicationState,applicationContext,node,event,GetSankeyMinWidthAndHeight,scale,inv_scale,ComponentUpdater,link_function
   )
 }
 
@@ -1104,20 +1092,18 @@ export const OSPDragElements : OSPDragElementsFType = (
   applicationContext,
   dragged:OSPNode|OSPLabel,
   event:{ dx: number; dy: number,x:number,y:number },
-  LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  link_function
 
 )=>{
   const {multi_selected_label}=applicationState
 
   DragElements(
-    dragged as SankeyNode,applicationData,applicationState,applicationContext, event,LinkText,GetSankeyMinWidthAndHeight,
-    GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
+    dragged as SankeyNode,applicationData,applicationState,applicationContext, event,GetSankeyMinWidthAndHeight,
+    scale,inv_scale,ComponentUpdater,link_function
   )
 
   // Drag zdt too
