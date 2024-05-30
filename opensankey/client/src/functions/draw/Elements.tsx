@@ -5,7 +5,7 @@
 // ==================================================================================================
 
 // External imports
-import d3 from 'd3'
+import * as d3 from 'd3'
 
 // Local types
 import {

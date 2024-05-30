@@ -5,15 +5,20 @@ import { SankeyData, SankeyNode} from '../types/Types'
 import { AddDrawNodesFType, DeleteGNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
 import { GetLinkValue, NodeColor,NodeDisplayed,ReturnValueNode} from '../configmenus/SankeyUtils'
-import { 
+import {
   SetNodeHeight,
-  nodeTransform,NodeStrokeWidth,PathNodeArrowShape, 
+  nodeTransform,NodeStrokeWidth,PathNodeArrowShape,
 } from './SankeyDrawFunction'
 import { SimpleGNodeClick } from './SankeyDrawEventFunction'
 import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
 import { EventNodeContextMenu } from './SankeyDrawEventFunction'
 import { DragGNodeEvent } from './SankeyDragNodes'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
+
+import {
+  Class_DrawingArea,
+  Class_Node
+} from '../types/Element'
 
 declare const window: Window &
 typeof globalThis & {
@@ -54,12 +59,10 @@ export const DrawAllNodes : DrawAllNodesFType = (
   )
   updateDrawNodeShape(applicationData,link_function,multi_selected_nodes,Object.values(display_nodes))
   RedrawNodesLabel(applicationData,Object.values(display_nodes),GetLinkValue,t,node_function)
-
-
 }
 
 /**
- * Add/update nodes event   
+ * Add/update nodes event
  */
 export const AddDrawNodesEvent : AddDrawNodesFType = (
   contextMenu,
@@ -90,17 +93,17 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   // const filtered_gggnodes = ggg_nodes.filter(
   //   n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
   // )
-  
+
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
-    // Add event listener to click 
-    // When we Ctrl + click a node, it select it and open a menu 
+    // Add event listener to click
+    // When we Ctrl + click a node, it select it and open a menu
     const DoubleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
       accept_simple_click.current=false
       const label_x=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().x??0
       const label_y=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().y??0
       const node_x=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().x??0
       const node_y=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().y??0
-        
+
       d3.select('#fo_input_label_'+d.idNode).style('display','inline-block')
       d3.select('#fo_input_label_'+d.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
       d3.select('#text_'+d.idNode).style('display','none')
@@ -175,14 +178,14 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     // Triggered when the mouse move over the node
     if ((window.SankeyToolsStatic ||event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
-      const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
+      const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
       let pos_tooltip_y= event.clientY
-      const size_browser=window.innerHeight 
+      const size_browser=window.innerHeight
       pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
-            
-      const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
+
+      const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))
       let pos_tooltip_x= event.clientX
-      const size_browser_w=window.innerWidth 
+      const size_browser_w=window.innerWidth
       pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
       sankeyTooltip
         .style('top',pos_tooltip_y + 'px')
@@ -193,10 +196,10 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     const sankeyTooltip=d3.select('.sankey-tooltip')
     sankeyTooltip.style('opacity', 0)
   })
-        
+
 }
 /**
- * Update visual elements linked to the shape of nodes  
+ * Update visual elements linked to the shape of nodes
  */
 export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
   applicationData,
@@ -267,16 +270,16 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
     }
     )
 
- 
+
   node_to_update.forEach(n=>{
     SetNodeHeight(n,applicationData,scale,inv_scale,GetLinkValue)
     d3.select(' .opensankey #gg_' + n.idNode).style('display', () => {
       if (HasLinksZero(data,n)) {
         return 'none'
       }
-      if (n.position === 'relative') { 
+      if (n.position === 'relative') {
         return 'none'
-      } 
+      }
       return 'inline'
     })
   })
@@ -373,7 +376,14 @@ export const drawAddNodes : drawNodeShapeFType = (
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
   const filtered_data = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
 
+  const tmp_draw = new Class_DrawingArea(1000, 1000)
   filtered_data.forEach(n=>{
+    // Test
+    const tmp_node = new Class_Node(n.idNode, n.name, tmp_draw)
+    tmp_node.display.position.x = n.x + 100
+    tmp_node.display.position.y = n.y + 100
+    tmp_node.draw()
+    // fin test
     d3.select(' .opensankey #g_nodes').datum(n).append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
@@ -385,9 +395,9 @@ export const drawAddNodes : drawNodeShapeFType = (
         if (HasLinksZero(data,d)) {
           return 'none'
         }
-        if (d.position === 'relative') { 
+        if (d.position === 'relative') {
           return 'none'
-        } 
+        }
         return 'inline'
       })
       .style('font-family', (d) => {
@@ -431,7 +441,7 @@ export const drawAddNodes : drawNodeShapeFType = (
 
 /**
  * Function used to delete visual elements of nodes
- * @param node_to_delete List of nodes id 
+ * @param node_to_delete List of nodes id
  */
 export const DeleteGNodes:DeleteGNodesFType=(node_to_delete)=>{
   (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(n=>node_to_delete.includes(n.idNode)).remove();

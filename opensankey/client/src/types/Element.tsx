@@ -4,6 +4,9 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
+// External imports
+import * as d3 from 'd3'
+
 // Local types
 
 // Local functions
@@ -145,7 +148,7 @@ export class Class_Data {
  *
  * @class Class_DrawingArea
  */
-class Class_DrawingArea {
+export class Class_DrawingArea {
   // Constructor =================================================
   constructor(height: number, width: number) {
     this.height = height
