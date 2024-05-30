@@ -386,8 +386,8 @@ export const DrawArrows : DrawArrowsType = (
     if (link_value === undefined) {
       continue
     }
-    const is_link_unvalued=link_value==''
-    link_value=(( !is_link_unvalued && +link_value==0)||(+link_value>=inv_scale(applicationData.min_link_thickness)))?+link_value:inv_scale(applicationData.min_link_thickness)
+    const is_link_unvalued=link_value===''
+    link_value=(( !is_link_unvalued)||(+link_value>=inv_scale(applicationData.min_link_thickness)))?+link_value:inv_scale(applicationData.min_link_thickness)
     const extension = GetLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
@@ -1585,15 +1585,16 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
     const link_value_is_free = link_values.extension && link_values.extension?.free_mini !== undefined
     if (link_value_is_free) {
       //Link value is free should be displayed dashed without text without witdh
-      return 5
+      return applicationData.min_link_thickness
     }
   }
   if ( link_values.extension && link_values.extension?.display_thin) {
     // if flux is displayed thin
-    return 5
+    return applicationData.min_link_thickness
   }
   let link_value = TestLinkValue(applicationData, l,GetLinkValue)
-  link_value=((+link_value==0)||(+link_value>=inv_scale(applicationData.min_link_thickness)))?+link_value:inv_scale(applicationData.min_link_thickness)
+  link_value=((+link_value>=inv_scale(applicationData.min_link_thickness)))?+link_value:inv_scale(applicationData.min_link_thickness)
+
   const width_n=(document.getElementById('shape_'+node.idNode)?.getBoundingClientRect().width??0)/scale_svg
   //Zones limite à ne pas êtres
   // La limite à ne pas être(fixé arbitrairement) ce situe à : largeur/hauteur du noeud + 1/4 de l'épaisseur du flux
@@ -1620,9 +1621,7 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
   if (draw_warning && !ReturnValueLink(data,l,'recycling')) {
     return 1
   } else {
-    const link_value = TestLinkValue(applicationData, l,GetLinkValue)
-    const tmp =(link_value=='')?1:link_value as number
-    return scale(Math.max(inv_scale(applicationData.min_link_thickness), tmp ? tmp : 0))
+    return scale(link_value)
   }
 }
 
