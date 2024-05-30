@@ -766,28 +766,28 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
         </Box>
         {/* Button to adjust label position in case the label is bigger than the link */}
 
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            iconColor={list_value['label_pos_auto'][1]?'#78C2AD':'white'}
-            isIndeterminate={list_value['label_pos_auto'][1]}
-            isChecked={list_value['label_pos_auto'][0] as boolean}
-            onChange={
-              (evt) => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
-                  AssignLinkValueToCorrectVar(d,'label_pos_auto',evt.target.checked,menu_for_style)
-                  AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
-                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                  delete d.drag_label_offset
-                })
-                updateMenuConfigLink()
-              }}>        
-              <OSTooltip label={t('Flux.tooltips.ajust_label')}>
-                {t('Flux.ajust_label')}
-              </OSTooltip>
-          </Checkbox>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          iconColor={list_value['label_pos_auto'][1]?'#78C2AD':'white'}
+          isIndeterminate={list_value['label_pos_auto'][1]}
+          isChecked={list_value['label_pos_auto'][0] as boolean}
+          onChange={
+            (evt) => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'label_pos_auto',evt.target.checked,menu_for_style)
+                AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                delete d.x_label
+                delete d.y_label
+                delete d.drag_label_offset
+              })
+              updateMenuConfigLink()
+            }}>        
+          <OSTooltip label={t('Flux.tooltips.ajust_label')}>
+            {t('Flux.ajust_label')}
+          </OSTooltip>
+        </Checkbox>
 
         {/* Positionnement lateral des label */}
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
