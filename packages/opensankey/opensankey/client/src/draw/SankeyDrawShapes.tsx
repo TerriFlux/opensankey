@@ -10,8 +10,7 @@ import {
   ComputeTotalOffsets,
   TestLinkValue,
   ReturnValueLink,
-  LinkVisible
-} from '../configmenus/SankeyUtils'
+  LinkVisible} from '../configmenus/SankeyUtils'
 import {
   GetLinkValueFuncType,
   LinkColorFuncType
@@ -527,6 +526,18 @@ export const bezier_link_classic_recycling = (
     return line1 + ' L ' + x4 + ',' + y4 + line2 + ' L ' + x8 + ',' + y8 + line3 + ' L ' + x12 + ',' + y12 + ' L ' + x16 + ',' + y16 + line5
   }
 }
+
+/**
+ *Function that draw link start sabot of links attached to node 'n',
+ * it go throught all link displayed attached to the node and draw a sabot with the thickness and color of the link
+ *
+ * @param {applicationDataType} applicationData
+ * @param {SankeyNode} n
+ * @param {(t: number) => number} scale
+ * @param {(t: number) => number} inv_scale
+ * @param {GetLinkValueFuncType} GetLinkValue
+ * @param {LinkColorFuncType} LinkSabotColor
+ */
 export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   applicationData,
   n: SankeyNode,
@@ -562,7 +573,10 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   )
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
-  for (let i = 0; i < n.outputLinksId.length; i++) {
+  // Some link can be in displayed_links but not visible, their style display is none (it happen when their value is 0)
+  const link_displayed_to_create_sabot=n.outputLinksId.filter(idLink=>Object.keys(applicationData.display_links).includes(idLink) && d3.select('#gg_'+idLink).style('display')!=='none')
+  
+  for (let i = 0; i < link_displayed_to_create_sabot.length; i++) {
     const l = data.links[n.outputLinksId[i]]
     const node_target = data.nodes[l.idTarget]
     const ori = ReturnValueLink(data, l, 'orientation')
@@ -602,7 +616,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     if (link_value === undefined) {
       continue
     }
-    link_value = (+link_value == 0 || (+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
+    link_value = ((+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
     const extension = GetLinkValue(data, n.outputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
