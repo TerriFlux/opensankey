@@ -9,7 +9,6 @@ import {
   Col,
   Container,
   Form,
-  FormLabel,
   Modal,
   Nav,
   Navbar,
@@ -34,13 +33,12 @@ import {
 } from '@chakra-ui/react'
 import {
   SankeyData,
-  SankeyLink,
-  TagsGroup,
   MenuTypes,
   NodeFunctionTypes,
   LinkFunctionTypes,
   applicationDataType,
-  ComponentUpdaterType} from '../types/Types'
+  ComponentUpdaterType,
+  applicationDrawType} from '../types/Types'
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -48,13 +46,12 @@ import SankeyLoad from '../dialogs/SankeyPersistence'
 import { SankeyConfigurationMenu } from '../configmenus/SankeyMenuConfiguration'
 import { ExcelModal,ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { TFunction } from 'i18next'
-import { MultiSelect } from 'react-multi-select-component'
 import { faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus, faCloudArrowUp, faExclamation, faCheck, faGears} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import {MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType} from './types/SankeyMenuTopTypes'
-import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue, OSTooltip } from '../configmenus/SankeyUtils'
+import { DefaultNode, DefaultLink, FindMaxLinkValue, OSTooltip } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
@@ -65,7 +62,7 @@ import { faFileExport} from '@fortawesome/free-solid-svg-icons'
 import FileSaver from 'file-saver'
 import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
 import { Drawer, DrawerBody, DrawerContent } from '@chakra-ui/react'
-
+import {addAllDropDownLinks} from '../configmenus/SankeyMenuBanner'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -105,42 +102,6 @@ const GoToUserDoc = () => {
     }
   }).then( win => win?.focus() )
 }
-
-
-/**
- *
- *
- * @param {React.ChangeEvent<HTMLSelectElement>} evt
- * @param {TagsGroup} tags_group
- * @param {SankeyData} data
- * @param {(data: SankeyData) => void} set_data
- * @returns {(void) => void}
- */
-const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
-  const val = evt.target.value
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
-}
-
-/**
- *
- *
- * @param {[{ label: string, value: string }]} selected
- * @param {TagsGroup} tags_group
- * @param {SankeyData} data
- * @returns {(void) => void}
- */
-const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData) => {
-  const tab_sel = selected.map((d) => {
-    return d.value
-  })
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
-  // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
-  if(tab_sel.length==0 && Object.values(data.dataTags).map(dt=>dt.group_name).includes(tags_group.group_name)){
-    Object.entries(tags_group.tags)[0][1].selected=true
-  }
-}
-
-
 
 // Logo for sub-nav 'aide'
 const logo_home=<svg
@@ -829,7 +790,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
     DDDT=DataTagsDDNavBar(
-      applicationData,node_function,link_function,ComponentUpdater
+      applicationData,node_function,link_function,ComponentUpdater,applicationDraw
     )
   }
   const modal_resolution_png=Modale_resolution_png(applicationContext.t,
@@ -1061,128 +1022,20 @@ const  DataTagsDDNavBar = (
   applicationData:applicationDataType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
-  // set_tags_selected:(o:{[x:string]:string})=>void
+  ComponentUpdater:ComponentUpdaterType,
+  applicationDraw:applicationDrawType
 ) => {
-  const {updateComponentMenu}=ComponentUpdater
-  const {data,set_data}=applicationData
+  const {data}=applicationData
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
-  const allDD = banner_grouptag.map(([, tags_group]) => {
-    if (tags_group.banner == 'one') {
-      let selected = ''
-      if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
-        selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
-      }
-      return (
-        <><Form.Group>
-          <Col><FormLabel style={{justifyContent: 'center',fontWeight:'bold'}}>{tags_group.group_name}</FormLabel></Col>
-          <Col>
-            {<Form.Select key={tags_group.group_name}
-              style={{ color:'black' }}
-              value={selected}
-              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                let has_suffix=false
-                const pl=Object.entries(data.links).map(l=>{
-                  const suffixeStart= l[0].indexOf('_')
-                  if(suffixeStart>=0){
-                    has_suffix=true
-                    l[0]=l[0].slice(0,suffixeStart)
-                    l[1].idLink=l[0]
-                    data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                    data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
-
-                    //Ajoute dans les noeuds source/target les id de flux
-                    const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
-                    if(ind_in_src==-1){
-                      data.nodes[l[1].idSource].outputLinksId.push(l[0])
-                    }
-                    const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
-                    if(ind_in_trgt==-1){
-                      data.nodes[l[1].idTarget].inputLinksId.push(l[0])
-                    }
-                  }
-                  return l
-                })
-                // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                const pureLinks=Object.fromEntries(pl)
-
-                // Check si on avait des flux avec suffixes, si c'est le cas : reforme linksZIndex
-                if(has_suffix){
-                  data.linkZIndex=Object.keys(pureLinks)
-                }
-
-                data.links=pureLinks
-                handleSimpleDropdown(evt, tags_group)
-                node_function.recomputeDisplayedElement()
-                node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-                link_function.RedrawLinks(Object.values(applicationData.display_links))
-                updateComponentMenu.current()
-                // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
-                //   return (Object.keys(dataTag.tags).length > 0) ? [
-                //     dataTagKey,
-                //     Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-                // }))
-                // const dataTagsSelected = Object.fromEntries(newEntries)
-                // set_tags_selected(dataTagsSelected)
-              }}>
-              {
-                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                  return (<option key={i} value={tag_key} >{tag.name}</option>)
-                })}
-            </Form.Select>}
-          </Col>
-        </Form.Group>
-        </>)
-    }
-    else if (tags_group.banner == 'multi') {
-      const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name ,'disabled':((selected.length<2 && tag[1].name==selected[0].label))} })
-      return (
-        <>
-          <Form.Group>
-            <Col><FormLabel style={{justifyContent: 'center',fontWeight:'bold'}}>{tags_group.group_name}</FormLabel></Col>
-            <Col><MultiSelect
-              className={'multidropdown_filter_node_link'}
-              // style={{ color: 'black'}}
-              labelledBy={'dropdown_link_filter'}
-              overrideStrings={{
-                'selectAll': 'Tout sélectionner',
-              }}
-              value={selected}
-              options={options}
-              onChange={(selected: [{ label: string, value: string }]) => {
-                HandleMultiDropdown(selected, tags_group, data)
-
-                //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
-                if(Object.keys(data.dataTags).length>0){
-
-                  const pl=Object.entries(data.links).map(l=>{
-                    const suffixeStart= l[0].indexOf('_')
-                    if(suffixeStart>=0){
-                      l[0]=l[0].slice(0,suffixeStart)
-                      l[1].idLink=l[0]
-                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                    }
-                    return l
-                  })
-                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                  const pureLinks=Object.fromEntries(pl)
-
-                  const new_links={} as { [link_id: string]: SankeyLink }
-
-                  Object.values(pureLinks).forEach(l=>{
-                    const suffix=''
-                    RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
-                  })
-                  data.links=new_links
-                  data.linkZIndex=Object.keys(new_links)
-                  set_data({...data})
-                }
-              }} /></Col>
-          </Form.Group>
-        </>)
-    }
+  const allDD = banner_grouptag.map(() => {
+    return (
+      <><Form.Group>
+        <Col>
+          {addAllDropDownLinks(applicationData,applicationDraw.GetSankeyMinWidthAndHeight,node_function,link_function,ComponentUpdater)}
+        </Col>
+      </Form.Group>
+      </>)
+    
   })
   return allDD
 }
