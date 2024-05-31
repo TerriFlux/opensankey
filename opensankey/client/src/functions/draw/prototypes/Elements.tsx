@@ -1,3 +1,10 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE for TerriFlux SARL
+// Date : 29/05/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
+// Local types
 import {
   Class_Element
 } from '../../../types/Element'
