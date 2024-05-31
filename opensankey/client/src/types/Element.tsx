@@ -8,8 +8,12 @@
 import * as d3 from 'd3'
 
 // Local types
+import { uiElementsRefType } from './Types'
 
 // Local functions
+import {
+  openRemoteUIElement
+} from '../functions/application/Menus'
 import {
   drawElement,
   unDrawElement
@@ -83,66 +87,92 @@ const default_font = 'Arial,sans-serif'
 //   'Zapf Chancery,cursive',
 // ]
 
+type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
+
 /**
  * Class that contains all elements to make the application work
  *
- * @class Class_Data
+ * @class Class_ApplicationData
  */
-export class Class_Data {
-  // Constructor =================================================
+export class Class_ApplicationData {
+  // CONSTRUCTOR ==============================================================
   constructor(window: Window & typeof globalThis, published_mode: boolean) {
     this.drawing_area = new Class_DrawingArea(
       window.innerWidth - 50,
-      window.innerHeight - 50)
+      window.innerHeight - 50,
+      this)
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
   }
-  // Attributes ==================================================
+
+  // DEFAULT ATTRIBUTES =======================================================
   // App version
   version: string = '0.8'
-  // File name
-  file_name?: string
+
   // Dealing with menus
   accordeon_to_show: string[] = ['MEP']
+  ui_elements: uiElementsRefType | null = null
+
   // Drawing area
   drawing_area: Class_DrawingArea
+
   // Existing styles
   flux_styles: {[_:string]: Class_LinkElement} = {} // TODO create defaut style
   node_styles: {[_:string]: Class_NodeElement} = {} // TODO create defaut style
+
   // Display
-  show_structure: 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval' = 'reconciled'
+  show_structure: Type_Structure = 'reconciled'
   fit_screen: boolean
+
   // Limitations
-  maximum_flux: number|null = null
-  minimum_flux: number|null = null
+  maximum_flux: number | null = null
+  minimum_flux: number | null = null
+
+  // OPTIONNAL ATTRIBUTES =====================================================
+  // File name
+  file_name?: string
+  // left_shift: 0,
+  // right_shift: 1,
+  // display_style: {
+  //   filter: 0,
+  //   filter_label: 0,
+  //   font_family: ['Arial,sans-serif','Helvetica,sans-serif','Verdana,sans-serif','Calibri,sans-serif','Noto,sans-serif','Lucida Sans,sans-serif','Gill Sans,sans-serif','Century Gothic,sans-serif','Candara,sans-serif','Futara,sans-serif','Franklin Gothic Medium,sans-serif','Trebuchet MS,sans-serif','Geneva,sans-serif','Segoe UI,sans-serif','Optima,sans-serif','Avanta Garde,sans-serif',
+  //     'Times New Roman,serif','Big Caslon,serif','Bodoni MT,serif','Book Antiqua,serif','Bookman,serif','New Century Schoolbook,serif','Calisto MT,serif','Cambria,serif','Didot,serif','Garamond,serif','Georgia,serif','Goudy Old Style,serif','Hoefler Text,serif','Lucida Bright,serif','Palatino,serif','Perpetua,serif','Rockwell,serif','Rockwell Extra Bold,serif','Baskerville,serif',
+  //     'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
+  //     'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
+  //   ],
+  // },
+
+  // colorMap: 'no_colormap',
+  // nodesColorMap: 'no_colormap',
+  // linksColorMap: 'no_colormap',
+
+  // legend_width:180,
+  // legend_position: [0,0],
+  // mask_legend:false,
+  // display_legend_scale:false,
+  // legend_police:16,
+  // legend_bg_border:false,
+  // legend_bg_color:defaultElementColor,
+  // legend_bg_opacity:0,
+  // legend_show_dataTags:false,
+  // node_label_separator:''
+
+  // PUBLIC METHODS ===========================================================
+  // Deal with menus
+  public closeAllMenus() { /* TODO */ }
+  // Open accordion menu
+  public openMenu() {
+    if (this.ui_elements !== null)
+      openRemoteUIElement(this.ui_elements.accordion_ref)
+  }
+  public openOnlyNodeMenu() {
+    this.openMenu()
+    if (this.ui_elements !== null)
+      openRemoteUIElement(this.ui_elements.nodes_accordion_ref)
+  }
 }
-// left_shift: 0,
-// right_shift: 1,
-// display_style: {
-//   filter: 0,
-//   filter_label: 0,
-//   font_family: ['Arial,sans-serif','Helvetica,sans-serif','Verdana,sans-serif','Calibri,sans-serif','Noto,sans-serif','Lucida Sans,sans-serif','Gill Sans,sans-serif','Century Gothic,sans-serif','Candara,sans-serif','Futara,sans-serif','Franklin Gothic Medium,sans-serif','Trebuchet MS,sans-serif','Geneva,sans-serif','Segoe UI,sans-serif','Optima,sans-serif','Avanta Garde,sans-serif',
-//     'Times New Roman,serif','Big Caslon,serif','Bodoni MT,serif','Book Antiqua,serif','Bookman,serif','New Century Schoolbook,serif','Calisto MT,serif','Cambria,serif','Didot,serif','Garamond,serif','Georgia,serif','Goudy Old Style,serif','Hoefler Text,serif','Lucida Bright,serif','Palatino,serif','Perpetua,serif','Rockwell,serif','Rockwell Extra Bold,serif','Baskerville,serif',
-//     'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
-//     'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
-//   ],
-// },
-
-// colorMap: 'no_colormap',
-// nodesColorMap: 'no_colormap',
-// linksColorMap: 'no_colormap',
-
-// legend_width:180,
-// legend_position: [0,0],
-// mask_legend:false,
-// display_legend_scale:false,
-// legend_police:16,
-// legend_bg_border:false,
-// legend_bg_color:defaultElementColor,
-// legend_bg_opacity:0,
-// legend_show_dataTags:false,
-// node_label_separator:''
 
 /**
  * Class to deal with drawing area properties and display
@@ -150,42 +180,78 @@ export class Class_Data {
  * @class Class_DrawingArea
  */
 export class Class_DrawingArea {
-  // Constructor =================================================
-  constructor(height: number, width: number) {
+  // CONSTRUCTOR ==============================================================
+  constructor(
+    height: number,
+    width: number,
+    application_data: Class_ApplicationData
+  ) {
     this.height = height
     this.width = width
+    this.application_data = application_data
     this.legend.display.shape.width = 180
   }
-  // Constructed Attributes ======================================
+
+  // CONSTRUCTED ATTRIBUTES ===================================================
+  // Relation with application
+  public application_data: Class_ApplicationData
+
   // Size
   public height: number
   public width: number
-  // Other Attributes ============================================
-  // Block edition
+
+  // DEFAULT ATTRIBUTES =======================================================
+  // Edition
   public static: boolean = false
-  // Element that are contained in this area
+  mode: 'edition' | 'selection' = 'selection'
+
+  // Elements that are contained in this area
   sankey: Class_Sankey = new Class_Sankey()
   legend: Class_Element = new Class_Element('legend', this, 'g_legend')
   text_areas: {[id: string]: Class_Element} = {}
+
+  // Elements that are selected in this area
+  sankey_selection: Class_Sankey = new Class_Sankey()
+
   // Color
   color: string = default_background_color
-  public setColor(_: string) { this.color = _ } // TODO add regular expression check here
-  public getColor() { return this.color }
+
   // Grid
   grid_visible: boolean = true
   grid_square_size: number = 100
+
   // Scale
   scale: number = 20
-  public setScale(_: number) { if (_ > 0) this.scale = _ }
-  public getScale() { return this.scale }
+
   // Positionning
   public h_space: number = 200
   public v_space: number =  50
+
+  // GETTERS / SETTERS =========================================================
+  // Mode
+  public isInSelectionMode() { return this.mode === 'selection' }
+  public setSelectionMode() { this.mode = 'selection' }
+  public isInEditionMode() { return this.mode === 'edition' }
+  public setEditionMode() { this.mode = 'edition' }
+
+  // Color
+  public getColor() { return this.color }
+  public setColor(_: string) { this.color = _ } // TODO add regular expression check here
+
+  // Scale
+  public getScale() { return this.scale }
+  public setScale(_: number) { if (_ > 0) this.scale = _ }
+
+  // PUBLIC METHODS ===========================================================
+  // Selection
+  public purgeSelection() { this.sankey_selection = new Class_Sankey() }
+  public addNodeToSelection(node: Class_Node) { this.sankey_selection.addNode(node) }
+  public addLinkToSelection(link: Class_Link) { this.sankey_selection.addLink(link) }
 }
 
 
 class Class_Sankey {
-  // Default Attributes ==========================================
+  // DEFAULT ATTRIBUTES =======================================================
   // Nodes
   nodes: {[_:string]: Class_Node} = {}
   // Links
@@ -218,6 +284,11 @@ class Class_Sankey {
 
   // legend_width:number,
   // node_label_separator:string
+
+  // PUBLIC METHODS ===========================================================
+  // Update nodes list
+  public addNode(node: Class_Node) { this.nodes[node.id] = node }
+  public addLink(link: Class_Link) { this.links[link.id] = link }
 }
 
 /**
@@ -297,6 +368,8 @@ export class Class_Element {
   // GETTERS / SETTERS =========================================================
   // Name
   public getId() { return this.id }
+  // DrawingArea
+  public getDrawingArea() { return this.display.drawing_area }
   // Position
   public getPosX() { return this.display.position.x }
   public setPosX(_: number) { this.display.position.x = _; this.draw() }
@@ -407,6 +480,7 @@ export class Class_NodeElement extends Class_Element{
     // Draw label
     updateDrawNodeElementLabel(this)
   }
+
   // PRIVATE METHODS ==========================================================
   // Get display value
   getDisplayValue() {
@@ -429,7 +503,7 @@ export class Class_NodeElement extends Class_Element{
  * @extends {Class_NodeElement}
  */
 export class Class_Node extends Class_NodeElement{
-  // Optionnal Attributes =========================================
+  // DEFAULT ATTRIBUTES =======================================================
   // Level & Parent
   dimensions: {
     [_:string] :{
@@ -437,20 +511,40 @@ export class Class_Node extends Class_NodeElement{
       level?: number,
     }
   } = {}
+
   // Tags
   tags: {[_: string] : Class_Tag[]} = {}
   color_sustainable: boolean = false
+
   // Related links
   input_links: Class_Link[] = []
   output_links: Class_Link[] = []
+
+  // Tooltips
+  tooltip?: Class_Element
+  tooltip_text?: string
+
+  // PUBLIC METHODS ===========================================================
+  // draw() override
+  public draw() {
+    super.draw()
+    // Apply position
+    applyPositionToNodeElement(this)
+  }
+
+  // Check links
+  public hasInputLinks() { return (this.input_links.length > 0) }
+  public hasOutputLinks() { return (this.output_links.length > 0) }
+
+  // Add links
   public addInputLink(link: Class_Link) {
     if (!this.input_links.includes(link)) this.input_links.push(link)
   }
   public addOutputLink(link: Class_Link) {
     if (!this.output_links.includes(link)) this.output_links.push(link)
   }
-  public hasInputLinks() { return (this.input_links.length > 0) }
-  public hasOutputLinks() { return (this.output_links.length > 0) }
+
+  // Get links
   public getFirstInputLink() {
     if (this.hasInputLinks()) return this.input_links[0]
     else return undefined
@@ -459,15 +553,9 @@ export class Class_Node extends Class_NodeElement{
     if (this.hasOutputLinks()) return this.output_links[0]
     else return undefined
   }
-  // Tooltips
-  tooltip_text?: string
-  // Public Methods ======================================================
-  // draw() override
-  public draw() {
-    super.draw()
-    // Apply position
-    applyPositionToNodeElement(this)
-  }
+
+  // Display tooltip
+  public showTooltip() { /* TODO */ }
 }
 
 /**
