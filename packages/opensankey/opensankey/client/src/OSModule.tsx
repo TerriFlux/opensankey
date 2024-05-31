@@ -77,6 +77,21 @@ import { Form, Popover } from 'react-bootstrap'
 import { windowSankey } from './configmenus/SankeyUtils'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
 
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+    sankey: {
+      filiere?: string,
+      header?: string,
+      has_header?: boolean,
+      footer?: boolean,
+      logo_width?: number,
+      excel?: string,
+      publish?: boolean
+      logo?: string
+    }
+  }
+
 let logo = ''
 try {
   /* eslint-disable */
@@ -524,12 +539,14 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   applicationDraw,
   ComponentUpdater
 ) => {
-  additional_menus.additional_nav_item.push(
-    <OpenSankeySaveButton
-      ComponentUpdater={ComponentUpdater}
-      applicationContext={applicationContext}
-    />
-  )
+  if (!window.SankeyToolsStatic) {
+    additional_menus.additional_nav_item.push(
+      <OpenSankeySaveButton
+        ComponentUpdater={ComponentUpdater}
+        applicationContext={applicationContext}
+      />
+    )
+  }
 }
 
 // Modal Dialogs
