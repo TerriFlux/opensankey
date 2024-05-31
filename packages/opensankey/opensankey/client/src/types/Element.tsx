@@ -15,6 +15,7 @@ import {
   unDrawElement
 } from '../functions/draw/Elements'
 import {
+  applyPositionToNodeElement,
   updateDrawNodeElementLabel,
   updateDrawNodeElementShape
 } from '../functions/draw/Nodes'
@@ -164,7 +165,7 @@ export class Class_DrawingArea {
   public static: boolean = false
   // Element that are contained in this area
   sankey: Class_Sankey = new Class_Sankey()
-  legend: Class_Element = new Class_Element('legend', this)
+  legend: Class_Element = new Class_Element('legend', this, 'g_legend')
   text_areas: {[id: string]: Class_Element} = {}
   // Color
   color: string = default_background_color
@@ -224,8 +225,9 @@ class Class_Sankey {
  *
  * @type Type_ElementPosition
  */
+type Type_Position = 'absolute' | 'relative'
 type Type_ElementPosition = {
-  type: 'absolute' | 'relative',
+  type: Type_Position,
   x: number,
   y: number
 }
@@ -240,8 +242,9 @@ const default_element_position: Type_ElementPosition = {
  *
  * @type Type_ElementShape
  */
+type Type_Shape =  'ellipse' | 'rect' | 'arrow'
 type Type_ElementShape = {
-  type: 'ellipse' | 'rect' | 'arrow',
+  type: Type_Shape,
   visible: boolean,
   width: number,
   height: number,
@@ -261,28 +264,58 @@ const default_element_shape: Type_ElementShape = {
  * @class Class_Element
  */
 export class Class_Element {
-  // Constructor =================================================
-  constructor(id: string, drawing_area: Class_DrawingArea) {
+
+  // CONSTRUCTOR ==============================================================
+  constructor(id: string, drawing_area: Class_DrawingArea, svg_group: string) {
     this.id = id
     this.display = {
       drawing_area: drawing_area,
-      position: default_element_position,
-      shape: default_element_shape,
+      position: structuredClone(default_element_position),
+      shape: structuredClone(default_element_shape),
     }
+    this.svg_group = svg_group
   }
-  // Mandatory Attributes ========================================
+
+  // CONSTRUCTED ATTRIBUTES ====================================================
   // Name
-  public id: string
-  public display: {
+  id: string
+  // Display
+  display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
     shape: Type_ElementShape,
   }
-  // Other Atrributes =============================================
+  svg_group: string
+
+  // DEFAULT ATTRIBUTES ========================================================
   public d3_selection: d3.Selection<SVGGElement, Class_Element, HTMLElement, unknown> | null = null
-  // Methods ======================================================
-  public draw(svg_class_name: string) { drawElement(this, svg_class_name) }
+
+  // PUBLIC METHODS ============================================================
+  public draw() { drawElement(this) }
   public unDraw() { unDrawElement(this) }
+
+  // GETTERS / SETTERS =========================================================
+  // Name
+  public getId() { return this.id }
+  // Position
+  public getPosX() { return this.display.position.x }
+  public setPosX(_: number) { this.display.position.x = _; this.draw() }
+  public getPosY() { return this.display.position.y }
+  public setPosY(_: number) { this.display.position.y = _; this.draw() }
+  public setPosXY(x: number, y: number) { this.display.position.x = x; this.display.position.y = y; this.draw() }
+  public getPosType() { return this.display.position.type }
+  public setPosType(_: Type_Position) { this.display.position.type = _; this.draw()  }
+  // Shape
+  public getShapeType() { return this.display.shape.type }
+  public setShapeType(_: Type_Shape) { this.display.shape.type = _; this.draw() }
+  public getShapeVisible() { return this.display.shape.visible }
+  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.draw() }
+  public getShapeWidth() { return this.display.shape.width }
+  public setShapeWidth(_: number) { this.display.shape.width = _; this.draw() }
+  public getShapeHeight() { return this.display.shape.height }
+  public setShapeHeight(_: number) { this.display.shape.height = _; this.draw() }
+  public getShapeColor() { return this.display.shape.color }
+  public setShapeColor(_: string) { this.display.shape.color = _; this.draw() }
 }
 
 /**
@@ -306,7 +339,7 @@ type Type_Label = {
 }
 const default_label: Type_Label = {
   visible: true,
-  position: default_element_position,
+  position: structuredClone(default_element_position),
   box_width: 100,
   font_family: default_font,
   font_size: 14,
@@ -326,17 +359,20 @@ const default_label: Type_Label = {
  * @extends {Class_Element}
  */
 export class Class_NodeElement extends Class_Element{
-  // Constructor =================================================
+
+  // CONSTRUCTOR ==============================================================
   constructor(id: string, name: string, drawing_area: Class_DrawingArea) {
-    super(id, drawing_area)
+    super(id, drawing_area, 'g_nodes')
     this.name = name
   }
-  // Mandatory Attributes ========================================
+
+  // CONSTRUCTED ATTRIBUTES ===================================================
   // Name
   public name: string
-  // Optionnal Attributes =========================================
+
+  // DEFAULT ATTRIBUTES =======================================================
   // Labels
-  public name_label: Type_Label = default_label
+  public name_label: Type_Label = structuredClone(default_label)
   public name_label_separator: string = ''
   public getNameLabelText() {
     if (this.name_label_separator !== '') {
@@ -344,20 +380,23 @@ export class Class_NodeElement extends Class_Element{
     }
     return this.name
   }
-  public value_label: Type_Label = default_label
+  public value_label: Type_Label = structuredClone(default_label)
+
   // Arrows
   public arrow_angle_factor: number = 10
   public arrow_angle_direction: string = 'hh'
+
   // TODO
   //   local?: SankeyNodeAttrLocal
   //   colorParameter: string = ""
   //   colorTag: string = ""
   //   tooltip_text?: string
   //   style: string
-  // Public Methods ======================================================
+
+  // PUBLIC METHODS ==========================================================
   // draw() override
   public draw() {
-    super.draw('g_nodes')
+    super.draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
@@ -368,7 +407,7 @@ export class Class_NodeElement extends Class_Element{
     // Draw label
     updateDrawNodeElementLabel(this)
   }
-  // Private Methods ======================================================
+  // PRIVATE METHODS ==========================================================
   // Get display value
   getDisplayValue() {
     // On gere la visibilité directement sur gg_nodes avec un display <inline />
@@ -422,6 +461,13 @@ export class Class_Node extends Class_NodeElement{
   }
   // Tooltips
   tooltip_text?: string
+  // Public Methods ======================================================
+  // draw() override
+  public draw() {
+    super.draw()
+    // Apply position
+    applyPositionToNodeElement(this)
+  }
 }
 
 /**
@@ -458,17 +504,33 @@ export class Class_LinkElement {
   // Optionnal Attributes =========================================
   // Display
   public display: {
-      drawing_area?: Class_DrawingArea,
-      shape: Type_LinkShape
+    drawing_area?: Class_DrawingArea,
+    shape: Type_LinkShape
   } = {
-      shape: default_link_shape
-    }
+    shape: default_link_shape
+  }
   // Labels
   public value_label?: Type_Label
   // Methods =====================================================
   public draw() {
     // TODO
   }
+  // GETTER / SETTER =====================================================
+  // Shape
+  public getShapeVisible() { return this.display.shape.visible }
+  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.draw() }
+  public getShapeOpacity() { return this.display.shape.opacity }
+  public setShapeOpacity(_: number) {
+    if (_ > 1)
+      this.display.shape.opacity = 1.0
+    else if (_ < 0)
+      this.display.shape.opacity = 0.0
+    else
+      this.display.shape.opacity = _
+    this.draw()
+  }
+  public getShapeColor() { return this.display.shape.color }
+  public setShapeColor(_: string) { this.display.shape.color = _; this.draw() }
 }
 
 /**
@@ -519,7 +581,7 @@ class Class_Tag {
   group: Class_Tagg
   // Others Attributes ============================================
   // Display attributes
-  shape: Type_ElementShape = default_element_shape
+  shape: Type_ElementShape = structuredClone(default_element_shape)
 }
 
 class Class_Tagg {
