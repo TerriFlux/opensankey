@@ -18,16 +18,14 @@ import {
  * Create and draw shape for element in svg container
 *
 * @param {Class_Element} element
-* @param {string} svg_class_name
 */
 export const drawElement : FType_DrawElement = (
-  element,
-  svg_class_name
+  element
 ) => {
   // Undraw
   element.unDraw()
   // Create d3 selection
-  element.d3_selection = d3.select(' .opensankey #'+svg_class_name)
+  element.d3_selection = d3.select(' .opensankey #' + element.svg_group)
     .datum(element)
     .append('g')
     .attr('id', 'gg_' + element.id)

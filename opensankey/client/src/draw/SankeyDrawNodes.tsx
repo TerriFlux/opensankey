@@ -379,10 +379,8 @@ export const drawAddNodes : drawNodeShapeFType = (
   const tmp_draw = new Class_DrawingArea(1000, 1000)
   filtered_data.forEach(n=>{
     // Test
-    const tmp_node = new Class_Node(n.idNode, n.name, tmp_draw)
-    tmp_node.display.position.x = n.x + 100
-    tmp_node.display.position.y = n.y + 100
-    tmp_node.draw()
+    const tmp_node = new Class_Node(n.idNode+'tmp', n.name, tmp_draw)
+    tmp_node.setPosXY(n.x + 100, n.y + 100)
     // fin test
     d3.select(' .opensankey #g_nodes').datum(n).append('g')
       .attr('id', d => {

@@ -9,7 +9,7 @@ import * as d3 from 'd3'
 
 // Local types
 import {
-  FType_ApplyNodePosition,
+  FType_ApplyPositionToNodeElement,
   FType_UpdateDrawNodeElementShape,
   FType_UpdateDrawNodeElementLabel
 } from './prototypes/Nodes'
@@ -21,40 +21,40 @@ import { PathNodeArrowShape } from '../../draw/SankeyDrawFunction'
  *
  * @param {Class_Node} node
  */
-export const applyNodePosition: FType_ApplyNodePosition = (
+export const applyPositionToNodeElement: FType_ApplyPositionToNodeElement = (
   node
 )=>{
   if (node.d3_selection !== null) {
     // Default positions
-    let x = node.display.position.x
-    let y = node.display.position.y
+    let x = node.getPosX()
+    let y = node.getPosY()
     // Deal with import / export nodes
-    if (node.display.position.type === 'relative') {
+    if (node.getPosType() === 'relative') {
       if (node.hasInputLinks()) {
         // Node is export
         const input_link = node.getFirstInputLink()
-        if (!input_link?.display.shape.visible) {
+        if (!input_link?.getShapeVisible()) {
           return 'translate(0, 0)'
         }
         const source_node = input_link.source
-        if ( !source_node.display.shape.visible) {
+        if ( !source_node.getShapeVisible()) {
           return 'translate(0, 0)'
         }
-        x = source_node.display.position.x + node.display.position.x
-        y = source_node.display.position.y + node.display.position.y
+        x = source_node.getPosX() + node.getPosX()
+        y = source_node.getPosY() + node.getPosY()
       }
       else if (node.hasOutputLinks()) {
         // Node is import
         const output_link = node.getFirstOutputLink()
-        if ( !output_link?.display.shape.visible) {
+        if ( !output_link?.getShapeVisible()) {
           return 'translate(0,0)'
         }
         const target_node = output_link.target
-        if ( !target_node.display.shape.visible) {
+        if ( !target_node.getShapeVisible()) {
           return 'translate(0,0)'
         }
-        x = target_node.display.position.x + node.display.position.x
-        y = target_node.display.position.y + node.display.position.y
+        x = target_node.getPosX() + node.getPosX()
+        y = target_node.getPosY() + node.getPosY()
       }
     }
     node.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
@@ -78,6 +78,8 @@ export const updateDrawNodeElementShape: FType_UpdateDrawNodeElementShape = (
     node.d3_selection?.append('rect')
       .classed('node', true)
       .classed('node_shape', true)
+      .attr('width', node.display.shape.width)
+      .attr('height', node.display.shape.height)
   }
   else if (node.display.shape.type === 'ellipse') {
     node.d3_selection?.append('ellipse')
@@ -105,7 +107,7 @@ export const updateDrawNodeElementShape: FType_UpdateDrawNodeElementShape = (
   // Apply common properties
   node.d3_selection?.selectAll(' .node_shape')
     .attr('id', node.id)
-    .attr('fill-opacity', node.display.shape.visible ? '1' : '0')
+    .attr('fill-opacity', node.getShapeVisible() ? '1' : '0')
     .attr('fill', node.display.shape.color)
     .style('stroke', 'black')
     // .style('stroke-width', d => {

@@ -28,6 +28,6 @@ export type FType_UpdateDrawNodeElementLabel = (
  *
  * @param {Class_Node} node
  */
-export type FType_ApplyNodePosition = (
+export type FType_ApplyPositionToNodeElement = (
   node: Class_Node
 ) => void
