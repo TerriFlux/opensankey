@@ -55,6 +55,7 @@ typeof globalThis & {
     filiere?:string
     footer?:boolean
     header?:string
+    logo?:string
   }
 }
 
@@ -123,6 +124,10 @@ root.render(
         const _ = initializeApplicationContext()
         Object.assign(_,OSPInitializeApplicationContext())
         _.has_free_account = true
+        if (window.sankey && window.sankey.logo) {
+          _.logo = window.sankey && window.sankey.logo?window.sankey.logo:''
+          _.logo_terriflux = 'logo_terriflux.png'
+        }
         return _
       }
     }
