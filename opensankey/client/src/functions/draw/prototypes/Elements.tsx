@@ -9,8 +9,7 @@ import {
  * @param {string} svg_class_name
  */
 export type FType_DrawElement = (
-    element: Class_Element,
-    svg_class_name: string
+    element: Class_Element
 ) => void
 
 /**
