@@ -1159,57 +1159,56 @@ export const DataTagSelector:FunctionComponent<DataTagSelectorType> = ({
         selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
       }
       return (
-        <>
-          <FormLabel>{tags_group.group_name}</FormLabel>
-          <FormGroup as={Row}>
-            <Col xs={10}>
-              {<Form.Select key={tags_group.group_name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                let had_suffix=false
-                const pl=Object.entries(data.links).map(l=>{
-                  const suffixeStart= l[0].indexOf('_')
-                  if(suffixeStart>=0){
-                    had_suffix=true
-                    l[0]=l[0].slice(0,suffixeStart)
-                    l[1].idLink=l[0]
-                    data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                    data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+        <FormGroup>
+          <Col><FormLabel style={{justifyContent: 'center'}}><b>{tags_group.group_name}</b></FormLabel></Col>
+          <Col>
+            {<Form.Select style={{ color:'black' }} key={tags_group.group_name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              let had_suffix=false
+              const pl=Object.entries(data.links).map(l=>{
+                const suffixeStart= l[0].indexOf('_')
+                if(suffixeStart>=0){
+                  had_suffix=true
+                  l[0]=l[0].slice(0,suffixeStart)
+                  l[1].idLink=l[0]
+                  data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                  data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
 
-                    //Ajoute dans les noeuds source/target les id de flux
-                    const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
-                    if(ind_in_src==-1){
-                      data.nodes[l[1].idSource].outputLinksId.push(l[0])
-                    }
-                    const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
-                    if(ind_in_trgt==-1){
-                      data.nodes[l[1].idTarget].inputLinksId.push(l[0])
-                    }
+                  //Ajoute dans les noeuds source/target les id de flux
+                  const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+                  if(ind_in_src==-1){
+                    data.nodes[l[1].idSource].outputLinksId.push(l[0])
                   }
-                  return l
-                })
-                // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                const pureLinks=Object.fromEntries(pl)
-                data.links=pureLinks
-                if(had_suffix){
-                  data.linkZIndex=Object.keys(pureLinks)
+                  const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+                  if(ind_in_trgt==-1){
+                    data.nodes[l[1].idTarget].inputLinksId.push(l[0])
+                  }
                 }
-                handleSimpleDropdown(evt, tags_group)
-                redrawSankeyWithSelectedTag(
-                  applicationData,
-                  GetSankeyMinWidthAndHeight,
-                  node_function,
-                  link_function
-                )
-                setForceUpdate(!forceUpdate)
-                updateComponentMenu.current()
-              }}>
-                {
-                  Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                    return (<option key={i} value={tag_key} >{tag.name}</option>)
-                  })}
-              </Form.Select>}
-            </Col>
-          </FormGroup>
-        </>)
+                return l
+              })
+              // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+              const pureLinks=Object.fromEntries(pl)
+              data.links=pureLinks
+              if(had_suffix){
+                data.linkZIndex=Object.keys(pureLinks)
+              }
+              handleSimpleDropdown(evt, tags_group)
+              redrawSankeyWithSelectedTag(
+                applicationData,
+                GetSankeyMinWidthAndHeight,
+                node_function,
+                link_function
+              )
+              setForceUpdate(!forceUpdate)
+              updateComponentMenu.current()
+            }}>
+              {
+                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key} >{tag.name}</option>)
+                })}
+            </Form.Select>}
+          </Col>
+        </FormGroup>
+      )
     }
     else if (tags_group.banner == 'multi') {
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
