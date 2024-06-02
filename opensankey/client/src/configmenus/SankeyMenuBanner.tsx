@@ -1266,7 +1266,7 @@ export const DataTagSelector:FunctionComponent<DataTagSelectorType> = ({
         </>)
     }
   })
-  return allDD
+  return <>{allDD}</>
 }
 
 export const redrawSankeyWithSelectedTag=(

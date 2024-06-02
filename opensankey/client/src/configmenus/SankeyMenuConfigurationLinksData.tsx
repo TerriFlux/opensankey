@@ -193,18 +193,17 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   const variantOfInput='menuconfigpanel_option_numberinput'
   const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
 
-  
   // Initialise hook with first link selected value
-  const [displayed_value,setDisplayedValue]=useState(()=>{
-    const val_of_key=ValueSelectedParameter(
-      applicationData,
-      multi_selected_links,
-      tags_selected
-    )
-    
-    return val_of_key.value as string
-  })
+  //const [displayed_value,setDisplayedValue]=useState(()=>{
+  const val_of_key=ValueSelectedParameter(
+    applicationData,
+    multi_selected_links,
+    tags_selected
+  ).value
 
+  // Initialise hook with first link selected value
+  const [displayed_value,setDisplayedValue]=useState(val_of_key)
+    
   // Add stepper addon if specified
   const stepperBtn=<NumberInputStepper>
     <NumberIncrementStepper/>
@@ -220,7 +219,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
     <NumberInput allowMouseWheel 
       variant={variantOfInput} 
       step={1} 
-      value={displayed_value}
+      value={isModifying.current ? displayed_value : val_of_key}
       onChange={(_)=>{
         // Launch/reset timeout before the input auto blur (and update the value in data)
         if(isModifying.current){
@@ -237,7 +236,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
 
       onBlur={()=>{
         clearTimeout(isModifying.current)
-
+        isModifying.current = undefined
         // const formatedValue=displayed_value.replace(',','.')
         if(displayed_value!=='' && !isNaN(+displayed_value )){
           let val = Object(multi_selected_links.current[0].value)

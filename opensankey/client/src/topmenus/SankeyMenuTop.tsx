@@ -787,11 +787,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   const data_tags = Object.assign({},applicationData.data.dataTags)
   const show_data=Object.values(data_tags).length>0
-  let DDDT=[] as (JSX.Element|undefined)[]
+  let DDDT=<></>
   if(show_data){
-    DDDT=DataTagsDDNavBar(
-      applicationData,node_function,link_function,ComponentUpdater,applicationDraw
-    )
+    DDDT=<DataTagSelector
+      applicationData={applicationData}
+      GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
+      node_function={node_function}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+    />
   }
   const modal_resolution_png=Modale_resolution_png(applicationContext.t,
     dict_hook_ref_setter_show_dialog_components,applicationData,contextMenu.pointer_pos
@@ -1016,34 +1020,6 @@ export const MenuDraggable : MenuDraggableFType=(
       </div>
     </div>
   </Draggable>
-}
-
-const  DataTagsDDNavBar = (
-  applicationData:applicationDataType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
-  applicationDraw:applicationDrawType
-) => {
-  const {data}=applicationData
-  const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
-  const allDD = banner_grouptag.map(() => {
-    return (
-      <><Form.Group>
-        <Col>
-          <DataTagSelector
-            applicationData={applicationData}
-            GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
-            node_function={node_function}
-            link_function={link_function}
-            ComponentUpdater={ComponentUpdater}
-          />
-        </Col>
-      </Form.Group>
-      </>)
-    
-  })
-  return allDD
 }
 export const OpenSankeySaveButton : FunctionComponent<OpenSankeySaveButtonFType> = ({
   ComponentUpdater,
