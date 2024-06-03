@@ -18,8 +18,10 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
 import {
   Class_ApplicationData,
   Class_DrawingArea,
-  Class_Node
 } from '../types/Element'
+import {
+  Class_Node
+} from '../types/Node'
 
 declare const window: Window &
 typeof globalThis & {
