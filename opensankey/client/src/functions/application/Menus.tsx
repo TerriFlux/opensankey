@@ -8,7 +8,7 @@
 import * as d3 from 'd3'
 
 // Local types
-import { FType_OpenRemoteUIElement } from "./prototypes/Menus"
+import { FType_OpenRemoteUIElement } from './prototypes/Menus'
 
 /**
  * Open a given element
@@ -20,6 +20,6 @@ export const openRemoteUIElement: FType_OpenRemoteUIElement = (
 ) => {
   if ( d3.select(element.current).attr('aria-expanded') === 'false' )
   {
-      element?.current?.click()
+    element?.current?.click()
   }
 }

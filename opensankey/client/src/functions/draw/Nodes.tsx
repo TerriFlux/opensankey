@@ -17,6 +17,7 @@ import {
 } from './prototypes/Nodes'
 
 import { PathNodeArrowShape } from '../../draw/SankeyDrawFunction'
+import { MouseEvent } from 'react'
 
 // ==================================================================================================
 /**
@@ -217,18 +218,18 @@ export const setNodeElementEventsListeners : FType_SetNodeElementEventsListeners
 
   if (!node.display.drawing_area.static) {
     // Right mouse button clicks
-    node.d3_selection?.on('click', (event, d) => eventNodeSimpleLMBCLick(node, event))
-    node.d3_selection?.on('dblclick', (event, d) => eventNodeDoubleLMBCLick(node, event))
+    node.d3_selection?.on('click', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => eventNodeSimpleLMBCLick(node, event))
+    node.d3_selection?.on('dblclick', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => eventNodeDoubleLMBCLick(node, event))
     // Right mouse button maintained
-    node.d3_selection?.on('mousedown', (event, d) => {/* TODO */})
-    node.d3_selection?.on('mouseup', (event, d) => {/* TODO */})
+    node.d3_selection?.on('mousedown', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
+    node.d3_selection?.on('mouseup', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
     // Mouse cursor goes over element
-    node.d3_selection?.on('mouseover', (event, d) => {/* TODO */})
-    node.d3_selection?.on('mouseout', (event, d) => {/* TODO */})
+    node.d3_selection?.on('mouseover', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
+    node.d3_selection?.on('mouseout', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
     // Mouse cursor move
-    node.d3_selection?.on('mousemove', (event, d) => {/* TODO */})
+    node.d3_selection?.on('mousemove', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
     // Left mouse button click
-    node.d3_selection?.on('contextmenu', (event, d) => eventNodeSimpleRMBCLick(node, event))
+    node.d3_selection?.on('contextmenu', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => eventNodeSimpleRMBCLick(node, event))
   }
 
   //   // Add event listener to click
