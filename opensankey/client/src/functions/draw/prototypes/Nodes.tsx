@@ -8,7 +8,7 @@
 import {
   Class_Node,
   Class_NodeElement
-} from '../../../types/Element'
+} from '../../../types/Node'
 
 
 /**
@@ -55,5 +55,5 @@ export type FType_SetNodeElementEventsListeners = (
  */
 export type FType_MouseEventNode = (
   node: Class_Node,
-  event: React.MouseEvent<HTMLButtonElement>
+  event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
 ) => void

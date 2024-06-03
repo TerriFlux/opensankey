@@ -8,7 +8,20 @@
 import * as d3 from 'd3'
 
 // Local types
-import { uiElementsRefType } from './Types'
+import {
+  uiElementsRefType
+} from './Types'
+import {
+  Class_Link,
+  Class_LinkElement
+} from './Link'
+import {
+  Class_Node,
+  Class_NodeElement
+} from './Node'
+import {
+  Class_Tagg
+} from './Tag'
 
 // Local functions
 import {
@@ -18,16 +31,11 @@ import {
   drawElement,
   unDrawElement
 } from '../functions/draw/Elements'
-import {
-  applyPositionToNodeElement,
-  updateDrawNodeElementLabel,
-  updateDrawNodeElementShape
-} from '../functions/draw/Nodes'
 
 // Constants
-const default_grey_color = '#000000'
-const default_background_color = '#f2f2f2'
-const default_font = 'Arial,sans-serif'
+export const default_grey_color = '#000000'
+export const default_background_color = '#f2f2f2'
+export const default_font = 'Arial,sans-serif'
 // TODO a utiliser plus tard, linter passe pas
 // const font_families = [
 //   'Andale Mono,monospace',
@@ -87,7 +95,7 @@ const default_font = 'Arial,sans-serif'
 //   'Zapf Chancery,cursive',
 // ]
 
-type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
+export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
 
 /**
  * Class that contains all elements to make the application work
@@ -250,7 +258,7 @@ export class Class_DrawingArea {
 }
 
 
-class Class_Sankey {
+export class Class_Sankey {
   // DEFAULT ATTRIBUTES =======================================================
   // Nodes
   nodes: {[_:string]: Class_Node} = {}
@@ -296,13 +304,13 @@ class Class_Sankey {
  *
  * @type Type_ElementPosition
  */
-type Type_Position = 'absolute' | 'relative'
-type Type_ElementPosition = {
+export type Type_ElementPosition = {
   type: Type_Position,
   x: number,
   y: number
 }
-const default_element_position: Type_ElementPosition = {
+export type Type_Position = 'absolute' | 'relative'
+export const default_element_position: Type_ElementPosition = {
   type: 'absolute',
   x: 10,
   y: 10,
@@ -313,15 +321,15 @@ const default_element_position: Type_ElementPosition = {
  *
  * @type Type_ElementShape
  */
-type Type_Shape =  'ellipse' | 'rect' | 'arrow'
-type Type_ElementShape = {
+export type Type_ElementShape = {
   type: Type_Shape,
   visible: boolean,
   width: number,
   height: number,
   color: string
 }
-const default_element_shape: Type_ElementShape = {
+export type Type_Shape =  'ellipse' | 'rect' | 'arrow'
+export const default_element_shape: Type_ElementShape = {
   type: 'rect',
   visible: true,
   width: 40,
@@ -396,7 +404,7 @@ export class Class_Element {
  *
  * @type Type_Label
  */
-type Type_Label = {
+export type Type_Label = {
   visible: boolean,
   position: Type_ElementPosition,
   box_width: number,
@@ -410,7 +418,7 @@ type Type_Label = {
   horiz: 'start' | 'middle' | 'end',
   background: boolean,
 }
-const default_label: Type_Label = {
+export const default_label: Type_Label = {
   visible: true,
   position: structuredClone(default_element_position),
   box_width: 100,
@@ -423,271 +431,4 @@ const default_label: Type_Label = {
   vert: 'center',
   horiz: 'middle',
   background: false
-}
-
-/**
- * Class that define a node element and how to interact with it
- *
- * @class Class_NodeElement
- * @extends {Class_Element}
- */
-export class Class_NodeElement extends Class_Element{
-
-  // CONSTRUCTOR ==============================================================
-  constructor(id: string, name: string, drawing_area: Class_DrawingArea) {
-    super(id, drawing_area, 'g_nodes')
-    this.name = name
-  }
-
-  // CONSTRUCTED ATTRIBUTES ===================================================
-  // Name
-  public name: string
-
-  // DEFAULT ATTRIBUTES =======================================================
-  // Labels
-  public name_label: Type_Label = structuredClone(default_label)
-  public name_label_separator: string = ''
-  public getNameLabelText() {
-    if (this.name_label_separator !== '') {
-      return this.name.split(this.name_label_separator)[0]
-    }
-    return this.name
-  }
-  public value_label: Type_Label = structuredClone(default_label)
-
-  // Arrows
-  public arrow_angle_factor: number = 10
-  public arrow_angle_direction: string = 'hh'
-
-  // TODO
-  //   local?: SankeyNodeAttrLocal
-  //   colorParameter: string = ""
-  //   colorTag: string = ""
-  //   tooltip_text?: string
-  //   style: string
-
-  // PUBLIC METHODS ==========================================================
-  // draw() override
-  public draw() {
-    super.draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_nodes')
-    // Apply styles
-    this.d3_selection?.style('display', this.getDisplayValue())
-    this.d3_selection?.style('font-family', this.name_label.font_family)
-    // Draw shape
-    updateDrawNodeElementShape(this)
-    // Draw label
-    updateDrawNodeElementLabel(this)
-  }
-
-  // PRIVATE METHODS ==========================================================
-  // Get display value
-  getDisplayValue() {
-    // On gere la visibilité directement sur gg_nodes avec un display <inline />
-    // Cela permettra de mieux gérer des zooms sur les éléments visibles
-    // if (HasLinksZero(data,node_element_d3)) {
-    //   return 'none'
-    // }
-    if (this.display.position.type === 'relative') {
-      return 'none'
-    }
-    return 'inline'
-  }
-}
-
-/**
- * Class that define a node object and how to interact with it
- *
- * @class Class_Node
- * @extends {Class_NodeElement}
- */
-export class Class_Node extends Class_NodeElement{
-  // DEFAULT ATTRIBUTES =======================================================
-  // Level & Parent
-  dimensions: {
-    [_:string] :{
-      parent_name?: string,
-      level?: number,
-    }
-  } = {}
-
-  // Tags
-  tags: {[_: string] : Class_Tag[]} = {}
-  color_sustainable: boolean = false
-
-  // Related links
-  input_links: Class_Link[] = []
-  output_links: Class_Link[] = []
-
-  // Tooltips
-  tooltip?: Class_Element
-  tooltip_text?: string
-
-  // PUBLIC METHODS ===========================================================
-  // draw() override
-  public draw() {
-    super.draw()
-    // Apply position
-    applyPositionToNodeElement(this)
-  }
-
-  // Check links
-  public hasInputLinks() { return (this.input_links.length > 0) }
-  public hasOutputLinks() { return (this.output_links.length > 0) }
-
-  // Add links
-  public addInputLink(link: Class_Link) {
-    if (!this.input_links.includes(link)) this.input_links.push(link)
-  }
-  public addOutputLink(link: Class_Link) {
-    if (!this.output_links.includes(link)) this.output_links.push(link)
-  }
-
-  // Get links
-  public getFirstInputLink() {
-    if (this.hasInputLinks()) return this.input_links[0]
-    else return undefined
-  }
-  public getFirstOutputLink() {
-    if (this.hasOutputLinks()) return this.output_links[0]
-    else return undefined
-  }
-
-  // Display tooltip
-  public showTooltip() { /* TODO */ }
-}
-
-/**
- * Define necessary properties for a link shape
- *
- * @type Type_ElementShape
- */
-type Type_LinkShape = {
-  visible: boolean,
-  color: string,
-  opacity: number
-  // TODO
-  // handlers
-}
-const default_link_shape: Type_LinkShape = {
-  visible: true,
-  color: default_grey_color,
-  opacity: 0.8
-}
-
-/**
- * Class that define a link element and how to interact with it
- *
- * @class Class_LinkElement
- */
-export class Class_LinkElement {
-  // Constructor =================================================
-  constructor(id: string) {
-    this.id = id
-  }
-  // Mandatory Attributes ========================================
-  // Name
-  public id: string
-  // Optionnal Attributes =========================================
-  // Display
-  public display: {
-    drawing_area?: Class_DrawingArea,
-    shape: Type_LinkShape
-  } = {
-    shape: default_link_shape
-  }
-  // Labels
-  public value_label?: Type_Label
-  // Methods =====================================================
-  public draw() {
-    // TODO
-  }
-  // GETTER / SETTER =====================================================
-  // Shape
-  public getShapeVisible() { return this.display.shape.visible }
-  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.draw() }
-  public getShapeOpacity() { return this.display.shape.opacity }
-  public setShapeOpacity(_: number) {
-    if (_ > 1)
-      this.display.shape.opacity = 1.0
-    else if (_ < 0)
-      this.display.shape.opacity = 0.0
-    else
-      this.display.shape.opacity = _
-    this.draw()
-  }
-  public getShapeColor() { return this.display.shape.color }
-  public setShapeColor(_: string) { this.display.shape.color = _; this.draw() }
-}
-
-/**
- * Class that define a link object and how to interact with it
- *
- * @class Class_Node
- * @extends {Class_LinkElement}
- */
-export class Class_Link extends Class_LinkElement{
-  // Constructor =================================================
-  constructor(source: Class_Node, target: Class_Node) {
-    super(source.id + '--->' + target.id)
-    this.source = source
-    this.source.addOutputLink(this)
-    this.target = target
-    this.target.addInputLink(this)
-  }
-  // Mandatory Attributes ========================================
-  // Related nodes
-  public source: Class_Node
-  public target: Class_Node
-  // Optionnal Attributes =========================================
-  // Tags
-  tags: {[_:string] : Class_Tag} = {}
-  public addTag(tag: Class_Tag) {this.tags[tag.id] = tag}
-  color_sustainable: boolean = false
-  // Tooltips
-  tooltip_text?: string
-}
-
-/**
- * Class that define a Tag object
- *
- * @class Class_Tag
- */
-class Class_Tag {
-  // Constructor =================================================
-  constructor(id: string, name: string, group: Class_Tagg) {
-    this.id = id
-    this.name = name
-    this.group = group
-  }
-  // Mandatory Attributes ========================================
-  // Name
-  id: string
-  name: string
-  // Group where it belong
-  group: Class_Tagg
-  // Others Attributes ============================================
-  // Display attributes
-  shape: Type_ElementShape = structuredClone(default_element_shape)
-}
-
-class Class_Tagg {
-  // Constructor =================================================
-  constructor(id: string, name: string) {
-    this.id = id
-    this.name = name
-    this.tags = {}
-    this.addTag('etiquette0', 'Etiquette 0')
-  }
-  // Mandatory Attributes ========================================
-  // Name
-  id: string
-  name: string
-  // List of tags
-  tags: {[_: string] : Class_Tag}
-  public addTag(id: string, name: string) {
-    const tag = new Class_Tag(id, name, this)
-    this.tags[id] = tag
-  }
 }

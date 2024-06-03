@@ -774,10 +774,10 @@ export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
       }
     }, 200)
   } else {
-
     EventNodeClick(uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
   }
 }
+
 export const SvgDragMiddleMouseStart: SvgDragMiddleMouseStartFuncType = () => {
   d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('display', 'none')
   d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('display', 'none')
