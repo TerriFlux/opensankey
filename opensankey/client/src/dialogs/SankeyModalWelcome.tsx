@@ -109,7 +109,7 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
 
 
 
-  const content=<div style={  {overflowY:'auto'}}>
+  const content=<div style={  {maxHeight:window.innerHeight*0.65,overflowY:'auto'}}>
     {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
   </div>
 
@@ -127,6 +127,7 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
   if (windowSankey.SankeyToolsStatic) {
     style_menu_draggable.width=undefined
+    style_menu_draggable.maxWidth='75%'
   } else {
     style_menu_draggable.width='75%'
   }
