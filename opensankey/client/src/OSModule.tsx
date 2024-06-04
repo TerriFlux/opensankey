@@ -31,7 +31,8 @@ import {
   processFunctionsType,
   SankeyData,
   SankeyLink,
-  SankeyNode
+  SankeyNode,
+  NodeFunctionTypes
 } from './types/Types'
 /*************************************************************************************************/
 import {
@@ -360,14 +361,18 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
     DrawAllNodes,
     drawAddNodes,
     RedrawNodes: (()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
+    RedrawNodesLabels: (()=>null),
     recomputeDisplayedElement,
     CreateNodesOnSVG:(()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
     OpposingDragElements:OpposingDragElements
-  }
+  } as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)
     RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
     return null
+  }
+  _.RedrawNodesLabels=(nodes_to_update:SankeyNode[])=>{
+    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
   }
   _.CreateNodesOnSVG=(nodes_to_update:SankeyNode[])=>{
     drawAddNodes(
