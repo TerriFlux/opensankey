@@ -8,20 +8,27 @@
 
 // Local types
 import {
-  Class_DrawingArea,
   Class_Element,
   Type_Label,
   default_label
 } from './Element'
+import {
+  Class_DrawingArea
+} from './DrawingArea'
+import {
+  Class_Tag
+} from './Tag'
+import {
+  Class_Link
+} from './Link'
 
 // Local functions
 import {
   applyPositionToNodeElement,
+  setNodeEventsListeners,
   updateDrawNodeElementLabel,
   updateDrawNodeElementShape
 } from '../functions/draw/Nodes'
-import { Class_Tag } from './Tag'
-import { Class_Link } from './Link'
 
 
 
@@ -31,7 +38,7 @@ import { Class_Link } from './Link'
  * @class Class_NodeElement
  * @extends {Class_Element}
  */
-export class Class_NodeElement extends Class_Element{
+export class Class_NodeElement extends Class_Element {
 
   // CONSTRUCTOR ==============================================================
   constructor(id: string, name: string, drawing_area: Class_DrawingArea) {
@@ -102,7 +109,7 @@ export class Class_NodeElement extends Class_Element{
  * @class Class_Node
  * @extends {Class_NodeElement}
  */
-export class Class_Node extends Class_NodeElement{
+export class Class_Node extends Class_NodeElement {
   // DEFAULT ATTRIBUTES =======================================================
   // Level & Parent
   dimensions: {
@@ -130,6 +137,8 @@ export class Class_Node extends Class_NodeElement{
     super.draw()
     // Apply position
     applyPositionToNodeElement(this)
+    // Set event handlers
+    setNodeEventsListeners(this)
   }
 
   // Check links

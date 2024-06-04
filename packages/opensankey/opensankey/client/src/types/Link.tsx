@@ -8,12 +8,18 @@
 
 // Local types
 import {
-  Class_DrawingArea,
   Type_Label,
   default_grey_color
 } from './Element'
-import { Class_Node } from './Node'
-import { Class_Tag } from './Tag'
+import {
+  Class_DrawingArea
+} from './DrawingArea'
+import {
+  Class_Node
+} from './Node'
+import {
+  Class_Tag
+  } from './Tag'
 
 // Local functions
 
