@@ -109,7 +109,7 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
 
 
 
-  const content=<div style={  {height:window.innerHeight*0.65,overflowY:'auto'}}>
+  const content=<div style={  {overflowY:'auto'}}>
     {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
   </div>
 
@@ -125,10 +125,14 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
   </Modal.Footer>
   const class_name=t('welcome.'+active_page).replaceAll('/','').replaceAll('.','').replaceAll('\'','').split(' ').join('_')
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
-  n_style_menu_draggable.width='75%'
+  if (windowSankey.SankeyToolsStatic) {
+    style_menu_draggable.width=undefined
+  } else {
+    style_menu_draggable.width='75%'
+  }
 
   return <Draggable  handle='.title_menu'
-    defaultPosition={{x:window.innerWidth/8,y:window.innerHeight*0.12}}
+    defaultPosition={{x:window.innerWidth/4,y:window.innerHeight*0.12}}
     bounds={{left:0,top:0}}
   >
     <div hidden={!show_wecome || never_see_again.current} className={'menu_conf '+class_name}
