@@ -576,6 +576,7 @@ export type NodeFunctionTypes = {
   drawAddNodes : drawNodeShapeFType,
   CreateNodesOnSVG:drawNodesFType,
   RedrawNodes:RedrawNodesFType,
+  RedrawNodesLabels:RedrawNodesFType,
   recomputeDisplayedElement:()=>void,
   OpposingDragElements:opposing_DragElementsFuncType
 }
