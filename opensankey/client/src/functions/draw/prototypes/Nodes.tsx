@@ -34,16 +34,16 @@ export type FType_UpdateDrawNodeElementLabel = (
  *
  * @param {Class_Node} node
  */
-export type FType_ApplyPositionToNodeElement = (
+export type FType_ApplyPositionToNode = (
   node: Class_Node
 ) => void
 
 /**
- * Set up node events on drawing area
+ * Set up mouse events listeners for given node
  *
  * @param {Class_Node} node
  */
-export type FType_SetNodeElementEventsListeners = (
+export type FType_SetNodeEventsListeners = (
   node: Class_Node
 ) => void
 
@@ -53,7 +53,7 @@ export type FType_SetNodeElementEventsListeners = (
  * @param {Class_Node} node
  * @param {React.MouseEvent<HTMLButtonElement>} event
  */
-export type FType_MouseEventNode = (
+export type FType_SetNodeMouseEvent = (
   node: Class_Node,
   event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
 ) => void
