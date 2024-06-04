@@ -76,6 +76,7 @@ import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBann
 import { Form, Popover } from 'react-bootstrap'
 import { windowSankey } from './configmenus/SankeyUtils'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
+import { Class_ApplicationData } from './types/Element'
 
 let logo = ''
 try {
@@ -190,11 +191,10 @@ export const initializeApplicationData : initializeApplicationDataType = (
   min_link_thickness:2,
   dataVarToUpdate:useRef(['']),
   setDiagram:setDiagram
-
 }
 }
 // General functions necessay to draw the diagram
-export const initializeApplicationDraw : initializeApplicationDrawType = ( 
+export const initializeApplicationDraw : initializeApplicationDrawType = (
   applicationData,
   applicationState,
   contextMenu:contextMenuType,
@@ -304,7 +304,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
     )
     ComponentUpdater.updateComponenSaveInCache.current(false)
     return null
-  } 
+  }
 
   _.CreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
     drawAddLinks(
@@ -318,9 +318,9 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
       links_to_update
-    ) 
+    )
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    return null 
+    return null
   }
 
   return _
@@ -425,7 +425,7 @@ export const DrawAll : DrawAllType = (
   )
 
 
-  
+
   // Legend
   applicationDraw.reDrawLegend()
 }
@@ -442,19 +442,19 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   applicationDraw
 ) => {
   const svgSankey=d3.select('.opensankey #svg')
-  
-  svgSankey.on('mousedown',evt=>{
-    EventOnZoneMouseDown(
-      applicationData,
-      applicationState,
-      dict_hook_ref_setter_show_dialog_components,
-      false,
-      evt,
-      applicationDraw.start_point,
-      contextMenu.closeAllMenuContext,
-      node_function
-    )
-  })
+
+  // svgSankey.on('mousedown',evt=>{
+  //   EventOnZoneMouseDown(
+  //     applicationData,
+  //     applicationState,
+  //     dict_hook_ref_setter_show_dialog_components,
+  //     false,
+  //     evt,
+  //     applicationDraw.start_point,
+  //     contextMenu.closeAllMenuContext,
+  //     node_function
+  //   )
+  // })
   svgSankey.on('mousemove',evt=>{
     EventOnZoneMouseMove(
       applicationData,
@@ -715,7 +715,7 @@ export const initializeContextMenu : ()=> contextMenuType = ()=> {
     showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>]>(),
     closeAllMenuContext:()=>null
   }  as contextMenuType
-  
+
   // Then add the function closeAllMenuContext
   _.closeAllMenuContext =initializeCloseAllMenuContext(
     _.ref_setter_contextualised_node,
@@ -730,7 +730,7 @@ export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType=(
   ref_setter_contextualised_node ,
   ref_setter_contextualised_link ,
   tagContext ,
-  showContextZDDRef 
+  showContextZDDRef
 )=>{
   return ()=>{
     ref_setter_contextualised_node.current!(undefined)
@@ -911,7 +911,7 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
   )
 }
 
-export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  
+export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   applicationContext,
   applicationData,
   applicationDraw,

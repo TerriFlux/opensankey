@@ -12,16 +12,14 @@ import {
   uiElementsRefType
 } from './Types'
 import {
-  Class_Link,
   Class_LinkElement
 } from './Link'
 import {
-  Class_Node,
   Class_NodeElement
 } from './Node'
 import {
-  Class_Tagg
-} from './Tag'
+  Class_DrawingArea
+} from './DrawingArea'
 
 // Local functions
 import {
@@ -33,8 +31,10 @@ import {
 } from '../functions/draw/Elements'
 
 // Constants
-export const default_grey_color = '#000000'
+export const default_grey_color = 'grey'
+export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
+export const default_grid_color = '#d3d3d3'
 export const default_font = 'Arial,sans-serif'
 // TODO a utiliser plus tard, linter passe pas
 // const font_families = [
@@ -103,11 +103,18 @@ export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' 
  * @class Class_ApplicationData
  */
 export class Class_ApplicationData {
+
   // CONSTRUCTOR ==============================================================
+  /**
+   * Creates an instance of Class_ApplicationData.
+   * @param {(Window & typeof globalThis)} window
+   * @param {boolean} published_mode
+   * @memberof Class_ApplicationData
+   */
   constructor(window: Window & typeof globalThis, published_mode: boolean) {
     this.drawing_area = new Class_DrawingArea(
-      window.innerWidth - 50,
       window.innerHeight - 50,
+      window.innerWidth - 50,
       this)
     // For published mode only
     this.drawing_area.static = published_mode
@@ -182,122 +189,6 @@ export class Class_ApplicationData {
   }
 }
 
-/**
- * Class to deal with drawing area properties and display
- *
- * @class Class_DrawingArea
- */
-export class Class_DrawingArea {
-  // CONSTRUCTOR ==============================================================
-  constructor(
-    height: number,
-    width: number,
-    application_data: Class_ApplicationData
-  ) {
-    this.height = height
-    this.width = width
-    this.application_data = application_data
-    this.legend.display.shape.width = 180
-  }
-
-  // CONSTRUCTED ATTRIBUTES ===================================================
-  // Relation with application
-  public application_data: Class_ApplicationData
-
-  // Size
-  public height: number
-  public width: number
-
-  // DEFAULT ATTRIBUTES =======================================================
-  // Edition
-  public static: boolean = false
-  mode: 'edition' | 'selection' = 'selection'
-
-  // Elements that are contained in this area
-  sankey: Class_Sankey = new Class_Sankey()
-  legend: Class_Element = new Class_Element('legend', this, 'g_legend')
-  text_areas: {[id: string]: Class_Element} = {}
-
-  // Elements that are selected in this area
-  sankey_selection: Class_Sankey = new Class_Sankey()
-
-  // Color
-  color: string = default_background_color
-
-  // Grid
-  grid_visible: boolean = true
-  grid_square_size: number = 100
-
-  // Scale
-  scale: number = 20
-
-  // Positionning
-  public h_space: number = 200
-  public v_space: number =  50
-
-  // GETTERS / SETTERS =========================================================
-  // Mode
-  public isInSelectionMode() { return this.mode === 'selection' }
-  public setSelectionMode() { this.mode = 'selection' }
-  public isInEditionMode() { return this.mode === 'edition' }
-  public setEditionMode() { this.mode = 'edition' }
-
-  // Color
-  public getColor() { return this.color }
-  public setColor(_: string) { this.color = _ } // TODO add regular expression check here
-
-  // Scale
-  public getScale() { return this.scale }
-  public setScale(_: number) { if (_ > 0) this.scale = _ }
-
-  // PUBLIC METHODS ===========================================================
-  // Selection
-  public purgeSelection() { this.sankey_selection = new Class_Sankey() }
-  public addNodeToSelection(node: Class_Node) { this.sankey_selection.addNode(node) }
-  public addLinkToSelection(link: Class_Link) { this.sankey_selection.addLink(link) }
-}
-
-
-export class Class_Sankey {
-  // DEFAULT ATTRIBUTES =======================================================
-  // Nodes
-  nodes: {[_:string]: Class_Node} = {}
-  // Links
-  links: {[_:string]: Class_Link} = {}
-  // Tags
-  node_taggs: {[_:string]: Class_Tagg} = {}
-  flux_taggs: {[_:string]: Class_Tagg} = {}
-  data_taggs: {[_:string]: Class_Tagg} = {}
-  level_taggs: {[_:string]: Class_Tagg} = {}
-
-  // left_shift: number,
-  // right_shift: number,
-
-  // legend_position: number[],
-  // display_legend_scale:boolean,
-  // legend_police:number,
-  // mask_legend:boolean,
-  // legend_bg_color:string,
-  // legend_bg_opacity:number,
-  // legend_bg_border:boolean,
-  // legend_show_dataTags:boolean,
-
-  // display_style : display_styleType,
-
-  // linkZIndex:string[]
-
-  // colorMap: string,
-  // nodesColorMap: string,
-  // linksColorMap: string,
-
-  // legend_width:number,
-  // node_label_separator:string
-
-  // PUBLIC METHODS ===========================================================
-  // Update nodes list
-  public addNode(node: Class_Node) { this.nodes[node.id] = node }
-  public addLink(link: Class_Link) { this.links[link.id] = link }
-}
 
 /**
  * Define necessary properties for a position
@@ -345,6 +236,14 @@ export const default_element_shape: Type_ElementShape = {
 export class Class_Element {
 
   // CONSTRUCTOR ==============================================================
+
+  /**
+   * Creates an instance of Class_Element.
+   * @param {string} id
+   * @param {Class_DrawingArea} drawing_area
+   * @param {string} svg_group
+   * @memberof Class_Element
+   */
   constructor(id: string, drawing_area: Class_DrawingArea, svg_group: string) {
     this.id = id
     this.display = {
@@ -358,16 +257,22 @@ export class Class_Element {
   // CONSTRUCTED ATTRIBUTES ====================================================
   // Name
   id: string
+
   // Display
   display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
     shape: Type_ElementShape,
   }
+
+  // Parent svg group : where element belong
   svg_group: string
 
+  // Is element currently visually selected
+  is_selected: boolean = false
+
   // DEFAULT ATTRIBUTES ========================================================
-  public d3_selection: d3.Selection<SVGGElement, Class_Element, HTMLElement, unknown> | null = null
+  public d3_selection: d3.Selection<SVGGElement, Class_Element, SVGGElement, unknown> | null = null
 
   // PUBLIC METHODS ============================================================
   public draw() { drawElement(this) }
@@ -397,6 +302,11 @@ export class Class_Element {
   public setShapeHeight(_: number) { this.display.shape.height = _; this.draw() }
   public getShapeColor() { return this.display.shape.color }
   public setShapeColor(_: string) { this.display.shape.color = _; this.draw() }
+  // Selection
+  public setSelected() {this.is_selected = true; this.draw()}
+  public setUnSelected() {this.is_selected = false; this.draw()}
+  public isSelected() {return this.is_selected}
+
 }
 
 /**
@@ -432,3 +342,4 @@ export const default_label: Type_Label = {
   horiz: 'middle',
   background: false
 }
+

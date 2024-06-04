@@ -54,6 +54,7 @@ import {
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
 import { DeleteGNodes } from './draw/SankeyDrawNodes'
+import { Class_ApplicationData } from './types/Element'
 
 
 declare const window: Window &
@@ -104,9 +105,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     {},
     {}
   )
+  applicationData.new_data = new Class_ApplicationData(window, false)
   const applicationState = initializeElementSelected()
   applicationState.userScaleRef.current = applicationData.data.user_scale // TODO
-  const dict_hook_ref_setter_show_dialog_components = initializeShowDialog() 
+  const dict_hook_ref_setter_show_dialog_components = initializeShowDialog()
   const contextMenu = initializeContextMenu()
 
   const ComponentUpdater = initializeComponentUpdater()
@@ -175,7 +177,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater,
     uiElementsRef,
     dict_hook_ref_setter_show_dialog_components,
-    ref_alt_key_pressed    
+    ref_alt_key_pressed
   )
 
   const node_function = initializeNodeFunctions(
@@ -229,7 +231,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     external_file_export_item: [],
     externale_save_item: [],
     externale_navbar_item:{},
-  
+
     // Mise en page
     extra_background_element: <></>,
     apply_transformation_additional_elements:[<></>],
@@ -237,10 +239,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     advanced_appearence_content: [],
     advanced_label_content: [],
     advanced_label_value_content: [],
-    additional_menu_configuration_nodes:{},  
+    additional_menu_configuration_nodes:{},
     additional_context_element_menu:[],
     additional_context_element_other:[],
-  
+
     // Links
     additional_data_element: [],
     additional_link_appearence_items: [],
@@ -390,7 +392,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     node_function
   )
   regular_ui['form'] = [...regular_ui['form'],...additionalMenus.additional_preferences]
-  
+
   const menu_configuration=initializeMenuConfiguration(
     applicationData,
     applicationState,
@@ -477,7 +479,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         ComponentUpdater,
         dict_hook_ref_setter_show_dialog_components,
         node_function,
-        applicationDraw      
+        applicationDraw
       )
     }
     setTimeout(() => {
@@ -503,7 +505,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           additionalMenus,
           menu_configuration_nodes_attributes,
           applicationDraw.reDrawLegend,
-          processFunctions        
+          processFunctions
         ).map(e=>e)}
         <>
           <Menu
@@ -633,7 +635,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         GetLinkValue = {GetLinkValue}
         ComponentUpdater={ComponentUpdater}
       />
-
       <SankeyDraw
         contextMenu={contextMenu}
         applicationData={applicationData}

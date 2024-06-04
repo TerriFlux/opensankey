@@ -25,10 +25,15 @@ export const drawElement : FType_DrawElement = (
   // Undraw
   element.unDraw()
   // Create d3 selection
-  element.d3_selection = d3.select(' .opensankey #' + element.svg_group)
-    .datum(element)
-    .append('g')
-    .attr('id', 'gg_' + element.id)
+  const d3_drawing_area = element.getDrawingArea().d3_selection
+  if (d3_drawing_area !== null) {
+    element.d3_selection = d3_drawing_area.selectAll(' #'+element.svg_group)
+      .datum(element)
+      .append('g')
+      .attr('id', 'gg_' + element.id)
+      .style('stroke-width', element.isSelected()? 3 : 0)
+      .style('stroke', 'black')
+  }
 }
 
 /**

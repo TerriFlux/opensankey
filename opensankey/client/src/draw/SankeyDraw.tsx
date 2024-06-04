@@ -91,7 +91,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     svgSankey.style('height', applicationData.data.height + 'px');
 
-
+    // Test
+    applicationData.new_data?.drawing_area?.reset();
 
 
     // Fonction permettant de déplacer les éléments dans la zone de dessin, seulement quand on drag avec le boutons du milieu de la souris
@@ -153,7 +154,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       <div className="span12" id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
-            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': applicationData.data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
+            <svg
+              id='svg'
+              transform-origin='0 0'
+              style={{
+                margin:'10px',
+                'height': applicationData.data.height,
+                'width': width_to_display,
+                'border': border,
+                boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }}
+              preserveAspectRatio="xMidYMin meet"
+            >
               <g className='grid' id='grid'></g>
               <g className='g_links' id='g_links' style={{ 'position': position }} ></g>
               <g className='g_nodes' id='g_nodes' style={{ 'position': position }} ></g>

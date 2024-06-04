@@ -6,18 +6,19 @@
 
 // External imports
 import * as d3 from 'd3'
+import { MouseEvent } from 'react'
 
 // Local types
 import {
-  FType_ApplyPositionToNodeElement,
+  FType_ApplyPositionToNode,
   FType_UpdateDrawNodeElementShape,
   FType_UpdateDrawNodeElementLabel,
-  FType_SetNodeElementEventsListeners,
-  FType_MouseEventNode
+  FType_SetNodeEventsListeners,
+  FType_SetNodeMouseEvent
 } from './prototypes/Nodes'
 
+// Local functions
 import { PathNodeArrowShape } from '../../draw/SankeyDrawFunction'
-import { MouseEvent } from 'react'
 
 // ==================================================================================================
 /**
@@ -25,7 +26,7 @@ import { MouseEvent } from 'react'
  *
  * @param {*} node
  */
-export const applyPositionToNodeElement: FType_ApplyPositionToNodeElement = (
+export const applyPositionToNodeElement: FType_ApplyPositionToNode = (
   node
 )=>{
   if (node.d3_selection !== null) {
@@ -131,7 +132,7 @@ export const updateDrawNodeElementLabel : FType_UpdateDrawNodeElementLabel = (
   node
 ) => {
   // Clean previous label
-  // TODO
+  node.d3_selection?.selectAll('.label').remove()
   // Add name label
   if (node.name_label.visible) {
     // Add name label background
@@ -140,9 +141,12 @@ export const updateDrawNodeElementLabel : FType_UpdateDrawNodeElementLabel = (
         .classed('label', true)
         .classed('label_background', true)
         .attr('id', 'label_background_' + node.id)
+        .attr('x', node.name_label.position.x)
+        .attr('y', node.name_label.position.y)
         .attr('fill', 'white')
         .attr('fill-opacity', 0.55)
         .attr('rx', 4)
+        .style('stroke', 'none')
     }
     // Add name label text
     node.d3_selection?.append('text')
@@ -158,6 +162,7 @@ export const updateDrawNodeElementLabel : FType_UpdateDrawNodeElementLabel = (
       .style('font-style', node.name_label.italic ? 'italic' : 'normal')
       .style('font-size', String(node.name_label.font_size) + 'px')
       .style('font-family', node.name_label.font_family)
+      .style('stroke', 'none')
       .style('text-transform', node.name_label.uppercase ? 'uppercase' : 'none')
       .text(node.getNameLabelText())
       // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
@@ -180,160 +185,33 @@ export const updateDrawNodeElementLabel : FType_UpdateDrawNodeElementLabel = (
         .attr('type', 'text')
         .attr('value', node.name)
         .style('font-size', String(node.name_label.font_size) + 'px')
-        // // TODO Deplacer la suite ailleurs
-        // .on('input',(evt,d)=>{d.name=evt.target.value})
-        // .style('background-color', 'white')
-        // .style('border', 'none')
-        // .style('border-color', 'transparent')
-        // .style('height', String(node.name_label.font_size) + 'px')
-        // .style('outline', 'none')
-        // .on('blur', (evt, n) => {
-        //   // TODO completer
-        //   node_function.RedrawNodes([n])
     }
   }
 }
 
 /**
- * Set up node events on drawing area
+ * Set up events related to node d3_element
  *
  * @param {Class_Node} node
  */
-export const setNodeElementEventsListeners : FType_SetNodeElementEventsListeners = (
+export const setNodeEventsListeners : FType_SetNodeEventsListeners = (
   node
 ) => {
-  // const { LinkText, GetLinkValue } = link_function
-  // const { data, display_nodes } = applicationData
-  // const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = applicationState
-  // const inv_scale = d3.scaleLinear()
-  //   .domain([0, 100])
-  //   .range([0, data.user_scale])
-  // const scale = d3.scaleLinear()
-  //   .range([0, 100])
-  //   .domain([0, data.user_scale])
-  // const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
-  // // const filtered_gggnodes = ggg_nodes.filter(
-  // //   n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
-  // // )
-
   if (!node.display.drawing_area.static) {
     // Right mouse button clicks
     node.d3_selection?.on('click', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => eventNodeSimpleLMBCLick(node, event))
     node.d3_selection?.on('dblclick', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => eventNodeDoubleLMBCLick(node, event))
     // Right mouse button maintained
-    node.d3_selection?.on('mousedown', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
-    node.d3_selection?.on('mouseup', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
+    node.d3_selection?.on('mousedown', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO Gestion evenement clic maintenu*/})
+    node.d3_selection?.on('mouseup', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO Gestion evenement clic relaché */})
     // Mouse cursor goes over element
-    node.d3_selection?.on('mouseover', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
-    node.d3_selection?.on('mouseout', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
+    node.d3_selection?.on('mouseover', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO Gestion evenement survol souris */})
+    node.d3_selection?.on('mouseout', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO Gestion evenement fin survol souris */})
     // Mouse cursor move
-    node.d3_selection?.on('mousemove', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO */})
+    node.d3_selection?.on('mousemove', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {/* TODO Gestion evenement souris qui bouge */})
     // Left mouse button click
     node.d3_selection?.on('contextmenu', (event: MouseEvent<HTMLButtonElement, MouseEvent>) => eventNodeSimpleRMBCLick(node, event))
   }
-
-  //   // Add event listener to click
-  //   // When we Ctrl + click a node, it select it and open a menu
-  //   const DoubleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>, d:SankeyNode)=>{
-  //     accept_simple_click.current=false
-  //     const label_x=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().x??0
-  //     const label_y=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().y??0
-  //     const node_x=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().x??0
-  //     const node_y=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().y??0
-
-  //     d3.select('#fo_input_label_'+d.idNode).style('display','inline-block')
-  //     d3.select('#fo_input_label_'+d.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-  //     d3.select('#text_'+d.idNode).style('display','none')
-  //     document.getElementById('input_label_'+d.idNode)?.focus()
-  //     setTimeout(()=>{
-  //       accept_simple_click.current=true
-  //     },200)
-  //   }
-  //   ggg_nodes
-  //     .filter(()=>!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))
-  //     .on('click', (event, d) => SimpleGNodeClick(
-  //       uiElementsRef,applicationState,event,d,accept_simple_click,ComponentUpdater
-  //     )
-  //     )
-  //     .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
-
-  //   if (ref_getter_mode_selection.current == 'ln') {
-  //     ggg_nodes.on('mousedown', function (event, d) {
-  //       if (!event.ctrlKey && !event.metaKey) {
-  //         first_selected_node.current = d
-  //       }
-  //     })
-  //       .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
-  //         event,
-  //         d,
-  //         applicationData,
-  //         applicationState,
-  //         uiElementsRef,
-  //         applicationContext,
-  //         ComponentUpdater,
-  //         link_function,
-  //         node_function
-  //       )
-  //       )
-  //   }
-  //   // allow nodes to be dragged
-  //   if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true ){
-  //     ggg_nodes.call(
-  //       DragGNodeEvent(
-  //         applicationData,applicationState,applicationContext,
-  //         alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function,GetSankeyMinWidthAndHeight,resizeCanvas
-  //       )
-  //     )
-  //   }
-  // }
-  // // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-  // ggg_nodes.on('contextmenu', (ev, n) => {
-  //   if(!window.SankeyToolsStatic){
-  //     // if the right mouse button is clicked we switch to selection mode
-  //     // applicationState.ref_setter_mode_selection.current('s')
-  //     // applicationState.ref_getter_mode_selection.current = 's'
-  //     // d3.select(' .opensankey #svg').attr('class','mode_selection')
-  //     return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
-  //   }}
-  // )
-  // // Add tooltip when mouse hover the <g> element that contains shape/label/icon (everything that compose a node)
-  // const gg_nodes = d3.selectAll(' .opensankey .gg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>
-  // const filtered_gg_nodes = gg_nodes.filter(
-  //   n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
-  // )
-  // // Gestion de la tooltip
-  // filtered_gg_nodes.on('mouseover', function (event, d) {
-  //   d3.select(this).attr('cursor', (ref_getter_mode_selection.current == 's')? 'pointer' : 'unset')
-  //   if ( (window.SankeyToolsStatic ||event.shiftKey)) {
-  //     const sankeyTooltip=d3.select('.sankey-tooltip')
-  //     sankeyTooltip
-  //       .style('opacity', 1)
-  //       .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
-  //   }
-  // })
-  // filtered_gg_nodes.on('mousemove', function (event) {
-  //   // Triggered when the mouse move over the node
-  //   if ((window.SankeyToolsStatic ||event.shiftKey)) {
-  //     const sankeyTooltip=d3.select('.sankey-tooltip')
-  //     const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
-  //     let pos_tooltip_y= event.clientY
-  //     const size_browser=window.innerHeight
-  //     pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
-
-  //     const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))
-  //     let pos_tooltip_x= event.clientX
-  //     const size_browser_w=window.innerWidth
-  //     pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
-  //     sankeyTooltip
-  //       .style('top',pos_tooltip_y + 'px')
-  //       .style('left',pos_tooltip_x + 'px')
-  //   }
-  // })
-  // filtered_gg_nodes.on('mouseout', function () {
-  //   const sankeyTooltip=d3.select('.sankey-tooltip')
-  //   sankeyTooltip.style('opacity', 0)
-  // })
-
 }
 
 /**
@@ -342,7 +220,7 @@ export const setNodeElementEventsListeners : FType_SetNodeElementEventsListeners
  * @param {*} node
  * @param {*} event
  */
-const eventNodeSimpleLMBCLick : FType_MouseEventNode =(
+const eventNodeSimpleLMBCLick : FType_SetNodeMouseEvent =(
   node,
   event
 )=>{
@@ -391,11 +269,11 @@ const eventNodeSimpleLMBCLick : FType_MouseEventNode =(
  * @param {*} node
  * @param {*} event
  */
-const eventNodeDoubleLMBCLick : FType_MouseEventNode = (
+const eventNodeDoubleLMBCLick : FType_SetNodeMouseEvent = (
   node,
   event
 ) => {
-  // TODO
+  // TODO Ajouter déclemenchement editeur nom de noeud
 }
 
 /**
@@ -404,9 +282,9 @@ const eventNodeDoubleLMBCLick : FType_MouseEventNode = (
  * @param {*} node
  * @param {*} event
  */
-const eventNodeSimpleRMBCLick : FType_MouseEventNode = (
+const eventNodeSimpleRMBCLick : FType_SetNodeMouseEvent = (
   node,
   event
 ) => {
-  // TODO
+  // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
 }
