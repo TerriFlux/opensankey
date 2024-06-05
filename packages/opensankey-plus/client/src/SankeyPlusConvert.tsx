@@ -268,7 +268,7 @@ export const OSPDiagramSelector : OSPDiagramSelectorFType = (
                   convert_data(new_layout,get_default_data)
                   complete_sankey_data(new_layout, get_default_data, DefaultNode, DefaultLink)
                   set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                  updateLayout(sankey_data, new_layout, dataVarToUpdate.current)
+                  updateLayout(sankey_data, new_layout, dataVarToUpdate.current,true)
                   const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
                   set_sankey_data(copy_data)
                   if (view === 'none' ) {
