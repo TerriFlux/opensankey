@@ -33,12 +33,7 @@ import {
 } from '@chakra-ui/react'
 import {
   SankeyData,
-  MenuTypes,
-  NodeFunctionTypes,
-  LinkFunctionTypes,
-  applicationDataType,
-  ComponentUpdaterType,
-  applicationDrawType} from '../types/Types'
+  MenuTypes} from '../types/Types'
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
