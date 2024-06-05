@@ -500,7 +500,6 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           <NumberInput
             variant='menuconfigpanel_option_numberinput_with_right_addon'
             min={0}
-            max={1000}
             isDisabled={disable_options}
             value={allLabelHeight()}
             onChange={evt => {
@@ -530,7 +529,6 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           <NumberInput
             variant='menuconfigpanel_option_numberinput'
             min={0}
-            max={1000}
             isDisabled={disable_options}
             value={allLabelWidth()}
             onChange={evt => {
