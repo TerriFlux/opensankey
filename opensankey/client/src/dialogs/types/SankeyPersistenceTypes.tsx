@@ -11,22 +11,13 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export type CounterFType = (
-  {
-    url_prefix,
-    finishReconciliation,
-    value,
-    result,
-    setResult
-  }:{
-    url_prefix:string,
-    finishReconciliation:(x:boolean)=>void,
-    value:number[],
-    result:string,
-    setResult:(x:string)=>void
-  }
-) => unknown
-
+export type CounterType={
+  url_prefix:string,
+  finishReconciliation:(x:boolean)=>void,
+  value:number[],
+  result:string,
+  set_result:(_:string)=>void
+}
 export type ProcessExampleFuncType = (
   applicationData:applicationDataType,
     updateLayout: updateLayoutFuncType,

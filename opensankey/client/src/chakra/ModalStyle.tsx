@@ -12,3 +12,10 @@ export const modal_select_unit_from_data = definePartsStyle({
     }
   }
 })
+export const modal_select_unit_from_excel = definePartsStyle({
+  body :{
+    '.rd3t-tree-container':{
+      height:'50vh'
+    }
+  }
+})
