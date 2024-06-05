@@ -75,7 +75,7 @@ import {
 import { heading_base_style, heading_welcome_style } from './HeadingStyles'
 import { card_base_style, card_icon_not_selected, card_icon_selected, card_import_icon } from './CardStyle'
 import { tag_base_style, tag_dev_navbar } from './TagStyle'
-import { modal_base_style, modal_select_unit_from_data} from './ModalStyle'
+import { modal_base_style, modal_select_unit_from_data, modal_select_unit_from_excel} from './ModalStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -146,7 +146,8 @@ export const opensankey_theme = extendTheme({
     Modal:{
       baseStyle:modal_base_style,
       variants:{
-        modal_select_unit_from_data
+        modal_select_unit_from_data,
+        modal_select_unit_from_excel
       }
     },
     Select: {

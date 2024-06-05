@@ -4,7 +4,7 @@ import Spinner  from 'react-bootstrap/Spinner'
 import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
-import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
+import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, CounterType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink, DefaultNode, DefaultSankeyData, GetRandomInt, SetNodeStyleToTypeNode, layout_type, list_palette_color } from '../configmenus/SankeyUtils'
 import FileSaver from 'file-saver'
@@ -201,18 +201,13 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export const Counter = ({
+
+export const Counter:FunctionComponent<CounterType> = ({
   url_prefix,
   finishReconciliation,
   value,
   result,
   set_result
-}:{
-  url_prefix:string,
-  finishReconciliation:(x:boolean)=>void,
-  value:number[],
-  result:string,
-  set_result:(_:string)=>void
 }) => {
   useEffect(() =>{
     const interval = setInterval(() => {
