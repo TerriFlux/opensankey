@@ -28,7 +28,7 @@ export type FType_DrawDrawingArea = (
  * @param {string} id
  * @param {string} name
  */
-export type FType_AddNewDefaultNodeToDrawingArea = (
+export type FType_AddNewNodeToDrawingArea = (
   drawing_area: Class_DrawingArea,
   id: string,
   name: string

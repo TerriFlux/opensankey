@@ -12,7 +12,6 @@ import {
   Class_ApplicationData,
   Class_Element,
   default_background_color,
-  default_black_color,
   default_grid_color
 } from './Element'
 import {
@@ -27,13 +26,13 @@ import {
 
 // Local functions
 import {
-  addNewNodeToDrawingArea,
   drawDrawingAreaBackground,
   drawDrawingAreaGrid,
   setDrawingAreaEventsListeners
 } from '../functions/draw/DrawingArea'
 
 
+// CLASS DRAWING AREA *******************************************************************
 /**
  * Class to deal with drawing area properties and display
  *
@@ -41,7 +40,7 @@ import {
  */
 export class Class_DrawingArea {
 
-  // CONSTRUCTOR ==============================================================
+  // CONSTRUCTOR ========================================================================
 
   /**
    * Creates an instance of Class_DrawingArea.
@@ -59,8 +58,10 @@ export class Class_DrawingArea {
     this.height = height
     this.width = width
     this.application_data = application_data
-    this.legend.display.shape.width = 180
+    // this.legend.display.shape.width = 180 TODO faire plus proprement
   }
+
+  // IMPORTANT METHODS ==================================================================
 
   /**
    * Reset drawing area
@@ -87,6 +88,11 @@ export class Class_DrawingArea {
     setDrawingAreaEventsListeners(this)
   }
 
+  /**
+   * Draw all elements inside drawing area
+   * @private
+   * @memberof Class_DrawingArea
+   */
   private drawElements() {
     // Draw background
     drawDrawingAreaBackground(this)
@@ -94,26 +100,82 @@ export class Class_DrawingArea {
     drawDrawingAreaGrid(this)
   }
 
-  // CONSTRUCTED ATTRIBUTES ===================================================
+  // PUBLIC ATTRIBUTES ==================================================================
 
-  // Relation with application
+  /**
+   * Application object which relates to this drawing area
+   * @type {Class_ApplicationData}
+   * @memberof Class_DrawingArea
+   */
   public application_data: Class_ApplicationData
 
-  // Size
-  private height: number
-  private width: number
-
-  // DEFAULT ATTRIBUTES =======================================================
-  // d3 svg groups for drawing area
+  /**
+   * d3 svg groups for drawing area
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
   public d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
+   * d3 selection of svg group that contains drawing area background
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
   public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
+   * d3 selection of svg group that contains drawing area grid
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
+   * d3 selection of svg group that contains drawing area nodes
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
   public d3_selection_nodes: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
+   * d3 selection of svg group that contains drawing area links
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
   public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
-  // Edition
+  /**
+   * Is drawing area in publish mode or not. If so, blocks all interactions with it
+   * @type {boolean}
+   * @memberof Class_DrawingArea
+   */
   public static: boolean = false
-  mode: 'edition' | 'selection' = 'edition'
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  /**
+   * Height in px of drawing area in application
+   * @private
+   * @type {number}
+   * @memberof Class_DrawingArea
+   */
+  private height: number
+
+  /**
+   * Width in px of drawing area in application
+   * @private
+   * @type {number}
+   * @memberof Class_DrawingArea
+   */
+  private width: number
+
+  /**
+   * Interaction mode with drawing area
+   * @private
+   * @type {('edition' | 'selection')}
+   * @memberof Class_DrawingArea
+   */
+  private mode: 'edition' | 'selection' = 'edition'
 
   // Elements that are contained in this area
   sankey: Class_Sankey = new Class_Sankey(this)
@@ -138,19 +200,23 @@ export class Class_DrawingArea {
   public h_space: number = 200
   public v_space: number =  50
 
-  // GETTERS / SETTERS =========================================================
+  // GETTERS / SETTERS ==================================================================
+
   // Mode
   public isInSelectionMode() { return this.mode === 'selection' }
   public setSelectionMode() { this.mode = 'selection' }
   public isInEditionMode() { return this.mode === 'edition' }
   public setEditionMode() { this.mode = 'edition' }
+  public switchMode() {
+    if (this.isInEditionMode()) this.setSelectionMode()
+    else if (this.isInSelectionMode()) this.setEditionMode()
+  }
 
   // Size
   public getWidth() { return this.width }
   public setWidth(_: number) { this.width = _; this.drawElements()}
   public getHeight() { return this.height }
   public setHeight(_: number) { this.height = _; this.drawElements()}
-
 
   // Color
   public getColor() { return this.color }
@@ -169,29 +235,69 @@ export class Class_DrawingArea {
   public getGridSize() { return this.grid_size }
   public setGridSize(_: number) { this.grid_size = _; drawDrawingAreaGrid(this) }
 
+  /**
+   * Checks if it is possible to directly deal with events
+   * @return {boolean}
+   * @memberof Class_DrawingArea
+   */
+  public eventsEnabled() {
+    // Deal with node events in priority
+    let node_id: string
+    for (node_id in this.sankey.nodes) {
+      if (this.sankey.nodes[node_id].isMouseOver())
+        return false
+    }
+    return true
+  }
+
   // PUBLIC METHODS ===========================================================
 
   /**
-   * Add new node to sankey struct
-   * @param {string} id
-   * @param {string} name
+   * Add a new default node to drawing area sankey
    * @return {Class_Node}
    * @memberof Class_DrawingArea
    */
-  // public addNewNodeToSankey(id: string, name: string) { return this.sankey.addNewNode(id, name) }
   public addNewDefaultNodeToSankey() { return this.sankey.addNewDefaultNode() }
 
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
-   * @return {*}
+   * @return {Class_Node | null}
    * @memberof Class_DrawingArea
    */
   public getNodeFromSankey(id: string) { return this.sankey.getNode(id) }
 
+  /**
+   * Clean selection set of sankey elements
+   * @memberof Class_DrawingArea
+   */
+  public purgeSelection() {
+    // Unselect all nodes
+    Object.values(this.sankey_selection.nodes)
+      .forEach((node) => node.setUnSelected())
+    // TODO Unselect other things
+    // Reset selection
+    // TODO do that properly
+    this.sankey_selection = new Class_Sankey(this)
+  }
 
-  // Selection
-  public purgeSelection() { /* TODO Faire proprement pour deselectionner touts les éléments */ this.sankey_selection = new Class_Sankey(this) }
-  public addNodeToSelection(node: Class_Node) { this.sankey_selection.addNode(node); node.setSelected() }
-  public addLinkToSelection(link: Class_Link) { this.sankey_selection.addLink(link) }
+  /**
+   * Add a node to selection set
+   * @param {Class_Node} node
+   * @memberof Class_DrawingArea
+   */
+  public addNodeToSelection(node: Class_Node) {
+    this.sankey_selection.addNode(node)
+    node.setSelected()
+  }
+
+  /**
+   * Add a link to selection set
+   * @param {Class_Link} link
+   * @memberof Class_DrawingArea
+   */
+  public addLinkToSelection(link: Class_Link) {
+    this.sankey_selection.addLink(link)
+    // TODO add selected attribute
+  }
 }

@@ -6,6 +6,7 @@
 
 // External imports
 import * as d3 from 'd3'
+import { MouseEvent } from 'react'
 
 // Local types
 import {
@@ -25,10 +26,6 @@ import {
 import {
   openRemoteUIElement
 } from '../functions/application/Menus'
-import {
-  drawElement,
-  unDrawElement
-} from '../functions/draw/Elements'
 
 // Constants
 export const default_grey_color = 'grey'
@@ -187,6 +184,9 @@ export class Class_ApplicationData {
     if (this.ui_elements !== null)
       openRemoteUIElement(this.ui_elements.nodes_accordion_ref)
   }
+
+  // GETTERS / SETTERS =========================================================
+  // TODO getter / setters for application data
 }
 
 
@@ -228,6 +228,7 @@ export const default_element_shape: Type_ElementShape = {
   color: default_grey_color
 }
 
+// CLASS ELEMENT ************************************************************************
 /**
  * Class that define a meta element to display on drawing area
  *
@@ -235,7 +236,65 @@ export const default_element_shape: Type_ElementShape = {
  */
 export class Class_Element {
 
-  // CONSTRUCTOR ==============================================================
+  // PUBLIC ATTRIBUTES ==================================================================
+
+  /**
+   * Id of element
+   * @type {string}
+   * @memberof Class_Element
+   */
+  public id: string
+
+  /**
+   * D3 selection that contains related svg element
+   * @type {(d3.Selection<SVGGElement, Class_Element, SVGGElement, unknown> | null)}
+   * @memberof Class_Element
+   */
+  public d3_selection: d3.Selection<SVGGElement, this, SVGGElement, unknown> | null = null
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  /**
+   * Display attributes for element
+   * @private
+   * @type {{
+   *     drawing_area: Class_DrawingArea,
+   *     position: Type_ElementPosition,
+   *     shape: Type_ElementShape,
+   *   }}
+   * @memberof Class_Element
+   */
+  private display: {
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+    shape: Type_ElementShape,
+  }
+
+  /**
+   * Parent svg group : where element belong
+   * @private
+   * @type {string}
+   * @memberof Class_Element
+   */
+  private svg_group: string
+
+  /**
+   * Is element currently visually selected
+   * @private
+   * @type {boolean}
+   * @memberof Class_Element
+   */
+  private is_selected: boolean = false
+
+  /**
+   * Is mouse cursor over element d3 selection (default=false)
+   * @private
+   * @type {boolean}
+   * @memberof Class_Element
+   */
+  private is_mouse_over: boolean = false
+
+  // CONSTRUCTOR ========================================================================
 
   /**
    * Creates an instance of Class_Element.
@@ -244,7 +303,11 @@ export class Class_Element {
    * @param {string} svg_group
    * @memberof Class_Element
    */
-  constructor(id: string, drawing_area: Class_DrawingArea, svg_group: string) {
+  constructor(
+    id: string,
+    drawing_area: Class_DrawingArea,
+    svg_group: string
+  ) {
     this.id = id
     this.display = {
       drawing_area: drawing_area,
@@ -254,59 +317,233 @@ export class Class_Element {
     this.svg_group = svg_group
   }
 
-  // CONSTRUCTED ATTRIBUTES ====================================================
-  // Name
-  id: string
-
-  // Display
-  display: {
-    drawing_area: Class_DrawingArea,
-    position: Type_ElementPosition,
-    shape: Type_ElementShape,
+  // PUBLIC METHODS =====================================================================
+  public reset() {
+    // Clear D3
+    this.unDraw()
+    // Draw on D3
+    this.draw()
+    // Add events listeners
+    this.setEventsListeners()
   }
 
-  // Parent svg group : where element belong
-  svg_group: string
-
-  // Is element currently visually selected
-  is_selected: boolean = false
-
-  // DEFAULT ATTRIBUTES ========================================================
-  public d3_selection: d3.Selection<SVGGElement, Class_Element, SVGGElement, unknown> | null = null
-
-  // PUBLIC METHODS ============================================================
-  public draw() { drawElement(this) }
-  public unDraw() { unDrawElement(this) }
-
-  // GETTERS / SETTERS =========================================================
+  // GETTERS / SETTERS ==================================================================
   // Name
   public getId() { return this.id }
+
   // DrawingArea
   public getDrawingArea() { return this.display.drawing_area }
+
+  // Svg Group
+  public getSvgGroup() { return this.svg_group }
+
   // Position
   public getPosX() { return this.display.position.x }
-  public setPosX(_: number) { this.display.position.x = _; this.draw() }
+  public setPosX(_: number) { this.display.position.x = _; this.reset() }
   public getPosY() { return this.display.position.y }
-  public setPosY(_: number) { this.display.position.y = _; this.draw() }
-  public setPosXY(x: number, y: number) { this.display.position.x = x; this.display.position.y = y; this.draw() }
+  public setPosY(_: number) { this.display.position.y = _; this.reset() }
+  public setPosXY(x: number, y: number) { this.display.position.x = x; this.display.position.y = y; this.reset() }
   public getPosType() { return this.display.position.type }
-  public setPosType(_: Type_Position) { this.display.position.type = _; this.draw()  }
+  public setPosType(_: Type_Position) { this.display.position.type = _; this.reset() }
+
   // Shape
   public getShapeType() { return this.display.shape.type }
-  public setShapeType(_: Type_Shape) { this.display.shape.type = _; this.draw() }
+  public setShapeType(_: Type_Shape) { this.display.shape.type = _; this.reset() }
   public getShapeVisible() { return this.display.shape.visible }
-  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.draw() }
+  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.reset() }
   public getShapeWidth() { return this.display.shape.width }
-  public setShapeWidth(_: number) { this.display.shape.width = _; this.draw() }
+  public setShapeWidth(_: number) { this.display.shape.width = _; this.reset() }
   public getShapeHeight() { return this.display.shape.height }
-  public setShapeHeight(_: number) { this.display.shape.height = _; this.draw() }
+  public setShapeHeight(_: number) { this.display.shape.height = _; this.reset() }
   public getShapeColor() { return this.display.shape.color }
-  public setShapeColor(_: string) { this.display.shape.color = _; this.draw() }
+  public setShapeColor(_: string) { this.display.shape.color = _; this.reset() }
+
   // Selection
-  public setSelected() {this.is_selected = true; this.draw()}
-  public setUnSelected() {this.is_selected = false; this.draw()}
+  public setSelected() {this.is_selected = true; this.reset()}
+  public setUnSelected() {this.is_selected = false; this.reset()}
   public isSelected() {return this.is_selected}
 
+  // Mouse is over element
+  public isMouseOver() { return this.is_mouse_over }
+  public setMouseOver() { this.is_mouse_over = true }
+  public unsetMouseOver() { this.is_mouse_over = false }
+
+
+  // PROTECTED METHODES =================================================================
+
+  /**
+   * Set up element on d3 svg area
+   * @private
+   * @memberof Class_Element
+   */
+  protected draw(){
+    const d3_drawing_area = this.getDrawingArea().d3_selection
+    if (d3_drawing_area !== null) {
+      this.d3_selection = d3_drawing_area.selectAll(' #'+this.svg_group)
+        .datum(this)
+        .append('g')
+        .attr('id', 'gg_' + this.id)
+        .style('stroke-width', this.isSelected()? 3 : 0)
+        .style('stroke', 'black')
+    }
+  }
+
+  /**
+   * Unset element from d3 svg area
+   * @protected
+   * @memberof Class_Element
+   */
+  protected unDraw() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.remove()
+      this.d3_selection = null
+    }
+  }
+
+  /**
+   * Set up events related to element d3_element
+   * @protected
+   * @memberof Class_Element
+   */
+  protected setEventsListeners() {
+    if (!this.display.drawing_area.static) {
+      // Right mouse button clicks
+      this.d3_selection?.on(
+        'click',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleLMBCLick(event))
+      this.d3_selection?.on(
+        'dblclick',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventDoubleLMBCLick(event))
+      // Right mouse button maintained
+      this.d3_selection?.on(
+        'mousedown',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMaintainedClick(event))
+      this.d3_selection?.on(
+        'mouseup',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventReleasedClick(event))
+      // Mouse cursor goes over this
+      this.d3_selection?.on(
+        'mouseover',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOver(event))
+      this.d3_selection?.on(
+        'mouseout',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOut(event))
+      // Mouse cursor move
+      this.d3_selection?.on(
+        'mousemove',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseMove(event))
+      // Left mouse button click
+      this.d3_selection?.on(
+        'contextmenu',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleRMBCLick(event))
+    }
+  }
+
+  /**
+   * Deal with simple left Mouse Button (LMB) click on given element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO do something
+  }
+
+  /**
+   * Deal with double left Mouse Button (LMB) click on given element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventDoubleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter déclemenchement editeur nom de noeud
+  }
+
+  /**
+   * Deal with simple right Mouse Button (RMB) click on given element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventSimpleRMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
+  }
+
+  /**
+   * Define maintained left mouse button click for drawing area
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMaintainedClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir clique gauche sur element */
+  }
+
+  /**
+   * Define released left mouse button click for drawing area
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventReleasedClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir clique gauche sur element */
+  }
+
+  /**
+   * Define event when mouse moves over drawing area
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseOver(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Update mouse over indicator for element
+    this.setMouseOver()
+  }
+
+  /**
+   * Define event when mouse moves out of drawing area
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseOut(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Update mouse left indicator for element
+    this.unsetMouseOver()
+  }
+
+  /**
+   * Define event when mouse moves in drawing area
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseMove(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir  */
+  }
 }
 
 /**

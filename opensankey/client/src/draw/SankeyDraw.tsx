@@ -165,11 +165,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }}
               preserveAspectRatio="xMidYMin meet"
             >
-              <g className='grid' id='grid'></g>
+              {/* <g className='grid' id='grid'></g>
               <g className='g_links' id='g_links' style={{ 'position': position }} ></g>
               <g className='g_nodes' id='g_nodes' style={{ 'position': position }} ></g>
               <g className='g_link_handles' id='g_link_handles'></g>
-              <g className='g_legend' id='g_legend'></g>
+              <g className='g_legend' id='g_legend'></g> */}
             </svg>
           </div>
         </div>
