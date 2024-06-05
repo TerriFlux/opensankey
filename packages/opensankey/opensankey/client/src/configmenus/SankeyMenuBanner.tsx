@@ -544,7 +544,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
 
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
-  
+
   //Popover element to handle filter on links, it contians :
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
   // - filter on link label
@@ -669,7 +669,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
       </Form.Group>
     </Popover.Body>
   </Popover>
-  const node_tag_filter_content=<AddAllDropDownNode 
+  const node_tag_filter_content=<AddAllDropDownNode
     applicationContext={applicationContext}
     ComponentUpdater={ComponentUpdater}
     applicationData={applicationData}
@@ -700,7 +700,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
       <FormGroup as={Row}>
         <Col xs={10}>
           <DataTagSelector
-          
+
             applicationData={applicationData}
             GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
             node_function={node_function}
@@ -778,14 +778,28 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
     btn_mouse_mode_edition=<>
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
       <OSTooltip placement='left' label={(mode_selection == 's')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')}>
-        <Button variant={(!(mode_selection == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
-          if(mode_selection=='ln'){
-            setSelectionMode('s')
-          }else{
-            setSelectionMode('ln')
-          }
-        }} >
-          <Col><FontAwesomeIcon icon={(mode_selection == 's')?faShareNodes:faArrowPointer}/></Col>
+        <Button
+          variant={'secondary'}
+          onClick={() => {
+            applicationData.new_data?.drawing_area.switchMode()
+          // if (applicationData.new_data?.drawing_area.isInEditionMode(){
+          //   // setSelectionMode('s') // TODO a supprimer
+          //   applicationData.new_data?.drawing_area.setSelectionMode()
+          // }
+          // else if (applicationData.new_data?.drawing_area.isInSelectionMode() {
+          //   applicationData.new_data?.drawing_area.setEditionMode()
+          //   // setSelectionMode('ln') // TODO a supprimer
+          // }
+        }}
+        >
+          <Col>
+            <FontAwesomeIcon icon={(
+              applicationData.new_data?.drawing_area.isInEditionMode() ?
+                faShareNodes:
+                faArrowPointer
+              )}
+            />
+          </Col>
         </Button>
       </OSTooltip>
     </>
