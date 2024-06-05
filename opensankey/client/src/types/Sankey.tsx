@@ -102,8 +102,9 @@ export class Class_Sankey {
     return addNewNodeToSankey(this, id, name)
   }
   public addNewDefaultNode() {
-    const id = 'node' + String(this.nodes.length)
-    const name = 'Node ' + String(this.nodes.length)
+    const n =  String(Object.values(this.nodes).length)
+    const id = 'node' + n
+    const name = 'Node ' + n
     return addNewNodeToSankey(this, id, name)
   }
 
