@@ -11,6 +11,7 @@ import * as d3 from 'd3'
 import {
   Class_Element,
   Type_Label,
+  Type_Shape,
   default_label
 } from './Element'
 import {
@@ -38,31 +39,21 @@ import {
  */
 export class Class_NodeElement extends Class_Element {
 
-  // CONSTRUCTOR ==============================================================
-  constructor(id: string, name: string, drawing_area: Class_DrawingArea) {
-    super(id, drawing_area, 'g_nodes')
-    this.name = name
-  }
 
-  // CONSTRUCTED ATTRIBUTES ===================================================
+  // PUBLIC ATTRIBUTES ==================================================================
   // Name
   public name: string
 
-  // DEFAULT ATTRIBUTES =======================================================
+  // PROTECTED ATTRIBUTES ===============================================================
   // Labels
-  public name_label: Type_Label = structuredClone(default_label)
-  public name_label_separator: string = ''
-  public getNameLabelText() {
-    if (this.name_label_separator !== '') {
-      return this.name.split(this.name_label_separator)[0]
-    }
-    return this.name
-  }
-  public value_label: Type_Label = structuredClone(default_label)
+  protected name_label: Type_Label = structuredClone(default_label)
+  protected name_label_separator: string = ''
+
+  protected value_label: Type_Label = structuredClone(default_label)
 
   // Arrows
-  public arrow_angle_factor: number = 10
-  public arrow_angle_direction: string = 'hh'
+  protected arrow_angle_factor: number = 10
+  protected arrow_angle_direction: string = 'hh'
 
   // TODO
   //   local?: SankeyNodeAttrLocal
@@ -71,11 +62,30 @@ export class Class_NodeElement extends Class_Element {
   //   tooltip_text?: string
   //   style: string
 
-  // PUBLIC METHODS ==========================================================
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_NodeElement.
+   * @param {string} id
+   * @param {string} name
+   * @param {Class_DrawingArea} drawing_area
+   * @memberof Class_NodeElement
+   */
+  constructor(
+    id: string,
+    name: string,
+    drawing_area: Class_DrawingArea
+  ) {
+    super(id, drawing_area, 'g_nodes')
+    // Surcharge with name
+    this.name = name
+  }
+
+  // PUBLIC METHODS =====================================================================
 
   /* TODO if needed */
 
-  // PRIVATE METHODS ==========================================================
+  // PROTECTED METHODS ==================================================================
 
   protected draw() {
     // Heritance of draw function
@@ -91,7 +101,26 @@ export class Class_NodeElement extends Class_Element {
     this.drawLabel()
   }
 
-  // PRIVATE METHODS ==========================================================
+  // GETTERS / SETTERS ==================================================================
+
+  // Shape can only be rect | ellipse | arrow
+  public setShapeType(_: Type_Shape) {
+    if ((_ !== 'rect') && (_ !== 'ellipse') && (_ !== 'arrow')) {
+      return
+    }
+    this.display.shape.type = _
+    this.reset()
+  }
+
+  // Label for name
+  public getNameLabelText() {
+    if (this.name_label_separator !== '') {
+      return this.name.split(this.name_label_separator)[0]
+    }
+    return this.name
+  }
+
+  // PRIVATE METHODS ====================================================================
 
   /**
    * Draw node shape on d3 svg
@@ -148,9 +177,8 @@ export class Class_NodeElement extends Class_Element {
       // }
   }
 
-
   /**
-   * Draw node lable on D3 svg
+   * Draw node label on D3 svg
    *
    * @private
    * @memberof Class_NodeElement
@@ -238,6 +266,7 @@ export class Class_Node extends Class_NodeElement {
 
   // DEFAULT ATTRIBUTES ===============================================================
   // Level & Parent
+  // TODO link with other nodes directly
   dimensions: {
     [_:string] :{
       parent_name?: string,
@@ -286,13 +315,6 @@ export class Class_Node extends Class_NodeElement {
 
   // PROTECTED METHODS ==================================================================
 
-  protected draw() {
-    // Heritance of draw function
-    super.draw()
-    // Compute and apply node position
-    this.applyPosition()
-  }
-
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
    * @private
@@ -340,15 +362,15 @@ export class Class_Node extends Class_NodeElement {
     }
   }
 
-  // PRIVATE METHODS ====================================================================
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Apply node position to it shape in d3
-   * @private
+   * @protected
    * @return {*}
    * @memberof Class_Node
    */
-  private applyPosition() {
+  protected applyPosition() {
     if (this.d3_selection !== null) {
       // Default positions
       let x = this.getPosX()
@@ -385,6 +407,5 @@ export class Class_Node extends Class_NodeElement {
       this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
     }
   }
-
 }
 

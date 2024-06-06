@@ -217,15 +217,17 @@ export type Type_ElementShape = {
   visible: boolean,
   width: number,
   height: number,
-  color: string
+  color: string,
+  opacity: number
 }
-export type Type_Shape =  'ellipse' | 'rect' | 'arrow'
+export type Type_Shape =  'ellipse' | 'rect' | 'arrow' | 'path-straight' | 'path-curved'
 export const default_element_shape: Type_ElementShape = {
   type: 'rect',
   visible: true,
   width: 40,
   height: 40,
-  color: default_grey_color
+  color: default_grey_color,
+  opacity: 1
 }
 
 // CLASS ELEMENT ************************************************************************
@@ -252,11 +254,11 @@ export class Class_Element {
    */
   public d3_selection: d3.Selection<SVGGElement, this, SVGGElement, unknown> | null = null
 
-  // PRIVATE ATTRIBUTES =================================================================
+  // PROTECTED ATTRIBUTES ===============================================================
 
   /**
    * Display attributes for element
-   * @private
+   * @protected
    * @type {{
    *     drawing_area: Class_DrawingArea,
    *     position: Type_ElementPosition,
@@ -264,7 +266,7 @@ export class Class_Element {
    *   }}
    * @memberof Class_Element
    */
-  private display: {
+  protected display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
     shape: Type_ElementShape,
@@ -272,27 +274,27 @@ export class Class_Element {
 
   /**
    * Parent svg group : where element belong
-   * @private
+   * @protected
    * @type {string}
    * @memberof Class_Element
    */
-  private svg_group: string
+  protected svg_group: string
 
   /**
    * Is element currently visually selected
-   * @private
+   * @protected
    * @type {boolean}
    * @memberof Class_Element
    */
-  private is_selected: boolean = false
+  protected is_selected: boolean = false
 
   /**
    * Is mouse cursor over element d3 selection (default=false)
-   * @private
+   * @protected
    * @type {boolean}
    * @memberof Class_Element
    */
-  private is_mouse_over: boolean = false
+  protected is_mouse_over: boolean = false
 
   // CONSTRUCTOR ========================================================================
 
@@ -321,8 +323,10 @@ export class Class_Element {
   public reset() {
     // Clear D3
     this.unDraw()
-    // Draw on D3
+    // Draw element on D3
     this.draw()
+    // Position element on D3
+    this.applyPosition()
     // Add events listeners
     this.setEventsListeners()
   }
@@ -357,6 +361,16 @@ export class Class_Element {
   public setShapeHeight(_: number) { this.display.shape.height = _; this.reset() }
   public getShapeColor() { return this.display.shape.color }
   public setShapeColor(_: string) { this.display.shape.color = _; this.reset() }
+  public getShapeOpacity() { return this.display.shape.opacity }
+  public setShapeOpacity(_: number) {
+    if (_ > 1)
+      this.display.shape.opacity = 1.0
+    else if (_ < 0)
+      this.display.shape.opacity = 0.0
+    else
+      this.display.shape.opacity = _
+    this.reset()
+  }
 
   // Selection
   public setSelected() {this.is_selected = true; this.reset()}
@@ -373,7 +387,7 @@ export class Class_Element {
 
   /**
    * Set up element on d3 svg area
-   * @private
+   * @protected
    * @memberof Class_Element
    */
   protected draw(){
@@ -397,6 +411,20 @@ export class Class_Element {
     if (this.d3_selection !== null) {
       this.d3_selection.remove()
       this.d3_selection = null
+    }
+  }
+
+  /**
+   * Apply node position to it shape in d3
+   * @protected
+   * @return {*}
+   * @memberof Class_Node
+   */
+  protected applyPosition() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.attr(
+        'transform',
+        'translate(' + this.getPosX() + ', ' + this.getPosY() + ')')
     }
   }
 

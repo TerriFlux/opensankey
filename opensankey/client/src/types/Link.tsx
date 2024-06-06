@@ -5,13 +5,14 @@
 // ==================================================================================================
 
 // External imports
-import * as d3 from 'd3'
-import { MouseEvent } from 'react'
 
 // Local types
 import {
+  Class_Element,
+  Type_ElementPosition,
   Type_Label,
-  default_grey_color
+  Type_Shape,
+  default_element_position,
 } from './Element'
 import {
   Class_DrawingArea
@@ -23,26 +24,9 @@ import {
   Class_Tag
   } from './Tag'
 
-// Local functions
+// CUSTOM TYPES **************************************************************************
 
-
-/**
- * Define necessary properties for a link shape
- *
- * @type Type_ElementShape
- */
-type Type_LinkShape = {
-  visible: boolean,
-  color: string,
-  opacity: number
-  // TODO
-  // handlers
-}
-const default_link_shape: Type_LinkShape = {
-  visible: true,
-  color: default_grey_color,
-  opacity: 0.8
-}
+type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 
 // CLASS LINK ELEMENT ********************************************************************
 /**
@@ -50,67 +34,50 @@ const default_link_shape: Type_LinkShape = {
  *
  * @class Class_LinkElement
  */
-export class Class_LinkElement {
+export class Class_LinkElement extends Class_Element {
 
   // PUBLIC ATTRIBUTES ==================================================================
-
-  /**
-   * Id of link
-   *
-   * @type {string}
-   * @memberof Class_LinkElement
-   */
-  public id: string
-
-  /**
-   * D3 selection that contains related svg element
-   * @type {(d3.Selection<SVGGElement, Class_LinkElement, SVGGElement, unknown> | null)}
-   * @memberof Class_LinkElement
-   */
-  public d3_selection: d3.Selection<SVGGElement, this, SVGGElement, unknown> | null = null
 
   // Labels
   // TODO set as private and add getter & setter
   public label?: Type_Label
 
+  // PROTECTED ATTRIBUTES ===============================================================
+
+
   // PRIVATE ATTRIBUTES =================================================================
 
   /**
-   * Display attribute for link element
-   * @type {{
-   *     drawing_area: Class_DrawingArea,
-   *     shape: Type_LinkShape
-   *   }}
+   * Orientation of link element
+   * @private
+   * @type {Type_Orientation}
    * @memberof Class_LinkElement
    */
-  private display: {
-    drawing_area: Class_DrawingArea,
-    shape: Type_LinkShape
-  }
+  private orientation: Type_Orientation = 'hh'
 
   /**
-   * Parent svg group : where element belong
+   * First curvature point, ie point where first bezier curve occurs
    * @private
-   * @type {string}
+   * @type {number}
    * @memberof Class_LinkElement
    */
-  private svg_group: string
+  private first_curve_point: number = 0.1
 
   /**
-   * Is element currently visually selected
+   * Second curvature point, ie point where first bezier curve occurs
    * @private
-   * @type {boolean}
+   * @type {number}
    * @memberof Class_LinkElement
    */
-  private is_selected: boolean = false
+  private second_curve_point: number = 0.9
 
   /**
-   * Is mouse cursor over element d3 selection (default=false)
+   * Center curvature point, ie center point for bezier curve
    * @private
-   * @type {boolean}
+   * @type {number}
    * @memberof Class_LinkElement
    */
-  private is_mouse_over: boolean = false
+  private center_curve_point: number = 0.5
 
   // CONSTRUCTOR ========================================================================
 
@@ -124,61 +91,74 @@ export class Class_LinkElement {
     id: string,
     drawing_area: Class_DrawingArea
   ) {
-    this.id = id
-    this.display = {
-      drawing_area: drawing_area,
-      shape: structuredClone(default_link_shape),
-    }
-    this.svg_group = 'g_links'
+    super(
+      id,
+      drawing_area,
+      'g_links')
+    // Override default values
+    this.display.shape.type = 'path-curved'
+    this.display.position.type = 'relative'
+    this.display.position.x = 0
+    this.display.position.y = 0
   }
 
   // PUBLIC METHODS =====================================================================
-  public reset() {
-    // Clear D3
-    this.unDraw()
-    // Draw on D3
-    this.draw()
-    // Add events listeners
-    this.setEventsListeners()
-  }
+  /* TODO */
 
   // GETTER / SETTER ====================================================================
-  // Name
-  public getId() { return this.id }
 
-  // DrawingArea
-  public getDrawingArea() { return this.display.drawing_area }
-
-  // Svg Group
-  public getSvgGroup() { return this.svg_group }
-
-  // Shape
-  public getShapeVisible() { return this.display.shape.visible }
-  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.reset() }
-  public getShapeOpacity() { return this.display.shape.opacity }
-  public setShapeOpacity(_: number) {
-    if (_ > 1)
-      this.display.shape.opacity = 1.0
-    else if (_ < 0)
-      this.display.shape.opacity = 0.0
-    else
-      this.display.shape.opacity = _
+  // Shape can only be path
+  public setShapeType(_: Type_Shape) {
+    if ((_ !== 'path-straight') && (_ !== 'path-curved')) {
+      return
+    }
+    this.display.shape.type = _
     this.reset()
   }
-  public getShapeColor() { return this.display.shape.color }
-  public setShapeColor(_: string) { this.display.shape.color = _; this.reset() }
+  public isStraight() { return this.display.shape.type === 'path-straight' }
+  public isCurved() { return this.display.shape.type === 'path-curved' }
 
-  // Selection
-  public setSelected() {this.is_selected = true; this.reset()}
-  public setUnSelected() {this.is_selected = false; this.reset()}
-  public isSelected() {return this.is_selected}
+  // Orientation
+  public getOrientation() { return this.orientation }
+  public setOrientation(_: Type_Orientation) {this.orientation = _; this.reset()}
+  public isHorizontal() { return this.orientation === 'hh' }
+  public isVertical() { return this.orientation === 'vv' }
 
-  // Mouse is over element
-  public isMouseOver() { return this.is_mouse_over }
-  public setMouseOver() { this.is_mouse_over = true }
-  public unsetMouseOver() { this.is_mouse_over = false }
+  // Coordinates
+  public getStartingPointX() { return this.getPosX() }
+  public getStartingPointY() { return this.getPosY() }
+  public getEndingPointX() { return this.getPosX() + this.getShapeWidth() }
+  public getEndingPointY() { return this.getPosY() + this.getShapeHeight() }
 
-  // PROTECTED METHODES =================================================================
+  // Curvature points
+  public getFirstCurvePoint() { return this.first_curve_point }
+  public setFirstCurvePoint(_: number) {
+    if ((_ > 0.05) && (_ < this.second_curve_point)) {
+      this.first_curve_point = _
+      this.reset()
+    }
+  }
+  public getSecondCurvePoint() {
+    return this.second_curve_point
+  }
+  public setSecondCurvePoint(_: number) {
+    if ((_ > this.first_curve_point) && (_ < 0.95)) {
+      this.second_curve_point = _
+      this.reset()
+    }
+  }
+  public getCenterCurvePoint() {
+    return this.center_curve_point
+  }
+  public setCenterCurvePoint(_: number) {
+    if ((_ > this.first_curve_point) && (_ < this.second_curve_point)) {
+      this.second_curve_point = _
+      this.reset()
+    }
+  }
+
+
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Set up element on d3 svg area
@@ -195,161 +175,68 @@ export class Class_LinkElement {
     }
   }
 
-  /**
-   * Unset element from d3 svg area
-   * @protected
-   * @memberof Class_LinkElement
-   */
-  protected unDraw() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.remove()
-      this.d3_selection = null
+  // PRIVATE METHODS ====================================================================
+  private getBezierPath() {
+    let x0, x5
+    let y0, y5
+
+    if (this.isVertical()) {
+      [x0, y0] = [this.getStartingPointX(), this.getEndingPointY()];
+      [x5, y5] = [this.getEndingPointX(), this.getEndingPointY()]
     }
-  }
-
-  /**
-   * Set up events related to element d3_element
-   * @protected
-   * @memberof Class_LinkElement
-   */
-  protected setEventsListeners() {
-    if (!this.display.drawing_area.static) {
-      // Right mouse button clicks
-      this.d3_selection?.on(
-        'click',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBCLick(event))
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBCLick(event))
-      // Right mouse button maintained
-      this.d3_selection?.on(
-        'mousedown',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMaintainedClick(event))
-      this.d3_selection?.on(
-        'mouseup',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventReleasedClick(event))
-      // Mouse cursor goes over this
-      this.d3_selection?.on(
-        'mouseover',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOver(event))
-      this.d3_selection?.on(
-        'mouseout',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOut(event))
-      // Mouse cursor move
-      this.d3_selection?.on(
-        'mousemove',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseMove(event))
-      // Left mouse button click
-      this.d3_selection?.on(
-        'contextmenu',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event))
+    else if (this.isHorizontal()) {
+      [y0, x0] = [this.getStartingPointX(), this.getEndingPointY()];
+      [y5, x5] = [this.getEndingPointX(), this.getEndingPointY()]
     }
-  }
+    else {
+      // TODO pour autre modes d'orientation
+      [x0, y0] = [this.getStartingPointX(), this.getEndingPointY()];
+      [x5, y5] = [this.getEndingPointX(), this.getEndingPointY()]
+    }
 
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventSimpleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO do something
-  }
 
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventDoubleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Ajouter déclemenchement editeur nom de noeud
-  }
+    const left_shift = (x5 - x0) * this.first_curve_point
+    const right_shift = (x5 - x0) * this.second_curve_point
+    const x1 = x0 + left_shift
+    const y1 = y0
+    const x4 = x0 + right_shift
+    const y4 = y5
+    // control point
+    const x2 = x1 + (x4 - x1) * this.center_curve_point //+ 1
+    const y2 = y1
+    const x3 = x1 + (x4 - x1) * (1 - this.center_curve_point) //- 1
+    const y3 = y4
 
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventSimpleRMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
-  }
-
-  /**
-   * Define maintained left mouse button click for drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventMaintainedClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    /* TODO définir clique gauche sur element */
-  }
-
-  /**
-   * Define released left mouse button click for drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventReleasedClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    /* TODO définir clique gauche sur element */
-  }
-
-  /**
-   * Define event when mouse moves over drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventMouseOver(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Update mouse over indicator for element
-    this.setMouseOver()
-  }
-
-  /**
-   * Define event when mouse moves out of drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventMouseOut(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Update mouse left indicator for element
-    this.unsetMouseOver()
-  }
-
-  /**
-   * Define event when mouse moves in drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
-   */
-  protected eventMouseMove(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    /* TODO définir  */
+    // Write paths
+    // TODO finish
+    if (this.isStraight()) {
+      if (this.isVertical()) {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' L ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+      }
+      else {
+        return 'M ' + y0 + ',' + x0
+          + ' L ' + y1 + ',' + x1
+          + ' L ' + y4 + ',' + x4
+          + ' L ' + y5 + ',' + x5
+      }
+    } else {
+      if (this.isHorizontal()) {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 // control points
+          + ' ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+      }
+      else {
+        return 'M ' + y0 + ',' + x0
+          + ' L ' + y1 + ',' + x1
+          + ' C ' + y2 + ',' + x2 + ' ' + y3 + ',' + x3 + ' ' + y4 + ',' + x4
+          + ' L ' + y5 + ',' + x5
+      }
+    }
   }
 }
 
@@ -357,7 +244,7 @@ export class Class_LinkElement {
 /**
  * Class that define a link object for a Sankey
  *
- * @class Class_Node
+ * @class Class_Link
  * @extends {Class_LinkElement}
  */
 export class Class_Link extends Class_LinkElement{
@@ -376,20 +263,20 @@ export class Class_Link extends Class_LinkElement{
   /**
    * Node from which link starts
    *
-   * @private
+   * @protected
    * @type {Class_Node}
    * @memberof Class_Link
    */
-  private source: Class_Node
+  protected source: Class_Node
 
   /**
    * Node to which link arrives
    *
-   * @private
+   * @protected
    * @type {Class_Node}
    * @memberof Class_Link
    */
-  private target: Class_Node
+  protected target: Class_Node
 
   // TODO comment the rest
   private color_sustainable: boolean = false
@@ -410,7 +297,10 @@ export class Class_Link extends Class_LinkElement{
     target: Class_Node,
     drawing_area: Class_DrawingArea,
   ) {
-    super(source.id + '--->' + target.id, drawing_area)
+    super(
+      source.id + '-->' + target.id,
+      drawing_area)
+    // Surcharge with source & target
     this.source = source
     this.source.addOutputLink(this)
     this.target = target
