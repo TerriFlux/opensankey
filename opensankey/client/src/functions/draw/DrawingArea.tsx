@@ -21,6 +21,7 @@ import {
 
 // Add local constants
 import { default_black_color } from '../../types/Element'
+import { Class_Link, Class_LinkElement } from '../../types/Link'
 
 /**
  * Draw background for drawing area
@@ -169,6 +170,12 @@ const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
       // Set position
       const mouse_position = d3.pointer(event)
       new_node.setPosXY(mouse_position[0], mouse_position[1])
+      // TODO remove test
+      const new_link = new Class_LinkElement('test', drawing_area)
+      new_link.setPosXY(new_node.getPosX(), new_node.getPosY())
+      new_link.setShapeWidth(100)
+      new_link.setShapeHeight(50)
+      new_link.setOrientation('vh')
     }
     // SELECTION MODE ===========================================================
     else if (drawing_area.isInSelectionMode()) {
