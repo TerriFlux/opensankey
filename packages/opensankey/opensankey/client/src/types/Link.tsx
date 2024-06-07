@@ -9,10 +9,8 @@
 // Local types
 import {
   Class_Element,
-  Type_ElementPosition,
   Type_Label,
   Type_Shape,
-  default_element_position,
 } from './Element'
 import {
   Class_DrawingArea
@@ -103,7 +101,25 @@ export class Class_LinkElement extends Class_Element {
   }
 
   // PUBLIC METHODS =====================================================================
-  /* TODO */
+
+  /**
+   * Compute lenght of link
+   * @memberof Class_LinkElement
+   */
+  public getLenght() {
+    if (this.isVertical()) {
+      return Math.abs(this.getStartingPointY() - this.getEndingPointY())
+    }
+    else if (this.isHorizontal()) {
+      return Math.abs(this.getStartingPointX() - this.getEndingPointX())
+    }
+    else {
+      return (
+        Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
+        Math.abs(this.getStartingPointY() - this.getEndingPointY())
+      )
+    }
+  }
 
   // GETTER / SETTER ====================================================================
 
@@ -123,6 +139,8 @@ export class Class_LinkElement extends Class_Element {
   public setOrientation(_: Type_Orientation) {this.orientation = _; this.reset()}
   public isHorizontal() { return this.orientation === 'hh' }
   public isVertical() { return this.orientation === 'vv' }
+  public isHorizontalVertical() { return this.orientation === 'hv' }
+  public isVerticalHorizontal() { return this.orientation === 'hv' }
 
   // Coordinates
   public getStartingPointX() { return this.getPosX() }
@@ -151,6 +169,7 @@ export class Class_LinkElement extends Class_Element {
     return this.center_curve_point
   }
   public setCenterCurvePoint(_: number) {
+    // TODO : no effect on vh or hv curves
     if ((_ > this.first_curve_point) && (_ < this.second_curve_point)) {
       this.second_curve_point = _
       this.reset()
@@ -166,6 +185,7 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   protected draw(){
+    // Create group
     const d3_drawing_area = this.getDrawingArea().d3_selection
     if (d3_drawing_area !== null) {
       this.d3_selection = d3_drawing_area.selectAll(' #'+this.svg_group)
@@ -173,69 +193,97 @@ export class Class_LinkElement extends Class_Element {
         .append('g')
         .attr('id', 'gg_' + this.id)
     }
+    // Draw shape
+    this.drawShape()
   }
 
   // PRIVATE METHODS ====================================================================
-  private getBezierPath() {
-    let x0, x5
-    let y0, y5
 
-    if (this.isVertical()) {
-      [x0, y0] = [this.getStartingPointX(), this.getEndingPointY()];
-      [x5, y5] = [this.getEndingPointX(), this.getEndingPointY()]
-    }
-    else if (this.isHorizontal()) {
-      [y0, x0] = [this.getStartingPointX(), this.getEndingPointY()];
-      [y5, x5] = [this.getEndingPointX(), this.getEndingPointY()]
+  /**
+   * Draw node shape on d3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
+  private drawShape() {
+    this.d3_selection?.append('path')
+      .classed('link', true)
+      .classed('link_shape', true)
+      .attr('d', this.getBezierPath())
+      .attr('fill', 'none')
+      .attr('stroke', this.getShapeColor())
+      .attr('stroke-opacity', this.getShapeOpacity())
+      .attr('stroke-width', 10) // TODO changer
+  }
+
+  private getBezierPath() {
+    // Get starting and ending position per type of shape
+    const [x0, y0] = [0, 0]
+    const [x5, y5] = [
+      this.getShapeWidth(),
+      this.getShapeHeight()]
+
+    // Shifts
+    const starting_shift = this.getLenght() * this.first_curve_point
+    const ending_shift = this.getLenght() * (1 - this.second_curve_point)
+    const horizontal_direction = Math.sign(x5-x0) // +1 / -1
+    const vertical_direction = Math.sign(y5-y0) // +1 / -1
+
+    // First curve point
+    let x1, y1
+    if (this.isHorizontal() || this.isHorizontalVertical()) {
+      x1 = x0 + horizontal_direction*starting_shift
+      y1 = y0
     }
     else {
-      // TODO pour autre modes d'orientation
-      [x0, y0] = [this.getStartingPointX(), this.getEndingPointY()];
-      [x5, y5] = [this.getEndingPointX(), this.getEndingPointY()]
+      x1 = x0
+      y1 = y0 + vertical_direction*starting_shift
     }
 
+    // Second curve point
+    let x4, y4
+    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+      x4 = x5 - horizontal_direction*ending_shift
+      y4 = y5
+    }
+    else {
+      x4 = x5
+      y4 = y5 - vertical_direction*ending_shift
+    }
 
-    const left_shift = (x5 - x0) * this.first_curve_point
-    const right_shift = (x5 - x0) * this.second_curve_point
-    const x1 = x0 + left_shift
-    const y1 = y0
-    const x4 = x0 + right_shift
-    const y4 = y5
-    // control point
-    const x2 = x1 + (x4 - x1) * this.center_curve_point //+ 1
-    const y2 = y1
-    const x3 = x1 + (x4 - x1) * (1 - this.center_curve_point) //- 1
-    const y3 = y4
+    // Bezier control points
+    // Line ((x1, y1); (x2, y2)) is first tangeant
+    // Line ((x3, y3); (x4, y4)) is second tangeant
+    let x2, y2
+    let x3, y3
+    if (this.isHorizontal() || this.isHorizontalVertical()) {
+      x2 = x1 + (x5 - x0) * this.center_curve_point
+      y2 = y1
+    }
+    else {
+      x2 = x1
+      y2 = y1 + (y5 - y0) * this.center_curve_point //+ 1
+    }
+    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+      x3 = x2
+      y3 = y4
+    }
+    else {
+      x3 = x4
+      y3 = y2
+    }
 
     // Write paths
-    // TODO finish
     if (this.isStraight()) {
-      if (this.isVertical()) {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' L ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-      }
-      else {
-        return 'M ' + y0 + ',' + x0
-          + ' L ' + y1 + ',' + x1
-          + ' L ' + y4 + ',' + x4
-          + ' L ' + y5 + ',' + x5
-      }
-    } else {
-      if (this.isHorizontal()) {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 // control points
-          + ' ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-      }
-      else {
-        return 'M ' + y0 + ',' + x0
-          + ' L ' + y1 + ',' + x1
-          + ' C ' + y2 + ',' + x2 + ' ' + y3 + ',' + x3 + ' ' + y4 + ',' + x4
-          + ' L ' + y5 + ',' + x5
-      }
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' L ' + x4 + ',' + y4
+        + ' L ' + x5 + ',' + y5
+    }
+    else {
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4
+        + ' L ' + x5 + ',' + y5
     }
   }
 }
