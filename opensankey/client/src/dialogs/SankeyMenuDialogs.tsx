@@ -131,6 +131,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   variant='menuconfigpanel_option_button'
                   onClick={() => {
                     dataVarToUpdate.current.length = 0
+                    ComponentUpdater.updateComponentBtnUpdateLayout.current()
                     setForceUpdate(!forceUpdate)
                   }}
                 >{t('Menu.Transformation.unSelectAll')}</Button>
@@ -154,6 +155,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   onClick={() => {
                     dataVarToUpdate.current.length = 0
                     default_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
+                    ComponentUpdater.updateComponentBtnUpdateLayout.current()
                     setForceUpdate(!forceUpdate)
                   }}
                 >{t('Menu.Transformation.selectDefault')}</Button>
@@ -390,9 +392,9 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 >{dataVarToUpdate.current.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
               </Box>
             </Box></OSTooltip>
-          {apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
+          {mode_trans=='expert'? apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
             return <React.Fragment key={i}>{c}</React.Fragment>
-          })}
+          }) : <></>}
         </Box>
       </TabPanel>
 
