@@ -56,7 +56,7 @@ import { DrawLegendFType, drag_legend_g_elementFuncType } from 'open-sankey/src/
 import { OpenSankeyConfigurationsMenusFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationTypes'
 import {SankeyMenuConfigurationNodesIOFType} from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationNodesIOTypes'
 import {
-  MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType
+  MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType
 } from 'open-sankey/src/topmenus/types/SankeyMenuTopTypes'
 import { keyHandlerFType } from 'open-sankey/src/draw/types/SankeyDrawTypes'
 import { OpenSankeyMenuConfigurationLayoutFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationLayoutTypes'
@@ -271,7 +271,6 @@ export const drawLinkShape:drawLinkShapeFType=SankeyDrawLinks.drawLinkShape
 export const AddDrawLinksEvent:AddDrawLinksEventsFType=SankeyDrawLinks.AddDrawLinksEvent
 
 export const RedrawNodesLabel:DrawAddNodesFtype=SankeyDrawNodesLabel.RedrawNodesLabel
-export const ToastWaitFunc : FunctionComponent<ToastWaitFuncFType> = SankeyMenuTop.ToastWaitFunc
 export const DeleteGNodes:DeleteGNodesFType=SankeyDrawNodes.DeleteGNodes
 export const applyZoomEvent:applyZoomEventFType=SankeyDrawEventFunc.applyZoomEvent
 

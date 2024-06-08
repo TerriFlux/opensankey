@@ -10,19 +10,11 @@ import {
   applyChange
 } from 'deep-diff'
 
-import {
-  Form,
-  Toast,
-  Badge,
-  Popover,
-  Overlay
-} from 'react-bootstrap'
-import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaCheck} from 'react-icons/fa'
 
 // Imported libs
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faListCheck, faXmark, faExclamation, faFloppyDisk } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faListCheck, faXmark, faExclamation, faFloppyDisk, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus } from '@fortawesome/free-solid-svg-icons'
 import {
   AccordionItem,
   AccordionButton,
@@ -44,8 +36,8 @@ import {
   ModalFooter,
   ModalHeader,
   ModalBody,
-  ModalContent
-} from '@chakra-ui/react'
+  ModalContent,
+  Tag} from '@chakra-ui/react'
 
 // OpenSankey Libs
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
@@ -66,8 +58,6 @@ import {
   OSPMenuPreferenceViewFType,
   SelecteurViewFType,
   setValueFType,
-  ViewToast_update_viewFType,
-  ViewToastFType,
   viewsAccordionFType
 } from '../types/SankeyPlusViewsTypes'
 
@@ -116,22 +106,6 @@ export const getSetDiagramFunc : getSetDiagramFType = (
   }
 }
 
-export const ViewToast : FunctionComponent<ViewToastFType> =({dict_hook_ref_setter_show_dialog_components})=> {
-  const show_toast=useState(false)
-  dict_hook_ref_setter_show_dialog_components.show_toast_new_view.current=show_toast[1]
-  return (<Toast show={show_toast[0]} bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
-    <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
-    <Toast.Body>Vue sauvegardée</Toast.Body>
-  </Toast>)}
-
-export const ViewToast_update_view : FunctionComponent<ViewToast_update_viewFType> = ({dict_hook_ref_setter_show_dialog_components})=> {
-  const show_toast=useState(false)
-  dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current=show_toast[1]
-
-  return(<Toast show={show_toast[0]} bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
-    <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Mise à jour</small> </Toast.Header>
-    <Toast.Body>Vue mise à jour</Toast.Body>
-  </Toast>)}
 
 export const setValue : setValueFType = (
   dataTags: TagsGroup[],
@@ -249,7 +223,6 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
   ComponentUpdater
 ) => {
   const {t,has_open_sankey_plus}=applicationContext
-  const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
   const {data,set_data,master_data,set_master_data,view,set_view,set_view_not_saved}=applicationData
   const {multi_selected_label}=applicationState
   const is_master=applicationData.view==='none'
@@ -280,10 +253,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
       RecomputeViews(new_master_data,master_data,set_master_data)
       // is_master data is now set
       // at this stage data is a view and is equal with is_master data
-      show_toast_new_view.current!(true)
-      setTimeout(function () {
-        show_toast_new_view.current!(false)
-      }, 3000)
+
       set_view(new_ind)
       new_master_data.current_view=new_ind
       set_master_data({...new_master_data})
@@ -338,7 +308,6 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
         set_master_data({...master_data!})
         // Save master_data data in localStorage
         localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
-        dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(false)
 
       }else{
         // Save current data (wich is master_data)
@@ -349,10 +318,8 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
 
     }
 
-    if(view!=='none'){
-      dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
-    }
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
+
+    dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
 
 
 
@@ -669,18 +636,7 @@ export const viewsAccordion : viewsAccordionFType = (
         <Box as='span' layerStyle='menuconfig_entry'>
           {t('view.storytelling')}
         </Box>
-        {(!is_activated)?
-          <OSTooltip label={t('Menu.sankeyOSPDisabled')}>
-            <Badge pill
-              bg="white"
-              style={{marginLeft:'5px', fontSize:'1.3em'}}>
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            </Badge>
-          </OSTooltip>:
-          <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>}
+        <Tag  colorScheme='teel' >Beta</Tag>
         <AccordionIcon/>
       </AccordionButton>
       <AccordionPanel>
@@ -799,7 +755,7 @@ export const viewsAccordion : viewsAccordionFType = (
       </AccordionPanel>
     </AccordionItem>
 
-    <Form.Control
+    <Input
       type="file"
       ref={_load_json}
       style={{ display: 'none' }}
@@ -903,8 +859,6 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
   const {data,set_data,master_data,set_master_data,get_default_data,view,set_view}=applicationData
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const m_d=master_data?master_data:data
-  const [show_modify_name_view,set_show_modify_name_view]=useState(false)
-  const target_popover_modify_view_name=useRef(null)
   const _load_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
   const {t,has_open_sankey_plus}=applicationContext
   const has_views = master_data?master_data.view.length>0:false
@@ -924,8 +878,7 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
           }
         }}
       >
-        <FaPlus
-          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/>
+        <FontAwesomeIcon icon={faPlus}  style={{opacity:(has_open_sankey_plus)?'0.6':'1'}}/>
         {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
@@ -985,12 +938,10 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
             if (_load_json_catalog.current) {
               _load_json_catalog.current.name = ''
               _load_json_catalog.current.click()
-            }
-          }
-        }
-      >
-        <FaCopy
-          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/>
+            }}}>
+        <FontAwesomeIcon icon={faCopy}  style={{opacity:( !has_open_sankey_plus)?'0.6':'1'}}/>
+        {/* <FaCopy
+          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/> */}
         {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
@@ -1038,8 +989,9 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
             set_master_data({...master_data!})
           }
         }>
-
-        <FaMinus/>
+          
+        <FontAwesomeIcon icon={faMinus}/>
+        
         {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
@@ -1056,26 +1008,7 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
   </OSTooltip>
 
 
-
-  const popover_modify_view_name=
-  <Popover id="popover-link-filter" style={{maxWidth:'100%','overflowY':'auto'}}>
-    <Popover.Header as="h3">{t('view.modify_name_view')}</Popover.Header>
-    <Popover.Body >
-      <Form.Control
-        type='text'
-        value={master_data && master_data.current_view && master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data!.current_view)[0].nom:''}
-        onChange={(evt)=>{
-          master_data?master_data.view.filter(v=>v.id===master_data!.current_view).forEach(v=>v.nom=evt.target.value):''
-          set_data(JSON.parse(JSON.stringify(data)))
-        }}
-      >
-
-      </Form.Control>
-    </Popover.Body>
-  </Popover>
-
-
-  const file_reder_for_catalog=<Form.Control
+  const file_reder_for_catalog=<Input
     type="file"
     multiple
     accept='.json'
@@ -1152,119 +1085,114 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
       }
     }}
   />
-  return <><Overlay
-    key={'popover-link-filter'}
-    placement={'bottom'}
-    target={target_popover_modify_view_name}
-    rootClose
-    show={show_modify_name_view}
-    onHide={()=>{set_show_modify_name_view(false)}}
-  >
-    {popover_modify_view_name}
-  </Overlay>
-  {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
-  {window.SankeyToolsStatic ? <></> : create_data_catalog}
-  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.home')}>
-    <Box>
-      <Button
-        variant='submenu_nav_btn'
-        isDisabled={((!has_open_sankey_plus && !has_views)||(master_data && master_data.is_catalog))}
-        onClick={() => {
-          const ev = document
-          const tmp = { key: 'F7' }
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}>
+  return <>  
+    {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
+    {window.SankeyToolsStatic ? <></> : create_data_catalog}
+    {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.home')}>
+      <Box>
+        <Button
+          variant='submenu_nav_btn'
+          isDisabled={((!has_open_sankey_plus && !has_views)||(master_data && master_data.is_catalog))}
+          onClick={() => {
+            const ev = document
+            const tmp = { key: 'F7' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+          <FontAwesomeIcon icon={faHome}/>
 
-        <FaHome
-          style={{opacity:((has_open_sankey_plus && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
-        {(!has_open_sankey_plus && !has_views)?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('Menu.home')}
-      </Button>
-    </Box>
-  </OSTooltip>}
+          {/* <FaHome
+          style={{opacity:((has_open_sankey_plus && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/> */}
+          {(!has_open_sankey_plus && !has_views)?
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            :<></>}
+          {t('Menu.home')}
+        </Button>
+      </Box>
+    </OSTooltip>}
 
-  {window.SankeyToolsStatic ? <></> : buttonCreateView}
+    {window.SankeyToolsStatic ? <></> : buttonCreateView}
 
 
-  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.PrevViewButton')}>
-    <Box>
-      <Button
-        variant='submenu_nav_btn'
-        isDisabled={prev_button_disabled || !has_views}
-        onClick={() => {
-          const ev = document
-          const tmp = { key: 'F8' }
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}>
-        <FaCaretSquareLeft
-          style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
-        {(!has_open_sankey_plus && !has_views)?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('Menu.precView')}
-      </Button>
-    </Box>
-  </OSTooltip>
+    <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.PrevViewButton')}>
+      <Box>
+        <Button
+          variant='submenu_nav_btn'
+          isDisabled={prev_button_disabled || !has_views}
+          onClick={() => {
+            const ev = document
+            const tmp = { key: 'F8' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+          <FontAwesomeIcon icon={faCaretSquareLeft}  style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
 
-  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.NextViewButton')}>
-    <Box>
-      <Button
-        variant='submenu_nav_btn'
-        isDisabled={next_button_disabled || !has_views}
-        onClick={() => {
-          const ev = document
-          const tmp = { key: 'F9'}
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}>
+          {/* <FaCaretSquareLeft */}
+          {/* // style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/> */}
+          {(!has_open_sankey_plus && !has_views)?
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            :<></>}
+          {t('Menu.precView')}
+        </Button>
+      </Box>
+    </OSTooltip>
 
-        <FaCaretSquareRight
+    <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.NextViewButton')}>
+      <Box>
+        <Button
+          variant='submenu_nav_btn'
+          isDisabled={next_button_disabled || !has_views}
+          onClick={() => {
+            const ev = document
+            const tmp = { key: 'F9'}
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+          <FontAwesomeIcon icon={faCaretSquareRight}  style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}/>
+
+          {/* <FaCaretSquareRight
           style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
-        />
-        {(!has_open_sankey_plus && !has_views)?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('Menu.nextView')}
-      </Button>
-    </Box>
-  </OSTooltip>
-  {view_selector}
+        /> */}
+          {(!has_open_sankey_plus && !has_views)?
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            :<></>}
+          {t('Menu.nextView')}
+        </Button>
+      </Box>
+    </OSTooltip>
+    {view_selector}
 
-  {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
-    {button_delete_actual_view}
-    {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
-  </>
-    :<></>
+    {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
+      {button_delete_actual_view}
+      {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
+    </>
+      :<></>
 
-  }
+    }
   </>
 }
 

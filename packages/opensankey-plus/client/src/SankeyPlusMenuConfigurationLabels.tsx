@@ -1,18 +1,9 @@
 // Standard libs
 import React, { Ref, useState, ChangeEvent, FunctionComponent, useRef } from 'react'
 import * as d3 from 'd3'
-
-import {
-  Form,
-  FormControl,
-  Popover,
-  ButtonGroup,
-  Badge
-} from 'react-bootstrap'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
-import { TFunction } from 'i18next'
-import ReactQuill, { Quill } from 'react-quill'
+import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 
 // Imported libs
@@ -30,10 +21,13 @@ import {
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInputField,
-  NumberInputStepper
+  NumberInputStepper,
+  FormControl,
+  FormErrorMessage,
+  ButtonGroup
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
+import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 
 // Local libs
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
@@ -51,7 +45,7 @@ import { OSTooltip } from './import/OpenSankey'
 // OpenSankey js-code
 import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
 
-const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
+const sep=<hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
 /**
  *  TODO
@@ -290,15 +284,13 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
       backgroundColor:(disable_options)?'#cccccc':''}}
   /></Box>
 
-  const content_wysiwyg = <Form>
-    <Form className='FO_zdt_editeur'>
-      <Form.Group>
-        {editor_fo}
-      </Form.Group>
-      <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
-      <FormControl.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</FormControl.Feedback>
-    </Form>
-  </Form>
+  const content_wysiwyg = <Box className='FO_zdt_editeur'>
+    <FormControl isInvalid={isQuill_invalid}>
+      {editor_fo}
+      <Input type='text'  style={{display:'none'}}/>
+      <FormErrorMessage>{t('MEP.onBlurNoEnter')}</FormErrorMessage>
+    </FormControl>
+  </Box>
 
   const content_image = <>
     {/* Import image */}
@@ -312,7 +304,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           {t('Noeud.img_src')}
         </Box>
 
-        <Form.Control
+        <Input
           accept='image/*'
           type="file"
           disabled={disable_options}
@@ -659,14 +651,15 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
 }
 
 
-export const context_zdt : context_zdtFType =(
+export const ContextZDT : FunctionComponent<context_zdtFType> =({
   contextMenu,
-  t:TFunction,
+  t,
   applicationData,
   dict_hook_ref_setter_show_dialog_components,
   applicationState,
   ComponentUpdater,
   reDrawOSPLabels
+}
 )=>{
   const {data}=applicationData
   const {pointer_pos,contextualised_zdt}=(contextMenu as OSPContextMenuType)
@@ -687,27 +680,24 @@ export const context_zdt : context_zdtFType =(
     set_zdt_to_contextualise(undefined)
     reDrawOSPLabels(multi_selected_label.current)
     updateComponentMenuConfigZdt.current.forEach(f=>f())
-  }} variant='light'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
+  }} variant='btn_in_context_menu'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
 
 
   const btn_change_color=<>
-    <Button variant='light'>
-      <Form.Label  htmlFor="form_color_zdt">
-        {t('LL.cfl')}
-      </Form.Label></Button>
-    <FormControl size='sm'
-      type='color'
-      id='form_color_zdt'
-      name='form_color_zdt'
-      style={{display:'none'}}
-      value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
-      onChange={evt => {
-        const val = evt.target.value
-        multi_selected_label.current.map(d => d.color = val)
-        reDrawOSPLabels(multi_selected_label.current)
-        updateComponentMenuConfigZdt.current.forEach(f=>f())
-      }}
-    />
+
+    <Button variant='btn_in_context_menu'>
+      <Input hidden type='color' id='form_color_zdt' name='color_bg_zdd' 
+        value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
+        onChange={(evt) => {
+          const val = evt.target.value
+          multi_selected_label.current.map(d => d.color = val)
+          reDrawOSPLabels(multi_selected_label.current)
+          updateComponentMenuConfigZdt.current.forEach(f=>f())
+        }}
+      >
+      </Input>
+      <label htmlFor='form_color_zdt' style={{ width: '100%', margin: 0 }}>{t('LL.cfl')}</label>
+    </Button>
   </>
 
 
@@ -715,17 +705,17 @@ export const context_zdt : context_zdtFType =(
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current!(true)
     set_zdt_to_contextualise(undefined)
 
-  }} variant='light'>{t('Menu.LL')} {icon_open_modal}</Button>
-  return zdt_to_contextualise?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
-    <Popover.Body >
-      <ButtonGroup vertical>
-        {btn_mask_border}
-        {btn_change_color}
-        {sep}
-        {button_open_layout}
-      </ButtonGroup>
-    </Popover.Body>
-  </Popover>:<></>
+  }} variant='btn_in_context_menu'>{t('Menu.LL')} {icon_open_modal}</Button>
+
+  return zdt_to_contextualise?<Box layerStyle='context_menu' id="context_zdd_pop_over" 
+    style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd,zIndex:4}}>
+    <ButtonGroup orientation='vertical' isAttached>
+      {btn_mask_border}
+      {btn_change_color}
+      {sep}
+      {button_open_layout}
+    </ButtonGroup>
+  </Box>:<></>
 }
 
 const icon_open_modal =<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
@@ -756,7 +746,7 @@ export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType
   content_menu_zdt
 })=>{
   // const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
-  const {t,has_open_sankey_plus} = applicationContext
+  const {t} = applicationContext
   return <AccordionItem
     style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'initial' : 'none' }}
   >
@@ -769,20 +759,6 @@ export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType
       >
         {t('Menu.LL')}
       </Box>
-      {
-        (!has_open_sankey_plus)?
-          <OSTooltip label={t('Menu.sankeyOSPDisabled')} >
-            <Badge pill
-              bg="white"
-              style={{marginLeft:'5px', fontSize:'1.3em'}}>
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            </Badge>
-          </OSTooltip>:
-          <></>
-      }
       <AccordionIcon/>
     </AccordionButton>
     <AccordionPanel>

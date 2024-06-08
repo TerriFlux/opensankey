@@ -61,22 +61,23 @@ import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenu
 import { OSPNodeFO } from './SankeyPlusForeignObject'
 import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
-import { OSPMenuPreferenceLabels, ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
+import { OSPMenuPreferenceLabels, ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
 import { OSPDrawNodesIllustration, OSPNodeClickEvent, OSPNodeIcon, OSPHyperLink, OpposingDragElementsPlus } from './SankeyPlusNodes'
 import { DefaultOSPStyleLink,  ImportImageAsSvgBg, OSPItemExport, OSPLinkSabotColor, SetSvgBg } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import { 
   GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView, 
   SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, 
-  ViewToast, ViewToast_update_view, viewsAccordion 
+  viewsAccordion 
 } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
-import { Col, Form, FormGroup, Popover, Row } from 'react-bootstrap'
 import { t } from 'i18next'
-import { windowSankey } from 'open-sankey/dist/configmenus/SankeyUtils'
 import { opposing_DragElementsFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
+import { Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger,Button, PopoverArrow, PopoverCloseButton, Box, Input } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
 declare const window: Window &
 typeof globalThis & {
@@ -207,8 +208,6 @@ export const OSPInitializeShowDialog : OSPInitializeShowDialogType = ()=>{
     ref_setter_show_modal_import_icons : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_zdt : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modal_transparent_view_attr: useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    show_toast_new_view: useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    show_toast_update_view: useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   } as  OSPShowMenuComponentsVarType
 }
 export const OSPcloseAllMenu = closeAllMenu
@@ -594,15 +593,15 @@ export const OSPModuleDialogs : module_dialogsType = (
     contextMenu.pointer_pos,
     applicationContext.t('Menu.LL')
     ),
-    context_zdt(
-      contextMenu,
-      applicationContext.t,
-      OSP_dict_app_data,
-      OSP_dict_hook_ref,
-      applicationState as OSPElementsSelectedType,
-      ComponentUpdater as OSPComponentUpdaterType,
-      (applicationDraw as OSPApplicationDrawType).reDrawOSPLabels
-    ),
+    <ContextZDT
+      contextMenu={contextMenu}
+      t={applicationContext.t}
+      applicationData={OSP_dict_app_data}
+      dict_hook_ref_setter_show_dialog_components={OSP_dict_hook_ref}
+      applicationState={applicationState as OSPElementsSelectedType}
+      ComponentUpdater={ComponentUpdater as OSPComponentUpdaterType}
+      reDrawOSPLabels={(applicationDraw as OSPApplicationDrawType).reDrawOSPLabels}
+    />,
     modal_transparent_view_attr(
       OSP_dict_hook_ref,
       OSP_dict_app_data,
@@ -620,12 +619,6 @@ export const OSPModuleDialogs : module_dialogsType = (
       applicationState={OSP_elements_selected}
       dict_hook_ref_setter_show_dialog_components={OSP_dict_hook_ref}
       node_function={OSP_node_function }
-    />,
-    <ViewToast
-      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType}
-    />,
-    <ViewToast_update_view
-      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType}
     />
   ]
 }
@@ -779,7 +772,6 @@ export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=( 
   link_function,
   ComponentUpdater
 )=>{
-  const opacity_advanced =  !windowSankey.SankeyToolsStatic ? '0.3' : '0'
 
   const mutiple_level_tag_filter=<AddAllDropDownNode 
     applicationContext={applicationContext}
@@ -790,18 +782,26 @@ export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=( 
     link_function={link_function}
     applicationDraw={applicationDraw}
   />
-  return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
-    <Popover.Body style={{maxHeight:'600px',overflowY:'auto',  marginLeft: '5px', width: '350px' }}>
-      <FormGroup as={Row}>
-        <Col xs={9}>
-          {t('Menu.group')}
-        </Col>
-      </FormGroup>
-      <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
-        {mutiple_level_tag_filter}</>
-      ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</>
-    </Popover.Body>
+  return <Popover placement='left' id='popover_details_level' >
+    <PopoverTrigger>
+      <Button variant='btn_detail_level_toolbar' id='btn_open_popover_details_level'>
+        <FontAwesomeIcon icon={faFolderTree} />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverCloseButton />
+
+      <PopoverHeader>{applicationContext.t('Banner.ndd')}</PopoverHeader>
+      <PopoverBody style={{maxHeight:'600px',overflowY:'auto'}}>
+        <Box as='span' layerStyle='popover_sidebar_row_tag_filter'>
+          <Box>{t('Menu.group')}</Box>
+        </Box>
+        <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
+          {mutiple_level_tag_filter}</>
+        ) : (<>
+          <Input placeholder="Pas de filtrage" isDisabled /></>)}</>
+      </PopoverBody>
+    </PopoverContent>
   </Popover>
 }
