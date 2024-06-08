@@ -1,6 +1,5 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { Form, FormLabel, Row, Col, Button, InputGroup, Tabs,Tab,FormControl, Modal} from 'react-bootstrap'
 import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
@@ -11,7 +10,7 @@ import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
-import { Box, Checkbox,Button as ChakraButton } from '@chakra-ui/react'
+import { Box, Checkbox, Button, NumberInput, Input, NumberDecrementStepper, NumberIncrementStepper, NumberInputField, NumberInputStepper, InputGroup, InputRightAddon, TabList, Tab, Tabs, TabPanels, TabPanel, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@chakra-ui/react'
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
@@ -90,423 +89,460 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     })
     set_data({...data})
   }
-  const content_modal_layout=  <Tabs defaultActiveKey={'import'} >
+  const content_modal_layout=  <Tabs>
+    <TabList>
+      <Box layerStyle='submenuconfig_tab' >
+        <Tab>{t('Menu.Transformation.amp_import')}</Tab>
+      </Box>
+      <Box layerStyle='submenuconfig_tab' >
+        <Tab>{t('Menu.Transformation.amp_manuelle')}</Tab>
+      </Box>
+    </TabList>
 
-    <Tab key='import' eventKey='import' title={t('Menu.Transformation.amp_import')} style={{marginBottom:'10px'}}>
+    <TabPanels>
+      {/* Import data */}
+      <TabPanel >
+        <Box layerStyle='menuconfigpanel_grid' >
 
-      <InputGroup>
-        <InputGroup.Text style={{width:'50%'}}>{t('Menu.choseTransforDifficulty')}</InputGroup.Text>
-        <Button variant={mode_trans=='simple'?'primary':'outline-primary'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('simple')}}>Simple</Button>
-        <Button variant={mode_trans=='avancé'?'warning':'outline-warning'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
-        <Button variant={mode_trans=='expert'?'danger':'outline-danger'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
-      </InputGroup>
+          {diagramSelector(
+            t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data,
+            updateLayout, dataVarToUpdate,DefaultSankeyData
+          )}
 
+          <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
-      {diagramSelector(
-        t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data,
-        updateLayout, dataVarToUpdate,DefaultSankeyData
-      )}
-      <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
-        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant='outline-primary'
-            onClick={() => {
-              dataVarToUpdate.current.length = 0
-              setForceUpdate(!forceUpdate)
-            }}
-          >{t('Menu.Transformation.unSelectAll')}</Button>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant='outline-primary'
-            onClick={() => {
-              dataVarToUpdate.current.length = 0
-              if(mode_trans==='simple'){
-                simple_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
-              }else if(mode_trans==='avancé'){
-                advanced_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
-              }else{
-                all_element_UpdateLayout.forEach(el=>dataVarToUpdate.current.push(el))
-              }
-              ComponentUpdater.updateComponentBtnUpdateLayout.current()
-              setForceUpdate(!forceUpdate)
-            }}
-          >{t('Menu.Transformation.selectAll')}</Button>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant='outline-primary'
-            onClick={() => {
-              dataVarToUpdate.current.length = 0
-              default_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
-              setForceUpdate(!forceUpdate)
-            }}
-          >{t('Menu.Transformation.selectDefault')}</Button>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.choseTransforDifficulty')}
+            </Box>
+            <Box layerStyle='options_3cols' >
+              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_secondary' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('simple')}}>Simple</Button>
+              <Button variant={mode_trans=='avancé'?'menuconfigpanel_option_button_tertiary' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
+              <Button variant={mode_trans=='expert'?'menuconfigpanel_del_button' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
+            </Box>
+          </Box>
+  
+          <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Shortcuts')}</Box>
+              <Box layerStyle='options_4cols' >
 
-        </InputGroup>
-      </OSTooltip>
+                <Button
+                  variant='menuconfigpanel_option_button'
+                  onClick={() => {
+                    dataVarToUpdate.current.length = 0
+                    setForceUpdate(!forceUpdate)
+                  }}
+                >{t('Menu.Transformation.unSelectAll')}</Button>
+                <Button
+                  variant='menuconfigpanel_option_button'
+                  onClick={() => {
+                    dataVarToUpdate.current.length = 0
+                    if(mode_trans==='simple'){
+                      simple_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
+                    }else if(mode_trans==='avancé'){
+                      advanced_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
+                    }else{
+                      all_element_UpdateLayout.forEach(el=>dataVarToUpdate.current.push(el))
+                    }
+                    ComponentUpdater.updateComponentBtnUpdateLayout.current()
+                    setForceUpdate(!forceUpdate)
+                  }}
+                >{t('Menu.Transformation.selectAll')}</Button>
+                <Button
+                  variant='menuconfigpanel_option_button'
+                  onClick={() => {
+                    dataVarToUpdate.current.length = 0
+                    default_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
+                    setForceUpdate(!forceUpdate)
+                  }}
+                >{t('Menu.Transformation.selectDefault')}</Button>
 
-      {mode_trans!='simple'?
-        <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
-          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={ dataVarToUpdate.current.includes('addNode')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('addNode')){
-                  dataVarToUpdate.current.push('addNode')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('addNode'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }
-            >{t('Menu.Transformation.addNode')}</Button>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={ dataVarToUpdate.current.includes('removeNode')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('removeNode')){
-                  dataVarToUpdate.current.push('removeNode')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('removeNode'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }
-            >{t('Menu.Transformation.removeNode')}</Button>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={ dataVarToUpdate.current.includes('addFlux')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('addFlux')){
-                  dataVarToUpdate.current.push('addFlux')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('addFlux'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }>{t('Menu.Transformation.addFlux')}</Button>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={ dataVarToUpdate.current.includes('removeFlux')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('removeFlux')){
-                  dataVarToUpdate.current.push('removeFlux')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('removeFlux'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }>{t('Menu.Transformation.removeFlux')}</Button>
+              </Box>
+            </Box>
+          </OSTooltip>
 
-          </InputGroup></OSTooltip>:<></>}
+          {mode_trans!='simple'?
+            <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
+              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Topology')}</Box>
+                <Box layerStyle='options_4cols' >
+                  <Button
+                    variant={ dataVarToUpdate.current.includes('addNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('addNode')){
+                        dataVarToUpdate.current.push('addNode')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('addNode'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{t('Menu.Transformation.addNode')}</Button>
+                  <Button
+                    variant={ dataVarToUpdate.current.includes('removeNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('removeNode')){
+                        dataVarToUpdate.current.push('removeNode')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('removeNode'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{t('Menu.Transformation.removeNode')}</Button>
+                  <Button
+                    variant={ dataVarToUpdate.current.includes('addFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('addFlux')){
+                        dataVarToUpdate.current.push('addFlux')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('addFlux'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }>{t('Menu.Transformation.addFlux')}</Button>
+                  <Button
+                    variant={ dataVarToUpdate.current.includes('removeFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('removeFlux')){
+                        dataVarToUpdate.current.push('removeFlux')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('removeFlux'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }>{t('Menu.Transformation.removeFlux')}</Button>
+                </Box>
+              </Box></OSTooltip>:<></>}
 
-      {/* Taille et pos des noeud/flux */}
-      <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
-        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={ dataVarToUpdate.current.includes('posNode')?'primary':'outline-primary'}
-            onClick={() => {
-              if(!dataVarToUpdate.current.includes('posNode')){
-                dataVarToUpdate.current.push('posNode')
-                setForceUpdate(!forceUpdate)
-              }else{
-                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('posNode'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }>{t('Menu.Transformation.PosNoeud')}</Button>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={ dataVarToUpdate.current.includes('posFlux')?'primary':'outline-primary'}
-            onClick={() => {
-              if(!dataVarToUpdate.current.includes('posFlux')){
-                dataVarToUpdate.current.push('posFlux')
-                setForceUpdate(!forceUpdate)
-              }else{
-                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('posFlux'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }> {t('Menu.Transformation.posFlux')}</Button>
+          {/* Taille et pos des noeud/flux */}
+          <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
+              <Box layerStyle='options_4cols' >
+                <Button
+                  variant={ dataVarToUpdate.current.includes('posNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  onClick={() => {
+                    if(!dataVarToUpdate.current.includes('posNode')){
+                      dataVarToUpdate.current.push('posNode')
+                      setForceUpdate(!forceUpdate)
+                    }else{
+                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('posNode'),1)
+                      setForceUpdate(!forceUpdate)
+                    }}
+                  }>{t('Menu.Transformation.PosNoeud')}</Button>
+                <Button
+                  variant={ dataVarToUpdate.current.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  onClick={() => {
+                    if(!dataVarToUpdate.current.includes('posFlux')){
+                      dataVarToUpdate.current.push('posFlux')
+                      setForceUpdate(!forceUpdate)
+                    }else{
+                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('posFlux'),1)
+                      setForceUpdate(!forceUpdate)
+                    }}
+                  }> {t('Menu.Transformation.posFlux')}</Button>
+              </Box>
 
-        </InputGroup>
-      </OSTooltip>
+            </Box>
+          </OSTooltip>
 
-      {/* Valeur des flux */}
-      {mode_trans!='simple'?
-        <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
-          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={ dataVarToUpdate.current.includes('Values')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('Values')){
-                  dataVarToUpdate.current.push('Values')
-                  // Also need dataTags because we can't only import values without the structur of dataTags
-                  // (but we can import dataTags without values)
-                  if(!dataVarToUpdate.current.includes('tagData')){
-                    dataVarToUpdate.current.push('tagData')
+          {/* Valeur des flux */}
+          {mode_trans!='simple'?
+            <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
+              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+                <Box layerStyle='options_4cols' >
+                  <Button
+                    variant={ dataVarToUpdate.current.includes('Values')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('Values')){
+                        dataVarToUpdate.current.push('Values')
+                        // Also need dataTags because we can't only import values without the structur of dataTags
+                        // (but we can import dataTags without values)
+                        if(!dataVarToUpdate.current.includes('tagData')){
+                          dataVarToUpdate.current.push('tagData')
+                        }
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Values'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{dataVarToUpdate.current.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+                </Box>
+              </Box></OSTooltip>:<></>}
+
+          <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'><Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
+              <Box layerStyle='options_4cols' >
+                <Button
+                  variant={dataVarToUpdate.current.includes('attrNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  onClick={() => {
+                    if(!dataVarToUpdate.current.includes('attrNode')){
+                      dataVarToUpdate.current.push('attrNode')
+                      setForceUpdate(!forceUpdate)
+
+                    }else{
+                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrNode'),1)
+                      setForceUpdate(!forceUpdate)
+                    }}
                   }
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Values'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }
-            >{dataVarToUpdate.current.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+                >{t('Menu.Transformation.attrNode')}</Button>
+                <Button
+                  variant={dataVarToUpdate.current.includes('attrFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  onClick={() =>{
+                    if(!dataVarToUpdate.current.includes('attrFlux')){
+                      dataVarToUpdate.current.push('attrFlux')
+                      setForceUpdate(!forceUpdate)
+                    }else{
+                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrFlux'),1)
+                      setForceUpdate(!forceUpdate)
+                    }}
+                  }
+                >{t('Menu.Transformation.attrFlux')}</Button>
+              </Box>
+            </Box></OSTooltip>
 
-          </InputGroup></OSTooltip>:<></>}
+          {/* Etiquette */}
+          {mode_trans=='expert'?
+            <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
+              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
+                <Box layerStyle='options_4cols' >
+                  <Button
+                    variant={dataVarToUpdate.current.includes('tagNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() =>{
+                      if(!dataVarToUpdate.current.includes('tagNode')){
+                        dataVarToUpdate.current.push('tagNode')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagNode'),1)
+                        setForceUpdate(!forceUpdate)
 
-      <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
-        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={dataVarToUpdate.current.includes('attrNode')?'primary':'outline-primary'}
-            onClick={() => {
-              if(!dataVarToUpdate.current.includes('attrNode')){
-                dataVarToUpdate.current.push('attrNode')
-                setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{t('Menu.Transformation.tagNode')}</Button>
+                  <Button
+                    variant={dataVarToUpdate.current.includes('tagFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('tagFlux')){
+                        dataVarToUpdate.current.push('tagFlux')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagFlux'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{t('Menu.Transformation.tagFlux')}</Button>
+                  <Button
+                    variant={dataVarToUpdate.current.includes('tagData')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('tagData')){
+                        dataVarToUpdate.current.push('tagData')
+                        setForceUpdate(!forceUpdate)
+                      }else if(!dataVarToUpdate.current.includes('Values')){
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagData'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{t('Menu.Transformation.tagData')}</Button>
+                </Box>
+              </Box></OSTooltip>:<></>}
 
-              }else{
-                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrNode'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{t('Menu.Transformation.attrNode')}</Button>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={dataVarToUpdate.current.includes('attrFlux')?'primary':'outline-primary'}
-            onClick={() =>{
-              if(!dataVarToUpdate.current.includes('attrFlux')){
-                dataVarToUpdate.current.push('attrFlux')
-                setForceUpdate(!forceUpdate)
-              }else{
-                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrFlux'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{t('Menu.Transformation.attrFlux')}</Button>
+          {/* Aggrégation */}
+          {mode_trans=='expert'?
+            <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
+              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
+                <Box layerStyle='options_4cols' >
+                  <Button
+                    variant={dataVarToUpdate.current.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    onClick={() => {
+                      if(!dataVarToUpdate.current.includes('tagLevel')){
+                        dataVarToUpdate.current.push('tagLevel')
+                        setForceUpdate(!forceUpdate)
+                      }else{
+                        dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagLevel'),1)
+                        setForceUpdate(!forceUpdate)
+                      }}
+                    }
+                  >{dataVarToUpdate.current.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+                </Box>
+              </Box></OSTooltip>:<></>}
 
-        </InputGroup></OSTooltip>
+          <OSTooltip label={t('Menu.Transformation.tooltips.attrGeneral')} >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+              <Box layerStyle='options_4cols' >
+                <Button
+                  variant={dataVarToUpdate.current.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  onClick={() =>{
+                    if(!dataVarToUpdate.current.includes('attrGeneral')){
+                      dataVarToUpdate.current.push('attrGeneral')
+                      setForceUpdate(!forceUpdate)
+                    }else{
+                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrGeneral'),1)
+                      setForceUpdate(!forceUpdate)
+                    }}
+                  }
+                >{dataVarToUpdate.current.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+              </Box>
+            </Box></OSTooltip>
+          {apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
+            return <React.Fragment key={i}>{c}</React.Fragment>
+          })}
+        </Box>
+      </TabPanel>
 
-      {/* Etiquette */}
-      {mode_trans=='expert'?
-        <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
-          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={dataVarToUpdate.current.includes('tagNode')?'primary':'outline-primary'}
-              onClick={() =>{
-                if(!dataVarToUpdate.current.includes('tagNode')){
-                  dataVarToUpdate.current.push('tagNode')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagNode'),1)
-                  setForceUpdate(!forceUpdate)
+      {/* Geometry */}
+      <TabPanel>
+        <Box layerStyle='menuconfigpanel_grid' >
+          {/* Ecart horizontal */}
+          <OSTooltip label={t('MEP.tooltips.EEN_h')} >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.Horizontal')}</Box>
+              <NumberInput
+                variant='menuconfigpanel_option_numberinput'
+                step={1}
+                min={0}
+                allowMouseWheel
+                value={node_hspace}
+                onChange={evt => {
+                  set_node_hspace(+evt)
+                  data.h_space = +evt
+                }}>
+                <NumberInputField/>
+                <NumberInputStepper>
+                  <NumberIncrementStepper/>
+                  <NumberDecrementStepper/>
+                </NumberInputStepper>
 
-                }}
-              }
-            >{t('Menu.Transformation.tagNode')}</Button>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={dataVarToUpdate.current.includes('tagFlux')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('tagFlux')){
-                  dataVarToUpdate.current.push('tagFlux')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagFlux'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }
-            >{t('Menu.Transformation.tagFlux')}</Button>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={dataVarToUpdate.current.includes('tagData')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('tagData')){
-                  dataVarToUpdate.current.push('tagData')
-                  setForceUpdate(!forceUpdate)
-                }else if(!dataVarToUpdate.current.includes('Values')){
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagData'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }
-            >{t('Menu.Transformation.tagData')}</Button>
+              </NumberInput>
+            </Box>
+          </OSTooltip>
 
-          </InputGroup></OSTooltip>:<></>}
+          {/* Ecart Vertical */}
+          <OSTooltip label={t('MEP.tooltips.EEN_v')} >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.Vertical')}</Box>
+              <NumberInput
+                variant='menuconfigpanel_option_numberinput'
+                step={1}
+                min={0}
+                allowMouseWheel
+                value={node_vspace}
+                onChange={evt => {
+                  set_node_vspace(+evt)
+                  data.v_space = +evt
+                }}>
+                <NumberInputField/>
+                <NumberInputStepper>
+                  <NumberIncrementStepper/>
+                  <NumberDecrementStepper/>
+                </NumberInputStepper>
+              </NumberInput>
+            </Box>
+          </OSTooltip>
 
-      {/* Aggrégation */}
-      {mode_trans=='expert'?
-        <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
-          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
-            <Button
-              className='btn_menu_config'
-              style={{width:'20%'}}
-              variant={dataVarToUpdate.current.includes('tagLevel')?'primary':'outline-primary'}
-              onClick={() => {
-                if(!dataVarToUpdate.current.includes('tagLevel')){
-                  dataVarToUpdate.current.push('tagLevel')
-                  setForceUpdate(!forceUpdate)
-                }else{
-                  dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('tagLevel'),1)
-                  setForceUpdate(!forceUpdate)
-                }}
-              }
-            >{dataVarToUpdate.current.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-          </InputGroup></OSTooltip>:<></>}
+          <OSTooltip label={t('MEP.tooltips.factExpH')} >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.factExpH')}</Box>
+              <InputGroup>
+                <NumberInput
+                  variant='menuconfigpanel_option_numberinput_with_right_addon'
+                  step={0.1}
+                  min={0}
+                  allowMouseWheel
+                  value={stretchFactorH}
+                  onChange={evt=>{
+                    set_stretchFactorH(+evt)
+                  }}>            
+                  <NumberInputField/>
+                  <NumberInputStepper>
+                    <NumberIncrementStepper/>
+                    <NumberDecrementStepper/>
+                  </NumberInputStepper>
+                </NumberInput>
+                <InputRightAddon>
+                  <Button
+                    variant='menuconfigpanel_option_button'
+                    onClick={()=>applyStretch('h')}>
+                    {t('MEP.stretchH')}
+                  </Button>
+                </InputRightAddon>
+              </InputGroup>
+            </Box>
+          </OSTooltip>
 
-      <OSTooltip label={t('Menu.Transformation.tooltips.attrGeneral')} >
-        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
-          <Button
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={dataVarToUpdate.current.includes('attrGeneral')?'primary':'outline-primary'}
-            onClick={() =>{
-              if(!dataVarToUpdate.current.includes('attrGeneral')){
-                dataVarToUpdate.current.push('attrGeneral')
-                setForceUpdate(!forceUpdate)
-              }else{
-                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrGeneral'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{dataVarToUpdate.current.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </InputGroup></OSTooltip>
-      {apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
-        return <React.Fragment key={i}>{c}</React.Fragment>
-      })}
-    </Tab>
+          <OSTooltip label={t('MEP.tooltips.factExpV')} >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.factExpV')}</Box>
+              <InputGroup>
+                <NumberInput
+                  variant='menuconfigpanel_option_numberinput_with_right_addon'
+                  step={0.1}
+                  min={0}
+                  allowMouseWheel
+                  value={stretchFactorV}
+                  onChange={evt=>{
+                    set_stretchFactorV(+evt)
+                  }}>            
+                  <NumberInputField/>
+                  <NumberInputStepper>
+                    <NumberIncrementStepper/>
+                    <NumberDecrementStepper/>
+                  </NumberInputStepper>
+                </NumberInput>
+                <InputRightAddon>
+                  <Button
+                    variant='menuconfigpanel_option_button'
+                    onClick={()=>applyStretch('v')}>
+                    {t('MEP.stretchV')}
+                  </Button>
+                </InputRightAddon>
+              </InputGroup>
+            </Box>
+          </OSTooltip>
 
-    <Tab key={'manuelle'} eventKey={'manuelle'} title={t('Menu.Transformation.amp_manuelle')} style={{marginBottom:'10px'}}>
-      {/* Ecart horizontal */}
-      <Form.Group ><InputGroup.Text style={{width:'20%'}}>{t('MEP.Horizontal')}</InputGroup.Text>
-        <OSTooltip label={t('MEP.tooltips.EEN_h')} >
-          <FormControl
-            type="text"
-            value={node_hspace}
-            onChange={evt => {
-              set_node_hspace(+evt.target.value)
-              data.h_space = +evt.target.value
-            }}/>
-        </OSTooltip>
-
-      </Form.Group>
-      {/* Ecart Vertical */}
-      <Form.Group><InputGroup.Text style={{width:'20%'}}>{t('MEP.Vertical')}</InputGroup.Text>
-        <OSTooltip label={t('MEP.tooltips.EEN_v')} >
-          <FormControl
-            type="text"
-            value={node_vspace}
-            onChange={evt => {
-              set_node_vspace(+evt.target.value)
-              data.v_space = +evt.target.value
-            }}/>
-        </OSTooltip>
-
-      </Form.Group>
-      <OSTooltip label={t('MEP.tooltips.factExpH')} >
-        <Form.Group>
-
-
-          <Form.Label>
-            {t('MEP.factExpH')}
-          </Form.Label>
-
-
-          <InputGroup>
-            <Form.Control
-              type='number'
-              min={0}
-              step={0.1}
-              value={stretchFactorH}
-              onChange={evt=>{
-                set_stretchFactorH(+evt.target.value)
-              }}
-            />
-            <Button
-              variant='outline-primary'
-              onClick={()=>applyStretch('h')}>
-              {t('MEP.stretchH')}
-            </Button>
-          </InputGroup>
-
-        </Form.Group>
-      </OSTooltip>
-      <OSTooltip label={t('MEP.tooltips.factExpV')} >
-        <Form.Group>
-
-          <Form.Label>
-            {t('MEP.factExpV')}
-          </Form.Label>
+          <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
 
-          <InputGroup>
-            <Form.Control
-              type='number'
-              min={0}
-              step={0.1}
-              value={stretchFactorV}
-              onChange={evt=>{
-                set_stretchFactorV(+evt.target.value)
-              }}
-            />
-            <Button
-              variant='outline-primary'
-              onClick={()=>applyStretch('v')}>
-              {t('MEP.stretchV')}
-            </Button>
-          </InputGroup>
+          { /* Positionnement des noeuds */}
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            { /* Mise en forme automatique */}
+            <OSTooltip label={t('MEP.tooltips.PA')} >
+              <Button
+                variant={'menuconfigpanel_option_button'}
+                onClick={() => {
+                  applicationData.function_on_wait.current=()=>{
+                    ComputeAutoSankey(applicationData, node_hspace,false)
+                    set_data({ ...data })
+                  }
+                  dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
 
-        </Form.Group>
-      </OSTooltip>
+                }}>
+                {t('MEP.PA')}
+              </Button>
+            </OSTooltip>{/* Arranger les noeud */}
+            <OSTooltip label={t('MEP.tooltips.AN')}>
+              <Button
+                variant={'menuconfigpanel_option_button'}
+                onClick={() => {
+                  arrangeNodes(data)
+                  set_data({ ...data })
+                }}>
+                {t('MEP.AN')}
+              </Button>
+            </OSTooltip>
 
-      { /* Positionnement des noeuds */}
-      <Form.Group>
-        { /* Mise en forme automatique */}
-        <OSTooltip label={t('MEP.tooltips.PA')} >
-          <Button
-            size="sm"
-            onClick={() => {
-              applicationData.function_on_wait.current=()=>{
-                ComputeAutoSankey(applicationData, node_hspace,false)
-                set_data({ ...data })
-              }
-              dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
-
-            }}>
-            {t('MEP.PA')}
-          </Button>
-        </OSTooltip>{/* Arranger les noeud */}
-        <OSTooltip label={t('MEP.tooltips.AN')}>
-          <Button
-            size="sm"
-            onClick={() => {
-              arrangeNodes(data)
-              set_data({ ...data })
-            }}>
-            {t('MEP.AN')}
-          </Button>
-        </OSTooltip>
-
-      </Form.Group>
-    </Tab>
-    <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
+          </Box>
+        </Box>
+      </TabPanel>
+    
+    </TabPanels>
+    
   </Tabs>
   const dragLayout= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -553,58 +589,65 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
   const [show_save_json_modal,set_show_save_json_modal]=useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current=set_show_save_json_modal
   return <Modal
-    show={show_save_json_modal}
-    onHide={() => set_show_save_json_modal(false)}
+    isOpen={show_save_json_modal}
+    onClose={() => set_show_save_json_modal(false)}
   >
-    <Modal.Header closeButton>
-      {t('Menu.SaveJSON')}
-    </Modal.Header>
-    <Modal.Body>
-      <Form>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={mode_save}
-          onChange={() => set_mode_save(!mode_save)}>
-          {t('Menu.SaveValue')}
-        </Checkbox>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={mode_visible_element}
-          onChange={() => set_mode_visible_element(!mode_visible_element)}>
-          {t('Menu.VisibleElement')}
-        </Checkbox>
-        {additional_file_save_json_option.map(el=>el)}
-      </Form>
-    </Modal.Body>
-    <Modal.Footer>
-      <Button
-        size="sm"
-        style={{width:'20%'}}
-        variant='danger'
-        onClick={
-          () => {
-            set_show_save_json_modal(false)
-          }
-        }>{t('Menu.close')}
-      </Button>
-      <Button
-        size="sm"
-        style={{width:'20%'}}
-        onClick={
-          () => {
-            ClickSaveDiagram(
-              applicationData,
-              applicationData.data,
-              applicationState,
-              {
-                mode_save,
-                mode_visible_element
-              }
-            )
-          }
-        }>{t('Menu.SaveJSON')}
-      </Button>
-    </Modal.Footer>
+    <ModalContent>
+      <ModalHeader>
+        {t('Menu.SaveJSON')}
+      </ModalHeader>
+      <ModalCloseButton/>
+      <ModalBody>
+        <Box layerStyle='menuconfigpanel_grid' >
+
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isChecked={mode_save}
+            onChange={() => set_mode_save(!mode_save)}>
+            {t('Menu.SaveValue')}
+          </Checkbox>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isChecked={mode_visible_element}
+            onChange={() => set_mode_visible_element(!mode_visible_element)}>
+            {t('Menu.VisibleElement')}
+          </Checkbox>
+          {additional_file_save_json_option.map(el=>el)}
+        </Box>
+      </ModalBody>
+      <ModalFooter>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <span/>
+          <Box layerStyle='options_2cols' >
+ 
+            <Button
+              variant='menuconfigpanel_option_button'
+              onClick={
+                () => {
+                  ClickSaveDiagram(
+                    applicationData,
+                    applicationData.data,
+                    applicationState,
+                    {
+                      mode_save,
+                      mode_visible_element
+                    }
+                  )
+                }
+              }>{t('Menu.SaveJSON')}
+            </Button>
+            <Button     
+              variant='menuconfigpanel_del_button'   
+              onClick={
+                () => {
+                  set_show_save_json_modal(false)
+                }
+              }>{t('Menu.close')}
+            </Button>
+          </Box>
+        </Box>
+      </ModalFooter>
+    </ModalContent>
   </Modal>
 }
 
@@ -631,8 +674,9 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
   >
     <Box>
       {t('Menu.input_file_excel')}
-      <Form.Control
+      <Input
         type="file"
+        accept='.xlsx'
         onChange={(evt: ChangeEvent) => {
           set_input_file_name((evt.target as HTMLFormElement).files[0])
         }}
@@ -641,8 +685,8 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
 
     <Box layerStyle='menuconfigpanel_row_2cols'>
       <Box/>
-      <ChakraButton
-        variant="menuconfigpanel_option_button"
+      <Button
+        variant="menuconfigpanel_option_button_secondary"
         onClick={
           () => {
             Reinitialization()
@@ -652,10 +696,10 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
             )
           }
         }
-      >{t('Menu.ouvrir')}</ChakraButton>
+      >{t('Menu.ouvrir')}</Button>
     </Box>
   </Box>
-  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'))
+  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'),30)
 
 }
 
@@ -671,19 +715,18 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
   defaultData
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
-  return <Form>
-    <Form.Group as={Row}>
-      <Col xs='3'>
-        <FormLabel>{t('Menu.Transformation.fmep')}</FormLabel>
-      </Col>
-      <Col xs='2'>
-        <Form.Control
-          type="file"
-          onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
-      </Col>
-      <Col xs={3}>
+  return <Box>
+    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+      {t('Menu.Transformation.fmep')}
+    </Box>
+    <Box layerStyle='menuconfigpanel_row_2cols'>
+      <Input
+        type="file"
+        aria-label=''
+        onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
+      <Box layerStyle='options_2cols' >
         <Button
-          size="sm"
+          variant='menuconfigpanel_option_button'
           onClick={() => {
             if (file_layout === undefined) {
               return
@@ -708,17 +751,15 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
             reader.readAsText(file_layout[0])
           } }>{t('Menu.Transformation.ad')}
         </Button>
-      </Col>
-      <Col xs={3}>
         <Button
-          size="sm"
+          variant='menuconfigpanel_option_button'
           onClick={() => {
             set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
           } }>{t('Menu.Transformation.undo')}
         </Button>
-      </Col>
-    </Form.Group>
-  </Form>
+      </Box>
+    </Box>
+  </Box>
 }
 
 // export const PopoverSelectorDetailNodes:FunctionComponent<popoverSelectorDetailNodesFType>=({

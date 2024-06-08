@@ -8,7 +8,7 @@ import React, {
 } from 'react'
 import i18next from 'i18next'
 import LZString from 'lz-string'
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, useToast } from '@chakra-ui/react'
 /*************************************************************************************************/
 import {
   AdditionalMenusType,
@@ -49,7 +49,8 @@ import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, Menu, ToastWaitFunc
+  OpenSankeyMenus, Menu,
+  launchToastConstructor
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
@@ -92,6 +93,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
+  const toast=useToast()
   const updateMenus = useState(false)
 
   // Logo, names, licences
@@ -107,6 +109,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const applicationState = initializeElementSelected()
   applicationState.userScaleRef.current = applicationData.data.user_scale // TODO
   const dict_hook_ref_setter_show_dialog_components = initializeShowDialog() 
+
+  dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current=(intake)=>{
+    launchToastConstructor(applicationData,toast,intake)
+  } 
+
+
   const contextMenu = initializeContextMenu()
 
   const ComponentUpdater = initializeComponentUpdater()
@@ -210,7 +218,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     start_point,
     resizeCanvas
   )
-  // node_function.
 
   recomputeDisplayedElement()
 
@@ -591,6 +598,19 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
+      
+
+
+      <SankeyDraw
+        contextMenu={contextMenu}
+        applicationData={applicationData}
+        animation={useRef(false)}
+        applicationState={applicationState}
+        agregation={agregation}
+        ref_alt_key_pressed={ref_alt_key_pressed}
+        GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
+      />
+
       <ContextMenuNode
         applicationContext = {applicationContext}
         applicationData = {applicationData}
@@ -633,22 +653,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         GetLinkValue = {GetLinkValue}
         ComponentUpdater={ComponentUpdater}
       />
-
-      <SankeyDraw
-        contextMenu={contextMenu}
-        applicationData={applicationData}
-        animation={useRef(false)}
-        applicationState={applicationState}
-        agregation={agregation}
-        ref_alt_key_pressed={ref_alt_key_pressed}
-        GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
-      />
     </div>
-    {<ToastWaitFunc
-      applicationData={applicationData}
-      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-      applicationContext={applicationContext}
-    />}
+    
   </ChakraProvider>
 }
 
