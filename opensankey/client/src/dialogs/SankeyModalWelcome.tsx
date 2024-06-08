@@ -1,17 +1,8 @@
 // Standard lib
 import React, {
-  CSSProperties,
   FunctionComponent,
   useState
 } from 'react'
-import {
-  CloseButton,
-  Col,
-  FormCheck,
-  Modal,
-  Pagination,
-  Row,
-} from 'react-bootstrap'
 
 // Imported libs
 import {
@@ -21,13 +12,20 @@ import {
   AccordionPanel,
   AccordionIcon,
   Box,
-  Heading
+  Heading,
+  ModalFooter,
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalHeader,
+  ModalCloseButton,
+  Checkbox,
+  Breadcrumb,
+  BreadcrumbItem
 } from '@chakra-ui/react'
-
 
 import { windowSankey } from '../configmenus/SankeyUtils'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
-import Draggable from 'react-draggable'
 
 export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = ({
   t,
@@ -101,64 +99,35 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
       </AccordionPanel>
     </AccordionItem>
 
-
     {additional_shortcut_item}
   </Accordion>
   external_content['rc'] = windowSankey.SankeyToolsStatic?content_rc_static:content_rc_not_static
   
+  const content=<Modal variant='modal_welcome' isOpen={show_wecome && !never_see_again.current} onClose={()=>set_show_welcome(false)}>
+    <ModalContent>
+      <ModalHeader>
+        <Box  className='title_menu'>
+          {t('welcome.'+active_page)}
+        </Box>
+      </ModalHeader>
+      <ModalCloseButton/>
+      <ModalBody>
+        {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
+      </ModalBody>
+      <ModalFooter style={{justifyContent:'center'}}>
 
+        <Breadcrumb variant={'pagination_welecome'} separator='-' >
+          {Object.entries(external_pagination).map((k)=>{return <BreadcrumbItem isCurrentPage={active_page===k[0]}  key={k[0]}>{k[1]}</BreadcrumbItem>})}
+        </Breadcrumb>
 
+        <Checkbox style={{width:'15%',position:'absolute',right:0}} isChecked={never_see_again.current} onChange={evt=>{
+          never_see_again.current = evt.target.checked
+          localStorage.setItem('dontSeeAggainWelcome','1')
+          set_show_welcome(false)
+        }}>{t('dontSeeAgain')}</Checkbox>
+      </ModalFooter>
+    </ModalContent>
+  </Modal>
 
-  const content=<div style={  {height:window.innerHeight*0.65,overflowY:'auto'}}>
-    {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
-  </div>
-
-  const welcome_footer=<Modal.Footer style={{justifyContent:'center'}}>
-    <Pagination >
-      {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-    </Pagination>
-    <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
-      never_see_again.current = evt.target.checked
-      localStorage.setItem('dontSeeAggainWelcome','1')
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current(false)
-    }}/>
-  </Modal.Footer>
-  const class_name=t('welcome.'+active_page).replaceAll('/','').replaceAll('.','').replaceAll('\'','').split(' ').join('_')
-  const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
-  n_style_menu_draggable.width='75%'
-
-  return <Draggable  handle='.title_menu'
-    defaultPosition={{x:window.innerWidth/8,y:window.innerHeight*0.12}}
-    bounds={{left:0,top:0}}
-  >
-    <div hidden={!show_wecome || never_see_again.current} className={'menu_conf '+class_name}
-      style={n_style_menu_draggable}
-    >
-      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
-        <Col><h3>{t('welcome.'+active_page)}</h3></Col>
-        <Col className='text-end'>{<CloseButton onClick={()=>{
-          dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current(false)}}/>}</Col>
-      </Row>
-      <div className='sankey-menu'>
-        {content}
-      </div>
-      {welcome_footer}
-    </div>
-  </Draggable>
-
+  return content
 }
-
-
-const style_menu_draggable={'display':'flex',
-  width:'25%',
-  'paddingLeft':'0.75rem',
-  'paddingRight':'0.75rem',
-  'position': 'fixed',
-  'flexDirection': 'column',
-  'backgroundColor': '#fff',
-  'backgroundClip': 'padding-box',
-  'border': '1px solid rgba(0, 0, 0, 0.2)',
-  'borderRadius':' 0.6rem',
-  'zIndex':'2',
-
-} as CSSProperties

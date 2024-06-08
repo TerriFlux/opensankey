@@ -90,3 +90,11 @@ export const menuconfigpanel_part_title_1_checkbox = definePartsStyle({
     textAlign: 'center'
   }
 })
+
+
+export const activate_antagonist_checkbox = definePartsStyle({
+  container: {
+    margin:'auto',
+    width:'inherit',
+  }
+})

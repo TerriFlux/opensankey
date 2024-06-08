@@ -1,39 +1,48 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
-import {
-  Badge,
-  Button,
-  ButtonGroup,
-  Card,
-  Col,
-  Container,
-  Form,
-  Modal,
-  Nav,
-  Navbar,
-  Row,
-  Toast,
-  ToggleButton
-} from 'react-bootstrap'
+
 import {
   Box,
-  Button as ChakraButton,
   Menu as ChakraMenu,
   MenuButton,
   MenuList,
   MenuItem,
-  Spinner,
   InputGroup,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
-  NumberInputStepper
+  NumberInputStepper,
+  CloseButton,
+  Tag,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Image,
+  Button,
+  ButtonGroup,
+  Card,
+  Heading,
+  Stack,
+  CardBody,
+  CardFooter,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalContent,
+  ModalCloseButton,
+  Toast,
+  CreateToastFnReturn,
+  Input
 } from '@chakra-ui/react'
 import {
   SankeyData,
-  MenuTypes} from '../types/Types'
+  MenuTypes,
+  applicationDataType,
+  textForToastPromiseType} from '../types/Types'
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -44,8 +53,7 @@ import { TFunction } from 'i18next'
 import { faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus, faCloudArrowUp, faExclamation, faCheck, faGears} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
-import CloseButton from 'react-bootstrap/CloseButton'
-import {MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType} from './types/SankeyMenuTopTypes'
+import {MenuDraggableFType, ModalTutoType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from './types/SankeyMenuTopTypes'
 import { DefaultNode, DefaultLink, FindMaxLinkValue, OSTooltip } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
@@ -154,7 +162,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
   const {ref_setter_show_style_node,ref_setter_show_style_link} = dict_hook_ref_setter_show_dialog_components
 
-  const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
+  const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 100 100"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
 
   const sous_filieres = window.sankey && window.sankey.sous_filieres ? window.sankey.sous_filieres : undefined
 
@@ -222,9 +230,11 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   // }
 
   const excel_element = window.sankey && window.sankey.excel ? (
-    <Form.Group key={'3'} as={Col} lg="auto" style={{marginRight:'10px'}} >
-      <Button variant='link' href={window.sankey.excel}>{t('Banner.tl')}</Button>
-    </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
+    <Box >
+      <Button
+      // href={window.sankey.excel}
+      >{t('Banner.tl')}</Button>
+    </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
 
 
   // if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
@@ -233,9 +243,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   if(!window.SankeyToolsStatic){
     ui['file']=[
       <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' >
-
         <OSTooltip placement='bottom' label={t('Menu.tooltips.new')}>
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={Button}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPlus} />
             {t('Menu.new')}
           </MenuButton>
@@ -244,7 +253,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         <MenuList>
           <MenuItem
             onClick={Reinitialization} >
-            <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')}
+            <FontAwesomeIcon icon={faFile} /> {t('Menu.from_new')}
           </MenuItem>
 
           <MenuItem
@@ -258,7 +267,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         <ChakraMenu placement='bottom-start'  id='ouvrir'  >
           <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
 
-            <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
+            <MenuButton variant='submenu_nav_btn_dropdown' as={Button}  rightIcon={<ChevronDownIcon />} >
               <FontAwesomeIcon icon={faFolderOpen} />
               {t('Menu.ouvrir')}
             </MenuButton>
@@ -271,7 +280,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
                   _load_json.current.click()
                 }
               }} >{t('Menu.open_json')}</MenuItem>
-            <Form.Control
+            <Input
               accept='.json'
               type="file"
               ref={_load_json}
@@ -314,7 +323,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='enregistrer' >
 
         <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={Button}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faDownload} />
             {t('Menu.enregistrer')}
           </MenuButton>
@@ -330,7 +339,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
       <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='exporter' >
         <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />}>
+          <MenuButton variant='submenu_nav_btn_dropdown' as={Button}  rightIcon={<ChevronDownIcon />}>
             <FontAwesomeIcon icon={faFileExport} />
             {t('Menu.exporter')}
           </MenuButton>
@@ -349,30 +358,30 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       <>{external_file_item}</>,
       <OSTooltip placement='bottom' label={t('Menu.tooltips.preference')}>
         <Box>
-          <ChakraButton variant='submenu_nav_btn'
+          <Button variant='submenu_nav_btn'
             onClick={() => {
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current!(true) }}>
             <FontAwesomeIcon icon={faGears} />
             {t('Menu.preference')}
 
-          </ChakraButton>
+          </Button>
         </Box>
       </OSTooltip>
     ]
 
     ui['edition']=[
       <OSTooltip placement='bottom' label={t('Menu.tooltips.amp')}>
-        <ChakraButton variant='submenu_nav_btn'
+        <Button variant='submenu_nav_btn'
           onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(true)}>
           <FontAwesomeIcon icon={faFileInvoice} />
           {t('Menu.Transformation.amp_short')}
-        </ChakraButton>
+        </Button>
       </OSTooltip>,
 
       <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' id='exporter' >
 
         <OSTooltip placement='bottom' label={t('Menu.tooltips.style')}>
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={Button}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPenToSquare} />
             {t('Menu.style')}
           </MenuButton>
@@ -388,34 +397,34 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
     ui['aide']=[
       <OSTooltip placement='bottom' label={t('Menu.tooltips.DisplayWelcome')} >
-        <ChakraButton  variant='submenu_nav_btn' onClick={() =>{
+        <Button  variant='submenu_nav_btn' onClick={() =>{
           dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true)
           never_see_again.current = false
           localStorage.setItem('dontSeeAggainWelcome','0')
         }}>
           {logo_home}
           {t('DisplayWelcome')}
-        </ChakraButton ></OSTooltip>,
+        </Button ></OSTooltip>,
 
       <OSTooltip placement='bottom' label={t('Menu.tooltips.tuto')}>
-        <ChakraButton variant='submenu_nav_btn'
+        <Button variant='submenu_nav_btn'
           onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_tuto.current!(true)} >
           {logo_tuto}
           {t('Menu.formation')}
-        </ChakraButton></OSTooltip>,
+        </Button></OSTooltip>,
 
       <OSTooltip placement='bottom' label={t('Menu.tooltips.doc')}>
-        <ChakraButton variant='submenu_nav_btn' onClick={() => GoToUserDoc()} >
+        <Button variant='submenu_nav_btn' onClick={() => GoToUserDoc()} >
           {logo_doc}
           {t('Menu.doc')}
-        </ChakraButton></OSTooltip>,
+        </Button></OSTooltip>,
 
       <OSTooltip placement='bottom' label={t('Menu.tooltips.support')}>
-        <ChakraButton variant='submenu_nav_btn'
+        <Button variant='submenu_nav_btn'
           onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_support.current!(true)}>
           {logo_contact}
           {t('Menu.support')}
-        </ChakraButton>
+        </Button>
       </OSTooltip>
     ]
   }
@@ -499,7 +508,7 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
       applicationData.function_on_wait.current=()=>{
         clickSavePNG(h,v)
       }
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
+      dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
     }}>Save</Button>
   </>
 
@@ -603,8 +612,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   updateComponentMenu.current=()=>setForceUpdate(!forceUpdate)
   RepositionneSidebar(show_nav)
 
-  const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
-  const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
   const [update,setUpdate] = useState(false)
   let max_link_value = 0
   Object.values(applicationData.data.links).forEach(link => {
@@ -626,7 +633,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
     }
     setUpdate(!update)
   }
-  const setChecked = useState(false)[1]
 
   const menuButton = () => {
     if (show_nav) {
@@ -654,124 +660,42 @@ export const Menu: FunctionComponent<MenuTypes> = (
     }
   })
 
-  // Pré-traitement du menu tuto pour trier les groupes
-  const n_a=new Array(50)
 
-  Object.keys(formations_menu).map(d=>{
-    return d.replace('_','__').split('__')
-  }).forEach(element => {
-    if(element.length>1){
-      n_a[Number(element[0])]=element[0]+'_'+element[1]
-    }else{
-      n_a[n_a.length-1]=element[0]
-    }
-  })
 
-  // Return l'objet formations_menu mais trier selon le numéro du groupe (quand il y en a un)
-  const new_array_for_exemple=Object.fromEntries(n_a.filter(f=>f).map((d)=>{
-    return [d,(formations_menu as {[k:string]:string})[d]]
-  }))
-
-  let modal_tuto=<></>
-  const tuto_sub_nav:{[s:string]:JSX.Element}={}
-
-  Object.entries(new_array_for_exemple).forEach(d=>{
-    tuto_sub_nav[d[0]]=<>
-      {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
-        return <Card >
-          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/Tutoriels/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'}} />
-          <Card.Body>
-            <Card.Title>{dd.replace('_layout.json','').replaceAll('_',' ')}</Card.Title>
-            <Card.Text>
-
-            </Card.Text>
-            <ButtonGroup>
-              <Button variant='primary'
-                onClick={() => {
-                  UploadExemple(
-                    ('Formations/Tutoriels/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
-                  )
-                  applicationData.set_data({...applicationData.data})
-                  set_show_tuto(false)
-                }}
-              >{applicationContext.t('useTutoJSON')}</Button>
-              {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
-                <Button variant='info'
-                  onClick={() => {
-                    processFunctions.launch('Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
-                    UploadExemple(
-                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
-                    )
-                    set_show_tuto(false)
-                  }
-                  }
-                >{applicationContext.t('useTutoExcel')}</Button>
-                :<></>}
-              {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
-                <Button variant='info'
-                  onClick={() => {
-                    processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
-                    UploadExemple(
-                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
-                    )
-                    set_show_tuto(false)
-                  }
-                  }
-                >{applicationContext.t('useTutoExcel')}</Button>
-                :<></>}
-
-            </ButtonGroup>
-          </Card.Body>
-        </Card>
-      })}
-
-    </>
-
-  })
-
-  modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={show_tuto} onHide={() => set_show_tuto(false)}>
-    <Modal.Header closeButton>{applicationContext.t('Menu.formation')}</Modal.Header>
-    <Modal.Body>
-      <Row>
-        <Nav variant="tabs" className='sub_nav' activeKey={modale_sub_tuto}>
-          {Object.keys(tuto_sub_nav).map(m=>{
-            return <Nav.Item>
-              <Nav.Link eventKey={m} onClick={()=>set_modale_sub_tuto(m)}>
-                {/*FORMAT THE TITLE OF TUTO */}
-                {(m.split('_').length>1)?m.split('_').filter(s=>isNaN(+s)).join(' '):m}
-              </Nav.Link>
-            </Nav.Item>
-          })}
-        </Nav>
-      </Row>
-      <Row md={3}>
-        {tuto_sub_nav[modale_sub_tuto]}
-      </Row>
-    </Modal.Body>
-  </Modal>
+  const modal_tuto=<ModalTuto
+    applicationData={applicationData}
+    applicationContext={applicationContext}
+    processFunctions={processFunctions}
+    formations_menu={formations_menu}
+    show_tuto={show_tuto}
+    set_show_tuto={set_show_tuto}
+    Reinitialization={Reinitialization}
+  />
+ 
 
   // Create the menu nav that can be slightly different if it in static
-  const menu_nav=(!window.SankeyToolsStatic)?(<Col>
-    <Row>
-      <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
+  const menu_nav=(!window.SankeyToolsStatic)?(<Box>
+    <Tabs variant={'tabs_navbar'}>
+      <TabList>
         {Object.keys(ordered_menu).map(m=>{
-
-          // Nav item that open a subnav when clicked
-          return <Nav.Item>
-            <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
-              {applicationContext.t('Menu.'+m) }{(['demo','unit'].includes(m)?<Badge pill bg="info" style={{marginLeft:'auto'}}>Dev</Badge>:<></>)}
-            </Nav.Link>
-          </Nav.Item>
-
+          return <Tab>
+            {applicationContext.t('Menu.'+m) }{(['demo','unit'].includes(m)?<Tag size={'sm'} colorScheme='teal'>Dev</Tag>:<></>)}
+          </Tab>
         })}
-      </Nav>
-    </Row>
-    <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
-      <ButtonGroup className={'subMenu '+menu_acivated}>
-        {ordered_menu[menu_acivated]}
-      </ButtonGroup>
-    </Row>
-  </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
+      </TabList>
+      <TabPanels>
+        {Object.values(ordered_menu).map(m=>{
+          return <TabPanel>
+            <ButtonGroup>
+              {m}
+            </ButtonGroup>
+          </TabPanel>
+        })}
+      </TabPanels>
+    </Tabs>
+
+  </Box> 
+  ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
   const content_support=<>
     <h3>{applicationContext.t('Menu.rth_support')} :</h3>
@@ -786,10 +710,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
   if(show_data){
     DDDT=<DataTagSelector
       applicationData={applicationData}
-      GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
       node_function={node_function}
       link_function={link_function}
+      applicationDraw={applicationDraw}
       ComponentUpdater={ComponentUpdater}
+      in_popover={false}
     />
   }
   const modal_resolution_png=Modale_resolution_png(applicationContext.t,
@@ -799,7 +724,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
-      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block', zIndex:'1' }} onClick={()=>{
+      {/* <Navbar className='bg-light' fixed='top' style={{ 'display': 'block', zIndex:'1' }}  */}
+      <Box 
+        className='MenuNavigation'
+        layerStyle='MenuNavTop'
+        style={{ zIndex:'1', position:'fixed',top:0}}
+        onClick={()=>{
         contextMenu.ref_setter_contextualised_node.current!(undefined)
         contextMenu.ref_contextualised_node.current = undefined
         contextMenu.ref_setter_contextualised_link.current!(undefined)
@@ -822,43 +752,43 @@ export const Menu: FunctionComponent<MenuTypes> = (
           applicationDraw.GetSankeyMinWidthAndHeight,
           applicationDraw.resizeCanvas
         )
-      }} >
-        <Container className='MenuNavigation'>
-          {!window.SankeyToolsStatic?<>
-            <Navbar.Brand style={{marginRight:'0px'}} href="https://terriflux.com/" ><img src={applicationContext.logo_terriflux} width={100} /> </Navbar.Brand>
-            <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
-          </>:<></>
-          }
+        }} >
+        {/* <Container 
+        // className='MenuNavigation'
+        > */}
+        {!window.SankeyToolsStatic?<Box style={{display:'grid',gridTemplateColumns:'9fr 1fr'}}>
+          <Image src={applicationContext.logo_terriflux} onClick={()=>{window.open('https://terriflux.com/','_blank')}} />
+          <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
+        </Box>:<></>
+        }
 
-          <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={applicationContext.logo} width={applicationContext.logo_width ? applicationContext.logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
-          {menu_nav}
+        <Box ><Image src={applicationContext.logo}/> {window.SankeyToolsStatic?window.sankey.header:<></>} </Box>
+        {menu_nav}
+        <Box>
           {DDDT}
-
           {Object.keys(menus).includes('unité')?<>
             {menus['unité']}
           </>:<></>}
-          {additional_nav_item}
+        </Box>
+        {additional_nav_item}
 
-        </Container>
-      </Navbar>
+      </Box>
       {/* Bottom Navbar with some more info */}
-      {!window.SankeyToolsStatic || window.sankey.footer ? <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em',zIndex:1}} >
-        <Container className='sankeyFooter' >
+      {!window.SankeyToolsStatic || window.sankey.footer ? <Box className='sankeyFooter' layerStyle='MenuNavfooter'>
 
-          <span style={{display:'inline'}}>
-        ©<a  href="https://terriflux.com/" ><img width={75} src={applicationContext.logo_terriflux} /></a> - {applicationContext.t('tdr')}
-          </span>
-          <span style={{display:'inline'}}>
-            {applicationContext.app_name}
-          </span>
-          <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>{applicationContext.t('legal')}</a></span>
-          <span style={{display:'inline'}}><a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a></span>
-          <span style={{display:'inline'}}>
+        <Box layerStyle='MenuNavfooterSubItem' style={{display:'flex'}}>
+            ©<a  href="https://terriflux.com/" ><img width={75} src={applicationContext.logo_terriflux} /></a> - {applicationContext.t('tdr')}
+        </Box>
+        <Box layerStyle='MenuNavfooterSubItem'>
+          {applicationContext.app_name}
+        </Box>
+        <Box layerStyle='MenuNavfooterSubItem'><a href='https://terriflux.com/mentions-legales/'>{applicationContext.t('legal')}</a></Box>
+        <Box layerStyle='MenuNavfooterSubItem'><a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a></Box>
+        <Box layerStyle='MenuNavfooterSubItem'>
           9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)4 56 47 00 71
-          </span>
+        </Box>
 
-        </Container>
-      </Navbar>:<></>}
+      </Box>:<></>}
 
       {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?
         <Drawer
@@ -887,32 +817,37 @@ export const Menu: FunctionComponent<MenuTypes> = (
         </Drawer>
         : <></>}
 
-      <ButtonGroup vertical
-        className='sideBar'
-        style={{top:window.innerHeight/2-120,right:0,zIndex:1}}
+      <ButtonGroup 
+        orientation='vertical'
+        className='sideToolBar'
+        isAttached
+        //ButtonGroup don't have variants theming so we modify directly the style 
+        style={{
+          right:0,
+          top:(window.innerHeight/4),
+          position:'fixed',
+          zIndex:100, 
+        }}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
-          <ToggleButton
-            ref={uiElementsRef.button_ref as Ref<HTMLLabelElement>}
+          <Button
+            ref={uiElementsRef.button_ref as Ref<HTMLButtonElement>}
             id="toggle-check"
             className='openMenu'
-            type="checkbox"
-            variant="primary"
-            checked={show_nav}
-            onChange={(e) => { setChecked(e.currentTarget.checked)}}
+            variant="btn_toggle_menuconfig_toolbar"
             onClick={toggleShow}
             value="menuConfigButton">{menuButton()}
-          </ToggleButton>
+          </Button>
         ) : (<></>)}
       </ButtonGroup>
 
       {
         processFunctions.ref_processing.current ? (
-          <Modal.Dialog >
+          <Toast >
             <Button className="btn btn-sm btn-warning col-md-12">
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
-            </Button></Modal.Dialog>) : (<></>)
+            </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
         t={applicationContext.t}
@@ -952,13 +887,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
       />
 
       {
-        <Modal size={'xl'}  show={show_template} onHide={() =>set_show_template(false)}>
-          <Modal.Header closeButton>{applicationContext.t('Banner.sdr')}</Modal.Header>
-          <Modal.Body>
-            <Row md={4}>
+        <Modal size='full'  isOpen={show_template} onClose={() =>set_show_template(false)}>
+          <ModalContent>
+            <ModalHeader>{applicationContext.t('Banner.sdr')}</ModalHeader>
+            <ModalCloseButton/>
+            <ModalBody>
               {cardsTemplate}
-            </Row>
-          </Modal.Body>
+            </ModalBody>
+          </ModalContent>
         </Modal>
       }
       {modal_tuto}
@@ -1016,6 +952,7 @@ export const MenuDraggable : MenuDraggableFType=(
     </div>
   </Draggable>
 }
+
 export const OpenSankeySaveButton : FunctionComponent<OpenSankeySaveButtonFType> = ({
   ComponentUpdater,
   applicationContext
@@ -1027,19 +964,23 @@ export const OpenSankeySaveButton : FunctionComponent<OpenSankeySaveButtonFType>
   ComponentUpdater.updateComponenSaveInCache.current=(b:boolean)=>setForceUpdate(b)
   let indicator_saved_data=<></>
   if(has_save_in_cache){
-    const color_icon=forceUpdate?'success':'danger'
-    indicator_saved_data=<FontAwesomeIcon icon={forceUpdate?faCheck:faExclamation} style={{ position:'relative',right:'0.5em', width:'1em', fontSize:'1em', color: 'rgba(var(--bs-'+color_icon+'-rgb), var(--bs-bg-opacity))'}} />
+    const color_icon=forceUpdate?'green':'red'
+    indicator_saved_data=<FontAwesomeIcon 
+      icon={forceUpdate?faCheck:faExclamation} 
+      style={{ color:color_icon,position:'relative',right:'1rem', bottom:'-0.5rem', fontSize:'1rem'}} />
 
   }
-  return <>
+  return <Box>
     <OSTooltip placement='bottom' label={applicationContext.t('Menu.tooltips.checkpoint')} >
-      <Button variant='light' onClick={() => {const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+      <Button variant='btn_save_in_cache' onClick={() => {const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
         if (ev.onkeydown) {
           ev.onkeydown(tmp)
         }
-      }}  ><FontAwesomeIcon style={{width:'2.5rem',height:'2.5rem'}} icon={faCloudArrowUp} />
+      }}><FontAwesomeIcon 
+          style={{fill:'black'}}
+          icon={faCloudArrowUp} />
         {indicator_saved_data}
-      </Button></OSTooltip></>
+      </Button></OSTooltip></Box>
 }
 
 const clickSavePDF = (data:SankeyData) => {
@@ -1129,24 +1070,168 @@ export const post_process_export_svg=()=>{
   d3.select(' .opensankey#svg-container svg').style('border','2px')
 }
 
-export const ToastWaitFunc=({
-  applicationData,
-  dict_hook_ref_setter_show_dialog_components,
-  applicationContext}:ToastWaitFuncFType
-)=>{
-  const [show_toast_wait,set_show_toast_wait]=useState(false)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current=set_show_toast_wait
+// export const ToastWaitFunc=({
+//   applicationData,
+//   dict_hook_ref_setter_show_dialog_components,
+//   applicationContext}:ToastWaitFuncFType
+// )=>{
+//   const [show_toast_wait,set_show_toast_wait]=useState(false)
+//   dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current=set_show_toast_wait
 
-  return     <Toast onEntered={()=>{
+//   return     <Toast onEntered={()=>{
+//     setTimeout(()=>{
+//       applicationData.function_on_wait.current()
+//       applicationData.function_on_wait.current=()=>null
+//       set_show_toast_wait(false)
+//     },50
+//     )
+//   }} className='toast_waiting' show={show_toast_wait} onClose={()=>set_show_toast_wait(false)} bg='info' style={{ 'width':'auto', 'position': 'fixed', 'right':'0','top':window.innerHeight-150, 'zIndex': 4 }}>
+//     <Toast.Body>
+//       <Spinner/>
+//       {applicationContext.t('Menu.waiting')}</Toast.Body>
+//   </Toast>
+// }
+
+export const launchToastConstructor=(
+  applicationData:applicationDataType,
+  toast:CreateToastFnReturn,
+  intake?:textForToastPromiseType
+)=>{
+  intake?.success
+  const defaultToastText={
+    success: { title: (intake?.success)?intake?.success:'Action finished', description: 'Looks great' },
+    error: { title: 'Action denied', description: 'Something wrong' },
+    loading: { title: (intake?.loading)?intake?.loading:'Please wait', description: 'Please wait' },
+  }
+  const tmp=new Promise((resole)=>{
     setTimeout(()=>{
       applicationData.function_on_wait.current()
-      applicationData.function_on_wait.current=()=>null
-      set_show_toast_wait(false)
-    },50
-    )
-  }} className='toast_waiting' show={show_toast_wait} onClose={()=>set_show_toast_wait(false)} bg='info' style={{ 'width':'auto', 'position': 'fixed', 'right':'0','top':window.innerHeight-150, 'zIndex': 4 }}>
-    <Toast.Body>
-      <Spinner/>
-      {applicationContext.t('Menu.waiting')}</Toast.Body>
-  </Toast>
+      resole(200)
+    },50)
+  })
+
+  toast.promise(tmp,defaultToastText)
+}
+
+
+export const ModalTuto:FunctionComponent<ModalTutoType>=({
+  applicationData,
+  applicationContext,
+  processFunctions,
+  formations_menu,
+  show_tuto,
+  set_show_tuto,
+  Reinitialization
+})=>{
+  const {convert_data}=applicationData
+  
+  // Pré-traitement du menu tuto pour trier les groupes
+  const n_a=new Array(50)
+
+  Object.keys(formations_menu).map(d=>{
+    return d.replace('_','__').split('__')
+  }).forEach(element => {
+    if(element.length>1){
+      n_a[Number(element[0])]=element[0]+'_'+element[1]
+    }else{
+      n_a[n_a.length-1]=element[0]
+    }
+  })
+
+  // Return l'objet formations_menu mais trier selon le numéro du groupe (quand il y en a un)
+  const new_array_for_exemple=Object.fromEntries(n_a.filter(f=>f).map((d)=>{
+    return [d,(formations_menu as {[k:string]:string})[d]]
+  }))
+
+  const tuto_sub_nav:{[s:string]:JSX.Element}={}
+
+  Object.entries(new_array_for_exemple).forEach(d=>{
+    tuto_sub_nav[d[0]]=<>
+      {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
+        return <Card variant='card_icon_not_selected'>
+          <CardBody>
+            <Stack>
+              <Image className='img-card'
+                src={'/fm/userfiles/Formations/Tutoriels/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'}
+                style={{'objectFit':'contain'}} 
+              />
+              <Heading>{dd.replace('_layout.json','').replaceAll('_',' ')}</Heading>
+            </Stack>
+          </CardBody>
+          <CardFooter>
+            <ButtonGroup>
+              {/* Button to open directly the JSON file */}
+              <Button variant='btn_is_connected'
+                onClick={() => {
+                  UploadExemple(
+                    ('Formations/Tutoriels/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                  )
+                  applicationData.set_data({...applicationData.data})
+                  set_show_tuto(false)
+                }}
+              >{applicationContext.t('useTutoJSON')}</Button>
+
+              {/* Button to open the Excel file */}
+              {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
+                <Button variant='btn_fullscreen_toolbar'
+                  onClick={() => {
+                    processFunctions.launch('Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
+                    UploadExemple(
+                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                    )
+                    set_show_tuto(false)
+                  }
+                  }
+                >{applicationContext.t('useTutoExcel')}</Button>
+                :<></>}
+
+              {/* Button to open the Excel file reconcilied */}
+              {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
+                <Button variant='btn_fullscreen_toolbar'
+                  onClick={() => {
+                    processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
+                    UploadExemple(
+                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                    )
+                    set_show_tuto(false)
+                  }
+                  }
+                >{applicationContext.t('useTutoExcel')}</Button>
+                :<></>}
+
+            </ButtonGroup>
+          </CardFooter>
+        </Card>
+      })}
+
+    </>
+
+  })
+
+  return <Modal size='full' id='modal_tutoriel' isOpen={show_tuto} onClose={() => set_show_tuto(false)}>
+    <ModalContent>
+      <ModalHeader>{applicationContext.t('Menu.formation')}</ModalHeader>
+      <ModalCloseButton/>
+      <ModalBody>
+        <Tabs variant='tabs_navbar'>
+          <TabList>
+            {Object.keys(tuto_sub_nav).map(m=>{
+              return <Tab>
+                {(m.split('_').length>1)?m.split('_').filter(s=>isNaN(+s)).join(' '):m}
+              </Tab>
+            })}
+          </TabList>
+          <TabPanels>
+            {Object.keys(tuto_sub_nav).map(m=>{
+              return <TabPanel>
+                <Box layerStyle='options_4cols' >
+                  {tuto_sub_nav[m]}
+                </Box>
+              </TabPanel>
+            })}
+          </TabPanels>
+        </Tabs>
+      </ModalBody>
+    </ModalContent>
+  </Modal>
 }
