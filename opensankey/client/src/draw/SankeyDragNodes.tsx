@@ -52,12 +52,6 @@ export const DragGNodeEvent: DragGNodeEventFType = (
       d3.selectAll('.node_shape').nodes().forEach(element => {
         node_visible.push(d3.select(element).attr('id'))
       })
-      if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
-        AssignNodeLocalAttribute(node,'label_horiz','')
-        AssignNodeLocalAttribute(node,'label_vert','')  
-      }
-
-      //hideLinkOnDragElement(applicationData)
     })
     .on('drag', function (event, node) {
       if (ref_getter_mode_selection.current == 's') {
@@ -78,14 +72,10 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           )
         }
       }
-    }).on('end', function (event) {
+    }).on('end', function (event,node) {
       if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // Update all links displayed
-        // Seems overkill but it possible that when we drag a node we trigger
-        // OpposingDragElements who shift all node not dragged, so we have to update position of all link too
-        if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
-          node_function.RedrawNodesLabels(Object.values(applicationData.display_nodes))
-        }
+        node_function.RedrawNodes([node])
         link_function.RedrawLinks(Object.values(applicationData.display_links))
         ComponentUpdater.updateComponenSaveInCache.current(false)
         resizeCanvas(applicationData)
