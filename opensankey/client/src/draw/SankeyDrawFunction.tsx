@@ -1690,7 +1690,7 @@ export const sizeOfNodeInDrawArea=(n:SankeyNode,applicationData:applicationDataT
   }
 
   let curr_n_size_x=(n.x??0)+node_width
-  let curr_n_size_y=(n.y??0+source_node_y)+node_height
+  let curr_n_size_y=((n.y??0)+source_node_y)+node_height
 
   if(n.x_label && n.y_label){
     curr_n_size_x=Math.max(curr_n_size_x,(n.x??0)+n.x_label+width_label)
