@@ -1,7 +1,7 @@
 // External imports
 import React, { FunctionComponent, MutableRefObject, useState } from 'react'
+import { Box, Button, Input, Select } from '@chakra-ui/react'
 
-import { InputGroup, Button, Form } from 'react-bootstrap'
 import { FaCheck } from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {
@@ -189,115 +189,119 @@ export const OSPDiagramSelector : OSPDiagramSelectorFType = (
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
 
-    return (<InputGroup>
+    return (<Box>
+      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+        {t('Menu.Transformation.fmep')}
+      </Box>
+      <Box layerStyle='options_3cols'>
+        <Box layerStyle='options_2cols'>
+        
+          <Button
+            variant={s_diagram_type==='File'?'menuconfigpanel_option_button_secondary':'menuconfigpanel_option_button_light'}
+            onClick={
+              () => {
+                sDiagramType('File')
+              }}>{t('Menu.other_file')}</Button>
+          <Button
+            variant={s_diagram_type==='View'?'menuconfigpanel_option_button_secondary':'menuconfigpanel_option_button_light'}
+            onClick={
+              () => {
+                sDiagramType('View')
+              }}>{t('Menu.view_actual_file')}</Button>
+        </Box>
 
-      <InputGroup.Text style={{width:'20%'}} >{t('Menu.Transformation.fmep')}</InputGroup.Text>
-      <Button
-        className='btn_menu_config'
-        style={{width:'10%'}}
-        variant={s_diagram_type==='File'?'primary':'outline-primary'}
-        onClick={
-          () => {
-            sDiagramType('File')
-          }}>{t('Menu.other_file')}</Button>
-      <Button
-        className='btn_menu_config'
-        style={{width:'10%'}}
-        variant={s_diagram_type==='View'?'primary':'outline-primary'}
-        onClick={
-          () => {
-            sDiagramType('View')
-          }}>{t('Menu.view_actual_file')}</Button>
-
-      {s_diagram_type==='File' ? <Form.Control
-        type="file"
-        onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} /> :
-
-        <Form.Select
-          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
-            set_view_selected(evt.target.value)
-          }}>
-          <option key='none' value='none'>{t('view.actual')}</option>
-          {master_data ? master_data.view.map(d => {
-            return <option key={d.id} value={d.id}>{d.nom}</option>
-          }) : <></>}
-        </Form.Select>
-      }
-
-      <Button
-        className='btn_menu_config'
-        style={{width:'15%'}}
-        onClick={() => {
-          if (s_diagram_type === 'View') {
-            if (view_selected === 'none') {
-              // View selected is master data
-              if (view === 'none' ) {
-                // No update of master data by master data
-                return
-              }
-              //- current view is updated by master data
-              updateLayout(sankey_data,master_data!,dataVarToUpdate.current)
-              set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
-            } else {
-              // A view is selected to update either another view or the master data
-              if (view === view_selected ) {
-                // No update of view by itself
-                return
-              }
-              const data_view=GetDataFromView(master_data,view_selected) as OSPData
-              updateLayout(sankey_data,data_view,dataVarToUpdate.current)
-              const copy_data = JSON.parse(JSON.stringify(sankey_data))
-              set_sankey_data(copy_data)
-              if (view === 'none' ) {
-                RecomputeViews(copy_data,master_data,set_master_data)
-              }
-            }
-            return
-          }
-          if (file_layout === undefined) {
-            return
-          }
-          const reader = new FileReader()
-          reader.onload = (() => {
-            return (
-              (e: ProgressEvent<FileReader>) => {
-                let result = (e.target as FileReader).result
-                if (result) {
-                  result = String(result) //.split('<br>').join('\\\\n')
-                  const new_layout = JSON.parse(result)
-                  convert_data(new_layout,get_default_data)
-                  complete_sankey_data(new_layout, get_default_data, DefaultNode, DefaultLink)
-                  set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                  updateLayout(sankey_data, new_layout, dataVarToUpdate.current,true)
-                  const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
+        {/* If s_diagram_type is file then use data from file to modify current data 
+          else if it's view then use data from a view */}
+        {s_diagram_type==='File' ? <Input
+          type="file"
+          onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} /> :
+          <Select
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
+              set_view_selected(evt.target.value)
+            }}>
+            <option key='none' value='none'>{t('view.actual')}</option>
+            {master_data ? master_data.view.map(d => {
+              return <option key={d.id} value={d.id}>{d.nom}</option>
+            }) : <></>}
+          </Select>
+        }
+        
+        <Box layerStyle='options_2cols'>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              if (s_diagram_type === 'View') {
+                if (view_selected === 'none') {
+                  // View selected is master data
+                  if (view === 'none' ) {
+                    // No update of master data by master data
+                    return
+                  }
+                  //- current view is updated by master data
+                  updateLayout(sankey_data,master_data!,dataVarToUpdate.current)
+                  set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
+                } else {
+                  // A view is selected to update either another view or the master data
+                  if (view === view_selected ) {
+                    // No update of view by itself
+                    return
+                  }
+                  const data_view=GetDataFromView(master_data,view_selected) as OSPData
+                  updateLayout(sankey_data,data_view,dataVarToUpdate.current)
+                  const copy_data = JSON.parse(JSON.stringify(sankey_data))
                   set_sankey_data(copy_data)
                   if (view === 'none' ) {
-                    // if master is being updated we need to set it.
-                    set_master_data(copy_data)
+                    RecomputeViews(copy_data,master_data,set_master_data)
                   }
                 }
+                return
               }
-            )
-          })()
-          reader.readAsText(file_layout[0])
-        } }>{t('Menu.Transformation.ad')}
-      </Button>
+              if (file_layout === undefined) {
+                return
+              }
+              const reader = new FileReader()
+              reader.onload = (() => {
+                return (
+                  (e: ProgressEvent<FileReader>) => {
+                    let result = (e.target as FileReader).result
+                    if (result) {
+                      result = String(result) //.split('<br>').join('\\\\n')
+                      const new_layout = JSON.parse(result)
+                      convert_data(new_layout,get_default_data)
+                      complete_sankey_data(new_layout, get_default_data, DefaultNode, DefaultLink)
+                      set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
+                      updateLayout(sankey_data, new_layout, dataVarToUpdate.current,true)
+                      const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
+                      set_sankey_data(copy_data)
+                      if (view === 'none' ) {
+                        // if master is being updated we need to set it.
+                        set_master_data(copy_data)
+                      }
+                    }
+                  }
+                )
+              })()
+              reader.readAsText(file_layout[0])
+            } }>{t('Menu.Transformation.ad')}
+          </Button>
+
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              const copy_data = { ...JSON.parse(JSON.stringify(prev_sankey_data)) }
+              set_sankey_data(copy_data)
+              if (view === 'none' ) {
+                // if master is being updated we need to set it.
+                set_master_data(copy_data)
+              }
+            } }>{t('Menu.Transformation.undo')}
+          </Button>
+
+        </Box>
+      </Box>
 
 
-      <Button
-        className='btn_menu_config'
-        style={{width:'15%'}}
-        onClick={() => {
-          const copy_data = { ...JSON.parse(JSON.stringify(prev_sankey_data)) }
-          set_sankey_data(copy_data)
-          if (view === 'none' ) {
-            // if master is being updated we need to set it.
-            set_master_data(copy_data)
-          }
-        } }>{t('Menu.Transformation.undo')}
-      </Button>
-
-    </InputGroup>)
+    </Box>)
   }
   return OSPDiagramSelectorInner
 }
@@ -317,72 +321,66 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
   if (!applicationContext.has_open_sankey_plus) {
     return <></>
   }
-  return <><InputGroup>
-    <InputGroup.Text style={{width:'20%'}}>{applicationContext.t('Menu.Transformation.freeLabels')}</InputGroup.Text>
-    <Button
-      className='btn_menu_config'
-      style={{width:'20%'}}
-      variant={dataVarToUpdate.current.includes('freeLabels')?'primary':'outline-primary'}
-      onClick={() => {
-        if(!dataVarToUpdate.current.includes('freeLabels')){
-          dataVarToUpdate.current.push('freeLabels')
-          setForceUpdate(!forceUpdate)
-        }else{
-          dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'),1)
-          setForceUpdate(!forceUpdate)
-        }}
-      }
-    >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-  </InputGroup>
+  return <>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.freeLabels')}</Box>
+      <Box layerStyle='options_4cols' >
+        <Button
+          variant={dataVarToUpdate.current.includes('freeLabels')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+          onClick={() => {
+            if(!dataVarToUpdate.current.includes('freeLabels')){
+              dataVarToUpdate.current.push('freeLabels')
+              setForceUpdate(!forceUpdate)
+            }else{
+              dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'),1)
+              setForceUpdate(!forceUpdate)
+            }}
+          }
+        >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </Box>
+    </Box>
 
-  <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
-    <InputGroup>
-      <InputGroup.Text
-        style={{width:'20%',
-          color:(!is_current_data_master)?'#666666':'',
-          backgroundColor:(!is_current_data_master)?'#cccccc':'',
-        }}
-      >{applicationContext.t('Menu.Transformation.Views')}</InputGroup.Text>
-      <Button
-        className='btn_menu_config'
-        style={{width:'20%'}}
-        disabled={!is_current_data_master}
-        variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
-        onClick={() => {
-          if(!dataVarToUpdate.current.includes('Views')){
-            dataVarToUpdate.current.push('Views')
-            setForceUpdate(!forceUpdate)
-          }else{
-            dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
-            setForceUpdate(!forceUpdate)
-          }}
-        }
-      >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-    </InputGroup>
-  </OSTooltip>
+    <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.Views')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            disabled={!is_current_data_master}
+            variant={dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+            onClick={() => {
+              if(!dataVarToUpdate.current.includes('Views')){
+                dataVarToUpdate.current.push('Views')
+                setForceUpdate(!forceUpdate)
+              }else{
+                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        </Box>
+      </Box>
+    </OSTooltip>
 
-  <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
-    <InputGroup>
-      <InputGroup.Text
-        style={{width:'20%'}}
-      >{applicationContext.t('Menu.Transformation.list_icon')}</InputGroup.Text>
-      <Button
-        className='btn_menu_config'
-        style={{width:'20%'}}
-        disabled={!is_current_data_master}
-        variant={dataVarToUpdate.current.includes('icon_catalog')?'primary':'outline-primary'}
-        onClick={() => {
-          if(!dataVarToUpdate.current.includes('icon_catalog')){
-            dataVarToUpdate.current.push('icon_catalog')
-            setForceUpdate(!forceUpdate)
-          }else{
-            dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'),1)
-            setForceUpdate(!forceUpdate)
-          }}
-        }
-      >{dataVarToUpdate.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-    </InputGroup>
-  </OSTooltip></>
+    <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.list_icon')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            disabled={!is_current_data_master}
+            variant={dataVarToUpdate.current.includes('icon_catalog')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+            onClick={() => {
+              if(!dataVarToUpdate.current.includes('icon_catalog')){
+                dataVarToUpdate.current.push('icon_catalog')
+                setForceUpdate(!forceUpdate)
+              }else{
+                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{dataVarToUpdate.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        </Box>
+      </Box>
+    </OSTooltip></>
 }
 
 export const plus_sankey_layout : plus_sankey_layoutFType =(

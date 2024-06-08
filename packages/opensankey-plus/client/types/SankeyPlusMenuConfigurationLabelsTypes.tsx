@@ -20,7 +20,7 @@ export type OSPMenuConfigurationFreeLabelsFType = {
 }
 
 
-export type context_zdtFType=(
+export type context_zdtFType={
   contextMenu:contextMenuType,
   t:TFunction,
   applicationData:OSPApplicationDataType,
@@ -28,7 +28,7 @@ export type context_zdtFType=(
   applicationState:OSPElementsSelectedType,
   ComponentUpdater:OSPComponentUpdaterType,
   reDrawOSPLabels:reDrawOSPLabelsFType
-) => JSX.Element
+}
 
 export type blur_ZDT_wysiwygFType=(
   r_editor_ZDT:{current:ReactQuill}

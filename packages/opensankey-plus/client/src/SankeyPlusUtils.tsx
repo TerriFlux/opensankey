@@ -1,13 +1,13 @@
 // External libs
 import React, { ChangeEvent, FunctionComponent, useRef } from 'react'
 import * as d3 from 'd3'
-import { Form } from 'react-bootstrap'
 import { FaEye, FaEyeSlash, FaFileImport } from 'react-icons/fa'
 import FileSaver from 'file-saver'
 import {
   Box,
   Button,
   Checkbox,
+  Input,
   MenuItem
 } from '@chakra-ui/react'
 
@@ -133,7 +133,7 @@ export const ImportImageAsSvgBg: FunctionComponent<ImportImageAsSvgBgFType> = ({
           >
             <FaFileImport />
           </Button>
-          <Form.Control
+          <Input
             ref={_load_image}
             style={{ display: 'none' }}
             accept='image/*'
