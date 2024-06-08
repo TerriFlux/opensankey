@@ -2050,6 +2050,7 @@ export const OSTooltip:FunctionComponent<OSTooltpFuncType>=(
     openDelay={delay}
     placement={placement}
     label={label}
+    closeDelay={100}
   >
     {children}
   </Tooltip>

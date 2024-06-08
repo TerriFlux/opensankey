@@ -74,9 +74,11 @@ import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfig
 import { MenuConfigurationLinks } from './configmenus/SankeyMenuConfigurationLinks'
 import { keyHandler } from './draw/SankeyDraw'
 import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
-import { Form, Popover } from 'react-bootstrap'
 import { windowSankey } from './configmenus/SankeyUtils'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
+import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
 declare const window: Window &
   typeof globalThis & {
@@ -719,7 +721,7 @@ export const initializeShowDialog : initializeShowDialogType = () => {return {
   ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+  ref_lauchToast : useRef<()=>void>(()=>null),
   ref_setter_show_resolution_save_png : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_png_res_h:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
   ref_setter_png_res_v:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null)
@@ -942,19 +944,29 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
 
-  return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-      <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
-        {addSimpleLevelDropDown(
-          applicationData,
-          applicationDraw.GetSankeyMinWidthAndHeight,
-          node_function,
-          link_function,
-        )}</>
-      ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
-    </Popover.Body>
+  return <Popover placement='left' id='popover_details_level'>
+    <PopoverTrigger>
+      <Button variant='btn_detail_level_toolbar' id='btn_open_popover_details_level'>
+        <FontAwesomeIcon icon={faFolderTree} />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverCloseButton />
+      <PopoverHeader as="h3">{applicationContext.t('Banner.ndd')}</PopoverHeader>
+      <PopoverBody style={{  marginLeft: '5px', width: '350px' }}>
+        <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
+          {addSimpleLevelDropDown(
+            applicationData,
+            applicationDraw,
+            node_function,
+            link_function,
+          )}</>
+        ) : (<>
+          <Input placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} isDisabled /></>)}</>
+      </PopoverBody>
+    </PopoverContent>
+
   </Popover>
 }
 

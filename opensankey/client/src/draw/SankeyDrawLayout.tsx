@@ -6,7 +6,6 @@ import {
   diff as getDiff,
   applyChange
 } from 'deep-diff'
-import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
 import {
   SankeyData,
@@ -55,6 +54,7 @@ import {
   DeleteNode,
   DeleteLink
 } from '../configmenus/SankeyUtils'
+import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
 
 export const reorganize_inputLinksId : reorganize_inputLinksIdFType = (
@@ -940,48 +940,49 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
     }
     return (
       <Modal
-        show={show_agregation}
-        onHide={ () => {
+        isOpen={show_agregation}
+        onClose={ () => {
           set_show_agregation(false)
           set_dim_name('')
         } } >
-        <Modal.Header closeButton>
-          <Modal.Title>Dimension difference'agrégation</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Row>
-                <Col>
-                  <Form.Select
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
-                    value={dim_name}
-                  >
-                    {dim_names.map(
-                      (cur_dir_name, i) => <option key={i} value={cur_dir_name}>{cur_dir_name}</option>
-                    )}
-                  </Form.Select>
-                  <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Form.Label>
-                </Col>
-              </Row>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={()=> {
-              agregation(data,n.idNode,dim_name)
-              set_data({...data})
+        <ModalOverlay/>
+
+        <ModalContent>
+
+          <ModalHeader >
+        Dimension difference'agrégation
+          </ModalHeader>
+          <ModalCloseButton/>
+          <ModalBody>
+            <Box>
+              <Select
+                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
+                value={dim_name}
+              >
+                {dim_names.map(
+                  (cur_dir_name, i) => <option key={i} value={cur_dir_name}>{cur_dir_name}</option>
+                )}
+              </Select>
+              <Text>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Text>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="menuconfigpanel_option_button_secondary"
+              onClick={()=> {
+                agregation(data,n.idNode,dim_name)
+                set_data({...data})
+                set_show_agregation(false)
+                set_dim_name('')
+              }}
+            >Agrégation</Button>
+            <Button variant="menuconfigpanel_del_button" onClick={() => {
               set_show_agregation(false)
               set_dim_name('')
-            }}
-          >Agrégation</Button>
-          <Button variant="secondary" onClick={() => {
-            set_show_agregation(false)
-            set_dim_name('')
-          }}>Annuler</Button>
-        </Modal.Footer>
+            }}>Annuler</Button>
+          </ModalFooter>
+        </ModalContent>
+
       </Modal>
     )
   } else {
@@ -1011,59 +1012,57 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
     }
     return (
       <Modal
-        show={show_agregation}
-        onHide={ () => {
+        isOpen={show_agregation}
+        onClose={ () => {
           set_show_agregation(false)
           agregationRef.agregationNode.current = undefined
           set_dim_name('')
         }} >
-        <Modal.Header closeButton>
-          <Modal.Title>Dimension desagrégation</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Row>
-                <Col>
-                  <Form.Select
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
-                      set_dim_name(evt.target.value)
-                      const the_child_names: string[] = []
-                      Object.values(data.nodes).forEach(n2 => {
-                        if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
-                          the_child_names.push(n2.name)
-                        }
-                      }
-                      )
-                      set_child_names(the_child_names)
-                    }}
-                    value={dim_name}
-                  >
-                    {dim_names.map(
-                      (cur_dim_name, i) => <option key={i} value={cur_dim_name} >{cur_dim_name}</option>
-                    )}
-                  </Form.Select>
-                  {child_names.map(child_name=><Form.Label>{child_name}</Form.Label>)}
-                </Col>
-              </Row>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={()=> {
-              desagregation(applicationData,n.idNode,dim_name,false)
-              set_data({...data})
+        <ModalOverlay/>
+        <ModalContent>
+          <ModalHeader>
+          Dimension desagrégation
+          </ModalHeader>
+          <ModalCloseButton/>
+          <ModalBody>
+            <Box>
+              <Select
+                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
+                  set_dim_name(evt.target.value)
+                  const the_child_names: string[] = []
+                  Object.values(data.nodes).forEach(n2 => {
+                    if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
+                      the_child_names.push(n2.name)
+                    }
+                  }
+                  )
+                  set_child_names(the_child_names)
+                }}
+                value={dim_name}
+              >
+                {dim_names.map(
+                  (cur_dim_name, i) => <option key={i} value={cur_dim_name} >{cur_dim_name}</option>
+                )}
+              </Select>
+              {child_names.map(child_name=><Text>{child_name}</Text>)}
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="menuconfigpanel_option_button_secondary"
+              onClick={()=> {
+                desagregation(applicationData,n.idNode,dim_name,false)
+                set_data({...data})
+                set_show_agregation(false)
+                set_dim_name('')
+              }}
+            >Désagrégation</Button>
+            <Button variant="menuconfigpanel_del_button" onClick={() => {
               set_show_agregation(false)
               set_dim_name('')
-            }}
-          >Désagrégation</Button>
-          <Button variant="secondary" onClick={() => {
-            set_show_agregation(false)
-            set_dim_name('')
-          }}>Annuler</Button>
-        </Modal.Footer>
+            }}>Annuler</Button>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     )
   }
