@@ -1,4 +1,3 @@
-import './css/bootstrap.css'
 import './css/main.css'
 import './css/colors/red.css'
 import React from 'react'

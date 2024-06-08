@@ -5,8 +5,8 @@ import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg, SelectVisualyLinks, returnScaleOfDrawArea } from './SankeyDrawFunction'
-import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from './types/SankeyDrawLegendTypes'
+import { Box, Button, } from '@chakra-ui/react'
 
 declare const window: Window &
 typeof globalThis & {
@@ -460,18 +460,14 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
     ComponentUpdater.updateComponentMenuConfigLink.current()
     tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
   }}
-  variant='light'>{text_button_select_element_by_tag} {}</Button>:<></>
+  variant='btn_in_context_menu'>{text_button_select_element_by_tag} {}</Button>:<></>
 
 
 
   // Pop over that serve as context menu
-  return tag_contextualised?<Popover id="context_tag_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_t}}>
-    <Popover.Body >
-      <ButtonGroup vertical>
-        {button_select_element_tagged}
-      </ButtonGroup>
-    </Popover.Body>
-  </Popover>:<></>
+  return tag_contextualised?<Box layerStyle='context_menu' id="context_tag_pop_over"  style={{maxWidth:'100%',position:'absolute',inset:style_c_t}}>
+    {button_select_element_tagged}
+  </Box>:<></>
 }
 
 export const draw_legend_handles =(

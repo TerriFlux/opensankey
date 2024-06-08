@@ -366,7 +366,7 @@ export const keyHandler : keyHandlerFType = (
       localStorage.setItem('last_save', 'true')
       ComponentUpdater.updateComponenSaveInCache.current(true)
     }
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
+    dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
 
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
