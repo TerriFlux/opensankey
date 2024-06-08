@@ -1,4 +1,5 @@
 import React,{FunctionComponent, MutableRefObject, useRef, useState} from 'react'
+import * as d3 from 'd3'
 import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle } from '../types/Types'
 import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaEyeSlash, FaEye, FaChevronDown, FaUndo } from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'react-icons/fa'
@@ -192,6 +193,9 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
             AssignLinkValueToCorrectVar(d,'recycling',evt.target.checked,menu_for_style)
             AssignLinkValueToCorrectVar(d,'left_horiz_shift',(!evt.target.checked?0.2:0),menu_for_style)
             AssignLinkValueToCorrectVar(d,'right_horiz_shift',(!evt.target.checked?0.8:0),menu_for_style)
+          })
+          multi_selected_links.current.forEach(l=>{
+            d3.selectAll(' .opensankey #gg_link_handle_'+l.idLink).remove()
           })
           updateMenuConfigLink()              }}>
       <OSTooltip label={t('Flux.apparence.tooltips.recy')}>{t('Flux.apparence.recy')}
