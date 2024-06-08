@@ -1555,7 +1555,7 @@ export const SelectVisualyNodes : SelectVisualyNodesFType=(
 }
 
 export const RepositionneSidebar:RepositionneSidebarFuncType =(show_nav:boolean)=>{
-  d3.select('.sideBar').style('right',((show_nav?menu_config_width:0))+'px')
+  d3.select('.sideToolBar').style('right',((show_nav?menu_config_width:0))+'px')
 }
 
 // Function that compute the link width

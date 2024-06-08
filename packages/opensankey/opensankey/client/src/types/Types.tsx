@@ -339,6 +339,11 @@ export interface treeFolderType{
   checked?:1|0.5|0
 }
 
+export type textForToastPromiseType={
+  success?:string,
+  loading?:string
+}
+
 export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_menu_node_apparence : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_node_io : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -361,7 +366,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_waiting : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_lauchToast : MutableRefObject<(intake?:textForToastPromiseType)=>void>,
   ref_setter_show_resolution_save_png : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_png_res_h : MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
   ref_setter_png_res_v : MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,

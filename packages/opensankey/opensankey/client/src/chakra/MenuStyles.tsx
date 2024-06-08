@@ -11,3 +11,20 @@ export const menu_button_subnav_style=definePartsStyle({
     minWidth:'inherit'
   }
 })
+
+export const menu_subnav_item_demo=definePartsStyle({
+  list:{
+    display:'grid',
+    color:'openSankey.200',
+    textAlign:'left'
+
+  }
+})
+
+export const menu_subnav_initial_item_demo=definePartsStyle({
+
+  list:{
+    display:'grid',
+
+  }
+})
