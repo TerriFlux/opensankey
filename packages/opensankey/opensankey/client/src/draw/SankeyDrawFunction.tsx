@@ -370,7 +370,7 @@ export const DrawArrows : DrawArrowsType = (
     const recy= ReturnValueLink(data,l,'recycling')
     const l_arrow= ReturnValueLink(data,l,'arrow')
     let node_arrow_shift=0
-    let node_arrow_shift2=0
+    let arrows_adjustment=0
     let arrow_length= ReturnValueLink(data,l,'arrow_size') as number
 
     const link_input_from_right=(data.nodes[l.idSource].x>n.x) && node_angle_direction==='left' && (ori === 'hh' || ori === 'vh')
@@ -445,14 +445,8 @@ export const DrawArrows : DrawArrowsType = (
           node_face_size2=total_width_top
           break
         }
-        node_arrow_shift2= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size2/2))
-        //if ( node_arrow_shift != node_arrow_shift2) {
-        node_arrow_shift2 = node_arrow_shift - node_arrow_shift2
-        //}
-        //node_arrow_shift -= w
-        //node_arrow_shift2 -= w        
-        // When the node target is in arrow shape, the link arrow length doesn't contribute to it shape
-        //arrow_length=0
+        arrows_adjustment= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size2/2))
+        arrows_adjustment = node_arrow_shift - arrows_adjustment
       }
     }
 
@@ -484,7 +478,7 @@ export const DrawArrows : DrawArrowsType = (
                 false,
                 arrow_length,
                 node_arrow_shift,
-                node_arrow_shift2,
+                arrows_adjustment,
                 node_shape==='arrow'
               )
             } else {
@@ -502,7 +496,7 @@ export const DrawArrows : DrawArrowsType = (
                 true,
                 arrow_length,
                 node_arrow_shift,
-                node_arrow_shift2,
+                arrows_adjustment,
                 node_shape==='arrow'
               )
             }
@@ -516,7 +510,7 @@ export const DrawArrows : DrawArrowsType = (
               is_v = false
               return SankeyShapes.draw_arrow_part(
                 scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false,
-                arrow_length,node_arrow_shift,node_arrow_shift2,
+                arrow_length,node_arrow_shift,arrows_adjustment,
                 node_shape==='arrow'
               )
             } else {
@@ -527,7 +521,7 @@ export const DrawArrows : DrawArrowsType = (
               is_v = false
               return SankeyShapes.draw_arrow_part(
                 scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true,
-                arrow_length,node_arrow_shift,node_arrow_shift2,
+                arrow_length,node_arrow_shift,arrows_adjustment,
                 node_shape==='arrow'
               )
             }
