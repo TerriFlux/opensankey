@@ -370,6 +370,7 @@ export const DrawArrows : DrawArrowsType = (
     const recy= ReturnValueLink(data,l,'recycling')
     const l_arrow= ReturnValueLink(data,l,'arrow')
     let node_arrow_shift=0
+    let node_arrow_shift2=0
     let arrow_length= ReturnValueLink(data,l,'arrow_size') as number
 
     const link_input_from_right=(data.nodes[l.idSource].x>n.x) && node_angle_direction==='left' && (ori === 'hh' || ori === 'vh')
@@ -414,24 +415,44 @@ export const DrawArrows : DrawArrowsType = (
     }
 
     if(node_shape==='arrow'){
-      // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-      let node_face_size=total_height_left
-      switch(node_angle_direction){
-      case 'left':
-        node_face_size=total_height_right
-        break
-      case 'top':
-        node_face_size=total_width_bottom
-        break
-      case 'bottom':
-        node_face_size=total_width_top
-        break
-      }
-
+      const target_node = data.nodes[l.idTarget]
+      const w = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
       if(link_direction_same_as_node_arrow){
+        // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+        let node_face_size=Math.max(total_height_left,total_height_right)
+        switch(node_angle_direction){
+        case 'left':
+          node_face_size=Math.max(total_height_left,total_height_right)
+          break
+        case 'top':
+          node_face_size=total_width_bottom
+          break
+        case 'bottom':
+          node_face_size=total_width_top
+          break
+        }
         node_arrow_shift= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size/2))
+
+        let node_face_size2=total_height_left
+        switch(node_angle_direction){
+        case 'left':
+          node_face_size2=total_height_right
+          break
+        case 'top':
+          node_face_size2=total_width_bottom
+          break
+        case 'bottom':
+          node_face_size2=total_width_top
+          break
+        }
+        node_arrow_shift2= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size2/2))
+        //if ( node_arrow_shift != node_arrow_shift2) {
+        node_arrow_shift2 = node_arrow_shift - node_arrow_shift2
+        //}
+        //node_arrow_shift -= w
+        //node_arrow_shift2 -= w        
         // When the node target is in arrow shape, the link arrow length doesn't contribute to it shape
-        arrow_length=0
+        //arrow_length=0
       }
     }
 
@@ -454,14 +475,36 @@ export const DrawArrows : DrawArrowsType = (
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(+link_value), scale(cum_v_left), true, false,arrow_length,node_arrow_shift)
+              return SankeyShapes.draw_arrow_part(
+                scale(total_height_left) / 2, 
+                p5, 
+                scale(+link_value), 
+                scale(cum_v_left), 
+                true, 
+                false,
+                arrow_length,
+                node_arrow_shift,
+                node_arrow_shift2,
+                node_shape==='arrow'
+              )
             } else {
               // If node source of the link is to his right (arrow pointing left)
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width')
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(+link_value), scale(cum_v_right), true, true,arrow_length,node_arrow_shift)
+              return SankeyShapes.draw_arrow_part(
+                scale(total_height_right) / 2, 
+                p5, 
+                scale(+link_value), 
+                scale(cum_v_right), 
+                true, 
+                true,
+                arrow_length,
+                node_arrow_shift,
+                node_arrow_shift2,
+                node_shape==='arrow'
+              )
             }
           } else if (ori === 'vv' || ori === 'hv') {
           // If link come vertically to the node (arrow pointing down)
@@ -471,14 +514,22 @@ export const DrawArrows : DrawArrowsType = (
               yt = +n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
               p5 = [xt, yt]
               is_v = false
-              return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false,arrow_length,node_arrow_shift)
+              return SankeyShapes.draw_arrow_part(
+                scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false,
+                arrow_length,node_arrow_shift,node_arrow_shift2,
+                node_shape==='arrow'
+              )
             } else {
               // If node source of the link is below (arrow pointing top)
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height')
               p5 = [xt, yt]
               is_v = false
-              return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true,arrow_length,node_arrow_shift)
+              return SankeyShapes.draw_arrow_part(
+                scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true,
+                arrow_length,node_arrow_shift,node_arrow_shift2,
+                node_shape==='arrow'
+              )
             }
           }
           return ''
@@ -614,9 +665,9 @@ export const PathNodeArrowShape : PathNodeArrowShapeFType = (
   if(direction==='right'){
     const opp=Math.tan((k_angle*Math.PI/180))*(node_height/2)
     const p0='0,0'
-    const p1=scale(node_width-opp)+',0'
-    const p2=scale(node_width)+','+scale(node_height/2)
-    const p3=scale(node_width-opp)+','+scale(node_height)
+    const p1=scale(node_width)+',0'
+    const p2=scale(node_width+opp)+','+scale(node_height/2)
+    const p3=scale(node_width)+','+scale(node_height)
     const p4='0,'+scale(node_height)
     const p5=scale(opp)+','+scale(node_height/2)
     path='M'+p0+'L'+p1+'L'+p2+'L'+p3+'L'+p4+'L'+p5+'z'
@@ -624,12 +675,12 @@ export const PathNodeArrowShape : PathNodeArrowShapeFType = (
   }else if(direction==='left'){
     const opp=Math.tan((k_angle*Math.PI/180))*(node_height/2)
 
-    const p0=scale(opp)+',0'
+    const p0='0,0'
     const p1=scale(node_width)+',0'
     const p2=scale(node_width-opp)+','+scale(node_height/2)
     const p3=scale(node_width)+','+scale(node_height)
-    const p4=scale(opp)+','+scale(node_height)
-    const p5='0,'+scale(node_height/2)
+    const p4='0,'+scale(node_height)
+    const p5=scale(-opp)+','+scale(node_height/2)
     path='M'+p0+'L'+p1+'L'+p2+'L'+p3+'L'+p4+'L'+p5+'z'
 
   }else if(direction==='top'){
