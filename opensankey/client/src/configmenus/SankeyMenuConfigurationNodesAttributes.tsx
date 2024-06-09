@@ -362,7 +362,8 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
                     .forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_factor', value, menu_for_style))
                   updateMenuConfigNode()
                   // Redraw only sabot of link attached to the node already shaped as an arrow
-                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
+                  updateLinkAttachedToNodes()
+                  //link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
                 }}
               >
                 <SliderMark
