@@ -10,6 +10,7 @@
 import {
   Class_Element,
   Type_Label,
+  Type_Position,
   Type_Shape,
 } from './Element'
 import {
@@ -21,6 +22,7 @@ import {
 import {
   Class_Tag
   } from './Tag'
+import { Class_Data } from './Data'
 
 // CUSTOM TYPES **************************************************************************
 
@@ -42,6 +44,14 @@ export class Class_LinkElement extends Class_Element {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
+  /**
+   * Thinckness of the drawned link
+   *
+   * @protected
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  protected thickness: number = 100
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -59,7 +69,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private first_curve_point: number = 0.1
+  private first_curve_point: number = 0.2
 
   /**
    * Second curvature point, ie point where first bezier curve occurs
@@ -67,7 +77,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private second_curve_point: number = 0.9
+  private second_curve_point: number = 0.8
 
   /**
    * Center curvature point, ie center point for bezier curve
@@ -205,22 +215,42 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawShape() {
-    this.d3_selection?.append('path')
+    const d3_path = this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
-      .attr('fill', 'none')
-      .attr('stroke', this.getShapeColor())
-      .attr('stroke-opacity', this.getShapeOpacity())
-      .attr('stroke-width', 10) // TODO changer
+    if (this.useStrokeWidth() ) {
+      d3_path?.attr('fill', 'none')
+        .attr('stroke', this.getShapeColor())
+        .attr('stroke-opacity', this.getShapeOpacity())
+        .attr('stroke-width', this.thickness)
+    }
+    else {
+      d3_path?.attr('fill', this.getShapeColor())
+      // TODO apply opacity and other attributes
+    }
   }
 
   private getBezierPath() {
     // Get starting and ending position per type of shape
-    const [x0, y0] = [0, 0]
-    const [x5, y5] = [
-      this.getShapeWidth(),
-      this.getShapeHeight()]
+    let x0, y0
+    let x5, y5
+    if (this.isHorizontal() || this.isHorizontalVertical()) {
+      x0 = 0
+      y0 = 0 + this.thickness/2
+    }
+    else {
+      x0 = 0 + this.thickness/2
+      y0 = 0
+    }
+    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+      x5 = this.getShapeWidth()
+      y5 = this.getShapeHeight() + this.thickness/2
+    }
+    else {
+      x5 = this.getShapeWidth() - this.thickness/2
+      y5 = this.getShapeHeight()
+    }
 
     // Shifts
     const starting_shift = this.getLenght() * this.first_curve_point
@@ -273,20 +303,131 @@ export class Class_LinkElement extends Class_Element {
     }
 
     // Write paths
-    if (this.isStraight()) {
-      return 'M ' + x0 + ',' + y0
-        + ' L ' + x1 + ',' + y1
-        + ' L ' + x4 + ',' + y4
-        + ' L ' + x5 + ',' + y5
+    if (this.useStrokeWidth()) {
+      // Return paths
+      if (this.isStraight()) {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' L ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+      }
+      else {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+      }
     }
     else {
-      return 'M ' + x0 + ',' + y0
-        + ' L ' + x1 + ',' + y1
-        + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4
-        + ' L ' + x5 + ',' + y5
+      // Adapt coordinates
+      let x0_1, y0_1
+      let x0_2, y0_2
+      let x1_1, y1_1
+      let x1_2, y1_2
+      let x2_1, y2_1
+      let x2_2, y2_2
+      let x3_1, y3_1
+      let x3_2, y3_2
+      let x4_1, y4_1
+      let x4_2, y4_2
+      let x5_1, y5_1
+      let x5_2, y5_2
+      // Start side
+      if (this.isHorizontal() || this.isHorizontalVertical()) {
+        x0_1 = x0
+        y0_1 = y0 - this.thickness/2
+        x0_2 = x0
+        y0_2 = y0 + this.thickness/2
+        x1_1 = x1
+        y1_1 = y1 - this.thickness/2
+        x1_2 = x1
+        y1_2 = y1 + this.thickness/2
+        x2_1 = x2 - horizontal_direction*this.thickness/(2*Math.sqrt(2))
+        y2_1 = y2 - this.thickness/2
+        x2_2 = x2 - horizontal_direction*this.thickness/(2*Math.sqrt(2))
+        y2_2 = y2 + this.thickness/2
+      }
+      else {
+        x0_1 = x0 + this.thickness/2
+        y0_1 = y0
+        x0_2 = x0 - this.thickness/2
+        y0_2 = y0
+        x1_1 = x1 + this.thickness/2
+        y1_1 = y1
+        x1_2 = x1 - this.thickness/2
+        y1_2 = y1
+        x2_1 = x2 + this.thickness/2
+        y2_1 = y2 - vertical_direction*this.thickness/(2*Math.sqrt(2))
+        x2_2 = x2 - this.thickness/2
+        y2_2 = y2 + vertical_direction*this.thickness/(2*Math.sqrt(2))
+      }
+      // End side
+      if (this.isHorizontal() || this.isVerticalHorizontal()) {
+        x3_1 = x2_1
+        y3_1 = y3 - this.thickness/2
+        x3_2 = x2_2
+        y3_2 = y3 + this.thickness/2
+        x4_1 = x4
+        y4_1 = y4 - this.thickness/2
+        x4_2 = x4
+        y4_2 = y4 + this.thickness/2
+        x5_1 = x5
+        y5_1 = y5 - this.thickness/2
+        x5_2 = x5
+        y5_2 = y5 + this.thickness/2
+      }
+      else {
+        x3_1 = x3 + this.thickness/2
+        y3_1 = y2_1
+        x3_2 = x3 - this.thickness/2
+        y3_2 = y2_2
+        x4_1 = x4 + this.thickness/2
+        y4_1 = y4
+        x4_2 = x4 - this.thickness/2
+        y4_2 = y4
+        x5_1 = x5 + this.thickness/2
+        y5_1 = y5
+        x5_2 = x5 - this.thickness/2
+        y5_2 = y5
+      }
+      // Write path
+      if (this.isStraight()) {
+        return 'M ' + x0_1 + ',' + y0_1
+          + ' L ' + x1_1 + ',' + y1_1
+          + ' L ' + x4_1 + ',' + y4_1
+          + ' L ' + x5_1 + ',' + y5_1
+          + ' L ' + x5_2 + ',' + y5_2
+          + ' L ' + x4_2 + ',' + y4_2
+          + ' L ' + x1_2 + ',' + y1_2
+          + ' L ' + x0_2 + ',' + y0_2
+          + ' Z '
+      }
+      else {
+        return 'M ' + x0_1 + ',' + y0_1
+        + ' L ' + x1_1 + ',' + y1_1
+        + ' C ' + x2_1 + ',' + y2_1 + ' ' + x3_1 + ',' + y3_1 + ' ' + x4_1 + ',' + y4_1
+        + ' L ' + x5_1 + ',' + y5_1
+        + ' L ' + x5_2 + ',' + y5_2
+        + ' L ' + x4_2 + ',' + y4_2
+        + ' C ' + x3_2 + ',' + y3_2 + ' ' + x2_2 + ',' + y2_2 + ' ' + x1_2 + ',' + y1_2
+        + ' L ' + x0_2 + ',' + y0_2
+        + 'Z'
+      }
     }
   }
+
+  /**
+   * Do we draw link element using stroke
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  private useStrokeWidth() {
+    return (this.thickness <= 10)
+  }
 }
+
 
 // CLASS LINK ***************************************************************************
 /**
@@ -311,20 +452,28 @@ export class Class_Link extends Class_LinkElement{
   /**
    * Node from which link starts
    *
-   * @protected
+   * @private
    * @type {Class_Node}
    * @memberof Class_Link
    */
-  protected source: Class_Node
+  private source: Class_Node
 
   /**
    * Node to which link arrives
    *
-   * @protected
+   * @private
    * @type {Class_Node}
    * @memberof Class_Link
    */
-  protected target: Class_Node
+  private target: Class_Node
+
+  /**
+   * Datas of this link
+   * @private
+   * @type {Class_Data[]}
+   * @memberof Class_Link
+   */
+  private datas: Class_Data[] = [new Class_Data(this)]
 
   // TODO comment the rest
   private color_sustainable: boolean = false
@@ -370,5 +519,63 @@ export class Class_Link extends Class_LinkElement{
   public getNodeTarget() { return this.target }
   public setNodeTarget(_: Class_Node) { this.target = _ }
 
+  // Override positionning
+  public getPosX() {
+    const source_x = this.source.getPosX()
+    const target_x = this.target.getPosX()
+    if (source_x <= target_x) {
+      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
+      if (this.isHorizontal() || this.isHorizontalVertical()) {
+        dx = this.source.getShapeWidth()
+      }
+      return source_x + dx
+    }
+    else {
+      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      return source_x + dx
+    }
+  }
+  public setPosX(_: number) { /* Does nothing */ }
+  public getPosY() {
+    const source_y = this.source.getPosY()
+    const target_y = this.target.getPosY()
+    if (source_y <= target_y) {
+      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
+      if (this.isVertical() || this.isVerticalHorizontal()) {
+        dy = this.source.getShapeHeight()
+      }
+      return source_y + dy
+    }
+    else {
+      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      return source_y + dy
+    }
+  }
+  public setPosY(_: number) { /* Does nothing */ }
+  public setPosXY(_: number, __: number) { /* Does nothing */ }
+  public setPosType(_: Type_Position) { /* Does nothing */ }
 
+  // Override width & height
+  public getShapeWidth() {
+    const source_x = this.source.getPosX()
+    const target_x = this.target.getPosX()
+    if (source_x <= target_x) {
+      return target_x - this.getPosX()
+    }
+    else {
+      return this.getPosX() - target_x - this.target.getShapeWidth()
+    }
+  }
+  public setShapeWidth(_: number) { /* Does nothing */ }
+  public getShapeHeight() {
+    const source_y = this.source.getPosY()
+    const target_y = this.target.getPosY()
+    if (source_y <= target_y) {
+      return target_y - this.getPosY()
+    }
+    else {
+      return this.getPosY() - target_y - this.target.getShapeHeight()
+    }
+  }
+  public setShapeHeight(_: number) { /* Does nothing */ }
 }

@@ -171,11 +171,11 @@ const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
       const mouse_position = d3.pointer(event)
       new_node.setPosXY(mouse_position[0], mouse_position[1])
       // TODO remove test
-      const new_link = new Class_LinkElement('test', drawing_area)
+      const tgt_node = new Class_Node('target', 'Target', drawing_area)
+      tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
+      const new_link = new Class_Link(new_node, tgt_node, drawing_area)
       new_link.setPosXY(new_node.getPosX(), new_node.getPosY())
-      new_link.setShapeWidth(100)
-      new_link.setShapeHeight(50)
-      new_link.setOrientation('vh')
+      new_link.setOrientation('hh')
     }
     // SELECTION MODE ===========================================================
     else if (drawing_area.isInSelectionMode()) {
