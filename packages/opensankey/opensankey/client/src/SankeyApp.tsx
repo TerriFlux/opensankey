@@ -580,7 +580,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             convert_data={applicationData.convert_data}
             apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
             DiagramSelector={initializeDiagrammSelector(applicationData)}
-            callback={()=>null}
+            postProcessLoadExcel={node_function.postProcessLoadExcel}
             ref_alt_key_pressed={ref_alt_key_pressed}
             accept_simple_click={accept_simple_click}
             link_function={link_function}
