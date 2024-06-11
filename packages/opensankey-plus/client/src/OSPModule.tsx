@@ -176,8 +176,8 @@ export const OSPInitializeApplicationData : OSPinitializeApplicationDataVarType=
     display_links:plus_display_links,
     get_default_data:plus_get_defaut_data,
     convert_data : (data:SankeyData,DefaultSankeyData:()=>SankeyData) => {
-      convert_data(data,DefaultSankeyData)
       plus_convert_data(data as OSPData,DefaultSankeyData as ()=> OSPData)
+      convert_data(data,DefaultSankeyData)
     },
     master_data,
     set_master_data,
