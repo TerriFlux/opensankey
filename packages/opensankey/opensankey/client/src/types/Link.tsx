@@ -69,7 +69,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private first_curve_point: number = 0.2
+  private starting_curve_point: number = 0.0
 
   /**
    * Second curvature point, ie point where first bezier curve occurs
@@ -77,15 +77,23 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private second_curve_point: number = 0.8
+  private ending_curve_point: number = 1.0
 
   /**
-   * Center curvature point, ie center point for bezier curve
+   * TODO
    * @private
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private center_curve_point: number = 0.5
+  private starting_tagent_lenght: number = 0.5
+
+  /**
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  private ending_tagent_lenght: number = 0.5
 
   // CONSTRUCTOR ========================================================================
 
@@ -159,29 +167,19 @@ export class Class_LinkElement extends Class_Element {
   public getEndingPointY() { return this.getPosY() + this.getShapeHeight() }
 
   // Curvature points
-  public getFirstCurvePoint() { return this.first_curve_point }
-  public setFirstCurvePoint(_: number) {
-    if ((_ > 0.05) && (_ < this.second_curve_point)) {
-      this.first_curve_point = _
+  public getStartingCurvePoint() { return this.starting_curve_point }
+  public setStartingCurvePoint(_: number) {
+    if ((_ > 0) && (_ < this.ending_curve_point)) {
+      this.starting_curve_point = _
       this.reset()
     }
   }
-  public getSecondCurvePoint() {
-    return this.second_curve_point
+  public getEndingCurvePoint() {
+    return this.ending_curve_point
   }
-  public setSecondCurvePoint(_: number) {
-    if ((_ > this.first_curve_point) && (_ < 0.95)) {
-      this.second_curve_point = _
-      this.reset()
-    }
-  }
-  public getCenterCurvePoint() {
-    return this.center_curve_point
-  }
-  public setCenterCurvePoint(_: number) {
-    // TODO : no effect on vh or hv curves
-    if ((_ > this.first_curve_point) && (_ < this.second_curve_point)) {
-      this.second_curve_point = _
+  public setEndingCurvePoint(_: number) {
+    if ((_ > this.starting_curve_point) && (_ < 1)) {
+      this.ending_curve_point = _
       this.reset()
     }
   }
@@ -215,26 +213,20 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawShape() {
-    const d3_path = this.d3_selection?.append('path')
+    this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
-    if (this.useStrokeWidth() ) {
-      d3_path?.attr('fill', 'none')
-        .attr('stroke', this.getShapeColor())
-        .attr('stroke-opacity', this.getShapeOpacity())
-        .attr('stroke-width', this.thickness)
-    }
-    else {
-      d3_path?.attr('fill', this.getShapeColor())
-      // TODO apply opacity and other attributes
-    }
+      .attr('fill', 'none')
+      .attr('stroke', this.getShapeColor())
+      .attr('stroke-opacity', this.getShapeOpacity())
+      .attr('stroke-width', this.thickness)
   }
 
   private getBezierPath() {
     // Get starting and ending position per type of shape
     let x0, y0
-    let x5, y5
+    let x6, y6
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x0 = 0
       y0 = 0 + this.thickness/2
@@ -244,21 +236,21 @@ export class Class_LinkElement extends Class_Element {
       y0 = 0
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x5 = this.getShapeWidth()
-      y5 = this.getShapeHeight() + this.thickness/2
+      x6 = this.getShapeWidth()
+      y6 = this.getShapeHeight() + this.thickness/2
     }
     else {
-      x5 = this.getShapeWidth() - this.thickness/2
-      y5 = this.getShapeHeight()
+      x6 = this.getShapeWidth() - this.thickness/2
+      y6 = this.getShapeHeight()
     }
 
     // Shifts
-    const starting_shift = this.getLenght() * this.first_curve_point
-    const ending_shift = this.getLenght() * (1 - this.second_curve_point)
-    const horizontal_direction = Math.sign(x5-x0) // +1 / -1
-    const vertical_direction = Math.sign(y5-y0) // +1 / -1
+    const starting_shift = this.getLenght() * this.starting_curve_point
+    const ending_shift = this.getLenght() * (1 - this.ending_curve_point)
+    const horizontal_direction = Math.sign(x6-x0) // +1 / -1
+    const vertical_direction = Math.sign(y6-y0) // +1 / -1
 
-    // First curve point
+    // Statring curve point
     let x1, y1
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x1 = x0 + horizontal_direction*starting_shift
@@ -269,162 +261,58 @@ export class Class_LinkElement extends Class_Element {
       y1 = y0 + vertical_direction*starting_shift
     }
 
-    // Second curve point
-    let x4, y4
+    // Ending curve point
+    let x5, y5
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x4 = x5 - horizontal_direction*ending_shift
-      y4 = y5
+      x5 = x6 - horizontal_direction*ending_shift
+      y5 = y6
     }
     else {
-      x4 = x5
-      y4 = y5 - vertical_direction*ending_shift
+      x5 = x6
+      y5 = y6 - vertical_direction*ending_shift
     }
+
+    // Center point
+    // TODO gerer cas non vertical ou horizontal
+    const x3 = (x1 + x5) / 2
+    const y3 = (y1 + y5) / 2
 
     // Bezier control points
     // Line ((x1, y1); (x2, y2)) is first tangeant
-    // Line ((x3, y3); (x4, y4)) is second tangeant
+    // Line ((x4, y4); (x5, y5)) is second tangeant
     let x2, y2
-    let x3, y3
+    let x4, y4
     if (this.isHorizontal() || this.isHorizontalVertical()) {
-      x2 = x1 + (x5 - x0) * this.center_curve_point
+      x2 = x1 + (x5 - x1)*this.starting_tagent_lenght
       y2 = y1
     }
     else {
       x2 = x1
-      y2 = y1 + (y5 - y0) * this.center_curve_point //+ 1
+      y2 = y1 + (y5 - y1)*this.starting_tagent_lenght
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x3 = x2
-      y3 = y4
+      x4 = x5 + (x1 - x5)*this.ending_tagent_lenght
+      y4 = y5
     }
     else {
-      x3 = x4
-      y3 = y2
+      x4 = x5
+      y4 = y5 + (y1 - y5)*this.starting_tagent_lenght
     }
 
-    // Write paths
-    if (this.useStrokeWidth()) {
-      // Return paths
-      if (this.isStraight()) {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' L ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-      }
-      else {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-      }
+    // Return paths
+    if (this.isStraight()) {
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' L ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
     }
     else {
-      // Adapt coordinates
-      let x0_1, y0_1
-      let x0_2, y0_2
-      let x1_1, y1_1
-      let x1_2, y1_2
-      let x2_1, y2_1
-      let x2_2, y2_2
-      let x3_1, y3_1
-      let x3_2, y3_2
-      let x4_1, y4_1
-      let x4_2, y4_2
-      let x5_1, y5_1
-      let x5_2, y5_2
-      // Start side
-      if (this.isHorizontal() || this.isHorizontalVertical()) {
-        x0_1 = x0
-        y0_1 = y0 - this.thickness/2
-        x0_2 = x0
-        y0_2 = y0 + this.thickness/2
-        x1_1 = x1
-        y1_1 = y1 - this.thickness/2
-        x1_2 = x1
-        y1_2 = y1 + this.thickness/2
-        x2_1 = x2 - horizontal_direction*this.thickness/(2*Math.sqrt(2))
-        y2_1 = y2 - this.thickness/2
-        x2_2 = x2 - horizontal_direction*this.thickness/(2*Math.sqrt(2))
-        y2_2 = y2 + this.thickness/2
-      }
-      else {
-        x0_1 = x0 + this.thickness/2
-        y0_1 = y0
-        x0_2 = x0 - this.thickness/2
-        y0_2 = y0
-        x1_1 = x1 + this.thickness/2
-        y1_1 = y1
-        x1_2 = x1 - this.thickness/2
-        y1_2 = y1
-        x2_1 = x2 + this.thickness/2
-        y2_1 = y2 - vertical_direction*this.thickness/(2*Math.sqrt(2))
-        x2_2 = x2 - this.thickness/2
-        y2_2 = y2 + vertical_direction*this.thickness/(2*Math.sqrt(2))
-      }
-      // End side
-      if (this.isHorizontal() || this.isVerticalHorizontal()) {
-        x3_1 = x2_1
-        y3_1 = y3 - this.thickness/2
-        x3_2 = x2_2
-        y3_2 = y3 + this.thickness/2
-        x4_1 = x4
-        y4_1 = y4 - this.thickness/2
-        x4_2 = x4
-        y4_2 = y4 + this.thickness/2
-        x5_1 = x5
-        y5_1 = y5 - this.thickness/2
-        x5_2 = x5
-        y5_2 = y5 + this.thickness/2
-      }
-      else {
-        x3_1 = x3 + this.thickness/2
-        y3_1 = y2_1
-        x3_2 = x3 - this.thickness/2
-        y3_2 = y2_2
-        x4_1 = x4 + this.thickness/2
-        y4_1 = y4
-        x4_2 = x4 - this.thickness/2
-        y4_2 = y4
-        x5_1 = x5 + this.thickness/2
-        y5_1 = y5
-        x5_2 = x5 - this.thickness/2
-        y5_2 = y5
-      }
-      // Write path
-      if (this.isStraight()) {
-        return 'M ' + x0_1 + ',' + y0_1
-          + ' L ' + x1_1 + ',' + y1_1
-          + ' L ' + x4_1 + ',' + y4_1
-          + ' L ' + x5_1 + ',' + y5_1
-          + ' L ' + x5_2 + ',' + y5_2
-          + ' L ' + x4_2 + ',' + y4_2
-          + ' L ' + x1_2 + ',' + y1_2
-          + ' L ' + x0_2 + ',' + y0_2
-          + ' Z '
-      }
-      else {
-        return 'M ' + x0_1 + ',' + y0_1
-        + ' L ' + x1_1 + ',' + y1_1
-        + ' C ' + x2_1 + ',' + y2_1 + ' ' + x3_1 + ',' + y3_1 + ' ' + x4_1 + ',' + y4_1
-        + ' L ' + x5_1 + ',' + y5_1
-        + ' L ' + x5_2 + ',' + y5_2
-        + ' L ' + x4_2 + ',' + y4_2
-        + ' C ' + x3_2 + ',' + y3_2 + ' ' + x2_2 + ',' + y2_2 + ' ' + x1_2 + ',' + y1_2
-        + ' L ' + x0_2 + ',' + y0_2
-        + 'Z'
-      }
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+        + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
     }
-  }
-
-  /**
-   * Do we draw link element using stroke
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  private useStrokeWidth() {
-    return (this.thickness <= 10)
   }
 }
 
