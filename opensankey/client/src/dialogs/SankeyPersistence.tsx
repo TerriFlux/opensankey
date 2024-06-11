@@ -1,5 +1,5 @@
 import React,{ FunctionComponent, useEffect, useState, } from 'react'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, postProcessLoadExcelFuncType, SankeyLink } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, CounterType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
@@ -21,7 +21,7 @@ interface SankeyLoadProdTypes {
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType,
   convert_data:ConvertDataFuncType,
-  callback:callbackFuncType
+  postProcessLoadExcel:postProcessLoadExcelFuncType
 }
 
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
@@ -32,7 +32,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
   convert_data,
-  callback
+  postProcessLoadExcel
 }) => {
   const { t,url_prefix } = applicationContext
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
@@ -83,7 +83,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
             applicationData,
             text,
             applicationDraw.updateLayout,
-            callback,
+            postProcessLoadExcel,
             applicationDraw.GetSankeyMinWidthAndHeight,
             convert_data,
             applicationData.get_default_data
@@ -257,7 +257,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
   updateLayout: updateLayoutFuncType,
-  callback: (server_data: SankeyData) => void,
+  postProcessLoadExcel: (server_data: SankeyData) => void,
   GetSankeyMinWidthAndHeight,
   convert_data: ConvertDataFuncType,
   defaultData: () => SankeyData
@@ -277,7 +277,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }
   const new_data = Object.assign(default_data, server_data) as SankeyData
   applicationData.data=new_data
-  ProcessExample(applicationData, updateLayout, convert_data, callback, DefaultSankeyData)
+  ProcessExample(applicationData, updateLayout, convert_data, postProcessLoadExcel, DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   delete (new_data as SankeyData & { layout?: SankeyData} ).layout
@@ -357,7 +357,7 @@ export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
   updateLayout: updateLayoutFuncType,
   convert_data: ConvertDataFuncType,
-  callback: (server_data: SankeyData) => void,
+  postProcessLoadExcel: (server_data: SankeyData) => void,
   DefaultSankeyData: () => SankeyData
 
 ): SankeyData => {
@@ -397,7 +397,7 @@ export const ProcessExample: ProcessExampleFuncType = (
       ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
 
     }
-    callback(data)
+    postProcessLoadExcel(data)
     compute_default_input_outputLinksId(data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout
     SetNodeStyleToTypeNode(data)
@@ -408,7 +408,7 @@ export const ProcessExample: ProcessExampleFuncType = (
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
     updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
-    callback(data)
+    postProcessLoadExcel(data)
   }
   d3.select('.loading_auto_compute').remove()
 
