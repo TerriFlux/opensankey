@@ -590,7 +590,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     apply_transformation_additional_elements,
     DiagramSelector,
     formations_menu,
-    callback,
+    postProcessLoadExcel,
     ref_alt_key_pressed,
     accept_simple_click,
     link_function,
@@ -883,7 +883,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
         convert_data={convert_data}
-        callback={callback}
+        postProcessLoadExcel={postProcessLoadExcel}
       />
 
       {
