@@ -110,8 +110,7 @@ export type OSPBannerViewFType = {
 export type OSPMenuPreferenceViewFType = (
   t:TFunction,
   data:OSPData,
-  set_data:(_:OSPData)=>void,
-  preferenceCheck:(str: string, data: OSPData) => void
+  set_data:(_:OSPData)=>void
 ) => JSX.Element
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view

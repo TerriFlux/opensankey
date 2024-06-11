@@ -71,6 +71,7 @@ import {
 } from '../types/Types'
 import {
   OSTooltip,
+  preferenceCheck,
   updateLayoutOSTyped
 } from './import/OpenSankey'
 import { deleteGLabel } from './SankeyPlusLabels'
@@ -1199,8 +1200,7 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
 export const OSPMenuPreferenceView : OSPMenuPreferenceViewFType =(
   t:TFunction,
   data:OSPData,
-  set_data:(_:OSPData)=>void,
-  preferenceCheck:(str: string, data: OSPData) => void
+  set_data:(_:OSPData)=>void
 )=>{
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'

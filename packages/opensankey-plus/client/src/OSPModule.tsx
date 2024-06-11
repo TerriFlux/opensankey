@@ -68,7 +68,8 @@ import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, O
 import { 
   GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView, 
   SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, 
-  viewsAccordion 
+  viewsAccordion, 
+  OSPMenuPreferenceView
 } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
@@ -517,6 +518,13 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
       data={applicationData.data as OSPData}
       updateMenus={updateMenus}
     />
+  )
+  additionalMenus.additional_preferences.push(
+    OSPMenuPreferenceView(
+      applicationContext.t,
+      (applicationData as OSPApplicationDataType).data,
+      (applicationData as OSPApplicationDataType).set_data
+    )
   )
   //- Builds Configuration Menus FreeLabel
   additionalMenus.additional_configuration_menus.push(
