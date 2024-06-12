@@ -826,7 +826,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           right:0,
           top:(window.innerHeight/4),
           position:'fixed',
-          zIndex:100, 
+          zIndex:1 
         }}
       >
         {menus['toolbar']}
