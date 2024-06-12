@@ -393,6 +393,16 @@ const has_link_come_from=(
   return link_io.length!==0
 }
 
+/**
+   * Computes the default selection between input and output and left/right or top/bottom
+   * depending of the existing links.
+   *
+   * @param {SankeyData} data
+   * @param {{ [node_id: string]: SankeyNode }} display_nodes
+   * @param {{ [link_id: string]: SankeyLink }} display_links
+   * @param {current:SankeyNode[]}: multi_selected_nodes
+   * @returns {*}
+   */
 const updateDefaultNodeIO=(
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
