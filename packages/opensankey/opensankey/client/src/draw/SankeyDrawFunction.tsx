@@ -371,7 +371,7 @@ export const DrawArrows : DrawArrowsType = (
     const l_arrow= ReturnValueLink(data,l,'arrow')
     let node_arrow_shift=0
     let arrows_adjustment=0
-    let arrow_length= ReturnValueLink(data,l,'arrow_size') as number
+    const arrow_length= ReturnValueLink(data,l,'arrow_size') as number
 
     const link_input_from_right=(data.nodes[l.idSource].x>n.x) && node_angle_direction==='left' && (ori === 'hh' || ori === 'vh')
     const link_input_from_left=(data.nodes[l.idSource].x<n.x) && node_angle_direction==='right' && (ori === 'hh' || ori === 'vh')
@@ -415,8 +415,8 @@ export const DrawArrows : DrawArrowsType = (
     }
 
     if(node_shape==='arrow'){
-      const target_node = data.nodes[l.idTarget]
-      const w = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
+      //const target_node = data.nodes[l.idTarget]
+      //const w = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
       if(link_direction_same_as_node_arrow){
         // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
         let node_face_size=Math.max(total_height_left,total_height_right)
