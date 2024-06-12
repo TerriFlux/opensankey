@@ -18,7 +18,7 @@ import {
 import { LinkVisible, LinkColor, ReturnValueLink, OSTooltip } from './SankeyUtils'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
-import { LinkFunctionTypes, SankeyData, SankeyNode } from '../types/Types'
+import { LinkFunctionTypes, SankeyData, SankeyLink, SankeyNode } from '../types/Types'
 import { reorganize_node_outputLinksId, reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SelectVisualyLinks } from '../draw/SankeyDrawFunction'
 
@@ -393,7 +393,43 @@ const has_link_come_from=(
   return link_io.length!==0
 }
 
+const updateDefaultNodeIO=(
+  data:SankeyData,
+  display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
+  multi_selected_nodes:{current:SankeyNode[]},
+)=>{
+  let link_io = 'right'
+  let link_pos = 'output'
+  if (multi_selected_nodes.current.length===1) {
+    const k_display_link=Object.values(display_links).map(l=>l.idLink)
+    if (multi_selected_nodes.current[0].inputLinksId.filter(lid=>k_display_link.includes(lid)).length>multi_selected_nodes.current[0].outputLinksId.filter(lid=>k_display_link.includes(lid)).length){
+      const obj_list_link={
+        left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input').length,
+        right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input').length,
+        top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input').length,
+        bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input').length,
+      }
+      const side_with_most_link=Object.entries(obj_list_link)
+        .sort(([,a],[,b]) => b-a)[0][0]
+      link_io = 'input'
+      link_pos = side_with_most_link
+    } else {
+      const obj_list_link={
+        left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output').length,
+        right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output').length,
+        top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output').length,
+        bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output').length,
+      }
+      const side_with_most_link=Object.entries(obj_list_link)
+        .sort(([,a],[,b]) => b-a)[0][0]
 
+      link_io = 'output'
+      link_pos = side_with_most_link
+    }
+  }
+  return [link_pos,link_io]
+}
 /**
    * Create a html table displaying links attached to the selected node and filtered by where they're coming/going from
    *
@@ -405,13 +441,15 @@ const tab_pos_link=(
   t:TFunction,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   multi_selected_nodes:{current:SankeyNode[]},
-  pos:string,io:string,tab_colored:boolean,
+  tab_colored:boolean,
   GetLinkValue:GetLinkValueFuncType,
   link_function:LinkFunctionTypes,
   setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
   forceUpdate:boolean
 )=>{
+  const [pos,io] = updateDefaultNodeIO(data,display_nodes,display_links,multi_selected_nodes)
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
   return (
     <>
@@ -529,45 +567,8 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     )
   }
 
-  const updateDefaultNodeIO=()=>{
-    if (multi_selected_nodes.current.length===1) {
-      const k_display_link=Object.values(display_links).map(l=>l.idLink)
-      if (multi_selected_nodes.current[0].inputLinksId.filter(lid=>k_display_link.includes(lid)).length>multi_selected_nodes.current[0].outputLinksId.filter(lid=>k_display_link.includes(lid)).length){
-        const obj_list_link={
-          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input').length,
-          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input').length,
-          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input').length,
-          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input').length,
-        }
-        const side_with_most_link=Object.entries(obj_list_link)
-          .sort(([,a],[,b]) => b-a)[0][0]
 
-        if (link_io!=='input') {
-          set_link_io('input')
-        }
-        if (link_pos!==side_with_most_link) {
-          set_link_pos(side_with_most_link)
-        }
-      } else {
-        const obj_list_link={
-          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output').length,
-          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output').length,
-          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output').length,
-          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output').length,
-        }
-        const side_with_most_link=Object.entries(obj_list_link)
-          .sort(([,a],[,b]) => b-a)[0][0]
-
-        if (link_io!=='output') {
-          set_link_io('output')
-        }
-        if (link_pos!==side_with_most_link) {
-          set_link_pos(side_with_most_link)
-        }
-      }
-    }
-  }
-  updateComponentMenuNodeIOSelectSideNode.current.push(updateDefaultNodeIO)
+  updateComponentMenuNodeIOSelectSideNode.current.push(()=>setForceUpdate(!forceUpdate))
 
   const content_reorg=<Box
     layerStyle='menuconfigpanel_grid'
@@ -711,9 +712,8 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           t,
           data,
           display_nodes,
+          display_links,
           multi_selected_nodes,
-          link_pos,
-          link_io,
           tab_colored,
           GetLinkValue,
           link_function,
