@@ -46,7 +46,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object)
-    .on('start', (event,node) => {
+    .on('start', () => {
 
       RemoveAnimate()
       d3.selectAll('.node_shape').nodes().forEach(element => {

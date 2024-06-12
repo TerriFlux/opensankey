@@ -84,7 +84,7 @@ export const draw_arrow_part : draw_arrow_partFType = (
   const angle_shift_oriented=node_arrow_shift*coeff
   const angle_shift_oriented_and_scaled=(angle_shift_oriented)*ratio_cum
 
-  let l=coeff * arrow_length
+  const l=coeff * arrow_length
 
   const start = arrowStart[0]
   const x0 = start - coeff * arrow_length
@@ -127,11 +127,11 @@ export const draw_arrow_part : draw_arrow_partFType = (
 
   let d
   if (horizontal) {
-      d =  ' M ' + String(x0) + ',' + String(y0)
-      d += ' L ' + String(x1) + ',' + String(y0)
-      d += ' L ' + String(x3) + ',' + String(y1)
-      d += ' L ' + String(x2) + ',' + String(y2)
-      d += ' L ' + String(x0) + ',' + String(y2) + ' Z'
+    d =  ' M ' + String(x0) + ',' + String(y0)
+    d += ' L ' + String(x1) + ',' + String(y0)
+    d += ' L ' + String(x3) + ',' + String(y1)
+    d += ' L ' + String(x2) + ',' + String(y2)
+    d += ' L ' + String(x0) + ',' + String(y2) + ' Z'
   } else {
     if (ratio_cum + ratio_cur < 1) {
       d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (l))
@@ -195,7 +195,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
   const arrowHalfHeight_scaled_by_ratio_current_value=arrowHalfHeight * ratio_cur
   const arrow_length_oriented=coeff * node_arrow_shift
  
-  let start = arrowStart[0]
+  const start = arrowStart[0]
   // if (!revert) {
   //   start -= (node_arrow_shift)
   // }
@@ -879,22 +879,22 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
   const ori = ReturnValueLink(data, link, 'orientation')
   const recy = ReturnValueLink(data, link, 'recycling')
   const source_shape = ReturnValueNode(data, source_node, 'shape')
-  let l_arrow = ReturnValueLink(data, link, 'arrow')
+  const l_arrow = ReturnValueLink(data, link, 'arrow')
   const l_arrow_size = ReturnValueLink(data, link, 'arrow_size') as number
 
   if (source_shape === 'arrow') {
-    if(true/*link_direction_same_as_node_arrow*/){
-      // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-      let node_face_size=Math.max(s_total_offset_height_left,s_total_offset_height_right)
-      const node_angle_direction = ReturnValueNode(data, source_node, 'node_arrow_angle_direction') as string
-      const node_angle=ReturnValueNode(data,source_node,'node_arrow_angle_factor') as number
-      const node_arrow_shift= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size/2))
-      if (node_angle_direction=='right') {
-        xs += node_arrow_shift
-      } else if (node_angle_direction=='left') {
-        xs -= node_arrow_shift
-      }
+    //if(true/*link_direction_same_as_node_arrow*/){
+    // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+    const node_face_size=Math.max(s_total_offset_height_left,s_total_offset_height_right)
+    const node_angle_direction = ReturnValueNode(data, source_node, 'node_arrow_angle_direction') as string
+    const node_angle=ReturnValueNode(data,source_node,'node_arrow_angle_factor') as number
+    const node_arrow_shift= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size/2))
+    if (node_angle_direction=='right') {
+      xs += node_arrow_shift
+    } else if (node_angle_direction=='left') {
+      xs -= node_arrow_shift
     }
+    //}
 
   }
 
