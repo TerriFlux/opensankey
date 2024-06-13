@@ -59,7 +59,6 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
  * @param sankeyTooltip
  */
 export const EventNodeClick : EventNodeClickFType =(
-  //applicationData,
   uiElementsRef,
   applicationState,
   event:React.MouseEvent<HTMLButtonElement>,
@@ -87,6 +86,24 @@ export const EventNodeClick : EventNodeClickFType =(
 
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
       button_ref.current.click()
+      setTimeout(() => {
+        // Open element accordion if not already openend
+        if (
+          accordion_ref &&
+          accordion_ref.current &&
+          d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          accordion_ref.current.click()
+        }
+        // Open node accordion if not already openend
+        if (
+          nodes_accordion_ref &&
+          nodes_accordion_ref.current &&
+          d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          nodes_accordion_ref.current.click()
+        }
+      })
     }
     // Open element accordion if not already openend
     if (
@@ -128,9 +145,9 @@ export const EventNodeClick : EventNodeClickFType =(
       })
     multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
   }
-  updateComponentMenuConfigNode.current()
+  updateComponentMenuConfigNode.current() 
+  updateComponentMenuNodeIOSelectSideNode.current()
   updateComponentMenuConfigNodeAppearence.current()
-  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
   updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
 }
 
@@ -500,7 +517,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     updateComponentMenuConfigNode.current()
     updateComponentMenuConfigNodeAppearence.current()
     updateComponentMenuConfigLink.current()
-    updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+    updateComponentMenuNodeIOSelectSideNode.current()
     updateComponenSaveInCache.current(true)
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
@@ -770,7 +787,7 @@ export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
   if ((event.target as HTMLSpanElement).tagName === 'tspan') {
     setTimeout(() => {
       if (accept_simple_click.current) {
-        EventNodeClick( uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
+        EventNodeClick(uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
       }
     }, 200)
   } else {
@@ -870,7 +887,7 @@ export const selectOpenSankeyElementsInSelectionZone:selectOpenSankeyElementsInS
   updateComponentMenuConfigNode.current()
   updateComponentMenuConfigNodeAppearence.current()
   updateComponentMenuConfigLink.current()
-  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+  updateComponentMenuNodeIOSelectSideNode.current()
   updateComponenSaveInCache.current(true)
 }
 

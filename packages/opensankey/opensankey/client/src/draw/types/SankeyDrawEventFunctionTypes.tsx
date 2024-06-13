@@ -8,7 +8,6 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 
 // Add or delete visual element to show that the node is selected like a thickker border
 export type EventNodeClickFType = (
-  //applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   applicationState:applicationStateType,
   event:React.MouseEvent<HTMLButtonElement>,
