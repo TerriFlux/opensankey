@@ -215,7 +215,17 @@ export const eventLabelClick : eventLabelClickFType =(
             zdt_accordion_ref.current.click()
           }
         }
-      }, 100)
+      }, 200)
+    }
+    // Open node accordion if not already openend
+    if ( accordion_ref && accordion_ref.current) {
+      if (
+        zdt_accordion_ref &&
+        zdt_accordion_ref.current &&
+        d3.select(zdt_accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        zdt_accordion_ref.current.click()
+      }
     }
 
     if (multi_selected_label.current.includes(d)) {
