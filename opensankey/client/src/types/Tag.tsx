@@ -7,10 +7,8 @@
 // External imports
 
 // Local types
-import {
-  Type_ElementShape,
-  default_element_shape
-} from './Element'
+import { Class_ElementShape } from './Element'
+import { Class_NodeShape } from './Node'
 
 // Local functions
 
@@ -35,7 +33,8 @@ export class Class_Tag {
   group: Class_Tagg
   // Others Attributes ============================================
   // Display attributes
-  shape: Type_ElementShape = structuredClone(default_element_shape)
+  // shape: Type_ElementShape = structuredClone(default_element_shape)
+  shape: Class_ElementShape = new Class_NodeShape
 }
 
 export class Class_Tagg {

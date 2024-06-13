@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties, useEffect} from 'react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   Badge,
@@ -604,9 +604,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modal_template.current=set_show_template
   const {updateComponentMenu} = ComponentUpdater
-
+  const config_object=applicationData.new_data.menu_configuration
+  console.log('here')
   updateComponentMenu.current=()=>setForceUpdate(!forceUpdate)
   RepositionneSidebar(show_nav)
+  useEffect(()=>{
+    console.log(config_object.getBtnToogleMenu())
+  })
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
@@ -895,7 +899,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <ToggleButton
-            ref={uiElementsRef.button_ref as Ref<HTMLLabelElement>}
+            // ref={uiElementsRef.button_ref as Ref<HTMLLabelElement>}
+            ref={config_object.getBtnToogleMenu()}
             id="toggle-check"
             className='openMenu'
             type="checkbox"

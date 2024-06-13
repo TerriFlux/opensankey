@@ -6,11 +6,12 @@
 
 // Import local types
 import {
-    Class_DrawingArea
-} from "../../../types/DrawingArea"
+  Class_DrawingArea
+} from '../../../types/DrawingArea'
+import { Class_MenuConfig } from '../../../types/MenuConfig'
 import {
   Class_Node
-} from "../../../types/Node"
+} from '../../../types/Node'
 
 /**
  * Draw what is necessary on given draw area
@@ -30,6 +31,7 @@ export type FType_DrawDrawingArea = (
  */
 export type FType_AddNewNodeToDrawingArea = (
   drawing_area: Class_DrawingArea,
+  menu_config: Class_MenuConfig,
   id: string,
   name: string
 ) => Class_Node
@@ -40,7 +42,9 @@ export type FType_AddNewNodeToDrawingArea = (
  * @param {Class_DrawingArea} drawing_area
  */
 export type FType_SetDrawingAreaEventsListeners = (
-  drawing_area: Class_DrawingArea
+  drawing_area: Class_DrawingArea,
+  menu_config: Class_MenuConfig,
+
 ) => void
 
 /**
@@ -51,5 +55,6 @@ export type FType_SetDrawingAreaEventsListeners = (
  */
 export type FType_SetDrawingAreaMouseEvent = (
   drawing_area: Class_DrawingArea,
+  menu_config: Class_MenuConfig,
   event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
 ) => void
