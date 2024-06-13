@@ -214,7 +214,15 @@ const eventLinkClick=(
           ) {
             links_accordion_ref.current.click()
           }
-        }, 100)
+        }, 200)
+      }
+      // Open link accordion if not already openend
+      if (
+        links_accordion_ref &&
+        links_accordion_ref.current &&
+        d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        links_accordion_ref.current.click()
       }
     }
 

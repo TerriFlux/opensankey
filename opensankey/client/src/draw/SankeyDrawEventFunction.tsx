@@ -103,7 +103,7 @@ export const EventNodeClick : EventNodeClickFType =(
         ) {
           nodes_accordion_ref.current.click()
         }
-      }, 100)
+      }, 200)
     }
     // Open element accordion if not already openend
     if (
@@ -470,7 +470,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
           ) {
             links_accordion_ref.current.click()
           }
-        }, 100)
+        }, 200)
       }
 
     // Open element accordion if not already openend
@@ -733,7 +733,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
           ) {
             links_accordion_ref.current.click()
           }
-        }, 100)
+        }, 200)
       }
 
       if (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
