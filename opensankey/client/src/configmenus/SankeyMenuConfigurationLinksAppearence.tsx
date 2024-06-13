@@ -1055,7 +1055,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
               multi_selected_links.current.map(l => {
                 handleDownLink(data,l.idLink)
               })
-              updateMenuConfigLink()
+              applicationData.set_data({...(applicationData.data)})
             }}>
             <FaAngleUp/>
           </Button>
@@ -1075,7 +1075,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                 tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
               })
               tab_toshift.forEach(l=>data.linkZIndex.push(l))
-              updateMenuConfigLink()
+              applicationData.set_data({...(applicationData.data)})
             }}>
             <FaAngleDoubleUp />
           </Button>
@@ -1091,8 +1091,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
               multi_selected_links.current.map(l => {
                 handleUpLink(data,l.idLink)
               })
-              updateMenuConfigLink()
-
+              applicationData.set_data({...(applicationData.data)})
             }}>
             <FaAngleDown />
           </Button>
@@ -1114,7 +1113,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
               const reverse_linkzindex=data.linkZIndex.reverse();
               (tab_toshift.reverse()).forEach(l=>reverse_linkzindex.push(l))
               data.linkZIndex=reverse_linkzindex.reverse()
-              updateMenuConfigLink()
+              applicationData.set_data({...(applicationData.data)})
 
             }}>
             <FaAngleDoubleDown />
