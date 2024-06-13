@@ -146,8 +146,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     const pre_link_key=Object.keys(pre_display_links)
 
     applicationData.display_links={}
-    applicationData.data.linkZIndex=pre_link_key
-    pre_link_key.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
+    if (applicationData.data.linkZIndex.length == 0) {
+      applicationData.data.linkZIndex=pre_link_key
+    }
+    applicationData.data.linkZIndex.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
 
     // delete element no longer displayed
     const curr_displayed_nodes= Object.keys(applicationData.display_nodes)
