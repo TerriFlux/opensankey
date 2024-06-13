@@ -59,7 +59,8 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   node_function
 
 ) => {
-  const {data}=applicationData
+  const {data,new_data}=applicationData
+  const config_object=new_data.menu_configuration
   const {t}=applicationContext
   const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=applicationState
@@ -95,7 +96,8 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         //MENU ITEMS
       }
       <AccordionButton
-        ref={accordion_ref as Ref<HTMLButtonElement>}
+        // ref={accordion_ref as Ref<HTMLButtonElement>}
+        // ref={config_object.getBtnToogleMenu()}
       >
         <Box
           as='span'

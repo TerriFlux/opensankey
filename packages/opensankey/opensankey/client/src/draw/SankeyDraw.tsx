@@ -89,7 +89,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     svgSankey.style('width', applicationData.data.width + 'px')
 
-    svgSankey.style('height', applicationData.data.height + 'px');
+    svgSankey.style('height', applicationData.data.height + 'px')
 
     // Test
     applicationData.new_data?.drawing_area?.reset();
