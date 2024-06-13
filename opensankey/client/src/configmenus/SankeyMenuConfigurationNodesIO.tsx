@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
-import { TFunction } from 'i18next'
 
 import {
   Box,
@@ -403,7 +402,7 @@ const has_link_come_from=(
    * @param {current:SankeyNode[]}: multi_selected_nodes
    * @returns {*}
    */
-const updateDefaultNodeIO=(
+export const updateDefaultNodeIO=(
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },
@@ -440,105 +439,7 @@ const updateDefaultNodeIO=(
   }
   return [link_pos,link_io]
 }
-/**
-   * Create a html table displaying links attached to the selected node and filtered by where they're coming/going from
-   *
-   * @param {string} pos
-   * @param {string} io
-   * @returns {*}
-   */
-const tab_pos_link=(
-  t:TFunction,
-  data:SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [link_id: string]: SankeyLink },
-  multi_selected_nodes:{current:SankeyNode[]},
-  tab_colored:boolean,
-  GetLinkValue:GetLinkValueFuncType,
-  link_function:LinkFunctionTypes,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
-  forceUpdate:boolean
-)=>{
-  const [pos,io] = updateDefaultNodeIO(data,display_nodes,display_links,multi_selected_nodes)
-  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
-  return (
-    <>
-      <Table
-        variant='striped'
-        // bordered
-        // hover
-        // className='node_group_tags_definition'
-      >
-        <Thead>
-          <Tr>
-            <Th>{t('Menu.flux')}</Th>
-            <Th>{t('Tags.Position')}</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {
-            link_io.map((k, i) => {
-              const color=LinkColor(data.links[k],data,GetLinkValue) as string
-              const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
-              const n_s=data.nodes[data.links[k].idSource]
-              const n_t=data.nodes[data.links[k].idTarget]
 
-              return (
-                <Tr key={i.toString()}>
-                  <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
-                  <td style={{ 'width': '10%' }}>
-                    <Box layerStyle="options_2cols">
-                      <Button
-                        variant='menuconfigpanel_option_button'
-                        minWidth='0'
-                        onClick={() =>
-                          handleUpLinkIOPos(
-                            data,
-                            display_nodes,
-                            multi_selected_nodes,
-                            k,
-                            pos,
-                            io,
-                            GetLinkValue,
-                            link_function,
-                            setForceUpdate,
-                            forceUpdate
-                          )
-                        }
-                      >
-                        <FaArrowAltCircleUp />
-                      </Button>
-                      <Button
-                        variant='menuconfigpanel_option_button'
-                        minWidth='0'
-                        onClick={() =>
-                          handleDownLinkIOPos(
-                            data,
-                            display_nodes,
-                            multi_selected_nodes,
-                            k,
-                            pos,
-                            io,
-                            GetLinkValue,
-                            link_function,
-                            setForceUpdate,
-                            forceUpdate
-                          )
-                        }
-                      >
-                        <FaArrowAltCircleDown />
-                      </Button>
-                    </Box>
-                  </td>
-                </Tr>
-              )
-            })
-          }
-        </Tbody>
-      </Table>
-    </>
-  )
-}
 
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
@@ -554,11 +455,13 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   const { data, display_nodes, display_links } = applicationData
   const { multi_selected_nodes, multi_selected_links } = applicationState
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
-  const [ link_io, set_link_io ] = useState('output')
-  const [ link_pos, set_link_pos ] = useState('right')
   const [ tab_colored, set_tab_colored ] = useState(false)
   const [ forceUpdate, setForceUpdate ] = useState(false)
-
+ 
+  let IOLink=[] as string[]
+  if (multi_selected_nodes.current.length===1) {
+    IOLink = getIOLink(data,display_nodes,multi_selected_nodes,applicationState.link_pos.current,applicationState.link_io.current)
+  }
 
   let has_input_links = false
   let has_output_links = false
@@ -577,8 +480,12 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     )
   }
 
-
-  updateComponentMenuNodeIOSelectSideNode.current.push(()=>setForceUpdate(!forceUpdate))
+  updateComponentMenuNodeIOSelectSideNode.current = ()=>{
+    const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
+    applicationState.link_io.current = io
+    applicationState.link_pos.current = pos    
+    setForceUpdate(!forceUpdate)
+  }
 
   const content_reorg=<Box
     layerStyle='menuconfigpanel_grid'
@@ -633,19 +540,20 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         <Select
           variant='menuconfigpanel_option_select'
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            set_link_io(evt.target.value)
+            applicationState.link_io.current = evt.target.value
             if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'left')) {
-              set_link_pos('left')
+              applicationState.link_pos.current = 'left'
             }
             else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'right')) {
-              set_link_pos('right')
+              applicationState.link_pos.current = 'right'
             }
             else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'top')) {
-              set_link_pos('top')
+              applicationState.link_pos.current = 'top'
             }
             else {
-              set_link_pos('bottom')
+              applicationState.link_pos.current = 'bottom'
             }
+            setForceUpdate(!forceUpdate)
           }}
         >
           {
@@ -676,26 +584,29 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         </OSTooltip>
         <Select
           variant='menuconfigpanel_option_select'
-          value={link_pos}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_link_pos(evt.target.value)}
+          value={applicationState.link_pos.current}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            applicationState.link_pos.current = evt.target.value
+            setForceUpdate(!forceUpdate)
+          }}
         >
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'left')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'left')?
               <option value='left'>{t('Noeud.PF.gauche')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'right')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'right')?
               <option value='right'>{t('Noeud.PF.droite')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'top')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'top')?
               <option value='top'>{t('Noeud.PF.ades')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'bottom')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'bottom')?
               <option value='bottom'>{t('Noeud.PF.edes')}</option>:
               <></>
           }
@@ -718,18 +629,81 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
 
       {/* Table montrant les noeuds selectionnés  */}
       {
-        tab_pos_link(
-          t,
-          data,
-          display_nodes,
-          display_links,
-          multi_selected_nodes,
-          tab_colored,
-          GetLinkValue,
-          link_function,
-          setForceUpdate,
-          forceUpdate
-        )
+        <>
+          <Table
+            variant='striped'
+            // bordered
+            // hover
+            // className='node_group_tags_definition'
+          >
+            <Thead>
+              <Tr>
+                <Th>{t('Menu.flux')}</Th>
+                <Th>{t('Tags.Position')}</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {
+                IOLink.map((k, i) => {
+                  const color=LinkColor(data.links[k],data,GetLinkValue) as string
+                  const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
+                  const n_s=data.nodes[data.links[k].idSource]
+                  const n_t=data.nodes[data.links[k].idTarget]
+
+                  return (
+                    <Tr key={i.toString()}>
+                      <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
+                      <td style={{ 'width': '10%' }}>
+                        <Box layerStyle="options_2cols">
+                          <Button
+                            variant='menuconfigpanel_option_button'
+                            minWidth='0'
+                            onClick={() =>
+                              handleUpLinkIOPos(
+                                data,
+                                display_nodes,
+                                multi_selected_nodes,
+                                k,
+                                applicationState.link_pos.current,
+                                applicationState.link_io.current,
+                                GetLinkValue,
+                                link_function,
+                                setForceUpdate,
+                                forceUpdate
+                              )
+                            }
+                          >
+                            <FaArrowAltCircleUp />
+                          </Button>
+                          <Button
+                            variant='menuconfigpanel_option_button'
+                            minWidth='0'
+                            onClick={() =>
+                              handleDownLinkIOPos(
+                                data,
+                                display_nodes,
+                                multi_selected_nodes,
+                                k,
+                                applicationState.link_pos.current,
+                                applicationState.link_io.current,
+                                GetLinkValue,
+                                link_function,
+                                setForceUpdate,
+                                forceUpdate
+                              )
+                            }
+                          >
+                            <FaArrowAltCircleDown />
+                          </Button>
+                        </Box>
+                      </td>
+                    </Tr>
+                  )
+                })
+              }
+            </Tbody>
+          </Table>
+        </>
       }
     </Box>:
     <></>

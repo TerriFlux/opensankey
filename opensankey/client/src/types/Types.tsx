@@ -486,6 +486,9 @@ export type applicationStateType = {
   ref_selected_style_link : MutableRefObject<string>
   first_selected_node :  {current:SankeyNode|undefined}
 
+  link_io : MutableRefObject<string>,
+  link_pos : MutableRefObject<string>,
+
   ref_pre_idSource : MutableRefObject<string>
   ref_pre_idTarget : MutableRefObject<string>
   ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>
@@ -639,7 +642,7 @@ export type ComponentUpdaterType={
   updateComponentMenuConfigLayout: MutableRefObject<()=>void>
   updateComponentMenu: MutableRefObject<()=>void>
   updateComponenSaveInCache: MutableRefObject<(b:boolean)=>void>
-  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(()=>void)[]>
+  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<()=>void>
   updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
   updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>  
   updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>

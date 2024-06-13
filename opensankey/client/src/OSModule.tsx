@@ -148,6 +148,9 @@ export const initializeElementSelected : initializeElementSelectedType = ()=> {
     ref_pre_idSource : useRef('none'),
     ref_pre_idTarget : useRef('none'),
 
+    link_io:useRef('output'),
+    link_pos:useRef('right'),
+
     ref_display_link_opacity : useRef<Dispatch<SetStateAction<string>>[]>([]),
     displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
     displayedInputLinkDataTagSetterRef : useRef<Dispatch<SetStateAction<{[k: string]: string;}>>[]>([]),
