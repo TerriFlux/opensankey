@@ -482,8 +482,13 @@ export const tree_data_nodes : tree_data_nodesFType =(
   filter_node_selector:string[]
 )=>{
 
-  const root_checked=(Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n).length===multi_selected_nodes.current.length)?1:0
+  const root_checked=(Object.values(data.nodes).filter(n=>
+    (data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)
+  ).map(n=>n).length===multi_selected_nodes.current.length)?1:0
   const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[],checked:root_checked}
+
+  //const roots_nodes = Object.values(data.nodes).filter(n=>n.tags['Primaire'].includes('1'))
+
   Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n) && check_node_has_node_type(n,filter_node_selector)).forEach(n=>{
     const sub_tree={id:n.idNode,name:n.name,checked:multi_selected_nodes.current.includes(n)?1:0} as treeFolderType
 
