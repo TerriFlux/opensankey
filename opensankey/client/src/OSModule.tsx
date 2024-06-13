@@ -190,7 +190,8 @@ export const initializeApplicationData : initializeApplicationDataType = (
   function_on_wait:useRef(()=>null),
   min_link_thickness:2,
   dataVarToUpdate:useRef(['']),
-  setDiagram:setDiagram
+  setDiagram:setDiagram,
+  new_data: new Class_ApplicationData(window, false)
 }
 }
 // General functions necessay to draw the diagram

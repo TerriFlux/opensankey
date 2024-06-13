@@ -10,8 +10,11 @@ import * as d3 from 'd3'
 // Local types
 import {
   Class_Element,
+  Class_ElementShape,
+  Type_ElementPosition,
   Type_Label,
-  Type_Shape,
+  default_element_position,
+  // Type_Shape,
   default_label
 } from './Element'
 import {
@@ -28,8 +31,32 @@ import {
 import {
   PathNodeArrowShape
 } from '../draw/SankeyDrawFunction'
+import { KeysTypeSankeyNodeAttrLocal, SankeyNodeAttrLocal, ValuesTypeSankeyNodeAttrLocal } from './Types'
+import { Class_MenuConfig } from './MenuConfig'
 
 
+
+export class Class_NodeShape extends Class_ElementShape{
+  // Shape can only be rect | ellipse | arrow
+  protected type:'rect' | 'ellipse' | 'arrow'
+  private width:number
+  private height:number
+
+  constructor(){
+    super()
+    this.type='rect'
+    this.width=40
+    this.height=40
+  }
+  public getType(): 'rect' | 'ellipse' | 'arrow' {return this.type}
+  public setType(value: 'rect' | 'ellipse' | 'arrow') {this.type = value}
+
+  public getWidth(): number {return this.width}
+  public setWidth(value: number) {this.width = value}
+
+  public getHeight(): number {return this.height}
+  public setHeight(value: number) {this.height = value}
+}
 
 /**
  * Class that define a node element and how to interact with it
@@ -51,16 +78,24 @@ export class Class_NodeElement extends Class_Element {
 
   protected value_label: Type_Label = structuredClone(default_label)
 
+  protected style: string
+
   // Arrows
   protected arrow_angle_factor: number = 10
   protected arrow_angle_direction: string = 'hh'
 
+  // Definition of abstract attribut from Class_Element
+  protected display: {
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+    shape: Class_NodeShape,
+  }
+
   // TODO
-  //   local?: SankeyNodeAttrLocal
+  protected local?: SankeyNodeAttrLocal
   //   colorParameter: string = ""
   //   colorTag: string = ""
   //   tooltip_text?: string
-  //   style: string
 
   // CONSTRUCTOR ========================================================================
 
@@ -74,11 +109,22 @@ export class Class_NodeElement extends Class_Element {
   constructor(
     id: string,
     name: string,
-    drawing_area: Class_DrawingArea
+    drawing_area: Class_DrawingArea,
+    menu_config: Class_MenuConfig,
+
   ) {
-    super(id, drawing_area, 'g_nodes')
+    super(id, drawing_area,menu_config, 'g_nodes')
     // Surcharge with name
     this.name = name
+
+    // init local class attr
+    this.style = 'default'
+    this.display = {
+      drawing_area: drawing_area,
+      position: structuredClone(default_element_position),
+      shape: new Class_NodeShape,
+    }
+    
   }
 
   // PUBLIC METHODS =====================================================================
@@ -103,15 +149,6 @@ export class Class_NodeElement extends Class_Element {
 
   // GETTERS / SETTERS ==================================================================
 
-  // Shape can only be rect | ellipse | arrow
-  public setShapeType(_: Type_Shape) {
-    if ((_ !== 'rect') && (_ !== 'ellipse') && (_ !== 'arrow')) {
-      return
-    }
-    this.display.shape.type = _
-    this.reset()
-  }
-
   // Label for name
   public getNameLabelText() {
     if (this.name_label_separator !== '') {
@@ -135,29 +172,29 @@ export class Class_NodeElement extends Class_Element {
     // Clean previous shape
     this.d3_selection?.selectAll(' .node_shape').remove()
     // Apply shape value
-    if (this.getShapeType() === 'rect') {
+    if (this.display.shape.getType() === 'rect') {
       this.d3_selection?.append('rect')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('width', this.getShapeWidth())
-        .attr('height', this.getShapeHeight())
+        .attr('width', this.display.shape.getWidth())
+        .attr('height', this.display.shape.getHeight())
     }
-    else if (this.getShapeType() === 'ellipse') {
+    else if (this.display.shape.getType() === 'ellipse') {
       this.d3_selection?.append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('cx', this.getShapeWidth() / 2)
-        .attr('cy', this.getShapeHeight() / 2)
-        .attr('rx', this.getShapeWidth() / 2)
-        .attr('ry', this.getShapeHeight() / 2)
+        .attr('cx', this.display.shape.getWidth() / 2)
+        .attr('cy', this.display.shape.getHeight() / 2)
+        .attr('rx', this.display.shape.getWidth() / 2)
+        .attr('ry', this.display.shape.getHeight() / 2)
     }
-    else if (this.getShapeType() === 'arrow') {
+    else if (this.display.shape.getType() === 'arrow') {
       this.d3_selection?.append('path')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('d', () => {
-          const n_w = this.getShapeWidth()
-          const n_h = this.getShapeHeight()
+          const n_w = this.display.shape.getWidth()
+          const n_h = this.display.shape.getHeight()
           const k_angle = this.arrow_angle_factor
           const angle_direction = this.arrow_angle_direction
           // const path='M0,0L'+n_w*(1-k_angle)+',0L'+n_w+','+n_h/2+'L'+n_w*(1-k_angle)+','+n_h+'L0,'+n_h+'L'+n_w*k_angle+','+n_h/2
@@ -166,15 +203,15 @@ export class Class_NodeElement extends Class_Element {
         })
     }
     // Apply common properties
-    this.d3_selection?.selectAll(' .node_shape')
+    this.d3_selection?.selectAll('.node_shape')
       .attr('id', this.id)
-      .attr('fill-opacity', this.getShapeVisible() ? '1' : '0')
-      .attr('fill', this.getShapeColor())
+      .attr('fill-opacity', this.display.shape.getVisible() ? '1' : '0')
+      .attr('fill', this.display.shape.getColor())
       .style('stroke', 'black')
-      // .style('stroke-width', d => {
-      //   const dd = (d as SankeyNode)
-      //   return NodeStrokeWidth(dd,multi_selected_nodes)
-      // }
+    // .style('stroke-width', d => {
+    //   const dd = (d as SankeyNode)
+    //   return NodeStrokeWidth(dd,multi_selected_nodes)
+    // }
   }
 
   /**
@@ -204,8 +241,8 @@ export class Class_NodeElement extends Class_Element {
       // Add name label text
       this.d3_selection?.append('text')
         .classed('label', true)
-        .classed('label_text',true)
-        .attr('fill', this.name_label.color? 'white' : 'black')
+        .classed('label_text', true)
+        .attr('fill', this.name_label.color ? 'white' : 'black')
         .attr('id', 'label_text_' + this.id)
         .attr('x', this.name_label.position.x)
         .attr('y', this.name_label.position.y)
@@ -218,7 +255,7 @@ export class Class_NodeElement extends Class_Element {
         .style('stroke', 'none')
         .style('text-transform', this.name_label.uppercase ? 'uppercase' : 'none')
         .text(this.getNameLabelText())
-        // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
+      // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
       // Add an input to change the name of the node
       // The input appear when we double click on the label
       if (!this.getDrawingArea().static) {
@@ -229,7 +266,7 @@ export class Class_NodeElement extends Class_Element {
           .attr('y', this.name_label.position.y)
           .style('width', String(this.name.length) + 'rem')
           .attr('height', this.name_label.font_size + 2)
-          .style('display','none')
+          .style('display', 'none')
           .append('xhtml:div')
           .append('input')
           .classed('label', true)
@@ -254,6 +291,10 @@ export class Class_NodeElement extends Class_Element {
     }
     return 'inline'
   }
+
+  public getDisplay(){
+    return this.display
+  }
 }
 
 /**
@@ -268,14 +309,14 @@ export class Class_Node extends Class_NodeElement {
   // Level & Parent
   // TODO link with other nodes directly
   dimensions: {
-    [_:string] :{
+    [_: string]: {
       parent_name?: string,
       level?: number,
     }
   } = {}
 
   // Tags
-  tags: {[_: string] : Class_Tag[]} = {}
+  tags: { [_: string]: Class_Tag[] } = {}
   color_sustainable: boolean = false
 
   // Related links
@@ -300,16 +341,72 @@ export class Class_Node extends Class_NodeElement {
     if (!this.output_links.includes(link)) this.output_links.push(link)
   }
 
+  public getName() {
+    return this.name
+  }
+
+  /**
+   * Get style key of node
+   * @return {string} 
+   * @memberof Class_Node
+   */
+  public getStyle() {
+    return this.style
+  }
+
+  /**
+  * Set style key of node
+  * @memberof Class_Node
+  */
+  public setStyle(new_style: string) {
+    this.style = new_style
+  }
+
+
+  /**
+  * Set style key of node
+  * 
+  * @return {SankeyNodeAttrLocal | undefined} 
+  * @memberof Class_Node
+  */
+  public getLocalAttr() {
+    return this.local
+  }
+
+  /**
+  * initialize local nonde attribute
+  * 
+  * @memberof Class_Node
+  */
+  public initLocalAttr() {
+    this.local={}
+  }
+
+  public setLocalAttrValue(key:KeysTypeSankeyNodeAttrLocal,value:ValuesTypeSankeyNodeAttrLocal) {
+    if(this.local!==undefined && this.local[key]!==undefined){
+      const t= this.local[key]
+    }
+  }
+
+
   // Get links
   public getFirstInputLink() {
     if (this.hasInputLinks()) return this.input_links[0]
     else return undefined
   }
+
+  public getInputLink(): Class_Link[] {
+    return this.input_links
+  }
+
   public getFirstOutputLink() {
     if (this.hasOutputLinks()) return this.output_links[0]
     else return undefined
   }
 
+  public getOutputLink(): Class_Link[] {
+    return this.output_links
+  }
   // Display tooltip
   public showTooltip() { /* TODO */ }
 
@@ -327,7 +424,7 @@ export class Class_Node extends Class_NodeElement {
     // Get related drawing area
     const drawing_area = this.getDrawingArea()
     // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()){
+    if (drawing_area.isInEditionMode()) {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
@@ -358,6 +455,8 @@ export class Class_Node extends Class_NodeElement {
         }
         // Add node to selection
         drawing_area.addNodeToSelection(this)
+        console.log(this)
+        this.getMenuConfig().OpenConfigMenu()
       }
     }
   }
@@ -380,11 +479,11 @@ export class Class_Node extends Class_NodeElement {
         if (this.hasInputLinks()) {
           // Node is export
           const input_link = this.getFirstInputLink()
-          if (!input_link?.getShapeVisible()) {
+          if (!input_link?.display.shape.getVisible()) {
             return 'translate(0, 0)'
           }
           const source_node = input_link.getNodeSource()
-          if ( !source_node.getShapeVisible()) {
+          if (!source_node.display.shape.getVisible()) {
             return 'translate(0, 0)'
           }
           x = source_node.getPosX() + this.getPosX()
@@ -393,11 +492,11 @@ export class Class_Node extends Class_NodeElement {
         else if (this.hasOutputLinks()) {
           // Node is import
           const output_link = this.getFirstOutputLink()
-          if ( !output_link?.getShapeVisible()) {
+          if (!output_link?.display.shape.getVisible()) {
             return 'translate(0,0)'
           }
           const target_node = output_link.getNodeTarget()
-          if ( !target_node.getShapeVisible()) {
+          if (!target_node.display.shape.getVisible()) {
             return 'translate(0,0)'
           }
           x = target_node.getPosX() + this.getPosX()

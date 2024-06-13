@@ -24,6 +24,7 @@ import {
 import {
   addNewNodeToSankey
 } from '../functions/draw/Sankey'
+import { Class_MenuConfig } from './MenuConfig'
 
 
 /**
@@ -41,8 +42,12 @@ export class Class_Sankey {
    * @param {Class_DrawingArea} drawing_area
    * @memberof Class_Sankey
    */
-  constructor(drawing_area: Class_DrawingArea) {
+  constructor(drawing_area: Class_DrawingArea,
+    menu_config: Class_MenuConfig,
+
+  ) {
     this.drawing_area = drawing_area
+    this.menu_config=menu_config
   }
 
   // CONSTRUCTED ATTRIBUTES ====================================================
@@ -54,17 +59,25 @@ export class Class_Sankey {
    */
   drawing_area: Class_DrawingArea
 
+  /**
+ * Config menu ref to html element & function to update it
+ * @protected
+ * @type {string}
+ * @memberof Class_Element
+ */
+  protected menu_config: Class_MenuConfig
+
   // DEFAULT ATTRIBUTES =======================================================
 
   // Nodes
-  nodes: {[_:string]: Class_Node} = {}
+  nodes: { [_: string]: Class_Node } = {}
   // Links
-  links: {[_:string]: Class_Link} = {}
+  links: { [_: string]: Class_Link } = {}
   // Tags
-  node_taggs: {[_:string]: Class_Tagg} = {}
-  flux_taggs: {[_:string]: Class_Tagg} = {}
-  data_taggs: {[_:string]: Class_Tagg} = {}
-  level_taggs: {[_:string]: Class_Tagg} = {}
+  node_taggs: { [_: string]: Class_Tagg } = {}
+  flux_taggs: { [_: string]: Class_Tagg } = {}
+  data_taggs: { [_: string]: Class_Tagg } = {}
+  level_taggs: { [_: string]: Class_Tagg } = {}
 
   // left_shift: number,
   // right_shift: number,
@@ -89,7 +102,10 @@ export class Class_Sankey {
   // legend_width:number,
   // node_label_separator:string
 
+
+
   // PUBLIC METHODS ===========================================================
+  // Nodes related METHODS ==================================================================
 
   /**
    * Create and add a node for this Sankey
@@ -99,13 +115,13 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public addNewNode(id: string, name: string) {
-    return addNewNodeToSankey(this, id, name)
+    return addNewNodeToSankey(this,this.menu_config, id, name)
   }
   public addNewDefaultNode() {
-    const n =  String(Object.values(this.nodes).length)
+    const n = String(Object.values(this.nodes).length)
     const id = 'node' + n
     const name = 'Node ' + n
-    return addNewNodeToSankey(this, id, name)
+    return addNewNodeToSankey(this,this.menu_config, id, name,)
   }
 
   /**
@@ -121,6 +137,48 @@ export class Class_Sankey {
     return null
   }
 
+  public getAllNodes() {
+    return this.nodes
+  }
+
+  /**
+   * Return an array of Class_Node sorted by name
+   *
+   * @return {Class_Node[]} 
+   * @memberof Class_Sankey
+   */
+  public getNameSortedNodes() {
+    return Object.entries(this.nodes)
+      .sort(([, a], [, b]) =>
+        (a.name > b.name) ?
+          1 :
+          ((b.name > a.name) ?
+            -1 :
+            0)
+      ).map(n => n[1])
+  }
+
+  /**
+  * Return an array of Class_Node selected
+  *
+  * @return {Class_Node[]} 
+  * @memberof Class_Sankey
+  */
+  public getAllNodesSelected() {
+
+    return Object.values(this.nodes)
+      .filter(n => n.isSelected())
+  }
+
+  /**
+   *  Reset all selected nodes
+   *
+   * @memberof Class_Sankey
+   */
+  public drawAllNodeSelected() {
+    this.getAllNodesSelected().forEach(n => n.reset())
+  }
+
   /**
    * Add a given node to Sankey
    * @param {Class_Node} node
@@ -129,9 +187,62 @@ export class Class_Sankey {
   public addNode(node: Class_Node) { this.nodes[node.id] = node }
 
   /**
+   * remove a given node from Sankey
+   * @param {Class_Node} node
+   * @memberof Class_Sankey
+   */
+  public removeNode(node: Class_Node) { 
+    delete this.nodes[node.id]
+  }
+
+  // public setValueForNodeAttribute(node: Class_Node){
+  //   if(node.getLocalAttr()===undefined){
+  //     node.setLocalAttr({})
+  //   }
+  //   node.getLocalAttr()
+
+  // }
+
+
+  // Links related METHODS ==================================================================
+
+  /**
    * Add a given link to Sankey
    * @param {Class_Link} link
    * @memberof Class_Sankey
    */
   public addLink(link: Class_Link) { this.links[link.id] = link }
+
+  /**
+     * Return array of link who have is_selected at true
+     *
+     * @return {Class_Link[]} 
+     * @memberof Class_Sankey
+     */
+  public getAllLinksSelected() {
+
+    return Object.values(this.links)
+      .filter(l => l.isSelected())
+  }
+
+  /**
+   *  Reset all selected links
+   *
+   * @memberof Class_Sankey
+   */
+  public drawAllLinksSelected() {
+    this.getAllLinksSelected().forEach(l => l.reset())
+  }
+
+  /**
+   *  Reset links in parameter
+   *
+   * @memberof Class_Sankey
+   */
+  public drawTheseLinks(links: Class_Link[]) {
+    links.forEach(l => l.reset())
+  }
+
+
+
 }

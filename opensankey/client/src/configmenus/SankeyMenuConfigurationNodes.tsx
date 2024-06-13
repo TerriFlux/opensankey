@@ -41,8 +41,9 @@ import {
 
 /*************************************************************************************************/
 import {
-  ReturnValueNode,AddNewNode, deleteSelectedNodeFromData,
-  OSTooltip} from './SankeyUtils'
+  ReturnValueNode, AddNewNode, deleteSelectedNodeFromData,
+  OSTooltip
+} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
@@ -53,43 +54,43 @@ import { selected_type } from '../topmenus/SankeyMenuTop'
 
 /*************************************************************************************************/
 type SankeyEditionTypes = {
-  applicationContext:applicationContextType,
-  applicationData:applicationDataType,
-  applicationState:applicationStateType,
-  multi_selected_nodes:{current:SankeyNode[]},
-  menu_configuration_nodes : {[s:string]: JSX.Element},
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
-  node_function:NodeFunctionTypes
+  applicationContext: applicationContextType,
+  applicationData: applicationDataType,
+  applicationState: applicationStateType,
+  multi_selected_nodes: { current: SankeyNode[] },
+  menu_configuration_nodes: { [s: string]: JSX.Element },
+  link_function: LinkFunctionTypes,
+  ComponentUpdater: ComponentUpdaterType,
+  node_function: NodeFunctionTypes
 }
 
 /*************************************************************************************************/
-export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
+export const OpenSankeyMenuConfigurationNodes: OpenSankeyMenuConfigurationNodesFType = (
   applicationContext,
   applicationData,
   applicationState,
   menu_configuration_nodes_attributes,
-  GetLinkValue:GetLinkValueFuncType,
-  node_function,link_function,
+  GetLinkValue: GetLinkValueFuncType,
+  node_function, link_function,
   ComponentUpdater
 ) => {
   const { data } = applicationData
 
-  const ui : {[s:string] : JSX.Element}= {
+  const ui: { [s: string]: JSX.Element } = {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
-      menu_to_wrap = {menu_configuration_nodes_attributes}
-      for_modal = {false}
+      menu_to_wrap={menu_configuration_nodes_attributes}
+      for_modal={false}
       idTab={'node_attr'}
     />,
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
       applicationContext={applicationContext}
-      applicationState ={applicationState}
+      applicationState={applicationState}
       ComponentUpdater={ComponentUpdater}
-      menu_for_modal = {false}
+      menu_for_modal={false}
     />
   }
 
-  if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
+  if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN')) {
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
@@ -128,38 +129,28 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
   const {
-    updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode,
-    updateComponentMenuConfigLink,updateMenuConfigTextNodeTooltip
-  }=ComponentUpdater
-  updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
-  
-  const {data}=applicationData
-  const {t}=applicationContext
-  const node_visible=NodeVisibleOnsSvg()
+    updateComponentMenuConfigNode, updateComponentMenuNodeIOSelectSideNode,
+    updateComponentMenuConfigLink, updateMenuConfigTextNodeTooltip
+  } = ComponentUpdater
+  updateComponentMenuConfigNode.current = () => setForceUpdate(!forceUpdate)
 
-  const tmpNodes = Object
-    .fromEntries(
-      Object.entries(data.nodes)
-        .sort(([, a], [, b]) =>
-          (a.name > b.name) ?
-            1 :
-            ((b.name > a.name) ?
-              -1 :
-              0)
-        ))
+  const { data, new_data } = applicationData
+  const { t } = applicationContext
+  const node_visible = NodeVisibleOnsSvg()
+
+  const new_nodes_sorted = new_data.drawing_area.sankey.getNameSortedNodes()
+  const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.isSelected())
   const INITIAL_OPTIONS = Object
-    .values(tmpNodes)
+    .values(new_nodes_sorted)
     .filter(d => (
-      data.displayed_node_selector)?
-      node_visible.includes(d.idNode):
-      true)
+      data.displayed_node_selector) ? (d.getId()) : true)
     .map(d => {
-      return { 'label': d.name, 'value': d.idNode }
+      return { 'label': d.getName(), 'value': d.getId() }
     })
 
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
-  const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.getName(), 'value': d.getId() } })
 
   // Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
@@ -178,22 +169,23 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             labelledBy={t('Noeud.TS')}
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
-              const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
-              multi_selected_nodes.current = m_s
-              Object.values(data.nodes).forEach( n =>
-                d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
-              )
-              multi_selected_nodes.current.forEach( n =>
-                d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
-              )
+              new_nodes_sorted.forEach(n => {
+                if (new_sel.includes(n.getId())) {
+                  n.setSelected()
+                  new_data.drawing_area.addNodeToSelection(n)
+                } else {
+                  n.setUnSelected()
+                  new_data.drawing_area.removeNodeFromSelection(n)
+                }
+              })
+
               setForceUpdate(!forceUpdate)
-              multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
-              updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
-              updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
+              updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+              updateMenuConfigTextNodeTooltip.current.forEach(f => f())
 
             }}
             valueRenderer={(selected: selected_type[]) => {
-              return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
+              return selected.length ? selected.map(({ label }) => label + ', ') : t('Noeud.NS')
             }}
           />
         </Box>
@@ -299,7 +291,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {
-        (!applicationContext.has_free_account && Object.keys(data.nodes).length>15)?
+        (!applicationContext.has_free_account && Object.keys(data.nodes).length > 15) ?
           <Box
             as='span'
             layerStyle='menuconfigpanel_warn_msg'
@@ -318,16 +310,24 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={!applicationContext.has_free_account && Object.keys(data.nodes).length>15}
+            isDisabled={!applicationContext.has_free_account && Object.keys(new_nodes_sorted).length > 15}
             onClick={() => {
-              Object.values(applicationData.display_nodes).forEach(n=>DeselectVisualyNodes(n))
-              AddNewNode(applicationData,multi_selected_nodes,node_function)
+              Object.values(applicationData.display_nodes).forEach(n => DeselectVisualyNodes(n))
+
+              const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
+              new_node.name='Unknown Node'
+              // Set position
+              new_node.setPosXY(50, 50)
+              new_data.drawing_area.addNodeToSelection(new_node)
+              new_node.reset()
+
+              // AddNewNode(applicationData, multi_selected_nodes, node_function)
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              SelectVisualyNodes(multi_selected_nodes.current[0])
-              updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
+              // SelectVisualyNodes(multi_selected_nodes.current[0])
+              updateMenuConfigTextNodeTooltip.current.forEach(f => f())
               setForceUpdate(!forceUpdate)
             }}>
-            <FaPlus/>
+            <FaPlus />
           </Button>
         </OSTooltip>
 
@@ -343,7 +343,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             isDisabled={multi_selected_nodes.current.length == 0}
             onClick={
               () => {
-                deleteSelectedNodeFromData(applicationData,applicationState)
+                deleteSelectedNodeFromData(applicationData, applicationState)
 
                 node_function.recomputeDisplayedElement()
                 node_function.RedrawNodes(Object.values(applicationData.display_nodes))
@@ -363,7 +363,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             variant='menuconfigpanel_option_button'
             onClick={
               () => {
-                data.displayed_node_selector=!data.displayed_node_selector
+                data.displayed_node_selector = !data.displayed_node_selector
                 setForceUpdate(!forceUpdate)
               }}>
             <FaEye />
@@ -391,47 +391,19 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               <Input
                 variant='menuconfigpanel_option_input'
                 value={
-                  (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
+                  (new_nodes_sorted_selected.length != 1) ? '' : new_nodes_sorted_selected[0].name
                 }
                 onChange={evt => {
-                  if (multi_selected_nodes.current.length != 1) {
+                  if (new_nodes_sorted_selected.length != 1) {
                     return
                   }
-                  multi_selected_nodes.current[0].name = evt.target.value
-                  const d = multi_selected_nodes.current[0]
-                  d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
-                  const wrap = textwrap()
-                    .bounds({ height: 100, width: (ReturnValueNode(data,d,'label_box_width') as number != 0) ? ReturnValueNode(data,d,'label_box_width') as number : 110 })
-                    .method('tspans')
-                  d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-                    .call(wrap)
-                  if (!d.x_label || data.show_structure === 'structure') {
-                    d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                      const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-                      if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
-                        return width / 2
-                      } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
-                        return ReturnValueNode(data,d,'label_vert') == 'middle' ? width : 0
-                      } else {
-                        return 0
-                      }
-                    })
-                  }
-                  d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                    const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-                    if (d.x_label) {
-                      return d.x_label
-                    } else if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
-                      return width / 2
-                    } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
-                      return width
-                    } else {
-                      return 0
-                    }
-                  })
+                  new_nodes_sorted_selected[0].name = evt.target.value
+                  const d = new_nodes_sorted_selected[0]
+                  d.reset()
+
                   setForceUpdate(!forceUpdate)
                 }}
-                isDisabled={(multi_selected_nodes.current.length == 1) ? false : true}
+                isDisabled={(new_nodes_sorted_selected.length == 1) ? false : true}
               />
             </InputGroup>
           </OSTooltip>
@@ -440,14 +412,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
       {/* Declenché si des neouds sont selectionnées */}
       {
-        (multi_selected_nodes.current.length !== 0) ?
+        (new_nodes_sorted_selected.length !== 0) ?
           <Tabs>
             <TabList>
               {
                 Object
                   .keys(menu_configuration_nodes)
                   .map((key) => {
-                    return <Tab> 
+                    return <Tab>
                       <Box layerStyle='submenuconfig_tab' >
                         {t(key)}
                       </Box>
@@ -465,7 +437,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   })
               }
             </TabPanels>
-          </Tabs>:
+          </Tabs> :
           <></>
       }
     </Box>
@@ -474,90 +446,90 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
 export default SankeyNodeEdition
 
-export const tree_data_nodes : tree_data_nodesFType =(
-  t:TFunction<'translation', undefined>,
-  data:SankeyData,
-  multi_selected_nodes:{current:SankeyNode[]},
-  node_visible:string[],
-  filter_node_selector:string[]
-)=>{
+// export const tree_data_nodes : tree_data_nodesFType =(
+//   t:TFunction<'translation', undefined>,
+//   data:SankeyData,
+//   multi_selected_nodes:{current:SankeyNode[]},
+//   node_visible:string[],
+//   filter_node_selector:string[]
+// )=>{
 
-  const root_checked=(Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n).length===multi_selected_nodes.current.length)?1:0
-  const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[],checked:root_checked}
-  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n) && check_node_has_node_type(n,filter_node_selector)).forEach(n=>{
-    const sub_tree={id:n.idNode,name:n.name,checked:multi_selected_nodes.current.includes(n)?1:0} as treeFolderType
+//   const root_checked=(Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n).length===multi_selected_nodes.current.length)?1:0
+//   const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[],checked:root_checked}
+//   Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n) && check_node_has_node_type(n,filter_node_selector)).forEach(n=>{
+//     const sub_tree={id:n.idNode,name:n.name,checked:multi_selected_nodes.current.includes(n)?1:0} as treeFolderType
 
-    if(data.displayed_node_selector && !node_visible.includes(n.idNode)){
-      sub_tree.checked=0.5
-    }
-    tree.children?tree.children.push(sub_tree):tree.children=[sub_tree]})
+//     if(data.displayed_node_selector && !node_visible.includes(n.idNode)){
+//       sub_tree.checked=0.5
+//     }
+//     tree.children?tree.children.push(sub_tree):tree.children=[sub_tree]})
 
-  tree.children?.forEach(t=>{
-    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes,data.displayed_node_selector,node_visible,filter_node_selector)
-    if(child_t.length>0){
-      t.children=child_t
-    }
-  })
-  return tree
-}
+//   tree.children?.forEach(t=>{
+//     const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes,data.displayed_node_selector,node_visible,filter_node_selector)
+//     if(child_t.length>0){
+//       t.children=child_t
+//     }
+//   })
+//   return tree
+// }
 
-const check_node_has_no_valid_dimensions=(n:SankeyNode)=>{
-  if(!n.dimensions){
-    return true
-  }
-  let invalid=true
-  Object.entries(n.dimensions).filter(nd=>nd[0]==='Primaire').forEach(value_dim=>{
-    if(value_dim[1].parent_name!==undefined){
-      invalid=false
-    }
+// const check_node_has_no_valid_dimensions=(n:SankeyNode)=>{
+//   if(!n.dimensions){
+//     return true
+//   }
+//   let invalid=true
+//   Object.entries(n.dimensions).filter(nd=>nd[0]==='Primaire').forEach(value_dim=>{
+//     if(value_dim[1].parent_name!==undefined){
+//       invalid=false
+//     }
 
-  })
-  return invalid
-}
+//   })
+//   return invalid
+// }
 
-export const add_children : add_childrenFType =(
-  nodes:{[x:string]:SankeyNode},n:SankeyNode,
-  multi_selected_nodes:{current:SankeyNode[]},
-  displayed_node_selector:boolean,
-  node_visible:string[],filter_node_selector:string[]
-)=> {
-  const children:treeFolderType[]=[]
-  Object.entries(nodes)
-    .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
-    .forEach(nn=>{
-      if(nn[1].dimensions['Primaire'].parent_name===n.idNode ) {
-        const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}
-        const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible,filter_node_selector)
-        if(child.length!=0){
-          c.children=child
-        }
-        if(displayed_node_selector && !node_visible.includes(nn[0])){
-          c.checked=0.5
-        }
-        children.push(c)
-      }})
-  return children
-}
+// export const add_children : add_childrenFType =(
+//   nodes:{[x:string]:SankeyNode},n:SankeyNode,
+//   multi_selected_nodes:{current:SankeyNode[]},
+//   displayed_node_selector:boolean,
+//   node_visible:string[],filter_node_selector:string[]
+// )=> {
+//   const children:treeFolderType[]=[]
+//   Object.entries(nodes)
+//     .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
+//     .forEach(nn=>{
+//       if(nn[1].dimensions['Primaire'].parent_name===n.idNode ) {
+//         const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}
+//         const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible,filter_node_selector)
+//         if(child.length!=0){
+//           c.children=child
+//         }
+//         if(displayed_node_selector && !node_visible.includes(nn[0])){
+//           c.checked=0.5
+//         }
+//         children.push(c)
+//       }})
+//   return children
+// }
 
-export const getNodeFromTree : getNodeFromTreeFType =(
-  path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
+// export const getNodeFromTree : getNodeFromTreeFType =(
+//   path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
 
-  if(tree.children && path.length>0){
-    const index=path.shift()??-1
-    const sub_tree=tree.children[index]
-    return getNodeFromTree(path,sub_tree)
-  }else{
-    const id=tree.id,checked=tree.checked
-    return {id,checked}
-  }
-}
+//   if(tree.children && path.length>0){
+//     const index=path.shift()??-1
+//     const sub_tree=tree.children[index]
+//     return getNodeFromTree(path,sub_tree)
+//   }else{
+//     const id=tree.id,checked=tree.checked
+//     return {id,checked}
+//   }
+// }
 
-export const check_node_has_node_type : check_node_has_node_typeFType =(
-  n:SankeyNode,filter_node_selector:string[]
-)=>{
-  if(n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].length>0 && filter_node_selector.length>0){
-    return (filter_node_selector.includes(n.tags['Type de noeud'][0]))
-  }else{
-    return true
-  }
-}
+// export const check_node_has_node_type : check_node_has_node_typeFType =(
+//   n:SankeyNode,filter_node_selector:string[]
+// )=>{
+//   if(n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].length>0 && filter_node_selector.length>0){
+//     return (filter_node_selector.includes(n.tags['Type de noeud'][0]))
+//   }else{
+//     return true
+//   }
+// }

@@ -375,7 +375,8 @@ export const drawAddNodes : drawNodeShapeFType = (
   filtered_data.forEach(n=>{
     // Test
     if (applicationData.new_data?.drawing_area) {
-      const tmp_node = addNewNodeToDrawingArea(applicationData.new_data?.drawing_area, 'test', 'tets')
+      console.log(applicationData.new_data.menu_configuration)
+      const tmp_node = addNewNodeToDrawingArea(applicationData.new_data?.drawing_area,applicationData.new_data.menu_configuration, 'test', 'tets',)
       tmp_node.setPosXY(n.x + 100, n.y + 100)
     }
     // fin test
