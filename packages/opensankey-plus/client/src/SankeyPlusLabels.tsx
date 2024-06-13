@@ -195,26 +195,27 @@ export const eventLabelClick : eventLabelClickFType =(
     // Open side panel
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()
-    }
+      setTimeout(() => {
+        // Open element accordion if not already openend
+        if (
+          accordion_ref &&
+          accordion_ref.current &&
+          d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          accordion_ref.current.click()
+        }
 
-    // Open element accordion if not already openend
-    if (
-      accordion_ref &&
-      accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
-    ) {
-      accordion_ref.current.click()
-    }
-
-    // Open node accordion if not already openend
-    if ( accordion_ref && accordion_ref.current) {
-      if (
-        zdt_accordion_ref &&
-        zdt_accordion_ref.current &&
-        d3.select(zdt_accordion_ref.current).attr('aria-expanded')==='false'
-      ) {
-        zdt_accordion_ref.current.click()
-      }
+        // Open node accordion if not already openend
+        if ( accordion_ref && accordion_ref.current) {
+          if (
+            zdt_accordion_ref &&
+            zdt_accordion_ref.current &&
+            d3.select(zdt_accordion_ref.current).attr('aria-expanded')==='false'
+          ) {
+            zdt_accordion_ref.current.click()
+          }
+        }
+      }, 100)
     }
 
     if (multi_selected_label.current.includes(d)) {
