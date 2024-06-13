@@ -519,7 +519,7 @@ export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
     updateComponenSaveInCache:useRef(()=>null),
-    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[]),
+    updateComponentMenuNodeIOSelectSideNode:useRef(()=>null),
     updateComponentBtnUpdateLayout : useRef(()=>null),
     updateMenuConfigTextNodeTooltip:useRef([] as (()=>void)[]),
     updateMenuConfigTextLinkTooltip:useRef([] as (()=>void)[]),
@@ -527,7 +527,7 @@ export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
   }
   _.updateMenuConfigTextNodeTooltip.current=[]
   _.updateMenuConfigTextLinkTooltip.current=[]
-  _.updateComponentMenuNodeIOSelectSideNode.current=[]
+  // _.updateComponentMenuNodeIOSelectSideNode.current=[]
   return _
 }
 
