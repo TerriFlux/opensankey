@@ -112,7 +112,6 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     ggg_nodes
       .filter(()=>!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))
       .on('click', (event, d) => SimpleGNodeClick(
-        applicationData,
         uiElementsRef,applicationState,event,d,accept_simple_click,ComponentUpdater
       )
       )
