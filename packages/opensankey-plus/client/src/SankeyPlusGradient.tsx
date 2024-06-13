@@ -541,6 +541,9 @@ export const OSPDrawArrows : DrawArrowsType = (
   const {data}=applicationData
   DrawArrows(n,applicationData,scale,inv_scale,GetLinkValue,display_style)
   for (const id_link of n.inputLinksId) {
+    if ( data.links[id_link] ==undefined ) {
+      continue
+    }
     const l_arrow=ReturnValueLink(data,data.links[id_link],'arrow')
     const l_grad=OSPReturnValueLink(data as OSPData,data.links[id_link] as OSPLink,'gradient')
     if(l_arrow && l_grad && data.linksColorMap==='no_colormap'){
