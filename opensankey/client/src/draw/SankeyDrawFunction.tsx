@@ -363,6 +363,9 @@ export const DrawArrows : DrawArrowsType = (
 
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l = data.links[n.inputLinksId[i]]
+    if (l==undefined) {
+      continue
+    }
     // Suppression de noeud (si il est present)
     d3.select('#gg_' + l.idLink + ' .arrow').remove()
 
