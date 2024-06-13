@@ -601,8 +601,14 @@ const node_mouse_click=(
       window.open(n.hyperlink)
     }
   }else{
-    SimpleGNodeClick(uiElementsRef,applicationState,event,d,accept_simple_click,
-      ComponentUpdater)
+    SimpleGNodeClick(
+      uiElementsRef,
+      applicationState,
+      event,
+      d,
+      accept_simple_click,
+      ComponentUpdater
+    )
 
   }
 }

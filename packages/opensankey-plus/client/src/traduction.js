@@ -58,7 +58,7 @@ export const resources = {
           'amp_short': 'Trans.',
           'amp': 'Modifier la mise en page',
           'amp_import': 'Depuis autre diagramme',
-          'amp_manuelle': 'Géométriques',
+          'amp_manuelle': 'Positionnement',
           'trans_topo': 'Topologiques',
           'fmep': 'Autre diagramme',
           'ad': 'Appliquer',
