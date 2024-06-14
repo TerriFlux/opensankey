@@ -467,15 +467,15 @@ def parse_folder(current_dir, menus, key=None):
             file_names = os.listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                if os.path.isfile(os.path.join(current_dir,'Etude', file_name)):
+                if os.path.isfile(os.path.join(current_dir, 'Etude', file_name)):
                     continue
-                folder_found = parse_folder(os.path.join(current_dir,'Etude', file_name), menus, key)
+                folder_found = parse_folder(os.path.join(current_dir, 'Etude', file_name), menus, key)
                 if folder_found:
-                    exemple_found = True    
-            folder_found = parse_folder(os.path.join(current_dir,'Etude'), menus, key)
+                    exemple_found = True
+            folder_found = parse_folder(os.path.join(current_dir, 'Etude'), menus, key)
             if folder_found:
-                exemple_found = True 
-            continue            
+                exemple_found = True
+            continue
         if key is not None:
             if key not in menus:
                 menus[key] = {}
@@ -500,23 +500,23 @@ def parse_folder(current_dir, menus, key=None):
 def menus_examples():
     data_folder = os.environ.get('MFAData')
     menus = {}
-    try:
-        parse_folder(data_folder, menus)
-        context = {
-                'exemples_menu': menus
-        }
-        json_data = json.dumps(context)
-        response = Response(
-            response=json_data,
-            status=200,
-            mimetype='application/json'
-        )
-    except Exception as expt:
-        response = Response(
-            response=str(expt),
-            status=500,
-            mimetype='application/json'
-        )
+    # try:
+    parse_folder(data_folder, menus)
+    context = {
+            'exemples_menu': menus
+    }
+    json_data = json.dumps(context)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
+    # except Exception as expt:
+    #     response = Response(
+    #         response=str(expt),
+    #         status=500,
+    #         mimetype='application/json'
+    #     )
     # Try to import images from MFAData/OpenSankey/image_preview to static/media
     try:
         current_folder = os.environ.get('MFAData')
