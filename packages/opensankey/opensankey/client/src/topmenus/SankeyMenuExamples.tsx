@@ -1,7 +1,7 @@
 
 import React from 'react'
 import { applicationContextType, applicationDataType, applicationStateType } from '../types/Types'
-import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { DownloadExamples, UploadExemple } from '../dialogs/SankeyPersistence'
 import { Button, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -66,12 +66,14 @@ export const ExempleItem = (
             multi_selected_links.current = []
             if (path.includes('xlsx')) {
               launch(path)
+              DownloadExamples(path,url_prefix,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            } else {
+              UploadExemple(
+                path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
+              )
             }
-            UploadExemple(
-              path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
-            )}
           }
-        >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
+        }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
             : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
           }</MenuItem>
       )
