@@ -52,12 +52,12 @@ export const ExempleItem = (
   const {url_prefix}=applicationContext
   const {multi_selected_nodes,multi_selected_links}=applicationState
   let content=<></>
-  if(('Etude' in exemple_menu)){
-    const list_item=((exemple_menu as subtypeFileList)['Etude'] as unknown as subtypeFileList)['Files'].map( (item,index)=> {
-      let path = current_path+'/sankey/'+item
-      if (item.includes('.xlsx')) {
-        path = current_path+'/'+item
-      }
+  if ('Files' in exemple_menu) {
+    const list_item=(exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
+      // let path = current_path+'/sankey/'+item
+      // if (item.includes('.xlsx')) {
+      const path = current_path+'/Etude/'+item
+      //}
       return (
         <MenuItem
           key={index}
@@ -72,36 +72,11 @@ export const ExempleItem = (
                 path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
               )
             }
+            // UploadExemple(
+            //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
+            // )}
           }
         }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
-            : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
-          }</MenuItem>
-      )
-    }
-    )
-    content=<>
-      {list_item}
-    </>
-  }else if ('Files' in exemple_menu) {
-    const list_item=(exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
-      let path = current_path+'/sankey/'+item
-      if (item.includes('.xlsx')) {
-        path = current_path+'/'+item
-      }
-      return (
-        <MenuItem
-          key={index}
-          onClick={() => {
-            multi_selected_nodes.current = []
-            multi_selected_links.current = []
-            if (path.includes('xlsx')) {
-              launch(path)
-            }
-            UploadExemple(
-              path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
-            )}
-          }
-        >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
             : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
           }</MenuItem>
       )
@@ -122,15 +97,7 @@ export const ExempleItem = (
         if (key === 'artefacts') {
           return <></>
         }
-        if (key == 'Tests') {
-          return <></>
-        }
-        let the_current_path = current_path
-        if (!key.includes('OpenSankey')) {
-          the_current_path = current_path !== '' ? current_path + '/' + key.replace('Sankey', '').replace('Excel', '') : key.replace('Sankey', '').replace('Excel', '')
-        } else {
-          the_current_path = current_path !== '' ? current_path + '/' + key : key
-        }
+        let the_current_path = current_path !== '' ? current_path + '/' + key : key
         return (
           <Menu variant={initial_list?'menu_subnav_initial_item_demo':'menu_subnav_item_demo' } placement='end' key={index} id={key} >
             <MenuButton variant='submenu_nav_btn_dropdown_item_demo' as={Button}  rightIcon={<ChevronRightIcon/>}>
