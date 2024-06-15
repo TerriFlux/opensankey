@@ -56,7 +56,7 @@ export const ExempleItem = (
     const list_item=(exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
       // let path = current_path+'/sankey/'+item
       // if (item.includes('.xlsx')) {
-      const path = current_path+'/Etude/'+item
+      const path = current_path+'/'+item
       //}
       return (
         <MenuItem
@@ -93,11 +93,19 @@ export const ExempleItem = (
           tmp_title.shift()
         }
         const title=tmp_title.join(' ')
-
-        if (key === 'artefacts') {
-          return <></>
-        }
         let the_current_path = current_path !== '' ? current_path + '/' + key : key
+        if (key === 'Etude') {
+          return <ExempleItem
+                  applicationContext={applicationContext}
+                  applicationData={applicationData}
+                  applicationState={applicationState}
+                  exemple_menu={(exemple_menu as subtypeObjectList)[key]}
+                  current_path={the_current_path}
+                  launch={launch}
+                  Reinitialization={Reinitialization}
+                  initial_list={false}
+                />
+        }
         return (
           <Menu variant={initial_list?'menu_subnav_initial_item_demo':'menu_subnav_item_demo' } placement='end' key={index} id={key} >
             <MenuButton variant='submenu_nav_btn_dropdown_item_demo' as={Button}  rightIcon={<ChevronRightIcon/>}>
