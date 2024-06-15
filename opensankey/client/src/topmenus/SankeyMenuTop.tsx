@@ -1146,6 +1146,9 @@ export const ModalTuto:FunctionComponent<ModalTutoType>=({
   const tuto_sub_nav:{[s:string]:JSX.Element}={}
 
   Object.entries(new_array_for_exemple).forEach(d=>{
+    if ((d[1] as {['Files']:string[]})['Files'] == undefined) {
+      return <></>
+    }
     tuto_sub_nav[d[0]]=<>
       {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
         return <Card variant='card_icon_not_selected'>
