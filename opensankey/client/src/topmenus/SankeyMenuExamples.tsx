@@ -1,7 +1,7 @@
 
 import React from 'react'
 import { applicationContextType, applicationDataType, applicationStateType } from '../types/Types'
-import { DownloadExamples, UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { Button, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -119,12 +119,10 @@ export const ExempleItem = (
             multi_selected_links.current = []
             if (path.includes('xlsx')) {
               launch(path)
-              DownloadExamples(path,url_prefix,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            } else {
-              UploadExemple(
-                path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
-              )
-            }
+            } 
+            UploadExemple(
+              path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
+            )
             // UploadExemple(
             //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
             // )}
