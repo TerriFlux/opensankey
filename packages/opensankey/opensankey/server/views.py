@@ -420,7 +420,8 @@ def parse_folder(current_dir, menus, key=None):
         if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder\
             or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder\
                 or 'Archive' in file_or_folder or 'new' in file_or_folder or 'prev' in file_or_folder\
-                or 'artefacts' in file_or_folder:
+                or 'artefacts' in file_or_folder or 'Old' in file_or_folder or 'old' in file_or_folder\
+                or 'Matériaux' in file_or_folder:
             continue
         if '.xlsx' in file_or_folder and 'old.' not in file_or_folder:
             if key not in menus:

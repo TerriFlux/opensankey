@@ -52,8 +52,61 @@ export const ExempleItem = (
   const {url_prefix}=applicationContext
   const {multi_selected_nodes,multi_selected_links}=applicationState
   let content=<></>
+  let item=Object.keys(exemple_menu).map(
+    (key, index) => {
+      const tmp_title = key.replaceAll('_','__').split('__')
+      if(tmp_title.length>1){
+        tmp_title.shift()
+      }
+      let title=tmp_title.join(' ')
+      if (title === 'Formations') {
+        title = 'Démos'
+      }
+      let the_current_path = current_path !== '' ? current_path + '/' + key : key
+      if (key === 'Etude' || key === 'Démos') {
+        if (typeof (exemple_menu as subtypeObjectList)[key] === 'string') {
+          return <></>
+        }
+        return <ExempleItem
+                applicationContext={applicationContext}
+                applicationData={applicationData}
+                applicationState={applicationState}
+                exemple_menu={(exemple_menu as subtypeObjectList)[key]}
+                current_path={the_current_path}
+                launch={launch}
+                Reinitialization={Reinitialization}
+                initial_list={false}
+              />
+      }
+      if (typeof (exemple_menu as subtypeObjectList)[key] === 'string') {
+        return <></>
+      }
+      if (key === 'Files') {
+        return <></>
+      }      
+      return (
+        <Menu variant={initial_list?'menu_subnav_initial_item_demo':'menu_subnav_item_demo' } placement='end' key={index} id={key} >
+          <MenuButton variant='submenu_nav_btn_dropdown_item_demo' as={Button}  rightIcon={<ChevronRightIcon/>}>
+            {title} 
+          </MenuButton>
+          <MenuList>
+            <ExempleItem
+              applicationContext={applicationContext}
+              applicationData={applicationData}
+              applicationState={applicationState}
+              exemple_menu={(exemple_menu as subtypeObjectList)[key]}
+              current_path={the_current_path}
+              launch={launch}
+              Reinitialization={Reinitialization}
+              initial_list={false}
+            />
+          </MenuList>
+        </Menu>
+      )
+    }
+  )
   if ('Files' in exemple_menu) {
-    const list_item=(exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
+    const files_item=(exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
       // let path = current_path+'/sankey/'+item
       // if (item.includes('.xlsx')) {
       const path = current_path+'/'+item
@@ -80,58 +133,14 @@ export const ExempleItem = (
             : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
           }</MenuItem>
       )
-    }
-    )
-    content=<>
-      {list_item}
-    </>
-  }else{
-    const item=Object.keys(exemple_menu).map(
-      (key, index) => {
-        const tmp_title = key.replaceAll('_','__').split('__')
-        if(tmp_title.length>1){
-          tmp_title.shift()
-        }
-        let title=tmp_title.join(' ')
-        if (title === 'Formations') {
-          title = 'Démos'
-        }
-        let the_current_path = current_path !== '' ? current_path + '/' + key : key
-        if (key === 'Etude' || key === 'Démos') {
-          return <ExempleItem
-                  applicationContext={applicationContext}
-                  applicationData={applicationData}
-                  applicationState={applicationState}
-                  exemple_menu={(exemple_menu as subtypeObjectList)[key]}
-                  current_path={the_current_path}
-                  launch={launch}
-                  Reinitialization={Reinitialization}
-                  initial_list={false}
-                />
-        }
-        return (
-          <Menu variant={initial_list?'menu_subnav_initial_item_demo':'menu_subnav_item_demo' } placement='end' key={index} id={key} >
-            <MenuButton variant='submenu_nav_btn_dropdown_item_demo' as={Button}  rightIcon={<ChevronRightIcon/>}>
-              {title} 
-            </MenuButton>
-            <MenuList>
-              <ExempleItem
-                applicationContext={applicationContext}
-                applicationData={applicationData}
-                applicationState={applicationState}
-                exemple_menu={(exemple_menu as subtypeObjectList)[key]}
-                current_path={the_current_path}
-                launch={launch}
-                Reinitialization={Reinitialization}
-                initial_list={false}
-              />
-            </MenuList>
-          </Menu>
-        )
-      }
-    )
-    content=<>{item}</>
+    } 
+    ) as JSX.Element[]
+    item = [...item,...files_item]
+    // content=<>
+    //   {list_item}
+    // </>
   }
+  content=<>{item}</>
 
   return content
 
