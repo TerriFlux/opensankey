@@ -92,9 +92,12 @@ export const ExempleItem = (
         if(tmp_title.length>1){
           tmp_title.shift()
         }
-        const title=tmp_title.join(' ')
+        let title=tmp_title.join(' ')
+        if (title === 'Formations') {
+          title = 'Démos'
+        }
         let the_current_path = current_path !== '' ? current_path + '/' + key : key
-        if (key === 'Etude') {
+        if (key === 'Etude' || key === 'Démos') {
           return <ExempleItem
                   applicationContext={applicationContext}
                   applicationData={applicationData}
