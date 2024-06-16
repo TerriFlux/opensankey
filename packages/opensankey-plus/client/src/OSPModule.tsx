@@ -376,6 +376,14 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
       ComponentUpdater,
       osp_nodes_to_update
     )
+    OSPDrawNodesFO(
+      (applicationData as OSPApplicationDataType).data,
+      (applicationData as OSPApplicationDataType).display_nodes,
+      applicationState,
+      NodeTooltipsContent,
+      link_function.GetLinkValue,
+      applicationContext.t
+    )
     return null
   }
   _.DrawAllNodes  = (
