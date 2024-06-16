@@ -58,7 +58,7 @@ import {
   AddAllDropDownNode,
   AdjustSankeyZone} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
-import { OSPNodeFO } from './SankeyPlusForeignObject'
+import { OSPDrawNodesFO, OSPNodeFO } from './SankeyPlusForeignObject'
 import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { OSPMenuPreferenceLabels, ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
@@ -422,6 +422,14 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
       link_function.GetLinkValue,
       ComponentUpdater,
       osp_nodes_to_update
+    )
+    OSPDrawNodesFO(
+      (applicationData as OSPApplicationDataType).data,
+      (applicationData as OSPApplicationDataType).display_nodes,
+      applicationState,
+      NodeTooltipsContent,
+      link_function.GetLinkValue,
+      applicationContext.t
     )
   }
 
