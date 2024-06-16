@@ -339,7 +339,7 @@ export const OSPDrawNodesFO : OSPDrawNodesFOFType = (
         sankeyTooltip.style('opacity', 0)
       })
       .append('xhtml:div')
-      .attr('class','ql-editor')
+      //.attr('class','ql-editor')
       .html((d)=>d.FO_content)
   }
   add_nodes_fo()
