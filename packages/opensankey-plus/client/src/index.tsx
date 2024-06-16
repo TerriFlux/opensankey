@@ -32,7 +32,7 @@ import {
   initializeKeyHandler,
   ClickSaveDiagram
 } from './import/OpenSankey'
-import { OSPApplicationContextType, OSPApplicationDrawType, OSPComponentUpdaterType, OSPElementsSelectedType, OSPUiElementsRefType, OSPApplicationDataType, OSPContextMenuType, OSPData, OSPDataVar, OSPLabel, OSPLink, OSPNode, OSPShowMenuComponentsType } from '../types/Types'
+import { OSPApplicationContextType, OSPApplicationDrawType, OSPComponentUpdaterType, OSPElementsSelectedType, OSPUiElementsRefType, OSPApplicationDataType, OSPContextMenuType, OSPData, OSPDataVar, OSPLabel, OSPLink, OSPNode, OSPShowMenuComponentsType, OSPNodeFuntionType } from '../types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
@@ -46,6 +46,7 @@ import { DefaultOSPStyleLink } from './SankeyPlusUtils'
 import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
 import { OSPBannerView, SelecteurView } from './SankeyPlusViews'
 import { OSPDrawLabels, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { OSPNodeDragEvent } from './SankeyPlusNodes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -164,18 +165,29 @@ root.render(
         node_function:NodeFunctionTypes,
         link_function:LinkFunctionTypes,
         start_point :{ current: number[]; },
-        resizeCanvas :() => void
+        resizeCanvas :() => void,
+        ref_alt_key_pressed:MutableRefObject<boolean>
       )=>{
         const _ = initializeApplicationDraw(
           applicationData,applicationState,contextMenu,
           applicationContext, ComponentUpdater, uiElementsRef, node_function, link_function,
-          start_point, resizeCanvas
+          start_point, resizeCanvas,ref_alt_key_pressed
         )
         Object.assign(_,OSPInitializeApplicationDraw(
           applicationData,applicationState,contextMenu,
           applicationContext,ComponentUpdater,uiElementsRef,node_function,link_function,
-          start_point, resizeCanvas
+          start_point, resizeCanvas,ref_alt_key_pressed
         ));
+        OSPNodeDragEvent(
+          applicationData as OSPApplicationDataType,
+          applicationState as OSPElementsSelectedType,
+          applicationContext as OSPApplicationContextType,
+          ref_alt_key_pressed.current,
+          ComponentUpdater,
+          (node_function as OSPNodeFuntionType),
+          link_function,
+          _ as unknown as OSPApplicationDrawType
+        );
         (_ as OSPApplicationDrawType).reDrawOSPLabels = (object_to_update:OSPLabel[])=>{
           OSPDrawLabels(
               applicationData as OSPApplicationDataType,
