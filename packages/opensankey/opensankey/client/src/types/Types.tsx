@@ -545,7 +545,8 @@ export type initializeApplicationDrawType = (
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   start_point:{current:number[]},
-  resizeCanvas:()=>void
+  resizeCanvas:()=>void,
+  ref_alt_key_pressed:MutableRefObject<boolean>
 )=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
