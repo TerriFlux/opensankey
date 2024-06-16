@@ -225,7 +225,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     node_function,
     link_function,
     start_point,
-    resizeCanvas
+    resizeCanvas,
+    ref_alt_key_pressed
   )
 
   recomputeDisplayedElement()
