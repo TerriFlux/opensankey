@@ -1584,6 +1584,13 @@ export const updateLayout: updateLayoutFuncType = (
         })
       }
     }
+    Object.keys(new_layout.nodeTags).forEach(tagGroup=>{
+      if (!(tagGroup in data.nodeTags)) {
+        data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
+      }
+      Object.values(data.nodes).forEach(n=>n.tags[tagGroup] = new_layout.nodes[n.idNode].tags[tagGroup])
+    })
+
   }
 
   if (mode.includes('tagFlux')) {
@@ -1611,6 +1618,12 @@ export const updateLayout: updateLayoutFuncType = (
         })
       }
     }
+    Object.keys(new_layout.fluxTags).forEach(tagGroup=>{
+      if (!(tagGroup in data.fluxTags)) {
+        data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
+      }
+      //Object.values(data.links).forEach(l=>l.tags[tagGroup] = new_layout.links[l.idNode].tags[tagGroup])
+    })
   }
 
   if (mode.includes('tagData')) {
