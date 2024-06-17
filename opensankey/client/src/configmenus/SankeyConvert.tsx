@@ -709,7 +709,8 @@ export const convert_tags:convert_tagsFuncType = (
   // Convertie les nodeTags avec pour bannière 'level' en levelTags
   if(has_not_converted_nodeTags_as_levelTags(data) || 'Primaire' in data.nodeTags){
     data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level' || nt[0] == 'Primaire')))
-    data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
+    Object.values(data.levelTags).forEach(tag=>tag.banner = 'level')
+    data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level' && nt[0] !== 'Primaire'))
   }
 
   // Assign colorMap to either fluxTags or nodesTags since now we can display color palette of both at the same time
@@ -970,7 +971,7 @@ export const convert_nodes:convert_nodesFuncType = (
     //remove tags which are not in data.NodeTags
     const tags_to_remove : string[] = []
     for (const tag in n.tags) {
-      if (!(tag in data.nodeTags)) {
+      if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
         tags_to_remove.push(tag)
       }
     }
