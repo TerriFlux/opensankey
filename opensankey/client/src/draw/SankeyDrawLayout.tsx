@@ -1662,6 +1662,13 @@ export const updateLayout: updateLayoutFuncType = (
       }
     })
     n.outputLinksId = newOutputLinksId
+    const tags_to_remove : string[] = []
+    for (const tag in n.tags) {
+      if (!(tag in data.nodeTags)) {
+        tags_to_remove.push(tag)
+      }
+    }
+    tags_to_remove.forEach(tag=>{delete n.tags[tag]} )
   })
 }
 

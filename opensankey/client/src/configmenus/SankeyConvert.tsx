@@ -966,9 +966,21 @@ export const convert_nodes:convert_nodesFuncType = (
         n.style='NodeSectorStyle'
       }
     }
+
+    //remove tags which are not in data.NodeTags
+    const tags_to_remove : string[] = []
+    for (const tag in n.tags) {
+      if (!(tag in data.nodeTags)) {
+        tags_to_remove.push(tag)
+      }
+    }
+    tags_to_remove.forEach(tag=>{delete n.tags[tag]} )
+
     data.nodes[n.idNode]=n
   }
+
   )
+
 }
 
 export const convert_links:convert_linksFuncType = (
