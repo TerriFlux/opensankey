@@ -595,7 +595,7 @@ const node_mouse_click=(
     if(n.hyperlink!==undefined && n.hyperlink!==''){
       window.open(n.hyperlink)
     }
-  }else if(window.SankeyToolsStatic===false && event.altKey) {
+  }else if(!window.SankeyToolsStatic && event.altKey) {
     const n=d as OSPNode
     if(n.hyperlink!==undefined && n.hyperlink!==''){
       window.open(n.hyperlink)
@@ -997,21 +997,23 @@ export const OSPNodeDragEvent : OSPNodeDragEventFType =(
       })
     })
     .on('end',function(_,n){
-      const node =n as OSPNode
+      setTimeout(() => {
+        const node =n as OSPNode
 
-      // update all nodes connected to dragged node & all links connected to these nodes
-      const node_to_update:SankeyNode[]=[node]
-      node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
-      node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
+        // update all nodes connected to dragged node & all links connected to these nodes
+        const node_to_update:SankeyNode[]=[node]
+        node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
+        node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
 
-      let link_to_update:OSPLink[]=[]
-      node_to_update.forEach(node=>{
-        link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
-        link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
-      })
-      node_function.RedrawNodes(node_to_update)
-      link_function.RedrawLinks(link_to_update)
-      actualizeDrawAreaFrame(applicaTionData,applicationDraw.GetSankeyMinWidthAndHeight)
+        let link_to_update:OSPLink[]=[]
+        node_to_update.forEach(node=>{
+          link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
+          link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
+        })
+        node_function.RedrawNodes(node_to_update)
+        link_function.RedrawLinks(link_to_update)
+        actualizeDrawAreaFrame(applicaTionData,applicationDraw.GetSankeyMinWidthAndHeight)
+      }, 100)
     })
   )
 }
@@ -1033,10 +1035,12 @@ const OSPDragGNodeEvent = (
   return d3.drag<SVGGElement, OSPNode>()
     .subject(Object)
     .on('start',()=>{
-      d3.selectAll('.node_shape').nodes().forEach(element => {
-        node_visible.push(d3.select(element).attr('id'))
-      })
-      hideLinkOnDragElement(applicationData)
+      if(ref_getter_mode_selection.current==='s' && window.SankeyToolsStatic!==true){
+        d3.selectAll('.node_shape').nodes().forEach(element => {
+          node_visible.push(d3.select(element).attr('id'))
+        })
+        hideLinkOnDragElement(applicationData)
+      }
     })
     .on('drag', function (event,node) {
       if(ref_getter_mode_selection.current==='s'){
@@ -1054,12 +1058,15 @@ const OSPDragGNodeEvent = (
       }
     })
     .on('end',()=>{
-      if(d3.select(document.activeElement).attr('class')!=='input_label'){
-        node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-        link_function.RedrawLinks(Object.values(applicationData.display_links))
-      }
-      applicationDraw.resizeCanvas()
-    })
+      if(ref_getter_mode_selection.current==='s'){
+        setTimeout(() => {
+          if(d3.select(document.activeElement).attr('class')!=='input_label'){
+            node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+            link_function.RedrawLinks(Object.values(applicationData.display_links))
+          }
+          applicationDraw.resizeCanvas()
+      }, 100)
+    }})
 }
 
 const OSPDragNodes = (
