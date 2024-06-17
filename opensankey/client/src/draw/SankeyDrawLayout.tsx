@@ -10,6 +10,7 @@ import {
 import {
   SankeyData,
   SankeyLink,
+  SankeyLinkValue,
   SankeyNode,
   SankeyNodeAttrLocal,
   agregationType,
@@ -1620,9 +1621,11 @@ export const updateLayout: updateLayoutFuncType = (
     }
     Object.keys(new_layout.fluxTags).forEach(tagGroup=>{
       if (!(tagGroup in data.fluxTags)) {
-        data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
+        data.fluxTags[tagGroup] = {...new_layout.fluxTags[tagGroup]}
       }
-      //Object.values(data.links).forEach(l=>l.tags[tagGroup] = new_layout.links[l.idNode].tags[tagGroup])
+      if (Object.keys(new_layout.dataTags).length == 0) {
+        Object.values(data.links).forEach(l=>(l.value as SankeyLinkValue).tags[tagGroup] = (new_layout.links[l.idLink].value as SankeyLinkValue).tags[tagGroup])
+      }
     })
   }
 
