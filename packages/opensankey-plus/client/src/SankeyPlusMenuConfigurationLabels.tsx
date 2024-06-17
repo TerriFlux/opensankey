@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+//import 'react-quill/dist/quill.snow.css'
 
 // Imported libs
 import {
