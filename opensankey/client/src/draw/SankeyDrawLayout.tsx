@@ -1570,6 +1570,7 @@ export const updateLayout: updateLayoutFuncType = (
         Object.values(nodeTag.tags).forEach(tag=>
           Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
             tag.selected = ltag.selected
+            tag.color = ltag.color
           })
         )
       })
@@ -1581,6 +1582,7 @@ export const updateLayout: updateLayoutFuncType = (
       if (layout_groups.length>0) {
         data.nodesColorMap = layout_groups[0].group_name
         Object.values(data.nodes).forEach(el => {
+          el.colorParameter = 'groupTag'
           el.colorTag = data.nodesColorMap
         })
       }
