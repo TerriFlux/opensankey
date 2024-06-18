@@ -505,7 +505,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
               <Slider
                 min={0}
                 max={max_link_value}
-                defaultValue={data.display_style.filter_label}
+                value={data.display_style.filter_label}
                 onChange={(evt) => {
                   applicationData.data.display_style.filter_label = +evt
                   setForceUpdate(!forceUpdate)
@@ -520,7 +520,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
               <NumberInput
                 min={0}
                 max={max_link_value}
-                defaultValue={data.display_style.filter_label}
+                value={data.display_style.filter_label}
                 onChange={(evt) => {
                   let tmp = +evt
                   if (tmp > max_link_value) {
