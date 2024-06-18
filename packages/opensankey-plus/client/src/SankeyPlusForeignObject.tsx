@@ -121,35 +121,6 @@ export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
     }}
   />
 
-  // return 
-  // <Tab>
-  //   <Box
-  //     layerStyle='submenuconfig_tab_with_badge'
-  //   >
-  //     {t('Noeud.tabs.fo')}
-  //     {
-  //       (!is_activated)?
-  //         <OSTooltip label={t('Menu.sankeyOSPDisabled')}>
-  //           <Badge
-  //             pill
-  //             bg="none"
-  //             style={{fontSize:'1em'}}>
-  //             <FontAwesomeIcon
-  //               icon={faLock}
-  //               style={{color: '#66a593', display: 'inline'}}
-  //             />
-  //           </Badge>
-  //         </OSTooltip>:
-  //         <Badge
-  //           pill
-  //           bg="info"
-  //           style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
-  //         >
-  //           Beta
-  //         </Badge>
-  //     }
-  //   </Box>
-  // </Tab>,
   return <TabPanel>
     <Box
       layerStyle='menuconfigpanel_grid'

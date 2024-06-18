@@ -88,7 +88,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
 }) => {
   const {data}=applicationData
   const {multi_selected_label}=applicationState
-  const {t,has_open_sankey_plus}=applicationContext 
+  const {t,has_open_sankey_plus}=applicationContext
   const r_editor_ZDT= useRef<ReactQuill>() as {current:ReactQuill}
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -680,13 +680,13 @@ export const ContextZDT : FunctionComponent<context_zdtFType> =({
     set_zdt_to_contextualise(undefined)
     reDrawOSPLabels(multi_selected_label.current)
     updateComponentMenuConfigZdt.current.forEach(f=>f())
-  }} variant='btn_in_context_menu'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
+  }} variant='contextmenu_button'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
 
 
   const btn_change_color=<>
 
-    <Button variant='btn_in_context_menu'>
-      <Input hidden type='color' id='form_color_zdt' name='color_bg_zdd' 
+    <Button variant='contextmenu_button'>
+      <Input hidden type='color' id='form_color_zdt' name='color_bg_zdd'
         value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
         onChange={(evt) => {
           const val = evt.target.value
@@ -705,9 +705,9 @@ export const ContextZDT : FunctionComponent<context_zdtFType> =({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current!(true)
     set_zdt_to_contextualise(undefined)
 
-  }} variant='btn_in_context_menu'>{t('Menu.LL')} {icon_open_modal}</Button>
+  }} variant='contextmenu_button'>{t('Menu.LL')} {icon_open_modal}</Button>
 
-  return zdt_to_contextualise?<Box layerStyle='context_menu' id="context_zdd_pop_over" 
+  return zdt_to_contextualise?<Box layerStyle='context_menu' id="context_zdd_pop_over"
     style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd,zIndex:4}}>
     <ButtonGroup orientation='vertical' isAttached>
       {btn_mask_border}

@@ -178,7 +178,7 @@ root.render(
           applicationData,applicationState,contextMenu,
           applicationContext,ComponentUpdater,uiElementsRef,node_function,link_function,
           start_point, resizeCanvas,ref_alt_key_pressed
-        ));
+        ))
         OSPNodeDragEvent(
           applicationData as OSPApplicationDataType,
           applicationState as OSPElementsSelectedType,

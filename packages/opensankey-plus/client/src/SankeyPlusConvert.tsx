@@ -93,7 +93,7 @@ export const plus_convert_data : plus_convert_dataFType = (
       }
 
       if(l.name!==undefined){
-        let new_content=l.name
+        const new_content=l.name
         if (l.font_uppercase) {
           l.content = new_content.toUpperCase()
         }
@@ -108,13 +108,13 @@ export const plus_convert_data : plus_convert_dataFType = (
           l.content=new_content?'<strong>'+l.content+'</strong>':''
         }
         if (l.position_horiz === 'gauche' ) {
-          l.content=new_content?'<p class=\"ql-align-left\">'+l.content+'</p>':''
+          l.content=new_content?'<p class="ql-align-left">'+l.content+'</p>':''
         }
         if (l.position_horiz === 'centre' ) {
-          l.content=new_content?'<p class=\"ql-align-center\">'+l.content+'</p>':''
+          l.content=new_content?'<p class="ql-align-center">'+l.content+'</p>':''
         }
         if (l.position_horiz === 'droite' ) {
-          l.content=new_content?'<p class=\"ql-align-right\">'+l.content+'</p>':''
+          l.content=new_content?'<p class="ql-align-right">'+l.content+'</p>':''
         }
         // if (l.position_vert === 'haut' ) {
         //  not possible to convert
@@ -124,7 +124,7 @@ export const plus_convert_data : plus_convert_dataFType = (
         // }
         // if (l.position_vert === 'bas' ) {
         //  not possible to convert
-        // }        
+        // }
         delete l.name
       }
       const keys = ['idLabel','title','content','opacity','color','color_border','transparent_border','label_width','label_height','x','y','x_label','y_label','is_image','image_src']
@@ -223,7 +223,7 @@ export const OSPDiagramSelector : OSPDiagramSelectorFType = (
       </Box>
       <Box layerStyle='options_3cols'>
         <Box layerStyle='options_2cols'>
-        
+
           <Button
             variant={s_diagram_type==='File'?'menuconfigpanel_option_button_secondary':'menuconfigpanel_option_button_light'}
             onClick={
@@ -238,7 +238,7 @@ export const OSPDiagramSelector : OSPDiagramSelectorFType = (
               }}>{t('Menu.view_actual_file')}</Button>
         </Box>
 
-        {/* If s_diagram_type is file then use data from file to modify current data 
+        {/* If s_diagram_type is file then use data from file to modify current data
           else if it's view then use data from a view */}
         {s_diagram_type==='File' ? <Input
           type="file"
@@ -253,7 +253,7 @@ export const OSPDiagramSelector : OSPDiagramSelectorFType = (
             }) : <></>}
           </Select>
         }
-        
+
         <Box layerStyle='options_2cols'>
           <Button
             variant='menuconfigpanel_option_button'

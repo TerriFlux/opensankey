@@ -7,16 +7,16 @@ import {
 import React from 'react'
 import ReactQuill from 'react-quill'
 import * as d3 from 'd3'
-import { 
-  dict_hook_ref_setter_show_dialog_componentsType, contextMenuType, 
-  SankeyData, 
-  module_dialogsType,  
+import {
+  dict_hook_ref_setter_show_dialog_componentsType, contextMenuType,
+  SankeyData,
+  module_dialogsType,
   DrawAllType,
   InstallEventsOnSVGType,
   SankeyNode,
   InitalizeSelectorDetailNodesType
 } from 'open-sankey/src/types/Types'
-import { 
+import {
   OSPApplicationDataVarType,
   OSPGetDefaultData,
   OSPInitializeAdditionalMenusType,
@@ -35,15 +35,15 @@ import {
   OSPApplicationContextType,
   OSPApplicationDrawType,
   OSPApplicationDrawVarType,
-  OSPComponentUpdaterType, OSPElementsSelectedType, OSPElementsSelectedVarType, OSPNodeFuntionType, OSPUiElementsRefType, OSPApplicationDataType, 
-  OSPContextMenuType, OSPData, OSPLabel, 
-  OSPLink, 
-  OSPNode, 
+  OSPComponentUpdaterType, OSPElementsSelectedType, OSPElementsSelectedVarType, OSPNodeFuntionType, OSPUiElementsRefType, OSPApplicationDataType,
+  OSPContextMenuType, OSPData, OSPLabel,
+  OSPLink,
+  OSPNode,
   OSPShowMenuComponentsType,
   OSPShowMenuComponentsVarType} from '../types/Types'
 
-import { 
-  MenuDraggable, closeAllMenu, 
+import {
+  MenuDraggable, closeAllMenu,
   initializeContextMenu,
   updateLayoutOSTyped,
   NodeTooltipsContent,
@@ -65,10 +65,10 @@ import { OSPMenuPreferenceLabels, ZDTMenuAsAccordeonItem, OSPMenuConfigurationFr
 import { OSPDrawNodesIllustration, OSPNodeClickEvent, OSPNodeIcon, OSPHyperLink, OpposingDragElementsPlus } from './SankeyPlusNodes'
 import { DefaultOSPStyleLink,  ImportImageAsSvgBg, OSPItemExport, OSPLinkSabotColor, SetSvgBg } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
-import { 
-  GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView, 
-  SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, 
-  viewsAccordion, 
+import {
+  GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView,
+  SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved,
+  viewsAccordion,
   OSPMenuPreferenceView
 } from './SankeyPlusViews'
 
@@ -97,7 +97,7 @@ export const OSPDefaultData = () => {
     // unitary_node:[],
     // unit_link_value_display:'percent',
     background_image:''
-  } 
+  }
 }
 
 export const OSPInitializeApplicationContext : OSPInitializeApplicationContextVarType = ()=>{
@@ -131,7 +131,7 @@ export const OSPInitializeApplicationContext : OSPInitializeApplicationContextVa
     has_open_sankey_plus : true,
     logo : logo_OSP,
     logo_terriflux : logo_terriflux
-  } 
+  }
 }
 
 
@@ -158,8 +158,8 @@ export const OSPInitializeApplicationData : OSPinitializeApplicationDataVarType=
   const set_data_plus=set_data as (_:OSPData)=>void
   const plus_get_defaut_data=get_default_data as OSPGetDefaultData
   const useOpenSankeySetDiagram = (master_data && master_data.view.length > 0) || window.SankeyToolsStatic
-    
-  // If initial data has views & has a current view then update current data to the view (and initial data become master data) 
+
+  // If initial data has views & has a current view then update current data to the view (and initial data become master data)
   if (data_plus.view && data_plus.view.length > 0 && !master_data) {
     set_master_data({...JSON.parse(JSON.stringify(data))})
     if(data_plus.current_view && data_plus.current_view!=='none'){
@@ -169,10 +169,10 @@ export const OSPInitializeApplicationData : OSPinitializeApplicationDataVarType=
     }
   }
 
-  return { 
+  return {
     data:data_plus,
     set_data:set_data_plus,
-    display_nodes:plus_display_nodes, 
+    display_nodes:plus_display_nodes,
     display_links:plus_display_links,
     get_default_data:plus_get_defaut_data,
     convert_data : (data:SankeyData,DefaultSankeyData:()=>SankeyData) => {
@@ -214,7 +214,7 @@ export const OSPInitializeShowDialog : OSPInitializeShowDialogType = ()=>{
 export const OSPcloseAllMenu = closeAllMenu
 
 // Modify Application Draw
-export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (  
+export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (
   applicationData,
   applicationState,
   contextMenu,
@@ -268,12 +268,12 @@ export const OSPInitializeComponentUpdater : OSPInitializeComponentUpdaterType  
     updateComponentMenuConfigZdt : useRef([] as (()=>void)[]),
   }
   _.updateComponentMenuConfigZdt.current = []
-  return _ 
+  return _
 }
 
 export const OSPInitializeReinitialization : OSPInitializeReinitializationType = (
   applicationData ,
-  applicationState 
+  applicationState
 ) => ()=> {
   const recast_selected_dict=applicationState as OSPElementsSelectedType
   recast_selected_dict.multi_selected_label.current = []
@@ -308,16 +308,16 @@ export const OSPInitializeUIElementsRef : OSPInitializeUIElementsRefType = () =>
   }
 }
 
-// Only override 
+// Only override
 export const OSPInitializeLinkFunctions : OSPInitializeLinkFuntionType = () => {
   return {
     DrawArrows : OSPDrawArrows,
     LinkStroke : OSPLinkStroke ,
     LinkSabotColor : OSPLinkSabotColor
-  } 
+  }
 }
 
-export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (  
+export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
   applicationData,
   applicationState,
   contextMenu,
@@ -355,7 +355,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
         ComponentUpdater,
         nodes_to_update
       )
-    } 
+    }
   } as OSPNodeFuntionType
 
   _.OpposingDragElements=OpposingDragElementsPlus as opposing_DragElementsFuncType
@@ -418,9 +418,9 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
       dict_hook_ref_setter_show_dialog_components,
       node_function,
       GetSankeyMinWidthAndHeight,
-      resizeCanvas      
+      resizeCanvas
     )
-    reDrawIllustration(osp_nodes_to_update)    
+    reDrawIllustration(osp_nodes_to_update)
     OSPNodeClickEvent(
       applicationData as OSPApplicationDataType,
       applicationState as OSPElementsSelectedType,
@@ -515,7 +515,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     is_activated={true}
     node_function={node_function as OSPNodeFuntionType}
   />
-    
+
   //Links
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
     applicationContext={applicationContext as OSPApplicationContextType}
@@ -569,7 +569,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
       />
     )
   }
- 
+
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
   const component_apply_transfor_OSP= <OSPTransformationElements
@@ -632,12 +632,12 @@ export const OSPModuleDialogs : module_dialogsType = (
       applicationContext.t
     ),
     modal_view_not_saved(
-      OSP_dict_app_data.view_not_saved, 
+      OSP_dict_app_data.view_not_saved,
       OSP_dict_app_data.set_view_not_saved,
       applicationContext.t,
       applicationData as OSPApplicationDataType
     ),
-    <ModalSelectionIcon 
+    <ModalSelectionIcon
       t={applicationContext.t}
       applicationData={OSP_dict_app_data}
       applicationState={OSP_elements_selected}
@@ -798,7 +798,7 @@ export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=( 
   ComponentUpdater
 )=>{
 
-  const mutiple_level_tag_filter=<AddAllDropDownNode 
+  const mutiple_level_tag_filter=<AddAllDropDownNode
     applicationContext={applicationContext}
     ComponentUpdater={ComponentUpdater}
     applicationData={applicationData}
@@ -809,7 +809,7 @@ export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=( 
   />
   return <Popover placement='left' id='popover_details_level' >
     <PopoverTrigger>
-      <Button variant='btn_detail_level_toolbar' id='btn_open_popover_details_level'>
+      <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
         <FontAwesomeIcon icon={faFolderTree} />
       </Button>
     </PopoverTrigger>
