@@ -72,7 +72,7 @@ export const OSPDrawLabels : OSPDrawLabelsFType = (
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
     Object.values(data_plus.labels)
-      .filter(zdt=>object_to_update.includes(zdt))
+      // .filter(zdt=>object_to_update.includes(zdt))
       .forEach(d => {
         g_label.select('#'+d.idLabel).remove()
 
