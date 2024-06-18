@@ -2,7 +2,7 @@
 import React from 'react'
 import { applicationContextType, applicationDataType, applicationStateType } from '../types/Types'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
-import { Button, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
+import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /**
@@ -44,8 +44,8 @@ export const ExempleItem = (
     applicationState,
     exemple_menu,
     current_path,
-    launch,Reinitialization,
-    initial_list
+    launch,
+    Reinitialization
   }: ExempleItemTypes
 ) => {
   const {data,set_data,convert_data,get_default_data}=applicationData
@@ -62,32 +62,50 @@ export const ExempleItem = (
       if (title === 'Formations') {
         title = 'Démos'
       }
-      let the_current_path = current_path !== '' ? current_path + '/' + key : key
+      const the_current_path = current_path !== '' ? current_path + '/' + key : key
       if (key === 'Etude' || key === 'Démos') {
         if (typeof (exemple_menu as subtypeObjectList)[key] === 'string') {
           return <></>
         }
         return <ExempleItem
-                applicationContext={applicationContext}
-                applicationData={applicationData}
-                applicationState={applicationState}
-                exemple_menu={(exemple_menu as subtypeObjectList)[key]}
-                current_path={the_current_path}
-                launch={launch}
-                Reinitialization={Reinitialization}
-                initial_list={false}
-              />
+          applicationContext={applicationContext}
+          applicationData={applicationData}
+          applicationState={applicationState}
+          exemple_menu={(exemple_menu as subtypeObjectList)[key]}
+          current_path={the_current_path}
+          launch={launch}
+          Reinitialization={Reinitialization}
+          initial_list={false}
+        />
       }
       if (typeof (exemple_menu as subtypeObjectList)[key] === 'string') {
         return <></>
       }
       if (key === 'Files') {
         return <></>
-      }      
+      }
       return (
-        <Menu variant={initial_list?'menu_subnav_initial_item_demo':'menu_subnav_item_demo' } placement='end' key={index} id={key} >
-          <MenuButton variant='submenu_nav_btn_dropdown_item_demo' as={Button}  rightIcon={<ChevronRightIcon/>}>
-            {title} 
+        <Menu
+          variant='menu_subnav_item_demo'
+          placement='right-start'
+          key={index}
+          id={key}
+        >
+          <MenuButton>
+            <Box
+              gridColumn='1'
+            >
+              {title}
+            </Box>
+            <Box
+              gridColumn="2"
+              height="1rem"
+              width="1rem"
+            >
+              <ChevronRightIcon
+                style={{'height':'1rem', 'width':'1rem'}}
+              />
+            </Box>
           </MenuButton>
           <MenuList>
             <ExempleItem
@@ -119,7 +137,7 @@ export const ExempleItem = (
             multi_selected_links.current = []
             if (path.includes('xlsx')) {
               launch(path)
-            } 
+            }
             UploadExemple(
               path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
             )
@@ -127,11 +145,11 @@ export const ExempleItem = (
             //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
             // )}
           }
-        }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
+          }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
             : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
           }</MenuItem>
       )
-    } 
+    }
     ) as JSX.Element[]
     item = [...item,...files_item]
     // content=<>

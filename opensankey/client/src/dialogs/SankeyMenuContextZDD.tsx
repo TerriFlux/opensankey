@@ -45,7 +45,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   let pos_x = pointer_pos.current[0] + 10
   let pos_y = pointer_pos.current[1] - 20
 
-  // The limit value of the mouse position that engages the shift of the context menu 
+  // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (show_context_zdd) {
     if (pointer_pos.current[0] + 450 > window.innerWidth) {
@@ -59,8 +59,8 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
   }
 
-  const button_bg_color = <Button variant='btn_in_context_menu'>
-    <Input hidden type='color' id='color_bg_zdd' name='color_bg_zdd' 
+  const button_bg_color = <Button variant='contextmenu_button'>
+    <Input hidden type='color' id='color_bg_zdd' name='color_bg_zdd'
       onChange={(evt) => {
         data.couleur_fond_sankey = evt.target.value
         d3.select('#svg').style('background-color', data.couleur_fond_sankey)
@@ -71,14 +71,14 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     <label htmlFor='color_bg_zdd' style={{ width: '100%', margin: 0 }}>{t('Menu.BgC')}</label>
   </Button>
 
-  const button_bg_grid = <><Button variant='btn_in_context_menu' onClick={() => {
+  const button_bg_grid = <><Button variant='contextmenu_button' onClick={() => {
     data.grid_visible = !data.grid_visible
     setForceUpdate(!forceUpdate)
     ComponentUpdater.updateComponenSaveInCache.current(false)
     DrawGrid(data)
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
   </>
-  const button_assgn_rand_node_color = <><Button variant='btn_in_context_menu' onClick={() => {
+  const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
     const n_keys = Object.keys(data.nodes)
     const size_color = n_keys.length
@@ -91,8 +91,8 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   }}>{t('Menu.rand_node_color')}</Button>
   </>
 
-  // Item to change sankey scale 
-  const dropdown_c_zdd_scale = <Box as={Button} variant='btn_in_context_menu'>
+  // Item to change sankey scale
+  const dropdown_c_zdd_scale = <Box as={Button} variant='contextmenu_button'>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('MEP.Echelle')}
@@ -102,11 +102,11 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
         min={0}
         value={data.user_scale}
         onChange={evt => {
-          data.user_scale = +evt   
+          data.user_scale = +evt
           RedrawNodes(Object.values(applicationData.display_nodes))
           RedrawLinks(Object.values(applicationData.display_links))
           ComponentUpdater.updateComponenSaveInCache.current(false)
-          setForceUpdate(!forceUpdate)       
+          setForceUpdate(!forceUpdate)
         }}>
         <NumberInputField/>
       </NumberInput>
@@ -115,12 +115,12 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
   // Item to set vert and horiz shift and automatically position nodes
   const button_pa = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('MEP.PA')}
     </MenuButton>
     <MenuList as={Box} layerStyle='context_menu' >
       {/* Set horizontal value for automatic positionning */}
-      <Box as={Button} variant='btn_in_context_menu'>
+      <Box as={Button} variant='contextmenu_button'>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('MEP.Horizontal')}
@@ -140,7 +140,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
       </Box>
 
       {/* Set vertical value for automatic positionning */}
-      <Box as={Button} variant='btn_in_context_menu'>
+      <Box as={Button} variant='contextmenu_button'>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('MEP.Vertical')}
@@ -159,7 +159,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
         </Box>
       </Box>
 
-      <Button variant='btn_in_context_menu' 
+      <Button variant='contextmenu_button'
         onClick={() => {
           applicationData.function_on_wait.current = () => {
             ComputeAutoSankey(applicationData, node_hspace, false)
@@ -177,7 +177,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   </Menu>
 
   // Item to display or mask the legend
-  const button_mask_leg = <Button variant='btn_in_context_menu'
+  const button_mask_leg = <Button variant='contextmenu_button'
     onClick={() => {
       data.mask_legend = !data.mask_legend
       reDrawLegend()
@@ -187,7 +187,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     {data.mask_legend ? t('MEP.hide_leg') : t('MEP.show_leg')}
   </Button>
 
-  const button_an = <Button variant='btn_in_context_menu'
+  const button_an = <Button variant='contextmenu_button'
     onClick={() => {
       arrangeNodes(data)
       RedrawNodes(Object.values(applicationData.display_nodes))
@@ -207,7 +207,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     full = t('exitFullscreen')
   }
 
-  const button_fullscreen = <Button variant='btn_in_context_menu'
+  const button_fullscreen = <Button variant='contextmenu_button'
     onClick={() => {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen()
@@ -224,7 +224,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   const button_open_layout = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(true)
     set_show_context_zdd(false)
-  }} variant='btn_in_context_menu'>
+  }} variant='contextmenu_button'>
     {t('Menu.MEP')} {icon_open_modal}
   </Button>
 

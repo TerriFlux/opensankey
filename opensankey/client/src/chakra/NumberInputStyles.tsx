@@ -12,17 +12,17 @@ export const numberinput_base_style = definePartsStyle({
     height: '2rem',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'grey.50',
+    borderColor: 'gray.50',
     textStyle: 'h4',
     bg: 'white',
     bgColor: 'white',
     _disabled: {
-      bg: 'grey.300',
-      bgColor: 'grey.300'
+      bg: 'gray.300',
+      bgColor: 'gray.300'
     },
     _focus: {
       border: 'solid 2px ',
-      borderColor: 'openSankey.400',
+      borderColor: 'primaire.2',
     }
   }
 })

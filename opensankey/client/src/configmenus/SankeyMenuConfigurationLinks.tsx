@@ -161,7 +161,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         {/* Position custom pour MultiSelect */}
         <Box
           height='2rem'
-          width='14.75rem'
+          width='100%'
         >
           <MultiSelect
             valueRenderer={ (selected :selected_type[]) => {
@@ -536,7 +536,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               Object
                 .keys(menu_configuration_links)
                 .map((key) => {
-                  return <Tab> 
+                  return <Tab>
                     <Box layerStyle='submenuconfig_tab' >
                       {t(key)}
                     </Box>

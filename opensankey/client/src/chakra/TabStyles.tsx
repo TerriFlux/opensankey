@@ -9,20 +9,23 @@ export const tabs_base_style = definePartsStyle({
   root: {
     border: 'solid 1px !important',
     borderRadius: '6px',
-    borderColor: 'openSankey.50 !important',
+    borderColor: 'primaire.5 !important',
   },
   tab: {
-    border: 'solid 0px !important',
-    borderRadius: '6px',
+    border: 'none',
+    borderBottom: 'solid 1px !important',
+    borderRadius: '0px',
     borderColor: 'none',
     margin: '0 !important',
     padding: '0 !important',
     height: '2rem !important',
     _selected: {
-      border: 'solid 1px !important',
-      borderRadius: '6px',
-      color: 'openSankey.50',
-      borderColor: 'none'
+      border: 'none',
+      borderBottom: 'solid 2px !important',
+      borderBottomColor: 'primaire.5',
+      borderRadius: '0px',
+      borderColor: 'none',
+      color: 'primaire.5',
     }
   },
   tablist: {
@@ -33,48 +36,63 @@ export const tabs_base_style = definePartsStyle({
     margin: '0.5rem !important'
   },
   tabpanels: {
-    borderTop: 'solid 1px !important',
-    borderTopColor: 'gray.100 !important',
     padding:'0px'
   },
   tabpanel: {
-    padding:'0px'
+    padding:'0.5rem'
   },
 })
 
 export const tabs_navbar = definePartsStyle({
   root: {
     border: 'none',
-    borderRadius: '6px',
-    borderColor: 'openSankey.50 !important',
-    fontSize:'0.75rem'
+    borderRadius: 'none',
+    borderColor: 'none',
+    borderLeft: 'solid 1px',
+    borderLeftColor: 'secondaire.2',
+    borderRight: 'solid 1px',
+    borderRightColor: 'secondaire.2',
+    fontSize:'1rem',
+    textStyle: 'h1',
   },
   tab: {
-    border: 'solid 0px !important',
-    borderRadius: '6px',
-    borderColor: 'none',
-    margin: '0 !important',
+    width: '10rem',
+    borderBottom: 'none',
+    margin: '0rem 0rem 0rem 0.25rem !important',
     padding: '0 !important',
     height: '2rem !important',
-    flex:'auto',
+    justifySelf: 'start',
+    alignSelf: 'center',
     _selected: {
-      borderTop: 'solid 1px !important',
-      borderLeft: 'solid 1px !important',
-      borderRight: 'solid 1px !important',
-      borderRadius: '6px 6px 0px 0px',
-      color: 'openSankey.50',
+      border: 'none',
+      borderBottom: 'solid 2px !important',
+      borderBottomColor: 'primaire.2',
+      borderRadius: '0px',
+      borderColor: 'none',
+      color: 'primaire.2',
     }
   },
   tablist: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(6, 10rem) auto',
+    gridColumnGap: '1px',
     border: '0 !important',
-    gridColumnGap: '0',
-    margin: '0.5rem !important',
-    marginBottom:'0 !important'
+    margin: '0 !important',
+    padding: '0 !important',
   },
   tabpanels: {
-
+    margin: '0 !important',
+    padding: '0 !important',
+    border: 'none',
+    borderRadius: '0px',
+    borderColor: 'none',
   },
+  tabpanel: {
+    display: 'inline-grid',
+    gridTemplateColumns: 'auto',
+    gridAutoFlow: 'column',
+    gridColumnGap: '0.25rem',
+  }
 })
 
 export const tabs_variant_lib_cion=definePartsStyle({
@@ -90,12 +108,12 @@ export const tabs_variant_lib_cion=definePartsStyle({
     margin: '0 !important',
     padding: '0 !important',
     height: '2rem !important',
-    backgroundColor: ' openSankey.50',
+    backgroundColor: ' primaire.5',
 
     _selected: {
       border: 'solid 1px !important',
       borderRadius: '6px',
-      color: 'openSankey.50',
+      color: 'primaire.5',
       borderColor: 'none',
       backgroundColor: ' openSankey.200',
 
