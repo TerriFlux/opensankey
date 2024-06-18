@@ -115,17 +115,17 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='btn_in_context_menu'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
+  }} variant='contextmenu_button'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
 
   const dropdown_c_n_tooltip = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='btn_in_context_menu'>{t('Noeud.IS')} {icon_open_modal}</Button>
+  }} variant='contextmenu_button'>{t('Noeud.IS')} {icon_open_modal}</Button>
 
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.SelectStyle')}
     </MenuButton>
     <MenuList>
@@ -147,11 +147,11 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Menu>
 
   const dropdown_c_n_style = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.editStyle')}
     </MenuButton>
     <MenuList>
-      <Button variant='btn_in_context_menu' onClick={() => {
+      <Button variant='contextmenu_button' onClick={() => {
         delete contextualised_node!.local
         multi_selected_nodes.current.filter(n => n != contextualised_node).forEach(n => delete n.local)
         RedrawNodes(multi_selected_nodes.current)
@@ -166,9 +166,9 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='btn_in_context_menu'>{t('Noeud.PF.PF')}{icon_open_modal}</Button>
+  }} variant='contextmenu_button'>{t('Noeud.PF.PF')}{icon_open_modal}</Button>
   const dropdown_c_n_align_h_min_ori = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align_horiz_min')}
     </MenuButton>
     <MenuList>
@@ -188,7 +188,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Menu>
 
   const dropdown_c_n_align_h_max_ori = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align_horiz_max')}
     </MenuButton>
     <MenuList>
@@ -209,7 +209,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
 
   const dropdown_c_n_align_h = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align_horiz')}
     </MenuButton>
     <MenuList>
@@ -222,7 +222,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   // ===============ALIGNEMENT VERTICAL DES NOEUDS=======================================
   const dropdown_c_n_align_v_min_ori = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align_vert_min')}
     </MenuButton>
     <MenuList>
@@ -242,7 +242,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Menu>
 
   const dropdown_c_n_align_v_max_ori = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align_vert_max')}
     </MenuButton>
     <MenuList>
@@ -262,7 +262,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Menu>
 
   const dropdown_c_n_align_v = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align_vert')}
     </MenuButton>
     <MenuList>
@@ -272,7 +272,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Menu>
 
   const dropdown_c_n_align = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.align')}
     </MenuButton>
     <MenuList>
@@ -281,7 +281,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuList>
   </Menu>
 
-  const button_edit_label_node = <Button variant='btn_in_context_menu'
+  const button_edit_label_node = <Button variant='contextmenu_button'
     onClick={() => {
       const label_x = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().x ?? 0
       const label_y = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().y ?? 0
@@ -302,7 +302,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   // Menu to select output or input links of the contextualised node
   const drp_dwn_slct_link = <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.SlctL')}
     </MenuButton>
     <MenuList>
@@ -336,7 +336,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Menu>
 
   const btn_reorganise_link_io = <Button
-    variant='btn_in_context_menu'
+    variant='contextmenu_button'
     onClick={() => {
       reorganize_node_inputLinksId(data, contextualised_node!, data.nodes, data.links)
       reorganize_node_outputLinksId(data, contextualised_node!, data.nodes, data.links)
@@ -362,7 +362,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     {t('Noeud.Reorg')}
   </Button>
 
-  const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='btn_in_context_menu' onClick={() => {
+  const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
     Aggregate(contextualised_node, data, agregation)
     multi_selected_nodes.current = []
     node_function.recomputeDisplayedElement()
@@ -373,7 +373,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   }}>{t('Noeud.context_agregate')}</Button> : <></>
 
-  const btn_desagregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasDesaggregate(contextualised_node, data) ? <Button variant='btn_in_context_menu' onClick={() => {
+  const btn_desagregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasDesaggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
     Desaggregate(contextualised_node, applicationData, agregation)
     multi_selected_nodes.current = []
     node_function.recomputeDisplayedElement()
@@ -384,7 +384,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   }}>{t('Noeud.context_desagregate')}</Button> : <></>
 
-  const btn_mask_shape = <Button variant='btn_in_context_menu'
+  const btn_mask_shape = <Button variant='contextmenu_button'
     onClick={() => {
       multi_selected_nodes.current.forEach(n => {
         AssignNodeLocalAttribute(n, 'shape_visible', !contextualised_node_shape_visible)
@@ -398,7 +398,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     {contextualised_node_shape_visible ? t('Noeud.apparence.hide_shape') : t('Noeud.apparence.display_shape')}
   </Button>
 
-  const btn_mask_label = <Button variant='btn_in_context_menu'
+  const btn_mask_label = <Button variant='contextmenu_button'
     onClick={() => {
       multi_selected_nodes.current.forEach(n => {
         AssignNodeLocalAttribute(n, 'label_visible', !contextualised_node_label_visible)
@@ -412,7 +412,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     {contextualised_node_label_visible ? t('Noeud.apparence.hide_label') : t('Noeud.apparence.display_label')}
   </Button>
 
-  const btn_mask_value = <Button variant='btn_in_context_menu'
+  const btn_mask_value = <Button variant='contextmenu_button'
     onClick={() => {
       multi_selected_nodes.current.forEach(n => {
         AssignNodeLocalAttribute(n, 'show_value', !contextualised_node_value_visible)
@@ -430,7 +430,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='btn_in_context_menu'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
+  }} variant='contextmenu_button'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
 
   // Pop over that serve as context menu
   return contextualised_node !== undefined ? <Box layerStyle='context_menu' id="context_node_pop_over"
@@ -449,7 +449,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
       {button_edit_label_node}
       <Button
-        variant='btn_in_context_menu'
+        variant='contextmenu_button'
         onClick={() => {
           multi_selected_nodes.current.map(d => DeleteNode(data, d))
           multi_selected_nodes.current = []

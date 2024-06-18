@@ -10,7 +10,7 @@ export const accordion_base_style = definePartsStyle({
   root: {
     margin: '0',
     padding: '0',
-    color: 'gray.500',
+    color: 'primaire.5',
     bg: 'white',
     bgColor: 'white',
     '.chakra-collapse': {
@@ -20,7 +20,7 @@ export const accordion_base_style = definePartsStyle({
   container: {
     margin: '0',
     padding: '0',
-    color: 'gray.500',
+    color: 'primaire.5',
     bg: 'white',
     bgColor: 'white',
     width: '100%',
@@ -30,7 +30,7 @@ export const accordion_base_style = definePartsStyle({
   button: {
     margin: '0',
     padding: '1rem 1.25rem',
-    color: 'gray.500',
+    color: 'primaire.5',
     bg: 'white',
     bgColor: 'white',
     border: '0',
@@ -43,17 +43,17 @@ export const accordion_base_style = definePartsStyle({
     textStyle: 'h2',
 
     _expanded: {
-      color: 'openSankey.200',
-      bg: 'openSankey.100',
-      bgColor: 'openSankey.100',
+      color: 'white',
+      bg: 'primaire.5',
+      bgColor: 'primaire.5',
       border: '1px',
-      borderColor: 'openSankey.100',
+      borderColor: 'primaire.5',
     }
   },
   panel: {
     margin: '0',
     padding: '0.5rem 1.5rem',
-    color: 'gray.500',
+    color: 'primaire.5',
     bg: 'white',
     bgColor: 'white',
     border: '0',
@@ -63,14 +63,14 @@ export const accordion_base_style = definePartsStyle({
     width: '2em',
     height: '1em',
     border: '1px solid',
-    borderColor: 'openSankey.100',
-    background: 'openSankey.100',
+    borderColor: 'primaire.5',
+    background: 'primaire.5',
     borderRadius: 'full',
-    color: 'gray.500',
+    color: 'white',
     _active: {
       borderColor: 'white',
       background: 'white',
-      color: 'opensankey.200'
+      color: 'primaire.5'
     }
   }
 })

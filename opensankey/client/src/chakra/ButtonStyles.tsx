@@ -6,18 +6,19 @@ export const button_base_style = defineStyle({
   margin: '0',
   border: 'solid 1px ',
   borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: 'openSankey.50',
-  bgColor: 'openSankey.50',
+  color: 'white',
+  borderColor: 'primaire.3',
+  bg: 'primaire.3',
+  bgColor: 'primaire.3',
   _hover: {
-    borderColor: 'openSankey.200',
-    bg: 'openSankey.200',
-    bgColor: 'openSankey.200',
+    borderColor: 'secondaire.3',
+    bg: 'secondaire.3',
+    bgColor: 'secondaire.3',
   },
   _disabled: {
-    borderColor: 'grey.300',
-    bg: 'grey.300',
-    bgColor: 'grey.300',
+    borderColor: 'gray.300',
+    bg: 'gray.300',
+    bgColor: 'gray.300',
   }
 })
 
@@ -57,8 +58,14 @@ export const menuconfigpanel_option_button_activated = defineStyle({
   minWidth: '4.5rem',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'openSankey.200',
-  bgColor: 'openSankey.200',
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  _hover: {
+    borderColor: 'primaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
 })
 
 export const menuconfigpanel_option_button_activated_right = defineStyle({
@@ -67,8 +74,14 @@ export const menuconfigpanel_option_button_activated_right = defineStyle({
   borderRadius: '0px 6px 6px 0px',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'openSankey.200',
-  bgColor: 'openSankey.200',
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  _hover: {
+    borderColor: 'primaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
 })
 
 export const menuconfigpanel_option_button_activated_left = defineStyle({
@@ -77,8 +90,14 @@ export const menuconfigpanel_option_button_activated_left = defineStyle({
   borderRadius: '6px 0px 0px 6px',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'openSankey.200',
-  bgColor: 'openSankey.200',
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  _hover: {
+    borderColor: 'primaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
 })
 
 export const menuconfigpanel_option_button_activated_center = defineStyle({
@@ -87,19 +106,27 @@ export const menuconfigpanel_option_button_activated_center = defineStyle({
   borderRadius: '0px',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'openSankey.200',
-  bgColor: 'openSankey.200',
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  _hover: {
+    borderColor: 'primaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
 })
 
 export const menuconfigpanel_add_button = defineStyle({
   height: '2rem',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'green.100',
-  bgColor: 'green.100',
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
   _hover: {
-    bg: 'green.200',
-    bgColor: 'green.200',
+    borderColor: 'primaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
   },
 })
 
@@ -107,21 +134,23 @@ export const menuconfigpanel_del_button = defineStyle({
   height: '2rem',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'red.100',
-  bgColor: 'red.100',
+  borderColor: 'primaire.1',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
   _hover: {
-    bg: 'red.200',
-    bgColor: 'red.200',
+    borderColor: 'primaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
   },
 })
 
 // Style for button in table of tags  in config menu
-export const menuconfigpanel_option_btn_in_table = defineStyle({
+export const menuconfigpanel_option_button_in_table = defineStyle({
   height: '1.5rem',
   width: '1.5rem',
   textStyle: 'h4',
   fontSize: '12px',
-  padding:0
+  padding: 0
 })
 
 // Style for delete button in table of tags in config menu
@@ -131,66 +160,68 @@ export const menuconfigpanel_del_button_in_table = defineStyle({
   borderRadius: '6px',
   textStyle: 'h4',
   fontSize: '12px',
-  padding:0,
-  bg: 'red.100',
-  bgColor: 'red.100',
+  padding: 0,
+  borderColor: 'primaire.1',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
   _hover: {
-    bg: 'red.200',
-    bgColor: 'red.200',
+    borderColor: 'primaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
   },
 })
 
-// Style of button in the subnav (sub elements of file/Formatting/view/help ...) 
-export const submenu_nav_btn = defineStyle({
-  height: '2rem',
-  width: '2rem',
-  borderRadius: '0px',
+// Style of button in the subnav (sub elements of file/Formatting/view/help ...)
+export const menutop_button = defineStyle({
+  height: '3rem',
+  width: '4rem',
   textStyle: 'h4',
   fontSize: '9px',
-  padding:'0.2rem 0.5rem',
+  margin:'0rem 0rem 0rem 0.75rem',
   border:'0px',
-  bg: 'inherit',
-  bgColor: 'inherit',
-  display: 'grid',
-  gridTemplateColumns: '2fr',
-  gridTemplateRows: '1.5fr 0.5fr',
-  gridColumnGap: '0.25rem',
-  gridRowGap: '0',
-  svg :{
-    margin:'auto',
-    height:'2.5em'
-  },
+  borderColor: 'transparent',
+  bg: 'transparent',
+  bgColor: 'transparent',
   _hover: {
-    bg: 'inherit',
-    bgColor: 'inherit',
+    color: 'gray.600',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    bgColor: 'transparent',
   },
+  _disabled: {
+    opacity: '0.6',
+    color: 'gray.600',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    bgColor: 'transparent',
+  }
 })
 
 // Style for menu list in the subnav
-export const submenu_nav_btn_dropdown = defineStyle({
-  height: '2.5rem',
-  width: '3.5rem',
+export const menutop_button_with_dropdown = defineStyle({
+  display: 'grid',
+  gridTemplateColumns: '2fr 1fr',
+  gridTemplateRows: '2fr 1fr',
+  gridColumnGap: '0',
+  gridRowGap: '0',
+  height: '3rem',
+  width: '3rem',
   borderRadius: '0px',
   textStyle: 'h4',
   fontSize: '9px',
   padding:'0.2rem',
+  margin:'0rem 0rem 0rem 0.75rem',
   border:'0px',
-  bg: 'inherit',
-  bgColor: 'inherit',
-  _hover: {
-    bg: 'inherit',
-    bgColor: 'inherit',
+  color: 'gray.600',
+  bg: 'transparent',
+  bgColor: 'transparent',
+  svg :{
+    margin:'auto',
+    height:'2rem'
   },
-  span:{
-    display: 'grid',
-    gridTemplateColumns: '2fr',
-    gridTemplateRows: '1.5fr 0.5fr',
-    gridColumnGap: '0.25rem',
-    gridRowGap: '0',
-    svg :{
-      margin:'auto',
-      height:'2.5em'
-    }
+  _hover: {
+    bg: 'transparent',
+    bgColor: 'transparent',
   }
 })
 
@@ -200,41 +231,30 @@ export const submenu_nav_btn_dropdown_item_demo = defineStyle({
   borderRadius: '0px',
   padding:'0.2rem',
   border:'0px',
-  color:'openSankey.200',
+  color:'primaire.2',
   bg: 'inherit',
   bgColor: 'inherit',
   minWidth:'inherit',
-
   _hover: {
     textDecoration:'underline',
     bg: 'inherit',
     bgColor: 'inherit',
   },
-  
+  _active:{
+    bg:'primaire.2'
+  }
 })
+
 export const menuconfigpanel_option_button_secondary = defineStyle({
   height: '2rem',
   minWidth: '4.5rem',
   textStyle: 'h4',
   fontSize: '12px',
-  bg: 'blue.200',
-  bgColor: 'blue.200',
+  bg: 'primaire.1',
+  bgColor: 'primaire.2',
   _hover: {
-    bg: 'blue.300',
-    bgColor: 'blue.300',
-  },
-})
-
-export const menuconfigpanel_option_button_light = defineStyle({
-  height: '2rem',
-  minWidth: '4.5rem',
-  textStyle: 'h4',
-  fontSize: '12px',
-  bg: 'none',
-  bgColor: 'none',
-  _hover: {
-    bg: 'none',
-    bgColor: 'none',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.2',
   },
 })
 
@@ -251,224 +271,11 @@ export const menuconfigpanel_option_button_tertiary = defineStyle({
   },
 })
 
-export const btn_mode_selection_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#4DAA57',
-  bgColor: '#4DAA57',
-  _hover: {
-    borderColor: '#4DAA57',
-    bg: '#4DAA57',
-    bgColor: '#4DAA57',
-  },
-
-})
-
-export const btn_detail_level_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#587D71',
-  bgColor: '#587D71',
-  _hover: {
-    borderColor: '#587D71',
-    bg: '#587D71',
-    bgColor: '#587D71',
-  },
-
-})
-
-export const btn_link_visual_filter_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#754668',
-  bgColor: '#754668',
-  _hover: {
-    borderColor: '#754668',
-    bg: '#754668',
-    bgColor: '#754668',
-  },
-
-})
-
-export const btn_node_link_tag_filter_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#00A6A6',
-  bgColor: '#00A6A6',
-  _hover: {
-    borderColor: '#00A6A6',
-    bg: '#00A6A6',
-    bgColor: '#00A6A6',
-  },
-
-})
-
-export const btn_data_tag_filter_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#BBDEF0',
-  bgColor: '#BBDEF0',
-  _hover: {
-    borderColor: '#BBDEF0',
-    bg: '#BBDEF0',
-    bgColor: '#BBDEF0',
-  },
-})
-
-export const btn_data_type_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#566E3D',
-  bgColor: '#566E3D',
-  _hover: {
-    borderColor: '#566E3D',
-    bg: '#566E3D',
-    bgColor: '#566E3D',
-  },
-})
-
-export const btn_stretch_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: 'black',
-  bgColor: 'black',
-  _hover: {
-    borderColor: 'black',
-    bg: 'black',
-    bgColor: 'black',
-  },
-})
-
-
-export const btn_fullscreen_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  margin: '0',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#0C4767',
-  bgColor: '#0C4767',
-  _hover: {
-    borderColor: '#0C4767',
-    bg: '#0C4767',
-    bgColor: '#0C4767',
-  },
-})
-
-export const btn_toggle_menuconfig_toolbar=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'6rem',
-  width: '100%',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: 'openSankey.200',
-  bgColor: 'openSankey.200',
-  _hover: {
-    borderColor: 'openSankey.200',
-    bg: 'openSankey.200',
-    bgColor: 'openSankey.200',
-  },
-})
-
-
-export const btn_is_connected=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: 'openSankey.200',
-  bgColor: 'openSankey.200',
-  _hover: {
-    borderColor: 'openSankey.200',
-    bg: 'openSankey.200',
-    bgColor: 'openSankey.200',
-  },
-})
-
-export const btn_not_connected=defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'2rem',
-  width: '100%',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'grey.50',
-  bg: '#C42021',
-  bgColor: '#C42021',
-  _hover: {
-    borderColor: '#C42021',
-    bg: '#C42021',
-    bgColor: '#C42021',
-  },
-})
-
-export const btn_save_in_cache=defineStyle({
-  height:'3rem',
-  width: '100%',
-  fontSize:'2rem',
-  border: 'none',
-  borderRadius: 'none',
+export const menuconfigpanel_option_button_light = defineStyle({
+  height: '2rem',
+  minWidth: '4.5rem',
+  textStyle: 'h4',
+  fontSize: '12px',
   bg: 'none',
   bgColor: 'none',
   _hover: {
@@ -477,22 +284,167 @@ export const btn_save_in_cache=defineStyle({
   },
 })
 
+export const toolbar_button_1 = defineStyle({
+  path:{
+    fill:'white'
+  },
+  bgColor: 'primaire.1',
+  borderColor: 'secondaire.1',
+  _hover: {
+    bgColor: 'tertiaire.1',
+    borderColor: 'secondaire.1',
+  },
+})
 
-export const btn_in_context_menu=defineStyle({
+export const toolbar_button_2 = defineStyle({
+  path:{
+    fill:'white'
+  },
+  bgColor: 'primaire.2',
+  borderColor: 'secondaire.2',
+  _hover: {
+    bgColor: 'tertiaire.2',
+    borderColor: 'secondaire.2',
+  },
+})
+
+export const toolbar_button_3 = defineStyle({
+  path:{
+    fill:'white'
+  },
+  bgColor: 'primaire.3',
+  borderColor: 'secondaire.3',
+  _hover: {
+    bgColor: 'tertiaire.3',
+    borderColor: 'secondaire.3',
+  },
+})
+
+export const toolbar_button_4 = defineStyle({
+  path:{
+    fill:'white'
+  },
+  bgColor: 'primaire.4',
+  borderColor: 'secondaire.4',
+  _hover: {
+    bgColor: 'tertiaire.4',
+    borderColor: 'secondaire.4',
+  },
+})
+
+export const toolbar_button_5 = defineStyle({
+  path:{
+    fill:'white'
+  },
+  bgColor: 'primaire.5',
+  borderColor: 'secondaire.5',
+  _hover: {
+    bgColor: 'tertiaire.5',
+    borderColor: 'secondaire.5',
+  },
+})
+
+export const toolbar_button_6 = defineStyle({
+  path:{
+    fill:'white'
+  },
+  bgColor: 'primaire.6',
+  borderColor: 'secondaire.6',
+  _hover: {
+    bgColor: 'tertiaire.6',
+    borderColor: 'secondaire.6',
+  },
+})
+
+export const toolbar_main_button = defineStyle({
+  path:{
+    fill:'white'
+  },
+  height:'6rem',
+  bgColor: 'primaire.1',
+  borderColor: 'secondaire.1',
+  _hover: {
+    bgColor: 'tertiaire.1',
+    borderColor: 'secondaire.1',
+  },
+})
+
+export const menutop_button_goto_dashboard = defineStyle({
+  padding: '0.25rem',
+  alignSelf: 'center',
+  justifySelf: 'center',
+  height:'3rem',
+  width: '4rem',
+  border: 'solid 1px ',
+  borderRadius: '6px',
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  color: 'white',
+  fill:'white',
+  _hover: {
+    borderColor: 'secondaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
+})
+
+export const menutop_button_logout = defineStyle({
+  padding: '0.25rem',
+  alignSelf: 'center',
+  justifySelf: 'center',
+  height:'3rem',
+  width:'4rem',
+  border: 'solid 1px ',
+  borderRadius: '6px',
+  borderColor: 'primaire.1',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
+  color: 'white',
+  fill:'white',
+  _hover: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+})
+
+export const menutop_button_save_in_cache = defineStyle({
+  padding: '0.25rem',
+  alignSelf: 'center',
+  justifySelf: 'center',
+  height:'3rem',
+  width:'4rem',
+  border: 'solid 1px ',
+  borderRadius: '6px',
+  borderColor: 'primaire.3',
+  bg: 'primaire.3',
+  bgColor: 'primaire.3',
+  color: 'white',
+  fill:'white',
+  _hover: {
+    borderColor: 'secondaire.3',
+    bg: 'secondaire.3',
+    bgColor: 'secondaire.3',
+  },
+})
+
+export const contextmenu_button = defineStyle({
   width: '100%',
-  fontSize:'0.75rem',
   border: 'none',
   borderRadius: 'none',
   textAlign:'left',
   justifyContent:'left',
+  color: 'grey.600',
   bg: 'none',
   bgColor: 'none',
+  layerStyle: 'menuconfigpanel_option_name',
   _hover: {
-    bg: 'lightgrey',
-    bgColor: 'lightgrey',
+    color: 'white',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
   },
 })
-
 
 export const token_blocker_activated=defineStyle({
   width: '2rem',
@@ -508,28 +460,54 @@ export const token_blocker_activated=defineStyle({
   },
 })
 
-export const token_blocker_deactivated=defineStyle({
+export const token_blocker_deactivated = defineStyle({
   width: '2rem',
+  height: '2rem',
   fontSize:'0.75rem',
   padding:'0px',
+  marginRight: '0.5rem',
   border: '1px solid #C42021',
-  borderRadius: '4px',
-  bg: 'none',
-  bgColor: 'none',
+  borderRadius: '6px',
+  color: 'white',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
   _hover: {
-    bg: 'lightgrey',
-    bgColor: 'lightgrey',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+    color: 'white',
   },
 })
 
-export const btn_navigation=defineStyle({
+export const btn_navigation = defineStyle({
   border: 'none',
   borderRadius: '4px',
   bg: 'none',
+  height:'2rem',
   bgColor: 'none',
   textDecoration:'underline',
   _hover: {
-    bg: 'openSankey.50',
-    bgColor: 'openSankey.50',
+    bg: 'primaire.2',
+    bgColor: 'primaire.2',
   },
+})
+
+export const btn_desc_licence = defineStyle({
+  border: 'none',
+  borderRadius: '4px',
+  bg: 'openSankey.100',
+  bgColor: 'openSankey.100',
+  textDecoration:'underline',
+  maxW:'20vw',
+  _hover: {
+    bg: 'primaire.2',
+    bgColor: 'primaire.2',
+  },
+})
+
+export const btn_lone_navigation = defineStyle({
+  height: '3rem',
+  maxW:'12rem',
+  marginLeft:'auto',
+  marginRight:'1rem',
+  padding: '1rem'
 })
