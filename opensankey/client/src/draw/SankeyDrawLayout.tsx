@@ -1340,10 +1340,12 @@ export const updateLayout: updateLayoutFuncType = (
   if (mode.includes('attrGeneral')) {
     let differences = getDiff(data, new_layout)
     if (differences) {
+      const legend_pos = differences.filter( difference=>difference.path![0] == 'legend_position')
+      legend_pos.forEach((difference) => applyChange(data, {}, difference));  
       differences = differences.filter(
         (difference) =>
           (difference.kind === 'E') &&
-          (difference.path!.length === 1) &&
+          (difference.path!.length === 1 ) &&
           (difference.path![0]!=='current_view'))
       differences.forEach(
         (difference) => applyChange(data, {}, difference))
