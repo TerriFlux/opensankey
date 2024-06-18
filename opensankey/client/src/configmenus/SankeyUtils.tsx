@@ -1500,7 +1500,7 @@ const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]
 
-    if(node_tags_attr.length!=0){
+    if(node_tags_attr!= undefined && node_tags_attr.length!=0){
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
       if (!nt[1].tags) {
@@ -1533,7 +1533,7 @@ const NodeHasDisplayedLevel=(data:SankeyData,n:SankeyNode)=>{
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]
-    if(node_tags_attr.length!=0){
+    if(node_tags_attr != undefined && node_tags_attr.length!=0){
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
       const tags_from_grp_to_display=Object.values(nt[1].tags).filter(t=>t.selected).map(t=>t.name)
