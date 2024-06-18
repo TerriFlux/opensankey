@@ -233,7 +233,10 @@ export const eventLabelClick : eventLabelClickFType =(
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',false))
       multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',false))
       // If we deselect a zdt use the last one selected as displayed in config
-      if(multi_selected_label.current.length>0)applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(multi_selected_label.current[multi_selected_label.current.length-1].content))
+      // if(multi_selected_label.current.length>0)applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(
+      //   multi_selected_label.current[multi_selected_label.current.length-1].content)
+      // )
+      applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
     } else {
       multi_selected_label.current.push(d)
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',true))
@@ -249,6 +252,7 @@ export const eventLabelClick : eventLabelClickFType =(
     multi_selected_label.current=[]
     multi_selected_nodes.current=[]
     multi_selected_links.current=[]
+    applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
 
   }

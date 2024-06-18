@@ -100,6 +100,10 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
   const {updateComponentMenuConfigZdt} = ComponentUpdater
   updateComponentMenuConfigZdt.current.push(()=>setForceUpdate(!forceUpdate))
   applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
+
+  if (multi_selected_label.current.length == 0 && s_editor_content_fo_zdt != '') {
+    sEditorContentFOZdt('')
+  }
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
