@@ -494,7 +494,7 @@ export const convert_tags:convert_tagsFuncType = (
 
   if (data.nodeTags.Dimensions) {
     Object.keys(data.nodeTags.Dimensions.tags).forEach(tag=>{
-      data.nodeTags[tag] = {
+      data.levelTags[tag] = {
         group_name : data.nodeTags.Dimensions.tags[tag].name,
         color_map: 'jet',
         show_legend: false,
@@ -529,7 +529,7 @@ export const convert_tags:convert_tagsFuncType = (
         }
       })
       for (let level = 1; level<=max_level;level++) {
-        data.nodeTags[tag]['tags'][String(level)] = {
+        data.levelTags[tag]['tags'][String(level)] = {
           name : String(level),
           selected : level == 1
         }
