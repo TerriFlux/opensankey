@@ -50,7 +50,11 @@ import { updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayou
 interface OSPLabelToConvert extends OSPLabel{
   transparent?:boolean,
   name?:string,
-  font_size?:number
+  font_size?:number,
+  font_weight?:boolean,
+  font_uppercase?:boolean,
+  position_horiz?:'gauche'|'centre'|'droite'
+  position_vert?: 'bas'|'milieu'|'haut'
 }
 
 export const plus_all_element_to_transform = [
@@ -88,16 +92,40 @@ export const plus_convert_data : plus_convert_dataFType = (
         delete ((l as unknown) as OSPLabelToConvert ).transparent
       }
 
-      if(((l as unknown) as OSPLabelToConvert ).name!==undefined){
-        const new_content=((l as unknown) as OSPLabelToConvert).name
-        if (((l as unknown) as OSPLabelToConvert).font_size === 40) {
-          l.content=new_content?'<h3>'+new_content+'</h3>':''
-        } else if (((l as unknown) as OSPLabelToConvert).font_size === 30) {
-          l.content=new_content?'<h4>'+new_content+'</h4>':''
-        } else {
-          l.content=new_content?new_content:''
+      if(l.name!==undefined){
+        let new_content=l.name
+        if (l.font_uppercase) {
+          l.content = new_content.toUpperCase()
         }
-        delete ((l as unknown) as OSPLabelToConvert ).name
+        if (l.font_size === 40) {
+          l.content=new_content?'<h3>'+l.content+'</h3>':''
+        } else if (l.font_size === 30) {
+          l.content=new_content?'<h4>'+l.content+'</h4>':''
+        } else {
+          l.content=new_content?l.content:''
+        }
+        if (l.font_weight) {
+          l.content=new_content?'<strong>'+l.content+'</strong>':''
+        }
+        if (l.position_horiz === 'gauche' ) {
+          l.content=new_content?'<p class=\"ql-align-left\">'+l.content+'</p>':''
+        }
+        if (l.position_horiz === 'centre' ) {
+          l.content=new_content?'<p class=\"ql-align-center\">'+l.content+'</p>':''
+        }
+        if (l.position_horiz === 'droite' ) {
+          l.content=new_content?'<p class=\"ql-align-right\">'+l.content+'</p>':''
+        }
+        // if (l.position_vert === 'haut' ) {
+        //  not possible to convert
+        // }
+        // if (l.position_vert === 'milieu' ) {
+        //  not possible to convert
+        // }
+        // if (l.position_vert === 'bas' ) {
+        //  not possible to convert
+        // }        
+        delete l.name
       }
       const keys = ['idLabel','title','content','opacity','color','color_border','transparent_border','label_width','label_height','x','y','x_label','y_label','is_image','image_src']
       const keys_to_remove : string[]=[]
