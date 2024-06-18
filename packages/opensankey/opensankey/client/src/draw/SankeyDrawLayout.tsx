@@ -1589,7 +1589,14 @@ export const updateLayout: updateLayoutFuncType = (
       if (!(tagGroup in data.nodeTags)) {
         data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
       }
-      Object.values(data.nodes).forEach(n=>n.tags[tagGroup] = new_layout.nodes[n.idNode].tags[tagGroup])
+      Object.values(data.nodes).forEach(n=>{
+        if (!n.tags[tagGroup]) {
+          n.tags[tagGroup] = []
+        }
+        if (new_layout.nodes[n.idNode].tags[tagGroup] != undefined) {
+          n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
+        }
+      })
     })
 
   }
