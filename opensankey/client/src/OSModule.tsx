@@ -74,7 +74,6 @@ import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfig
 import { MenuConfigurationLinks } from './configmenus/SankeyMenuConfigurationLinks'
 import { keyHandler } from './draw/SankeyDraw'
 import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
-import { windowSankey } from './configmenus/SankeyUtils'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
 import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -215,7 +214,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
 }
 }
 // General functions necessay to draw the diagram
-export const initializeApplicationDraw : initializeApplicationDrawType = ( 
+export const initializeApplicationDraw : initializeApplicationDrawType = (
   applicationData,
   applicationState,
   contextMenu:contextMenuType,
@@ -225,7 +224,8 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   node_function,
   link_function,
   start_point,
-  resizeCanvas
+  resizeCanvas,
+  _
 )=> {
   const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
@@ -325,7 +325,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
     )
     ComponentUpdater.updateComponenSaveInCache.current(false)
     return null
-  } 
+  }
 
   _.CreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
     drawAddLinks(
@@ -339,9 +339,9 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
       links_to_update
-    ) 
+    )
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    return null 
+    return null
   }
 
   return _
@@ -451,7 +451,7 @@ export const DrawAll : DrawAllType = (
   )
 
 
-  
+
   // Legend
   applicationDraw.reDrawLegend()
 }
@@ -468,7 +468,7 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   applicationDraw
 ) => {
   const svgSankey=d3.select('.opensankey #svg')
-  
+
   svgSankey.on('mousedown',evt=>{
     const token = true
     EventOnZoneMouseDown(
@@ -744,7 +744,7 @@ export const initializeContextMenu : ()=> contextMenuType = ()=> {
     showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>]>(),
     closeAllMenuContext:()=>null
   }  as contextMenuType
-  
+
   // Then add the function closeAllMenuContext
   _.closeAllMenuContext =initializeCloseAllMenuContext(
     _.ref_setter_contextualised_node,
@@ -759,7 +759,7 @@ export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType=(
   ref_setter_contextualised_node ,
   ref_setter_contextualised_link ,
   tagContext ,
-  showContextZDDRef 
+  showContextZDDRef
 )=>{
   return ()=>{
     ref_setter_contextualised_node.current!(undefined)
@@ -940,7 +940,7 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
   )
 }
 
-export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  
+export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   applicationContext,
   applicationData,
   applicationDraw,
@@ -951,24 +951,35 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
 
   return <Popover placement='left' id='popover_details_level'>
     <PopoverTrigger>
-      <Button variant='btn_detail_level_toolbar' id='btn_open_popover_details_level'>
+      <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
         <FontAwesomeIcon icon={faFolderTree} />
       </Button>
     </PopoverTrigger>
     <PopoverContent>
       <PopoverArrow />
       <PopoverCloseButton />
-      <PopoverHeader as="h3">{applicationContext.t('Banner.ndd')}</PopoverHeader>
-      <PopoverBody style={{  marginLeft: '5px', width: '350px' }}>
-        <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
-          {addSimpleLevelDropDown(
-            applicationData,
-            applicationDraw,
-            node_function,
-            link_function,
-          )}</>
-        ) : (<>
-          <Input placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} isDisabled /></>)}</>
+      <PopoverHeader>{applicationContext.t('Banner.ndd')}</PopoverHeader>
+      <PopoverBody>
+        <>
+          {
+            (Object.entries(applicationData.data.levelTags).length > 0) ?
+              (<>
+                {
+                  addSimpleLevelDropDown(
+                    applicationData,
+                    applicationDraw,
+                    node_function,
+                    link_function)
+                }
+              </>) :
+              (<>
+                <Input
+                  placeholder="Pas de filtrage"
+                  isDisabled
+                />
+              </>)
+          }
+        </>
       </PopoverBody>
     </PopoverContent>
 

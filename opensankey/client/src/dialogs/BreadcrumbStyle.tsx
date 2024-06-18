@@ -12,6 +12,7 @@ export const breadcrumb_base_style = definePartsStyle({
 })
 export const pagination_welecome = definePartsStyle({
   item:{
+    textStyle:'h2',
     span:{
       color:'openSankey.200'
     }

@@ -43,7 +43,7 @@ export const card_account = definePartsStyle({
     marginTop: '6rem',
   },
   header: {
-    bg: '#f2f2f2'
+    bg: 'openSankey.50'
   },
   body: {
     width: '100%'
@@ -54,8 +54,9 @@ export const card_register = definePartsStyle({
   container: {
     marginTop: '175px',
     borderWidth: '1px',
+    borderStyle:'solid',
+    borderColor: 'openSankey.50',
     minW: '40vw',
-    borderColor: 'openSankey.50'
   },
   header: {
     textAlign: 'center',
@@ -66,4 +67,11 @@ export const card_register = definePartsStyle({
     display: 'grid',
     gridRowGap: '10px',
   },
+})
+export const cards_template = definePartsStyle({
+  container: {
+    borderWidth: '1px',
+    borderStyle:'solid',
+    borderColor: 'grey'
+  }
 })

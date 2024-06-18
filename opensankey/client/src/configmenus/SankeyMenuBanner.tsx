@@ -1,6 +1,18 @@
 import React, { FunctionComponent, useState } from 'react'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType, applicationDrawType } from '../types/Types'
-import { MultiSelect } from 'react-multi-select-component'
+import {
+  ComponentUpdaterType,
+  LinkFunctionTypes,
+  NodeFunctionTypes,
+  SankeyData,
+  SankeyLink,
+  TagsCatalog,
+  TagsGroup,
+  applicationDataType,
+  applicationDrawType
+} from '../types/Types'
+import {
+  MultiSelect
+} from 'react-multi-select-component'
 import {
   FindMaxLinkValue,
   AdjustSankeyZone,
@@ -8,7 +20,9 @@ import {
   OSTooltip
 } from './SankeyUtils'
 import * as d3 from 'd3'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  FontAwesomeIcon
+} from '@fortawesome/react-fontawesome'
 import {
   faShareNodes,
   faArrowPointer,
@@ -21,21 +35,63 @@ import {
   faCompress,
   faDatabase
 } from '@fortawesome/free-solid-svg-icons'
-import { selected_type } from '../topmenus/SankeyMenuTop'
-import { TFunction } from 'i18next'
-import { ConvertDataFuncType } from './types/SankeyConvertTypes'
 import {
-  addAllDropDownNodeFType, addSimpleLevelDropDownFType,
+  selected_type
+} from '../topmenus/SankeyMenuTop'
+import {
+  TFunction
+} from 'i18next'
+import {
+  ConvertDataFuncType
+} from './types/SankeyConvertTypes'
+import {
+  addAllDropDownNodeFType,
+  addSimpleLevelDropDownFType,
   DataTagSelectorType,
-  setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType
+  setDiagramFuncType,
+  stretchButtonsFType,
+  ToolbarBuilderFType
 } from './types/SankeyMenuBannerTypes'
-import { GetSankeyMinWidthAndHeightFuncType } from './types/SankeyUtilsTypes'
-import { AddAllDropDownFluxFType } from '../topmenus/types/SankeyMenuTopTypes'
-import { Checkbox, Button, Popover, PopoverHeader, PopoverBody, PopoverContent, PopoverTrigger, PopoverArrow, PopoverCloseButton, Text, Box, NumberInput, NumberInputField, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Select, Switch, Input } from '@chakra-ui/react'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import { DeleteGNodes } from '../draw/SankeyDrawNodes'
-import { DeleteGLinks } from '../draw/SankeyDrawLinks'
-import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
+import {
+  GetSankeyMinWidthAndHeightFuncType
+} from './types/SankeyUtilsTypes'
+import {
+  AddAllDropDownFluxFType
+} from '../topmenus/types/SankeyMenuTopTypes'
+import {
+  Checkbox,
+  Button,
+  Popover,
+  PopoverHeader,
+  PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverCloseButton,
+  Text,
+  Box,
+  NumberInput,
+  NumberInputField,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  Select,
+  Switch,
+  Input
+} from '@chakra-ui/react'
+import {
+  FaEye,
+  FaEyeSlash
+} from 'react-icons/fa'
+import {
+  DeleteGNodes
+} from '../draw/SankeyDrawNodes'
+import {
+  DeleteGLinks
+} from '../draw/SankeyDrawLinks'
+import {
+  actualizeDrawAreaFrame
+} from '../draw/SankeyDrawEventFunction'
 
 
 
@@ -149,11 +205,14 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
   const allDD = banner_grouptag.map(([, tags_group]) => {
     const tags_selected = Object.entries(data['nodeTags']).filter((k) => { return k[1] == tags_group })[0]
 
-    // Create a btn that can either be a switch to activate tag color palette 
+    // Create a btn that can either be a switch to activate tag color palette
     // or in some case for level tag activating or deactivating antagonazing tags
     let btn_switch = <></>
     if (tags_group.banner !== 'level') {
       btn_switch = <Switch
+        justifySelf='end'
+        alignSelf='center'
+        height='1rem'
         isChecked={data.nodesColorMap == tags_selected[0]}
         onChange={evt => {
           Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
@@ -178,6 +237,8 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
       />
     } else if (tags_group.siblings !== undefined && tags_group.siblings.length > 0) {
       btn_switch = <Checkbox
+        justifySelf='end'
+        alignSelf='center'
         variant='activate_antagonist_checkbox'
         isChecked={tags_group.activated}
         icon={tags_group.activated ? <FaEye style={{ fill: 'rgb(120, 194, 173)' }} /> : <FaEyeSlash />}
@@ -238,9 +299,8 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
             return (<option key={i} value={tag_key}>{tag.name}</option>)
           })}
       </Select>
-
-
-    } else if (tags_group.banner == 'multi') {
+    }
+    else if (tags_group.banner == 'multi') {
       const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
 
@@ -262,21 +322,22 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
           setForceUpdate(!forceUpdate)
         }}
       />
-
     }
-    return (<>
-      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-        {tags_group.group_name}
+    return (
+      <Box layerStyle='menuconfig_grid'>
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {tags_group.group_name}
+        </Box>
+        <Box layerStyle='popover_sidebar_row_tag_filter'>
+          <OSTooltip label={t('Banner.ndd_lst')}>
+            {selector}
+          </OSTooltip>
+          <OSTooltip label={t('Banner.ndd_chk')} >
+            {btn_switch}
+          </OSTooltip>
+        </Box>
       </Box>
-      <Box as='span' layerStyle='popover_sidebar_row_tag_filter'>
-        <OSTooltip label={t('Banner.ndd_lst')}>
-          {selector}
-        </OSTooltip>
-        <OSTooltip label={t('Banner.ndd_chk')} >
-          {btn_switch}
-        </OSTooltip>
-      </Box>
-    </>)
+    )
   })
   return (<>{allDD}</>)
 }
@@ -437,9 +498,12 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   })
   max_link_value += 1
 
-  const legend_filter = <Box as='span' layerStyle='popover_sidebar_row_tag_filter'>
-    <Box>{t('Menu.group')}</Box>
-    <Box>{t('Menu.color')}</Box>
+  const legend_filter = <Box
+    as='span'
+    layerStyle='popover_sidebar_row_tag_filter'
+  >
+    <Box textStyle='h2'>{t('Menu.group')}</Box>
+    <Box textStyle='h2'>{t('Menu.color')}</Box>
   </Box>
 
 
@@ -449,91 +513,107 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   //Popover element to handle filter on links, it contians :
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
   // - filter on link label
-  const popover_link_visual_filter = <Popover variant='popover_btn_sideBar' placement='left' id="popover_link_value_filter" >
+  const popover_link_visual_filter = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id="popover_link_value_filter"
+  >
     <PopoverTrigger>
-      <Button variant='btn_link_visual_filter_toolbar' id='btn_open_popover_link_value_filter'>
+      <Button
+        variant='toolbar_button_3'
+        id='btn_open_popover_link_value_filter'
+      >
         <FontAwesomeIcon icon={faSliders} />
       </Button>
     </PopoverTrigger>
     <PopoverContent>
+      <PopoverCloseButton />
       <PopoverHeader >{t('Banner.p_aff')}</PopoverHeader>
       <PopoverBody >
-        <Box layerStyle='menuconfigpanel_grid' >
-          <Text fontSize='xl'>{t('Banner.p_aff_filtre_links')}</Text>
+        <Box
+          layerStyle='menuconfigpanel_grid'
+          gridTemplateColumns='1fr'
+        >
+          <Text
+            fontSize='h3'
+          >
+            {t('Banner.p_aff_filtre_links')}
+          </Text>
 
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box
+            layerStyle='popover_sidebar_layout_filter'
+          >
             <Box layerStyle='menuconfigpanel_option_name'>
               {t('Banner.filtre')}
             </Box>
-            <Box as='span' layerStyle='options_2cols'>
-              <Slider
-                min={0}
-                max={max_link_value}
-                defaultValue={filter}
-                onChange={evt => {
-                  set_current_filter(Number(evt))
-                  setForceUpdate(!forceUpdate)
-                }
-                } >
-                <SliderTrack>
-                  <SliderFilledTrack />
-                </SliderTrack>
-                <SliderThumb />
-              </Slider>
+            <Slider
+              min={0}
+              max={max_link_value}
+              defaultValue={filter}
+              onChange={evt => {
+                set_current_filter(Number(evt))
+                setForceUpdate(!forceUpdate)
+              }
+              } >
+              <SliderTrack>
+                <SliderFilledTrack />
+              </SliderTrack>
+              <SliderThumb />
+            </Slider>
 
-              <NumberInput
-                min={0}
-                max={filter}
-                defaultValue={filter}
-                onChange={(evt) => {
-                  let tmp = +evt
-                  if (tmp > max_link_value) {
-                    tmp = max_link_value
-                  }
-                  set_current_filter(tmp)
-                  setForceUpdate(!forceUpdate)
-                }}>
-                <NumberInputField />
-              </NumberInput>
-            </Box>
+            <NumberInput
+              min={0}
+              max={filter}
+              defaultValue={filter}
+              onChange={(evt) => {
+                let tmp = +evt
+                if (tmp > max_link_value) {
+                  tmp = max_link_value
+                }
+                set_current_filter(tmp)
+                setForceUpdate(!forceUpdate)
+              }}>
+              <NumberInputField />
+            </NumberInput>
           </Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+
+          <Box
+            layerStyle='popover_sidebar_layout_filter'
+          >
             <Box layerStyle='menuconfigpanel_option_name'>
               {t('Banner.fl')}
             </Box>
-            <Box as='span' layerStyle='options_2cols'>
-              <Slider
-                min={0}
-                max={max_link_value}
-                value={data.display_style.filter_label}
-                onChange={(evt) => {
-                  applicationData.data.display_style.filter_label = +evt
-                  setForceUpdate(!forceUpdate)
-                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                }}>
-                <SliderTrack>
-                  <SliderFilledTrack />
-                </SliderTrack>
-                <SliderThumb />
-              </Slider>
+            <Slider
+              min={0}
+              max={max_link_value}
+              value={data.display_style.filter_label}
+              onChange={(evt) => {
+                applicationData.data.display_style.filter_label = +evt
+                setForceUpdate(!forceUpdate)
+                redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+              }}>
+              <SliderTrack>
+                <SliderFilledTrack />
+              </SliderTrack>
+              <SliderThumb />
+            </Slider>
 
-              <NumberInput
-                min={0}
-                max={max_link_value}
-                value={data.display_style.filter_label}
-                onChange={(evt) => {
-                  let tmp = +evt
-                  if (tmp > max_link_value) {
-                    tmp = max_link_value
-                  }
-                  applicationData.data.display_style.filter_label = tmp
-                  setForceUpdate(!forceUpdate)
-                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                }}
-              >
-                <NumberInputField />
-              </NumberInput>
-            </Box>
+            <NumberInput
+              min={0}
+              max={max_link_value}
+              value={data.display_style.filter_label}
+              onChange={(evt) => {
+                let tmp = +evt
+                if (tmp > max_link_value) {
+                  tmp = max_link_value
+                }
+                applicationData.data.display_style.filter_label = tmp
+                setForceUpdate(!forceUpdate)
+                redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+              }}
+            >
+              <NumberInputField />
+            </NumberInput>
           </Box>
           {additional_link_visual_filter_content}
         </Box>
@@ -542,20 +622,28 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   </Popover>
 
 
-  const struc_data_reconciled = <Popover variant='popover_btn_sideBar' placement='left' id='popover_data_type' >
+  const struc_data_reconciled = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_data_type'
+  >
     <PopoverTrigger>
-      <Button variant='btn_data_type_toolbar' id='btn_open_popover_data_type'>
+      <Button
+        variant='toolbar_button_5'
+        id='btn_open_popover_data_type'
+      >
         <FontAwesomeIcon icon={faDiagramProject} />
       </Button>
     </PopoverTrigger>
 
     <PopoverContent>
-      <PopoverArrow />
       <PopoverCloseButton />
       <PopoverHeader >{t('Banner.sdr')}</PopoverHeader>
       <PopoverBody>
-        <Box>
-          <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+        <Box
+          layerStyle='menuconfig_grid'
+        >
+          <Box fontStyle='h3' >
             {t('Banner.type_value')}
           </Box>
 
@@ -573,13 +661,16 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
               redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
             }}>
             <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
-            <option key='data' value='data'      >{t('Banner.t_v_c')}</option>
-            <option key='reconciled' value='reconciled'>{t('Banner.t_v_r')}</option>
+            <option key='data' value='data' >{t('Banner.t_v_c')}</option>
+            <option key='reconciled' value='reconciled' >{t('Banner.t_v_r')}</option>
           </Select>
         </Box>
 
-        <Box style={{ display: s_is_data_type_reconcilied ? '' : 'none' }}>
-          <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+        <Box
+          layerStyle='menuconfig_grid'
+          display={s_is_data_type_reconcilied ? '' : 'none' }
+        >
+          <Box fontStyle='h3' >
             {t('Banner.indetermined_value')}
           </Box>
           <Select
@@ -607,16 +698,25 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
     link_function={link_function}
     applicationDraw={applicationDraw}
   />
+
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
-  const filter_color_node = <Popover variant='popover_btn_sideBar' placement='left' id='popover_node_tag_filter'>
+  const filter_color_node = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_node_tag_filter'
+  >
     <PopoverTrigger>
-      <Button variant='btn_node_link_tag_filter_toolbar' id='btn_open_popover_node_tag_filter'>
+      <Button
+        variant='toolbar_button_4'
+        id='btn_open_popover_node_tag_filter'
+      >
         {logo_btn_node}
       </Button>
     </PopoverTrigger>
 
     <PopoverContent>
+      <PopoverCloseButton />
       <PopoverHeader >{t('Banner.fdn')}</PopoverHeader>
       <PopoverBody>
         {legend_filter}
@@ -630,14 +730,22 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   </Popover>
 
   //Popover element to handle the display of data tags
-  const filter_data = <Popover variant='popover_btn_sideBar' placement='left' id='popover_data_tag_filter'>
+  const filter_data = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_data_tag_filter'
+  >
     <PopoverTrigger>
-      <Button variant='btn_data_tag_filter_toolbar' id='btn_open_popover_data_tag_filter' >
+      <Button
+        variant='toolbar_button_4'
+        id='btn_open_popover_data_tag_filter'
+      >
         <FontAwesomeIcon icon={faDatabase} />
       </Button>
     </PopoverTrigger>
 
     <PopoverContent>
+      <PopoverCloseButton />
       <PopoverHeader >{t('Banner.sdd')}</PopoverHeader>
       <PopoverBody>
         {legend_filter}
@@ -649,33 +757,46 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
           ComponentUpdater={ComponentUpdater}
           in_popover={true}
         />
-
       </PopoverBody>
     </PopoverContent>
   </Popover>
 
   //Popover element to handle the display of link tags
-  const filter_color_link = <Popover variant='popover_btn_sideBar' placement='left' id='popover_link_tag_filter'>
+  const filter_color_link = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_link_tag_filter'
+  >
     <PopoverTrigger>
-      <Button variant='btn_node_link_tag_filter_toolbar' id='btn_open_popover_link_tag_filter'>{logo_btn_filter_link}</Button>
+      <Button
+        variant='toolbar_button_4'
+        id='btn_open_popover_link_tag_filter'
+      >
+        {logo_btn_filter_link}
+      </Button>
     </PopoverTrigger>
 
     <PopoverContent>
+      <PopoverCloseButton />
       <PopoverHeader >{t('Banner.fdf')}</PopoverHeader>
-      <PopoverBody style={{ marginLeft: '5px' }}>
+      <PopoverBody>
         {legend_filter}
         {AddAllDropDownFlux(t, data.fluxTags, applicationData, node_function, link_function, ComponentUpdater, applicationDraw)}
       </PopoverBody>
     </PopoverContent>
-
   </Popover>
 
 
   // ===========Creation Button to show popover========================
 
   const button_fullscreen = <>
-    <OSTooltip placement='left' label={s_force_update ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}>
-      <Button variant='btn_fullscreen_toolbar' id='button_fullscreen'
+    <OSTooltip
+      placement='left'
+      label={s_force_update ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
+    >
+      <Button
+        variant='toolbar_button_6'
+        id='button_fullscreen'
         onClick={() => {
           if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen()
@@ -695,14 +816,20 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   if (!window.SankeyToolsStatic) {
     btn_mouse_mode_edition = <>
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
-      <OSTooltip placement='left' label={(mode_selection == 's') ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}>
-        <Button variant='btn_mode_selection_toolbar' onClick={() => {
-          if (mode_selection == 'ln') {
-            setSelectionMode('s')
-          } else {
-            setSelectionMode('ln')
-          }
-        }} >
+      <OSTooltip
+        placement='left'
+        label={(mode_selection == 's') ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
+      >
+        <Button
+          variant='toolbar_button_1'
+          id='button_selection_edition'
+          onClick={() => {
+            if (mode_selection == 'ln') {
+              setSelectionMode('s')
+            } else {
+              setSelectionMode('ln')
+            }
+          }} >
           <FontAwesomeIcon icon={(mode_selection == 's') ? faShareNodes : faArrowPointer} />
         </Button>
       </OSTooltip>
@@ -710,11 +837,12 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   }
 
   const btn_aggrega_level = (level_filter) ? <>
-    <OSTooltip placement='left' label={t('Banner.hlp_1_txt_2')}>
+    <OSTooltip
+      placement='left'
+      label={t('Banner.hlp_1_txt_2')}>
       {detail_level}
     </OSTooltip>
-  </>
-    :
+  </>:
     <></>
 
   const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
@@ -793,7 +921,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
  * @param {*} applicationData
  * @param {GetSankeyMinWidthAndHeightFuncType} GetSankeyMinWidthAndHeight
  * @param {TFunction} t
- * @return {*} 
+ * @return {*}
  */
 const stretchButtons: stretchButtonsFType = (
   applicationData,
@@ -801,12 +929,12 @@ const stretchButtons: stretchButtonsFType = (
   t: TFunction
 ) => {
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-    <Button variant='btn_stretch_toolbar' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight) }} >
+    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight) }} >
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
   <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='btn_stretch_toolbar' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
+    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
       <FontAwesomeIcon icon={faArrowsUpDown} />
     </Button>
   </OSTooltip></>
@@ -823,7 +951,7 @@ const stretchButtons: stretchButtonsFType = (
  * @param {LinkFunctionTypes} link_function
  * @param {ComponentUpdaterType} ComponentUpdater
  * @param {ComponentUpdaterType} applicationDraw
- * @return {JSX.Element} 
+ * @return {JSX.Element}
  */
 const AddAllDropDownFlux: AddAllDropDownFluxFType = (
   t: TFunction,
@@ -881,16 +1009,26 @@ const AddAllDropDownFlux: AddAllDropDownFluxFType = (
     }
 
     return (
-      <>
-        <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+        >
           {the_tags_group.group_name}
         </Box>
-        <Box as='span' layerStyle='popover_sidebar_row_tag_filter'>
+        <Box
+          as='span'
+          layerStyle='popover_sidebar_row_tag_filter'
+        >
           <OSTooltip label={t('Banner.ndd_lst')}>
             {selector}
           </OSTooltip>
           <OSTooltip label={t('Banner.ndd_chk')} >
             <Switch
+              justifySelf='end'
+              alignSelf='center'
+              height='1rem'
               isChecked={data.linksColorMap == tags_selected[0]}
               onChange={evt => {
                 Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
@@ -913,8 +1051,7 @@ const AddAllDropDownFlux: AddAllDropDownFluxFType = (
             />
           </OSTooltip>
         </Box>
-      </>)
-
+      </Box>)
   })
   return (<>{allDD.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}</>)
 }
@@ -928,9 +1065,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
   link_function,
   ComponentUpdater,
   in_popover
-
-}
-) => {
+}) => {
   const { data } = applicationData
   const [forceUpdate, setForceUpdate] = useState(false)
   const { updateComponentMenu } = ComponentUpdater
@@ -989,8 +1124,8 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             return (<option key={i} value={tag_key} >{tag.name}</option>)
           })}
       </Select>
-
-    } else {
+    }
+    else {
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name, 'disabled': ((selected.length < 2 && tag[1].name == selected[0].label)) } })
       selecteor = <MultiSelect
@@ -1039,44 +1174,54 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             updateComponentMenu.current()
           }
         }} />
-
     }
-    return (
-      <>
 
-        <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+    return (
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_option_name'
+        >
           {tags_group.group_name}
         </Box>
-        <Box as='span' layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}>
+        <Box
+          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
+        >
           {selecteor}
+          {
+            in_popover ?
+              <Switch
+                justifySelf='end'
+                alignSelf='center'
+                height='1rem'
+                isChecked={(banner_grouptag.length > 0) ? (Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
+                onChange={evt => {
+                  //Déselecitonne tous les type de tag
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
-          {in_popover ? <Switch
-            isChecked={(banner_grouptag.length > 0) ? (Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
-            onChange={evt => {
-              //Déselecitonne tous les type de tag
-              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-              Object.values(data.links).forEach(el => {
-                el.colorTag = 'no_colormap'
-              })
-              data.linksColorMap = 'no_colormap'
-              //Met le dernier dataTag en tant que couleur a suivre pour les flux
-              if (evt.target.checked) {
-                Object.values(data.links).forEach(el => {
-                  el.colorTag = 'no_colormap'
-                })
-                data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
-                Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
-              }
-              setForceUpdate(!forceUpdate)
-              redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-            }}
-          />
-            : <></>}
-
+                  Object.values(data.links).forEach(el => {
+                    el.colorTag = 'no_colormap'
+                  })
+                  data.linksColorMap = 'no_colormap'
+                  //Met le dernier dataTag en tant que couleur a suivre pour les flux
+                  if (evt.target.checked) {
+                    Object.values(data.links).forEach(el => {
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
+                    Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
+                  }
+                  setForceUpdate(!forceUpdate)
+                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+                }}
+              /> :
+              <></>
+          }
         </Box>
-      </>)
+      </Box>)
   })
   return <>{allDD}</>
 }
