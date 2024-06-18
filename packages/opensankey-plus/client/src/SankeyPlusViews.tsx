@@ -37,7 +37,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalContent,
-  Tag} from '@chakra-ui/react'
+  Tag
+} from '@chakra-ui/react'
 
 // OpenSankey Libs
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
@@ -584,7 +585,12 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
     }
     value={view}
   >
-    <option hidden value={'none'}>{t('view.actual')}</option>
+    <option
+      hidden
+      value={'none'}
+    >
+      {t('view.actual')}
+    </option>
     {master_data ? master_data.view.map(d => {
       return <option key={d.id} value={d.id}>{d.nom}</option>
     }) : <></>}
@@ -605,6 +611,7 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
 
   return connected && s_select_or_edit==='edit'?editeur_name:selecteur
 }
+
 export const viewsAccordion : viewsAccordionFType = (
   applicationData,
   t:TFunction,
@@ -681,7 +688,7 @@ export const viewsAccordion : viewsAccordionFType = (
                     </Td>
                     <Td>
                       {/* Change the position of the view in the liste of view from master data */}
-                      <Button variant='menuconfigpanel_option_btn_in_table' isDisabled={!is_activated}
+                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
                         onClick={
                           () => {
                             let ind = -1
@@ -697,7 +704,7 @@ export const viewsAccordion : viewsAccordionFType = (
                         }
                       ><FaArrowUp />
                       </Button>
-                      <Button variant='menuconfigpanel_option_btn_in_table' isDisabled={!is_activated}
+                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
                         onClick={
                           () => {
                             let ind = -1
@@ -789,7 +796,7 @@ export const viewsAccordion : viewsAccordionFType = (
             cur_view.nom = (files[0].name).replace('.json','')
 
             set_master_data(JSON.parse(JSON.stringify(master_data)))
-            set_data(JSON.parse(JSON.stringify(imported_data)))            
+            set_data(JSON.parse(JSON.stringify(imported_data)))
             set_view(cur_view.id)
           }
         })()
@@ -866,10 +873,16 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
 
-  const buttonCreateView=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.buttonCreateView')}>
+  const buttonCreateView=<OSTooltip
+    placement='bottom'
+    label={
+      (!has_open_sankey_plus)?
+        (t('Menu.sankeyOSPDisabled')):
+        t('view.tooltips.buttonCreateView')}
+  >
     <Box>
       <Button
-        variant='submenu_nav_btn'
+        variant='menutop_button'
         isDisabled={!has_open_sankey_plus}
         onClick={() => {
           const ev = document
@@ -879,18 +892,40 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
           }
         }}
       >
-        <FontAwesomeIcon icon={faPlus}  style={{opacity:(has_open_sankey_plus)?'0.6':'1'}}/>
-        {!has_open_sankey_plus?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('Menu.addView')}
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_open_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faPlus}
+            />
+            {
+              !has_open_sankey_plus?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+                :<></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.addView')}
+          </Box>
+        </Box>
       </Button>
     </Box>
 
@@ -905,7 +940,7 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
     label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
     <Box>
       <Button
-        variant='submenu_nav_btn'
+        variant='menutop_button'
         isDisabled={!has_open_sankey_plus}
         onClick={
           () => {
@@ -913,56 +948,105 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
           }
         }
       >
-        <FontAwesomeIcon style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}} icon={faListCheck} />
-        {!has_open_sankey_plus?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('view.keep_master_var')}
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_open_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faListCheck}
+            />
+            {
+              !has_open_sankey_plus?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+                :<></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('view.keep_master_var')}
+          </Box>
+        </Box>
       </Button>
     </Box>
   </OSTooltip>:<></>
 
-  const create_data_catalog=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.catalog_data')}>
+  const create_data_catalog=<OSTooltip
+    placement='bottom'
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.catalog_data')}
+  >
     <Box>
       <Button
-        variant= {master_data && master_data.is_catalog?'submenu_nav_btn':'submenu_nav_btn'}
+        variant='menutop_button'
         isDisabled={!has_open_sankey_plus}
         onClick={
           () => {
             if (_load_json_catalog.current) {
               _load_json_catalog.current.name = ''
               _load_json_catalog.current.click()
-            }}}>
-        <FontAwesomeIcon icon={faCopy}  style={{opacity:( !has_open_sankey_plus)?'0.6':'1'}}/>
-        {/* <FaCopy
-          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/> */}
-        {!has_open_sankey_plus?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('view.catalog')}
+            }}}
+      >
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_open_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faCopy}
+            />
+            {
+              !has_open_sankey_plus?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+                :<></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('view.catalog')}
+          </Box>
+        </Box>
       </Button>
     </Box>
   </OSTooltip>
 
 
-  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.button_delete_actual_view')}>
+  const button_delete_actual_view=<OSTooltip
+    placement='bottom'
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.button_delete_actual_view')}
+  >
     <Box>
       <Button
-        variant='submenu_nav_btn'
+        variant='menutop_button'
         isDisabled={!has_open_sankey_plus}
         onClick={
           // Delete the view
@@ -989,21 +1073,42 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
             }
             set_master_data({...master_data!})
           }
-        }>
-          
-        <FontAwesomeIcon icon={faMinus}/>
-        
-        {!has_open_sankey_plus?
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              fontSize:'1em',
-              position: 'absolute',
-              right: '0.1em',
-              bottom: '0em',
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          :<></>}
-        {t('view.delete')}
+        }
+      >
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_open_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faMinus}
+            />
+            {
+              !has_open_sankey_plus ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} /> :
+                <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('view.delete')}
+          </Box>
+        </Box>
       </Button>
     </Box>
   </OSTooltip>
@@ -1086,13 +1191,17 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
       }
     }}
   />
-  return <>  
+
+  return <>
     {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
     {window.SankeyToolsStatic ? <></> : create_data_catalog}
-    {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.home')}>
+    {window.SankeyToolsStatic ? <></> : <OSTooltip
+      placement='bottom'
+      label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.home')}
+    >
       <Box>
         <Button
-          variant='submenu_nav_btn'
+          variant='menutop_button'
           isDisabled={((!has_open_sankey_plus && !has_views)||(master_data && master_data.is_catalog))}
           onClick={() => {
             const ev = document
@@ -1100,22 +1209,42 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
             if (ev.onkeydown) {
               ev.onkeydown(tmp as KeyboardEvent)
             }
-          }}>
-          <FontAwesomeIcon icon={faHome}/>
-
-          {/* <FaHome
-          style={{opacity:((has_open_sankey_plus && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/> */}
-          {(!has_open_sankey_plus && !has_views)?
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            :<></>}
-          {t('Menu.home')}
+          }}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow="1"
+              padding="0.1rem 0 0.1rem 0"
+            >
+              <FontAwesomeIcon
+                style={{
+                  'height': '2rem',
+                  'width': '3rem',
+                  // 'opacity': (!has_open_sankey_plus && !has_views) ? '0.6' : '1'
+                }}
+                icon={faHome}
+              />
+              {
+                (!has_open_sankey_plus && !has_views)?
+                  <FontAwesomeIcon
+                    icon={faLock}
+                    style={{
+                      'fontSize': '1em',
+                      'position': 'absolute',
+                      'right': '0.1em',
+                      'bottom': '0em',
+                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+                  :<></>
+              }
+            </Box>
+            <Box
+              gridRow="2"
+            >
+              {t('Menu.home')}
+            </Box>
+          </Box>
         </Button>
       </Box>
     </OSTooltip>}
@@ -1126,7 +1255,7 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
     <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.PrevViewButton')}>
       <Box>
         <Button
-          variant='submenu_nav_btn'
+          variant='menutop_button'
           isDisabled={prev_button_disabled || !has_views}
           onClick={() => {
             const ev = document
@@ -1134,30 +1263,56 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
             if (ev.onkeydown) {
               ev.onkeydown(tmp as KeyboardEvent)
             }
-          }}>
-          <FontAwesomeIcon icon={faCaretSquareLeft}  style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
-
-          {/* <FaCaretSquareLeft */}
-          {/* // style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/> */}
-          {(!has_open_sankey_plus && !has_views)?
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            :<></>}
-          {t('Menu.precView')}
+          }}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow="1"
+              padding="0.1rem 0 0.1rem 0"
+            >
+              <FontAwesomeIcon
+                style={{
+                  'height': '2rem',
+                  'width': '3rem',
+                  // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
+                }}
+                icon={faCaretSquareLeft}
+              />
+              {
+                (!has_open_sankey_plus && !has_views)?
+                  <FontAwesomeIcon
+                    icon={faLock}
+                    style={{
+                      'fontSize': '1em',
+                      'position': 'absolute',
+                      'right': '0.1em',
+                      'bottom': '0em',
+                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+                  :<></>
+              }
+            </Box>
+            <Box
+              gridRow="2"
+            >
+              {t('Menu.precView')}
+            </Box>
+          </Box>
         </Button>
       </Box>
     </OSTooltip>
 
-    <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.NextViewButton')}>
+    <OSTooltip
+      placement='bottom'
+      label={
+        (!has_open_sankey_plus && !has_views) ?
+          (t('Menu.sankeyOSPDisabled')) :
+          t('view.tooltips.NextViewButton')}
+    >
       <Box>
         <Button
-          variant='submenu_nav_btn'
+          variant='menutop_button'
           isDisabled={next_button_disabled || !has_views}
           onClick={() => {
             const ev = document
@@ -1165,27 +1320,54 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
             if (ev.onkeydown) {
               ev.onkeydown(tmp as KeyboardEvent)
             }
-          }}>
-          <FontAwesomeIcon icon={faCaretSquareRight}  style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}/>
-
-          {/* <FaCaretSquareRight
-          style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
-        /> */}
-          {(!has_open_sankey_plus && !has_views)?
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            :<></>}
-          {t('Menu.nextView')}
+          }}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow="1"
+              padding="0.1rem 0 0.1rem 0"
+            >
+              <FontAwesomeIcon
+                style={{
+                  'height': '2rem',
+                  'width': '3rem',
+                  // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
+                }}
+                icon={faCaretSquareRight}
+              />
+              {
+                (!has_open_sankey_plus && !has_views)?
+                  <FontAwesomeIcon
+                    icon={faLock}
+                    style={{
+                      'fontSize': '1em',
+                      'position': 'absolute',
+                      'right': '0.1em',
+                      'bottom': '0em',
+                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+                  :<></>
+              }
+            </Box>
+            <Box
+              gridRow="2"
+            >
+              {t('Menu.nextView')}
+            </Box>
+          </Box>
         </Button>
       </Box>
     </OSTooltip>
-    {view_selector}
+
+    <Box
+      height='3rem'
+      gridColumnEnd='span 4'
+      alignSelf='center'
+      alignContent='center'
+    >
+      {view_selector}
+    </Box>
 
     {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
       {button_delete_actual_view}
@@ -1237,7 +1419,8 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
           {t('view.warn_ns')}
         </ModalBody>
         <ModalFooter>
-          <Button variant='danger'
+          <Button
+            variant='danger'
             onClick={()=>{
             // Don't save the view before changing to the selected one
               if(view !== 'none'){
@@ -1248,8 +1431,11 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               }
               set_view_not_saved('')
             }}
-          >{t('view.dont_save')}</Button>
-          <Button variant='success'
+          >
+            {t('view.dont_save')}
+          </Button>
+          <Button
+            variant='success'
             onClick={()=>{
             // Save the view before changing to the selected one
 
@@ -1268,53 +1454,14 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             }
             set_view_not_saved('')
             }}
-          >{t('view.save')}</Button>
+          >
+            {t('view.save')}
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>)
 }
 
-// export const toolbar_fullscreen=(data:OSPData,
-//   set_data:(d:OSPData)=>void,
-//   view:string,
-//   set_view:(s:string)=>void,
-//   multi_selected_nodes:{current:OSPNode[]},
-//   multi_selected_links:{current:OSPLink[]},
-//   multi_selected_label:{current:OSPLabel[]},
-//   master_data:OSPData,
-//   set_master_data:(d:OSPData)=>void,
-//   t:TFunction,
-//   has_open_sankey_plus:boolean,
-//   view_not_saved:string,
-//   set_view_not_saved:(s:string)=>void,
-//   _load_json:{current:HTMLInputElement},
-//   _load_json_catalog:{current:HTMLInputElement},
-
-//   set_ref_setter_show_modal_transparent_view_attr:(b:boolean)=>void,
-//   show_modal_selection_link_ref_in_unitary_sankey:boolean,
-//   set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
-//   s_value_editor_name_view:string,
-//   sValueEditorNameView:(s:string)=>void,
-//   select_or_edit:'select'|'edit',
-//   sSelectOrEdit:(s:'select'|'edit')=>void,
-//   convert_data:(d:OSPData)=>void
-// )=>{
-//   const buttons_view= OSPBannerView(data,set_data,
-//     view,set_view,view_not_saved,
-//     multi_selected_nodes,multi_selected_links,multi_selected_label,
-//     master_data,set_master_data,
-//     t,
-//     has_open_sankey_plus,set_view_not_saved,
-//     _load_json,_load_json_catalog,set_ref_setter_show_modal_transparent_view_attr,
-//     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,s_value_editor_name_view,sValueEditorNameView,
-//     select_or_edit,sSelectOrEdit,convert_data
-//   )
-//   const group_btn=<ButtonGroup>
-//     {buttons_view}
-//   </ButtonGroup>
-//   return <>{group_btn}</>
-
-// }
 
 export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   dict_hook_ref_setter_show_dialog_components,

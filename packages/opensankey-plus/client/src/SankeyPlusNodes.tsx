@@ -423,34 +423,6 @@ export const OSPNodeIcon : FunctionComponent<OSPNodeIconFType> = ({
     return [content_tab]
   }
 
-  // return [
-  //   <Tab>
-  //     <Box
-  //       layerStyle='submenuconfig_tab_with_badge'
-  //     >
-  //       {t('Noeud.tabs.icon')}
-  //       {
-  //         (!is_activated)?<OSTooltip label={t('Menu.sankeyOSPDisabled')} >
-  //           <Badge
-  //             pill
-  //             bg="none"
-  //             style={{fontSize:'1em'}}>
-  //             <FontAwesomeIcon
-  //               icon={faLock}
-  //               style={{color: '#66a593', display: 'inline'}}
-  //             />
-  //           </Badge>
-  //         </OSTooltip>:
-  //           <Badge
-  //             pill
-  //             bg="info"
-  //             style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
-  //           >
-  //             Beta
-  //           </Badge>
-  //       }
-  //     </Box>
-  //   </Tab>,
   return <TabPanel>
     {content_tab}
   </TabPanel>
@@ -581,7 +553,7 @@ const node_mouse_click=(
       data.nodes)
 
     // Get longest path to animate possible (number of path before we get to a node without output link  )
-    // so we can determinate a timeout before reseting the sankey 
+    // so we can determinate a timeout before reseting the sankey
     let nb_animation = Object.values(horizontal_indexes_per_nodes_ids).reduce((a, b) => Math.max(a, b), -Infinity)
     nb_animation = (nb_animation !== undefined) ? nb_animation : 0
     time_to_animate += nb_animation * 2000
@@ -748,7 +720,7 @@ export const node_icon_fill_color : node_icon_fill_colorFType = (
     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
     if (tag && !ReturnValueNode(data,n,'shape_visible')) {
       return tag.color as string
-    } 
+    }
   }
   return (n as OSPNode).iconColor
 }
@@ -1065,8 +1037,8 @@ const OSPDragGNodeEvent = (
             link_function.RedrawLinks(Object.values(applicationData.display_links))
           }
           applicationDraw.resizeCanvas()
-      }, 100)
-    }})
+        }, 100)
+      }})
 }
 
 const OSPDragNodes = (
