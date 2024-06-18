@@ -132,7 +132,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     updateComponentMenuConfigLink,updateMenuConfigTextNodeTooltip
   }=ComponentUpdater
   updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
-  
+
   const {data}=applicationData
   const {t}=applicationContext
   const node_visible=NodeVisibleOnsSvg()
@@ -170,7 +170,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         {/* Position custom pour MultiSelect */}
         <Box
           height='2rem'
-          width='14.75rem'
+          width='100%'
         >
           <MultiSelect
             options={INITIAL_OPTIONS}
@@ -447,7 +447,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 Object
                   .keys(menu_configuration_nodes)
                   .map((key) => {
-                    return <Tab> 
+                    return <Tab>
                       <Box layerStyle='submenuconfig_tab' >
                         {t(key)}
                       </Box>

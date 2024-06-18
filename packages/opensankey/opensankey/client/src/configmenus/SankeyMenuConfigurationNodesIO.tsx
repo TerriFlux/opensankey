@@ -457,7 +457,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const [ tab_colored, set_tab_colored ] = useState(false)
   const [ forceUpdate, setForceUpdate ] = useState(false)
- 
+
   let IOLink=[] as string[]
   if (multi_selected_nodes.current.length===1) {
     IOLink = getIOLink(data,display_nodes,multi_selected_nodes,applicationState.link_pos.current,applicationState.link_io.current)
@@ -483,7 +483,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   updateComponentMenuNodeIOSelectSideNode.current = ()=>{
     const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
     applicationState.link_io.current = io
-    applicationState.link_pos.current = pos    
+    applicationState.link_pos.current = pos
     setForceUpdate(!forceUpdate)
   }
 
@@ -776,19 +776,11 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   </Box>
 
   return menu_for_modal ?
-    content:
-    
-  // <Tab>
-  //   <Box
-  //     layerStyle='submenuconfig_tab'
-  //   >
-  //     {t('Noeud.tabs.io')}
-  //   </Box>
-  // </Tab>,
+    content :
     <TabPanel>
       {content}
     </TabPanel>
-    
+
 }
 
 

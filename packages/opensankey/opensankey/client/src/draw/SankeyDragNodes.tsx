@@ -74,15 +74,15 @@ export const DragGNodeEvent: DragGNodeEventFType = (
       }
     }).on('end', function (event,node) {
       setTimeout(() => {
-      if (d3.select(document.activeElement).attr('class') !== 'input_label') {
+        if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // Update all links displayed
-        node_function.RedrawNodes([node])
-        link_function.RedrawLinks(Object.values(applicationData.display_links))
-        ComponentUpdater.updateComponenSaveInCache.current(false)
-        resizeCanvas(applicationData)
-      }
-    }, 100)
-  })
+          node_function.RedrawNodes([node])
+          link_function.RedrawLinks(Object.values(applicationData.display_links))
+          ComponentUpdater.updateComponenSaveInCache.current(false)
+          resizeCanvas(applicationData)
+        }
+      }, 100)
+    })
 }
 /**
  *  Function to modify the label length threshold
