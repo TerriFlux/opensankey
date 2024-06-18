@@ -1350,6 +1350,11 @@ export const updateLayout: updateLayoutFuncType = (
       differences.forEach(
         (difference) => applyChange(data, {}, difference))
     }
+    const display_style_diff = getDiff(data.display_style, new_layout.display_style)
+    if (display_style_diff) {
+      display_style_diff.forEach((difference) => applyChange(data.display_style, {}, difference))
+    }
+
     const node_style_differences = getDiff(data.style_node, new_layout.style_node)
     if (node_style_differences) {
       node_style_differences.forEach((difference) => applyChange(data.style_node, {}, difference))
