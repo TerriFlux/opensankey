@@ -473,11 +473,11 @@ export const DrawArrows : DrawArrowsType = (
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow_part(
-                scale(total_height_left) / 2, 
-                p5, 
-                scale(+link_value), 
-                scale(cum_v_left), 
-                true, 
+                scale(total_height_left) / 2,
+                p5,
+                scale(+link_value),
+                scale(cum_v_left),
+                true,
                 false,
                 arrow_length,
                 node_arrow_shift,
@@ -491,11 +491,11 @@ export const DrawArrows : DrawArrowsType = (
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow_part(
-                scale(total_height_right) / 2, 
-                p5, 
-                scale(+link_value), 
-                scale(cum_v_right), 
-                true, 
+                scale(total_height_right) / 2,
+                p5,
+                scale(+link_value),
+                scale(cum_v_right),
+                true,
                 true,
                 arrow_length,
                 node_arrow_shift,
@@ -546,7 +546,7 @@ export const DrawArrows : DrawArrowsType = (
         cum_h_bottom += link_value
       }
     }
-    
+
   }
 }
 

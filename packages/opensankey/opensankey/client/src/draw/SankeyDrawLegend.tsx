@@ -460,7 +460,7 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
     ComponentUpdater.updateComponentMenuConfigLink.current()
     tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
   }}
-  variant='btn_in_context_menu'>{text_button_select_element_by_tag} {}</Button>:<></>
+  variant='contextmenu_button'>{text_button_select_element_by_tag} {}</Button>:<></>
 
 
 

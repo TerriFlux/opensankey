@@ -1804,62 +1804,6 @@ export const GetRandomInt=(max:number) =>{
   return Math.floor(Math.random() * max)
 }
 
-// Function that return style for checkbox
-export const SmoothClasses = ({
-  bgChecked = '#C1E5DB',
-  bgHovered = '#C1E5DB',
-  controlColor = '#25B48C',
-  focusColor = '#78C2AD',
-  text_as_title=false
-
-}) => {
-  return {
-    h: '24px',
-    px: '12px',
-    w: '100%',
-    borderRadius: '6px',
-    border:'solid 1px '+bgHovered,
-    marginBottom:0,
-    transition: 'all 150ms',
-    _checked: {
-      bg: bgChecked
-    },
-    'span[class*=\'checkbox__control\']:not([data-disabled])': {
-      borderColor: controlColor,
-      borderRadius: '2px',
-      border:'solid 2px '+controlColor,
-      width:'1rem',
-      height:'1rem',
-      marginLeft:text_as_title?'auto':'',
-      marginRight:text_as_title?'2px':'',
-      _checked: {
-        bg: controlColor,
-        borderColor: controlColor
-      },
-      _focus: {
-        boxShadow: `0 0 0 2px ${focusColor}`,
-        _checked: {
-          boxShadow: `0 0 0 2px ${focusColor}`
-        }
-      }
-    },
-    _hover: {
-      bg: bgHovered,
-      transition: 'all 250ms',
-      _checked: {
-        bg: bgChecked
-      }
-    },
-    'span[class*=\'chakra-checkbox__label\']:not([data-disabled])': {
-      width:'100%',
-      marginLeft:text_as_title?'0':'',
-      marginRight:text_as_title?'auto':'',
-      fontSize:text_as_title?'14px':'',
-      fontWeight:text_as_title?'bold':'',
-    }
-  }
-}
-
 /**
  * Function that return a style for title of subsection in menu configuration
  * Attributes modified :

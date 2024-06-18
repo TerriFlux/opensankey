@@ -126,14 +126,14 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const has_flux_tags = Object.values(data.fluxTags).length > 0
   // Menu to change some pararmeter concerning the appearence of the node
   const dropdown_c_l_tag = (contextualised_link !== undefined && has_flux_tags) && has_flux_tags ? <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Menu.Transformation.tagFlux_assign')}
     </MenuButton>
 
     <MenuList  >
       {Object.entries(data.fluxTags).filter(nt => Object.keys(nt[1].tags).length > 0).map(nt => {
         return <Menu placement='end'>
-          <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+          <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
             {nt[1].group_name}
           </MenuButton>
           <MenuList>
@@ -163,11 +163,11 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const button_open_link_appearence = contextualised_link !== undefined ? <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(true)
     set_contextualised_link(undefined)
-  }} variant='btn_in_context_menu'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button> : <></>
+  }} variant='contextmenu_button'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button> : <></>
 
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_l_style_select = contextualised_link !== undefined ? <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.SelectStyle')}
     </MenuButton>
     <MenuList >
@@ -186,11 +186,11 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
     </MenuList>
   </Menu> : <></>
   const dropdown_c_l_style = contextualised_link !== undefined ? <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.editStyle')}
     </MenuButton>
     <MenuList >
-      <MenuItem as={Button} variant='btn_in_context_menu' onClick={() => {
+      <MenuItem as={Button} variant='contextmenu_button' onClick={() => {
         delete contextualised_link!.local
         multi_selected_links.current.filter(n => n != contextualised_link).forEach(n => delete n.local)
       }}>{t('Noeud.AS')}</MenuItem>
@@ -199,7 +199,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   </Menu> : <></>
 
   const dropdown_c_l_layout = contextualised_link !== undefined ? <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Flux.layout')}
     </MenuButton>
     <MenuList >
@@ -256,7 +256,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const button_open_link_data = contextualised_link !== undefined ? <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(true)
     set_contextualised_link(undefined)
-  }} variant='btn_in_context_menu'>{t('Flux.data.données')} {icon_open_modal}</Button> : <></>
+  }} variant='contextmenu_button'>{t('Flux.data.données')} {icon_open_modal}</Button> : <></>
 
   const button_mask_link_label = contextualised_link !== undefined ? <Button onClick={() => {
     multi_selected_links.current.forEach(l => {
@@ -264,23 +264,23 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
     })
     RedrawLinks(multi_selected_links.current)
     setForceUpdate(!forceUpdate)
-  }} variant='btn_in_context_menu'>{context_link_label_visible ? t('Flux.apparence.hide_link_lab') : t('Flux.apparence.display_link_lab')}</Button> : <></>
+  }} variant='contextmenu_button'>{context_link_label_visible ? t('Flux.apparence.hide_link_lab') : t('Flux.apparence.display_link_lab')}</Button> : <></>
 
   const button_open_link_tooltip = contextualised_link !== undefined ? <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(true)
     set_contextualised_link(undefined)
-  }} variant='btn_in_context_menu'>{t('Flux.IS')} {icon_open_modal}</Button> : <></>
+  }} variant='contextmenu_button'>{t('Flux.IS')} {icon_open_modal}</Button> : <></>
 
   const btn_l_show_tags_menu = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tags.current(true)
     set_contextualised_link(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='btn_in_context_menu'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
+  }} variant='contextmenu_button'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
 
 
   // Inverse source & target of the link
   const btn_edit_value = contextualised_link !== undefined ? <Menu placement='end'>
-    <MenuButton variant='btn_in_context_menu' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">{t('Flux.data.edit_value')}</MenuButton>
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">{t('Flux.data.edit_value')}</MenuButton>
     <MenuList>
       <ConfigLinkDataNumberInput
         applicationData={applicationData}
@@ -292,7 +292,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
       />
     </MenuList>
   </Menu> : <></>
-  const btn_inverse_io = <Button variant='btn_in_context_menu'
+  const btn_inverse_io = <Button variant='contextmenu_button'
     onClick={() => {
       const nodes_to_reorganize: SankeyNode[] = []
       invert_flux(contextualised_link!, nodes_to_reorganize)

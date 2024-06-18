@@ -115,16 +115,19 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
         {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
       </ModalBody>
       <ModalFooter style={{justifyContent:'center'}}>
+        <Box layerStyle='box_footer_welcome'>
+          <Breadcrumb variant={'pagination_welecome'} separator='-' >
+            {Object.entries(external_pagination).map((k)=>{return <BreadcrumbItem isCurrentPage={active_page===k[0]}  key={k[0]}>{k[1]}</BreadcrumbItem>})}
+          </Breadcrumb>
 
-        <Breadcrumb variant={'pagination_welecome'} separator='-' >
-          {Object.entries(external_pagination).map((k)=>{return <BreadcrumbItem isCurrentPage={active_page===k[0]}  key={k[0]}>{k[1]}</BreadcrumbItem>})}
-        </Breadcrumb>
-
-        <Checkbox style={{width:'15%',position:'absolute',right:0}} isChecked={never_see_again.current} onChange={evt=>{
-          never_see_again.current = evt.target.checked
-          localStorage.setItem('dontSeeAggainWelcome','1')
-          set_show_welcome(false)
-        }}>{t('dontSeeAgain')}</Checkbox>
+          <Checkbox 
+            variant='checkbox_dont_show_again'
+            isChecked={never_see_again.current} onChange={evt=>{
+              never_see_again.current = evt.target.checked
+              localStorage.setItem('dontSeeAggainWelcome','1')
+              set_show_welcome(false)
+            }}>{t('dontSeeAgain')}</Checkbox>
+        </Box>
       </ModalFooter>
     </ModalContent>
   </Modal>

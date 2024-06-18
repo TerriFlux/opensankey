@@ -10,7 +10,8 @@ import {
   ComputeTotalOffsets,
   TestLinkValue,
   ReturnValueLink,
-  LinkVisible} from '../configmenus/SankeyUtils'
+  LinkVisible
+} from '../configmenus/SankeyUtils'
 import {
   GetLinkValueFuncType,
   LinkColorFuncType
@@ -33,7 +34,7 @@ const default_horiz_shift = 50
 /**
  * Function that return the path used to draw the arrow part corresponding to the
  * link. There are there cases
- 
+
  *                     ____
  *                    |   |
  *               \    |   |   / \
@@ -46,9 +47,9 @@ const default_horiz_shift = 50
  * ______________/    |   |          \ /
  *                    |___|
  *             x0-l   x0
- * 
- * 
- * @param {number} arrowHalfHeight : Half height of the arrow 
+ *
+ *
+ * @param {number} arrowHalfHeight : Half height of the arrow
  * @param {number[]} arrowStart
  * @param {number} linkSize
  * @param {number} arrowSizeAlreadyComputed
@@ -58,7 +59,7 @@ const default_horiz_shift = 50
  * @param {number} node_arrow_shift
  * @returns {string}
  */
-export const draw_arrow_part : draw_arrow_partFType = (
+export const draw_arrow_part: draw_arrow_partFType = (
   arrowHalfHeight,
   arrowStart,
   linkSize,
@@ -74,17 +75,17 @@ export const draw_arrow_part : draw_arrow_partFType = (
   // Donc on assume que ca vaut 0
   const pre_ratio_cum = arrowSizeAlreadyComputed / arrowHalfHeight
   const pre_ratio_cur = linkSize / arrowHalfHeight
-  const ratio_cum=(isFinite(pre_ratio_cum))?pre_ratio_cum:1
-  const ratio_cur=(isFinite(pre_ratio_cur))?pre_ratio_cur:1
+  const ratio_cum = (isFinite(pre_ratio_cum)) ? pre_ratio_cum : 1
+  const ratio_cur = (isFinite(pre_ratio_cur)) ? pre_ratio_cur : 1
 
   // Coeff to orient arrow in 1 direction or the opposite
   const coeff = revert ? -1 : 1
   // Create variable to store results of mini-process used multiple time in order to save processing power
-  const arrow_angle=arrow_length+(node_arrow_shift)
-  const angle_shift_oriented=node_arrow_shift*coeff
-  const angle_shift_oriented_and_scaled=(angle_shift_oriented)*ratio_cum
+  const arrow_angle = arrow_length + (node_arrow_shift)
+  const angle_shift_oriented = node_arrow_shift * coeff
+  const angle_shift_oriented_and_scaled = (angle_shift_oriented) * ratio_cum
 
-  const l=coeff * arrow_length
+  const l = coeff * arrow_length
 
   const start = arrowStart[0]
   const x0 = start - coeff * arrow_length
@@ -93,36 +94,36 @@ export const draw_arrow_part : draw_arrow_partFType = (
   let x3 = 0
   if (ratio_cum + ratio_cur < 1) {
     x1 = x0 + l * ratio_cum
-    x2 = x0 + l * (ratio_cum+ratio_cur)
+    x2 = x0 + l * (ratio_cum + ratio_cur)
     x3 = x1
   } else if (ratio_cum > 1) {
-    x1 = x0 + l * (2-ratio_cum)
-    x2 = x0 + l * (2-ratio_cum-ratio_cur)
+    x1 = x0 + l * (2 - ratio_cum)
+    x2 = x0 + l * (2 - ratio_cum - ratio_cur)
     x3 = x1
   } else {
     x1 = x0 + l * ratio_cum
-    x2 = x0 + l * (2-ratio_cum-ratio_cur)
+    x2 = x0 + l * (2 - ratio_cum - ratio_cur)
     x3 = start
   }
-  if ( node_is_arrow) {
+  if (node_is_arrow) {
     if (node_arrow_shift > arrow_length) {
-      x1 = x1 + l + node_arrow_shift2*coeff
-      x2 = x2 + l + node_arrow_shift2*coeff
+      x1 = x1 + l + node_arrow_shift2 * coeff
+      x2 = x2 + l + node_arrow_shift2 * coeff
     }
-    x3 += node_arrow_shift *coeff
+    x3 += node_arrow_shift * coeff
   }
 
-  const arrowHalfHeight_scaled_by_ratio_cumulative_value=arrowHalfHeight * ratio_cum
-  const arrowHalfHeight_scaled_by_ratio_current_value=arrowHalfHeight * ratio_cur
+  const arrowHalfHeight_scaled_by_ratio_cumulative_value = arrowHalfHeight * ratio_cum
+  const arrowHalfHeight_scaled_by_ratio_current_value = arrowHalfHeight * ratio_cur
   const y0 = arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)
-  let y1=0 
+  let y1 = 0
   if (ratio_cum + ratio_cur < 1) {
     y1 = y0
   } else if (ratio_cum > 1) {
     y1 = y0
   } else {
     y1 = arrowStart[1]
-  }        
+  }
   const y2 = arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)
 
   let d
@@ -135,19 +136,19 @@ export const draw_arrow_part : draw_arrow_partFType = (
   } else {
     if (ratio_cum + ratio_cur < 1) {
       d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (l))
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1]+(angle_shift_oriented_and_scaled) - (l) * (1 - ratio_cum))
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1]+(angle_shift_oriented_and_scaled) - (l) * (1 - ratio_cum) + coeff * arrow_angle * ratio_cur)
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] + (angle_shift_oriented_and_scaled) - (l) * (1 - ratio_cum))
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] + (angle_shift_oriented_and_scaled) - (l) * (1 - ratio_cum) + coeff * arrow_angle * ratio_cur)
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] - (l)) + ' Z'
     } else if (ratio_cum > 1) {
       d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (l))
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1]+((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1))
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1]+((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1) - coeff * arrow_angle * ratio_cur)
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] + ((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1))
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] + ((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1) - coeff * arrow_angle * ratio_cur)
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] - (l)) + ' Z'
     } else {
       d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (l))
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1]+(angle_shift_oriented_and_scaled) - (l) * (1 - ratio_cum))
-      d += ' L ' + String(start) + ',' + String(arrowStart[1]+(angle_shift_oriented))
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1]+((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1) - coeff * arrow_angle * ratio_cur)
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] + (angle_shift_oriented_and_scaled) - (l) * (1 - ratio_cum))
+      d += ' L ' + String(start) + ',' + String(arrowStart[1] + (angle_shift_oriented))
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] + ((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1) - coeff * arrow_angle * ratio_cur)
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] - (l)) + ' Z'
     }
   }
@@ -171,7 +172,7 @@ export const draw_arrow_part : draw_arrow_partFType = (
 //        /    |          |    \
 //       /     |          |     \   This part is drawed when (ratio_cum > 1)
 //      /______|          |______\
-export const DrawLinkSabot : DrawLinkSabotFType = (
+export const DrawLinkSabot: DrawLinkSabotFType = (
   arrowHalfHeight,
   arrowStart,
   linkSize,
@@ -185,16 +186,16 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
   // Donc on assume que ca vaut 0
   const pre_ratio_cum = arrowSizeAlreadyComputed / arrowHalfHeight
   const pre_ratio_cur = linkSize / arrowHalfHeight
-  const ratio_cum=(isFinite(pre_ratio_cum))?pre_ratio_cum:1
-  const ratio_cur=(isFinite(pre_ratio_cur))?pre_ratio_cur:1
+  const ratio_cum = (isFinite(pre_ratio_cum)) ? pre_ratio_cum : 1
+  const ratio_cur = (isFinite(pre_ratio_cur)) ? pre_ratio_cur : 1
 
   // Coeff to orient arrow in 1 direction or the opposite
-  const coeff = revert ? 1:-1
+  const coeff = revert ? 1 : -1
   // Create variable to store results of mini-process used multiple time in order to save processing power
-  const arrowHalfHeight_scaled_by_ratio_cumulative_value=arrowHalfHeight * ratio_cum
-  const arrowHalfHeight_scaled_by_ratio_current_value=arrowHalfHeight * ratio_cur
-  const arrow_length_oriented=coeff * node_arrow_shift
- 
+  const arrowHalfHeight_scaled_by_ratio_cumulative_value = arrowHalfHeight * ratio_cum
+  const arrowHalfHeight_scaled_by_ratio_current_value = arrowHalfHeight * ratio_cur
+  const arrow_length_oriented = coeff * node_arrow_shift
+
   const start = arrowStart[0]
   // if (!revert) {
   //   start -= (node_arrow_shift)
@@ -204,40 +205,40 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
   if (horizontal) {
     if (ratio_cum + ratio_cur < 1) {
       d = ' M ' + String((start - (arrow_length_oriented))) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
-      d += ' L ' + String(start)+ ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
-      d += ' L ' + String(start ) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
-      d += ' L ' + String(start -arrow_length_oriented*(1-ratio_cur)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ' Z'
-    } else if (ratio_cum > 1) {
-      d = ' M ' + String(start - (arrow_length_oriented)*(ratio_cum-1)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(start) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(start) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
-      d += ' L ' + String(start - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ' Z'
+      d += ' L ' + String(start - arrow_length_oriented * (1 - ratio_cur)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ' Z'
+    } else if (ratio_cum > 1) {
+      d = ' M ' + String(start - (arrow_length_oriented) * (ratio_cum - 1)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(start) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(start) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
+      d += ' L ' + String(start - (arrow_length_oriented) * (ratio_cum + ratio_cur - 1)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ' Z'
     } else {
-      d = ' M ' + String(start-node_arrow_shift2 ) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
-      d += ' L ' + String(start+ (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
-      d += ' L ' + String(start+ (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(arrowStart[1])
-      d += ' L ' + String(start+ (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
-      d += ' L ' + String(start-node_arrow_shift2) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
-      d += ' L ' + String(start+ (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(arrowStart[1])+ ' Z'
+      d = ' M ' + String(start - node_arrow_shift2) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(start + (arrow_length_oriented) * (1 - ratio_cum)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(start + (arrow_length_oriented) * (1 - ratio_cum)) + ',' + String(arrowStart[1])
+      d += ' L ' + String(start + (arrow_length_oriented) * (1 - ratio_cum)) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
+      d += ' L ' + String(start - node_arrow_shift2) + ',' + String(arrowStart[1] - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value))
+      d += ' L ' + String(start + (arrow_length_oriented) * (1 - ratio_cum)) + ',' + String(arrowStart[1]) + ' Z'
     }
   } else {
     if (ratio_cum + ratio_cur < 1) {
       d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented))
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1])
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1])
-      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] -arrow_length_oriented*(1-ratio_cur)) + ' Z'
+      d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] - arrow_length_oriented * (1 - ratio_cur)) + ' Z'
     } else if (ratio_cum > 1) {
-      d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented)*(ratio_cum-1))
+      d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented) * (ratio_cum - 1))
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1])
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1])
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented)) + ' Z'
     } else {
-      d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented)*(1-ratio_cum))
+      d = ' M ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented) * (1 - ratio_cum))
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value)) + ',' + String(arrowStart[1])
       d += ' L ' + String(start) + ',' + String(arrowStart[1])
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1])
       d += ' L ' + String(start - arrowHalfHeight + (arrowHalfHeight_scaled_by_ratio_cumulative_value) + (arrowHalfHeight_scaled_by_ratio_current_value)) + ',' + String(arrowStart[1] - (arrow_length_oriented))
-      d += ' L ' + String(start) + ',' + String(arrowStart[1])+ ' Z'
+      d += ' L ' + String(start) + ',' + String(arrowStart[1]) + ' Z'
     }
   }
 
@@ -301,7 +302,7 @@ const check_errors = (
  * @param {({ text?: string } | undefined)} error_msg
  * @returns {string}
  */
-export const bezier_link_classic_vv : bezier_link_classic_vvFType = (
+export const bezier_link_classic_vv: bezier_link_classic_vvFType = (
   source_name: string,
   target_name: string,
   origin: number[],
@@ -518,7 +519,7 @@ export const bezier_link_classic_recycling = (
   const y1 = y0
   let x16 = x17 - factor * default_horiz_shift + factor * left_horiz_shift
   const y16 = y17
-  if (origin[0] < destination[0] ) {
+  if (origin[0] < destination[0]) {
     x1 = x0 + factor * default_horiz_shift - factor * left_horiz_shift
     x16 = x17 - factor * default_horiz_shift - factor * right_horiz_shift
   }
@@ -597,7 +598,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   GetLinkValue: GetLinkValueFuncType,
   LinkSabotColor: LinkColorFuncType
 ) => {
-  const {data,display_nodes}=applicationData
+  const { data, display_nodes } = applicationData
   let cum_v_left = 0
   let cum_h_top = 0
   let cum_v_right = 0
@@ -626,8 +627,8 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   // Some link can be in displayed_links but not visible, their style display is none (it happen when their value is 0)
-  const link_displayed_to_create_sabot=n.outputLinksId.filter(idLink=>Object.keys(applicationData.display_links).includes(idLink) && d3.select('#gg_'+idLink).style('display')!=='none')
-  
+  const link_displayed_to_create_sabot = n.outputLinksId.filter(idLink => Object.keys(applicationData.display_links).includes(idLink) && d3.select('#gg_' + idLink).style('display') !== 'none')
+
   for (let i = 0; i < link_displayed_to_create_sabot.length; i++) {
     const l = data.links[n.outputLinksId[i]]
     const node_target = data.nodes[l.idTarget]
@@ -694,10 +695,10 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
 
     if (node_shape === 'arrow') {
       // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-      let arrowHalfHeight = Math.max(total_height_right,total_height_left)
+      let arrowHalfHeight = Math.max(total_height_right, total_height_left)
       switch (node_angle_direction) {
       case 'left':
-        arrowHalfHeight = Math.max(total_height_right,total_height_left)
+        arrowHalfHeight = Math.max(total_height_right, total_height_left)
         break
       case 'top':
         arrowHalfHeight = total_width_top
@@ -724,13 +725,13 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
         break
       }
       node_arrow_shift2 = scale(Math.tan(node_angle * Math.PI / 180) * (arrowHalfHeight2 / 2))
-      node_arrow_shift2 = node_arrow_shift-node_arrow_shift2
+      node_arrow_shift2 = node_arrow_shift - node_arrow_shift2
     }
 
     if (!data.display_style.filter || link_value >= data.display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .start_corner').remove() // supression dans le cas du drag notamment
-      SetNodeHeight(n, applicationData,scale, inv_scale, GetLinkValue)
+      SetNodeHeight(n, applicationData, scale, inv_scale, GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'start_corner')
@@ -746,13 +747,13 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return DrawLinkSabot(scale(total_height_left) / 2, p5, scale(+link_value), scale(cum_v_left), true, false, node_arrow_shift,node_arrow_shift2)
+              return DrawLinkSabot(scale(total_height_left) / 2, p5, scale(+link_value), scale(cum_v_left), true, false, node_arrow_shift, node_arrow_shift2)
             } else {
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') + 0.1
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return DrawLinkSabot(scale(total_height_right) / 2, p5, scale(+link_value), scale(cum_v_right), true, true, node_arrow_shift,node_arrow_shift2)
+              return DrawLinkSabot(scale(total_height_right) / 2, p5, scale(+link_value), scale(cum_v_right), true, true, node_arrow_shift, node_arrow_shift2)
             }
           } else if (ori === 'vv' || ori === 'hv') {
             if (n.y > target_node.y || is_exportation_node) {
@@ -760,13 +761,13 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
               yt = +n.y + ((is_exportation_node) ? +target_node.y + +d3.select('#shape_' + target_node.idNode).attr('height') : 0)
               p5 = [xt, yt]
               is_v = false
-              return DrawLinkSabot(scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false, node_arrow_shift,node_arrow_shift2)
+              return DrawLinkSabot(scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false, node_arrow_shift, node_arrow_shift2)
             } else {
               xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
               yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height')
               p5 = [xt, yt]
               is_v = false
-              return DrawLinkSabot(scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true, node_arrow_shift,node_arrow_shift2)
+              return DrawLinkSabot(scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true, node_arrow_shift, node_arrow_shift2)
             }
           }
           return ''
@@ -797,7 +798,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
   GetLinkValue: GetLinkValueFuncType
 
 ) => {
-  const {data,display_links}=applicationData
+  const { data, display_links } = applicationData
   if (!display_links) {
     return [0, 0, 0, 0]
   }
@@ -806,13 +807,13 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     return [0, 0, 0, 0]
   }
   //inv_scale(applicationData.min_link_thickness) = epaisseur minimum d'un flux (5px)
-  link_value = ((link_value!=='' && link_value == 0) || (+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
+  link_value = ((link_value !== '' && link_value == 0) || (+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
 
   const theLinkValue = GetLinkValue(data, link.idLink)
   let is_structure = false
   if (source_node.position !== 'relative' && target_node.position !== 'relative') {
     if (data.show_structure === 'data') {
-      if (!(theLinkValue as SankeyLinkValue & { extension: { data_value: string} } ).extension.data_value) {
+      if (!(theLinkValue as SankeyLinkValue & { extension: { data_value: string } }).extension.data_value) {
         is_structure = true
       }
     } else if (data.show_structure === 'reconciled') {
@@ -820,7 +821,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       if (link_value_is_free) {
         // If the link is free we check if data allow indeterminate free null link
         //  to be considerate as visible
-        is_structure=true
+        is_structure = true
       }
     }
     if (theLinkValue.extension?.display_thin) {
@@ -831,9 +832,9 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     link_value = inv_scale(applicationData.min_link_thickness)
   }
 
-  let res = ComputeTotalOffsets(inv_scale, source_node, applicationData,TestLinkValue, undefined, GetLinkValue)
+  let res = ComputeTotalOffsets(inv_scale, source_node, applicationData, TestLinkValue, undefined, GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, applicationData,TestLinkValue, undefined, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, target_node, applicationData, TestLinkValue, undefined, GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
   let node_size_s_width = inv_scale((ReturnValueNode(data, source_node, 'node_width') as number))
   let node_size_t_width = inv_scale(ReturnValueNode(data, target_node, 'node_width') as number)
@@ -855,9 +856,9 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       inv_scale((ReturnValueNode(data, target_node, 'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = ComputeTotalOffsets(inv_scale, source_node, applicationData,TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, source_node, applicationData, TestLinkValue, link, GetLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, applicationData,TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, target_node, applicationData, TestLinkValue, link, GetLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)
@@ -883,18 +884,18 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
   const l_arrow_size = ReturnValueLink(data, link, 'arrow_size') as number
 
   if (source_shape === 'arrow') {
-    //if(true/*link_direction_same_as_node_arrow*/){
+    // if(true/*link_direction_same_as_node_arrow*/){
     // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-    const node_face_size=Math.max(s_total_offset_height_left,s_total_offset_height_right)
+    const node_face_size = Math.max(s_total_offset_height_left, s_total_offset_height_right)
     const node_angle_direction = ReturnValueNode(data, source_node, 'node_arrow_angle_direction') as string
-    const node_angle=ReturnValueNode(data,source_node,'node_arrow_angle_factor') as number
-    const node_arrow_shift= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size/2))
-    if (node_angle_direction=='right') {
+    const node_angle = ReturnValueNode(data, source_node, 'node_arrow_angle_factor') as number
+    const node_arrow_shift = scale(Math.tan(node_angle * Math.PI / 180) * (node_face_size / 2))
+    if (node_angle_direction === 'right') {
       xs += node_arrow_shift
-    } else if (node_angle_direction=='left') {
+    } else if (node_angle_direction === 'left') {
       xs -= node_arrow_shift
     }
-    //}
+    // }
 
   }
 

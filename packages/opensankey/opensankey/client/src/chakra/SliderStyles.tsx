@@ -8,7 +8,7 @@ export const slider_base_style = definePartsStyle({
     height: '1.5rem',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'grey.50',
+    borderColor: 'gray.50',
     bg: 'openSankey.50',
     bgColor: 'openSankey.50',
   },
@@ -18,7 +18,7 @@ export const slider_base_style = definePartsStyle({
   },
   mark: {
     textAlign: 'center',
-    color: 'grey.50',
+    color: 'gray.50',
     width: '1.5rem',
     zIndex: '2',
     marginTop: '-0.25rem',
