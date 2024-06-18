@@ -1,6 +1,7 @@
 import './css/main.css'
 import './css/colors/red.css'
 import './css/style_elements_sankey.css'
+import './css/react-quill.css'
 import React, { MutableRefObject } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as d3 from 'd3'

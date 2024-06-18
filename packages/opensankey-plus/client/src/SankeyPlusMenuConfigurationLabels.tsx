@@ -270,15 +270,11 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
     ref={r_editor_ZDT}
     onChange={(evt) => {
       sEditorContentFOZdt(evt)
-    }}
-    onBlur={()=>{
       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-        d.content = s_editor_content_fo_zdt
+        d.content = evt
       })
       reDrawOSPLabels(multi_selected_label.current)
-      setForceUpdate(!forceUpdate)
     }}
-
     theme="snow"
     modules={modules}
     formats={formats}
@@ -288,7 +284,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
       backgroundColor:(disable_options)?'#cccccc':''}}
   /></Box>
 
-  const content_wysiwyg = <Box className='FO_zdt_editeur'>
+  const content_wysiwyg = <Box className='FO_zdt_editeur' >
     <FormControl isInvalid={isQuill_invalid}>
       {editor_fo}
       <Input type='text'  style={{display:'none'}}/>
