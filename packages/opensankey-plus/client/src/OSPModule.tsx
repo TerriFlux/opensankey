@@ -711,11 +711,12 @@ export const OSPInstallEventsOnSVG : InstallEventsOnSVGType = (
   const svgSankey = d3.select('.opensankey #svg')
   svgSankey.on('mousedown',evt=>{
     blur_ZDT_wysiwyg((applicationState as unknown as OSPElementsSelectedVarType).r_editor_ZDT as { current: ReactQuill; })
+    const token = true
     EventOnZoneMouseDown(
       applicationData,
       applicationState,
       dict_hook_ref_setter_show_dialog_components,
-      false,
+      token,
       evt,
       applicationDraw.start_point,
       contextMenu.closeAllMenuContext,
