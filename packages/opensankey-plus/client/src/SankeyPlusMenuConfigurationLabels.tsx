@@ -284,7 +284,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
       backgroundColor:(disable_options)?'#cccccc':''}}
   /></Box>
 
-  const content_wysiwyg = <Box className='FO_zdt_editeur' >
+  const content_wysiwyg = <Box className='FO_zdt_editeur'>
     <FormControl isInvalid={isQuill_invalid}>
       {editor_fo}
       <Input type='text'  style={{display:'none'}}/>
