@@ -5,52 +5,72 @@ import {
   accordion_sublevel_style
 } from './AccordionStyles'
 import {
+  badge_base_style
+} from './BadgeStyle'
+import {
+  btn_desc_licence,
+  contextmenu_button,
+  btn_lone_navigation,
+  btn_navigation,
   button_base_style,
   menuconfigpanel_add_button,
+  menuconfigpanel_del_button_in_table,
   menuconfigpanel_del_button,
   menuconfigpanel_option_button_activated_center,
   menuconfigpanel_option_button_activated_left,
   menuconfigpanel_option_button_activated_right,
   menuconfigpanel_option_button_activated,
   menuconfigpanel_option_button_center,
+  menuconfigpanel_option_button_in_table,
   menuconfigpanel_option_button_left,
-  menuconfigpanel_option_button_right,
-  menuconfigpanel_option_button,
-  menuconfigpanel_option_btn_in_table,
-  menuconfigpanel_del_button_in_table,
-  submenu_nav_btn,
-  submenu_nav_btn_dropdown,
-  menuconfigpanel_option_button_secondary,
   menuconfigpanel_option_button_light,
+  menuconfigpanel_option_button_right,
+  menuconfigpanel_option_button_secondary,
   menuconfigpanel_option_button_tertiary,
-  btn_mode_selection_toolbar,
-  btn_data_tag_filter_toolbar,
-  btn_data_type_toolbar,
-  btn_detail_level_toolbar,
-  btn_fullscreen_toolbar,
-  btn_link_visual_filter_toolbar,
-  btn_node_link_tag_filter_toolbar,
-  btn_stretch_toolbar,
-  btn_toggle_menuconfig_toolbar,
-  btn_is_connected,
-  btn_not_connected,
-  btn_save_in_cache,
+  menuconfigpanel_option_button,
+  menutop_button_goto_dashboard,
+  menutop_button_logout,
+  menutop_button_save_in_cache,
+  menutop_button_with_dropdown,
+  menutop_button,
   submenu_nav_btn_dropdown_item_demo,
-  btn_in_context_menu,
-  token_blocker_deactivated,
   token_blocker_activated,
-  btn_navigation
+  token_blocker_deactivated,
+  toolbar_button_1,
+  toolbar_button_2,
+  toolbar_button_3,
+  toolbar_button_4,
+  toolbar_button_5,
+  toolbar_button_6,
+  toolbar_main_button
 } from './ButtonStyles'
+import {
+  buttongroup_base_style,
+  buttongroup_sideBar
+} from './ButtonGroupStyle'
+import {
+  card_account,
+  card_base_style,
+  card_icon_not_selected,
+  card_icon_selected,
+  card_import_icon,
+  card_register,
+  cards_template
+} from './CardStyle'
 import {
   checkbox_base_style,
   menuconfigpanel_part_title_1_checkbox,
   menuconfigpanel_option_checkbox,
   menuconfigpanel_tag_checkbox,
-  activate_antagonist_checkbox
+  activate_antagonist_checkbox,
+  checkbox_dont_show_again
 } from './CheckboxStyles'
-import { 
-  drawer_base_style, 
-  drawer_menu_config 
+import {
+  close_button_base_style
+} from './CloseButtonStyle'
+import {
+  drawer_base_style,
+  drawer_menu_config
 } from './DrawerStyles'
 import {
   input_base_style,
@@ -58,10 +78,10 @@ import {
   menuconfigpanel_option_input_color,
   menuconfigpanel_option_input_table
 } from './InputStyles'
-import { 
-  menu_button_base_style, 
-  menu_button_subnav_style, 
-  menu_subnav_initial_item_demo, 
+import {
+  menu_button_base_style,
+  menu_button_subnav_account_style,
+  menu_button_subnav_style,
   menu_subnav_item_demo
 } from './MenuStyles'
 import {
@@ -93,13 +113,29 @@ import {
   table_edit_tag_data,
   table_edit_grp_tag_node_link
 } from './TableStyle'
-import { heading_base_style, heading_welcome_style } from './HeadingStyles'
-import { card_account, card_base_style, card_icon_not_selected, card_icon_selected, card_import_icon, card_register } from './CardStyle'
-import { breadcrumb_base_style, pagination_welecome } from '../dialogs/BreadcrumbStyle'
-import { tag_base_style, tag_dev_navbar } from './TagStyle'
-import { buttongroup_base_style, buttongroup_sideBar } from './ButtonGroupStyle'
-import { popover_base_style, popover_btn_sideBar } from './PopoverStyle'
-import { modal_base_style, modal_select_unit_from_data, modal_select_unit_from_excel, modal_welcome} from './ModalStyle'
+import {
+  heading_base_style,
+  heading_template_dashboard,
+  heading_welcome_style
+} from './HeadingStyles'
+import {
+  breadcrumb_base_style,
+  pagination_welecome
+} from '../dialogs/BreadcrumbStyle'
+import {
+  tag_base_style,
+  tag_dev_navbar
+} from './TagStyle'
+import {
+  popover_base_style,
+  toolbar_popover_window
+} from './PopoverStyle'
+import {
+  modal_base_style,
+  modal_select_unit_from_data,
+  modal_select_unit_from_excel,
+  modal_welcome
+} from './ModalStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -107,44 +143,46 @@ export const opensankey_theme = extendTheme({
       baseStyle: accordion_base_style,
       variants: { accordion_sublevel_style }
     },
+    Badge: {
+      baseStyle: badge_base_style,
+    },
     Button: {
       baseStyle: button_base_style,
       variants: {
+        btn_desc_licence,
+        contextmenu_button,
+        menutop_button_goto_dashboard,
+        btn_lone_navigation,
+        btn_navigation,
+        menutop_button_logout,
+        menutop_button_save_in_cache,
         menuconfigpanel_add_button,
+        menuconfigpanel_del_button_in_table,
         menuconfigpanel_del_button,
+        menuconfigpanel_option_button_in_table,
         menuconfigpanel_option_button_activated_center,
         menuconfigpanel_option_button_activated_left,
         menuconfigpanel_option_button_activated_right,
         menuconfigpanel_option_button_activated,
         menuconfigpanel_option_button_center,
         menuconfigpanel_option_button_left,
+        menuconfigpanel_option_button_light,
         menuconfigpanel_option_button_right,
-        menuconfigpanel_option_button,
-        menuconfigpanel_option_btn_in_table,
-        menuconfigpanel_del_button_in_table,
-        submenu_nav_btn,
-        submenu_nav_btn_dropdown,
-        submenu_nav_btn_dropdown_item_demo,
         menuconfigpanel_option_button_secondary,
         menuconfigpanel_option_button_tertiary,
-        menuconfigpanel_option_button_light,
-        btn_mode_selection_toolbar,
-        btn_detail_level_toolbar,
-        btn_link_visual_filter_toolbar,
-        btn_node_link_tag_filter_toolbar,
-        btn_data_tag_filter_toolbar,
-        btn_data_type_toolbar,
-        btn_stretch_toolbar,
-        btn_fullscreen_toolbar,
-        btn_toggle_menuconfig_toolbar,
-        btn_is_connected,
-        btn_not_connected,
-        btn_save_in_cache,
-        btn_in_context_menu,
+        menuconfigpanel_option_button,
+        submenu_nav_btn_dropdown_item_demo,
+        menutop_button_with_dropdown,
+        menutop_button,
         token_blocker_activated,
         token_blocker_deactivated,
-        btn_navigation,
-        
+        toolbar_button_1,
+        toolbar_button_2,
+        toolbar_button_3,
+        toolbar_button_4,
+        toolbar_button_5,
+        toolbar_button_6,
+        toolbar_main_button
       }
     },
     ButtonGroup:{
@@ -167,6 +205,7 @@ export const opensankey_theme = extendTheme({
         card_import_icon,
         card_account,
         card_register,
+        cards_template,
       }
     },
     Checkbox: {
@@ -175,8 +214,12 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_part_title_1_checkbox,
         menuconfigpanel_option_checkbox,
         menuconfigpanel_tag_checkbox,
-        activate_antagonist_checkbox
+        activate_antagonist_checkbox,
+        checkbox_dont_show_again,
       }
+    },
+    CloseButton: {
+      baseStyle: close_button_base_style
     },
     Input: {
       baseStyle: input_base_style,
@@ -198,8 +241,8 @@ export const opensankey_theme = extendTheme({
       baseStyle:menu_button_base_style,
       variants:{
         menu_button_subnav_style,
+        menu_button_subnav_account_style,
         menu_subnav_item_demo,
-        menu_subnav_initial_item_demo
       }
     },
     NumberInput: {
@@ -212,7 +255,7 @@ export const opensankey_theme = extendTheme({
     Popover:{
       baseStyle:popover_base_style,
       variants:{
-        popover_btn_sideBar
+        toolbar_popover_window
       }
     },
     Select: {
@@ -220,7 +263,7 @@ export const opensankey_theme = extendTheme({
       variants: {
         select_custom_style,
         menuconfigpanel_option_select,
-        menuconfigpanel_option_select_table
+        menuconfigpanel_option_select_table,
       }
     },
     Slider: {
@@ -257,16 +300,20 @@ export const opensankey_theme = extendTheme({
     Heading:{
       baseStyle:heading_base_style,
       variants:{
-        heading_welcome_style
+        heading_welcome_style,
+        heading_template_dashboard,
       }
     }
   },
   layerStyles: {
+    box_footer_welcome:{
+      display:'grid'
+    },
     context_menu:{
       display:'grid',
       rowGap:'0.1rem',
       background:'white',
-      border:'1px solid grey',
+      border:'1px solid gray',
       borderRadius:'4px'
     },
     menuconfig_entry: {
@@ -291,7 +338,6 @@ export const opensankey_theme = extendTheme({
       flex: '1',
       paddingStart: '0',
       paddingEnd: '0',
-      color: 'openSankey.400'
     },
     submenuconfig_tab_with_badge: {
       alignItems: 'center',
@@ -379,45 +425,87 @@ export const opensankey_theme = extendTheme({
       gridRowGap: '0',
       height: '3rem'
     },
-    MenuNavTop:{
+    menutop_layout_style:{
       display: 'grid',
-      gridTemplateColumns: '0.5fr 0.5fr 3fr 2fr 1fr 0.5fr',
       gridColumnGap: '0.25rem',
       height: '6rem',
-      alignItems:'center',
-      background:'white'
+      width: 'auto',
+      marginLeft: '0.5rem',
+      marginRight: '0.5rem',
+      alignItems: 'center',
+      background: 'gray.50',
+      color: 'gray.600'
     },
-    MenuNavTopUser:{
+    menutop_tab_style: {
+      textStyle: 'h3',
+      textAlign: 'start',
+      flex: '1',
+      paddingStart: '0.5rem',
+      paddingEnd: '0'
+    },
+    menutop_button_style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 3fr',
-      gridColumnGap: '60rem',
+      gridTemplateColumns: '3fr',
+      gridTemplateRows: '2fr 1fr',
+      gridColumnGap: '0',
+      gridRowGap: '0',
+      height: '3rem',
+      width: '4rem',
+      padding: '0',
+      margin: '0',
+      textStyle: 'h4',
+      fontSize: '9px',
+      color: 'gray.600',
+      stroke: 'gray.600', // Svg params
+      fill: 'gray.600',  // svg params
+      alignItems: 'center',
+      justifyItems: 'center'
+    },
+    menubottom_layout_style: {
+      background: 'gray.50',
+      bgColor: 'gray.50',
+      width: '100%',
+      height: '2rem',
+      marginLeft: '0.5rem',
+      marginRight: '0.5rem'
+    },
+    menubottom_item_style: {
+      display: 'flex',
+      color: 'black',
+      textStyle: 'h4',
+      alignSelf: 'center',
+      justifySelf: 'center'
+    },
+    menutop_userpages_layout_style:{
+      display: 'grid',
+      gridTemplateColumns: '1fr auto 1fr',
+      gridColumnGap: '0',
+      width:'100%',
       height: '6rem',
       alignItems:'center',
-      background:'white'
+      background:'gray.50',
+      color: 'gray.600',
+      img:{
+        height:'6rem',
+        padding:'0.25rem'
+      }
     },
     MenuNavTopUserNavigation:{
+      background:'gray.50',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 0.5fr',
       gridColumnGap: '0.25rem',
+      marginLeft:'auto'
 
     },
     account_row:{
       display: 'grid',
       gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr',
+      gridColumnGap: '0.25rem',
+      alignItems: 'center',
       p:{
         margin:'0'
       }
-    },
-    MenuNavfooter:{
-      display: 'flex',
-      width:'100%',
-      height: '1rem',
-      alignItems:'center',
-      background:'white',
-      zIndex:1, position:'fixed',bottom:0,fontSize:'0.85em'
-    },
-    MenuNavfooterSubItem:{
-      flex:'auto'
     },
     option_with_activation: {
       display: 'grid',
@@ -443,23 +531,24 @@ export const opensankey_theme = extendTheme({
       gridColumnGap: '0.12rem',
       height: '2rem'
     },
+    licence_row:{
+      display: 'grid',
+      gridTemplateColumns: '1fr 3fr',
+      gridColumnGap: '0.25rem',
+    },
+    licence_row_inverse:{
+      display: 'grid',
+      gridTemplateColumns: '3fr 1fr',
+      gridColumnGap: '0.25rem',
+    },
+    licence_desc:{
+      whiteSpace:'pre-line'
+    },
     menustylepanel_row_droplist: {
       display: 'grid',
       gridTemplateColumns: '1fr 6fr 1fr',
       gridColumnGap: '0.25rem',
       height: '2rem'
-    },
-    title_menu_draggable: {
-      display: 'grid',
-      gridTemplateColumns: '9fr 1fr',
-      gridColumnGap: '0.25rem',
-      zIndex:1,
-      borderBottom:' 1px solid #eceeef',
-      lineHeight:'1.5rem',
-      backgroundColor:'white',
-      position:'sticky',
-      top:'0',
-      padding:'1rem'
     },
     popover_sidebar_row_tag_filter: {
       display: 'grid',
@@ -467,6 +556,48 @@ export const opensankey_theme = extendTheme({
       gridColumnGap: '0.25rem',
       height: '2rem'
     },
+    popover_sidebar_layout_filter: {
+      display: 'grid',
+      gridTemplateColumns: 'auto 15rem 5rem',
+      gridColumnGap: '1.25rem',
+      height: '2rem',
+      alignItems: 'center'
+    },
+    menucontext_layout: {
+      display: 'grid',
+      gridRowGap: '0.5rem',
+      color: 'gray.600',
+      bg: 'white',
+      bgColor: 'white',
+      width: 'fit-content',
+      border: 'solid 1px',
+      borderColor: 'primaire.2',
+      borderRadius: '6px',
+      alignItems: 'center',
+      maxWidth: '40vw'
+    },
+    menucontext_title_layout: {
+      display: 'grid',
+      gridTemplateColumns: '9fr 1fr',
+      gridColumnGap: '0.25rem',
+      margin: '0.25rem',
+      borderBottom:' 1px solid',
+      borderBottomColor: 'primaire.2',
+      height:'2rem',
+      alignItems: 'center',
+      alignContent: 'center'
+    },
+    menucontext_entries_layout: {
+      display: 'grid',
+      gridRowGap: '0.25rem',
+      fontStyle: 'h4',
+      alignItems: 'center',
+      margin: '0.25rem'
+    },
+    image_layout: {
+      height: '100%',
+      margin: '1rem'
+    }
   },
   textStyles: {
     xs: {
@@ -487,6 +618,7 @@ export const opensankey_theme = extendTheme({
     h1: {
       fontFamily: 'Open Sans,sans-serif',
       fontSize: '16px',
+      fontWeight:'bold',
     },
     h2: {
       fontFamily: 'Open Sans,sans-serif',
@@ -501,6 +633,7 @@ export const opensankey_theme = extendTheme({
     h4: {
       fontFamily: 'Open Sans,sans-serif',
       fontSize: '12px',
+      fontWeight:'normal',
     }
   },
   colors: {
@@ -511,5 +644,29 @@ export const opensankey_theme = extendTheme({
       300: '#25B48C',
       400: '#78C2AD'
     },
+    primaire: {
+      1: '#F7AD7C',
+      2: '#78A7C2',
+      3: '#78C2AD',
+      4: '#B49E90',
+      5: '#8EA4B1',
+      6: '#8EB1A8'
+    },
+    secondaire: {
+      1: '#DA996D',
+      2: '#668EA5',
+      3: '#66A593',
+      4: '#968478',
+      5: '#778A95',
+      6: '#77958D'
+    },
+    tertiaire: {
+      1: '#BC835E',
+      2: '#557689',
+      3: '#55897A',
+      4: '#786960',
+      5: '#606F78',
+      6: '#607871'
+    }
   }
 })

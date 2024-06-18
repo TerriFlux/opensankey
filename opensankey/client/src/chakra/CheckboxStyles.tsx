@@ -11,7 +11,7 @@ export const checkbox_base_style = definePartsStyle({
     w: '100%',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'grey.50',
+    borderColor: 'gray.50',
     margin: '0',
     padding: '0',
     transition: 'all 150ms',
@@ -19,7 +19,8 @@ export const checkbox_base_style = definePartsStyle({
       bg: 'white'
     },
     _hover: {
-      bg: 'openSankey.50',
+      bg: 'primaire.5',
+      color: 'white',
       transition: 'all 250ms',
     },
   },
@@ -33,9 +34,9 @@ export const checkbox_base_style = definePartsStyle({
     border: 'solid 1px ',
     borderRadius: '2px',
     _checked: {
-      bg: 'openSankey.300',
-      borderColor: 'openSankey.300',
-      iconColor: 'openSankey.400',
+      bg: 'primaire.3',
+      borderColor: 'primaire.3',
+      iconColor: 'primaire.2',
       _hover: {
         bg: 'gray.400',
         borderColor: 'gray.400',
@@ -43,9 +44,9 @@ export const checkbox_base_style = definePartsStyle({
       }
     },
     _hover: {
-      bg: 'openSankey.300',
-      borderColor: 'openSankey.300',
-      iconColor: 'openSankey.400',
+      bg: 'primaire.3',
+      borderColor: 'primaire.3',
+      iconColor: 'primaire.2',
     }
   },
   label: {
@@ -96,5 +97,53 @@ export const activate_antagonist_checkbox = definePartsStyle({
   container: {
     margin:'auto',
     width:'inherit',
+  }
+})
+
+export const checkbox_dont_show_again = definePartsStyle({
+  container: {
+    w: 'inherit',
+    border: 'none',
+    margin: 'auto',
+    padding: '0',
+    transition: 'all 150ms',
+    _checked: {
+      bg: 'white'
+    },
+    _hover: {
+      bg: 'primaire.5',
+      transition: 'all 250ms',
+    },
+  },
+  control: {
+    margin: '0.25rem',
+    width: '1rem',
+    height: '1rem',
+    bg: 'gray.400',
+    borderColor: 'gray.400',
+    iconColor: 'white',
+    border: 'solid 1px ',
+    borderRadius: '2px',
+    _checked: {
+      bg: 'primaire.3',
+      borderColor: 'primaire.3',
+      iconColor: 'primaire.2',
+      _hover: {
+        bg: 'gray.400',
+        borderColor: 'gray.400',
+        iconColor: 'white',
+      }
+    },
+    _hover: {
+      bg: 'primaire.3',
+      borderColor: 'primaire.3',
+      iconColor: 'primaire.2',
+    }
+  },
+  label: {
+    width:'inherit',
+    margin: 'auto',
+    fontSize: '12px',
+    textStyle: 'h4',
   }
 })

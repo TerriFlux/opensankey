@@ -356,6 +356,8 @@ export const keyHandler : keyHandlerFType = (
     multi_selected_links.current.forEach(l=>{
       SelectVisualyLinks(l)
     })
+    ComponentUpdater.updateComponentMenuConfigNode.current()
+    ComponentUpdater.updateComponentMenuConfigLink.current()
 
   }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && (['form-control','chakra-numberinput__field','chakra-input','input_label'].some(r=> document.activeElement?.className.includes(r)))){
     (document.activeElement as HTMLInputElement).blur()
