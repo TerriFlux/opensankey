@@ -27,10 +27,6 @@ import {
   Class_Tagg
 } from './Tag'
 
-// Local functions
-import {
-  addNewNodeToSankey
-} from '../functions/draw/Sankey'
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -239,7 +235,9 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public addNewNode(id: string, name: string) {
-    return addNewNodeToSankey(this,this.menu_config, id, name)
+    const node = new Class_NodeElement(id, name, this.drawing_area, this.menu_config)
+    this.addNode(node)
+    return node
   }
 
   /**
@@ -251,7 +249,7 @@ export class Class_Sankey {
     const n = String(Object.values(this._nodes).length)
     const id = 'node' + n
     const name = 'Node ' + n
-    return addNewNodeToSankey(this,this.menu_config, id, name,)
+    return this.addNewNode(id, name)
   }
 
   /**
