@@ -75,33 +75,41 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  // private first_curve_point: number = 0.2
-
-  // /**
-  //  * Second curvature point, ie point where first bezier curve occurs
-  //  * @private
-  //  * @type {number}
-  //  * @memberof Class_LinkElement
-  //  */
-  // private second_curve_point: number = 0.8
+  private starting_curve_point: number = 0.0
 
   /**
-   * Center curvature point, ie center point for bezier curve
+   * Second curvature point, ie point where first bezier curve occurs
    * @private
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private center_curve_point: number = 0.5
+  private ending_curve_point: number = 1.0
 
-  private _x_label?:number
-  private _y_label?:number
+  /**
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  private starting_tagent_lenght: number = 0.5
+
+  /**
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  private ending_tagent_lenght: number = 0.5
+
+  private _x_label?: number
+  private _y_label?: number
 
   // Definition of abstract attribut from Class_Element
   public display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
-    local:Class_LinkAttribute,
-    style:Class_LinkStyle
+    local: Class_LinkAttribute,
+    style: Class_LinkStyle
   }
 
 
@@ -124,7 +132,7 @@ export class Class_LinkElement extends Class_Element {
    */
   private _target: Class_NodeElement
 
-  private _value:number
+  private _value: number
 
 
   // CONSTRUCTOR ========================================================================
@@ -155,10 +163,10 @@ export class Class_LinkElement extends Class_Element {
     this.display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
-      local:new Class_LinkAttribute(),
-      style:drawing_area.sankey.flux_styles['default']
+      local: new Class_LinkAttribute(),
+      style: drawing_area.sankey.flux_styles['default']
     }
-    this._value=10
+    this._value = 10
 
     this._source = source
     this.source.addOutputLink(this)
@@ -187,89 +195,89 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-  public deleteRelativeLabelPos(){
+  public deleteRelativeLabelPos() {
     delete this._x_label
     delete this._y_label
   }
 
   public isEqual(_: Class_LinkElement) {
 
-    if(this.orientation!==_.orientation){
+    if (this.orientation !== _.orientation) {
       return false
     }
-    if(this.left_horiz_shift!==_.left_horiz_shift){
+    if (this.left_horiz_shift !== _.left_horiz_shift) {
       return false
     }
-    if(this.right_horiz_shift!==_.right_horiz_shift){
+    if (this.right_horiz_shift !== _.right_horiz_shift) {
       return false
     }
-    if(this.vert_shift!==_.vert_shift){
+    if (this.vert_shift !== _.vert_shift) {
       return false
     }
-    if(this.curvature!==_.curvature){
+    if (this.curvature !== _.curvature) {
       return false
     }
-    if(this.curved!==_.curved){
+    if (this.curved !== _.curved) {
       return false
     }
-    if(this.recycling!==_.recycling){
+    if (this.recycling !== _.recycling) {
       return false
     }
-    if(this.arrow_size!==_.arrow_size){
+    if (this.arrow_size !== _.arrow_size) {
       return false
     }
-    if(this.label_position!==_.label_position){
+    if (this.label_position !== _.label_position) {
       return false
     }
-    if(this.orthogonal_label_position!==_.orthogonal_label_position){
+    if (this.orthogonal_label_position !== _.orthogonal_label_position) {
       return false
     }
-    if(this.label_on_path!==_.label_on_path){
+    if (this.label_on_path !== _.label_on_path) {
       return false
     }
-    if(this.label_pos_auto!==_.label_pos_auto){
+    if (this.label_pos_auto !== _.label_pos_auto) {
       return false
     }
-    if(this.arrow!==_.arrow){
+    if (this.arrow !== _.arrow) {
       return false
     }
-    if(this.color!==_.color){
+    if (this.color !== _.color) {
       return false
     }
-    if(this.opacity!==_.opacity){
+    if (this.opacity !== _.opacity) {
       return false
     }
-    if(this.dashed!==_.dashed){
+    if (this.dashed !== _.dashed) {
       return false
     }
-    if(this.label_visible!==_.label_visible){
+    if (this.label_visible !== _.label_visible) {
       return false
     }
-    if(this.label_font_size!==_.label_font_size){
+    if (this.label_font_size !== _.label_font_size) {
       return false
     }
-    if(this.text_color!==_.text_color){
+    if (this.text_color !== _.text_color) {
       return false
     }
-    if(this.to_precision!==_.to_precision){
+    if (this.to_precision !== _.to_precision) {
       return false
     }
-    if(this.scientific_precision!==_.scientific_precision){
+    if (this.scientific_precision !== _.scientific_precision) {
       return false
     }
-    if(this.font_family!==_.font_family){
+    if (this.font_family !== _.font_family) {
       return false
     }
-    if(this.label_unit_visible!==_.label_unit_visible){
+    if (this.label_unit_visible !== _.label_unit_visible) {
       return false
     }
-    if(this.label_unit!==_.label_unit){
+    if (this.label_unit !== _.label_unit) {
       return false
     }
-    if(this.custom_digit!==_.custom_digit){
+    if (this.custom_digit !== _.custom_digit) {
       return false
     }
-    if(this.nb_digit!==_.nb_digit){
+    if (this.nb_digit !== _.nb_digit) {
       return false
     }
 
@@ -285,17 +293,31 @@ export class Class_LinkElement extends Class_Element {
   public isVerticalHorizontal() { return this.orientation === 'hv' }
 
   // Coordinates
-  public getStartingPointX() { return this.source.getPosX()+this.source.width }
-  public getStartingPointY() { return this.source.getPosY()+this.source.height }
-  public getEndingPointX() { return this.target.getPosX()}
-  public getEndingPointY() { return this.target.getPosY()}
+  public getStartingPointX() { return this.getPosX() }
+  public getStartingPointY() { return this.getPosY() }
+  public getEndingPointX() { return this.getPosX() }
+  public getEndingPointY() { return this.getPosY() }
 
-  public get value(){return this._value}
-
-  
+  // Curvature points
+  public getStartingCurvePoint() { return this.starting_curve_point }
+  public setStartingCurvePoint(_: number) {
+    if ((_ > 0) && (_ < this.ending_curve_point)) {
+      this.starting_curve_point = _
+      this.reset()
+    }
+  }
+  public getEndingCurvePoint() {
+    return this.ending_curve_point
+  }
+  public setEndingCurvePoint(_: number) {
+    if ((_ > this.starting_curve_point) && (_ < 1)) {
+      this.ending_curve_point = _
+      this.reset()
+    }
+  }
 
   /**
-   * 
+   *
    * Getter & Setter of class attributes
    */
 
@@ -341,54 +363,45 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_NodeElementElement
    */
   private drawShape() {
-    const d3_path = this.d3_selection?.append('path')
+    this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
-    // .attr('d', '')
-    if (this.useStrokeWidth()) {
-      d3_path?.attr('fill', 'black')
-        .attr('stroke', this.color)
-        .attr('stroke-opacity', this.opacity)
-        .attr('stroke-width', this.thickness)
-    }
-    else {
-      d3_path?.attr('fill', 'none')
-        .attr('stroke', this.color)
-        .attr('stroke-opacity', this.opacity)
-        .attr('stroke-width', this.thickness)
-      // TODO apply opacity and other attributes
-    }
+      .attr('fill', 'none')
+      .attr('stroke', this.color)
+      .attr('stroke-opacity', this.opacity)
+      .attr('stroke-width', this.thickness)
+    // TODO apply opacity and other attributes
   }
 
   private getBezierPath() {
     // Get starting and ending position per type of shape
     let x0, y0
-    let x5, y5
+    let x6, y6
     if (this.isHorizontal() || this.isHorizontalVertical()) {
-      x0 = this.getStartingPointX()
-      y0 = this.getStartingPointY() + this.thickness / 2
+      x0 = 0
+      y0 = 0 + this.thickness / 2
     }
     else {
       x0 = 0 + this.thickness / 2
       y0 = 0
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x5 = this.getShapeWidth()
-      y5 = this.getShapeHeight() + this.thickness / 2
+      x6 = this.getShapeWidth()
+      y6 = this.getShapeHeight() + this.thickness / 2
     }
     else {
-      x5 = this.getShapeWidth() - this.thickness / 2
-      y5 = this.getShapeHeight()
+      x6 = this.getShapeWidth() - this.thickness / 2
+      y6 = this.getShapeHeight()
     }
 
     // Shifts
-    const starting_shift = this.getLenght() * this.left_horiz_shift
-    const ending_shift = this.getLenght() * (1 - this.right_horiz_shift)
-    const horizontal_direction = Math.sign(x5 - x0) // +1 / -1
-    const vertical_direction = Math.sign(y5 - y0) // +1 / -1
+    const starting_shift = this.getLenght() * this.starting_curve_point
+    const ending_shift = this.getLenght() * (1 - this.ending_curve_point)
+    const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
+    const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
-    // First curve point
+    // Starting curve point
     let x1, y1
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x1 = x0 + horizontal_direction * starting_shift
@@ -399,488 +412,382 @@ export class Class_LinkElement extends Class_Element {
       y1 = y0 + vertical_direction * starting_shift
     }
 
-    // Second curve point
-    let x4, y4
+    // Ending curve point
+    let x5, y5
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x4 = x5 - horizontal_direction * ending_shift
-      y4 = y5
+      x5 = x6 - horizontal_direction * ending_shift
+      y5 = y6
     }
     else {
-      x4 = x5
-      y4 = y5 - vertical_direction * ending_shift
+      x5 = x6
+      y5 = y6 - vertical_direction * ending_shift
     }
+
+    // Center point
+    // TODO gerer cas non vertical ou horizontal
+    const x3 = (x1 + x5) / 2
+    const y3 = (y1 + y5) / 2
 
     // Bezier control points
     // Line ((x1, y1); (x2, y2)) is first tangeant
-    // Line ((x3, y3); (x4, y4)) is second tangeant
+    // Line ((x4, y4); (x5, y5)) is second tangeant
     let x2, y2
-    let x3, y3
+    let x4, y4
     if (this.isHorizontal() || this.isHorizontalVertical()) {
-      x2 = x1 + (x5 - x0) * this.center_curve_point
+      x2 = x1 + (x5 - x1) * this.starting_tagent_lenght
       y2 = y1
     }
     else {
       x2 = x1
-      y2 = y1 + (y5 - y0) * this.center_curve_point //+ 1
+      y2 = y1 + (y5 - y1) * this.starting_tagent_lenght
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x3 = x2
-      y3 = y4
+      x4 = x5 + (x1 - x5) * this.ending_tagent_lenght
+      y4 = y5
     }
     else {
-      x3 = x4
-      y3 = y2
+      x4 = x5
+      y4 = y5 + (y1 - y5) * this.starting_tagent_lenght
     }
 
-    // Write paths
-    if (this.useStrokeWidth()) {
-      // Return paths
-      if (!this.curved) {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' L ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-      }
-      else {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-      }
-    }else {
-      // Adapt coordinates
-      let x0_1, y0_1
-      let x0_2, y0_2
-      let x1_1, y1_1
-      let x1_2, y1_2
-      let x2_1, y2_1
-      let x2_2, y2_2
-      let x3_1, y3_1
-      let x3_2, y3_2
-      let x4_1, y4_1
-      let x4_2, y4_2
-      let x5_1, y5_1
-      let x5_2, y5_2
-      // Start side
+    // Return paths
+    if (!this.curved) {
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' L ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
+    }
+    else {
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+        + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
+    }
+  }
+
+
+  public getShapeWidth() {
+    const source_x = this.source.getPosX()
+    const target_x = this.target.getPosX()
+    if (source_x <= target_x) {
+      return target_x - this.getPosX()
+    }
+    else {
+      return this.getPosX() - target_x - this.target.width
+    }
+  }
+  public setShapeWidth(_: number) { /* Does nothing */ }
+  public getShapeHeight() {
+    const source_y = this.source.getPosY()
+    const target_y = this.target.getPosY()
+    if (source_y <= target_y) {
+      return target_y - this.getPosY()
+    }
+    else {
+      return this.getPosY() - target_y - this.target.height
+    }
+  }
+  public setShapeHeight(_: number) { /* Does nothing */ }
+
+  public getPosX() {
+    const source_x = this.source.getPosX()
+    const target_x = this.target.getPosX()
+    if (source_x <= target_x) {
+      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
       if (this.isHorizontal() || this.isHorizontalVertical()) {
-        x0_1 = x0
-        y0_1 = y0 - this.thickness / 2
-        x0_2 = x0
-        y0_2 = y0 + this.thickness / 2
-        x1_1 = x1
-        y1_1 = y1 - this.thickness / 2
-        x1_2 = x1
-        y1_2 = y1 + this.thickness / 2
-        x2_1 = x2 - horizontal_direction * this.thickness / (2 * Math.sqrt(2))
-        y2_1 = y2 - this.thickness / 2
-        x2_2 = x2 - horizontal_direction * this.thickness / (2 * Math.sqrt(2))
-        y2_2 = y2 + this.thickness / 2
+        dx = this.source.width
       }
-      else {
-        x0_1 = x0 + this.thickness / 2
-        y0_1 = y0
-        x0_2 = x0 - this.thickness / 2
-        y0_2 = y0
-        x1_1 = x1 + this.thickness / 2
-        y1_1 = y1
-        x1_2 = x1 - this.thickness / 2
-        y1_2 = y1
-        x2_1 = x2 + this.thickness / 2
-        y2_1 = y2 - vertical_direction * this.thickness / (2 * Math.sqrt(2))
-        x2_2 = x2 - this.thickness / 2
-        y2_2 = y2 + vertical_direction * this.thickness / (2 * Math.sqrt(2))
-      }
-      // End side
-      if (this.isHorizontal() || this.isVerticalHorizontal()) {
-        x3_1 = x2_1
-        y3_1 = y3 - this.thickness / 2
-        x3_2 = x2_2
-        y3_2 = y3 + this.thickness / 2
-        x4_1 = x4
-        y4_1 = y4 - this.thickness / 2
-        x4_2 = x4
-        y4_2 = y4 + this.thickness / 2
-        x5_1 = x5
-        y5_1 = y5 - this.thickness / 2
-        x5_2 = x5
-        y5_2 = y5 + this.thickness / 2
-      }
-      else {
-        x3_1 = x3 + this.thickness / 2
-        y3_1 = y2_1
-        x3_2 = x3 - this.thickness / 2
-        y3_2 = y2_2
-        x4_1 = x4 + this.thickness / 2
-        y4_1 = y4
-        x4_2 = x4 - this.thickness / 2
-        y4_2 = y4
-        x5_1 = x5 + this.thickness / 2
-        y5_1 = y5
-        x5_2 = x5 - this.thickness / 2
-        y5_2 = y5
-      }
-      // Write path
-      if (!this.curved) {
-        return 'M ' + x0_1 + ',' + y0_1
-          + ' L ' + x1_1 + ',' + y1_1
-          + ' L ' + x4_1 + ',' + y4_1
-          + ' L ' + x5_1 + ',' + y5_1
-          + ' L ' + x5_2 + ',' + y5_2
-          + ' L ' + x4_2 + ',' + y4_2
-          + ' L ' + x1_2 + ',' + y1_2
-          + ' L ' + x0_2 + ',' + y0_2
-          + ' Z '
-      }
-      else {
-        return 'M ' + x0_1 + ',' + y0_1
-          + ' L ' + x1_1 + ',' + y1_1
-          + ' C ' + x2_1 + ',' + y2_1 + ' ' + x3_1 + ',' + y3_1 + ' ' + x4_1 + ',' + y4_1
-          + ' L ' + x5_1 + ',' + y5_1
-          + ' L ' + x5_2 + ',' + y5_2
-          + ' L ' + x4_2 + ',' + y4_2
-          + ' C ' + x3_2 + ',' + y3_2 + ' ' + x2_2 + ',' + y2_2 + ' ' + x1_2 + ',' + y1_2
-          + ' L ' + x0_2 + ',' + y0_2
-          + 'Z'
-      }
+      return source_x + dx
+    }
+    else {
+      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      return source_x + dx
     }
   }
+  public setPosX(_: number) { /* Does nothing */ }
+  public getPosY() {
+    const source_y = this.source.getPosY()
+    const target_y = this.target.getPosY()
+    if (source_y <= target_y) {
+      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
+      if (this.isVertical() || this.isVerticalHorizontal()) {
+        dy = this.source.height
 
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_NodeElement
-   */
-  protected eventSimpleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Get related drawing area
-    event.preventDefault()
-    const drawing_area = this.getDrawingArea()
-    // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()) {
-      // Purge selection list
-      drawing_area.purgeSelection()
-      // Close all menus
-      drawing_area.application_data.closeAllMenus()
+      }
+      return source_y + dy
     }
-    // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode()) {
-      // ALT
-      if (event.altKey) {
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Show tooltip
-        // this.showTooltip()
-      }
-      // SHIFT
-      else if (event.shiftKey) {
-        // Add link to selection
-        drawing_area.addLinkToSelection(this)
-        
-        // Open related menu
-        this.menu_config.OpenConfigMenu()
-        this.menu_config.OpenConfigMenuElements()
-        this.menu_config.OpenConfigMenuElementsLinks()
-
-        // Update components related to link edition
-        this.menu_config.updateMenuEditionLink()
-
-      }
-      // OTHERS
-      else {
-        // NO CTRL - purge
-        if (!event.ctrlKey) {
-          // Purge selection list
-          drawing_area.purgeSelection()
-        }
-        // Add link to selection
-        drawing_area.addLinkToSelection(this)
-      }
+    else {
+      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      return source_y + dy
     }
   }
-
-  protected getShapeWidth() {
-    return this.target.getPosX()
-  }
-  protected getShapeHeight() {
-    return this.target.getPosY()
-  }
-  /**
-   * Do we draw link element using stroke
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  private useStrokeWidth() {
-    return (this.thickness <= 10)
-  }
-
+  public setPosY(_: number) { /* Does nothing */ }
+  public setPosXY(_: number, __: number) { /* Does nothing */ }
 
   // ==========Setter & Getter of link attribute/style=====================
-  public get orientation(){
-    if(this.display.local.orientation!==undefined){
+  public get orientation() {
+    if (this.display.local.orientation !== undefined) {
       return this.display.local.orientation
-    }else if(this.display.style.orientation!==undefined){
+    } else if (this.display.style.orientation !== undefined) {
       return this.display.style.orientation
     }
     return ''
   }
-  public set orientation(_:string){this.orientation=_}
+  public set orientation(_: string) { this.orientation = _ }
 
-  public get left_horiz_shift(){
-    if(this.display.local.left_horiz_shift!==undefined){
+  public get left_horiz_shift() {
+    if (this.display.local.left_horiz_shift !== undefined) {
       return this.display.local.left_horiz_shift
-    }else if(this.display.style.left_horiz_shift!==undefined){
+    } else if (this.display.style.left_horiz_shift !== undefined) {
       return this.display.style.left_horiz_shift
     }
     return 0
   }
-  public set left_horiz_shift(_:number){this.left_horiz_shift=_}
+  public set left_horiz_shift(_: number) { this.left_horiz_shift = _ }
 
-  public get right_horiz_shift(){
-    if(this.display.local.right_horiz_shift!==undefined){
+  public get right_horiz_shift() {
+    if (this.display.local.right_horiz_shift !== undefined) {
       return this.display.local.right_horiz_shift
-    }else if(this.display.style.right_horiz_shift!==undefined){
+    } else if (this.display.style.right_horiz_shift !== undefined) {
       return this.display.style.right_horiz_shift
     }
     return 0
   }
-  public set right_horiz_shift(_:number){this.right_horiz_shift=_}
+  public set right_horiz_shift(_: number) { this.right_horiz_shift = _ }
 
-  public get vert_shift(){
-    if(this.display.local.vert_shift!==undefined){
+  public get vert_shift() {
+    if (this.display.local.vert_shift !== undefined) {
       return this.display.local.vert_shift
-    }else if(this.display.style.vert_shift!==undefined){
+    } else if (this.display.style.vert_shift !== undefined) {
       return this.display.style.vert_shift
     }
     return 0
   }
-  public set vert_shift(_:number){this.vert_shift=_}
+  public set vert_shift(_: number) { this.vert_shift = _ }
 
-  public get curvature(){
-    if(this.display.local.curvature!==undefined){
+  public get curvature() {
+    if (this.display.local.curvature !== undefined) {
       return this.display.local.curvature
-    }else if(this.display.style.curvature!==undefined){
+    } else if (this.display.style.curvature !== undefined) {
       return this.display.style.curvature
     }
     return 0
   }
-  public set curvature(_:number){this.curvature=_}
+  public set curvature(_: number) { this.curvature = _ }
 
-  public get curved(){
-    if(this.display.local.curved!==undefined){
+  public get curved() {
+    if (this.display.local.curved !== undefined) {
       return this.display.local.curved
-    }else if(this.display.style.curved!==undefined){
+    } else if (this.display.style.curved !== undefined) {
       return this.display.style.curved
     }
     return false
   }
-  public set curved(_:boolean){this.curved=_}
+  public set curved(_: boolean) { this.curved = _ }
 
-  public get recycling(){
-    if(this.display.local.recycling!==undefined){
+  public get recycling() {
+    if (this.display.local.recycling !== undefined) {
       return this.display.local.recycling
-    }else if(this.display.style.recycling!==undefined){
+    } else if (this.display.style.recycling !== undefined) {
       return this.display.style.recycling
     }
     return false
   }
-  public set recycling(_:boolean){this.recycling=_}
+  public set recycling(_: boolean) { this.recycling = _ }
 
-  public get arrow_size(){
-    if(this.display.local.arrow_size!==undefined){
+  public get arrow_size() {
+    if (this.display.local.arrow_size !== undefined) {
       return this.display.local.arrow_size
-    }else if(this.display.style.arrow_size!==undefined){
+    } else if (this.display.style.arrow_size !== undefined) {
       return this.display.style.arrow_size
     }
     return 0
   }
-  public set arrow_size(_:number){this.arrow_size=_}
+  public set arrow_size(_: number) { this.arrow_size = _ }
 
-  public get label_position(){
-    if(this.display.local.label_position!==undefined){
+  public get label_position() {
+    if (this.display.local.label_position !== undefined) {
       return this.display.local.label_position
-    }else if(this.display.style.label_position!==undefined){
+    } else if (this.display.style.label_position !== undefined) {
       return this.display.style.label_position
     }
     return ''
   }
-  public set label_position(_:string){this.label_position=_}
+  public set label_position(_: string) { this.label_position = _ }
 
-  public get orthogonal_label_position(){
-    if(this.display.local.orthogonal_label_position!==undefined){
+  public get orthogonal_label_position() {
+    if (this.display.local.orthogonal_label_position !== undefined) {
       return this.display.local.orthogonal_label_position
-    }else if(this.display.style.orthogonal_label_position!==undefined){
+    } else if (this.display.style.orthogonal_label_position !== undefined) {
       return this.display.style.orthogonal_label_position
     }
     return ''
   }
-  public set orthogonal_label_position(_:string){this.orthogonal_label_position=_}
+  public set orthogonal_label_position(_: string) { this.orthogonal_label_position = _ }
 
-  public get label_on_path(){
-    if(this.display.local.label_on_path!==undefined){
+  public get label_on_path() {
+    if (this.display.local.label_on_path !== undefined) {
       return this.display.local.label_on_path
-    }else if(this.display.style.label_on_path!==undefined){
+    } else if (this.display.style.label_on_path !== undefined) {
       return this.display.style.label_on_path
     }
     return false
   }
-  public set label_on_path(_:boolean){this.label_on_path=_}
+  public set label_on_path(_: boolean) { this.label_on_path = _ }
 
-  public get label_pos_auto(){
-    if(this.display.local.label_pos_auto!==undefined){
+  public get label_pos_auto() {
+    if (this.display.local.label_pos_auto !== undefined) {
       return this.display.local.label_pos_auto
-    }else if(this.display.style.label_pos_auto!==undefined){
+    } else if (this.display.style.label_pos_auto !== undefined) {
       return this.display.style.label_pos_auto
     }
     return false
   }
-  public set label_pos_auto(_:boolean){this.label_pos_auto=_}
+  public set label_pos_auto(_: boolean) { this.label_pos_auto = _ }
 
-  public get arrow(){
-    if(this.display.local.arrow!==undefined){
+  public get arrow() {
+    if (this.display.local.arrow !== undefined) {
       return this.display.local.arrow
-    }else if(this.display.style.arrow!==undefined){
+    } else if (this.display.style.arrow !== undefined) {
       return this.display.style.arrow
     }
     return false
   }
-  public set arrow(_:boolean){this.arrow=_}
+  public set arrow(_: boolean) { this.arrow = _ }
 
-  public get color(){
-    if(this.display.local.color!==undefined){
+  public get color() {
+    if (this.display.local.color !== undefined) {
       return this.display.local.color
-    }else if(this.display.style.color!==undefined){
+    } else if (this.display.style.color !== undefined) {
       return this.display.style.color
     }
     return ''
   }
-  public set color(_:string){this.color=_}
+  public set color(_: string) { this.color = _ }
 
-  public get opacity(){
-    if(this.display.local.opacity!==undefined){
+  public get opacity() {
+    if (this.display.local.opacity !== undefined) {
       return this.display.local.opacity
-    }else if(this.display.style.opacity!==undefined){
+    } else if (this.display.style.opacity !== undefined) {
       return this.display.style.opacity
     }
     return 0
   }
-  public set opacity(_:number){this.opacity=_}
+  public set opacity(_: number) { this.opacity = _ }
 
-  public get dashed(){
-    if(this.display.local.dashed!==undefined){
+  public get dashed() {
+    if (this.display.local.dashed !== undefined) {
       return this.display.local.dashed
-    }else if(this.display.style.dashed!==undefined){
+    } else if (this.display.style.dashed !== undefined) {
       return this.display.style.dashed
     }
     return false
   }
-  public set dashed(_:boolean){this.dashed=_}
+  public set dashed(_: boolean) { this.dashed = _ }
 
-  public get label_visible(){
-    if(this.display.local.label_visible!==undefined){
+  public get label_visible() {
+    if (this.display.local.label_visible !== undefined) {
       return this.display.local.label_visible
-    }else if(this.display.style.label_visible!==undefined){
+    } else if (this.display.style.label_visible !== undefined) {
       return this.display.style.label_visible
     }
     return false
   }
-  public set label_visible(_:boolean){this.label_visible=_}
+  public set label_visible(_: boolean) { this.label_visible = _ }
 
-  public get label_font_size(){
-    if(this.display.local.label_font_size!==undefined){
+  public get label_font_size() {
+    if (this.display.local.label_font_size !== undefined) {
       return this.display.local.label_font_size
-    }else if(this.display.style.label_font_size!==undefined){
+    } else if (this.display.style.label_font_size !== undefined) {
       return this.display.style.label_font_size
     }
     return 0
   }
-  public set label_font_size(_:number){this.label_font_size=_}
+  public set label_font_size(_: number) { this.label_font_size = _ }
 
-  public get text_color(){
-    if(this.display.local.text_color!==undefined){
+  public get text_color() {
+    if (this.display.local.text_color !== undefined) {
       return this.display.local.text_color
-    }else if(this.display.style.text_color!==undefined){
+    } else if (this.display.style.text_color !== undefined) {
       return this.display.style.text_color
     }
     return ''
   }
-  public set text_color(_:string){this.text_color=_}
+  public set text_color(_: string) { this.text_color = _ }
 
-  public get to_precision(){
-    if(this.display.local.to_precision!==undefined){
+  public get to_precision() {
+    if (this.display.local.to_precision !== undefined) {
       return this.display.local.to_precision
-    }else if(this.display.style.to_precision!==undefined){
+    } else if (this.display.style.to_precision !== undefined) {
       return this.display.style.to_precision
     }
     return false
   }
-  public set to_precision(_:boolean){this.to_precision=_}
+  public set to_precision(_: boolean) { this.to_precision = _ }
 
-  public get scientific_precision(){
-    if(this.display.local.scientific_precision!==undefined){
+  public get scientific_precision() {
+    if (this.display.local.scientific_precision !== undefined) {
       return this.display.local.scientific_precision
-    }else if(this.display.style.scientific_precision!==undefined){
+    } else if (this.display.style.scientific_precision !== undefined) {
       return this.display.style.scientific_precision
     }
     return 0
   }
-  public set scientific_precision(_:number){this.scientific_precision=_}
+  public set scientific_precision(_: number) { this.scientific_precision = _ }
 
-  public get font_family(){
-    if(this.display.local.font_family!==undefined){
+  public get font_family() {
+    if (this.display.local.font_family !== undefined) {
       return this.display.local.font_family
-    }else if(this.display.style.font_family!==undefined){
+    } else if (this.display.style.font_family !== undefined) {
       return this.display.style.font_family
     }
     return ''
   }
-  public set font_family(_:string){this.font_family=_}
+  public set font_family(_: string) { this.font_family = _ }
 
-  public get label_unit_visible(){
-    if(this.display.local.label_unit_visible!==undefined){
+  public get label_unit_visible() {
+    if (this.display.local.label_unit_visible !== undefined) {
       return this.display.local.label_unit_visible
-    }else if(this.display.style.label_unit_visible!==undefined){
+    } else if (this.display.style.label_unit_visible !== undefined) {
       return this.display.style.label_unit_visible
     }
     return false
   }
-  public set label_unit_visible(_:boolean){this.label_unit_visible=_}
+  public set label_unit_visible(_: boolean) { this.label_unit_visible = _ }
 
-  public get label_unit(){
-    if(this.display.local.label_unit!==undefined){
+  public get label_unit() {
+    if (this.display.local.label_unit !== undefined) {
       return this.display.local.label_unit
-    }else if(this.display.style.label_unit!==undefined){
+    } else if (this.display.style.label_unit !== undefined) {
       return this.display.style.label_unit
     }
     return ''
   }
-  public set label_unit(_:string){this.label_unit=_}
+  public set label_unit(_: string) { this.label_unit = _ }
 
-  public get custom_digit(){
-    if(this.display.local.custom_digit!==undefined){
+  public get custom_digit() {
+    if (this.display.local.custom_digit !== undefined) {
       return this.display.local.custom_digit
-    }else if(this.display.style.custom_digit!==undefined){
+    } else if (this.display.style.custom_digit !== undefined) {
       return this.display.style.custom_digit
     }
     return false
   }
-  public set custom_digit(_:boolean){this.custom_digit=_}
+  public set custom_digit(_: boolean) { this.custom_digit = _ }
 
-  public get nb_digit(){
-    if(this.display.local.nb_digit!==undefined){
+  public get nb_digit() {
+    if (this.display.local.nb_digit !== undefined) {
       return this.display.local.nb_digit
-    }else if(this.display.style.nb_digit!==undefined){
+    } else if (this.display.style.nb_digit !== undefined) {
       return this.display.style.nb_digit
     }
     return 0
   }
-  public set nb_digit(_:number){this.nb_digit=_}
+  public set nb_digit(_: number) { this.nb_digit = _ }
 
 
-  
+
 }
 
 
@@ -1025,38 +932,38 @@ export class Class_LinkElement extends Class_Element {
 
 
 export class Class_LinkAttribute {
-// Geometry link
-  orientation?:string
+  // Geometry link
+  orientation?: string
   left_horiz_shift?: number
   right_horiz_shift?: number
   vert_shift?: number
   curvature?: number
   curved?: boolean
   recycling?: boolean
-  arrow_size?:number
+  arrow_size?: number
 
   // Geometry link labels
-  label_position?:string
-  orthogonal_label_position?:string
-  label_on_path?:boolean
-  label_pos_auto?:boolean
+  label_position?: string
+  orthogonal_label_position?: string
+  label_on_path?: boolean
+  label_pos_auto?: boolean
 
   //Attributes link
-  arrow?:boolean
-  color?:string
-  opacity?:number
+  arrow?: boolean
+  color?: string
+  opacity?: number
   dashed?: boolean
   //Attributes link labels
-  label_visible?:boolean
-  label_font_size?:number
-  text_color?:string
-  to_precision?:boolean
-  scientific_precision?:number
+  label_visible?: boolean
+  label_font_size?: number
+  text_color?: string
+  to_precision?: boolean
+  scientific_precision?: number
   font_family?: string
-  label_unit_visible?:boolean
-  label_unit?:string
-  custom_digit?:boolean
-  nb_digit?:number
+  label_unit_visible?: boolean
+  label_unit?: string
+  custom_digit?: boolean
+  nb_digit?: number
 
 }
 
@@ -1066,36 +973,36 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   constructor() {
     super()
-    this.orientation=default_link_style['orientation']
-    this.left_horiz_shift=default_link_style['left_horiz_shift']
-    this.right_horiz_shift=default_link_style['right_horiz_shift']
-    this.vert_shift=default_link_style['vert_shift']
-    this.curvature=default_link_style['curvature']
-    this.curved=default_link_style['curved']
-    this.recycling=default_link_style['recycling']
-    this.arrow_size=default_link_style['arrow_size']
-    this.label_position=default_link_style['label_position']
-    this.orthogonal_label_position=default_link_style['orthogonal_label_position']
-    this.label_on_path=default_link_style['label_on_path']
-    this.label_pos_auto=default_link_style['label_pos_auto']
-    this.arrow=default_link_style['arrow']
-    this.color=default_link_style['color']
-    this.opacity=default_link_style['opacity']
-    this.dashed=default_link_style['dashed']
-    this.label_visible=default_link_style['label_visible']
-    this.label_font_size=default_link_style['label_font_size']
-    this.text_color=default_link_style['text_color']
-    this.to_precision=default_link_style['to_precision']
-    this.scientific_precision=default_link_style['scientific_precision']
-    this.font_family=default_link_style['font_family']
-    this.label_unit_visible=default_link_style['label_unit_visible']
-    this.label_unit=default_link_style['label_unit']
-    this.custom_digit=default_link_style['custom_digit']
-    this.nb_digit=default_link_style['nb_digit']
+    this.orientation = default_link_style['orientation']
+    this.left_horiz_shift = default_link_style['left_horiz_shift']
+    this.right_horiz_shift = default_link_style['right_horiz_shift']
+    this.vert_shift = default_link_style['vert_shift']
+    this.curvature = default_link_style['curvature']
+    this.curved = default_link_style['curved']
+    this.recycling = default_link_style['recycling']
+    this.arrow_size = default_link_style['arrow_size']
+    this.label_position = default_link_style['label_position']
+    this.orthogonal_label_position = default_link_style['orthogonal_label_position']
+    this.label_on_path = default_link_style['label_on_path']
+    this.label_pos_auto = default_link_style['label_pos_auto']
+    this.arrow = default_link_style['arrow']
+    this.color = default_link_style['color']
+    this.opacity = default_link_style['opacity']
+    this.dashed = default_link_style['dashed']
+    this.label_visible = default_link_style['label_visible']
+    this.label_font_size = default_link_style['label_font_size']
+    this.text_color = default_link_style['text_color']
+    this.to_precision = default_link_style['to_precision']
+    this.scientific_precision = default_link_style['scientific_precision']
+    this.font_family = default_link_style['font_family']
+    this.label_unit_visible = default_link_style['label_unit_visible']
+    this.label_unit = default_link_style['label_unit']
+    this.custom_digit = default_link_style['custom_digit']
+    this.nb_digit = default_link_style['nb_digit']
   }
 }
 
-export type SankeyLinkAttrType ={
+export type SankeyLinkAttrType = {
 
   // Geometry/appearence
   orientation: string,
@@ -1108,29 +1015,29 @@ export type SankeyLinkAttrType ={
   curvature: number,
   curved: boolean,
   recycling: boolean,
-  arrow_size:number,
+  arrow_size: number,
   dashed: boolean,
   // Label
   label_position: string,
   orthogonal_label_position: string,
   label_on_path: boolean,
-  label_pos_auto:boolean,
+  label_pos_auto: boolean,
 
   label_visible: boolean,
   label_font_size: number,
   text_color: string,
-  to_precision:boolean,
-  scientific_precision:number,
+  to_precision: boolean,
+  scientific_precision: number,
   font_family: string,
-  label_unit_visible:boolean,
-  label_unit:string,
-  custom_digit:boolean,
-  nb_digit:number,
+  label_unit_visible: boolean,
+  label_unit: string,
+  custom_digit: boolean,
+  nb_digit: number,
 }
 
-export const default_link_style:SankeyLinkAttrType={
+export const default_link_style: SankeyLinkAttrType = {
   color: defaultElementColor,
-  recycling:false,
+  recycling: false,
   curved: true,
   arrow: true,
   text_color: 'black',
@@ -1139,20 +1046,20 @@ export const default_link_style:SankeyLinkAttrType={
   curvature: 0.5,
   label_visible: true,
   label_on_path: true,
-  label_pos_auto:false,
-  label_font_size:20,
+  label_pos_auto: false,
+  label_font_size: 20,
   orientation: 'hh',
   left_horiz_shift: 0.05,
   right_horiz_shift: 0.95,
   vert_shift: 0,
-  opacity:0.85,
-  to_precision:false,
-  scientific_precision:5,
-  arrow_size:10,
+  opacity: 0.85,
+  to_precision: false,
+  scientific_precision: 5,
+  arrow_size: 10,
   font_family: 'Arial,serif',
-  label_unit_visible:false,
-  label_unit:'',
-  custom_digit:false,
-  nb_digit:0,
-  dashed:false
+  label_unit_visible: false,
+  label_unit: '',
+  custom_digit: false,
+  nb_digit: 0,
+  dashed: false
 }
