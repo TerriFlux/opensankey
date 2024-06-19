@@ -1,39 +1,41 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
-import { Box, Button, TabPanel, Textarea } from '@chakra-ui/react'
+import { Box, Button, TabPanel, Textarea, useBoolean } from '@chakra-ui/react'
 import { OSTooltip } from './SankeyUtils'
 
 export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
+  applicationData,
   applicationContext,
   applicationState,
   ComponentUpdater,
   menu_for_modal
 }) => {
   const { t } = applicationContext
-  const {updateMenuConfigTextNodeTooltip}=ComponentUpdater
-  const { multi_selected_nodes } = applicationState
-  const [ forceUpdate, setForceUpdate ]=useState(false)
-
+  // const { multi_selected_nodes } = applicationState
+  const [ , setForceUpdate ]=useBoolean()
+  const {new_data}=applicationData
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
   let tmp_editor_content_tooltip = editor_content_tooltip
+  const new_nodes_sorted = new_data.drawing_area.sankey_selection.getNameSortedNodes()
+  const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.isSelected())
   let s_tmp_editor_content_changed = false
-  if (multi_selected_nodes.current.length>0) {
-    if (multi_selected_nodes.current[0].tooltip_text !== editor_content_tooltip) {
+  if (new_nodes_sorted_selected.length>0) {
+    if (new_nodes_sorted_selected[0].tooltip_text !== editor_content_tooltip) {
       s_tmp_editor_content_changed = true
     }
   }
   const resetTextEditor=()=>{
-    if (multi_selected_nodes.current.length>0) {
-      if ( typeof multi_selected_nodes.current[0].tooltip_text !== 'undefined' ) {
+    if (new_nodes_sorted_selected.length>0) {
+      if ( typeof new_nodes_sorted_selected[0].tooltip_text !== 'undefined' ) {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
-            inputRef.current.value = multi_selected_nodes.current[0].tooltip_text
+            inputRef.current.value = new_nodes_sorted_selected[0].tooltip_text
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip(multi_selected_nodes.current[0].tooltip_text)
+        sEditorContentNodeTooltip(new_nodes_sorted_selected[0].tooltip_text)
       }else {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
@@ -55,11 +57,10 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
       // Reset state value
       sEditorContentNodeTooltip('')
     }
-    setForceUpdate(!forceUpdate)
+    setForceUpdate.toggle()
 
   }
-
-  updateMenuConfigTextNodeTooltip.current.push(resetTextEditor)
+  new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.push(resetTextEditor)
 
   const content = <Box
     layerStyle='menuconfigpanel_grid'
@@ -105,7 +106,7 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
         variant='menuconfigpanel_option_button_right'
         isDisabled={!s_tmp_editor_content_changed}
         onClick={() => {
-          multi_selected_nodes.current.map(node => node.tooltip_text = tmp_editor_content_tooltip)
+          new_nodes_sorted_selected.map(node => node.tooltip_text = tmp_editor_content_tooltip)
           sEditorContentNodeTooltip(tmp_editor_content_tooltip)
         }}
       >

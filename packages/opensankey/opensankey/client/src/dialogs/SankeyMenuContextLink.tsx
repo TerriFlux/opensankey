@@ -9,6 +9,7 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { AssignLinkLocalAttribute, ReturnValueLink, updateLinkTagValue } from '../configmenus/SankeyUtils'
 import * as d3 from 'd3'
 import { Placement } from 'react-bootstrap/esm/types'
+import { useBoolean } from '@chakra-ui/react'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -26,10 +27,10 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
 })=>{
   const [ contextualised_link, set_contextualised_link] = useState<SankeyLink>()
   contextMenu.ref_setter_contextualised_link.current = set_contextualised_link
-  const [forceUpdate,setForceUpdate]=useState(false)
+  const [,setForceUpdate]=useBoolean()
   const { pointer_pos } = contextMenu
   const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef } = applicationState
-  const { data } = applicationData
+  const { data,new_data} = applicationData
   const { t } = applicationContext
   const {RedrawNodes} = node_function
   const {RedrawLinks} = link_function
@@ -39,10 +40,11 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       return multi_selected_links.current.includes(cast_l)
     }).remove()
     link_function.CreateLinksOnSVG(multi_selected_links.current)
-    ComponentUpdater.updateComponentMenuConfigLink.current()
-    ComponentUpdater.updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
+    new_data.menu_configuration.updateComponentMenuConfigLink.current()
 
-    setForceUpdate(!forceUpdate)
+    new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
+
+    setForceUpdate.toggle()
   }
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -265,7 +267,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       AssignLinkLocalAttribute(l,'label_visible',!context_link_label_visible)
     })
     RedrawLinks(multi_selected_links.current)
-    setForceUpdate(!forceUpdate)
+    setForceUpdate.toggle()
   }} variant='light'>{context_link_label_visible?t('Flux.apparence.hide_link_lab'):t('Flux.apparence.display_link_lab')}</Button>:<></>
 
   const button_open_link_tooltip=contextualised_link!==undefined?<Button onClick={()=>{
@@ -296,7 +298,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               }else{
                 d3.select('.inputValueLink').style('border','#ced4da 1px solid')
               }
-              setForceUpdate(!forceUpdate)
+              setForceUpdate.toggle()
             }
           }
           onBlur={evt=>{

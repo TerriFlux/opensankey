@@ -9,7 +9,7 @@ import {
   Class_Sankey
 } from '../../../types/Sankey'
 import {
-  Class_Node
+  Class_NodeElement
 } from '../../../types/Node'
 import { Class_MenuConfig } from '../../../types/MenuConfig'
 
@@ -18,4 +18,4 @@ export type FType_AddNewNodeToSankey = (
     menu_config: Class_MenuConfig,
     id: string,
     name: string
-) => Class_Node
+) => Class_NodeElement

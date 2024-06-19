@@ -161,8 +161,8 @@ const eventLinkClick=(
   ComponentUpdater:ComponentUpdaterType,
 
 )=>{
+  const {new_data}=applicationData
   const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef}=applicationState
-  const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -269,9 +269,8 @@ const eventLinkClick=(
     }else{
       displayedInputLinkValueSetterRef.current.forEach(setter=>setter(''))
     }
-    updateComponentMenuConfigLink.current()
-    updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
-  }
+    new_data.menu_configuration.updateComponentMenuConfigLink.current()
+    new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.forEach(f=>f())  }
 }
 
 export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
