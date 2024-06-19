@@ -150,8 +150,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const list_links_selected = new_data.drawing_area.sankey_selection.getListAllLinks()
 
   // const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
-  const INITIAL_OPTIONS_LINKS = list_links.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.getId() } })
-  const selected_links = list_links_selected.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.getId() } })
+  const INITIAL_OPTIONS_LINKS = list_links.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.id } })
+  const selected_links = list_links_selected.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.id } })
 
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
@@ -177,7 +177,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
               list_links.forEach(link => {
-                if (new_sel.includes(link.getId())) {
+                if (new_sel.includes(link.id)) {
                   new_data.drawing_area.addLinkToSelection(link)
                 } else {
                   new_data.drawing_area.removeLinkFromSelection(link)
@@ -280,7 +280,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const source_node = nodes[changeEvent.target.value]
       link.source = source_node
       if (link.source === link.target) {
-        // TODO : when a version of AssignLinkValueToCorrectVar is implemented 
+        // TODO : when a version of AssignLinkValueToCorrectVar is implemented
         // with the class system then use it here
 
         // AssignLinkValueToCorrectVar(link,'recycling',true,false)
@@ -333,13 +333,13 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     if (list_links_selected.length > 0) {
       const { nodes } = new_data.drawing_area.sankey
       const link = list_links_selected[0]
-      const previous_node = nodes[link.getId()]
+      const previous_node = nodes[link.id]
       previous_node.input_links.splice(previous_node.input_links.indexOf(list_links_selected[0]), 1)
 
       const target_node = nodes[changeEvent.target.value]
       link.target = target_node
       if (link.source === link.target) {
-        // TODO : when a version of AssignLinkValueToCorrectVar is implemented 
+        // TODO : when a version of AssignLinkValueToCorrectVar is implemented
         // with the class system then use it here
 
         // AssignLinkValueToCorrectVar(link,'recycling',true,false)

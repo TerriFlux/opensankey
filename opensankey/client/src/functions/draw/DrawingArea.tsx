@@ -1,5 +1,5 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
 // Date : 29/05/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
@@ -20,7 +20,7 @@ import {
 } from '../../types/Node'
 
 // Add local constants
-import { default_black_color } from '../../types/Element'
+import { default_black_color } from '../../types/Utils'
 
 /**
  * Draw background for drawing area
@@ -179,7 +179,7 @@ const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
       // tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
       // const new_link = new Class_LinkElement(new_node, tgt_node, drawing_area, menu_config)
       // drawing_area.sankey.addLink(new_link)
-      // new_link.setPosXY(new_node.getPosX(), new_node.getPosY())
+      // new_link.setPosXY(new_node.position_x, new_node.position_y)
       // new_link.setOrientation('hh')
     }
     // SELECTION MODE ===========================================================

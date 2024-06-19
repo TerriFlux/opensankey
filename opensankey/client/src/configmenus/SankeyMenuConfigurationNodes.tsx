@@ -128,14 +128,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const INITIAL_OPTIONS = Object
     .values(new_nodes_sorted)
     .filter(d => (
-      data.displayed_node_selector) ? (d.getId()) : true)
+      data.displayed_node_selector) ? (d.id) : true)
     .map(d => {
-      return { 'label': d.getName(), 'value': d.getId() }
+      return { 'label': d.getName(), 'value': d.id }
     })
 
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
-  const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.getName(), 'value': d.getId() } })
+  const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.getName(), 'value': d.id } })
 
   // Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
@@ -155,7 +155,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
               new_nodes_sorted.forEach(n => {
-                if (new_sel.includes(n.getId())) {
+                if (new_sel.includes(n.id)) {
                   new_data.drawing_area.addNodeToSelection(n)
                 } else {
                   new_data.drawing_area.removeNodeFromSelection(n)

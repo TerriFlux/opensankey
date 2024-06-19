@@ -1,5 +1,5 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
 // Date : 29/05/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
@@ -9,16 +9,21 @@ import * as d3 from 'd3'
 
 // Local types
 import {
-  Class_Element,
   Type_ElementPosition,
   Type_Label,
-  defaultElementColor,
+  default_element_color,
   default_element_position,
   default_label,
-} from './Element'
+} from './Utils'
+import {
+  Class_MenuConfig
+} from './MenuConfig'
 import {
   Class_DrawingArea
 } from './DrawingArea'
+import {
+  Class_Element,
+} from './Element'
 import {
   Class_Tag
 } from './Tag'
@@ -30,33 +35,7 @@ import {
 import {
   PathNodeArrowShape
 } from '../draw/SankeyDrawFunction'
-import { KeysTypeSankeyNodeAttrLocal, SankeyNodeAttrLocal, SankeyNodeStyle, ValuesTypeSankeyNodeAttrLocal } from './Types'
-import { Class_MenuConfig } from './MenuConfig'
 
-
-
-// export class Class_NodeShape extends Class_ElementShape {
-//   // Shape can only be rect | ellipse | arrow
-//   protected type: 'rect' | 'ellipse' | 'arrow'
-//   private width: number
-//   private height: number
-
-
-//   constructor() {
-//     super()
-//     this.type = 'rect'
-//     this.width = 40
-//     this.height = 40
-//   }
-//   public getType(): 'rect' | 'ellipse' | 'arrow' { return this.type }
-//   public setType(value: 'rect' | 'ellipse' | 'arrow') { this.type = value }
-
-//   // public getWidth(): number { return this.width }
-//   // public setWidth(value: number) { this.width = value }
-
-//   // public getHeight(): number { return this.height }
-//   // public setHeight(value: number) { this.height = value }
-// }
 
 /**
  * Class that define a node element and how to interact with it
@@ -65,7 +44,6 @@ import { Class_MenuConfig } from './MenuConfig'
  * @extends {Class_Element}
  */
 export class Class_NodeElement extends Class_Element {
-
 
   // PUBLIC ATTRIBUTES ==================================================================
   // Name
@@ -90,26 +68,25 @@ export class Class_NodeElement extends Class_Element {
   // Tooltips
   tooltip?: Class_Element
   tooltip_text?: string
+
   // PROTECTED ATTRIBUTES ===============================================================
-  // Labels
+  // Name Labels
   // protected name_label: Type_Label = structuredClone(default_label)
   protected name_label_separator: string = ''
 
+  // Value label
   protected value_label: Type_Label = structuredClone(default_label)
-
 
   // Arrows
   protected arrow_angle_factor: number = 10
   protected arrow_angle_direction: string = 'hh'
 
   // Definition of abstract attribut from Class_Element
-  protected display: {
+  protected _display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
-    // shape: Class_NodeShape,
     local: Class_NodeAttribute
     style: Class_NodeAttribute
-
   }
 
   // TODO
@@ -132,21 +109,17 @@ export class Class_NodeElement extends Class_Element {
     name: string,
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
-
   ) {
-    super(id, drawing_area, menu_config, 'g_nodes')
-    // Surcharge with name
+    // Init parent class attributes
+    super(id, menu_config, 'g_nodes')
+    // Init other class attributes
     this.name = name
-
-    // init local class attr
-    this.display = {
+    this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
       style: drawing_area.sankey.node_styles['default'],
       local: new Class_NodeAttribute()
-
     }
-
   }
 
   // PUBLIC METHODS =====================================================================
@@ -160,11 +133,9 @@ export class Class_NodeElement extends Class_Element {
     super.draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_nodes')
-
-    const node_label_font_family = this.font_family
     // Apply styles
     this.d3_selection?.style('display', this.getDisplayValue())
-    this.d3_selection?.style('font-family', node_label_font_family)
+    this.d3_selection?.style('font-family', this.font_family)
     // Draw shape
     this.drawShape()
     // Draw label
@@ -197,7 +168,7 @@ export class Class_NodeElement extends Class_Element {
     // Get drawing scale
     const scale = d3.scaleLinear()
       .range([0, 100])
-      .domain([0, this.getDrawingArea().scale])
+      .domain([0, this.drawing_area.scale])
     // Clean previous shape
     this.d3_selection?.selectAll(' .node_shape').remove()
     // Apply shape value
@@ -252,7 +223,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawLabel() {
-    // Get variable property for node label 
+    // Get variable property for node label
     // Clean previous label
     this.d3_selection?.selectAll('.label').remove()
     // Add name label
@@ -324,7 +295,7 @@ export class Class_NodeElement extends Class_Element {
       // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
       // Add an input to change the name of the node
       // The input appear when we double click on the label
-      if (!this.getDrawingArea().static) {
+      if (!this.drawing_area.static) {
         this.d3_selection?.append('foreignObject')
           .classed('label', true)
           .classed('label_fo_input', true)
@@ -352,48 +323,48 @@ export class Class_NodeElement extends Class_Element {
     // if (HasLinksZero(data,node_element_d3)) {
     //   return 'none'
     // }
-    if (this.getPosType() === 'relative') {
+    if (this.position_type === 'relative') {
       return 'none'
     }
     return 'inline'
   }
 
   public getDisplay() {
-    return this.display
+    return this._display
   }
 
 
 
   public get width() {
     /*
-    TODO : the width depend of the sum of input/output links from top or bottom of the node 
+    TODO : the width depend of the sum of input/output links from top or bottom of the node
     if the sum is superior to node width the use the max of input/output
-    
+
     (to see exemple, look function SetNodeHeight )
-    
+
     */
     return this.min_width
   }
 
   public get height() {
     /*
-    TODO : the height depend of the sum of input/output links from left or right of the node 
+    TODO : the height depend of the sum of input/output links from left or right of the node
     if the sum is superior to node height the use the max of input/output
-    
+
     (to see exemple, look function SetNodeHeight )
-    
+
     */
     return this.min_height
   }
 
   /**
   * Function that return attribute to use when we draw the node
-  * the attribute can either came from local attribute variable if defined 
+  * the attribute can either came from local attribute variable if defined
   * else by default it return the value from his style
   *
   * @private
   * @param {(keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle)} k
-  * @return {ValueOf<SankeyNodeAttrLocal> | ValueOf<SankeyNodeStyle>} 
+  * @return {ValueOf<SankeyNodeAttrLocal> | ValueOf<SankeyNodeStyle>}
   * @memberof Class_Node
   */
   // public getNodeAttribute(k: keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle) {
@@ -411,11 +382,11 @@ export class Class_NodeElement extends Class_Element {
 
   /**
    * Get style key of node
-   * @return {string} 
+   * @return {string}
    * @memberof Class_Node
    */
   public getStyle() {
-    return this.display.style
+    return this._display.style
   }
 
   /**
@@ -423,27 +394,27 @@ export class Class_NodeElement extends Class_Element {
   * @memberof Class_Node
   */
   public set style(new_style: Class_NodeStyle) {
-    this.display.style = new_style
+    this._display.style = new_style
   }
 
 
   /**
   * Set style key of node
-  * 
-  * @return {SankeyNodeAttrLocal | undefined} 
+  *
+  * @return {SankeyNodeAttrLocal | undefined}
   * @memberof Class_Node
   */
   public getLocalAttr() {
-    return this.display.local
+    return this._display.local
   }
 
   /**
   * initialize local nonde attribute
-  * 
+  *
   * @memberof Class_Node
   */
   public initLocalAttr() {
-    this.display.local = {}
+    this._display.local = {}
   }
 
 
@@ -567,12 +538,12 @@ export class Class_NodeElement extends Class_Element {
   public showTooltip() {
     const sankeyTooltip = d3.select('.sankey-tooltip')
     const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
-    const pos_tooltip_y = this.getPosY()
+    const pos_tooltip_y = this.position_y
     const size_browser = window.innerHeight
     // pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
 
     const w_tooltip = Number(sankeyTooltip.style('width').replace('px', ''))
-    const pos_tooltip_x = this.getPosX()
+    const pos_tooltip_x = this.position_x
     const size_browser_w = window.innerWidth
     // pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
     sankeyTooltip
@@ -595,7 +566,7 @@ export class Class_NodeElement extends Class_Element {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Get related drawing area
-    const drawing_area = this.getDrawingArea()
+    const drawing_area = this.drawing_area
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
       // Purge selection list
@@ -653,10 +624,10 @@ export class Class_NodeElement extends Class_Element {
   protected applyPosition() {
     if (this.d3_selection !== null) {
       // Default positions
-      let x = this.getPosX()
-      let y = this.getPosY()
+      let x = this.position_x
+      let y = this.position_y
       // Deal with import / export nodes
-      if (this.getPosType() === 'relative') {
+      if (this.position_type === 'relative') {
         if (this.hasInputLinks()) {
           // Node is export
           const input_link = this.getFirstInputLink()
@@ -670,8 +641,8 @@ export class Class_NodeElement extends Class_Element {
           if (!source_node.shape_visible) {
             return 'translate(0, 0)'
           }
-          x = source_node.getPosX() + this.getPosX()
-          y = source_node.getPosY() + this.getPosY()
+          x = source_node.position_x + this.position_x
+          y = source_node.position_y + this.position_y
         }
         else if (this.hasOutputLinks()) {
           // Node is import
@@ -685,8 +656,8 @@ export class Class_NodeElement extends Class_Element {
           if (!target_node.shape_visible) {
             return 'translate(0,0)'
           }
-          x = target_node.getPosX() + this.getPosX()
-          y = target_node.getPosY() + this.getPosY()
+          x = target_node.position_x + this.position_x
+          y = target_node.position_y + this.position_y
         }
       }
       this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
@@ -695,271 +666,278 @@ export class Class_NodeElement extends Class_Element {
 
 
   public get shape_visible() {
-    if (this.display.local.shape_visible !== undefined) {
-      return this.display.local.shape_visible
-    } else if (this.display.style.shape_visible !== undefined) {
-      return this.display.style.shape_visible
+    if (this._display.local.shape_visible !== undefined) {
+      return this._display.local.shape_visible
+    } else if (this._display.style.shape_visible !== undefined) {
+      return this._display.style.shape_visible
     }
     return false
   }
   public set shape_visible(_: boolean) {
-    this.display.local.shape_visible = _
+    this._display.local.shape_visible = _
   }
 
   public get label_visible() {
-    if (this.display.local.label_visible !== undefined) {
-      return this.display.local.label_visible
-    } else if (this.display.style.label_visible !== undefined) {
-      return this.display.style.label_visible
+    if (this._display.local.label_visible !== undefined) {
+      return this._display.local.label_visible
+    } else if (this._display.style.label_visible !== undefined) {
+      return this._display.style.label_visible
     }
     return false
   }
   public set label_visible(_: boolean) {
-    this.display.local.label_visible = _
+    this._display.local.label_visible = _
   }
   public get min_width() {
-    if (this.display.local.min_width !== undefined) {
-      return this.display.local.min_width
-    } else if (this.display.style.min_width !== undefined) {
-      return this.display.style.min_width
+    if (this._display.local.min_width !== undefined) {
+      return this._display.local.min_width
+    } else if (this._display.style.min_width !== undefined) {
+      return this._display.style.min_width
     }
     return 0
   }
-  public set min_width(_: number) { this.display.local.min_width = _ }
+  public set min_width(_: number) { this._display.local.min_width = _ }
 
   public get min_height() {
-    if (this.display.local.min_height !== undefined) {
-      return this.display.local.min_height
-    } else if (this.display.style.min_height !== undefined) {
-      return this.display.style.min_height
+    if (this._display.local.min_height !== undefined) {
+      return this._display.local.min_height
+    } else if (this._display.style.min_height !== undefined) {
+      return this._display.style.min_height
     }
     return 0
   }
-  public set min_height(_: number) { this.display.local.min_height = _ }
+  public set min_height(_: number) { this._display.local.min_height = _ }
 
   public get color() {
-    if (this.display.local.color !== undefined) {
-      return this.display.local.color
-    } else if (this.display.style.color !== undefined) {
-      return this.display.style.color
+    if (this._display.local.color !== undefined) {
+      return this._display.local.color
+    } else if (this._display.style.color !== undefined) {
+      return this._display.style.color
     }
     return ''
   }
   public set color(_: string) {
-    this.display.local.color = _
+    this._display.local.color = _
   }
 
   public get shape() {
-    if (this.display.local.shape !== undefined) {
-      return this.display.local.shape
-    } else if (this.display.style.shape !== undefined) {
-      return this.display.style.shape
+    if (this._display.local.shape !== undefined) {
+      return this._display.local.shape
+    } else if (this._display.style.shape !== undefined) {
+      return this._display.style.shape
     }
     return 'rect'
   }
   public set shape(_: 'ellipse' | 'rect' | 'arrow') {
-    this.display.local.shape = _
+    this._display.local.shape = _
   }
 
   public get node_arrow_angle_factor() {
-    if (this.display.local.node_arrow_angle_factor !== undefined) {
-      return this.display.local.node_arrow_angle_factor
-    } else if (this.display.style.node_arrow_angle_factor !== undefined) {
-      return this.display.style.node_arrow_angle_factor
+    if (this._display.local.node_arrow_angle_factor !== undefined) {
+      return this._display.local.node_arrow_angle_factor
+    } else if (this._display.style.node_arrow_angle_factor !== undefined) {
+      return this._display.style.node_arrow_angle_factor
     }
     return 0
   }
-  public set node_arrow_angle_factor(_: number) { this.display.local.node_arrow_angle_factor = _ }
+  public set node_arrow_angle_factor(_: number) { this._display.local.node_arrow_angle_factor = _ }
 
   public get node_arrow_angle_direction() {
-    if (this.display.local.node_arrow_angle_direction !== undefined) {
-      return this.display.local.node_arrow_angle_direction
-    } else if (this.display.style.node_arrow_angle_direction !== undefined) {
-      return this.display.style.node_arrow_angle_direction
+    if (this._display.local.node_arrow_angle_direction !== undefined) {
+      return this._display.local.node_arrow_angle_direction
+    } else if (this._display.style.node_arrow_angle_direction !== undefined) {
+      return this._display.style.node_arrow_angle_direction
     }
     return 'right'
   }
   public set node_arrow_angle_direction(_: string) {
-    this.display.local.node_arrow_angle_direction = _
+    this._display.local.node_arrow_angle_direction = _
   }
 
   public get colorSustainable() {
-    if (this.display.local.colorSustainable !== undefined) {
-      return this.display.local.colorSustainable
-    } else if (this.display.style.colorSustainable !== undefined) {
-      return this.display.style.colorSustainable
+    if (this._display.local.colorSustainable !== undefined) {
+      return this._display.local.colorSustainable
+    } else if (this._display.style.colorSustainable !== undefined) {
+      return this._display.style.colorSustainable
     }
     return false
   }
   public set colorSustainable(_: boolean) {
-    this.display.local.colorSustainable = _
+    this._display.local.colorSustainable = _
   }
 
   public get font_family() {
-    if (this.display.local.font_family !== undefined) {
-      return this.display.local.font_family
-    } else if (this.display.style.font_family !== undefined) {
-      return this.display.style.font_family
+    if (this._display.local.font_family !== undefined) {
+      return this._display.local.font_family
+    } else if (this._display.style.font_family !== undefined) {
+      return this._display.style.font_family
     }
     return ''
   }
   public set font_family(_: string) {
-    this.display.local.font_family = _
+    this._display.local.font_family = _
   }
 
   public get font_size() {
-    if (this.display.local.font_size !== undefined) {
-      return this.display.local.font_size
-    } else if (this.display.style.font_size !== undefined) {
-      return this.display.style.font_size
+    if (this._display.local.font_size !== undefined) {
+      return this._display.local.font_size
+    } else if (this._display.style.font_size !== undefined) {
+      return this._display.style.font_size
     }
     return 10
   }
-  public set font_size(_: number) { this.display.local.font_size = _ }
+  public set font_size(_: number) { this._display.local.font_size = _ }
 
   public get uppercase() {
-    if (this.display.local.uppercase !== undefined) {
-      return this.display.local.uppercase
-    } else if (this.display.style.uppercase !== undefined) {
-      return this.display.style.uppercase
+    if (this._display.local.uppercase !== undefined) {
+      return this._display.local.uppercase
+    } else if (this._display.style.uppercase !== undefined) {
+      return this._display.style.uppercase
     }
     return false
   }
   public set uppercase(_: boolean) {
-    this.display.local.uppercase = _
+    this._display.local.uppercase = _
   }
 
   public get bold() {
-    if (this.display.local.bold !== undefined) {
-      return this.display.local.bold
-    } else if (this.display.style.bold !== undefined) {
-      return this.display.style.bold
+    if (this._display.local.bold !== undefined) {
+      return this._display.local.bold
+    } else if (this._display.style.bold !== undefined) {
+      return this._display.style.bold
     }
     return false
   }
   public set bold(_: boolean) {
-    this.display.local.bold = _
+    this._display.local.bold = _
   }
 
   public get italic() {
-    if (this.display.local.italic !== undefined) {
-      return this.display.local.italic
-    } else if (this.display.style.italic !== undefined) {
-      return this.display.style.italic
+    if (this._display.local.italic !== undefined) {
+      return this._display.local.italic
+    } else if (this._display.style.italic !== undefined) {
+      return this._display.style.italic
     }
     return false
   }
   public set italic(_: boolean) {
-    this.display.local.italic = _
+    this._display.local.italic = _
   }
 
   public get label_box_width() {
-    if (this.display.local.label_box_width !== undefined) {
-      return this.display.local.label_box_width
-    } else if (this.display.style.label_box_width !== undefined) {
-      return this.display.style.label_box_width
+    if (this._display.local.label_box_width !== undefined) {
+      return this._display.local.label_box_width
+    } else if (this._display.style.label_box_width !== undefined) {
+      return this._display.style.label_box_width
     }
     return 0
   }
-  public set label_box_width(_: number) { this.display.local.label_box_width = _ }
+  public set label_box_width(_: number) { this._display.local.label_box_width = _ }
 
   public get label_color() {
-    if (this.display.local.label_color !== undefined) {
-      return this.display.local.label_color
-    } else if (this.display.style.label_color !== undefined) {
-      return this.display.style.label_color
+    if (this._display.local.label_color !== undefined) {
+      return this._display.local.label_color
+    } else if (this._display.style.label_color !== undefined) {
+      return this._display.style.label_color
     }
     return false
   }
   public set label_color(_: boolean) {
-    this.display.local.label_color = _
+    this._display.local.label_color = _
   }
 
   public get label_vert() {
-    if (this.display.local.label_vert !== undefined) {
-      return this.display.local.label_vert
-    } else if (this.display.style.label_vert !== undefined) {
-      return this.display.style.label_vert
+    if (this._display.local.label_vert !== undefined) {
+      return this._display.local.label_vert
+    } else if (this._display.style.label_vert !== undefined) {
+      return this._display.style.label_vert
     }
     return ''
   }
   public set label_vert(_: string) {
-    this.display.local.label_vert = _
+    this._display.local.label_vert = _
   }
 
 
   public get label_horiz() {
-    if (this.display.local.label_horiz !== undefined) {
-      return this.display.local.label_horiz
-    } else if (this.display.style.label_horiz !== undefined) {
-      return this.display.style.label_horiz
+    if (this._display.local.label_horiz !== undefined) {
+      return this._display.local.label_horiz
+    } else if (this._display.style.label_horiz !== undefined) {
+      return this._display.style.label_horiz
     }
     return ''
   }
   public set label_horiz(_: string) {
-    this.display.local.label_horiz = _
+    this._display.local.label_horiz = _
   }
 
   public get label_background() {
-    if (this.display.local.label_background !== undefined) {
-      return this.display.local.label_background
-    } else if (this.display.style.label_background !== undefined) {
-      return this.display.style.label_background
+    if (this._display.local.label_background !== undefined) {
+      return this._display.local.label_background
+    } else if (this._display.style.label_background !== undefined) {
+      return this._display.style.label_background
     }
     return false
   }
   public set label_background(_: boolean) {
-    this.display.local.label_background = _
+    this._display.local.label_background = _
   }
   public get show_value() {
-    if (this.display.local.show_value !== undefined) {
-      return this.display.local.show_value
-    } else if (this.display.style.show_value !== undefined) {
-      return this.display.style.show_value
+    if (this._display.local.show_value !== undefined) {
+      return this._display.local.show_value
+    } else if (this._display.style.show_value !== undefined) {
+      return this._display.style.show_value
     }
     return false
   }
   public set show_value(_: boolean) {
-    this.display.local.show_value = _
+    this._display.local.show_value = _
   }
 
   public get label_vert_valeur() {
-    if (this.display.local.label_vert_valeur !== undefined) {
-      return this.display.local.label_vert_valeur
-    } else if (this.display.style.label_vert_valeur !== undefined) {
-      return this.display.style.label_vert_valeur
+    if (this._display.local.label_vert_valeur !== undefined) {
+      return this._display.local.label_vert_valeur
+    } else if (this._display.style.label_vert_valeur !== undefined) {
+      return this._display.style.label_vert_valeur
     }
     return ''
   }
   public set label_vert_valeur(_: string) {
-    this.display.local.label_vert_valeur = _
+    this._display.local.label_vert_valeur = _
   }
 
   public get label_horiz_valeur() {
-    if (this.display.local.label_horiz_valeur !== undefined) {
-      return this.display.local.label_horiz_valeur
-    } else if (this.display.style.label_horiz_valeur !== undefined) {
-      return this.display.style.label_horiz_valeur
+    if (this._display.local.label_horiz_valeur !== undefined) {
+      return this._display.local.label_horiz_valeur
+    } else if (this._display.style.label_horiz_valeur !== undefined) {
+      return this._display.style.label_horiz_valeur
     }
     return ''
   }
   public set label_horiz_valeur(_: string) {
-    this.display.local.label_horiz_valeur = _
+    this._display.local.label_horiz_valeur = _
   }
 
   public get value_font_size() {
-    if (this.display.local.value_font_size !== undefined) {
-      return this.display.local.value_font_size
-    } else if (this.display.style.value_font_size !== undefined) {
-      return this.display.style.value_font_size
+    if (this._display.local.value_font_size !== undefined) {
+      return this._display.local.value_font_size
+    } else if (this._display.style.value_font_size !== undefined) {
+      return this._display.style.value_font_size
     }
     return 0
   }
   public set value_font_size(_: number) {
-    this.display.local.value_font_size = _
+    this._display.local.value_font_size = _
   }
 }
 
+
+/**
+ * Define all attributes that can be apply to a node
+ *
+ * @export
+ * @class Class_NodeAttribute
+ */
 export class Class_NodeAttribute {
   // idNode?: string
   // name?: string
@@ -992,13 +970,16 @@ export class Class_NodeAttribute {
   label_vert_valeur?: string
   label_horiz_valeur?: string
   value_font_size?: number
-
 }
 
-
-
+/**
+ * Define style for nodes
+ *
+ * @export
+ * @class Class_NodeStyle
+ * @extends {Class_NodeAttribute}
+ */
 export class Class_NodeStyle extends Class_NodeAttribute {
-
   constructor() {
     super()
     this.shape_visible = default_node_style['shape_visible']
@@ -1071,9 +1052,8 @@ export const default_node_style: Type_Node_Style = {
   label_visible: true,
   min_width: 40,
   min_height: 40,
-  color: defaultElementColor,
+  color: default_element_color,
   colorSustainable: false,
-
 
   font_family: 'Cormorant',
   font_size: 14,
@@ -1090,5 +1070,4 @@ export const default_node_style: Type_Node_Style = {
   value_font_size: 14,
   label_box_width: 150,
   label_color: false,
-
 }

@@ -1,5 +1,5 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
 // Date : 29/05/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
@@ -8,32 +8,34 @@
 
 // Local types
 import {
-  Class_Element,
   Type_ElementPosition,
   Type_Label,
-  defaultElementColor,
-  // Type_Shape,
+  default_element_color,
   default_element_position,
-} from './Element'
+} from './Utils'
+import {
+  Class_MenuConfig
+} from './MenuConfig'
 import {
   Class_DrawingArea
 } from './DrawingArea'
-
+import {
+  Class_Element,
+} from './Element'
+import {
+  Class_NodeElement
+} from './Node'
 import {
   Class_Tag
 } from './Tag'
-import { Class_Data } from './Data'
-import { Class_MenuConfig } from './MenuConfig'
-import { Class_NodeElement } from './Node'
 
 // CUSTOM TYPES **************************************************************************
 
 type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 
 
-
-
 // CLASS LINK ELEMENT ********************************************************************
+
 /**
  * Class that define how to display a link element and how to interact with it
  *
@@ -101,39 +103,64 @@ export class Class_LinkElement extends Class_Element {
    */
   private ending_tagent_lenght: number = 0.5
 
+  /**
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
   private _x_label?: number
-  private _y_label?: number
-
-  // Definition of abstract attribut from Class_Element
-  public display: {
-    drawing_area: Class_DrawingArea,
-    position: Type_ElementPosition,
-    local: Class_LinkAttribute,
-    style: Class_LinkStyle
-  }
-
 
   /**
-* Node from which link starts
-*
-* @private
-* @type {Class_NodeElement}
-* @memberof Class_LinkElement
-*/
-  private _source: Class_NodeElement
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  private _y_label?: number
 
+  /**
+  * Node from which link starts
+  * @private
+  * @type {Class_NodeElement}
+  * @memberof Class_LinkElement
+  */
+  private _source: Class_NodeElement
 
   /**
    * Node to which link arrives
-   *
    * @private
    * @type {Class_NodeElement}
    * @memberof Class_LinkElement
    */
   private _target: Class_NodeElement
 
+  /**
+   * Value of link
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
   private _value: number
 
+  // PROTECTED ATTRIBUTES ===============================================================
+  /**
+   * Display attributes for link
+   * @private
+   * @type {{
+   *     drawing_area: Class_DrawingArea,
+  *     position: Type_ElementPosition,
+  *     local: Class_LinkAttribute,
+  *     style: Class_LinkStyle
+  *   }}
+  * @memberof Class_LinkElement
+  */
+ protected _display: {
+   drawing_area: Class_DrawingArea,
+   position: Type_ElementPosition,
+   local: Class_LinkAttribute,
+   style: Class_LinkStyle
+ }
 
   // CONSTRUCTOR ========================================================================
 
@@ -150,28 +177,23 @@ export class Class_LinkElement extends Class_Element {
     menu_config: Class_MenuConfig,
 
   ) {
+    // Init parent class attributes
     super(
       source.id + '-->' + target.id,
-      drawing_area,
       menu_config,
       'g_links')
-    // Override default values
-    // this.display.shape.type = 'path-curved'
-    // this.display.position.type = 'relative'
-    // this.display.position.x = 0
-    // this.display.position.y = 0
-    this.display = {
+      // Init other class attributes
+    this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
       local: new Class_LinkAttribute(),
       style: drawing_area.sankey.flux_styles['default']
     }
     this._value = 10
-
     this._source = source
-    this.source.addOutputLink(this)
+    this._source.addOutputLink(this)
     this._target = target
-    this.target.addInputLink(this)
+    this._target.addInputLink(this)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -293,10 +315,10 @@ export class Class_LinkElement extends Class_Element {
   public isVerticalHorizontal() { return this.orientation === 'hv' }
 
   // Coordinates
-  public getStartingPointX() { return this.getPosX() }
-  public getStartingPointY() { return this.getPosY() }
-  public getEndingPointX() { return this.getPosX() }
-  public getEndingPointY() { return this.getPosY() }
+  public getStartingPointX() { return this.position_x }
+  public getStartingPointY() { return this.position_y }
+  public getEndingPointX() { return this.position_x }
+  public getEndingPointY() { return this.position_y }
 
   // Curvature points
   public getStartingCurvePoint() { return this.starting_curve_point }
@@ -344,7 +366,7 @@ export class Class_LinkElement extends Class_Element {
    */
   protected draw() {
     // Create group
-    const d3_drawing_area = this.getDrawingArea().d3_selection
+    const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
       this.d3_selection = d3_drawing_area.selectAll(' #' + this.svg_group)
         .datum(this)
@@ -468,31 +490,31 @@ export class Class_LinkElement extends Class_Element {
 
 
   public getShapeWidth() {
-    const source_x = this.source.getPosX()
-    const target_x = this.target.getPosX()
+    const source_x = this.source.position_x
+    const target_x = this.target.position_x
     if (source_x <= target_x) {
-      return target_x - this.getPosX()
+      return target_x - this.position_x
     }
     else {
-      return this.getPosX() - target_x - this.target.width
+      return this.position_x - target_x - this.target.width
     }
   }
   public setShapeWidth(_: number) { /* Does nothing */ }
   public getShapeHeight() {
-    const source_y = this.source.getPosY()
-    const target_y = this.target.getPosY()
+    const source_y = this.source.position_y
+    const target_y = this.target.position_y
     if (source_y <= target_y) {
-      return target_y - this.getPosY()
+      return target_y - this.position_y
     }
     else {
-      return this.getPosY() - target_y - this.target.height
+      return this.position_y - target_y - this.target.height
     }
   }
   public setShapeHeight(_: number) { /* Does nothing */ }
 
   public getPosX() {
-    const source_x = this.source.getPosX()
-    const target_x = this.target.getPosX()
+    const source_x = this.source.position_x
+    const target_x = this.target.position_x
     if (source_x <= target_x) {
       let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
       if (this.isHorizontal() || this.isHorizontalVertical()) {
@@ -507,8 +529,8 @@ export class Class_LinkElement extends Class_Element {
   }
   public setPosX(_: number) { /* Does nothing */ }
   public getPosY() {
-    const source_y = this.source.getPosY()
-    const target_y = this.target.getPosY()
+    const source_y = this.source.position_y
+    const target_y = this.target.position_y
     if (source_y <= target_y) {
       let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
       if (this.isVertical() || this.isVerticalHorizontal()) {
@@ -527,260 +549,260 @@ export class Class_LinkElement extends Class_Element {
 
   // ==========Setter & Getter of link attribute/style=====================
   public get orientation() {
-    if (this.display.local.orientation !== undefined) {
-      return this.display.local.orientation
-    } else if (this.display.style.orientation !== undefined) {
-      return this.display.style.orientation
+    if (this._display.local.orientation !== undefined) {
+      return this._display.local.orientation
+    } else if (this._display.style.orientation !== undefined) {
+      return this._display.style.orientation
     }
     return ''
   }
   public set orientation(_: string) { this.orientation = _ }
 
   public get left_horiz_shift() {
-    if (this.display.local.left_horiz_shift !== undefined) {
-      return this.display.local.left_horiz_shift
-    } else if (this.display.style.left_horiz_shift !== undefined) {
-      return this.display.style.left_horiz_shift
+    if (this._display.local.left_horiz_shift !== undefined) {
+      return this._display.local.left_horiz_shift
+    } else if (this._display.style.left_horiz_shift !== undefined) {
+      return this._display.style.left_horiz_shift
     }
     return 0
   }
   public set left_horiz_shift(_: number) { this.left_horiz_shift = _ }
 
   public get right_horiz_shift() {
-    if (this.display.local.right_horiz_shift !== undefined) {
-      return this.display.local.right_horiz_shift
-    } else if (this.display.style.right_horiz_shift !== undefined) {
-      return this.display.style.right_horiz_shift
+    if (this._display.local.right_horiz_shift !== undefined) {
+      return this._display.local.right_horiz_shift
+    } else if (this._display.style.right_horiz_shift !== undefined) {
+      return this._display.style.right_horiz_shift
     }
     return 0
   }
   public set right_horiz_shift(_: number) { this.right_horiz_shift = _ }
 
   public get vert_shift() {
-    if (this.display.local.vert_shift !== undefined) {
-      return this.display.local.vert_shift
-    } else if (this.display.style.vert_shift !== undefined) {
-      return this.display.style.vert_shift
+    if (this._display.local.vert_shift !== undefined) {
+      return this._display.local.vert_shift
+    } else if (this._display.style.vert_shift !== undefined) {
+      return this._display.style.vert_shift
     }
     return 0
   }
   public set vert_shift(_: number) { this.vert_shift = _ }
 
   public get curvature() {
-    if (this.display.local.curvature !== undefined) {
-      return this.display.local.curvature
-    } else if (this.display.style.curvature !== undefined) {
-      return this.display.style.curvature
+    if (this._display.local.curvature !== undefined) {
+      return this._display.local.curvature
+    } else if (this._display.style.curvature !== undefined) {
+      return this._display.style.curvature
     }
     return 0
   }
   public set curvature(_: number) { this.curvature = _ }
 
   public get curved() {
-    if (this.display.local.curved !== undefined) {
-      return this.display.local.curved
-    } else if (this.display.style.curved !== undefined) {
-      return this.display.style.curved
+    if (this._display.local.curved !== undefined) {
+      return this._display.local.curved
+    } else if (this._display.style.curved !== undefined) {
+      return this._display.style.curved
     }
     return false
   }
   public set curved(_: boolean) { this.curved = _ }
 
   public get recycling() {
-    if (this.display.local.recycling !== undefined) {
-      return this.display.local.recycling
-    } else if (this.display.style.recycling !== undefined) {
-      return this.display.style.recycling
+    if (this._display.local.recycling !== undefined) {
+      return this._display.local.recycling
+    } else if (this._display.style.recycling !== undefined) {
+      return this._display.style.recycling
     }
     return false
   }
   public set recycling(_: boolean) { this.recycling = _ }
 
   public get arrow_size() {
-    if (this.display.local.arrow_size !== undefined) {
-      return this.display.local.arrow_size
-    } else if (this.display.style.arrow_size !== undefined) {
-      return this.display.style.arrow_size
+    if (this._display.local.arrow_size !== undefined) {
+      return this._display.local.arrow_size
+    } else if (this._display.style.arrow_size !== undefined) {
+      return this._display.style.arrow_size
     }
     return 0
   }
   public set arrow_size(_: number) { this.arrow_size = _ }
 
   public get label_position() {
-    if (this.display.local.label_position !== undefined) {
-      return this.display.local.label_position
-    } else if (this.display.style.label_position !== undefined) {
-      return this.display.style.label_position
+    if (this._display.local.label_position !== undefined) {
+      return this._display.local.label_position
+    } else if (this._display.style.label_position !== undefined) {
+      return this._display.style.label_position
     }
     return ''
   }
   public set label_position(_: string) { this.label_position = _ }
 
   public get orthogonal_label_position() {
-    if (this.display.local.orthogonal_label_position !== undefined) {
-      return this.display.local.orthogonal_label_position
-    } else if (this.display.style.orthogonal_label_position !== undefined) {
-      return this.display.style.orthogonal_label_position
+    if (this._display.local.orthogonal_label_position !== undefined) {
+      return this._display.local.orthogonal_label_position
+    } else if (this._display.style.orthogonal_label_position !== undefined) {
+      return this._display.style.orthogonal_label_position
     }
     return ''
   }
   public set orthogonal_label_position(_: string) { this.orthogonal_label_position = _ }
 
   public get label_on_path() {
-    if (this.display.local.label_on_path !== undefined) {
-      return this.display.local.label_on_path
-    } else if (this.display.style.label_on_path !== undefined) {
-      return this.display.style.label_on_path
+    if (this._display.local.label_on_path !== undefined) {
+      return this._display.local.label_on_path
+    } else if (this._display.style.label_on_path !== undefined) {
+      return this._display.style.label_on_path
     }
     return false
   }
   public set label_on_path(_: boolean) { this.label_on_path = _ }
 
   public get label_pos_auto() {
-    if (this.display.local.label_pos_auto !== undefined) {
-      return this.display.local.label_pos_auto
-    } else if (this.display.style.label_pos_auto !== undefined) {
-      return this.display.style.label_pos_auto
+    if (this._display.local.label_pos_auto !== undefined) {
+      return this._display.local.label_pos_auto
+    } else if (this._display.style.label_pos_auto !== undefined) {
+      return this._display.style.label_pos_auto
     }
     return false
   }
   public set label_pos_auto(_: boolean) { this.label_pos_auto = _ }
 
   public get arrow() {
-    if (this.display.local.arrow !== undefined) {
-      return this.display.local.arrow
-    } else if (this.display.style.arrow !== undefined) {
-      return this.display.style.arrow
+    if (this._display.local.arrow !== undefined) {
+      return this._display.local.arrow
+    } else if (this._display.style.arrow !== undefined) {
+      return this._display.style.arrow
     }
     return false
   }
   public set arrow(_: boolean) { this.arrow = _ }
 
   public get color() {
-    if (this.display.local.color !== undefined) {
-      return this.display.local.color
-    } else if (this.display.style.color !== undefined) {
-      return this.display.style.color
+    if (this._display.local.color !== undefined) {
+      return this._display.local.color
+    } else if (this._display.style.color !== undefined) {
+      return this._display.style.color
     }
     return ''
   }
   public set color(_: string) { this.color = _ }
 
   public get opacity() {
-    if (this.display.local.opacity !== undefined) {
-      return this.display.local.opacity
-    } else if (this.display.style.opacity !== undefined) {
-      return this.display.style.opacity
+    if (this._display.local.opacity !== undefined) {
+      return this._display.local.opacity
+    } else if (this._display.style.opacity !== undefined) {
+      return this._display.style.opacity
     }
     return 0
   }
   public set opacity(_: number) { this.opacity = _ }
 
   public get dashed() {
-    if (this.display.local.dashed !== undefined) {
-      return this.display.local.dashed
-    } else if (this.display.style.dashed !== undefined) {
-      return this.display.style.dashed
+    if (this._display.local.dashed !== undefined) {
+      return this._display.local.dashed
+    } else if (this._display.style.dashed !== undefined) {
+      return this._display.style.dashed
     }
     return false
   }
   public set dashed(_: boolean) { this.dashed = _ }
 
   public get label_visible() {
-    if (this.display.local.label_visible !== undefined) {
-      return this.display.local.label_visible
-    } else if (this.display.style.label_visible !== undefined) {
-      return this.display.style.label_visible
+    if (this._display.local.label_visible !== undefined) {
+      return this._display.local.label_visible
+    } else if (this._display.style.label_visible !== undefined) {
+      return this._display.style.label_visible
     }
     return false
   }
   public set label_visible(_: boolean) { this.label_visible = _ }
 
   public get label_font_size() {
-    if (this.display.local.label_font_size !== undefined) {
-      return this.display.local.label_font_size
-    } else if (this.display.style.label_font_size !== undefined) {
-      return this.display.style.label_font_size
+    if (this._display.local.label_font_size !== undefined) {
+      return this._display.local.label_font_size
+    } else if (this._display.style.label_font_size !== undefined) {
+      return this._display.style.label_font_size
     }
     return 0
   }
   public set label_font_size(_: number) { this.label_font_size = _ }
 
   public get text_color() {
-    if (this.display.local.text_color !== undefined) {
-      return this.display.local.text_color
-    } else if (this.display.style.text_color !== undefined) {
-      return this.display.style.text_color
+    if (this._display.local.text_color !== undefined) {
+      return this._display.local.text_color
+    } else if (this._display.style.text_color !== undefined) {
+      return this._display.style.text_color
     }
     return ''
   }
   public set text_color(_: string) { this.text_color = _ }
 
   public get to_precision() {
-    if (this.display.local.to_precision !== undefined) {
-      return this.display.local.to_precision
-    } else if (this.display.style.to_precision !== undefined) {
-      return this.display.style.to_precision
+    if (this._display.local.to_precision !== undefined) {
+      return this._display.local.to_precision
+    } else if (this._display.style.to_precision !== undefined) {
+      return this._display.style.to_precision
     }
     return false
   }
   public set to_precision(_: boolean) { this.to_precision = _ }
 
   public get scientific_precision() {
-    if (this.display.local.scientific_precision !== undefined) {
-      return this.display.local.scientific_precision
-    } else if (this.display.style.scientific_precision !== undefined) {
-      return this.display.style.scientific_precision
+    if (this._display.local.scientific_precision !== undefined) {
+      return this._display.local.scientific_precision
+    } else if (this._display.style.scientific_precision !== undefined) {
+      return this._display.style.scientific_precision
     }
     return 0
   }
   public set scientific_precision(_: number) { this.scientific_precision = _ }
 
   public get font_family() {
-    if (this.display.local.font_family !== undefined) {
-      return this.display.local.font_family
-    } else if (this.display.style.font_family !== undefined) {
-      return this.display.style.font_family
+    if (this._display.local.font_family !== undefined) {
+      return this._display.local.font_family
+    } else if (this._display.style.font_family !== undefined) {
+      return this._display.style.font_family
     }
     return ''
   }
   public set font_family(_: string) { this.font_family = _ }
 
   public get label_unit_visible() {
-    if (this.display.local.label_unit_visible !== undefined) {
-      return this.display.local.label_unit_visible
-    } else if (this.display.style.label_unit_visible !== undefined) {
-      return this.display.style.label_unit_visible
+    if (this._display.local.label_unit_visible !== undefined) {
+      return this._display.local.label_unit_visible
+    } else if (this._display.style.label_unit_visible !== undefined) {
+      return this._display.style.label_unit_visible
     }
     return false
   }
   public set label_unit_visible(_: boolean) { this.label_unit_visible = _ }
 
   public get label_unit() {
-    if (this.display.local.label_unit !== undefined) {
-      return this.display.local.label_unit
-    } else if (this.display.style.label_unit !== undefined) {
-      return this.display.style.label_unit
+    if (this._display.local.label_unit !== undefined) {
+      return this._display.local.label_unit
+    } else if (this._display.style.label_unit !== undefined) {
+      return this._display.style.label_unit
     }
     return ''
   }
   public set label_unit(_: string) { this.label_unit = _ }
 
   public get custom_digit() {
-    if (this.display.local.custom_digit !== undefined) {
-      return this.display.local.custom_digit
-    } else if (this.display.style.custom_digit !== undefined) {
-      return this.display.style.custom_digit
+    if (this._display.local.custom_digit !== undefined) {
+      return this._display.local.custom_digit
+    } else if (this._display.style.custom_digit !== undefined) {
+      return this._display.style.custom_digit
     }
     return false
   }
   public set custom_digit(_: boolean) { this.custom_digit = _ }
 
   public get nb_digit() {
-    if (this.display.local.nb_digit !== undefined) {
-      return this.display.local.nb_digit
-    } else if (this.display.style.nb_digit !== undefined) {
-      return this.display.style.nb_digit
+    if (this._display.local.nb_digit !== undefined) {
+      return this._display.local.nb_digit
+    } else if (this._display.style.nb_digit !== undefined) {
+      return this._display.style.nb_digit
     }
     return 0
   }
@@ -870,8 +892,8 @@ export class Class_LinkElement extends Class_Element {
 
 //   // Override positionning
 //   // public getPosX() {
-//   //   const source_x = this.source.getPosX()
-//   //   const target_x = this.target.getPosX()
+//   //   const source_x = this.source.position_x
+//   //   const target_x = this.target.position_x
 //   //   if (source_x <= target_x) {
 //   //     let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
 //   //     if (this.isHorizontal() || this.isHorizontalVertical()) {
@@ -886,8 +908,8 @@ export class Class_LinkElement extends Class_Element {
 //   // }
 //   public setPosX(_: number) { /* Does nothing */ }
 //   // public getPosY() {
-//   //   const source_y = this.source.getPosY()
-//   //   const target_y = this.target.getPosY()
+//   //   const source_y = this.source.position_y
+//   //   const target_y = this.target.position_y
 //   //   if (source_y <= target_y) {
 //   //     let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
 //   //     if (this.isVertical() || this.isVerticalHorizontal()) {
@@ -907,24 +929,24 @@ export class Class_LinkElement extends Class_Element {
 
 //   // Override width & height
 //   // public getShapeWidth() {
-//   //   const source_x = this.source.getPosX()
-//   //   const target_x = this.target.getPosX()
+//   //   const source_x = this.source.position_x
+//   //   const target_x = this.target.position_x
 //   //   if (source_x <= target_x) {
-//   //     return target_x - this.getPosX()
+//   //     return target_x - this.position_x
 //   //   }
 //   //   else {
-//   //     return this.getPosX() - target_x - this.target.getDisplay().shape.getWidth()
+//   //     return this.position_x - target_x - this.target.getDisplay().shape.getWidth()
 //   //   }
 //   // }
 //   // public setShapeWidth(_: number) { /* Does nothing */ }
 //   // public getShapeHeight() {
-//   //   const source_y = this.source.getPosY()
-//   //   const target_y = this.target.getPosY()
+//   //   const source_y = this.source.position_y
+//   //   const target_y = this.target.position_y
 //   //   if (source_y <= target_y) {
-//   //     return target_y - this.getPosY()
+//   //     return target_y - this.position_y
 //   //   }
 //   //   else {
-//   //     return this.getPosY() - target_y - this.target.getDisplay().shape.getHeight()
+//   //     return this.position_y - target_y - this.target.getDisplay().shape.getHeight()
 //   //   }
 //   // }
 //   public setShapeHeight(_: number) { /* Does nothing */ }
@@ -1036,7 +1058,7 @@ export type SankeyLinkAttrType = {
 }
 
 export const default_link_style: SankeyLinkAttrType = {
-  color: defaultElementColor,
+  color: default_element_color,
   recycling: false,
   curved: true,
   arrow: true,
