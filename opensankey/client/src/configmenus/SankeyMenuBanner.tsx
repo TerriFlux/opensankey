@@ -790,14 +790,14 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
           //   applicationData.new_data?.drawing_area.setEditionMode()
           //   // setSelectionMode('ln') // TODO a supprimer
           // }
-        }}
+          }}
         >
           <Col>
             <FontAwesomeIcon icon={(
               applicationData.new_data?.drawing_area.isInEditionMode() ?
                 faShareNodes:
                 faArrowPointer
-              )}
+            )}
             />
           </Col>
         </Button>

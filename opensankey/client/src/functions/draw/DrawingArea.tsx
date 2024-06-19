@@ -14,7 +14,7 @@ import {
   FType_DrawDrawingArea,
   FType_SetDrawingAreaEventsListeners,
   FType_SetDrawingAreaMouseEvent
-} from "./prototypes/DrawingArea"
+} from './prototypes/DrawingArea'
 import {
   Class_Node
 } from '../../types/Node'
@@ -55,7 +55,7 @@ export const drawDrawingAreaGrid: FType_DrawDrawingArea = (
   // Clean if needed
   drawing_area.d3_selection_grid?.selectAll('.line').remove()
   // Draw only if asked OR outside publishing mode
-  if (drawing_area.isGridVisible() && !drawing_area.static ) {
+  if (drawing_area.isGridVisible() && !drawing_area.static) {
     // Draw horizontal lines
     const number_of_horizontal_lines = drawing_area.getHeight() / drawing_area.getGridSize()
     for (let row = 0; row < number_of_horizontal_lines; row++) {
@@ -92,10 +92,11 @@ export const drawDrawingAreaGrid: FType_DrawDrawingArea = (
  */
 export const addNewNodeToDrawingArea: FType_AddNewNodeToDrawingArea = (
   drawing_area,
+  menu_config,
   id,
   name
 ) => {
-  const node = new Class_Node(id, name, drawing_area)
+  const node = new Class_Node(id, name, drawing_area, menu_config)
   drawing_area.sankey.addNode(node)
   return node
 }
@@ -105,8 +106,9 @@ export const addNewNodeToDrawingArea: FType_AddNewNodeToDrawingArea = (
  *
  * @param {*} drawing_area
  */
-export const setDrawingAreaEventsListeners : FType_SetDrawingAreaEventsListeners = (
-  drawing_area
+export const setDrawingAreaEventsListeners: FType_SetDrawingAreaEventsListeners = (
+  drawing_area,
+  menu_config
 ) => {
   if (
     !drawing_area.static &&
@@ -116,39 +118,39 @@ export const setDrawingAreaEventsListeners : FType_SetDrawingAreaEventsListeners
     drawing_area.d3_selection.on(
       'click',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaSimpleLMBCLick(drawing_area, event))
+        eventDrawingAreaSimpleLMBCLick(drawing_area, menu_config, event))
     drawing_area.d3_selection?.on(
       'dblclick',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaDoubleLMBCLick(drawing_area, event))
+        eventDrawingAreaDoubleLMBCLick(drawing_area, menu_config, event))
     // Right mouse button maintained
     drawing_area.d3_selection.on(
       'mousedown',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaMaintainedClick(drawing_area, event))
+        eventDrawingAreaMaintainedClick(drawing_area, menu_config, event))
     drawing_area.d3_selection.on(
       'mouseup',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaReleasedClick(drawing_area, event))
+        eventDrawingAreaReleasedClick(drawing_area, menu_config, event))
     // Mouse cursor goes over element
     drawing_area.d3_selection.on(
       'mouseover',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaMouseOver(drawing_area, event))
+        eventDrawingAreaMouseOver(drawing_area, menu_config, event))
     drawing_area.d3_selection.on(
       'mouseout',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaMouseOut(drawing_area, event))
+        eventDrawingAreaMouseOut(drawing_area, menu_config, event))
     // Mouse cursor move
     drawing_area.d3_selection.on(
       'mousemove',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaMouseMove(drawing_area, event))
+        eventDrawingAreaMouseMove(drawing_area, menu_config, event))
     // Left mouse button click
     drawing_area.d3_selection.on(
       'contextmenu',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        eventDrawingAreaSimpleRMBCLick(drawing_area, event))
+        eventDrawingAreaSimpleRMBCLick(drawing_area, menu_config, event))
   }
 }
 
@@ -160,6 +162,7 @@ export const setDrawingAreaEventsListeners : FType_SetDrawingAreaEventsListeners
  */
 const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
   drawing_area,
+  menu_config,
   event
 ) => {
   if (drawing_area.eventsEnabled()) {
@@ -171,9 +174,9 @@ const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
       const mouse_position = d3.pointer(event)
       new_node.setPosXY(mouse_position[0], mouse_position[1])
       // TODO remove test
-      const tgt_node = new Class_Node('target', 'Target', drawing_area)
+      const tgt_node = new Class_Node('target', 'Target', drawing_area, menu_config)
       tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
-      const new_link = new Class_Link(new_node, tgt_node, drawing_area)
+      const new_link = new Class_Link(new_node, tgt_node, drawing_area, menu_config)
       new_link.setPosXY(new_node.getPosX(), new_node.getPosY())
       new_link.setOrientation('hh')
     }

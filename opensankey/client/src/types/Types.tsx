@@ -46,6 +46,9 @@ export type SankeyNodeAttrLocal ={
   label_horiz_valeur?: string,
   value_font_size?: number,
 }
+type ValueOf<T> = T[keyof T];
+export type KeysTypeSankeyNodeAttrLocal=keyof SankeyNodeAttrLocal
+export type ValuesTypeSankeyNodeAttrLocal=ValueOf<SankeyNodeAttrLocal>
 
 // Same as Local node attribute but with required value as now style attributes is the default attributes of node
 export type SankeyNodeStyle ={
@@ -515,7 +518,7 @@ export type applicationDataType = {
   min_link_thickness:number,
   dataVarToUpdate:MutableRefObject<string[]>,
   setDiagram:setDiagramFuncType,
-  new_data?: Class_ApplicationData
+  new_data: Class_ApplicationData
 }
 export type initializeApplicationDataType = (
   data:SankeyData,
