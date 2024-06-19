@@ -145,9 +145,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
   delete tags_selected['n']
 
-  const list_nodes = new_data.drawing_area.sankey.getListAllNodes()
-  const list_links = new_data.drawing_area.sankey.getListAllLinks()
-  const list_links_selected = new_data.drawing_area.sankey_selection.getListAllLinks()
+  const list_nodes = new_data.drawing_area.sankey.nodes_list
+  const list_links = new_data.drawing_area.sankey.links_list
+  const list_links_selected = new_data.drawing_area.selected_links_list
 
   // const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const INITIAL_OPTIONS_LINKS = list_links.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.id } })
@@ -259,7 +259,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     const n_link=new Class_LinkElement(node_src,node_trgt,new_data.drawing_area,new_data.menu_configuration)
     new_data.drawing_area.sankey.addLink(n_link)
-    new_data.drawing_area.sankey_selection.addLink(n_link)
+    new_data.drawing_area.addLinkToSelection(n_link)
     console.log(n_link)
     n_link.reset()
     setForceUpdate.toggle()
@@ -271,8 +271,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   //Change the source of selected link
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     if (list_links_selected.length > 0) {
-      const { nodes } = new_data.drawing_area.sankey
+      const nodes = new_data.drawing_area.sankey.nodes_dict
       const link = list_links_selected[0]
+
       //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
       const previous_node = link.source
       previous_node.output_links.splice(previous_node.output_links.indexOf(link), 1)
@@ -331,7 +332,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   //Change the target of selected link
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     if (list_links_selected.length > 0) {
-      const { nodes } = new_data.drawing_area.sankey
+      const nodes = new_data.drawing_area.sankey.nodes_dict
       const link = list_links_selected[0]
       const previous_node = nodes[link.id]
       previous_node.input_links.splice(previous_node.input_links.indexOf(list_links_selected[0]), 1)

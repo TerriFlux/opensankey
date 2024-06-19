@@ -217,6 +217,12 @@ export class Class_DrawingArea {
   // Sankey
   public get sankey() { return this._sankey }
 
+  // Selections
+  public get selected_nodes_list() { return this._sankey_selection.nodes_list }
+  public get selected_nodes_list_sorted() { return this._sankey_selection.nodes_list_sorted }
+  public get selected_links_list() { return this._sankey_selection.links_list }
+  public get selected_links_list_sorted() { return this._sankey_selection.links_list_sorted }
+
   // Size
   public getWidth() { return this._width }
   public setWidth(_: number) { this._width = _; this.drawElements() }
@@ -261,13 +267,13 @@ export class Class_DrawingArea {
   public eventsEnabled() {
     // Deal with node events in priority
     let node_id: string
-    for (node_id in this.sankey.nodes) {
-      if (this.sankey.nodes[node_id].isMouseOver())
+    for (node_id in this.sankey.nodes_dict) {
+      if (this.sankey.nodes_dict[node_id].isMouseOver())
         return false
     }
     // Deal with link events
-    for (const link_id in this.sankey.links) {
-      if (this.sankey.links[link_id].isMouseOver())
+    for (const link_id in this.sankey.links_dict) {
+      if (this.sankey.links_dict[link_id].isMouseOver())
         return false
     }
     // Ok event
@@ -295,10 +301,10 @@ export class Class_DrawingArea {
    */
   public purgeSelection() {
     // Unselect all nodes
-    Object.values(this._sankey_selection.nodes)
+    Object.values(this._sankey_selection.nodes_list)
       .forEach((node) => node.setUnSelected())
       // Unselect all links
-    Object.values(this._sankey_selection.links)
+    Object.values(this._sankey_selection.links_list)
       .forEach((link) => link.setUnSelected())
     // TODO Unselect other things
     // Reset selection
