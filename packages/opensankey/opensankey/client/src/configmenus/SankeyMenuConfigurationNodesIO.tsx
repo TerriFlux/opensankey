@@ -13,6 +13,7 @@ import {
   Th,
   Thead,
   Tr,
+  useBoolean,
 } from '@chakra-ui/react'
 
 import { LinkVisible, LinkColor, ReturnValueLink, OSTooltip } from './SankeyUtils'
@@ -183,8 +184,7 @@ const handleUpLinkIOPos=(
   io:string,
   GetLinkValue:GetLinkValueFuncType,
   link_function:LinkFunctionTypes,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
-  forceUpdate:boolean
+  setForceUpdate:{ on: () => void; off: () => void; toggle: () => void; },
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
@@ -266,7 +266,7 @@ const handleUpLinkIOPos=(
     }
   }
   link_function.RedrawLinks(link_io.map(lid=>data.links[lid]))
-  setForceUpdate(!forceUpdate)
+  setForceUpdate.toggle()
 }
 
 
@@ -286,8 +286,7 @@ const handleDownLinkIOPos=(
   io:string,
   GetLinkValue:GetLinkValueFuncType,
   link_function:LinkFunctionTypes,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
-  forceUpdate:boolean
+  setForceUpdate:{ on: () => void; off: () => void; toggle: () => void; },
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
@@ -371,7 +370,7 @@ const handleDownLinkIOPos=(
   }
 
   link_function.RedrawLinks(link_io.map(lid=>data.links[lid]))
-  setForceUpdate(!forceUpdate)
+  setForceUpdate.toggle()
 }
 
 
@@ -409,8 +408,7 @@ const tab_pos_link=(
   pos:string,io:string,tab_colored:boolean,
   GetLinkValue:GetLinkValueFuncType,
   link_function:LinkFunctionTypes,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
-  forceUpdate:boolean
+  setForceUpdate:{ on: () => void; off: () => void; toggle: () => void; },
 )=>{
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
   return (
@@ -454,7 +452,6 @@ const tab_pos_link=(
                             GetLinkValue,
                             link_function,
                             setForceUpdate,
-                            forceUpdate
                           )
                         }
                       >
@@ -474,7 +471,6 @@ const tab_pos_link=(
                             GetLinkValue,
                             link_function,
                             setForceUpdate,
-                            forceUpdate
                           )
                         }
                       >
@@ -503,13 +499,12 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   menu_for_modal
 }) => {
   const { t } = applicationContext
-  const { data, display_nodes, display_links } = applicationData
+  const { data, display_nodes, display_links,new_data } = applicationData
   const { multi_selected_nodes, multi_selected_links } = applicationState
-  const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const [ link_io, set_link_io ] = useState('output')
   const [ link_pos, set_link_pos ] = useState('right')
   const [ tab_colored, set_tab_colored ] = useState(false)
-  const [ forceUpdate, setForceUpdate ] = useState(false)
+  const [ , setForceUpdate ] = useBoolean()
 
 
   let has_input_links = false
@@ -567,7 +562,8 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
       }
     }
   }
-  updateComponentMenuNodeIOSelectSideNode.current.push(updateDefaultNodeIO)
+  new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.push(setForceUpdate.toggle)
+
 
   const content_reorg=<Box
     layerStyle='menuconfigpanel_grid'
@@ -593,7 +589,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           node_function.RedrawNodes(Object.values(applicationData.display_nodes))
           link_function.RedrawLinks(Object.values(applicationData.display_links))
           ComponentUpdater.updateComponenSaveInCache.current(false)
-          setForceUpdate(!forceUpdate)
+          setForceUpdate.toggle()
         }}
       >
         {t('Noeud.Reorg')}
@@ -718,7 +714,6 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           GetLinkValue,
           link_function,
           setForceUpdate,
-          forceUpdate
         )
       }
     </Box>:

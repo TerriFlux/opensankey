@@ -27,7 +27,7 @@ import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/Sa
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 
-export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType> = ({
+export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> = ({
   applicationContext,
   applicationData,
   dict_hook_ref_setter_show_dialog_components,
@@ -38,17 +38,16 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
   node_attribute_tab
 }) => {
   const { t } = applicationContext
-  const { data } = applicationData
-  const { updateComponentMenuConfigNodeAppearence } = ComponentUpdater
+  const { data, new_data } = applicationData
   const { RedrawNodes } = node_function
 
-  const [ forceUpdate, setForceUpdate ] = useState(false)
-  const [ selected_style_node, set_selected_style_node ] = useState('default')
+  const [forceUpdate, setForceUpdate] = useState(false)
+  const [selected_style_node, set_selected_style_node] = useState('default')
   ref_selected_style_node.current = selected_style_node
   if (data.style_node && !Object.keys(data.style_node).includes(selected_style_node)) {
     set_selected_style_node('default')
   }
-  const ref_input_name= useRef<HTMLInputElement>(null)
+  const ref_input_name = useRef<HTMLInputElement>(null)
   const content = <Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
@@ -61,16 +60,16 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
           const new_style = DefaultNodeStyle()
           new_style.name = 'New Style'
           const new_id = 'style_node_' + String(new Date().getTime())
-          new_style.idNode=new_id
+          new_style.idNode = new_id
           data.style_node[new_id] = new_style
-          updateComponentMenuConfigNodeAppearence.current()
+          new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
           ref_selected_style_node.current = new_style.idNode
           set_selected_style_node(new_style.idNode)
           setForceUpdate(!forceUpdate)
-          ref_input_name.current!.value=data.style_node[new_id].name
+          ref_input_name.current!.value = data.style_node[new_id].name
 
         }}>
-        <FaPlus/>
+        <FaPlus />
       </Button>
 
       {/* Liste déroulante pour selectionner un style */}
@@ -89,15 +88,15 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
           {
             Object
               .keys(data.style_node)
-              .map((d,i) => {
+              .map((d, i) => {
                 return (
                   <MenuItem
                     key={i}
                     onClick={() => {
                       ref_selected_style_node.current = d
                       set_selected_style_node(d)
-                      ref_input_name.current!.value=data.style_node[d].name
-                      updateComponentMenuConfigNodeAppearence.current()
+                      ref_input_name.current!.value = data.style_node[d].name
+                      new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
                       setForceUpdate(!forceUpdate)
                     }}
                   >
@@ -113,12 +112,12 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
         variant='menuconfigpanel_del_button'
         isDisabled={(selected_style_node === 'default')}
         onClick={() => {
-          Object.values(data.nodes).filter(n=>n.style==selected_style_node).forEach(n=>n.style='default')
+          Object.values(data.nodes).filter(n => n.style == selected_style_node).forEach(n => n.style = 'default')
           delete data.style_node[selected_style_node]
-          const new_style=(Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : ''
+          const new_style = (Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : ''
           set_selected_style_node(new_style)
-          ref_selected_style_node.current=new_style
-          updateComponentMenuConfigNodeAppearence.current()
+          ref_selected_style_node.current = new_style
+          new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
           RedrawNodes(Object.values(applicationData.display_nodes))
           ComponentUpdater.updateComponenSaveInCache.current(false)
           setForceUpdate(!forceUpdate)
@@ -145,13 +144,13 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
         >
           <Input
             variant='menuconfigpanel_option_input'
-            disabled={(selected_style_node === 'default')? true: false}
+            disabled={(selected_style_node === 'default') ? true : false}
             ref={ref_input_name}
             defaultValue={data.style_node[selected_style_node].name}
             onBlur={() => {
-              data.style_node[selected_style_node].name = ref_input_name.current?.value??''
+              data.style_node[selected_style_node].name = ref_input_name.current?.value ?? ''
               setForceUpdate(!forceUpdate)
-              updateComponentMenuConfigNodeAppearence.current()
+              new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
               ComponentUpdater.updateComponenSaveInCache.current(false)
             }}
           />
@@ -161,8 +160,8 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
 
     {
       <SankeyWrapperConfigInModalOrMenu
-        menu_to_wrap = {node_attribute_tab}
-        for_modal = {true}
+        menu_to_wrap={node_attribute_tab}
+        for_modal={true}
         idTab={'node_attr'}
       />
     }
@@ -171,14 +170,14 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
   return MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_style_node',
-    content,pointer_pos,
+    content, pointer_pos,
     t('Menu.esn')
   )
 }
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>= ({
+export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> = ({
   applicationContext,
   applicationData,
   applicationState,
@@ -188,22 +187,21 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
   link_function,
   ComponentUpdater
 }) => {
-  const {data}=applicationData
-  const {t}=applicationContext
-  const {ref_selected_style_link}=applicationState
-  const {updateComponentMenuConfigLink}=ComponentUpdater
+  const { data,new_data } = applicationData
+  const { t } = applicationContext
+  const { ref_selected_style_link } = applicationState
 
-  const [selected_style_link,set_selected_style_link] = useState('default')
-  const [forceUpdate,setForceUpdate]=useState(false)
-  const ref_input_name= useRef<HTMLInputElement>(null)
+  const [selected_style_link, set_selected_style_link] = useState('default')
+  const [forceUpdate, setForceUpdate] = useState(false)
+  const ref_input_name = useRef<HTMLInputElement>(null)
   ref_selected_style_link.current = selected_style_link
 
-  if(data.style_link && !Object.keys(data.style_link).includes(selected_style_link)) {
+  if (data.style_link && !Object.keys(data.style_link).includes(selected_style_link)) {
     // Protection if style is not existing (issue with old files)
     set_selected_style_link('default')
   }
 
-  const content= <Box layerStyle='menuconfigpanel_grid'>
+  const content = <Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
       layerStyle='menustylepanel_row_droplist'
@@ -217,11 +215,11 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
           const new_id = 'style_link_' + String(new Date().getTime())
           new_style.idLink = new_id
           data.style_link[new_id] = new_style
-          updateComponentMenuConfigLink.current()
+          new_data.menu_configuration.updateComponentMenuConfigLink.current()
           set_selected_style_link(new_style.idLink)
-          ref_input_name.current!.value=data.style_link[new_id].name
+          ref_input_name.current!.value = data.style_link[new_id].name
         }}>
-        <FaPlus/>
+        <FaPlus />
       </Button>
 
       {/* Liste déroulante pour selectionner un style */}
@@ -240,12 +238,12 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
           {
             Object
               .keys(data.style_link)
-              .map((d,i) => 
+              .map((d, i) =>
                 <MenuItem
                   key={i}
                   onClick={() => {
-                      ref_input_name.current!.value=data.style_link[d].name
-                      set_selected_style_link(d)
+                    ref_input_name.current!.value = data.style_link[d].name
+                    set_selected_style_link(d)
                   }}
                 >
                   {data.style_link[d].name}
@@ -259,12 +257,12 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
       <Button
         variant='menuconfigpanel_del_button'
         isDisabled={(selected_style_link === 'default')}
-        onClick={ () => {
-          Object.values(data.links).filter(l=>l.style==selected_style_link).forEach(l=>l.style='default')
+        onClick={() => {
+          Object.values(data.links).filter(l => l.style == selected_style_link).forEach(l => l.style = 'default')
           delete data.style_link[selected_style_link]
           set_selected_style_link('default')
-          ref_selected_style_link.current='default'
-          updateComponentMenuConfigLink.current()
+          ref_selected_style_link.current = 'default'
+          new_data.menu_configuration.updateComponentMenuConfigLink.current()
           link_function.RedrawLinks(Object.values(applicationData.display_links))
         }}
       >
@@ -288,14 +286,14 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
           <Input
             ref={ref_input_name}
             variant='menuconfigpanel_option_input'
-            disabled={(selected_style_link === 'default')? true: false}
+            disabled={(selected_style_link === 'default') ? true : false}
             defaultValue={
               (selected_style_link !== '') ? data.style_link[selected_style_link].name : ''
             }
             onBlur={() => {
-              data.style_link[selected_style_link].name = ref_input_name.current?.value??''
+              data.style_link[selected_style_link].name = ref_input_name.current?.value ?? ''
               setForceUpdate(!forceUpdate)
-              updateComponentMenuConfigLink.current()
+              new_data.menu_configuration.updateComponentMenuConfigLink.current()
             }}
           />
         </InputGroup>
@@ -318,7 +316,7 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
   return MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_style_link',
-    content,pointer_pos,
+    content, pointer_pos,
     t('Menu.esf')
   )
 }

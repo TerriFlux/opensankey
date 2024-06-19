@@ -1,6 +1,7 @@
-import { ComponentUpdaterType, applicationContextType, applicationStateType } from '../../types/Types'
+import { ComponentUpdaterType, applicationContextType, applicationDataType, applicationStateType } from '../../types/Types'
 
 export type SankeyMenuConfigurationNodesTooltipFType = {
+  applicationData:applicationDataType,
   applicationContext : applicationContextType,
   applicationState : applicationStateType,
   ComponentUpdater:ComponentUpdaterType,
