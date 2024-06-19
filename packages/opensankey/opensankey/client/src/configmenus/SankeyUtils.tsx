@@ -46,7 +46,7 @@ declare const window: Window &
     SankeyToolsStatic: boolean
   }
 
-export const defaultElementColor='#a9a9a9'
+export const default_element_color='#a9a9a9'
 /**
  *
  * @param {TagsGroup[]} dataTags
@@ -668,7 +668,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     display_legend_scale:false,
     legend_police:16,
     legend_bg_border:false,
-    legend_bg_color:defaultElementColor,
+    legend_bg_color:default_element_color,
     legend_bg_opacity:0,
     legend_show_dataTags:false,
     node_label_separator:''
@@ -885,7 +885,7 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
     label_visible: true,
     node_width: 40,
     node_height: 40,
-    color: defaultElementColor,
+    color: default_element_color,
     colorSustainable:false,
     not_to_scale:false,
     not_to_scale_direction:'right',
@@ -929,7 +929,7 @@ export const DefaultLinkStyle:DefaultLinkStyleFuncType=()=>{
   return {
     idLink:'default',
     name:'Style par défaut',
-    color: defaultElementColor,
+    color: default_element_color,
     recycling:false,
     curved: true,
     arrow: true,
@@ -1140,25 +1140,25 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
     if (n.colorTag !== undefined && n.colorTag !== '' && n.colorTag !=='no_colormap') {
       const tagGroup = n.colorTag
       if (n.tags[tagGroup] === undefined) {
-        return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:defaultElementColor
+        return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:default_element_color
       } else if (n.tags[tagGroup].length == 1 ) {
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           return data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color??''
         } else {
-          return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:defaultElementColor
+          return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:default_element_color
         }
       } else {
-        return defaultElementColor
+        return default_element_color
       }
     } else {
-      return defaultElementColor
+      return default_element_color
     }
   }
   if (n.colorParameter === 'local') {
     // Le couleur est définie dans les parametres locaux du noeud
     return ReturnValueNode(data,n,'color') as string
   }
-  return defaultElementColor
+  return default_element_color
 }
 
 export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncType=(): number=>{
