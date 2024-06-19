@@ -58,30 +58,30 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
  * @param d
  * @param sankeyTooltip
  */
-export const EventNodeClick : EventNodeClickFType =(
-  //applicationData,
+export const EventNodeClick: EventNodeClickFType = (
+  applicationData,
   uiElementsRef,
   applicationState,
-  event:React.MouseEvent<HTMLButtonElement>,
-  d:SankeyNode,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+  event: React.MouseEvent<HTMLButtonElement>,
+  d: SankeyNode,
+  sankeyTooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,
   ComponentUpdater,
-)=>{
-  const {ref_getter_mode_selection, multi_selected_nodes}=applicationState
-  const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
-  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateMenuConfigTextNodeTooltip}=ComponentUpdater
-  multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
-  if (  (event.ctrlKey || event.metaKey)) {
-    ref_getter_mode_selection.current='s'
-    d3.select(' .opensankey #svg').attr('class','mode_selection')
+) => {
+  const { new_data } = applicationData
+  const { ref_getter_mode_selection, multi_selected_nodes } = applicationState
+  const { nodes_accordion_ref, accordion_ref, button_ref } = uiElementsRef
+  multi_selected_nodes.current.forEach(n => DeselectVisualyNodes(n))
+  if ((event.ctrlKey || event.metaKey)) {
+    ref_getter_mode_selection.current = 's'
+    d3.select(' .opensankey #svg').attr('class', 'mode_selection')
     sankeyTooltip.style('opacity', 0)
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
     } else {
       multi_selected_nodes.current.push(d)
-      if(multi_selected_nodes.current.length==1){
-        d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      if (multi_selected_nodes.current.length == 1) {
+        d3.select(' .opensankey #ggg_' + d.idNode + ' .box_width_threshold').attr('visibility', 'visible')
       }
     }
 
@@ -92,7 +92,7 @@ export const EventNodeClick : EventNodeClickFType =(
     if (
       accordion_ref &&
       accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      d3.select(accordion_ref.current).attr('aria-expanded') === 'false'
     ) {
       accordion_ref.current.click()
     }
@@ -101,7 +101,7 @@ export const EventNodeClick : EventNodeClickFType =(
     if (
       nodes_accordion_ref &&
       nodes_accordion_ref.current &&
-      d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false'
+      d3.select(nodes_accordion_ref.current).attr('aria-expanded') === 'false'
     ) {
       nodes_accordion_ref.current.click()
     }
@@ -109,29 +109,29 @@ export const EventNodeClick : EventNodeClickFType =(
     d3.select(' .opensankey #ggg_' + d.idNode + ' rect')
       .style('stroke-width', d => {
         const dd = (d as SankeyNode)
-        return NodeStrokeWidth(dd,multi_selected_nodes)
+        return NodeStrokeWidth(dd, multi_selected_nodes)
       })
-    multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
+    multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
 
-  }else if(!event.ctrlKey){
+  } else if (!event.ctrlKey) {
     // If we click a node without pressing Ctrl then we select only the node cliked
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
     } else {
-      multi_selected_nodes.current=[d]
+      multi_selected_nodes.current = [d]
     }
     d3.select(' .opensankey #ggg_' + d.idNode + ' rect')
       .style('stroke-width', d => {
         const dd = (d as SankeyNode)
-        return NodeStrokeWidth(dd,multi_selected_nodes)
+        return NodeStrokeWidth(dd, multi_selected_nodes)
       })
-    multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
+    multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
   }
-  updateComponentMenuConfigNode.current()
-  updateComponentMenuConfigNodeAppearence.current()
-  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
-  updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
+  new_data.menu_configuration.updateComponentMenuConfigNode.current
+  new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+  new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+  new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
 }
 
 export const EventNodeContextMenu: EventNodeContextMenuFType = (
@@ -170,7 +170,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   tags_selected,
 ) => {
   const { data } = applicationData
-  const {displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef,multi_selected_links,ref_display_link_opacity}=applicationState
+  const { displayedInputLinkValueSetterRef, displayedInputLinkDataTagSetterRef, multi_selected_links, ref_display_link_opacity } = applicationState
   ev.preventDefault()
   pointer_pos.current = [ev.pageX, ev.pageY]
   if (multi_selected_links.current.includes(l)) {
@@ -185,7 +185,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   const link_data_ref = l.idLink
   let new_tags_selected = tags_selected
 
-  let valueLinkInContext:SankeyLinkValue=ValueSelectedParameter(
+  let valueLinkInContext: SankeyLinkValue = ValueSelectedParameter(
     applicationData,
     multi_selected_links,
     new_tags_selected
@@ -202,7 +202,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
       new_tags_selected[key] = Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
     }
 
-    valueLinkInContext=ValueSelectedParameter(
+    valueLinkInContext = ValueSelectedParameter(
       applicationData,
       multi_selected_links,
       tags_selected
@@ -220,11 +220,11 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
     Object.values(data.dataTags).forEach(dt => {
       tmp.push(Object.entries(dt.tags).filter(t => t[1].selected)[0][0])
     })
-    const n_t_s = {} as { [x: string]: string}
+    const n_t_s = {} as { [x: string]: string }
     Object.keys(data.dataTags).forEach((dt, i) => {
       n_t_s[dt] = tmp[i]
     })
-    valueLinkInContext=ValueSelectedParameter(
+    valueLinkInContext = ValueSelectedParameter(
       applicationData,
       multi_selected_links,
       n_t_s
@@ -269,11 +269,11 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   node_function
 ) => {
   // Special cast usefull for when the app is used in SankeySuiteManager
-  const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
+  const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined> })
   const { data } = applicationData
   const { ref_getter_mode_selection, first_selected_node } = applicationState
   closeAllMenuContext()
-  const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number}
+  const evt2 = evt as unknown as { target: string, ctrlKey: boolean, metaKey: boolean, which: number }
 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if (evt.which == 1) {
@@ -281,7 +281,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
     // blur all the input of the config menu in case we modify a value from an input (where the value is truly apply on blur)
     // and click on the drawing zone wich normally doesn't count as a blur of the input
     for (const item of document.getElementsByTagName('input')) {
-      if ((['form-control','chakra-numberinput__field','chakra-input','input_label'].some(r=> item.className.includes(r)))) {
+      if ((['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => item.className.includes(r)))) {
         item.blur()
       }
     }
@@ -308,13 +308,13 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
           new_node1.y = pos[1] - ((ReturnValueNode(data, new_node1, 'node_height') as number) / 2)
           start_point.current = pos
           first_selected_node.current = new_node1
-          applicationData.display_nodes[new_node1.idNode]=new_node1
+          applicationData.display_nodes[new_node1.idNode] = new_node1
 
           node_function.CreateNodesOnSVG([new_node1])
 
         }
       }
-    } else if (d3.select(evt2.target).attr('class') != 'node node_shape' &&  ref_getter_mode_selection.current == 's' && !evt.ctrlKey) {
+    } else if (d3.select(evt2.target).attr('class') != 'node node_shape' && ref_getter_mode_selection.current == 's' && !evt.ctrlKey) {
       const pos = d3.pointer(evt)
       start_point.current = pos
       d3.select('#svg').append('g').attr('class', 'selection_zone')
@@ -328,10 +328,10 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   applicationData,
   applicationState,
   evt: MouseEvent,
-  start_point: { current: number[]}
+  start_point: { current: number[] }
 ) => {
   const { data } = applicationData
-  const { ref_getter_mode_selection,first_selected_node } = applicationState
+  const { ref_getter_mode_selection, first_selected_node } = applicationState
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
   //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
@@ -420,18 +420,18 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   reDrawLegend,
   resizeCanvas
 ) => {
-  const { data, display_links } = applicationData
-  const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = applicationState
+  const { data, display_links, new_data } = applicationData
+  const { ref_getter_mode_selection, multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = applicationState
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
-  const {updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateComponenSaveInCache}=ComponentUpdater
+  const { updateComponenSaveInCache } = ComponentUpdater
   // Special cast usefull for when the app is used in SankeySuiteManager
-  const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
+  const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined> })
 
   legend_clicked.current = false
   d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray', () => '')
   let h = document.getElementById('g_legend')?.getBoundingClientRect().height
   h = h ? h : 50
-  draw_legend_handles(applicationData, legend_clicked.current, h,ComponentUpdater,reDrawLegend,resizeCanvas)
+  draw_legend_handles(applicationData, legend_clicked.current, h, ComponentUpdater, reDrawLegend, resizeCanvas)
 
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
@@ -441,7 +441,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     if (
       accordion_ref &&
       accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      d3.select(accordion_ref.current).attr('aria-expanded') === 'false'
     ) {
       accordion_ref.current.click()
     }
@@ -450,18 +450,18 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     if (
       links_accordion_ref &&
       links_accordion_ref.current &&
-      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+      d3.select(links_accordion_ref.current).attr('aria-expanded') === 'false'
     ) {
       links_accordion_ref.current.click()
     }
   }
 
-  const evt_recast = ((evt as unknown) as { target: string} ).target
+  const evt_recast = ((evt as unknown) as { target: string }).target
 
   if (ref_getter_mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
     NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
     Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
-    const scale_svg=returnScaleOfDrawArea()
+    const scale_svg = returnScaleOfDrawArea()
     const z_x = Number(d3.select('.selection_zone rect').attr('x'))
     const z_y = Number(d3.select('.selection_zone rect').attr('y'))
     const z_w = Number(d3.select('.selection_zone rect').attr('width'))
@@ -495,12 +495,12 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     start_point.current = [0, 0]
 
     d3.selectAll('.selection_zone').remove()
-    multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
-    multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-    updateComponentMenuConfigNode.current()
-    updateComponentMenuConfigNodeAppearence.current()
-    updateComponentMenuConfigLink.current()
-    updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+    multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
+    multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
+    new_data.menu_configuration.updateComponentMenuConfigNode.current
+    new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+    new_data.menu_configuration.updateComponentMenuConfigLink.current()
+    new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
     updateComponenSaveInCache.current(true)
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
@@ -564,16 +564,16 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       OpenLinksMenu()
       first_selected_node.current = undefined
       // Deselect old selected links to then only select the new one
-      Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+      Object.values(display_links).forEach(l => DeselectVisualyLinks(l))
 
-      applicationData.display_nodes[new_node1.idNode]=new_node1
-      applicationData.display_links[new_link.idLink]=new_link
+      applicationData.display_nodes[new_node1.idNode] = new_node1
+      applicationData.display_links[new_link.idLink] = new_link
 
       node_function.RedrawNodes([data.nodes[new_link.idSource]])
       node_function.CreateNodesOnSVG([new_node1])
       link_function.CreateLinksOnSVG([new_link])
       // update link congig panel
-      updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.updateComponentMenuConfigLink.current()
     } else if ((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class') != 'node node_shape') {
 
       const n_link = DefaultLink(data)
@@ -610,15 +610,15 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       multi_selected_links.current = [n_link]
       OpenLinksMenu()
       // Deselect old selected links to then only select the new one
-      Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+      Object.values(display_links).forEach(l => DeselectVisualyLinks(l))
 
       first_selected_node.current = undefined
-      applicationData.display_nodes[n_node.idNode]=n_node
-      applicationData.display_links[n_link.idLink]=n_link
+      applicationData.display_nodes[n_node.idNode] = n_node
+      applicationData.display_links[n_link.idLink] = n_link
 
       node_function.CreateNodesOnSVG([n_node])
       link_function.CreateLinksOnSVG([n_link])
-      updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.updateComponentMenuConfigLink.current()
     }
   }
 }
@@ -626,8 +626,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 // or creating a nodes at first click then linking it to a already existing one or the opposite
 
 export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType = (
-  event:React.MouseEvent<HTMLButtonElement>,
-  d:SankeyNode,
+  event: React.MouseEvent<HTMLButtonElement>,
+  d: SankeyNode,
   applicationData,
   applicationState,
   uiElementsRef,
@@ -636,16 +636,15 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   link_function,
   node_function
 ) => {
-  const { data,display_links } = applicationData
-  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = applicationState
-  const { accordion_ref, links_accordion_ref,button_ref } = uiElementsRef
-  const {GetLinkValue}=link_function
-  const {updateComponentMenuConfigLink}=ComponentUpdater
-  if ((!event.ctrlKey && !event.metaKey && event.button != 2) && first_selected_node.current && ref_getter_mode_selection.current=='ln') {
+  const { data, display_links, new_data } = applicationData
+  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef, ref_getter_mode_selection } = applicationState
+  const { accordion_ref, links_accordion_ref, button_ref } = uiElementsRef
+  const { GetLinkValue } = link_function
+  if ((!event.ctrlKey && !event.metaKey && event.button != 2) && first_selected_node.current && ref_getter_mode_selection.current == 'ln') {
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       d.name = d.idNode
-      RedrawNodesLabel(applicationData,[d],GetLinkValue,applicationContext.t,node_function)
+      RedrawNodesLabel(applicationData, [d], GetLinkValue, applicationContext.t, node_function)
     } else {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)
@@ -670,10 +669,10 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       multi_selected_links.current = [n_link]
 
       // Deselect old selected links to then only select the new one
-      Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+      Object.values(display_links).forEach(l => DeselectVisualyLinks(l))
 
       first_selected_node.current = undefined
-      applicationData.display_links[n_link.idLink]=n_link
+      applicationData.display_links[n_link.idLink] = n_link
 
       link_function.CreateLinksOnSVG([n_link])
 
@@ -683,8 +682,8 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       // Open element accordion if not already openend
       if (
         accordion_ref &&
-      accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        accordion_ref.current &&
+        d3.select(accordion_ref.current).attr('aria-expanded') === 'false'
       ) {
         accordion_ref.current.click()
       }
@@ -692,8 +691,8 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       // Open link accordion if not already openend
       if (
         links_accordion_ref &&
-      links_accordion_ref.current &&
-      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+        links_accordion_ref.current &&
+        d3.select(links_accordion_ref.current).attr('aria-expanded') === 'false'
       ) {
         links_accordion_ref.current.click()
       }
@@ -701,7 +700,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
         const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
         tmp.name = 'node' + (Object.keys(data.nodes).length - 1)
       }
-      updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.updateComponentMenuConfigLink.current()
     }
 
     first_selected_node.current = undefined
@@ -730,9 +729,9 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     first_selected_node.current = undefined
 
     // Deselect old selected links to then only select the new one
-    Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+    Object.values(display_links).forEach(l => DeselectVisualyLinks(l))
 
-    applicationData.display_links[new_link.idLink]=new_link
+    applicationData.display_links[new_link.idLink] = new_link
 
     link_function.CreateLinksOnSVG([new_link])
 
@@ -745,7 +744,7 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
 
   const t = 'translate(0,0) scale(' + evt.transform.k + ')'
   const svgSankey = d3.select('.opensankey #svg')
-  const {data}=applicationData
+  const { data } = applicationData
   svgSankey
     .attr('transform', t)
   //Compensate the scale of the legend when we dezoom so the legend has alway a readable size
@@ -754,11 +753,12 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
     .style('border', Math.max(1, Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + (scale_legend) + ')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale / 2) * scale_legend)))
-  actualizeDrawAreaFrame(applicationData,GetSankeyMinWidthAndHeight)
+  actualizeDrawAreaFrame(applicationData, GetSankeyMinWidthAndHeight)
 
 }
 
 export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
+  applicationData,
   uiElementsRef,
   applicationState,
   event,
@@ -770,11 +770,11 @@ export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
   if ((event.target as HTMLSpanElement).tagName === 'tspan') {
     setTimeout(() => {
       if (accept_simple_click.current) {
-        EventNodeClick( uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
+        EventNodeClick(applicationData, uiElementsRef, applicationState, event, d, sankeyTooltip, ComponentUpdater)
       }
     }, 200)
   } else {
-    EventNodeClick(uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
+    EventNodeClick(applicationData, uiElementsRef, applicationState, event, d, sankeyTooltip, ComponentUpdater)
   }
 }
 
@@ -796,7 +796,7 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 
   shiftAllArrowPath(event)
 
-  const scale_svg=returnScaleOfDrawArea()
+  const scale_svg = returnScaleOfDrawArea()
   const scale_for_legend = (scale_svg < 1 ? (1 / scale_svg) : 1)
   data.legend_position[0] += event.dx
   data.legend_position[1] += event.dy
@@ -804,34 +804,31 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 
 }
 
-export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(applicationData,GetSankeyMinWidthAndHeight)=>{
+export const actualizeDrawAreaFrame: actualizeDrawAreaFrameFType = (applicationData, GetSankeyMinWidthAndHeight) => {
   [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData)
-  const scale_svg=returnScaleOfDrawArea()
-  d3.select('.scroll_zone').style('width',((applicationData.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
-  d3.select('.scroll_zone').style('height',((applicationData.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
+  const scale_svg = returnScaleOfDrawArea()
+  d3.select('.scroll_zone').style('width', ((applicationData.data.width + 600) * scale_svg - (600 * (scale_svg - 1.1))) + 'px')
+  d3.select('.scroll_zone').style('height', ((applicationData.data.height + 200) * scale_svg - (200 * (scale_svg - 1.1))) + 'px')
 
-  d3.select('#svg').style('width',applicationData.data.width+'px')
-  d3.select('#svg').style('height',applicationData.data.height+'px')
+  d3.select('#svg').style('width', applicationData.data.width + 'px')
+  d3.select('#svg').style('height', applicationData.data.height + 'px')
 }
 
 
-export const selectOpenSankeyElementsInSelectionZone:selectOpenSankeyElementsInSelectionZoneFType=(
+export const selectOpenSankeyElementsInSelectionZone: selectOpenSankeyElementsInSelectionZoneFType = (
   applicationData,
   applicationState,
   ComponentUpdater,
   evt,
   start_point
-)=>{
-  const {data,display_links}=applicationData
-  const {multi_selected_nodes,multi_selected_links}=applicationState
-  const {updateComponentMenuConfigNode,
-    updateComponentMenuConfigNodeAppearence,
-    updateComponentMenuConfigLink,
-    updateComponentMenuNodeIOSelectSideNode,
-    updateComponenSaveInCache}=ComponentUpdater
+) => {
+  const { data, display_links, new_data } = applicationData
+  const { multi_selected_nodes, multi_selected_links } = applicationState
+  const {
+    updateComponenSaveInCache } = ComponentUpdater
   NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
   Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
-  const scale_svg=returnScaleOfDrawArea()
+  const scale_svg = returnScaleOfDrawArea()
   const z_x = Number(d3.select('.selection_zone rect').attr('x'))
   const z_y = Number(d3.select('.selection_zone rect').attr('y'))
   const z_w = Number(d3.select('.selection_zone rect').attr('width'))
@@ -865,16 +862,16 @@ export const selectOpenSankeyElementsInSelectionZone:selectOpenSankeyElementsInS
   start_point.current = [0, 0]
 
   d3.selectAll('.selection_zone').remove()
-  multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
-  multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-  updateComponentMenuConfigNode.current()
-  updateComponentMenuConfigNodeAppearence.current()
-  updateComponentMenuConfigLink.current()
-  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+  multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
+  multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
+  new_data.menu_configuration.updateComponentMenuConfigNode.current()
+  new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+  new_data.menu_configuration.updateComponentMenuConfigLink.current()
+  new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
   updateComponenSaveInCache.current(true)
 }
 
-export const applyZoomEvent:applyZoomEventFType=(applicationData,GetSankeyMinWidthAndHeight)=>{
+export const applyZoomEvent: applyZoomEventFType = (applicationData, GetSankeyMinWidthAndHeight) => {
   // Zoom Behavior
   const svgSankey = d3.select('.opensankey #svg');
   (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
@@ -886,7 +883,7 @@ export const applyZoomEvent:applyZoomEventFType=(applicationData,GetSankeyMinWid
         return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
       })
       .on('zoom', function (evt) {
-        ZoomFunction(evt,applicationData,GetSankeyMinWidthAndHeight)
+        ZoomFunction(evt, applicationData, GetSankeyMinWidthAndHeight)
       }))
     .on('dblclick.zoom', null)
 }
@@ -895,9 +892,9 @@ export const applyZoomEvent:applyZoomEventFType=(applicationData,GetSankeyMinWid
  *
  * @param {d3.D3DragEvent<Element, unknown, unknown>} event
  */
-export const shiftAllLinkPath=(event:d3.D3DragEvent<Element, unknown, unknown>)=>{
+export const shiftAllLinkPath = (event: d3.D3DragEvent<Element, unknown, unknown>) => {
   d3.selectAll('.link').attr('d', (d) => {
-    const l=d as SankeyLink
+    const l = d as SankeyLink
 
     // Get the path of each displayed link
     const path = d3.select('#path_' + l.idLink).attr('d').split(' ')
@@ -910,7 +907,7 @@ export const shiftAllLinkPath=(event:d3.D3DragEvent<Element, unknown, unknown>)=
     //
     // Then once the subpart of the path are modified, we join the array to reform the path
     const new_path = path.map((p, i) => {
-    // Case when it's a [x,y] coordinates
+      // Case when it's a [x,y] coordinates
       if (p.includes(',')) {
         const pos = p.split(',')
         const newPosX = Number(pos[0]) + event.dx
@@ -937,7 +934,7 @@ export const shiftAllLinkPath=(event:d3.D3DragEvent<Element, unknown, unknown>)=
  *
  * @param {d3.D3DragEvent<Element, unknown, unknown>} event
  */
-export const shiftAllArrowPath=(event:d3.D3DragEvent<Element, unknown, unknown>)=>{
+export const shiftAllArrowPath = (event: d3.D3DragEvent<Element, unknown, unknown>) => {
   d3.selectAll('.arrow').attr('d', (d) => {
     const l = d as SankeyLink
     // Get the path of each displayed link

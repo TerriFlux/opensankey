@@ -162,7 +162,6 @@ export const DragNodes: DragNodesFType = (
   // Cherche si des element seront hors zone si on les drag 
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   const out_of_zone_item = ReturnOutOfBoundElement(node, data, event, multi_selected_nodes, node_visible)
-  console.log(out_of_zone_item)
   // // Pousse les element non sélectionnés dans la direction opposé
   if (out_of_zone_item.length > 0) {
     node_function.OpposingDragElements(out_of_zone_item, event, node, applicationData, applicationState)

@@ -48,7 +48,7 @@ export type SankeyNodeAttrLocal ={
 }
 type ValueOf<T> = T[keyof T];
 export type KeysTypeSankeyNodeAttrLocal=keyof SankeyNodeAttrLocal
-export type ValuesTypeSankeyNodeAttrLocal=ValueOf<SankeyNodeAttrLocal>
+export type ValuesTypeSankeyNodeAttrLocal=Exclude<ValueOf<SankeyNodeAttrLocal>,undefined>
 
 // Same as Local node attribute but with required value as now style attributes is the default attributes of node
 export type SankeyNodeStyle ={
@@ -628,18 +628,9 @@ export type InstallEventsOnSVGType = (
 ) => void
 
 export type ComponentUpdaterType={
-  updateComponentMenuConfigNode: MutableRefObject<()=>void>
-  updateComponentMenuConfigNodeAppearence: MutableRefObject<()=>void>
-  updateComponentMenuConfigLink: MutableRefObject<()=>void>
-  updateComponentToolbar: MutableRefObject<()=>void>
   updateComponentMenuConfig: MutableRefObject<()=>void>
-  updateComponentMenuConfigLayout: MutableRefObject<()=>void>
-  updateComponentMenu: MutableRefObject<()=>void>
   updateComponenSaveInCache: MutableRefObject<(b:boolean)=>void>
-  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(()=>void)[]>
-  updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
-  updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>
-  updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>
+  updateComponentBtnUpdateLayout: MutableRefObject<()=>void>
 }
 export type initializeComponentUpdaterType = ()=>ComponentUpdaterType
 

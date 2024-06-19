@@ -6,7 +6,7 @@
 
 // Add local types
 import {
-  Class_Node
+  Class_NodeElement
 } from '../../types/Node'
 import {
   FType_AddNewNodeToSankey
@@ -26,7 +26,7 @@ export const addNewNodeToSankey: FType_AddNewNodeToSankey = (
   id,
   name,
 ) => {
-  const node = new Class_Node(id, name, sankey.drawing_area,menu_config)
+  const node = new Class_NodeElement(id, name, sankey.drawing_area,menu_config)
   sankey.addNode(node)
   return node
 }

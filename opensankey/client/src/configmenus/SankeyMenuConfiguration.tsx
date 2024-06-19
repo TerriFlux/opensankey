@@ -39,7 +39,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
  * @param { TODO type } token - TODO description
  *
  */
-export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
+export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType = (
   applicationData,
   applicationState,
   applicationContext,
@@ -59,18 +59,18 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   node_function
 
 ) => {
-  const {data,new_data}=applicationData
-  const config_object=new_data.menu_configuration
-  const {t}=applicationContext
-  const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
-  const {multi_selected_nodes}=applicationState
+  const { data, new_data } = applicationData
+  const config_object = new_data.menu_configuration
+  const { t } = applicationContext
+  const { links_accordion_ref, nodes_accordion_ref, accordion_ref } = uiElementsRef
+  const { multi_selected_nodes } = applicationState
   // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const show_menu_config_tag = (
     (data.accordeonToShow.includes('EN') ||
-     data.accordeonToShow.includes('EF') ||
-     data.accordeonToShow.includes('ED')))
+      data.accordeonToShow.includes('EF') ||
+      data.accordeonToShow.includes('ED')))
   return [
-    data.accordeonToShow.includes('MEP')?
+    data.accordeonToShow.includes('MEP') ?
       <AccordionItem>
         {
           //MENU PARAMETRE GENERAUX
@@ -81,14 +81,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             layerStyle='menuconfig_entry'>
             {t('Menu.MEP')}
           </Box>
-          <AccordionIcon/>
+          <AccordionIcon />
         </AccordionButton>
         <AccordionPanel>
           <Box layerStyle='menuconfigpanel_grid'>
             {menu_configuration_layout}
           </Box>
         </AccordionPanel>
-      </AccordionItem>:
+      </AccordionItem> :
       <></>,
 
     <AccordionItem>
@@ -96,15 +96,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         //MENU ITEMS
       }
       <AccordionButton
-        // ref={accordion_ref as Ref<HTMLButtonElement>}
-        // ref={config_object.getBtnToogleMenu()}
+        ref={config_object.btn_accordion_config_elements}
       >
         <Box
           as='span'
           layerStyle='menuconfig_entry'>
           {t('Menu.Elements')}
         </Box>
-        <AccordionIcon/>
+        <AccordionIcon />
       </AccordionButton>
       <AccordionPanel>
         <Accordion
@@ -116,14 +115,15 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               //MENU NODES
             }
             <AccordionButton
-              ref={nodes_accordion_ref as Ref<HTMLButtonElement>}
+              ref={config_object.btn_accordion_config_node}
+
             >
               <Box
                 as='span'
                 layerStyle='submenuconfig_entry'>
                 {t('Menu.EdN')}
               </Box>
-              <AccordionIcon/>
+              <AccordionIcon />
             </AccordionButton>
             <AccordionPanel>
               <SankeyNodeEdition
@@ -144,14 +144,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               //MENU LINKS
             }
             <AccordionButton
-              ref={links_accordion_ref as Ref<HTMLButtonElement>}
+              ref={config_object.btn_accordion_config_link}
             >
               <Box
                 as='span'
                 layerStyle='submenuconfig_entry'>
                 {t('Menu.EdF')}
               </Box>
-              <AccordionIcon/>
+              <AccordionIcon />
             </AccordionButton>
             <AccordionPanel>
               <SankeyMenuConfigurationLinks
@@ -174,7 +174,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       </AccordionPanel>
     </AccordionItem>,
 
-    show_menu_config_tag?
+    show_menu_config_tag ?
       <AccordionItem>
         {
           //MENU ETIQUETTES
@@ -185,7 +185,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             layerStyle='menuconfig_entry'>
             {t('Menu.Etiquettes')}
           </Box>
-          <AccordionIcon/>
+          <AccordionIcon />
         </AccordionButton>
         <AccordionPanel>
           <Accordion
@@ -204,7 +204,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                   layerStyle='submenuconfig_entry'>
                   {t('Menu.EN')}
                 </Box>
-                <AccordionIcon/>
+                <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
                 {menu_configuration_node_tags}
@@ -223,7 +223,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                   layerStyle='submenuconfig_entry'>
                   {t('Menu.EF')}
                 </Box>
-                <AccordionIcon/>
+                <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
                 {menu_configuration_link_tags}
@@ -242,7 +242,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                   layerStyle='submenuconfig_entry'>
                   {t('Menu.ED')}
                 </Box>
-                <AccordionIcon/>
+                <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
                 {menu_configuration_data_tags}
@@ -250,7 +250,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             </AccordionItem>
           </Accordion>
         </AccordionPanel>
-      </AccordionItem>:
+      </AccordionItem> :
       <></>
   ]
 }
@@ -272,8 +272,9 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
 
   return (
     <Accordion allowToggle>
-      {configuration_menus.map((c:ReactElementLike, i:number)=>{
-        return <React.Fragment key={i}>{c}</React.Fragment>})}
+      {configuration_menus.map((c: ReactElementLike, i: number) => {
+        return <React.Fragment key={i}>{c}</React.Fragment>
+      })}
     </Accordion>
   )
 }
