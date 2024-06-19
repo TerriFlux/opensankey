@@ -65,7 +65,7 @@ export const drawDrawingAreaGrid: FType_DrawDrawingArea = (
         .attr('x2', drawing_area.getWidth())
         .attr('y1', row * drawing_area.grid_size)
         .attr('y2', row * drawing_area.grid_size)
-        .style('stroke', drawing_area.getGridColor())
+        .style('stroke', drawing_area.grid_color)
         .style('stroke-dasharray', 4)
     }
     // Draw vertical lines
@@ -79,7 +79,7 @@ export const drawDrawingAreaGrid: FType_DrawDrawingArea = (
         .attr('y1', 0)
         .attr('y2', drawing_area.getHeight())
         .style('stroke-dasharray', 4)
-        .style('stroke', drawing_area.getGridColor())
+        .style('stroke', drawing_area.grid_color)
     }
   }
 }
@@ -172,7 +172,7 @@ const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
       // Set position
       const mouse_position = d3.pointer(event)
       new_node.setPosXY(mouse_position[0], mouse_position[1])
-      menu_config.updateMenuEditionNode() 
+      menu_config.updateMenuEditionNode()
 
       // TODO remove test
       // const tgt_node = new Class_NodeElement('target', 'Target', drawing_area, menu_config)
