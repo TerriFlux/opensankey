@@ -6,10 +6,12 @@
 
 // External imports
 import * as d3 from 'd3'
+import { MouseEvent } from 'react'
 
 // Local types
 import {
   default_background_color,
+  default_black_color,
   default_grid_color
 } from './Utils'
 import {
@@ -25,12 +27,6 @@ import {
   Class_ApplicationData
 } from './ApplicationData'
 
-// Local functions
-import {
-  drawDrawingAreaBackground,
-  drawDrawingAreaGrid,
-  setDrawingAreaEventsListeners
-} from '../functions/draw/DrawingArea'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -187,7 +183,7 @@ export class Class_DrawingArea {
     // Draw Everything
     this.drawElements()
     // Added events listeners
-    setDrawingAreaEventsListeners(this, this.application_data.menu_configuration)
+    this.setEventsListeners()
   }
 
   /**
@@ -197,9 +193,9 @@ export class Class_DrawingArea {
    */
   private drawElements() {
     // Draw background
-    drawDrawingAreaBackground(this)
+    this.drawBackground()
     // Draw grid
-    drawDrawingAreaGrid(this)
+    this.drawGrid()
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -231,7 +227,7 @@ export class Class_DrawingArea {
 
   // Color
   public get color() { return this._color }
-  public set color(_: string) { this._color = _; drawDrawingAreaBackground(this) } // TODO add regular expression check here
+  public set color(_: string) { this._color = _; this.drawBackground() } // TODO add regular expression check here
 
   // Scale
   public get scale(): number {
@@ -245,19 +241,19 @@ export class Class_DrawingArea {
 
   // Grid color
   public get grid_color() { return this._grid_color }
-  public set grid_color(_: string) { this._grid_color = _; drawDrawingAreaGrid(this) }
+  public set grid_color(_: string) { this._grid_color = _; this.drawGrid() }
 
   // Grid visibility
   public get grid_visible() { return this._grid_visible }
   public set grid_visible(_:boolean){this._grid_visible=_}
-  public setGridVisible() { this.grid_visible = true; drawDrawingAreaGrid(this) }
-  public setGridInvisible() { this.grid_visible = false; drawDrawingAreaGrid(this) }
+  public setGridVisible() { this.grid_visible = true; this.drawGrid() }
+  public setGridInvisible() { this.grid_visible = false; this.drawGrid() }
 
   // Grid size
   public get grid_size() { return this._grid_size }
-  public set grid_size(_: number) { this._grid_size = _; drawDrawingAreaGrid(this) }
+  public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
 
-  // PUBLIC METHODS ===========================================================
+  // PUBLIC METHODS =====================================================================
 
   /**
    * Checks if it is possible to directly deal with events
@@ -362,4 +358,233 @@ export class Class_DrawingArea {
   //     const new_link = new Class_LinkElement(new_node, new_node2, this, this.application_data.menu_configuration)
   //     this.sankey.addLink(new_link)
   // }
+
+  // PRIVATE METHODS ==================================================================
+
+  /**
+   * Draw background for drawing area
+   *
+   * @param {*} drawing_area
+   */
+  private drawBackground() {
+    // Clean if needed
+    this.d3_selection_bg?.selectAll('.bg').remove()
+    // Draw background
+    this.d3_selection_bg?.append('rect')
+      .attr('class', 'bg')
+      .attr('id', 'bg_drawing_area')
+      .attr('fill', this.color)
+      .attr('width', this.getWidth())
+      .attr('height', this.getHeight())
+      .style('stroke-width', 5)
+      .style('stroke', default_black_color)
+  }
+
+  /**
+   * Draw grid for drawing area
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private drawGrid() {
+    // Clean if needed
+    this.d3_selection_grid?.selectAll('.line').remove()
+    // Draw only if asked OR outside publishing mode
+    if (this.grid_visible && !this.static) {
+      // Draw horizontal lines
+      const number_of_horizontal_lines = this.getHeight() / this.grid_size
+      for (let row = 0; row < number_of_horizontal_lines; row++) {
+        this.d3_selection_grid?.append('line')
+          .attr('class', 'line line-horiz')
+          .attr('id', 'line_horiz_drawing_area_' + String(row))
+          .attr('x1', '0')
+          .attr('x2', this.getWidth())
+          .attr('y1', row * this.grid_size)
+          .attr('y2', row * this.grid_size)
+          .style('stroke', this.grid_color)
+          .style('stroke-dasharray', 4)
+      }
+      // Draw vertical lines
+      const number_of_vertical_lines = this.getWidth() / this.grid_size
+      for (let column = 0; column < number_of_vertical_lines; column++) {
+        this.d3_selection_grid?.append('line')
+          .attr('class', 'line line-vert')
+          .attr('id', 'line_horiz_drawing_area_' + String(column))
+          .attr('x1', column * this.grid_size)
+          .attr('x2', column * this.grid_size)
+          .attr('y1', 0)
+          .attr('y2', this.getHeight())
+          .style('stroke-dasharray', 4)
+          .style('stroke', this.grid_color)
+      }
+    }
+  }
+
+  /**
+   * Set up events related to element d3_element
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private setEventsListeners() {
+    if (
+      !this.static &&
+      (this.d3_selection !== null)
+    ) {
+      // Right mouse button clicks
+      this.d3_selection?.on(
+        'click',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleLMBCLick(event))
+      this.d3_selection?.on(
+        'dblclick',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventDoubleLMBCLick(event))
+      // Right mouse button maintained
+      this.d3_selection?.on(
+        'mousedown',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMaintainedClick(event))
+      this.d3_selection?.on(
+        'mouseup',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventReleasedClick(event))
+      // Mouse cursor goes over this
+      this.d3_selection?.on(
+        'mouseover',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOver(event))
+      this.d3_selection?.on(
+        'mouseout',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOut(event))
+      // Mouse cursor move
+      this.d3_selection?.on(
+        'mousemove',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseMove(event))
+      // Left mouse button click
+      this.d3_selection?.on(
+        'contextmenu',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleRMBCLick(event))
+    }
+  }
+
+  /**
+   * Deal with simple left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    if (this.eventsEnabled()) {
+      // EDITION MODE =============================================================
+      if (this.isInEditionMode()) {
+        // Create new node
+        const new_node = this.addNewDefaultNodeToSankey()
+        // Set position
+        const mouse_position = d3.pointer(event)
+        new_node.setPosXY(mouse_position[0], mouse_position[1])
+        this.application_data.menu_configuration.updateMenuEditionNode()
+
+        // TODO remove test
+        // const tgt_node = new Class_NodeElement('target', 'Target', this, this.application_data.menu_configuration)
+        // tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
+        // const new_link = new Class_LinkElement(new_node, tgt_node, this, this.application_data.menu_configuration)
+        // this.sankey.addLink(new_link)
+        // new_link.setPosXY(new_node.position_x, new_node.position_y)
+        // new_link.setOrientation('hh')
+      }
+      // SELECTION MODE ===========================================================
+      else if (this.isInSelectionMode()) {
+        // Purge selection list
+        this.purgeSelection()
+      }
+    }
+  }
+
+  /**
+   * Deal with double left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventDoubleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter déclemenchement editeur nom de noeud
+  }
+
+  /**
+   * Deal with simple right Mouse Button (RMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventSimpleRMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
+  }
+
+  /**
+   * Define maintained left mouse button click for drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMaintainedClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir clique gauche sur element */
+  }
+
+  /**
+   * Define released left mouse button click for drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventReleasedClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir clique gauche sur element */
+  }
+
+  /**
+   * Define event when mouse moves over drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseOver(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Definir
+  }
+
+  /**
+   * Define event when mouse moves out of drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseOut(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO definir
+  }
+
+  /**
+   * Define event when mouse moves in drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseMove(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir  */
+  }
 }
