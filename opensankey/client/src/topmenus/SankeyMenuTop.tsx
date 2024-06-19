@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties, useEffect} from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useState, CSSProperties} from 'react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   Badge,
@@ -29,7 +29,8 @@ import {
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
-  NumberInputStepper
+  NumberInputStepper,
+  useBoolean
 } from '@chakra-ui/react'
 import {
   SankeyData,
@@ -60,7 +61,6 @@ import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
 import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
 import { faFileExport} from '@fortawesome/free-solid-svg-icons'
 import FileSaver from 'file-saver'
-import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
 import { Drawer, DrawerBody, DrawerContent } from '@chakra-ui/react'
 import {DataTagSelector} from '../configmenus/SankeyMenuBanner'
 declare const window: Window &
@@ -597,20 +597,17 @@ export const Menu: FunctionComponent<MenuTypes> = (
 ) => {
   const {ref_setter_show_modale_tuto,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
   const {ref_setter_mode_selection} = applicationState
-  const [show_nav,set_show_nav] = useState(false)
+  const [show_nav,set_show_nav] = useBoolean()
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_template,set_show_template]=useState(false)
-  const [forceUpdate,setForceUpdate]=useState(false)
+  const [,setForceUpdate]=useBoolean()
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modal_template.current=set_show_template
-  const {updateComponentMenu} = ComponentUpdater
   const config_object=applicationData.new_data.menu_configuration
-  console.log('here')
-  updateComponentMenu.current=()=>setForceUpdate(!forceUpdate)
+  const {new_data}=applicationData
+  new_data.menu_configuration.updateComponentMenu.current=setForceUpdate.toggle
   RepositionneSidebar(show_nav)
-  useEffect(()=>{
-    console.log(config_object.getBtnToogleMenu())
-  })
+
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
@@ -627,7 +624,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
-    set_show_nav(!show_nav)
+    set_show_nav.toggle()
     if(!show_nav){
       actualizeDrawAreaFrame(applicationData,applicationDraw.GetSankeyMinWidthAndHeight)
     }else{
@@ -811,22 +808,22 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
         ref_setter_mode_selection.current('s')
-        AddDrawNodesEvent(
-          contextMenu,
-          applicationData,
-          uiElementsRef,
-          applicationState,
-          applicationContext,
-          ref_alt_key_pressed,
-          accept_simple_click,
-          link_function,
-          NodeTooltipsContent,
-          ComponentUpdater,
-          dict_hook_ref_setter_show_dialog_components,
-          node_function,
-          applicationDraw.GetSankeyMinWidthAndHeight,
-          applicationDraw.resizeCanvas
-        )
+        // AddDrawNodesEvent(
+        //   contextMenu,
+        //   applicationData,
+        //   uiElementsRef,
+        //   applicationState,
+        //   applicationContext,
+        //   ref_alt_key_pressed,
+        //   accept_simple_click,
+        //   link_function,
+        //   NodeTooltipsContent,
+        //   ComponentUpdater,
+        //   dict_hook_ref_setter_show_dialog_components,
+        //   node_function,
+        //   applicationDraw.GetSankeyMinWidthAndHeight,
+        //   applicationDraw.resizeCanvas
+        // )
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
@@ -870,7 +867,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           blockScrollOnMount={false}
           isOpen={show_nav}
           placement='right'
-          onClose={()=>set_show_nav(false)}
+          onClose={set_show_nav.off}
           variant='drawer_menu_config'
           trapFocus={false}
         >
@@ -900,7 +897,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <ToggleButton
             // ref={uiElementsRef.button_ref as Ref<HTMLLabelElement>}
-            ref={config_object.getBtnToogleMenu()}
+            ref={config_object.btn_toogle_menu}
             id="toggle-check"
             className='openMenu'
             type="checkbox"

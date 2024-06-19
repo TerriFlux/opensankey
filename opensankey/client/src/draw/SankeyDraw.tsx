@@ -1,23 +1,25 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { DeleteLink,deleteSelectedNodeFromData,windowSankey} from '../configmenus/SankeyUtils'
+import { DeleteLink, deleteSelectedNodeFromData, windowSankey } from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
-import { RemoveAnimate,
+import {
+  RemoveAnimate,
   DrawGrid,
   SelectVisualyLinks,
   DeselectVisualyLinks,
   DeselectVisualyNodes,
-  SelectVisualyNodes} from './SankeyDrawFunction'
+  SelectVisualyNodes
+} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
 import { AddDrawNodesEvent } from './SankeyDrawNodes'
 import { DeleteGLinks } from './SankeyDrawLinks'
 declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-}
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
   applicationData,
@@ -27,7 +29,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
-  const {ref_getter_mode_selection,ref_setter_mode_selection}=applicationState
+  const { ref_getter_mode_selection, ref_setter_mode_selection } = applicationState
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
 
@@ -60,14 +62,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData)
 
     RemoveAnimate()
-    d3.select('#svg').style('background-color',applicationData.data.couleur_fond_sankey)
+    d3.select('#svg').style('background-color', applicationData.data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
-    if (ref_getter_mode_selection.current=='s') {
-      d3.select(' .opensankey #svg').attr('class','mode_selection')
+    if (ref_getter_mode_selection.current == 's') {
+      d3.select(' .opensankey #svg').attr('class', 'mode_selection')
     }
 
-    if (ref_getter_mode_selection.current=='ln') {
-      d3.select(' .opensankey #svg').attr('class','mode_add_flux')
+    if (ref_getter_mode_selection.current == 'ln') {
+      d3.select(' .opensankey #svg').attr('class', 'mode_add_flux')
     }
     // Disable zoom outside of the sankey draw zone
     (d3.select('body') as d3.Selection<Element, unknown, HTMLElement, unknown>)
@@ -99,44 +101,44 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
       .call(d3.drag<Element, unknown, HTMLElement>()
         .subject(Object)
-        .filter(evt=>{
+        .filter(evt => {
           evt.stopPropagation()
           evt.preventDefault()
 
-          return d3.select(evt.target).attr('id')=='svg' && evt.which==2
+          return d3.select(evt.target).attr('id') == 'svg' && evt.which == 2
         })
-        .on('start',()=>{
-        // Cache les handles des liens
+        .on('start', () => {
+          // Cache les handles des liens
           SvgDragMiddleMouseStart()
         })
-        .on('drag', event=> {
-          SvgDragMiddleMouseMove(event,applicationData.data)
+        .on('drag', event => {
+          SvgDragMiddleMouseMove(event, applicationData.data)
         })
-        .on('end',()=>{
-          applicationData.set_data({...applicationData.data})
+        .on('end', () => {
+          applicationData.set_data({ ...applicationData.data })
         })
 
       )
-    svgSankey.on('contextmenu',(evt)=>{
-      if(!window.SankeyToolsStatic && d3.select(evt.target).attr('class')=='mode_selection'){return EventZDDContextMenu(evt,contextMenu)}
+    svgSankey.on('contextmenu', (evt) => {
+      if (!window.SankeyToolsStatic && d3.select(evt.target).attr('class') == 'mode_selection') { return EventZDDContextMenu(evt, contextMenu) }
     })
 
     DrawGrid(applicationData.data)
 
-    const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+    const shift_top = document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y + document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
-    d3.select('#svg-container').style('margin-top',shift_top+'px')
+    d3.select('#svg-container').style('margin-top', shift_top + 'px')
 
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
-    d3.selectAll('.navbar').on('mouseup',()=>{
-      if(ref_getter_mode_selection.current=='ln'){
+    d3.selectAll('.navbar').on('mouseup', () => {
+      if (ref_getter_mode_selection.current == 'ln') {
         ref_setter_mode_selection.current('s')
       }
     })
-    d3.select('.sankey-menu').on('click',e=>{
-      if(ref_getter_mode_selection.current=='ln' && d3.select(e.target).attr('class')!=='accordion-item'){
+    d3.select('.sankey-menu').on('click', e => {
+      if (ref_getter_mode_selection.current == 'ln' && d3.select(e.target).attr('class') !== 'accordion-item') {
         ref_setter_mode_selection.current('s')
       }
     })
@@ -148,7 +150,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     border = '2px solid #d3d3d3'
   }
 
-  const width_to_display=((applicationData.data.width) ? applicationData.data.width : window.innerWidth*0.975)
+  const width_to_display = ((applicationData.data.width) ? applicationData.data.width : window.innerWidth * 0.975)
   return (
     <>
       <div className="span12" id='visualization_div' >
@@ -158,11 +160,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               id='svg'
               transform-origin='0 0'
               style={{
-                margin:'10px',
+                margin: '10px',
                 'height': applicationData.data.height,
                 'width': width_to_display,
                 'border': border,
-                boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }}
+                boxShadow: '2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3'
+              }}
               preserveAspectRatio="xMidYMin meet"
             >
               {/* <g className='grid' id='grid'></g>
@@ -188,13 +191,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // Escape key open and close configuration sankey menu
 // ctrl + s save a view of the data
 // Delete key allow us to delete selected elments (nodes,links, free label)
-export const keyHandler : keyHandlerFType = (
+export const keyHandler: keyHandlerFType = (
   applicationData,
   uiElementsRef,
   contextMenu,
   e: KeyboardEvent,
   applicationState,
-  closeAllMenu:()=>void,
+  closeAllMenu: () => void,
   ref_alt_key_pressed,
   accept_simple_click,
   link_function,
@@ -205,15 +208,14 @@ export const keyHandler : keyHandlerFType = (
   node_function,
   applicationDraw
 ) => {
-  const {data}=applicationData
-  const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=applicationState
-  const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
+  const { data, new_data } = applicationData
+  const { multi_selected_nodes, multi_selected_links, ref_setter_mode_selection } = applicationState
   if (
     ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
-    (((document.activeElement?.tagName==='INPUT')?
-      d3.select(document.activeElement).attr('value')==='menuConfigButton':
+    (((document.activeElement?.tagName === 'INPUT') ?
+      d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
       true) &&
-     (!document.activeElement?.className.includes('ql-editor')))
+      (!document.activeElement?.className.includes('ql-editor')))
   ) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
@@ -290,105 +292,104 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     }
-    let link_to_update:string[]=[]
-    multi_selected_nodes.current.forEach(n=>{
-      link_to_update=link_to_update.concat(n.outputLinksId)
-      link_to_update=link_to_update.concat(n.inputLinksId)
+    let link_to_update: string[] = []
+    multi_selected_nodes.current.forEach(n => {
+      link_to_update = link_to_update.concat(n.outputLinksId)
+      link_to_update = link_to_update.concat(n.inputLinksId)
       d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
     })
-    link_to_update=[...new Set(link_to_update)]
+    link_to_update = [...new Set(link_to_update)]
     link_function.RedrawLinks(Object.values(applicationData.display_links))
 
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
     applicationState.ref_getter_mode_selection.current = 's'
-    d3.select(' .opensankey #svg').attr('class','mode_selection')
+    d3.select(' .opensankey #svg').attr('class', 'mode_selection')
 
     // Visualy deselect nodes then deselect in the app data
     multi_selected_nodes.current.forEach(d => {
       DeselectVisualyNodes(d)
     })
-    multi_selected_nodes.current=[]
+    multi_selected_nodes.current = []
 
 
-    multi_selected_links.current.forEach(l=>{
+    multi_selected_links.current.forEach(l => {
       DeselectVisualyLinks(l)
     })
-    multi_selected_links.current=[]
+    multi_selected_links.current = []
 
     closeAllMenu()
-    AddDrawNodesEvent(
-      contextMenu,
-      applicationData,
-      uiElementsRef,
-      applicationState,
-      applicationContext,
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      node_function,
-      applicationDraw.GetSankeyMinWidthAndHeight,
-      applicationDraw.resizeCanvas)
+    // AddDrawNodesEvent(
+    //   contextMenu,
+    //   applicationData,
+    //   uiElementsRef,
+    //   applicationState,
+    //   applicationContext,
+    //   ref_alt_key_pressed,
+    //   accept_simple_click,
+    //   link_function,
+    //   NodeTooltipsContent,
+    //   ComponentUpdater,
+    //   dict_hook_ref_setter_show_dialog_components,
+    //   node_function,
+    //   applicationDraw.GetSankeyMinWidthAndHeight,
+    //   applicationDraw.resizeCanvas)
 
-    updateComponentMenuConfigNode.current()
-    updateComponentMenuConfigNodeAppearence.current()
-    updateComponentMenuConfigLink.current()
-  }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
+    new_data.menu_configuration.updateComponentMenuConfigNode.current
+    new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+    new_data.menu_configuration.updateComponentMenuConfigLink.current()
+  } else if (e.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
 
-    if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
-    {
-      DeleteGLinks(multi_selected_links.current.map(l=>l.idLink))
-      multi_selected_links.current.forEach(el=>{
-        DeleteLink(data,el)
+    if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
+      DeleteGLinks(multi_selected_links.current.map(l => l.idLink))
+      multi_selected_links.current.forEach(el => {
+        DeleteLink(data, el)
       })
 
-      deleteSelectedNodeFromData(applicationData,applicationState)
-      multi_selected_nodes.current=[]
-      multi_selected_links.current=[]
+      deleteSelectedNodeFromData(applicationData, applicationState)
+      multi_selected_nodes.current = []
+      multi_selected_links.current = []
 
       node_function.recomputeDisplayedElement()
       node_function.RedrawNodes(Object.values(applicationData.display_nodes))
       link_function.RedrawLinks(Object.values(applicationData.display_links))
-      updateComponentMenuConfigNode.current()
-      updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.updateComponentMenuConfigNode.current
+      new_data.menu_configuration.updateComponentMenuConfigLink.current()
 
 
     }
-  }else if(e.key=='a' && e.ctrlKey){
+  } else if (e.key == 'a' && e.ctrlKey) {
     e.preventDefault()
-    multi_selected_nodes.current=Object.values(data.nodes)
-    multi_selected_nodes.current.forEach(n=>{
+    multi_selected_nodes.current = Object.values(data.nodes)
+    multi_selected_nodes.current.forEach(n => {
       SelectVisualyNodes(n)
     })
-    multi_selected_links.current=Object.values(data.links)
-    multi_selected_links.current.forEach(l=>{
+    multi_selected_links.current = Object.values(data.links)
+    multi_selected_links.current.forEach(l => {
       SelectVisualyLinks(l)
     })
 
-  }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && (['form-control','chakra-numberinput__field','chakra-input','input_label'].some(r=> document.activeElement?.className.includes(r)))){
+  } else if (e.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
     (document.activeElement as HTMLInputElement).blur()
-  }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
+  } else if (e.key == 's' && e.ctrlKey && !e.shiftKey) {
     e.preventDefault()
-    applicationData.function_on_wait.current=()=>{
+    applicationData.function_on_wait.current = () => {
       localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
       localStorage.setItem('last_save', 'true')
       ComponentUpdater.updateComponenSaveInCache.current(true)
     }
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
 
-  }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
+  } else if ((e.key == 's' && e.ctrlKey && e.shiftKey) || (e.key == 'S' && e.ctrlKey && e.shiftKey)) {
     e.preventDefault()
     ClickSaveDiagram(
       applicationData,
       applicationData.data,
       applicationState,
-      {mode_save:true,mode_visible_element:false}
+      { mode_save: true, mode_visible_element: false }
     )
-  }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
-    if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))){
+  } else if ((e.key === 'f') && !e.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+    if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
       e.preventDefault()
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen()

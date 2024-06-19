@@ -8,7 +8,7 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 
 // Add or delete visual element to show that the node is selected like a thickker border
 export type EventNodeClickFType = (
-  //applicationData:applicationDataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   applicationState:applicationStateType,
   event:React.MouseEvent<HTMLButtonElement>,
@@ -95,6 +95,7 @@ export type SvgDragMiddleMouseStartFuncType = () => void
 export type SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => void
 
 export type SimpleGNodeClickFuncType = (
+  applicationData:applicationDataType,
   uiElementsRef: uiElementsRefType,
   applicationState: applicationStateType,
   event: React.MouseEvent<HTMLButtonElement>,

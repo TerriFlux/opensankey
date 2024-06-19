@@ -417,7 +417,7 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
   ComponentUpdater
 })=>{
   const [ tag_contextualised, set_tag_contextualised] = useState<string>()
-  const {data}=applicationData
+  const {data,new_data}=applicationData
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   if (tagContext.current!.length === 0) {
@@ -457,7 +457,7 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
     multi_selected_links.current.forEach(d=>{
       SelectVisualyLinks(d)
     })
-    ComponentUpdater.updateComponentMenuConfigLink.current()
+    new_data.menu_configuration.updateComponentMenuConfigLink.current()
     tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
   }}
   variant='light'>{text_button_select_element_by_tag} {}</Button>:<></>
@@ -547,7 +547,7 @@ const drag_legend_handle=(
   resizeCanvas:(_:applicationDataType)=>void,
 
 )=>{
-  const {data} = applicationData
+  const {data,new_data} = applicationData
   const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
   const text_zone_shape=d3.select('.g_drag_zone_leg rect')
   const g_text_zone=d3.select('#g_legend')
@@ -579,7 +579,8 @@ const drag_legend_handle=(
       }
     })
     .on('end',()=>{
-      ComponentUpdater.updateComponentMenuConfigLayout.current()
+      new_data.menu_configuration.updateComponentMenuConfigLayout.current()
+
       reDrawLegend()
       resizeCanvas(applicationData)
 
