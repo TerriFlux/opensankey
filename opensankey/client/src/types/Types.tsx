@@ -13,7 +13,7 @@ import { DrawAllNodesFType, drawNodeShapeFType } from '../draw/types/SankeyDrawN
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
 import { opposing_DragElementsFuncType } from '../draw/types/SankeyDragTypes'
-import { Class_ApplicationData } from './Element'
+import { Class_ApplicationData } from './Data'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,

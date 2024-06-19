@@ -1,4 +1,4 @@
-import React,{FunctionComponent, MutableRefObject, useRef, useState} from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
@@ -15,12 +15,12 @@ import {
 } from '@chakra-ui/react'
 import * as d3 from 'd3'
 
-import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
+import { OpenSankeyMenuConfigurationLayoutFType } from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
 import { SankeyData } from '../types/Types'
 import { OSTooltip } from './SankeyUtils'
 
-export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
+export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
   applicationContext,
   applicationData,
   extra_background_element,
@@ -30,14 +30,16 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
   ComponentUpdater
 }) => {
   const { t } = applicationContext
-  const { data, set_data,new_data} = applicationData
-  const {RedrawNodes} = node_function
-  const {RedrawLinks} = link_function
+  const { data, set_data, new_data } = applicationData
+  const { RedrawNodes } = node_function
+  const { RedrawLinks } = link_function
 
-  const [legend_position,set_legend_position] = useState(data.legend_position)
-  const [,setForceUpdate]=useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigLayout.current=setForceUpdate.toggle
+  const [legend_position, set_legend_position] = useState(data.legend_position)
+  const [, setForceUpdate] = useBoolean()
+  new_data.menu_configuration.updateComponentMenuConfigLayout.current = setForceUpdate.toggle
 
+
+  // TODO : re implement number input when class element for legend created
 
   const right_addon_pixel = (val: number) => {
     if (val === 1) {
@@ -65,14 +67,10 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <Input
           variant='menuconfigpanel_option_input_color'
           type='color'
-          value={data.couleur_fond_sankey}
-          onChange={evt=>{
-            // data.couleur_fond_sankey=evt.target.value
-            // d3.select('#svg').style('background-color',evt.target.value)
-            new_data.drawing_area.setColor(evt.target.value)
-          }}
-          onBlur={()=>{
-            set_data({...data})
+          value={new_data.drawing_area.color}
+          onChange={evt => {
+            new_data.drawing_area.color = evt.target.value
+            setForceUpdate.toggle()
           }}
         />
       </OSTooltip>
@@ -86,11 +84,10 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
 
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
-        isChecked={data.grid_visible}
-        icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
+        isChecked={new_data.drawing_area.grid_visible}
+        icon={new_data.drawing_area.grid_visible ? <FaEye /> : <FaEyeSlash />}
         onChange={(evt) => {
-          data.grid_visible = evt.target.checked
-          DrawGrid(data)
+          new_data.drawing_area.grid_visible = evt.target.checked
           setForceUpdate.toggle()
         }}
       >
@@ -105,23 +102,21 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
-      style={{display:(data.grid_visible?'':'none')}}
+      style={{ display: (new_data.drawing_area.grid_visible ? '' : 'none') }}
     >
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('MEP.TCG_shift')}
       </Box>
       <Box>
         <OSTooltip label={t('MEP.tooltips.TCG')}>
-
           <ConfigLayoutNumberInput
-            data={applicationData.data}
-            var_of_data={'grid_square_size'}
-            function_onBlur={()=>DrawGrid(data)}
+            value_attr={new_data.drawing_area.grid_size}
+            function_onCahnge={(_, value) => new_data.drawing_area.grid_size = value}
+            function_onBlur={() => DrawGrid(data)}
             minimum_value={10}
             stepper={true}
             unitText={right_addon_pixel(data.grid_square_size)}
           />
-
         </OSTooltip>
       </Box>
     </Box>
@@ -144,9 +139,9 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
       <Box>
 
         <ConfigLayoutNumberInput
-          data={applicationData.data}
-          var_of_data={'user_scale'}
-          function_onBlur={()=>{
+          value_attr={new_data.drawing_area.scale}
+          function_onCahnge={(_, value) => new_data.drawing_area.scale = value}
+          function_onBlur={() => {
             reDrawLegend()
             RedrawNodes(Object.values(applicationData.display_nodes))
             RedrawLinks(Object.values(applicationData.display_links))
@@ -202,9 +197,9 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('MEP.tooltips.MinFlux')}>
 
           <ConfigLayoutNumberInput
-            data={applicationData.data}
-            var_of_data={'minimum_flux'}
-            function_onBlur={()=>{
+            value_attr={new_data.minimum_flux}
+            function_onCahnge={(_, value) => new_data.minimum_flux = value}
+            function_onBlur={() => {
               RedrawNodes(Object.values(applicationData.display_nodes))
               RedrawLinks(Object.values(applicationData.display_links))
               ComponentUpdater.updateComponenSaveInCache.current(false)
@@ -223,9 +218,9 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
 
           <ConfigLayoutNumberInput
-            data={applicationData.data}
-            var_of_data={'maximum_flux'}
-            function_onBlur={()=>{
+            value_attr={new_data.maximum_flux}
+            function_onCahnge={(_, value) => new_data.maximum_flux = value}
+            function_onBlur={() => {
               RedrawNodes(Object.values(applicationData.display_nodes))
               RedrawLinks(Object.values(applicationData.display_links))
               ComponentUpdater.updateComponenSaveInCache.current(false)
@@ -244,7 +239,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
     >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={data.mask_legend?<FaEye/>:<FaEyeSlash/>}
+        icon={data.mask_legend ? <FaEye /> : <FaEyeSlash />}
         isChecked={data.mask_legend}
         onChange={(evt) => {
           data.mask_legend = evt.target.checked
@@ -258,7 +253,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{display:(data.mask_legend?'':'none')}}
+      style={{ display: (data.mask_legend ? '' : 'none') }}
     >
       <Box
         as='span'
@@ -281,16 +276,16 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
           {t('Menu.fontSize')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
-
-          <ConfigLayoutNumberInput
+          <></>
+          {/* <ConfigLayoutNumberInput
             data={applicationData.data}
             var_of_data={'legend_police'}
-            function_onBlur={()=>{
+            function_onBlur={() => {
               reDrawLegend()
             }}
             minimum_value={1}
             stepper={true}
-          />
+          /> */}
 
         </OSTooltip>
       </Box>
@@ -333,18 +328,18 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
           {t('Menu.LegBgOpacity')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
-
-          <ConfigLayoutNumberInput
+          <></>
+          {/* <ConfigLayoutNumberInput
             data={applicationData.data}
             var_of_data={'legend_bg_opacity'}
-            function_onBlur={()=>{
+            function_onBlur={() => {
               reDrawLegend()
             }}
             minimum_value={0}
             maximum_value={100}
             stepper={true}
             unitText='%'
-          />
+          /> */}
 
         </OSTooltip>
       </Box>
@@ -396,10 +391,10 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
                 setForceUpdate.toggle()
               }}
             >
-              <NumberInputField/>
+              <NumberInputField />
               <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
             <InputRightAddon>
@@ -435,10 +430,10 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
                 setForceUpdate.toggle()
               }}
             >
-              <NumberInputField/>
+              <NumberInputField />
               <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
             <InputRightAddon>
@@ -457,19 +452,19 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegWidth')}
         </Box>
-        <OSTooltip label={t('Menu.tooltips.LegWidth')}>
+        {/* <OSTooltip label={t('Menu.tooltips.LegWidth')}>
 
           <ConfigLayoutNumberInput
-            data={applicationData.data}
-            var_of_data={'legend_width'}
-            function_onBlur={()=>{
+            // data={applicationData.data}
+            // var_of_data={'legend_width'}
+            function_onBlur={() => {
               reDrawLegend()
             }}
             minimum_value={0}
             stepper={true}
             unitText={right_addon_pixel(data.legend_width)}
           />
-        </OSTooltip>
+        </OSTooltip> */}
       </Box>
 
       <Box
@@ -512,14 +507,16 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
 }
 
 
-type ConfigLayoutNumberInputType={
-  data:SankeyData
-  var_of_data:keyof SankeyData
-  minimum_value?:number
-  maximum_value?:number
-  stepper?:boolean
-  unitText?:string
-  function_onBlur:()=>void
+type ConfigLayoutNumberInputType = {
+  // data:SankeyData
+  // var_of_data:keyof SankeyData
+  value_attr: number | undefined,
+  minimum_value?: number
+  maximum_value?: number
+  stepper?: boolean
+  unitText?: string
+  function_onCahnge: (s: string, val: number) => void
+  function_onBlur: () => void
 }
 /**
  * Component developped for number input of the layout config menu
@@ -534,29 +531,30 @@ type ConfigLayoutNumberInputType={
  *
  * @return {JSX.Elmement}
  */
-export const ConfigLayoutNumberInput:FunctionComponent<ConfigLayoutNumberInputType>=({
-  data,
-  var_of_data,
+export const ConfigLayoutNumberInput: FunctionComponent<ConfigLayoutNumberInputType> = ({
+  value_attr,
   minimum_value,
   maximum_value,
-  stepper=false,
+  stepper = false,
   unitText,
+  function_onCahnge,
   function_onBlur
-})=>{
-  const [update,setUpdate]=useState(false)
-  const ref_input=useRef<HTMLInputElement>(null)
-  const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
-  const variantOfInput=unitText?'menuconfigpanel_option_numberinput_with_right_addon':'menuconfigpanel_option_numberinput'
-  const val_of_key=(data[var_of_data] as number)
+}) => {
+  // const [update,setUpdate]=useState(false)
+  const [val, setVal] = useState(value_attr)
+  const ref_input = useRef<HTMLInputElement>(null)
+  const isModifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
+  const variantOfInput = unitText ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
+  // const val_of_key=(data[var_of_data] as number)
 
   // Add stepper addon if specified
-  const stepperBtn=stepper?<NumberInputStepper>
-    <NumberIncrementStepper/>
-    <NumberDecrementStepper/>
-  </NumberInputStepper>:<></>
+  const stepperBtn = stepper ? <NumberInputStepper>
+    <NumberIncrementStepper />
+    <NumberDecrementStepper />
+  </NumberInputStepper> : <></>
 
   // Add unit addon if specified
-  const inputUnit=unitText?<InputRightAddon>{unitText}</InputRightAddon>:<></>
+  const inputUnit = unitText ? <InputRightAddon>{unitText}</InputRightAddon> : <></>
 
   return <InputGroup variant='menuconfigpanel_option_input' >
     <NumberInput allowMouseWheel
@@ -564,21 +562,22 @@ export const ConfigLayoutNumberInput:FunctionComponent<ConfigLayoutNumberInputTy
       min={minimum_value}
       max={maximum_value}
       step={1}
-      value={(val_of_key || val_of_key===0)?val_of_key:''}
-      onChange={(_,value)=>{
-        (data[var_of_data] as number)=value
-        setUpdate(!update)
+      value={val as number}
+      onChange={(_, value) => {
+        // (data[var_of_data] as number)=value
+        function_onCahnge(_, value)
 
-        if(isModifying.current){
+        setVal(value)
+        if (isModifying.current) {
           clearTimeout(isModifying.current)
         }
 
-        isModifying.current=setTimeout(()=>{
+        isModifying.current = setTimeout(() => {
           function_onBlur()
           ref_input.current?.blur()
-        },2000)
+        }, 2000)
       }}
-      onBlur={()=>{
+      onBlur={() => {
         clearTimeout(isModifying.current)
         function_onBlur()
       }}

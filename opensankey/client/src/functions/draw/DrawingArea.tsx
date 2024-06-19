@@ -21,7 +21,6 @@ import {
 
 // Add local constants
 import { default_black_color } from '../../types/Element'
-import { Class_Link, Class_LinkElement } from '../../types/Link'
 
 /**
  * Draw background for drawing area
@@ -37,7 +36,7 @@ export const drawDrawingAreaBackground: FType_DrawDrawingArea = (
   drawing_area.d3_selection_bg?.append('rect')
     .attr('class', 'bg')
     .attr('id', 'bg_drawing_area')
-    .attr('fill', drawing_area.getColor())
+    .attr('fill', drawing_area.color)
     .attr('width', drawing_area.getWidth())
     .attr('height', drawing_area.getHeight())
     .style('stroke-width', 5)
@@ -55,28 +54,28 @@ export const drawDrawingAreaGrid: FType_DrawDrawingArea = (
   // Clean if needed
   drawing_area.d3_selection_grid?.selectAll('.line').remove()
   // Draw only if asked OR outside publishing mode
-  if (drawing_area.isGridVisible() && !drawing_area.static) {
+  if (drawing_area.grid_visible && !drawing_area.static) {
     // Draw horizontal lines
-    const number_of_horizontal_lines = drawing_area.getHeight() / drawing_area.getGridSize()
+    const number_of_horizontal_lines = drawing_area.getHeight() / drawing_area.grid_size
     for (let row = 0; row < number_of_horizontal_lines; row++) {
       drawing_area.d3_selection_grid?.append('line')
         .attr('class', 'line line-horiz')
         .attr('id', 'line_horiz_drawing_area_' + String(row))
         .attr('x1', '0')
         .attr('x2', drawing_area.getWidth())
-        .attr('y1', row * drawing_area.getGridSize())
-        .attr('y2', row * drawing_area.getGridSize())
+        .attr('y1', row * drawing_area.grid_size)
+        .attr('y2', row * drawing_area.grid_size)
         .style('stroke', drawing_area.getGridColor())
         .style('stroke-dasharray', 4)
     }
     // Draw vertical lines
-    const number_of_vertical_lines = drawing_area.getWidth() / drawing_area.getGridSize()
+    const number_of_vertical_lines = drawing_area.getWidth() / drawing_area.grid_size
     for (let column = 0; column < number_of_vertical_lines; column++) {
       drawing_area.d3_selection_grid?.append('line')
         .attr('class', 'line line-vert')
         .attr('id', 'line_horiz_drawing_area_' + String(column))
-        .attr('x1', column * drawing_area.getGridSize())
-        .attr('x2', column * drawing_area.getGridSize())
+        .attr('x1', column * drawing_area.grid_size)
+        .attr('x2', column * drawing_area.grid_size)
         .attr('y1', 0)
         .attr('y2', drawing_area.getHeight())
         .style('stroke-dasharray', 4)

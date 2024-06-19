@@ -10,7 +10,6 @@ import * as d3 from 'd3'
 // Local types
 import {
   Class_Element,
-  Class_ElementShape,
   Type_ElementPosition,
   Type_Label,
   defaultElementColor,
@@ -36,28 +35,28 @@ import { Class_MenuConfig } from './MenuConfig'
 
 
 
-export class Class_NodeShape extends Class_ElementShape {
-  // Shape can only be rect | ellipse | arrow
-  protected type: 'rect' | 'ellipse' | 'arrow'
-  private width: number
-  private height: number
+// export class Class_NodeShape extends Class_ElementShape {
+//   // Shape can only be rect | ellipse | arrow
+//   protected type: 'rect' | 'ellipse' | 'arrow'
+//   private width: number
+//   private height: number
 
 
-  constructor() {
-    super()
-    this.type = 'rect'
-    this.width = 40
-    this.height = 40
-  }
-  public getType(): 'rect' | 'ellipse' | 'arrow' { return this.type }
-  public setType(value: 'rect' | 'ellipse' | 'arrow') { this.type = value }
+//   constructor() {
+//     super()
+//     this.type = 'rect'
+//     this.width = 40
+//     this.height = 40
+//   }
+//   public getType(): 'rect' | 'ellipse' | 'arrow' { return this.type }
+//   public setType(value: 'rect' | 'ellipse' | 'arrow') { this.type = value }
 
-  // public getWidth(): number { return this.width }
-  // public setWidth(value: number) { this.width = value }
+//   // public getWidth(): number { return this.width }
+//   // public setWidth(value: number) { this.width = value }
 
-  // public getHeight(): number { return this.height }
-  // public setHeight(value: number) { this.height = value }
-}
+//   // public getHeight(): number { return this.height }
+//   // public setHeight(value: number) { this.height = value }
+// }
 
 /**
  * Class that define a node element and how to interact with it
@@ -143,7 +142,6 @@ export class Class_NodeElement extends Class_Element {
     this.display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
-      // shape: new Class_NodeShape,
       style: drawing_area.sankey.node_styles['default'],
       local: new Class_NodeAttribute()
 
@@ -366,7 +364,7 @@ export class Class_NodeElement extends Class_Element {
 
 
 
-  private get width() {
+  public get width() {
     /*
     TODO : the width depend of the sum of input/output links from top or bottom of the node 
     if the sum is superior to node width the use the max of input/output
@@ -377,7 +375,7 @@ export class Class_NodeElement extends Class_Element {
     return this.min_width
   }
 
-  private get height() {
+  public get height() {
     /*
     TODO : the height depend of the sum of input/output links from left or right of the node 
     if the sum is superior to node height the use the max of input/output
@@ -662,10 +660,12 @@ export class Class_NodeElement extends Class_Element {
         if (this.hasInputLinks()) {
           // Node is export
           const input_link = this.getFirstInputLink()
-          if (!input_link?.display.shape.getVisible()) {
-            return 'translate(0, 0)'
-          }
-          const source_node = input_link.source
+          // if (!input_link?.display.shape.getVisible()) {
+          //   return 'translate(0, 0)'
+          // }
+
+          // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
+          const source_node = input_link!.source
           // if (!source_node.display.shape.getVisible()) {
           if (!source_node.shape_visible) {
             return 'translate(0, 0)'
@@ -676,10 +676,12 @@ export class Class_NodeElement extends Class_Element {
         else if (this.hasOutputLinks()) {
           // Node is import
           const output_link = this.getFirstOutputLink()
-          if (!output_link?.display.shape.getVisible()) {
-            return 'translate(0,0)'
-          }
-          const target_node = output_link.target
+          // if (!output_link?.display.shape.getVisible()) {
+          //   return 'translate(0,0)'
+          // }
+
+          // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
+          const target_node = output_link!.target
           if (!target_node.shape_visible) {
             return 'translate(0,0)'
           }

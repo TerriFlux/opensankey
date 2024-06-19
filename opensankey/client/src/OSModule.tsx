@@ -76,7 +76,7 @@ import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBann
 import { Form, Popover } from 'react-bootstrap'
 import { windowSankey } from './configmenus/SankeyUtils'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
-import { Class_ApplicationData } from './types/Element'
+import { Class_ApplicationData } from './types/Data'
 
 let logo = ''
 try {

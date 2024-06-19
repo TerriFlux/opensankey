@@ -54,7 +54,7 @@ import {
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
 import { DeleteGNodes } from './draw/SankeyDrawNodes'
-import { Class_ApplicationData } from './types/Element'
+import { Class_ApplicationData } from './types/Data'
 
 
 declare const window: Window &
