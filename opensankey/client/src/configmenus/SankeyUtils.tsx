@@ -671,7 +671,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_color:defaultElementColor,
     legend_bg_opacity:0,
     legend_show_dataTags:false,
-    node_label_separator:''
+    node_label_separator:' - '
 
   }
   const node_style_sect=DefaultNodeSectorStyle()

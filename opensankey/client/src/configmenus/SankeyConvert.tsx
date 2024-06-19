@@ -1635,7 +1635,7 @@ export const convert_data:ConvertDataFuncType = (
   }
 
   if(data.node_label_separator===undefined || data.node_label_separator===null){
-    data.node_label_separator=''
+    data.node_label_separator=' - '
   }
 
   clean_data_local(data)
