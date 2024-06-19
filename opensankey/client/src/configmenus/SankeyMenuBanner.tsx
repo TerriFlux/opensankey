@@ -333,7 +333,11 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
             {selector}
           </OSTooltip>
           <OSTooltip label={t('Banner.ndd_chk')} >
-            {btn_switch}
+            <Box
+              justifySelf='end'
+            >
+              {btn_switch}
+            </Box>
           </OSTooltip>
         </Box>
       </Box>
@@ -1025,30 +1029,33 @@ const AddAllDropDownFlux: AddAllDropDownFluxFType = (
             {selector}
           </OSTooltip>
           <OSTooltip label={t('Banner.ndd_chk')} >
-            <Switch
+            <Box
               justifySelf='end'
               alignSelf='center'
               height='1rem'
-              isChecked={data.linksColorMap == tags_selected[0]}
-              onChange={evt => {
-                Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-                Object.values(data.links).forEach(el => {
-                  el.colorTag = 'no_colormap'
-                })
-                data.linksColorMap = 'no_colormap'
-
-                if (evt.target.checked) {
+            >
+              <Switch
+                isChecked={data.linksColorMap == tags_selected[0]}
+                onChange={evt => {
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
                   Object.values(data.links).forEach(el => {
-                    el.colorTag = tags_selected[0]
+                    el.colorTag = 'no_colormap'
                   })
-                  data.linksColorMap = tags_selected[0]
-                  data.fluxTags[tags_selected[0]].show_legend = true
-                }
-                redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                setForceUpdate(!forceUpdate)
-              }}
-            />
+                  data.linksColorMap = 'no_colormap'
+
+                  if (evt.target.checked) {
+                    Object.values(data.links).forEach(el => {
+                      el.colorTag = tags_selected[0]
+                    })
+                    data.linksColorMap = tags_selected[0]
+                    data.fluxTags[tags_selected[0]].show_legend = true
+                  }
+                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+                  setForceUpdate(!forceUpdate)
+                }}
+              />
+            </Box>
           </OSTooltip>
         </Box>
       </Box>)
