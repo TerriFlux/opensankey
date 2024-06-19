@@ -9,8 +9,6 @@ import * as d3 from 'd3'
 
 // Local types
 import {
-  Class_ApplicationData,
-  Class_Element,
   default_background_color,
   default_grid_color
 } from './Element'
@@ -29,6 +27,7 @@ import {
   setDrawingAreaEventsListeners
 } from '../functions/draw/DrawingArea'
 import { Class_NodeElement } from './Node'
+import { Class_ApplicationData } from './Data'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -63,7 +62,6 @@ export class Class_DrawingArea {
   }
 
   // IMPORTANT METHODS ==================================================================
-
   /**
    * Reset drawing area
    * @memberof Class_DrawingArea
@@ -182,21 +180,22 @@ export class Class_DrawingArea {
   // Elements that are contained in this area
   sankey: Class_Sankey
   // legend: Class_Element = new Class_Element('legend', this, 'g_legend')
-  text_areas: { [id: string]: Class_Element } = {}
+  // text_areas: { [id: string]: Class_Element } = {}
 
   // Elements that are selected in this area
   sankey_selection: Class_Sankey
 
   // Color
-  private color: string = default_background_color
+  private _color: string = default_background_color
 
   // Grid
   private grid_color: string = default_grid_color
-  private grid_visible: boolean = true
-  private grid_size: number = 100
+  private _grid_visible: boolean = true
+  private _grid_size: number = 100
 
   // Scale
-  scale: number = 20
+  private _scale: number = 20
+
 
   // Positionning
   public h_space: number = 200
@@ -221,21 +220,27 @@ export class Class_DrawingArea {
   public setHeight(_: number) { this.height = _; this.drawElements() }
 
   // Color
-  public getColor() { return this.color }
-  public setColor(_: string) { this.color = _; drawDrawingAreaBackground(this) } // TODO add regular expression check here
+  public get color() { return this._color }
+  public set color(_: string) { this._color = _; drawDrawingAreaBackground(this) } // TODO add regular expression check here
 
   // Scale
-  public getScale() { return this.scale }
-  public setScale(_: number) { if (_ > 0) this.scale = _ }
-
+  public get scale(): number {
+    return this._scale
+  }
+  public set scale(value: number) {
+    if(value>0){
+      this._scale = value
+    }
+  }
   // Grid
   public getGridColor() { return this.grid_color }
   public setGridColor(_: string) { this.grid_color = _; drawDrawingAreaGrid(this) }
-  public isGridVisible() { return this.grid_visible }
+  public get grid_visible() { return this._grid_visible }
+  public set grid_visible(_:boolean){this._grid_visible=_}
   public setGridVisible() { this.grid_visible = true; drawDrawingAreaGrid(this) }
   public setGridInvisible() { this.grid_visible = false; drawDrawingAreaGrid(this) }
-  public getGridSize() { return this.grid_size }
-  public setGridSize(_: number) { this.grid_size = _; drawDrawingAreaGrid(this) }
+  public get grid_size() { return this._grid_size }
+  public set grid_size(_: number) { this._grid_size = _; drawDrawingAreaGrid(this) }
 
   /**
    * Checks if it is possible to directly deal with events
@@ -329,7 +334,7 @@ export class Class_DrawingArea {
 
   /**
    * Add a link to selection set
-   * @param {Class_Link} link
+   * @param {Class_LinkElement} link
    * @memberof Class_DrawingArea
    */
   public addLinkToSelection(link: Class_LinkElement) {

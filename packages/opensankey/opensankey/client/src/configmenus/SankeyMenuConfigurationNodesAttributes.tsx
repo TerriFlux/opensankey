@@ -84,12 +84,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const { RedrawNodes } = node_function
   const { RedrawLinks } = link_function
 
-  if(!menu_for_style){
-    console.log(list_nodes_selected)
-  }
-
-
-
   /**
  * Function used to reset node modified (selected if in menu config else all node)
  *
@@ -142,10 +136,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
    * function that go throught all Class_NodeElement of an array & check if they're all equals 
    * (to the first )
    *
-   * @param {boolean} acc
    * @param {Class_NodeElement} curr
-   * @param {number} ind
-   * @param {Class_NodeElement[]} array
    * @return {*} 
    */
   const check_indeterminate = (curr: Class_NodeElement,) => {
@@ -238,7 +229,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             type='color'
             value={value_color}
             onChange={evt => {
-              // assignValueToVar('color', evt.target.value)
               list_style_or_nodes.forEach(n => n.color = evt.target.value)
               newUpdateMenuConfigNode()
               updateLinkAttachedToNodes()
@@ -282,7 +272,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              // assignValueToVar('shape', 'ellipse')
               list_style_or_nodes.forEach(n => n.shape = 'ellipse')
               newUpdateMenuConfigNode()
               updateLinkAttachedToNodes()

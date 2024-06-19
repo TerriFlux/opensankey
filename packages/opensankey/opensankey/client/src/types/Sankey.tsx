@@ -8,8 +8,9 @@
 
 // Local types
 import {
-  Class_Link,
   Class_LinkElement,
+  Class_LinkStyle,
+  default_link_style,
 } from './Link'
 import {
   Class_NodeElement,
@@ -39,7 +40,7 @@ import { Class_MenuConfig } from './MenuConfig'
 export class Class_Sankey {
 
   // Existing styles
-  flux_styles: { [_: string]: Class_LinkElement } = {} // TODO create defaut style
+  flux_styles: { [_: string]: Class_LinkStyle } = {'default':default_link_style} // TODO create defaut style
   node_styles: { [_: string]: Class_NodeStyle } = { 'default': default_node_style }
 
   // CONSTRUCTOR ==============================================================
@@ -278,7 +279,7 @@ export class Class_Sankey {
   /**
      * Return array of link who have is_selected at true
      *
-     * @return {Class_Link[]} 
+     * @return {Class_LinkElement[]} 
      * @memberof Class_Sankey
      */
   public getAllLinksSelected() {
@@ -301,7 +302,7 @@ export class Class_Sankey {
    *
    * @memberof Class_Sankey
    */
-  public drawTheseLinks(links: Class_Link[]) {
+  public drawTheseLinks(links: Class_LinkElement[]) {
     links.forEach(l => l.reset())
   }
 
