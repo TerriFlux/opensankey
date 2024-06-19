@@ -81,11 +81,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const [, set_style_to_apply_to_link] = useState('default')
   //const {updateComponentMenuConfigLink}=ComponentUpdater
 
-  const links = new_data.drawing_area.sankey.getAllLinks()
+  const links = new_data.drawing_area.sankey.links_dict
 
-  const list_links_selected = new_data.drawing_area.sankey.getAllLinksSelected()
+  const list_links_selected = new_data.drawing_area.selected_links_list
 
-  const list_style_or_links = (menu_for_style) ? [new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current]] : list_links_selected
+  const list_style_or_links = (menu_for_style) ? [new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]] : list_links_selected
   const list_links_to_reset = (menu_for_style) ? Object.values(links) : list_links_selected
 
 
@@ -106,11 +106,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
   /**
    *
-   * function that go throught all Class_NodeElement of an array & check if they're all equals 
+   * function that go throught all Class_NodeElement of an array & check if they're all equals
    * (to the first )
-  
+
    * @param {Class_LinkElement} curr
-   * @return {*} 
+   * @return {*}
    */
   const check_indeterminate = (curr: Class_LinkElement) => {
     return (list_links_selected[0].isEqual(curr))
@@ -118,32 +118,32 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const is_indeterminatae = !list_links_selected.every(check_indeterminate)
 
 
-  const value_orientation = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].orientation : (list_links_selected[0]?.orientation ?? false)
-  const value_left_horiz_shift = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].left_horiz_shift : (list_links_selected[0]?.left_horiz_shift ?? false)
-  const value_right_horiz_shift = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].right_horiz_shift : (list_links_selected[0]?.right_horiz_shift ?? false)
-  const value_vert_shift = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].vert_shift : (list_links_selected[0]?.vert_shift ?? false)
-  const value_curvature = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].curvature : (list_links_selected[0]?.curvature ?? false)
-  const value_curved = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].curved : (list_links_selected[0]?.curved ?? false)
-  const value_recycling = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].recycling : (list_links_selected[0]?.recycling ?? false)
-  const value_arrow_size = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].arrow_size : (list_links_selected[0]?.arrow_size ?? false)
-  const value_label_position = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_position : (list_links_selected[0]?.label_position ?? false)
-  const value_orthogonal_label_position = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].orthogonal_label_position : (list_links_selected[0]?.orthogonal_label_position ?? false)
-  const value_label_on_path = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_on_path : (list_links_selected[0]?.label_on_path ?? false)
-  const value_label_pos_auto = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_pos_auto : (list_links_selected[0]?.label_pos_auto ?? false)
-  const value_arrow = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].arrow : (list_links_selected[0]?.arrow ?? false)
-  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].color : (list_links_selected[0]?.color ?? false)
-  const value_opacity = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].opacity : (list_links_selected[0]?.opacity ?? false)
-  const value_dashed = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].dashed : (list_links_selected[0]?.dashed ?? false)
-  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_visible : (list_links_selected[0]?.label_visible ?? false)
-  const value_label_font_size = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_font_size : (list_links_selected[0]?.label_font_size ?? false)
-  const value_text_color = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].text_color : (list_links_selected[0]?.text_color ?? false)
-  const value_to_precision = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].to_precision : (list_links_selected[0]?.to_precision ?? false)
-  const value_scientific_precision = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].scientific_precision : (list_links_selected[0]?.scientific_precision ?? false)
-  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].font_family : (list_links_selected[0]?.font_family ?? false)
-  const value_label_unit_visible = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_unit_visible : (list_links_selected[0]?.label_unit_visible ?? false)
-  const value_label_unit = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].label_unit : (list_links_selected[0]?.label_unit ?? false)
-  const value_custom_digit = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].custom_digit : (list_links_selected[0]?.custom_digit ?? false)
-  const value_nb_digit = (menu_for_style) ? new_data.drawing_area.sankey.flux_styles[ref_selected_style_link.current].nb_digit : (list_links_selected[0]?.nb_digit ?? false)
+  const value_orientation = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].orientation : (list_links_selected[0]?.orientation ?? false)
+  const value_left_horiz_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].left_horiz_shift : (list_links_selected[0]?.left_horiz_shift ?? false)
+  const value_right_horiz_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].right_horiz_shift : (list_links_selected[0]?.right_horiz_shift ?? false)
+  const value_vert_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].vert_shift : (list_links_selected[0]?.vert_shift ?? false)
+  const value_curvature = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].curvature : (list_links_selected[0]?.curvature ?? false)
+  const value_curved = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].curved : (list_links_selected[0]?.curved ?? false)
+  const value_recycling = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].recycling : (list_links_selected[0]?.recycling ?? false)
+  const value_arrow_size = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].arrow_size : (list_links_selected[0]?.arrow_size ?? false)
+  const value_label_position = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_position : (list_links_selected[0]?.label_position ?? false)
+  const value_orthogonal_label_position = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].orthogonal_label_position : (list_links_selected[0]?.orthogonal_label_position ?? false)
+  const value_label_on_path = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_on_path : (list_links_selected[0]?.label_on_path ?? false)
+  const value_label_pos_auto = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_pos_auto : (list_links_selected[0]?.label_pos_auto ?? false)
+  const value_arrow = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].arrow : (list_links_selected[0]?.arrow ?? false)
+  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].color : (list_links_selected[0]?.color ?? false)
+  const value_opacity = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].opacity : (list_links_selected[0]?.opacity ?? false)
+  const value_dashed = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].dashed : (list_links_selected[0]?.dashed ?? false)
+  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_visible : (list_links_selected[0]?.label_visible ?? false)
+  const value_label_font_size = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_font_size : (list_links_selected[0]?.label_font_size ?? false)
+  const value_text_color = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].text_color : (list_links_selected[0]?.text_color ?? false)
+  const value_to_precision = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].to_precision : (list_links_selected[0]?.to_precision ?? false)
+  const value_scientific_precision = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].scientific_precision : (list_links_selected[0]?.scientific_precision ?? false)
+  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].font_family : (list_links_selected[0]?.font_family ?? false)
+  const value_label_unit_visible = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_unit_visible : (list_links_selected[0]?.label_unit_visible ?? false)
+  const value_label_unit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_unit : (list_links_selected[0]?.label_unit ?? false)
+  const value_custom_digit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].custom_digit : (list_links_selected[0]?.custom_digit ?? false)
+  const value_nb_digit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].nb_digit : (list_links_selected[0]?.nb_digit ?? false)
 
 
   const deleteLinkRelativeLabelPos = (l: Class_LinkElement) => {
@@ -1135,7 +1135,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   //     >
   //       {t('Flux.apparence.apparence')}
   //     </Box>
-  //   </Tab>,<TabPanel 
+  //   </Tab>,<TabPanel
   //     id='links_desc'
   //   >
   //     <Box layerStyle='menuconfigpanel_grid'>
@@ -1182,7 +1182,7 @@ type ConfigLinkNumberInputType = {
 }
 /**
  * Component developped for number input of the nodes attributs config menu
- * 
+ *
  * @param {applicationDataType} applicationData
  * @param {keyof SankeyNodeAttrLocal} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
  * @param {{[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}} parameter_to_modify multi_selected_nodes or dict of node style
@@ -1193,7 +1193,7 @@ type ConfigLinkNumberInputType = {
  * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
  * @param {string} unitText (default:'') text of the addon
  * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
- * 
+ *
  * @return {JSX.Elmement}
  */
 export const ConfigLinkAttributeNumberInput: FunctionComponent<ConfigLinkNumberInputType> = ({
