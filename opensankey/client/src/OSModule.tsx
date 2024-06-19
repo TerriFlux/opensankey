@@ -486,23 +486,11 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
 // Used to update the various component of the application
 export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
   const _ = {
-    updateComponentMenuConfigNode:useRef(()=>null),
-    updateComponentMenuConfigNodeAppearence:useRef(()=>null),
-    updateComponentMenuConfigLink:useRef(()=>null),
-    updateComponentToolbar:useRef(()=>null),
     updateComponentMenuConfig:useRef(()=>null),
-    updateComponentMenuConfigLayout:useRef(()=>null),
-    updateComponentMenu:useRef(()=>null),
     updateComponenSaveInCache:useRef(()=>null),
-    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[]),
     updateComponentBtnUpdateLayout : useRef(()=>null),
-    updateMenuConfigTextNodeTooltip:useRef([] as (()=>void)[]),
-    updateMenuConfigTextLinkTooltip:useRef([] as (()=>void)[]),
     updatePreference:useRef(()=>null)
   }
-  _.updateMenuConfigTextNodeTooltip.current=[]
-  _.updateMenuConfigTextLinkTooltip.current=[]
-  _.updateComponentMenuNodeIOSelectSideNode.current=[]
   return _
 }
 
@@ -623,6 +611,7 @@ export const moduleDialogs : module_dialogsType = (
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_node_tooltip',
     <SankeyMenuConfigurationNodesTooltip
+      applicationData={applicationData}
       applicationContext={applicationContext}
       applicationState ={applicationState}
       ComponentUpdater={ComponentUpdater}
@@ -664,6 +653,7 @@ export const moduleDialogs : module_dialogsType = (
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_tooltip',
     <MenuConfigurationLinksTooltip
+      applicationData={applicationData}
       ComponentUpdater={ComponentUpdater}
       multi_selected_links={applicationState.multi_selected_links}
       t={applicationContext.t}

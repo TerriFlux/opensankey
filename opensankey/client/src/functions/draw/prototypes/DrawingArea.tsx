@@ -9,9 +9,7 @@ import {
   Class_DrawingArea
 } from '../../../types/DrawingArea'
 import { Class_MenuConfig } from '../../../types/MenuConfig'
-import {
-  Class_Node
-} from '../../../types/Node'
+import { Class_NodeElement } from '../../../types/Node'
 
 /**
  * Draw what is necessary on given draw area
@@ -34,7 +32,7 @@ export type FType_AddNewNodeToDrawingArea = (
   menu_config: Class_MenuConfig,
   id: string,
   name: string
-) => Class_Node
+) => Class_NodeElement
 
 /**
  * Set up mouse events listeners for given node

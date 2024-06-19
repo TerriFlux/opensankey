@@ -1,17 +1,17 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurationLinksTooltipTypes'
-import { Box, Button, TabPanel, Textarea } from '@chakra-ui/react'
+import { Box, Button, TabPanel, Textarea, useBoolean } from '@chakra-ui/react'
 import { OSTooltip } from './SankeyUtils'
 
 export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
+  applicationData,
   ComponentUpdater,
   multi_selected_links,
   t,
   menu_for_modal
 })=>{
-  const {updateMenuConfigTextLinkTooltip}=ComponentUpdater
-  const [ forceUpdate, setForceUpdate ]=useState(false)
-
+  const [ , setForceUpdate ]=useBoolean()
+  const {new_data}=applicationData
 
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
@@ -54,11 +54,11 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
       // Reset state value
       sEditorContentNodeTooltip('')
     }
-    setForceUpdate(!forceUpdate)
+    setForceUpdate.toggle()
 
   }
 
-  updateMenuConfigTextLinkTooltip.current.push(resetTextEditor)
+  new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.push(resetTextEditor)  
 
   const content=    <>
     <Box

@@ -255,9 +255,8 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
   ComponentUpdater
 
 )=>{
-  const {data}= applicationData
+  const {data,new_data}= applicationData
   const {multi_selected_links}= applicationState
-  const  {updateComponentMenuConfigLink}=ComponentUpdater
 
   const l_ori=ReturnValueLink(data,link,'orientation')
   return d3.drag<SVGCircleElement, unknown>()
@@ -270,7 +269,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
       }
     })
     .on('end',()=>{
-      updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.updateComponentMenuConfigLink.current()
     })
 }
 /**
@@ -312,8 +311,8 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
   ComponentUpdater
 
 )=>{
+  const {new_data}=applicationData
   const {multi_selected_links}=applicationState
-  const  {updateComponentMenuConfigLink}=ComponentUpdater
   return d3.drag<SVGRectElement, unknown>()
     .subject(Object).on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
@@ -324,7 +323,7 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
 
     })
     .on('end',()=>{
-      updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.updateComponentMenuConfigLink.current()
     })
 }
 

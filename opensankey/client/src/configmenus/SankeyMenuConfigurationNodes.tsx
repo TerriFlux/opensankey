@@ -1,11 +1,8 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent } from 'react'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 
-import * as d3 from 'd3'
-import { textwrap } from 'd3-textwrap'
-import { TFunction } from 'i18next'
 
 import {
   Box,
@@ -15,7 +12,8 @@ import {
   Tabs,
   TabList,
   TabPanels,
-  Tab
+  Tab,
+  useBoolean
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -23,32 +21,25 @@ import {
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
-  SankeyData,
   SankeyNode,
   applicationContextType,
   applicationDataType,
-  applicationStateType,
-  treeFolderType
-} from '../types/Types'
+  applicationStateType} from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
-  add_childrenFType,
-  check_node_has_node_typeFType,
-  getNodeFromTreeFType,
   OpenSankeyMenuConfigurationNodesFType,
-  tree_data_nodesFType,
 } from './types/SankeyMenuConfigurationNodesTypes'
 
 /*************************************************************************************************/
 import {
-  ReturnValueNode, AddNewNode, deleteSelectedNodeFromData,
+  deleteSelectedNodeFromData,
   OSTooltip
 } from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction'
+import { DeselectVisualyNodes, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { selected_type } from '../topmenus/SankeyMenuTop'
 
 
@@ -83,6 +74,7 @@ export const OpenSankeyMenuConfigurationNodes: OpenSankeyMenuConfigurationNodesF
       idTab={'node_attr'}
     />,
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
+      applicationData={applicationData}
       applicationContext={applicationContext}
       applicationState={applicationState}
       ComponentUpdater={ComponentUpdater}
@@ -127,17 +119,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     node_function
   }
 ) => {
-  const [forceUpdate, setForceUpdate] = useState(false)
-  const {
-    updateComponentMenuConfigNode, updateComponentMenuNodeIOSelectSideNode,
-    updateComponentMenuConfigLink, updateMenuConfigTextNodeTooltip
-  } = ComponentUpdater
-  updateComponentMenuConfigNode.current = () => setForceUpdate(!forceUpdate)
-
   const { data, new_data } = applicationData
+  const [, setForceUpdate] = useBoolean()
+  new_data.menu_configuration.updateComponentMenuConfigNode.current = setForceUpdate.toggle
   const { t } = applicationContext
-  const node_visible = NodeVisibleOnsSvg()
-
   const new_nodes_sorted = new_data.drawing_area.sankey.getNameSortedNodes()
   const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.isSelected())
   const INITIAL_OPTIONS = Object
@@ -179,9 +164,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 }
               })
 
-              setForceUpdate(!forceUpdate)
-              updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
-              updateMenuConfigTextNodeTooltip.current.forEach(f => f())
+              setForceUpdate.toggle()
+              new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+              new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
 
             }}
             valueRenderer={(selected: selected_type[]) => {
@@ -315,7 +300,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               Object.values(applicationData.display_nodes).forEach(n => DeselectVisualyNodes(n))
 
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
-              new_node.name='Unknown Node'
+              new_node.name = 'Unknown Node'
               // Set position
               new_node.setPosXY(50, 50)
               new_data.drawing_area.addNodeToSelection(new_node)
@@ -324,8 +309,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               // AddNewNode(applicationData, multi_selected_nodes, node_function)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               // SelectVisualyNodes(multi_selected_nodes.current[0])
-              updateMenuConfigTextNodeTooltip.current.forEach(f => f())
-              setForceUpdate(!forceUpdate)
+              new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
+              setForceUpdate.toggle()
             }}>
             <FaPlus />
           </Button>
@@ -348,8 +333,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 node_function.recomputeDisplayedElement()
                 node_function.RedrawNodes(Object.values(applicationData.display_nodes))
                 link_function.RedrawLinks(Object.values(applicationData.display_links))
-                updateComponentMenuConfigNode.current()
-                updateComponentMenuConfigLink.current()
+                new_data.menu_configuration.updateComponentMenuConfigNode.current()
+                new_data.menu_configuration.updateComponentMenuConfigLink.current()
                 ComponentUpdater.updateComponenSaveInCache.current(false)
 
               }}>
@@ -364,7 +349,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onClick={
               () => {
                 data.displayed_node_selector = !data.displayed_node_selector
-                setForceUpdate(!forceUpdate)
+                setForceUpdate.toggle()
               }}>
             <FaEye />
           </Button>
@@ -401,7 +386,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   const d = new_nodes_sorted_selected[0]
                   d.reset()
 
-                  setForceUpdate(!forceUpdate)
+                  setForceUpdate.toggle()
                 }}
                 isDisabled={(new_nodes_sorted_selected.length == 1) ? false : true}
               />
