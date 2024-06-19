@@ -71,7 +71,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   node_function
 }) => {
   const { t } = applicationContext
-  const { data } = applicationData
+  const { data,new_data } = applicationData
   const { multi_selected_nodes } = applicationState
   const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
@@ -80,8 +80,12 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   const {RedrawNodes}=node_function
   const {RedrawLinks}=link_function
   updateComponentMenuConfigNodeAppearence.current=()=>setForceUpdate(!forceUpdate)
-
   const element_to_update=menu_for_style?Object.values(applicationData.display_nodes):multi_selected_nodes.current
+
+
+  const list_nodes=new_data.drawing_area.sankey.getAllNodes()
+  const list_nodes_selected=new_data.drawing_area.sankey.getAllNodesSelected()
+
 
   const updateMenuConfigNode=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
@@ -93,6 +97,15 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
     setForceUpdate(!forceUpdate)
   }
 
+  const newUpdateMenuConfigNode=()=>{
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+    list_nodes_selected.forEach(n=>n.reset())
+    if(!menu_for_style){
+      updateComponentMenuConfigNode.current()
+    }
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+    setForceUpdate(!forceUpdate)
+  }
   const updateLinkAttachedToNodes=()=>{
     if(!menu_for_style){
       // Redraw link attached to modified node when the modification to the node
@@ -204,15 +217,18 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           <Input
             variant='menuconfigpanel_option_input_color'
             type='color'
-            value={
-              (!list_value['color'][1]) ? (
-                list_value['color'][0]) as string : (
-                '#ffffff'
-              )
-            }
+            // value={
+            //   (!list_value['color'][1]) ? (
+            //     list_value['color'][0]) as string : (
+            //     '#ffffff'
+            //   )
+            // }
+            value={list_nodes_selected[0]?.getDisplay().shape.getColor()??''}
             onChange={evt=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
-              updateMenuConfigNode()
+              // Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
+              list_nodes_selected[0].getDisplay().shape.setColor(evt.target.value)
+              // updateMenuConfigNode()
+              newUpdateMenuConfigNode()
               updateLinkAttachedToNodes()
 
             }}
@@ -252,16 +268,22 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         <Box layerStyle='options_3cols' >
           <Button
             value="ellipse"
+            // variant={
+            //   list_value['shape'][0]==='ellipse'?
+            //     'menuconfigpanel_option_button_activated':
+            //     'menuconfigpanel_option_button'}
             variant={
-              list_value['shape'][0]==='ellipse'?
+              (list_nodes_selected[0]?.getDisplay().shape.getType()??'')==='ellipse'?
                 'menuconfigpanel_option_button_activated':
                 'menuconfigpanel_option_button'}
             onClick={() => {
               Object
-                .values(parameter_to_modify)
-                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                .forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
-              updateMenuConfigNode()
+              // .values(parameter_to_modify)
+              // .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              // .forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
+              list_nodes_selected[0].getDisplay().shape.setType('ellipse')
+              newUpdateMenuConfigNode()
+              // updateMenuConfigNode()
               updateLinkAttachedToNodes()
             }}
           >

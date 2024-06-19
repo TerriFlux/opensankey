@@ -9,9 +9,12 @@
 // Local types
 import {
   Class_Element,
+  Class_ElementShape,
+  Type_ElementPosition,
   Type_Label,
   Type_Position,
-  Type_Shape,
+  // Type_Shape,
+  default_element_position,
 } from './Element'
 import {
   Class_DrawingArea
@@ -21,12 +24,35 @@ import {
 } from './Node'
 import {
   Class_Tag
-  } from './Tag'
+} from './Tag'
 import { Class_Data } from './Data'
+import { Class_MenuConfig } from './MenuConfig'
 
 // CUSTOM TYPES **************************************************************************
 
 type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+
+
+export class Class_LinkShape extends Class_ElementShape{
+  /**
+  * Shape can only be path
+   *
+   * @protected
+   * @type {('path-straight' | 'path-curved')}
+   * @memberof Class_LinkShape
+   */
+  protected type:'path-straight' | 'path-curved'
+
+  constructor(){
+    super()
+    this.type='path-curved'
+  }
+
+  public getType(): 'path-straight' | 'path-curved' {return this.type}
+  public setType(value: 'path-straight' | 'path-curved') {this.type = value}
+
+}
+
 
 // CLASS LINK ELEMENT ********************************************************************
 /**
@@ -95,6 +121,13 @@ export class Class_LinkElement extends Class_Element {
    */
   private ending_tagent_lenght: number = 0.5
 
+  // Definition of abstract attribut from Class_Element
+  public display: {
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+    shape: Class_LinkShape,
+  }
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -105,17 +138,25 @@ export class Class_LinkElement extends Class_Element {
    */
   constructor(
     id: string,
-    drawing_area: Class_DrawingArea
+    drawing_area: Class_DrawingArea,
+    menu_config: Class_MenuConfig,
+
   ) {
     super(
       id,
       drawing_area,
+      menu_config,
       'g_links')
     // Override default values
-    this.display.shape.type = 'path-curved'
-    this.display.position.type = 'relative'
-    this.display.position.x = 0
-    this.display.position.y = 0
+    // this.display.shape.type = 'path-curved'
+    // this.display.position.type = 'relative'
+    // this.display.position.x = 0
+    // this.display.position.y = 0
+    this.display = {
+      drawing_area: drawing_area,
+      position: structuredClone(default_element_position),
+      shape: new Class_LinkShape,
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -124,33 +165,32 @@ export class Class_LinkElement extends Class_Element {
    * Compute lenght of link
    * @memberof Class_LinkElement
    */
-  public getLenght() {
-    if (this.isVertical()) {
-      return Math.abs(this.getStartingPointY() - this.getEndingPointY())
-    }
-    else if (this.isHorizontal()) {
-      return Math.abs(this.getStartingPointX() - this.getEndingPointX())
-    }
-    else {
-      return (
-        Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
-        Math.abs(this.getStartingPointY() - this.getEndingPointY())
-      )
-    }
-  }
+  // public getLenght() {
+  //   if (this.isVertical()) {
+  //     return Math.abs(this.getStartingPointY() - this.getEndingPointY())
+  //   }
+  //   else if (this.isHorizontal()) {
+  //     return Math.abs(this.getStartingPointX() - this.getEndingPointX())
+  //   }
+  //   else {
+  //     return (
+  //       Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
+  //       Math.abs(this.getStartingPointY() - this.getEndingPointY())
+  //     )
+  //   }
+  // }
 
   // GETTER / SETTER ====================================================================
 
-  // Shape can only be path
-  public setShapeType(_: Type_Shape) {
-    if ((_ !== 'path-straight') && (_ !== 'path-curved')) {
-      return
-    }
-    this.display.shape.type = _
-    this.reset()
-  }
-  public isStraight() { return this.display.shape.type === 'path-straight' }
-  public isCurved() { return this.display.shape.type === 'path-curved' }
+  // public setShapeType(_: Type_Shape) {
+  //   if ((_ !== 'path-straight') && (_ !== 'path-curved')) {
+  //     return
+  //   }
+  //   this.display.shape.type = _
+  //   this.reset()
+  // }
+  public isStraight() { return this.display.shape.getType() === 'path-straight' }
+  public isCurved() { return this.display.shape.getType() === 'path-curved' }
 
   // Orientation
   public getOrientation() { return this.orientation }
@@ -161,10 +201,10 @@ export class Class_LinkElement extends Class_Element {
   public isVerticalHorizontal() { return this.orientation === 'hv' }
 
   // Coordinates
-  public getStartingPointX() { return this.getPosX() }
-  public getStartingPointY() { return this.getPosY() }
-  public getEndingPointX() { return this.getPosX() + this.getShapeWidth() }
-  public getEndingPointY() { return this.getPosY() + this.getShapeHeight() }
+  // public getStartingPointX() { return this.getPosX() }
+  // public getStartingPointY() { return this.getPosY() }
+  // public getEndingPointX() { return this.getPosX() + this.getShapeWidth() }
+  // public getEndingPointY() { return this.getPosY() + this.getShapeHeight() }
 
   // Curvature points
   public getStartingCurvePoint() { return this.starting_curve_point }
@@ -218,9 +258,10 @@ export class Class_LinkElement extends Class_Element {
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
       .attr('fill', 'none')
-      .attr('stroke', this.getShapeColor())
-      .attr('stroke-opacity', this.getShapeOpacity())
+      .attr('stroke', this.display.shape.getColor())
+      .attr('stroke-opacity', this.display.shape.getOpacity())
       .attr('stroke-width', this.thickness)
+      // TODO apply opacity and other attributes
   }
 
   private getBezierPath() {
@@ -250,7 +291,7 @@ export class Class_LinkElement extends Class_Element {
     const horizontal_direction = Math.sign(x6-x0) // +1 / -1
     const vertical_direction = Math.sign(y6-y0) // +1 / -1
 
-    // Statring curve point
+    // Starting curve point
     let x1, y1
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x1 = x0 + horizontal_direction*starting_shift
@@ -381,10 +422,14 @@ export class Class_Link extends Class_LinkElement{
     source: Class_Node,
     target: Class_Node,
     drawing_area: Class_DrawingArea,
+    menu_config: Class_MenuConfig,
+
   ) {
     super(
       source.id + '-->' + target.id,
-      drawing_area)
+      drawing_area,
+      menu_config
+    )
     // Surcharge with source & target
     this.source = source
     this.source.addOutputLink(this)
@@ -414,12 +459,12 @@ export class Class_Link extends Class_LinkElement{
     if (source_x <= target_x) {
       let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
       if (this.isHorizontal() || this.isHorizontalVertical()) {
-        dx = this.source.getShapeWidth()
+        dx=this.source.getDisplay().shape.getWidth()
       }
       return source_x + dx
     }
     else {
-      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
       return source_x + dx
     }
   }
@@ -430,12 +475,13 @@ export class Class_Link extends Class_LinkElement{
     if (source_y <= target_y) {
       let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
       if (this.isVertical() || this.isVerticalHorizontal()) {
-        dy = this.source.getShapeHeight()
+        dy = this.source.getDisplay().shape.getHeight()
+
       }
       return source_y + dy
     }
     else {
-      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
       return source_y + dy
     }
   }
@@ -451,7 +497,7 @@ export class Class_Link extends Class_LinkElement{
       return target_x - this.getPosX()
     }
     else {
-      return this.getPosX() - target_x - this.target.getShapeWidth()
+      return this.getPosX() - target_x - this.target.getDisplay().shape.getWidth()
     }
   }
   public setShapeWidth(_: number) { /* Does nothing */ }
@@ -462,7 +508,7 @@ export class Class_Link extends Class_LinkElement{
       return target_y - this.getPosY()
     }
     else {
-      return this.getPosY() - target_y - this.target.getShapeHeight()
+      return this.getPosY() - target_y - this.target.getDisplay().shape.getHeight()
     }
   }
   public setShapeHeight(_: number) { /* Does nothing */ }

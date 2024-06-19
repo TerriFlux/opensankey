@@ -26,6 +26,7 @@ import {
 import {
   openRemoteUIElement
 } from '../functions/application/Menus'
+import { Class_MenuConfig } from './MenuConfig'
 
 // Constants
 export const default_grey_color = 'grey'
@@ -91,6 +92,7 @@ export const default_font = 'Arial,sans-serif'
 //   'Verdana,sans-serif',
 //   'Zapf Chancery,cursive',
 // ]
+export const defaultElementColor = '#a9a9a9'
 
 export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
 
@@ -109,10 +111,14 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   constructor(window: Window & typeof globalThis, published_mode: boolean) {
+    this.menu_configuration = new Class_MenuConfig
+
     this.drawing_area = new Class_DrawingArea(
       window.innerHeight - 50,
       window.innerWidth - 50,
       this)
+
+
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
@@ -129,9 +135,12 @@ export class Class_ApplicationData {
   // Drawing area
   drawing_area: Class_DrawingArea
 
+  // Configuration Menu
+  menu_configuration: Class_MenuConfig
+
   // Existing styles
-  flux_styles: {[_:string]: Class_LinkElement} = {} // TODO create defaut style
-  node_styles: {[_:string]: Class_NodeElement} = {} // TODO create defaut style
+  flux_styles: { [_: string]: Class_LinkElement } = {} // TODO create defaut style
+  node_styles: { [_: string]: Type_Node_Style } = { 'default': default_node_style }
 
   // Display
   show_structure: Type_Structure = 'reconciled'
@@ -212,22 +221,52 @@ export const default_element_position: Type_ElementPosition = {
  *
  * @type Type_ElementShape
  */
-export type Type_ElementShape = {
-  type: Type_Shape,
-  visible: boolean,
-  width: number,
-  height: number,
-  color: string,
-  opacity: number
-}
-export type Type_Shape =  'ellipse' | 'rect' | 'arrow' | 'path-straight' | 'path-curved'
-export const default_element_shape: Type_ElementShape = {
-  type: 'rect',
-  visible: true,
-  width: 40,
-  height: 40,
-  color: default_grey_color,
-  opacity: 1
+// export type Type_ElementShape = {
+//   type: Type_Shape,
+//   visible: boolean,
+//   width: number,
+//   height: number,
+//   color: string,
+//   opacity: number
+// }
+// export type Type_Shape = 'ellipse' | 'rect' | 'arrow' | 'path-straight' | 'path-curved'
+// export const default_element_shape: Type_ElementShape = {
+//   type: 'rect',
+//   visible: true,
+//   width: 40,
+//   height: 40,
+//   color: default_grey_color,
+//   opacity: 1
+// }
+
+export abstract class Class_ElementShape {
+  protected abstract type: string
+  private visible: boolean
+  private color: string
+  private opacity: number
+
+  constructor() {
+    // this.type=''
+    this.visible = true
+    this.color = defaultElementColor
+    this.opacity = 1
+  }
+  public getType(): string { return this.type }
+  public setType(value: string) { this.type = value }
+
+
+  public getVisible(): boolean { return this.visible }
+  public setVisible(value: boolean) { this.visible = value }
+
+  public getColor(): string { return this.color }
+  public setColor(value: string) { this.color = value }
+
+  public getOpacity(): number { return this.opacity }
+  public setOpacity(_: number) {
+    if (_ > 1) { this.opacity = 1.0 }
+    else if (_ < 0) { this.opacity = 0.0 }
+    else { this.opacity = _ }
+  }
 }
 
 // CLASS ELEMENT ************************************************************************
@@ -236,7 +275,7 @@ export const default_element_shape: Type_ElementShape = {
  *
  * @class Class_Element
  */
-export class Class_Element {
+export abstract class Class_Element {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -266,10 +305,10 @@ export class Class_Element {
    *   }}
    * @memberof Class_Element
    */
-  protected display: {
+  protected abstract display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
-    shape: Type_ElementShape,
+    shape: Class_ElementShape,
   }
 
   /**
@@ -296,6 +335,14 @@ export class Class_Element {
    */
   protected is_mouse_over: boolean = false
 
+  /**
+ * Config menu ref to html element & function to update it
+ * @protected
+ * @type {string}
+ * @memberof Class_Element
+ */
+  protected menu_config: Class_MenuConfig
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -308,15 +355,18 @@ export class Class_Element {
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
-    svg_group: string
+    menu_config: Class_MenuConfig,
+
+    svg_group: string,
   ) {
     this.id = id
-    this.display = {
-      drawing_area: drawing_area,
-      position: structuredClone(default_element_position),
-      shape: structuredClone(default_element_shape),
-    }
+    // this.display = {
+    //   drawing_area: drawing_area,
+    //   position: structuredClone(default_element_position),
+    //   shape: new Class_ElementShape,
+    // }
     this.svg_group = svg_group
+    this.menu_config = menu_config
   }
 
   // PUBLIC METHODS =====================================================================
@@ -338,6 +388,9 @@ export class Class_Element {
   // DrawingArea
   public getDrawingArea() { return this.display.drawing_area }
 
+  // MenuConfig
+  public getMenuConfig() { return this.menu_config }
+
   // Svg Group
   public getSvgGroup() { return this.svg_group }
 
@@ -351,31 +404,31 @@ export class Class_Element {
   public setPosType(_: Type_Position) { this.display.position.type = _; this.reset() }
 
   // Shape
-  public getShapeType() { return this.display.shape.type }
-  public setShapeType(_: Type_Shape) { this.display.shape.type = _; this.reset() }
-  public getShapeVisible() { return this.display.shape.visible }
-  public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.reset() }
-  public getShapeWidth() { return this.display.shape.width }
-  public setShapeWidth(_: number) { this.display.shape.width = _; this.reset() }
-  public getShapeHeight() { return this.display.shape.height }
-  public setShapeHeight(_: number) { this.display.shape.height = _; this.reset() }
-  public getShapeColor() { return this.display.shape.color }
-  public setShapeColor(_: string) { this.display.shape.color = _; this.reset() }
-  public getShapeOpacity() { return this.display.shape.opacity }
-  public setShapeOpacity(_: number) {
-    if (_ > 1)
-      this.display.shape.opacity = 1.0
-    else if (_ < 0)
-      this.display.shape.opacity = 0.0
-    else
-      this.display.shape.opacity = _
-    this.reset()
-  }
+  // public getShapeType() { return this.display.shape.type }
+  // public setShapeType(_: Type_Shape) { this.display.shape.type = _; this.reset() }
+  // public getShapeVisible() { return this.display.shape.visible }
+  // public setShapeVisible(_: boolean) { this.display.shape.visible = _; this.reset() }
+  // public getShapeWidth() { return this.display.shape.width }
+  // public setShapeWidth(_: number) { this.display.shape.width = _; this.reset() }
+  // public getShapeHeight() { return this.display.shape.height }
+  // public setShapeHeight(_: number) { this.display.shape.height = _; this.reset() }
+  // public getShapeColor() { return this.display.shape.color }
+  // public setShapeColor(_: string) { this.display.shape.color = _; this.reset() }
+  // public getShapeOpacity() { return this.display.shape.opacity }
+  // public setShapeOpacity(_: number) {
+  //   if (_ > 1)
+  //     this.display.shape.setOpacity(1.0)
+  //   else if (_ < 0)
+  //     this.display.shape.setOpacity(0.0)
+  //   else
+  //     this.display.shape.setOpacity(_)
+  //   this.reset()
+  // }
 
   // Selection
-  public setSelected() {this.is_selected = true; this.reset()}
-  public setUnSelected() {this.is_selected = false; this.reset()}
-  public isSelected() {return this.is_selected}
+  public setSelected() { this.is_selected = true; this.reset() }
+  public setUnSelected() { this.is_selected = false; this.reset() }
+  public isSelected() { return this.is_selected }
 
   // Mouse is over element
   public isMouseOver() { return this.is_mouse_over }
@@ -390,14 +443,14 @@ export class Class_Element {
    * @protected
    * @memberof Class_Element
    */
-  protected draw(){
+  protected draw() {
     const d3_drawing_area = this.getDrawingArea().d3_selection
     if (d3_drawing_area !== null) {
-      this.d3_selection = d3_drawing_area.selectAll(' #'+this.svg_group)
+      this.d3_selection = d3_drawing_area.selectAll(' #' + this.svg_group)
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this.id)
-        .style('stroke-width', this.isSelected()? 3 : 0)
+        .style('stroke-width', this.isSelected() ? 3 : 0)
         .style('stroke', 'black')
     }
   }
@@ -608,3 +661,69 @@ export const default_label: Type_Label = {
   background: false
 }
 
+
+export type Type_Node_Style = {
+  idNode: string,
+  name: string,
+
+  // Parameter of node shape
+  shape_visible: boolean,
+  label_visible: boolean,
+  node_width: number,
+  node_height: number,
+  color: string,
+  shape: 'ellipse' | 'rect' | 'arrow',
+  node_arrow_angle_factor: number,
+  node_arrow_angle_direction: string,
+  colorSustainable: boolean,
+
+  // Parameter of node label
+  font_family: string,
+  font_size: number,
+  uppercase: boolean,
+  bold: boolean,
+  italic: boolean,
+  label_box_width: number,
+  label_color: boolean,
+  label_vert: string,
+  label_horiz: string,
+  label_background: boolean,
+
+  // Parameter of node value label
+  show_value: boolean,
+  label_vert_valeur: string,
+  label_horiz_valeur: string,
+  value_font_size: number,
+}
+export const default_node_style: Type_Node_Style = {
+  idNode: 'default',
+  name: 'Style par défaut',
+  shape: 'rect',
+  node_arrow_angle_factor: 30,
+  node_arrow_angle_direction: 'right',
+  shape_visible: true,
+  label_visible: true,
+  node_width: 40,
+  node_height: 40,
+  color: defaultElementColor,
+  colorSustainable: false,
+  // not_to_scale:false,
+  // not_to_scale_direction:'right',
+
+  font_family: 'Cormorant',
+  font_size: 14,
+  uppercase: false,
+  bold: false,
+  italic: false,
+  label_vert: 'bottom',
+  label_horiz: 'middle',
+  label_background: false,
+
+  show_value: false,
+  label_vert_valeur: 'top',
+  label_horiz_valeur: 'middle',
+  value_font_size: 14,
+  label_box_width: 150,
+  label_color: false,
+
+}

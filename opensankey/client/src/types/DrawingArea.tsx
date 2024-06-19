@@ -58,6 +58,8 @@ export class Class_DrawingArea {
     this.height = height
     this.width = width
     this.application_data = application_data
+    this.sankey = new Class_Sankey(this, this.application_data.menu_configuration)
+    this.sankey_selection=new Class_Sankey(this,this.application_data.menu_configuration)
     // this.legend.display.shape.width = 180 TODO faire plus proprement
   }
 
@@ -85,7 +87,7 @@ export class Class_DrawingArea {
     // Draw Everything
     this.drawElements()
     // Added events listeners
-    setDrawingAreaEventsListeners(this)
+    setDrawingAreaEventsListeners(this, this.application_data.menu_configuration)
   }
 
   /**
@@ -178,12 +180,12 @@ export class Class_DrawingArea {
   private mode: 'edition' | 'selection' = 'edition'
 
   // Elements that are contained in this area
-  sankey: Class_Sankey = new Class_Sankey(this)
-  legend: Class_Element = new Class_Element('legend', this, 'g_legend')
-  text_areas: {[id: string]: Class_Element} = {}
+  sankey: Class_Sankey
+  // legend: Class_Element = new Class_Element('legend', this, 'g_legend')
+  text_areas: { [id: string]: Class_Element } = {}
 
   // Elements that are selected in this area
-  sankey_selection: Class_Sankey = new Class_Sankey(this)
+  sankey_selection: Class_Sankey 
 
   // Color
   private color: string = default_background_color
@@ -198,7 +200,7 @@ export class Class_DrawingArea {
 
   // Positionning
   public h_space: number = 200
-  public v_space: number =  50
+  public v_space: number = 50
 
   // GETTERS / SETTERS ==================================================================
 
@@ -214,9 +216,9 @@ export class Class_DrawingArea {
 
   // Size
   public getWidth() { return this.width }
-  public setWidth(_: number) { this.width = _; this.drawElements()}
+  public setWidth(_: number) { this.width = _; this.drawElements() }
   public getHeight() { return this.height }
-  public setHeight(_: number) { this.height = _; this.drawElements()}
+  public setHeight(_: number) { this.height = _; this.drawElements() }
 
   // Color
   public getColor() { return this.color }
@@ -228,7 +230,7 @@ export class Class_DrawingArea {
 
   // Grid
   public getGridColor() { return this.grid_color }
-  public setGridColor(_: string) { this.grid_color = _; drawDrawingAreaGrid(this)}
+  public setGridColor(_: string) { this.grid_color = _; drawDrawingAreaGrid(this) }
   public isGridVisible() { return this.grid_visible }
   public setGridVisible() { this.grid_visible = true; drawDrawingAreaGrid(this) }
   public setGridInvisible() { this.grid_visible = false; drawDrawingAreaGrid(this) }
@@ -273,12 +275,12 @@ export class Class_DrawingArea {
    */
   public purgeSelection() {
     // Unselect all nodes
-    Object.values(this.sankey_selection.nodes)
+    Object.values(this.sankey.nodes)
       .forEach((node) => node.setUnSelected())
     // TODO Unselect other things
     // Reset selection
     // TODO do that properly
-    this.sankey_selection = new Class_Sankey(this)
+    this.sankey_selection = new Class_Sankey(this,this.application_data.menu_configuration)
   }
 
   /**
@@ -292,12 +294,23 @@ export class Class_DrawingArea {
   }
 
   /**
+   * remove a node from a selection set
+   * @param {Class_Node} node
+   * @memberof Class_DrawingArea
+   */
+  public removeNodeFromSelection(node: Class_Node) {
+    this.sankey_selection.removeNode(node)
+    node.setUnSelected()
+  }
+
+  /**
    * Add a link to selection set
    * @param {Class_Link} link
    * @memberof Class_DrawingArea
    */
   public addLinkToSelection(link: Class_Link) {
     this.sankey_selection.addLink(link)
+    link.setSelected()
     // TODO add selected attribute
   }
 }
