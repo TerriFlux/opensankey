@@ -156,10 +156,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               const new_sel = selected.map(d => d.value)
               new_nodes_sorted.forEach(n => {
                 if (new_sel.includes(n.getId())) {
-                  n.setSelected()
                   new_data.drawing_area.addNodeToSelection(n)
                 } else {
-                  n.setUnSelected()
                   new_data.drawing_area.removeNodeFromSelection(n)
                 }
               })
