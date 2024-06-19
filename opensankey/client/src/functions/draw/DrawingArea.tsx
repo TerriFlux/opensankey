@@ -16,7 +16,7 @@ import {
   FType_SetDrawingAreaMouseEvent
 } from './prototypes/DrawingArea'
 import {
-  Class_Node
+  Class_NodeElement
 } from '../../types/Node'
 
 // Add local constants
@@ -96,7 +96,7 @@ export const addNewNodeToDrawingArea: FType_AddNewNodeToDrawingArea = (
   id,
   name
 ) => {
-  const node = new Class_Node(id, name, drawing_area, menu_config)
+  const node = new Class_NodeElement(id, name, drawing_area, menu_config)
   drawing_area.sankey.addNode(node)
   return node
 }
@@ -173,12 +173,15 @@ const eventDrawingAreaSimpleLMBCLick: FType_SetDrawingAreaMouseEvent = (
       // Set position
       const mouse_position = d3.pointer(event)
       new_node.setPosXY(mouse_position[0], mouse_position[1])
+      menu_config.updateMenuEditionNode() 
+
       // TODO remove test
-      const tgt_node = new Class_Node('target', 'Target', drawing_area, menu_config)
-      tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
-      const new_link = new Class_Link(new_node, tgt_node, drawing_area, menu_config)
-      new_link.setPosXY(new_node.getPosX(), new_node.getPosY())
-      new_link.setOrientation('hh')
+      // const tgt_node = new Class_NodeElement('target', 'Target', drawing_area, menu_config)
+      // tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
+      // const new_link = new Class_LinkElement(new_node, tgt_node, drawing_area, menu_config)
+      // drawing_area.sankey.addLink(new_link)
+      // new_link.setPosXY(new_node.getPosX(), new_node.getPosY())
+      // new_link.setOrientation('hh')
     }
     // SELECTION MODE ===========================================================
     else if (drawing_area.isInSelectionMode()) {

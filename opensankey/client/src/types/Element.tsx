@@ -13,12 +13,6 @@ import {
   uiElementsRefType
 } from './Types'
 import {
-  Class_LinkElement
-} from './Link'
-import {
-  Class_NodeElement
-} from './Node'
-import {
   Class_DrawingArea
 } from './DrawingArea'
 
@@ -138,10 +132,6 @@ export class Class_ApplicationData {
   // Configuration Menu
   menu_configuration: Class_MenuConfig
 
-  // Existing styles
-  flux_styles: { [_: string]: Class_LinkElement } = {} // TODO create defaut style
-  node_styles: { [_: string]: Type_Node_Style } = { 'default': default_node_style }
-
   // Display
   show_structure: Type_Structure = 'reconciled'
   fit_screen: boolean
@@ -188,11 +178,8 @@ export class Class_ApplicationData {
     if (this.ui_elements !== null)
       openRemoteUIElement(this.ui_elements.accordion_ref)
   }
-  public openOnlyNodeMenu() {
-    this.openMenu()
-    if (this.ui_elements !== null)
-      openRemoteUIElement(this.ui_elements.nodes_accordion_ref)
-  }
+
+
 
   // GETTERS / SETTERS =========================================================
   // TODO getter / setters for application data
@@ -308,7 +295,8 @@ export abstract class Class_Element {
   protected abstract display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
-    shape: Class_ElementShape,
+    // shape: Class_ElementShape,
+    // local?:object
   }
 
   /**
@@ -341,7 +329,8 @@ export abstract class Class_Element {
  * @type {string}
  * @memberof Class_Element
  */
-  protected menu_config: Class_MenuConfig
+  private _menu_config: Class_MenuConfig
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -366,7 +355,7 @@ export abstract class Class_Element {
     //   shape: new Class_ElementShape,
     // }
     this.svg_group = svg_group
-    this.menu_config = menu_config
+    this._menu_config = menu_config
   }
 
   // PUBLIC METHODS =====================================================================
@@ -387,9 +376,6 @@ export abstract class Class_Element {
 
   // DrawingArea
   public getDrawingArea() { return this.display.drawing_area }
-
-  // MenuConfig
-  public getMenuConfig() { return this.menu_config }
 
   // Svg Group
   public getSvgGroup() { return this.svg_group }
@@ -625,6 +611,14 @@ export abstract class Class_Element {
   ) {
     /* TODO définir  */
   }
+
+
+  protected get menu_config(): Class_MenuConfig {
+    return this._menu_config
+  }
+  protected set menu_config(value: Class_MenuConfig) {
+    this._menu_config = value
+  }
 }
 
 /**
@@ -662,68 +656,5 @@ export const default_label: Type_Label = {
 }
 
 
-export type Type_Node_Style = {
-  idNode: string,
-  name: string,
 
-  // Parameter of node shape
-  shape_visible: boolean,
-  label_visible: boolean,
-  node_width: number,
-  node_height: number,
-  color: string,
-  shape: 'ellipse' | 'rect' | 'arrow',
-  node_arrow_angle_factor: number,
-  node_arrow_angle_direction: string,
-  colorSustainable: boolean,
 
-  // Parameter of node label
-  font_family: string,
-  font_size: number,
-  uppercase: boolean,
-  bold: boolean,
-  italic: boolean,
-  label_box_width: number,
-  label_color: boolean,
-  label_vert: string,
-  label_horiz: string,
-  label_background: boolean,
-
-  // Parameter of node value label
-  show_value: boolean,
-  label_vert_valeur: string,
-  label_horiz_valeur: string,
-  value_font_size: number,
-}
-export const default_node_style: Type_Node_Style = {
-  idNode: 'default',
-  name: 'Style par défaut',
-  shape: 'rect',
-  node_arrow_angle_factor: 30,
-  node_arrow_angle_direction: 'right',
-  shape_visible: true,
-  label_visible: true,
-  node_width: 40,
-  node_height: 40,
-  color: defaultElementColor,
-  colorSustainable: false,
-  // not_to_scale:false,
-  // not_to_scale_direction:'right',
-
-  font_family: 'Cormorant',
-  font_size: 14,
-  uppercase: false,
-  bold: false,
-  italic: false,
-  label_vert: 'bottom',
-  label_horiz: 'middle',
-  label_background: false,
-
-  show_value: false,
-  label_vert_valeur: 'top',
-  label_horiz_valeur: 'middle',
-  value_font_size: 14,
-  label_box_width: 150,
-  label_color: false,
-
-}

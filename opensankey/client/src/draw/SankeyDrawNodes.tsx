@@ -111,7 +111,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     ggg_nodes
       .filter(()=>!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))
       .on('click', (event, d) => SimpleGNodeClick(
-        uiElementsRef,applicationState,event,d,accept_simple_click,ComponentUpdater
+        applicationData,uiElementsRef,applicationState,event,d,accept_simple_click,ComponentUpdater
       )
       )
       .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
@@ -375,7 +375,6 @@ export const drawAddNodes : drawNodeShapeFType = (
   filtered_data.forEach(n=>{
     // Test
     if (applicationData.new_data?.drawing_area) {
-      console.log(applicationData.new_data.menu_configuration)
       const tmp_node = addNewNodeToDrawingArea(applicationData.new_data?.drawing_area,applicationData.new_data.menu_configuration, 'test', 'tets',)
       tmp_node.setPosXY(n.x + 100, n.y + 100)
     }
@@ -418,22 +417,22 @@ export const drawAddNodes : drawNodeShapeFType = (
     t,
     node_function
   )
-  AddDrawNodesEvent(
-    contextMenu,
-    applicationData,
-    uiElementsRef,
-    applicationState,
-    applicationContext,
-    alt_key_pressed,
-    accept_simple_click,
-    link_function,
-    NodeTooltipsContent,
-    ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components,
-    node_function,
-    GetSankeyMinWidthAndHeight,
-    resizeCanvas
-  )
+  // AddDrawNodesEvent(
+  //   contextMenu,
+  //   applicationData,
+  //   uiElementsRef,
+  //   applicationState,
+  //   applicationContext,
+  //   alt_key_pressed,
+  //   accept_simple_click,
+  //   link_function,
+  //   NodeTooltipsContent,
+  //   ComponentUpdater,
+  //   dict_hook_ref_setter_show_dialog_components,
+  //   node_function,
+  //   GetSankeyMinWidthAndHeight,
+  //   resizeCanvas
+  // )
 }
 
 /**

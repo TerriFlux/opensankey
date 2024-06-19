@@ -9,9 +9,12 @@
 // Local types
 import {
   Class_Link,
+  Class_LinkElement,
 } from './Link'
 import {
-  Class_Node,
+  Class_NodeElement,
+  Class_NodeStyle,
+  default_node_style,
 } from './Node'
 import {
   Class_Tagg
@@ -34,6 +37,10 @@ import { Class_MenuConfig } from './MenuConfig'
  * @class Class_Sankey
  */
 export class Class_Sankey {
+
+  // Existing styles
+  flux_styles: { [_: string]: Class_LinkElement } = {} // TODO create defaut style
+  node_styles: { [_: string]: Class_NodeStyle } = { 'default': default_node_style }
 
   // CONSTRUCTOR ==============================================================
 
@@ -70,9 +77,9 @@ export class Class_Sankey {
   // DEFAULT ATTRIBUTES =======================================================
 
   // Nodes
-  nodes: { [_: string]: Class_Node } = {}
+  nodes: { [_: string]: Class_NodeElement } = {}
   // Links
-  links: { [_: string]: Class_Link } = {}
+  links: { [_: string]: Class_LinkElement } = {}
   // Tags
   node_taggs: { [_: string]: Class_Tagg } = {}
   flux_taggs: { [_: string]: Class_Tagg } = {}
@@ -140,6 +147,11 @@ export class Class_Sankey {
   public getAllNodes() {
     return this.nodes
   }
+  
+
+  public getListAllNodes() {
+    return Object.values(this.nodes)
+  }
 
   /**
    * Return an array of Class_Node sorted by name
@@ -184,15 +196,19 @@ export class Class_Sankey {
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public addNode(node: Class_Node) { this.nodes[node.id] = node }
+  public addNode(node: Class_NodeElement) { this.nodes[node.id] = node }
 
   /**
    * remove a given node from Sankey
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public removeNode(node: Class_Node) { 
+  public removeNode(node: Class_NodeElement) { 
     delete this.nodes[node.id]
+  }
+
+  public removeLink(link: Class_LinkElement) { 
+    delete this.links[link.id]
   }
 
   // public setValueForNodeAttribute(node: Class_Node){
@@ -203,16 +219,62 @@ export class Class_Sankey {
 
   // }
 
+  /**
+ * Return the object containing all the style
+ *
+ * @return {*} 
+ * @memberof Class_ApplicationData
+ */
+  public getAllNodesStyle() {
+    return this.node_styles
+  }
+  
+  /**
+     * Function that return the value of a key k of style keyOfStyle
+     *
+     * @param {keyof Type_Node_Style} k
+     * @return {*} 
+     * @memberof Class_ApplicationData
+     */
+  // public getStyleNodeValue(keyOfStyle:string,k:keyof Type_Node_Style){
+  //   return this.node_styles[keyOfStyle][k]
+  // }
+
 
   // Links related METHODS ==================================================================
 
   /**
    * Add a given link to Sankey
-   * @param {Class_Link} link
+   * @param {Class_LinkElement} link
    * @memberof Class_Sankey
    */
-  public addLink(link: Class_Link) { this.links[link.id] = link }
+  public addLink(link: Class_LinkElement) { this.links[link.id] = link }
 
+  public getLink(id: string) {
+    if (id in this.links) {
+      return this.links[id]
+    }
+    return null
+  }
+  /**
+ *
+ *
+ * @return {Class_LinkElement} 
+ * @memberof Class_Sankey
+ */
+  public getAllLinks() {
+    return this.links
+  }
+
+
+  /** 
+ * Return a list with all the links of the sankey
+ * @return {Class_LinkElement[]} 
+ * @memberof Class_Sankey
+ */
+  public getListAllLinks() {
+    return Object.values(this.links)
+  }
   /**
      * Return array of link who have is_selected at true
      *

@@ -19,21 +19,20 @@ import {
 import {
   Class_DrawingArea
 } from './DrawingArea'
-import {
-  Class_Node
-} from './Node'
+
 import {
   Class_Tag
 } from './Tag'
 import { Class_Data } from './Data'
 import { Class_MenuConfig } from './MenuConfig'
+import { Class_NodeElement } from './Node'
 
 // CUSTOM TYPES **************************************************************************
 
 type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 
 
-export class Class_LinkShape extends Class_ElementShape{
+export class Class_LinkShape extends Class_ElementShape {
   /**
   * Shape can only be path
    *
@@ -41,15 +40,15 @@ export class Class_LinkShape extends Class_ElementShape{
    * @type {('path-straight' | 'path-curved')}
    * @memberof Class_LinkShape
    */
-  protected type:'path-straight' | 'path-curved'
+  protected type: 'path-straight' | 'path-curved'
 
-  constructor(){
+  constructor() {
     super()
-    this.type='path-curved'
+    this.type = 'path-curved'
   }
 
-  public getType(): 'path-straight' | 'path-curved' {return this.type}
-  public setType(value: 'path-straight' | 'path-curved') {this.type = value}
+  public getType(): 'path-straight' | 'path-curved' { return this.type }
+  public setType(value: 'path-straight' | 'path-curved') { this.type = value }
 
 }
 
@@ -77,7 +76,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  protected thickness: number = 100
+  protected thickness: number = 20
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -128,6 +127,27 @@ export class Class_LinkElement extends Class_Element {
     shape: Class_LinkShape,
   }
 
+
+  /**
+* Node from which link starts
+*
+* @private
+* @type {Class_NodeElement}
+* @memberof Class_Link
+*/
+  private _source: Class_NodeElement
+
+
+  /**
+   * Node to which link arrives
+   *
+   * @private
+   * @type {Class_NodeElement}
+   * @memberof Class_Link
+   */
+  private _target: Class_NodeElement
+
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -137,13 +157,14 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   constructor(
-    id: string,
+    source: Class_NodeElement,
+    target: Class_NodeElement,
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
 
   ) {
     super(
-      id,
+      source.id + '-->' + target.id,
       drawing_area,
       menu_config,
       'g_links')
@@ -157,6 +178,11 @@ export class Class_LinkElement extends Class_Element {
       position: structuredClone(default_element_position),
       shape: new Class_LinkShape,
     }
+
+    this._source = source
+    this.source.addOutputLink(this)
+    this._target = target
+    this.target.addInputLink(this)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -165,20 +191,20 @@ export class Class_LinkElement extends Class_Element {
    * Compute lenght of link
    * @memberof Class_LinkElement
    */
-  // public getLenght() {
-  //   if (this.isVertical()) {
-  //     return Math.abs(this.getStartingPointY() - this.getEndingPointY())
-  //   }
-  //   else if (this.isHorizontal()) {
-  //     return Math.abs(this.getStartingPointX() - this.getEndingPointX())
-  //   }
-  //   else {
-  //     return (
-  //       Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
-  //       Math.abs(this.getStartingPointY() - this.getEndingPointY())
-  //     )
-  //   }
-  // }
+  public getLenght() {
+    if (this.isVertical()) {
+      return Math.abs(this.getStartingPointY() - this.getEndingPointY())
+    }
+    else if (this.isHorizontal()) {
+      return Math.abs(this.getStartingPointX() - this.getEndingPointX())
+    }
+    else {
+      return (
+        Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
+        Math.abs(this.getStartingPointY() - this.getEndingPointY())
+      )
+    }
+  }
 
   // GETTER / SETTER ====================================================================
 
@@ -194,17 +220,17 @@ export class Class_LinkElement extends Class_Element {
 
   // Orientation
   public getOrientation() { return this.orientation }
-  public setOrientation(_: Type_Orientation) {this.orientation = _; this.reset()}
+  public setOrientation(_: Type_Orientation) { this.orientation = _; this.reset() }
   public isHorizontal() { return this.orientation === 'hh' }
   public isVertical() { return this.orientation === 'vv' }
   public isHorizontalVertical() { return this.orientation === 'hv' }
   public isVerticalHorizontal() { return this.orientation === 'hv' }
 
   // Coordinates
-  // public getStartingPointX() { return this.getPosX() }
-  // public getStartingPointY() { return this.getPosY() }
-  // public getEndingPointX() { return this.getPosX() + this.getShapeWidth() }
-  // public getEndingPointY() { return this.getPosY() + this.getShapeHeight() }
+  public getStartingPointX() { return this.getPosX() }
+  public getStartingPointY() { return this.getPosY() }
+  public getEndingPointX() { return this.getPosX() + this.getShapeWidth() }
+  public getEndingPointY() { return this.getPosY() + this.getShapeHeight() }
 
   // Curvature points
   public getStartingCurvePoint() { return this.starting_curve_point }
@@ -224,6 +250,24 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
+  /**
+   *
+   * Getter & Setter of class attributes
+   */
+
+  public get source(): Class_NodeElement {
+    return this._source
+  }
+  public set source(value: Class_NodeElement) {
+    this._source = value
+  }
+  public get target(): Class_NodeElement {
+    return this._target
+  }
+  public set target(value: Class_NodeElement) {
+    this._target = value
+  }
+
 
   // PROTECTED METHODS ==================================================================
 
@@ -232,11 +276,11 @@ export class Class_LinkElement extends Class_Element {
    * @private
    * @memberof Class_LinkElement
    */
-  protected draw(){
+  protected draw() {
     // Create group
     const d3_drawing_area = this.getDrawingArea().d3_selection
     if (d3_drawing_area !== null) {
-      this.d3_selection = d3_drawing_area.selectAll(' #'+this.svg_group)
+      this.d3_selection = d3_drawing_area.selectAll(' #' + this.svg_group)
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this.id)
@@ -248,9 +292,9 @@ export class Class_LinkElement extends Class_Element {
   // PRIVATE METHODS ====================================================================
 
   /**
-   * Draw node shape on d3 svg
+   * Draw link shape on d3 svg
    * @private
-   * @memberof Class_NodeElement
+   * @memberof Class_NodeElementElement
    */
   private drawShape() {
     this.d3_selection?.append('path')
@@ -355,6 +399,8 @@ export class Class_LinkElement extends Class_Element {
         + ' L ' + x6 + ',' + y6
     }
   }
+
+
 }
 
 
@@ -365,7 +411,7 @@ export class Class_LinkElement extends Class_Element {
  * @class Class_Link
  * @extends {Class_LinkElement}
  */
-export class Class_Link extends Class_LinkElement{
+export class Class_Link extends Class_LinkElement {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -374,27 +420,10 @@ export class Class_Link extends Class_LinkElement{
    * @type {{[_:string] : Class_Tag}}
    * @memberof Class_Link
    */
-  public tags: {[_:string] : Class_Tag} = {}
+  public tags: { [_: string]: Class_Tag } = {}
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  /**
-   * Node from which link starts
-   *
-   * @private
-   * @type {Class_Node}
-   * @memberof Class_Link
-   */
-  private source: Class_Node
-
-  /**
-   * Node to which link arrives
-   *
-   * @private
-   * @type {Class_Node}
-   * @memberof Class_Link
-   */
-  private target: Class_Node
 
   /**
    * Datas of this link
@@ -413,103 +442,104 @@ export class Class_Link extends Class_LinkElement{
 
   /**
    * Creates an instance of Class_Link.
-   * @param {Class_Node} source
-   * @param {Class_Node} target
+   * @param {Class_NodeElement} source
+   * @param {Class_NodeElement} target
    * @param {Class_DrawingArea} drawing_area
    * @memberof Class_Link
    */
   constructor(
-    source: Class_Node,
-    target: Class_Node,
+    source: Class_NodeElement,
+    target: Class_NodeElement,
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
 
   ) {
     super(
-      source.id + '-->' + target.id,
+      source,
+      target,
       drawing_area,
       menu_config
     )
-    // Surcharge with source & target
-    this.source = source
-    this.source.addOutputLink(this)
-    this.target = target
-    this.target.addInputLink(this)
+    // // Surcharge with source & target
+    // this.source = source
+    // this.source.addOutputLink(this)
+    // this.target = target
+    // this.target.addInputLink(this)
   }
 
   // PUBLIC METHODS =====================================================================
 
   // Tags
-  public addTag(tag: Class_Tag) {this.tags[tag.id] = tag}
+  public addTag(tag: Class_Tag) { this.tags[tag.id] = tag }
 
   // GETTERS / SETTERS ==================================================================
 
-  // Source node
-  public getNodeSource() { return this.source }
-  public setNodeSource(_: Class_Node) { this.source = _ }
+  // // Source node
+  // public getNodeSource() { return this.source }
+  // public setNodeSource(_: Class_NodeElement) { this.source = _ }
 
-  // Target node
-  public getNodeTarget() { return this.target }
-  public setNodeTarget(_: Class_Node) { this.target = _ }
+  // // Target node
+  // public getNodeTarget() { return this.target }
+  // public setNodeTarget(_: Class_NodeElement) { this.target = _ }
 
   // Override positionning
-  public getPosX() {
-    const source_x = this.source.getPosX()
-    const target_x = this.target.getPosX()
-    if (source_x <= target_x) {
-      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.isHorizontal() || this.isHorizontalVertical()) {
-        dx=this.source.getDisplay().shape.getWidth()
-      }
-      return source_x + dx
-    }
-    else {
-      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_x + dx
-    }
-  }
+  // public getPosX() {
+  //   const source_x = this.source.getPosX()
+  //   const target_x = this.target.getPosX()
+  //   if (source_x <= target_x) {
+  //     let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
+  //     if (this.isHorizontal() || this.isHorizontalVertical()) {
+  //       dx = this.source.getDisplay().shape.getWidth()
+  //     }
+  //     return source_x + dx
+  //   }
+  //   else {
+  //     const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+  //     return source_x + dx
+  //   }
+  // }
   public setPosX(_: number) { /* Does nothing */ }
-  public getPosY() {
-    const source_y = this.source.getPosY()
-    const target_y = this.target.getPosY()
-    if (source_y <= target_y) {
-      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.isVertical() || this.isVerticalHorizontal()) {
-        dy = this.source.getDisplay().shape.getHeight()
+  // public getPosY() {
+  //   const source_y = this.source.getPosY()
+  //   const target_y = this.target.getPosY()
+  //   if (source_y <= target_y) {
+  //     let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
+  //     if (this.isVertical() || this.isVerticalHorizontal()) {
+  //       dy = this.source.getDisplay().shape.getHeight()
 
-      }
-      return source_y + dy
-    }
-    else {
-      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_y + dy
-    }
-  }
+  //     }
+  //     return source_y + dy
+  //   }
+  //   else {
+  //     const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+  //     return source_y + dy
+  //   }
+  // }
   public setPosY(_: number) { /* Does nothing */ }
   public setPosXY(_: number, __: number) { /* Does nothing */ }
   public setPosType(_: Type_Position) { /* Does nothing */ }
 
   // Override width & height
-  public getShapeWidth() {
-    const source_x = this.source.getPosX()
-    const target_x = this.target.getPosX()
-    if (source_x <= target_x) {
-      return target_x - this.getPosX()
-    }
-    else {
-      return this.getPosX() - target_x - this.target.getDisplay().shape.getWidth()
-    }
-  }
-  public setShapeWidth(_: number) { /* Does nothing */ }
-  public getShapeHeight() {
-    const source_y = this.source.getPosY()
-    const target_y = this.target.getPosY()
-    if (source_y <= target_y) {
-      return target_y - this.getPosY()
-    }
-    else {
-      return this.getPosY() - target_y - this.target.getDisplay().shape.getHeight()
-    }
-  }
+  // public getShapeWidth() {
+  //   const source_x = this.source.getPosX()
+  //   const target_x = this.target.getPosX()
+  //   if (source_x <= target_x) {
+  //     return target_x - this.getPosX()
+  //   }
+  //   else {
+  //     return this.getPosX() - target_x - this.target.getDisplay().shape.getWidth()
+  //   }
+  // }
+  // public setShapeWidth(_: number) { /* Does nothing */ }
+  // public getShapeHeight() {
+  //   const source_y = this.source.getPosY()
+  //   const target_y = this.target.getPosY()
+  //   if (source_y <= target_y) {
+  //     return target_y - this.getPosY()
+  //   }
+  //   else {
+  //     return this.getPosY() - target_y - this.target.getDisplay().shape.getHeight()
+  //   }
+  // }
   public setShapeHeight(_: number) { /* Does nothing */ }
 }

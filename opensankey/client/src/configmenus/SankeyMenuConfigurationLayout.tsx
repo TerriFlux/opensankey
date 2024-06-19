@@ -11,6 +11,7 @@ import {
   Input,
   InputGroup,
   InputRightAddon,
+  useBoolean,
 } from '@chakra-ui/react'
 import * as d3 from 'd3'
 
@@ -29,16 +30,14 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
   ComponentUpdater
 }) => {
   const { t } = applicationContext
-  const { data, set_data} = applicationData
+  const { data, set_data,new_data} = applicationData
   const {RedrawNodes} = node_function
   const {RedrawLinks} = link_function
 
-  const {updateComponentMenuConfigLayout}=ComponentUpdater
   const [legend_position,set_legend_position] = useState(data.legend_position)
-  const [forceUpdate,setForceUpdate]=useState(false)
-  updateComponentMenuConfigLayout.current=()=>setForceUpdate(!forceUpdate)
-  const {updateComponentMenuConfigLink}=ComponentUpdater
-  updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
+  const [,setForceUpdate]=useBoolean()
+  new_data.menu_configuration.updateComponentMenuConfigLayout.current=setForceUpdate.toggle
+
 
   const right_addon_pixel = (val: number) => {
     if (val === 1) {
@@ -68,8 +67,9 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
           type='color'
           value={data.couleur_fond_sankey}
           onChange={evt=>{
-            data.couleur_fond_sankey=evt.target.value
-            d3.select('#svg').style('background-color',evt.target.value)
+            // data.couleur_fond_sankey=evt.target.value
+            // d3.select('#svg').style('background-color',evt.target.value)
+            new_data.drawing_area.setColor(evt.target.value)
           }}
           onBlur={()=>{
             set_data({...data})
@@ -91,7 +91,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         onChange={(evt) => {
           data.grid_visible = evt.target.checked
           DrawGrid(data)
-          setForceUpdate(!forceUpdate)
+          setForceUpdate.toggle()
         }}
       >
         <OSTooltip label={t('MEP.tooltips.GV')}>
@@ -248,7 +248,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         isChecked={data.mask_legend}
         onChange={(evt) => {
           data.mask_legend = evt.target.checked
-          setForceUpdate(!forceUpdate)
+          setForceUpdate.toggle()
           reDrawLegend()
         }}
       >
@@ -317,7 +317,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
             onChange={evt => {
               data.legend_bg_color = evt.target.value
               reDrawLegend()
-              setForceUpdate(!forceUpdate)
+              setForceUpdate.toggle()
             }}
           />
         </OSTooltip>
@@ -358,7 +358,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
           onChange={(evt) => {
             data.legend_bg_border = evt.target.checked
             reDrawLegend()
-            setForceUpdate(!forceUpdate)
+            setForceUpdate.toggle()
           }}
         >
           <OSTooltip label={t('Menu.tooltips.LegBgBorder')}>
@@ -393,7 +393,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
               onBlur={() => {
                 data.legend_position = legend_position
                 reDrawLegend()
-                setForceUpdate(!forceUpdate)
+                setForceUpdate.toggle()
               }}
             >
               <NumberInputField/>
@@ -432,7 +432,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
               onBlur={() => {
                 data.legend_position = legend_position
                 reDrawLegend()
-                setForceUpdate(!forceUpdate)
+                setForceUpdate.toggle()
               }}
             >
               <NumberInputField/>
@@ -487,7 +487,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
           onChange={(evt) => {
             data.display_legend_scale = evt.target.checked
             reDrawLegend()
-            setForceUpdate(!forceUpdate)
+            setForceUpdate.toggle()
           }}
         >
           {t('Menu.display_scale')}
@@ -502,7 +502,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         onChange={(evt) => {
           data.legend_show_dataTags = evt.target.checked
           reDrawLegend()
-          setForceUpdate(!forceUpdate)
+          setForceUpdate.toggle()
         }}
       >
         {t('MEP.leg_show_dataTags')}
