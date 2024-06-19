@@ -14,7 +14,6 @@ import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
 import { EventNodeContextMenu } from './SankeyDrawEventFunction'
 import { DragGNodeEvent } from './SankeyDragNodes'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
-import { addNewNodeToDrawingArea } from '../functions/draw/DrawingArea'
 
 declare const window: Window &
 typeof globalThis & {
@@ -373,13 +372,6 @@ export const drawAddNodes : drawNodeShapeFType = (
   const filtered_data = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
 
   filtered_data.forEach(n=>{
-    // Test
-    if (applicationData.new_data?.drawing_area) {
-      const tmp_node = addNewNodeToDrawingArea(applicationData.new_data?.drawing_area,applicationData.new_data.menu_configuration, 'test', 'tets',)
-      tmp_node.setPosXY(n.x + 100, n.y + 100)
-    }
-    // fin test
-
     d3.select(' .opensankey #g_nodes').datum(n).append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
