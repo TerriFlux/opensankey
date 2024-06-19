@@ -45,6 +45,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate } from '@fortawesome/free-solid-svg-icons'
 import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
+import { Class_LinkElement } from '../types/Link'
 export const MenuConfigurationLinks: MenuConfigurationLinksFType = (
   applicationData: applicationDataType,
   applicationState: applicationStateType,
@@ -196,51 +197,74 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   //Add new link and selection it
   const add_new_link = () => {
-    const { nodes, links } = data
+    // const { nodes, links } = data
 
-    if (Object.keys(nodes).length < 2) {
-      if (Object.keys(nodes).length == 0) {
-        AddNewNode(applicationData, multi_selected_nodes, node_function)
-      }
-      AddNewNode(applicationData, multi_selected_nodes, node_function)
-    }
-    const link: SankeyLink = DefaultLink(data)
-    // Méthode pour incrementer idNode
-    let idLink = Object.keys(data.links).length
-    while (data.links['link' + idLink]) {
-      idLink = idLink + 1
-    }
-    link.idLink = 'link' + idLink
-    links[link.idLink] = link
-    const node_keys = Object.keys(nodes)
-    let ids = node_keys[0]
-    let idt = node_keys[1]
+    // if (Object.keys(nodes).length < 2) {
+    //   if (Object.keys(nodes).length == 0) {
+    //     AddNewNode(applicationData, multi_selected_nodes, node_function)
+    //   }
+    //   AddNewNode(applicationData, multi_selected_nodes, node_function)
+    // }
+    // const link: SankeyLink = DefaultLink(data)
+    // // Méthode pour incrementer idNode
+    // let idLink = Object.keys(data.links).length
+    // while (data.links['link' + idLink]) {
+    //   idLink = idLink + 1
+    // }
+    // link.idLink = 'link' + idLink
+    // links[link.idLink] = link
+    // const node_keys = Object.keys(nodes)
+    // let ids = node_keys[0]
+    // let idt = node_keys[1]
 
-    if (ref_pre_idSource.current !== 'none') {
-      ids = ref_pre_idSource.current
-    }
-    if (ref_pre_idTarget.current !== 'none') {
-      idt = ref_pre_idTarget.current
-    }
+    // if (ref_pre_idSource.current !== 'none') {
+    //   ids = ref_pre_idSource.current
+    // }
+    // if (ref_pre_idTarget.current !== 'none') {
+    //   idt = ref_pre_idTarget.current
+    // }
 
-    link.idSource = nodes[ids].idNode
-    link.idTarget = nodes[idt].idNode
-    if (link.idSource === link.idTarget) {
-      AssignLinkValueToCorrectVar(link, 'recycling', true, false)
+    // link.idSource = nodes[ids].idNode
+    // link.idTarget = nodes[idt].idNode
+    // if (link.idSource === link.idTarget) {
+    //   AssignLinkValueToCorrectVar(link, 'recycling', true, false)
 
-    }
+    // }
 
-    nodes[ids].outputLinksId.push(link.idLink)
-    nodes[idt].inputLinksId.push(link.idLink)
+    // nodes[ids].outputLinksId.push(link.idLink)
+    // nodes[idt].inputLinksId.push(link.idLink)
 
-    multi_selected_links.current = [link]
-    applicationState.ref_display_link_opacity.current.forEach(setter => setter(
-      ReturnCorrectLinkAttributeValue(data, link, 'opacity', false) as string)
-    )
-    data.linkZIndex.push(link.idLink)
+    // multi_selected_links.current = [link]
+    // applicationState.ref_display_link_opacity.current.forEach(setter => setter(
+    //   ReturnCorrectLinkAttributeValue(data, link, 'opacity', false) as string)
+    // )
+    // data.linkZIndex.push(link.idLink)
+    // ComponentUpdater.updateComponenSaveInCache.current(false)
+    // set_data({ ...data })
+    // set_show_link(true)
+    const node_src = new_data.drawing_area.addNewDefaultNodeToSankey()
+    node_src.name = 'Unknown source'
+    // Set position
+    node_src.setPosXY(50, 50)
+    new_data.drawing_area.addNodeToSelection(node_src)
+    node_src.reset()
+
+    const node_trgt = new_data.drawing_area.addNewDefaultNodeToSankey()
+    node_src.name = 'Unknown target'
+    // Set position
+    node_trgt.setPosXY(150, 150)
+    new_data.drawing_area.addNodeToSelection(node_trgt)
+    node_trgt.reset()
+
+
+    const n_link=new Class_LinkElement(node_src,node_trgt,new_data.drawing_area,new_data.menu_configuration)
+    new_data.drawing_area.sankey.addLink(n_link)
+    new_data.drawing_area.sankey_selection.addLink(n_link)
+    console.log(n_link)
+    n_link.reset()
+    setForceUpdate.toggle()
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    set_data({ ...data })
-    set_show_link(true)
+
   }
 
 
@@ -360,7 +384,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               // new_data.drawing_area.createNewLinkAndNewNodes()
-              // add_new_link()
+              add_new_link()
               // link_function.DrawAllLinks(contextMenu, applicationData, uiElementsRef, applicationState, applicationContext, alt_key_pressed, (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute', link_function, ComponentUpdater, dict_hook_ref_setter_show_dialog_components)
             }}>
           <FaPlus />
