@@ -54,13 +54,6 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     set_node_vspace(data.v_space)
   }
   const node_visible=NodeVisibleOnsSvg()
-  const advanced_element_to_transform = [
-    'addNode', 'addFlux', 'removeNode', 'removeFlux',
-    'posNode', 'posFlux',
-    'Values',
-    'attrNode', 'attrFlux',
-    'attrGeneral'
-  ]
   const simple_element_to_transform = [
     'posNode', 'posFlux',
     'attrNode', 'attrFlux',
@@ -116,9 +109,8 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               {t('Menu.choseTransforDifficulty')}
             </Box>
             <Box layerStyle='options_3cols' >
-              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_secondary' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('simple')}}>Simple</Button>
-              <Button variant={mode_trans=='avancé'?'menuconfigpanel_option_button_tertiary' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
-              <Button variant={mode_trans=='expert'?'menuconfigpanel_del_button' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
+              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_secondary' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('simple')}}>Basiques</Button>
+              <Button variant={mode_trans=='expert'?'menuconfigpanel_del_button' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('expert')}}>Tous</Button>
             </Box>
           </Box>
   
@@ -141,8 +133,6 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     dataVarToUpdate.current.length = 0
                     if(mode_trans==='simple'){
                       simple_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
-                    }else if(mode_trans==='avancé'){
-                      advanced_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
                     }else{
                       all_element_UpdateLayout.forEach(el=>dataVarToUpdate.current.push(el))
                     }
