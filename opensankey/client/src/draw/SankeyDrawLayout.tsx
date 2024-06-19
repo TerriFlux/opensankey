@@ -1543,20 +1543,25 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('Values')) {
-    Object.entries(data.links).forEach(([key, link]) => {
-      const layoutLink = new_layout.links[key]
-      if (!layoutLink) {
-        return
-      }
-      const differences = getDiff(link.value, layoutLink.value)
+    const dataTagsNames = Object.values(data.dataTags).map(tagGroup=>tagGroup.group_name)
+    const layoutTagsNames = Object.values(new_layout.dataTags).map(tagGroup=>tagGroup.group_name)
+
+    if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
+      Object.entries(data.links).forEach(([key, link]) => {
+        const layoutLink = new_layout.links[key]
+        if (!layoutLink) {
+          return
+        }
+        const differences = getDiff(link.value, layoutLink.value)
+        if (differences) {
+          differences.forEach((difference) => applyChange(link.value, {}, difference))
+        }
+      })
+      // If values are applied dataTags must be applied also
+      const differences = getDiff(data.dataTags, new_layout.dataTags)
       if (differences) {
-        differences.forEach((difference) => applyChange(link.value, {}, difference))
+        differences.forEach((difference) => applyChange(data.dataTags, {}, difference))
       }
-    })
-    // If values are applied dataTags must be applied also
-    const differences = getDiff(data.dataTags, new_layout.dataTags)
-    if (differences) {
-      differences.forEach((difference) => applyChange(data.dataTags, {}, difference))
     }
   }
 
@@ -1646,29 +1651,42 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('tagData')) {
+    const dataTagsNames = Object.values(data.dataTags).map(tagGroup=>tagGroup.group_name)
+    const layoutTagsNames = Object.values(new_layout.dataTags).map(tagGroup=>tagGroup.group_name)
+
+    if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
     // Finds the corresponding tag group by name and apply the "dynamic" attributes
     // activate, show_legend and selected.
-    Object
-      .values(data.dataTags)
-      .forEach(dataTag => {
-        Object
-          .values(new_layout.dataTags)
-          .filter(_ => _.group_name === dataTag.group_name)
-          .forEach(_ => {
-            dataTag.activated=_.activated
-            dataTag.show_legend = _.show_legend
-            Object
-              .values(dataTag.tags)
-              .forEach(tag => {
-                Object
-                  .values(_.tags)
-                  .filter(ltag => ltag.name === tag.name)
-                  .forEach(ltag => {
-                    tag.selected = ltag.selected
-                  })
-              })
-          })
+      Object
+        .values(data.dataTags)
+        .forEach(dataTag => {
+          Object
+            .values(new_layout.dataTags)
+            .filter(_ => _.group_name === dataTag.group_name)
+            .forEach(_ => {
+              dataTag.activated=_.activated
+              dataTag.show_legend = _.show_legend
+              Object
+                .values(dataTag.tags)
+                .forEach(tag => {
+                  Object
+                    .values(_.tags)
+                    .filter(ltag => ltag.name === tag.name)
+                    .forEach(ltag => {
+                      tag.selected = ltag.selected
+                    })
+                })
+            })
+        })
+    } else {
+      data.dataTags = JSON.parse(JSON.stringify(new_layout.dataTags))
+      Object.values(data.links).forEach(l=>{
+        if (new_layout.links[l.idLink] == undefined ) {
+          return
+        }
+        l.value = JSON.parse(JSON.stringify(new_layout.links[l.idLink].value))
       })
+    }
   }
 
   //- Sanity check
