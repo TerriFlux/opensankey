@@ -11,7 +11,7 @@ import * as d3 from 'd3'
 import {
   default_background_color,
   default_grid_color
-} from './Element'
+} from './Utils'
 import {
   Class_Sankey
 } from './Sankey'

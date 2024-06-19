@@ -7,7 +7,7 @@
 // Local types
 import { openRemoteUIElement } from '../functions/application/Menus'
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_Structure } from './Element'
+import { Type_Structure } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { uiElementsRefType } from './Types'
 
@@ -87,7 +87,7 @@ export class Class_ApplicationData {
   // display_legend_scale:false,
   // legend_police:16,
   // legend_bg_border:false,
-  // legend_bg_color:defaultElementColor,
+  // legend_bg_color:default_element_color,
   // legend_bg_opacity:0,
   // legend_show_dataTags:false,
   // node_label_separator:''
