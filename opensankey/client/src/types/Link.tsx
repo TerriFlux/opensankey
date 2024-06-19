@@ -187,7 +187,7 @@ export class Class_LinkElement extends Class_Element {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
       local: new Class_LinkAttribute(),
-      style: drawing_area.sankey.flux_styles['default']
+      style: drawing_area.sankey.default_link_style
     }
     this._value = 10
     this._source = source

@@ -123,7 +123,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigNode.current = setForceUpdate.toggle
   const { t } = applicationContext
-  const new_nodes_sorted = new_data.drawing_area.sankey.getNameSortedNodes()
+  const new_nodes_sorted = new_data.drawing_area.sankey.nodes_list_sorted
   const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.isSelected())
   const INITIAL_OPTIONS = Object
     .values(new_nodes_sorted)

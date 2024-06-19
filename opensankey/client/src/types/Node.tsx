@@ -117,7 +117,7 @@ export class Class_NodeElement extends Class_Element {
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
-      style: drawing_area.sankey.node_styles['default'],
+      style: drawing_area.sankey.default_node_style,
       local: new Class_NodeAttribute()
     }
   }
