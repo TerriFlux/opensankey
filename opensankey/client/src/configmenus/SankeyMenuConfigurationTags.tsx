@@ -1,14 +1,13 @@
 import React, { useState, FunctionComponent } from 'react'
 
-import { TagsGroup } from '../types/Types'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus, FaPalette, FaRandom } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaPalette, FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
 import { AddTag, AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp, OSTooltip } from './SankeyUtils'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
 import { TableContainer, Table, Th, Thead, Tr, Button, Tbody, Td, Box, Input, InputGroup, Select, useBoolean } from '@chakra-ui/react'
-import { Class_TagGroup, tag_banner_type } from '../types/Tag'
+import { tag_banner_type } from '../types/Tag'
 import { Class_NodeElement } from '../types/Node'
 import { Class_LinkElement } from '../types/Link'
 const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
@@ -122,7 +121,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     let elements: Class_NodeElement[] | Class_LinkElement[]
     if (elementNameProp === 'nodes') {
       element = new_data.drawing_area.sankey.nodes_list
-    }
 
     const elementName = elementNameProp === 'nodes' ? 'nodes_list' : 'links_list'
     // delete group_tag
