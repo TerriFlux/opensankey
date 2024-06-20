@@ -150,8 +150,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const list_links_selected = new_data.drawing_area.selected_links_list
 
   // const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
-  const INITIAL_OPTIONS_LINKS = list_links.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.id } })
-  const selected_links = list_links_selected.map((d) => { return { 'label': (d.source.getName() + '--->' + d.target.getName()), 'value': d.id } })
+  const INITIAL_OPTIONS_LINKS = list_links.map((d) => { return { 'label': (d.source.name + '--->' + d.target.name), 'value': d.id } })
+  const selected_links = list_links_selected.map((d) => { return { 'label': (d.source.name + '--->' + d.target.name), 'value': d.id } })
 
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
@@ -276,7 +276,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
       //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
       const previous_node = link.source
-      previous_node.output_links.splice(previous_node.output_links.indexOf(link), 1)
+      previous_node.output_links_list.splice(previous_node.output_links_list.indexOf(link), 1)
 
       const source_node = nodes[changeEvent.target.value]
       link.source = source_node
@@ -286,15 +286,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
         // AssignLinkValueToCorrectVar(link,'recycling',true,false)
       }
-      source_node.output_links.push(link)
+      source_node.output_links_list.push(link)
 
       // Create a variable containing all links to update
       let link_to_update = []
       link_to_update.push(link)
-      link_to_update = link_to_update.concat(previous_node.output_links.map(lid => lid))
-      link_to_update = link_to_update.concat(previous_node.input_links.map(lid => lid))
-      link_to_update = link_to_update.concat(source_node.output_links.map(lid => lid))
-      link_to_update = link_to_update.concat(source_node.input_links.map(lid => lid))
+      link_to_update = link_to_update.concat(previous_node.output_links_list.map(lid => lid))
+      link_to_update = link_to_update.concat(previous_node.input_links_list.map(lid => lid))
+      link_to_update = link_to_update.concat(source_node.output_links_list.map(lid => lid))
+      link_to_update = link_to_update.concat(source_node.input_links_list.map(lid => lid))
 
       // RedrawNodes([source_node, previous_node])
       source_node.reset()
@@ -335,7 +335,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const nodes = new_data.drawing_area.sankey.nodes_dict
       const link = list_links_selected[0]
       const previous_node = nodes[link.id]
-      previous_node.input_links.splice(previous_node.input_links.indexOf(list_links_selected[0]), 1)
+      previous_node.input_links_list.splice(previous_node.input_links_list.indexOf(list_links_selected[0]), 1)
 
       const target_node = nodes[changeEvent.target.value]
       link.target = target_node
@@ -345,17 +345,17 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
         // AssignLinkValueToCorrectVar(link,'recycling',true,false)
       }
-      target_node.input_links.push(list_links_selected[0])
+      target_node.input_links_list.push(list_links_selected[0])
 
 
 
       // Create a variable containing all links to update
       let link_to_update = []
       link_to_update.push(link)
-      link_to_update = link_to_update.concat(previous_node.output_links.map(lid => lid))
-      link_to_update = link_to_update.concat(previous_node.input_links.map(lid => lid))
-      link_to_update = link_to_update.concat(target_node.output_links.map(lid => lid))
-      link_to_update = link_to_update.concat(target_node.input_links.map(lid => lid))
+      link_to_update = link_to_update.concat(previous_node.output_links_list.map(lid => lid))
+      link_to_update = link_to_update.concat(previous_node.input_links_list.map(lid => lid))
+      link_to_update = link_to_update.concat(target_node.output_links_list.map(lid => lid))
+      link_to_update = link_to_update.concat(target_node.input_links_list.map(lid => lid))
 
       // RedrawNodes([target_node,previous_node])
       previous_node.reset()

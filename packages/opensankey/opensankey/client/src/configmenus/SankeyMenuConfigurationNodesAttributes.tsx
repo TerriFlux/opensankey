@@ -152,7 +152,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const value_shape = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape : (list_nodes_selected[0]?.shape ?? false)
   const value_node_arrow_angle_factor = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].node_arrow_angle_factor : (list_nodes_selected[0]?.node_arrow_angle_factor ?? false)
   const value_node_arrow_angle_direction = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].node_arrow_angle_direction : (list_nodes_selected[0]?.node_arrow_angle_direction ?? false)
-  const value_colorSustainable = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].colorSustainable : (list_nodes_selected[0]?.colorSustainable ?? false)
+  const value_colorSustainable = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].color_sustainable : (list_nodes_selected[0]?.color_sustainable ?? false)
   const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].font_family : (list_nodes_selected[0]?.font_family ?? false)
   const value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].font_size : (list_nodes_selected[0]?.font_size ?? false)
   const value_uppercase = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].uppercase : (list_nodes_selected[0]?.uppercase ?? false)
@@ -243,7 +243,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              list_style_or_nodes.forEach(n => n.colorSustainable = !value_colorSustainable)
+              list_style_or_nodes.forEach(n => n.color_sustainable = !value_colorSustainable)
 
               newUpdateMenuConfigNode()
             }}
