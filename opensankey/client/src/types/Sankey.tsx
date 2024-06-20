@@ -24,7 +24,7 @@ import {
   default_node_style,
 } from './Node'
 import {
-  Class_Tagg
+  Class_TagGroup
 } from './Tag'
 
 
@@ -47,10 +47,10 @@ export class Class_Sankey {
   public drawing_area: Class_DrawingArea
 
   // Tags
-  public node_taggs: { [_: string]: Class_Tagg } = {}
-  public flux_taggs: { [_: string]: Class_Tagg } = {}
-  public data_taggs: { [_: string]: Class_Tagg } = {}
-  public level_taggs: { [_: string]: Class_Tagg } = {}
+  public node_taggs: { [_: string]: Class_TagGroup } = {}
+  public flux_taggs: { [_: string]: Class_TagGroup } = {}
+  public data_taggs: { [_: string]: Class_TagGroup } = {}
+  public level_taggs: { [_: string]: Class_TagGroup } = {}
 
   // TODO a implementer
   // left_shift: number,
