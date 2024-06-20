@@ -76,10 +76,10 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
 
   new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current = setForceUpdate.toggle
 
-  const nodes = new_data.drawing_area.sankey.getAllNodes()
-  const list_nodes_selected = new_data.drawing_area.sankey.getAllNodesSelected()
+  const nodes = new_data.drawing_area.sankey.nodes_dict
+  const list_nodes_selected = new_data.drawing_area.selected_nodes_list
 
-  const list_style_or_nodes = (menu_for_style) ? [new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current]] : list_nodes_selected
+  const list_style_or_nodes = (menu_for_style) ? [new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]] : list_nodes_selected
   const list_nodes_to_reset = (menu_for_style) ? Object.values(nodes) : list_nodes_selected
   const { RedrawNodes } = node_function
   const { RedrawLinks } = link_function
@@ -113,7 +113,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
       RedrawLinks(Object.values(applicationData.display_links))
     }
   }
-  
+
   const style_of_selected_nodes = () => {
     let style_to_display = 'Aucun'
     if (multi_selected_nodes.current.length != 0) {
@@ -133,40 +133,40 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   }
   /**
    *
-   * function that go throught all Class_NodeElement of an array & check if they're all equals 
+   * function that go throught all Class_NodeElement of an array & check if they're all equals
    * (to the first )
    *
    * @param {Class_NodeElement} curr
-   * @return {*} 
+   * @return {*}
    */
   const check_indeterminate = (curr: Class_NodeElement,) => {
     return (list_nodes_selected[0].isEqual(curr))
   }
   const is_indeterminatae = !list_nodes_selected.every(check_indeterminate)
 
-  const value_shape_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].shape_visible : (list_nodes_selected[0]?.shape_visible ?? false)
-  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_visible : (list_nodes_selected[0]?.label_visible ?? false)
-  const value_min_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].min_width : (list_nodes_selected[0]?.min_width ?? false)
-  const value_min_height = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].min_height : (list_nodes_selected[0]?.min_height ?? false)
-  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].color : (list_nodes_selected[0]?.color ?? false)
-  const value_shape = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].shape : (list_nodes_selected[0]?.shape ?? false)
-  const value_node_arrow_angle_factor = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].node_arrow_angle_factor : (list_nodes_selected[0]?.node_arrow_angle_factor ?? false)
-  const value_node_arrow_angle_direction = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].node_arrow_angle_direction : (list_nodes_selected[0]?.node_arrow_angle_direction ?? false)
-  const value_colorSustainable = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].colorSustainable : (list_nodes_selected[0]?.colorSustainable ?? false)
-  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].font_family : (list_nodes_selected[0]?.font_family ?? false)
-  const value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].font_size : (list_nodes_selected[0]?.font_size ?? false)
-  const value_uppercase = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].uppercase : (list_nodes_selected[0]?.uppercase ?? false)
-  const value_bold = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].bold : (list_nodes_selected[0]?.bold ?? false)
-  const value_italic = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].italic : (list_nodes_selected[0]?.italic ?? false)
-  const value_label_box_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_box_width : (list_nodes_selected[0]?.label_box_width ?? false)
-  const value_label_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_color : (list_nodes_selected[0]?.label_color ?? false)
-  const value_label_vert = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_vert : (list_nodes_selected[0]?.label_vert ?? false)
-  const value_label_horiz = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_horiz : (list_nodes_selected[0]?.label_horiz ?? false)
-  const value_label_background = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_background : (list_nodes_selected[0]?.label_background ?? false)
-  const value_show_value = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].show_value : (list_nodes_selected[0]?.show_value ?? false)
-  const value_label_vert_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_vert_valeur : (list_nodes_selected[0]?.label_vert_valeur ?? false)
-  const value_label_horiz_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].label_horiz_valeur : (list_nodes_selected[0]?.label_horiz_valeur ?? false)
-  const value_value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].value_font_size : (list_nodes_selected[0]?.value_font_size ?? false)
+  const value_shape_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_visible : (list_nodes_selected[0]?.shape_visible ?? false)
+  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_visible : (list_nodes_selected[0]?.label_visible ?? false)
+  const value_min_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].min_width : (list_nodes_selected[0]?.min_width ?? false)
+  const value_min_height = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].min_height : (list_nodes_selected[0]?.min_height ?? false)
+  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].color : (list_nodes_selected[0]?.color ?? false)
+  const value_shape = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape : (list_nodes_selected[0]?.shape ?? false)
+  const value_node_arrow_angle_factor = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].node_arrow_angle_factor : (list_nodes_selected[0]?.node_arrow_angle_factor ?? false)
+  const value_node_arrow_angle_direction = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].node_arrow_angle_direction : (list_nodes_selected[0]?.node_arrow_angle_direction ?? false)
+  const value_colorSustainable = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].colorSustainable : (list_nodes_selected[0]?.colorSustainable ?? false)
+  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].font_family : (list_nodes_selected[0]?.font_family ?? false)
+  const value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].font_size : (list_nodes_selected[0]?.font_size ?? false)
+  const value_uppercase = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].uppercase : (list_nodes_selected[0]?.uppercase ?? false)
+  const value_bold = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].bold : (list_nodes_selected[0]?.bold ?? false)
+  const value_italic = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].italic : (list_nodes_selected[0]?.italic ?? false)
+  const value_label_box_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_box_width : (list_nodes_selected[0]?.label_box_width ?? false)
+  const value_label_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_color : (list_nodes_selected[0]?.label_color ?? false)
+  const value_label_vert = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_vert : (list_nodes_selected[0]?.label_vert ?? false)
+  const value_label_horiz = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_horiz : (list_nodes_selected[0]?.label_horiz ?? false)
+  const value_label_background = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_background : (list_nodes_selected[0]?.label_background ?? false)
+  const value_show_value = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].show_value : (list_nodes_selected[0]?.show_value ?? false)
+  const value_label_vert_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_vert_valeur : (list_nodes_selected[0]?.label_vert_valeur ?? false)
+  const value_label_horiz_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_horiz_valeur : (list_nodes_selected[0]?.label_horiz_valeur ?? false)
+  const value_value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_font_size : (list_nodes_selected[0]?.value_font_size ?? false)
 
 
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
@@ -184,7 +184,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         onChange={(evt) => {
 
           if (menu_for_style) {
-            new_data.drawing_area.sankey.node_styles[ref_selected_style_node.current].shape_visible = evt.target.checked
+            new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_visible = evt.target.checked
           } else {
             list_style_or_nodes.forEach(node => node.shape_visible = evt.target.checked)
           }
@@ -1130,7 +1130,7 @@ export const SankeyWrapperConfigInModalOrMenu: FunctionComponent<SankeyWrapperCo
       {menu_to_wrap}
     </Box>
     :
-    // <Tab> 
+    // <Tab>
     //   <Box layerStyle='submenuconfig_tab' >
     //     {/* {SankeyWrapperConfigInModalOrMenu} */}
     //     {title_tab}
@@ -1158,14 +1158,14 @@ type ConfigLayoutNumberInputType = {
 }
 /**
  * Component developped for number input of the nodes attributs config menu
- * 
+ *
  * @param {boolean} menu_for_style Modify either the style of node or the multi_selected_nodes
  * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
  * @param {number} maximum_value (optional, if not specified it mean the value can be undefined )
  * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
  * @param {string} unitText (default:'') text of the addon
  * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
- * 
+ *
  * @return {JSX.Elmement}
  */
 const ConfigNodeAttributeNumberInput: FunctionComponent<ConfigLayoutNumberInputType> = ({
