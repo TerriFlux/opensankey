@@ -18,7 +18,8 @@ import {
   default_node_style,
 } from './Node'
 import {
-  Class_Tagg
+  Class_TagGroup,
+  Class_TagGroupNodeLevel
 } from './Tag'
 import {
   Class_DrawingArea
@@ -30,6 +31,10 @@ import {
 } from '../functions/draw/Sankey'
 import { Class_MenuConfig } from './MenuConfig'
 
+/**
+ * Type of group of Class_TagGroup
+ */
+export type MacroTagGroupType = 'node_taggs' | 'flux_taggs' | 'data_taggs'
 
 /**
  * Contains all necessary elements to draw a Sankey
@@ -40,7 +45,7 @@ import { Class_MenuConfig } from './MenuConfig'
 export class Class_Sankey {
 
   // Existing styles
-  flux_styles: { [_: string]: Class_LinkStyle } = {'default':default_link_style} // TODO create defaut style
+  flux_styles: { [_: string]: Class_LinkStyle } = { 'default': default_link_style } // TODO create defaut style
   node_styles: { [_: string]: Class_NodeStyle } = { 'default': default_node_style }
 
   // CONSTRUCTOR ==============================================================
@@ -55,7 +60,10 @@ export class Class_Sankey {
 
   ) {
     this.drawing_area = drawing_area
-    this.menu_config=menu_config
+    this.menu_config = menu_config
+    this.node_taggs={}
+    this.flux_taggs={}
+    this.data_taggs={}
   }
 
   // CONSTRUCTED ATTRIBUTES ====================================================
@@ -82,10 +90,10 @@ export class Class_Sankey {
   // Links
   links: { [_: string]: Class_LinkElement } = {}
   // Tags
-  node_taggs: { [_: string]: Class_Tagg } = {}
-  flux_taggs: { [_: string]: Class_Tagg } = {}
-  data_taggs: { [_: string]: Class_Tagg } = {}
-  level_taggs: { [_: string]: Class_Tagg } = {}
+  node_taggs: { [_: string]: Class_TagGroup }
+  flux_taggs: { [_: string]: Class_TagGroup }
+  data_taggs: { [_: string]: Class_TagGroup }
+  level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // left_shift: number,
   // right_shift: number,
@@ -123,13 +131,13 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public addNewNode(id: string, name: string) {
-    return addNewNodeToSankey(this,this.menu_config, id, name)
+    return addNewNodeToSankey(this, this.menu_config, id, name)
   }
   public addNewDefaultNode() {
     const n = String(Object.values(this.nodes).length)
     const id = 'node' + n
     const name = 'Node ' + n
-    return addNewNodeToSankey(this,this.menu_config, id, name,)
+    return addNewNodeToSankey(this, this.menu_config, id, name,)
   }
 
   /**
@@ -148,7 +156,7 @@ export class Class_Sankey {
   public getAllNodes() {
     return this.nodes
   }
-  
+
 
   public getListAllNodes() {
     return Object.values(this.nodes)
@@ -204,11 +212,11 @@ export class Class_Sankey {
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public removeNode(node: Class_NodeElement) { 
+  public removeNode(node: Class_NodeElement) {
     delete this.nodes[node.id]
   }
 
-  public removeLink(link: Class_LinkElement) { 
+  public removeLink(link: Class_LinkElement) {
     delete this.links[link.id]
   }
 
@@ -229,7 +237,7 @@ export class Class_Sankey {
   public getAllNodesStyle() {
     return this.node_styles
   }
-  
+
   /**
      * Function that return the value of a key k of style keyOfStyle
      *
@@ -304,6 +312,34 @@ export class Class_Sankey {
    */
   public drawTheseLinks(links: Class_LinkElement[]) {
     links.forEach(l => l.reset())
+  }
+
+  /**
+   * Create a TagGroup and add it to to specified group
+   *
+   * @return {*} 
+   * @memberof Class_Sankey
+   */
+  public CreateNewTagGroup(type_group: MacroTagGroupType) {
+    const key = Object.keys(this[type_group]).length
+    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
+    this[type_group][new_grp.id] = new_grp
+    return new_grp.id
+  }
+
+  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
+    delete this[type_group][key_to_delete]
+  }
+
+  /**
+   * Return list of group tag from specified group type
+   *
+   * @param {MacroTagGroupType} type_group
+   * @return {*} 
+   * @memberof Class_Sankey
+   */
+  public getListGroupTagOf(type_group: MacroTagGroupType) {
+    return Object.values(this[type_group])
   }
 
 

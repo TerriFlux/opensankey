@@ -11,6 +11,7 @@
 // import { Class_NodeShape } from './Node'
 
 // Local functions
+export type tag_banner_type='none'|'one'|'multi'
 
 
 /**
@@ -19,40 +20,98 @@
  * @class Class_Tag
  */
 export class Class_Tag {
-  // Constructor =================================================
-  constructor(id: string, name: string, group: Class_Tagg) {
-    this.id = id
-    this.name = name
-    this.group = group
-  }
   // Mandatory Attributes ========================================
   // Name
-  id: string
-  name: string
+  private _id: string
+  private _name: string
+
   // Group where it belong
-  group: Class_Tagg
+  private _group: Class_TagGroup
+  // Color of tag
+  private _color: string
+  // Boolean to show elements that are assigned to this tag
+  private _selected: boolean
+
+  
+  // Constructor =================================================
+  constructor(id: string, name: string, group: Class_TagGroup) {
+    this._id = id
+    this._name = name
+    this._group = group
+    this._color='grey'
+    this._selected=true
+  }
+
   // Others Attributes ============================================
   // Display attributes
   // shape: Type_ElementShape = structuredClone(default_element_shape)
   // shape: Class_ElementShape = new Class_NodeShape
+
+  // =========== Getter & Setter ===================
+  public get color(): string {return this._color}
+  public set color(value: string) {this._color = value}
+
+  public get selected(): boolean {return this._selected}
+  public set selected(value: boolean) {this._selected = value}
+
+  public get name(): string {return this._name}
+  public set name(value: string) {this._name = value}
 }
 
-export class Class_Tagg {
-  // Constructor =================================================
-  constructor(id: string, name: string) {
-    this.id = id
-    this.name = name
-    this.tags = {}
-    this.addTag('etiquette0', 'Etiquette 0')
-  }
+export class Class_TagGroup {
   // Mandatory Attributes ========================================
   // Name
-  id: string
-  name: string
+  private _id: string
+  private _name: string
+
   // List of tags
-  tags: {[_: string] : Class_Tag}
+  private _tags: { [_: string]: Class_Tag} 
+
+
+  private _show_legend: boolean
+  private _banner: tag_banner_type
+
+
+  // Constructor =================================================
+  constructor(id: string, name: string) {
+    this._id = id
+    this._name = name
+    this._tags = {}
+    this._show_legend=false
+    this._banner='one'
+
+    this.addTag('etiquette0', 'Etiquette 0')
+  }
+
   public addTag(id: string, name: string) {
     const tag = new Class_Tag(id, name, this)
-    this.tags[id] = tag
+    this._tags[id] = tag
+  }
+
+  // =========== Getter & Setter ===================
+  public get id(): string {return this._id}
+  public set id(value: string) {this._id = value}
+
+  public get name(): string {return this._name}
+  public set name(value: string) {this._name = value}
+
+  public get tags(): { [_: string]: Class_Tag}  {return this._tags}
+  public set tags(value: { [_: string]: Class_Tag} ) {this._tags = value}
+
+  public get banner(): tag_banner_type {return this._banner}
+  public set banner(value: tag_banner_type) {this._banner = value}
+}
+
+// SPECIAL TAG GROUP FOR NODE LEVEL
+export class Class_TagGroupNodeLevel extends Class_TagGroup{
+  // Class Attributes====================
+  private _siblings:string[]
+  private _activated:boolean
+
+  // Constructor=======================
+  constructor(id: string, name: string){
+    super(id,name)
+    this._siblings=[]
+    this._activated=false
   }
 }
