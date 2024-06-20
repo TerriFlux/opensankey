@@ -7,7 +7,8 @@ import * as d3 from 'd3'
 import { AddTag, AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp, OSTooltip } from './SankeyUtils'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
-import { TableContainer, Table, Th, Thead, Tr, Button, Tbody, Td, Box, Input, InputGroup, Select } from '@chakra-ui/react'
+import { TableContainer, Table, Th, Thead, Tr, Button, Tbody, Td, Box, Input, InputGroup, Select, useBoolean } from '@chakra-ui/react'
+import { Class_TagGroup, tag_banner_type } from '../types/Tag'
 const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
   d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
   d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
@@ -21,16 +22,26 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   node_function,
   link_function,
   ComponentUpdater,
-  updateMenus,
   reDrawLegend
 }) => {
-  const { data, new_data } = applicationData
+  const { new_data } = applicationData
   const { t } = applicationContext
-  const isNodeTags = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
-  const type_tag_name = elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
+  const [, setForceUpdate] = useBoolean()
+  const [tags_group_key, set_tags_group_key] = useState('')
+  const [color_map,setColorMap]=useState('jet')
+  /**
+   * Current tag group modifying
+   */
+  const group_tag = new_data.drawing_area.sankey[elementTagNameProp][tags_group_key]
+
+  /**
+   * List of tag group of current family of tag group (node,links,data)
+   */
+  const list_group_tag = new_data.drawing_area.sankey.getListGroupTagOf(elementTagNameProp)
+
+
   const { updateComponenSaveInCache } = ComponentUpdater
-  //const [forceUpdate,setForceUpdate]=useState(false)
+
   const colormaps = [
     'custom',
     'jet', 'hsv', 'hot', 'cool', 'spring', 'summer', 'autumn', 'winter', 'bone',
@@ -51,17 +62,18 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   }
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
-  const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
-    data[type_tag_name][tags_group_key].banner = evt.target.value
-    updateMenus[1](!updateMenus[0])
+  const handleBanner = (tags_group_key: string, new_banner_type: tag_banner_type) => {
+    group_tag.banner = new_banner_type
+    setForceUpdate.toggle()
     redrawGenereal()
   }
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
 
   let element_tags: string[] = []
-  if (Object.keys(data[type_tag_name]).length > 0 && tags_group_key !== '') {
-    if (tags_group_key in data[type_tag_name]) {
-      element_tags = Object.keys(data[type_tag_name][tags_group_key].tags)
+  if (list_group_tag.length > 0 && tags_group_key !== '') {
+    const list_key_grp_tag = list_group_tag.map(grp => grp.id)
+    if (list_key_grp_tag.includes(tags_group_key)) {
+      element_tags = Object.keys(group_tag.tags)
     } else {
       console.log('tutu')
     }
@@ -71,24 +83,33 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   //add a tags to the selected groupTag
   const handleAddTagButton = () => {
-    AddTag(data, type_tag_name, tags_group_key)
-    updateMenus[1](!updateMenus[0])
+    const new_key = Object.keys(group_tag.tags).length
+    group_tag.addTag('key_tag_' + new_key, 'Tag')
+    setForceUpdate.toggle()
     redrawGenereal()
   }
 
   //add a groupTag
   const handleAddTagGrpButton = () => {
-    const k = AddGroupTag(data, type_tag_name, tags_group_key, elementNameProp)
-    set_tags_group_key(k)
-    updateMenus[1](!updateMenus[0])
-    redrawGenereal()
+    // Old
+    // const k = AddGroupTag(data, elementTagNameProp, tags_group_key, elementNameProp)
+    // set_tags_group_key(k)
+    // setForceUpdate.toggle()
+    // redrawGenereal()
+
+    // New
+    const grp_key = new_data.drawing_area.sankey.CreateNewTagGroup(elementTagNameProp)
+    set_tags_group_key(grp_key)
+    setForceUpdate.toggle()
+
   }
+
 
   // Delete a tag
   const handleDelTag = (n: string) => {
 
-    delete data[type_tag_name][tags_group_key].tags[n]
-    updateMenus[1](!updateMenus[0])
+    delete group_tag.tags[n]
+    setForceUpdate.toggle()
     redrawGenereal()
   }
 
@@ -97,8 +118,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const handleDelGroupTag = (tags_group_key: string) => {
 
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
-    delete data[type_tag_name][tags_group_key]
-    Object.values(data[elementName]).forEach(
+    // delete group_tag
+    new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tags_group_key)
+    Object.values(new_data.drawing_area.sankey[elementName]).forEach(
       n => {
         if (n.colorTag === tags_group_key) {
           n.colorTag = ''
@@ -107,53 +129,52 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           delete n.tags[tags_group_key]
         }
       })
-    if (Object.keys(data[type_tag_name]).length > 0) {
-      const lastElmt = Object.keys(data[type_tag_name])[Object.keys(data[type_tag_name]).length - 1]
+    if (list_group_tag.length > 0) {
+      const lastElmt = list_group_tag[list_group_tag.length - 1].id
       set_tags_group_key(lastElmt)
     }
     // If we delete a group data tag then we have to reset links value since the link value tree structure change drastically
-    if (type_tag_name === 'dataTags') {
-      resetLinkValueAfterDeleteDTGrp(data)
-    }
-    updateMenus[1](!updateMenus[0])
+    // if (elementTagNameProp === 'data_taggs') {
+    //   resetLinkValueAfterDeleteDTGrp(data)
+    // }
+    setForceUpdate.toggle()
     redrawGenereal()
   }
 
   // Switch the position of the groupTag with the one before him on the list of grouptag
-  const handleUpGrpTag = (i: string) => {
+  // const handleUpGrpTag = (i: string) => {
 
-    const listElmt = Object.keys(data[type_tag_name])
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: TagsGroup } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = data[type_tag_name][elt]
-    })
-    for (const member in data[type_tag_name]) delete data[type_tag_name][member]
-    Object.assign(data[type_tag_name], new_cat)
-    updateMenus[1](!updateMenus[0])
-  }
+  //   const listElmt = Object.keys(data[elementTagNameProp])
+  //   const posElemt = listElmt.indexOf(i)
+  //   listElmt.splice(posElemt, 1)
+  //   listElmt.splice(posElemt - 1, 0, i)
+  //   const new_cat: { [key: string]: TagsGroup } = {}
+  //   listElmt.forEach(elt => {
+  //     new_cat[elt] = data[elementTagNameProp][elt]
+  //   })
+  //   for (const member in data[elementTagNameProp]) delete data[elementTagNameProp][member]
+  //   Object.assign(data[elementTagNameProp], new_cat)
+  //   setForceUpdate.toggle()
+  // }
+  // // Switch the position of the groupTag with the one after him on the list of grouptag
+  // const handleDownGrpTag = (i: string) => {
 
-  // Switch the position of the groupTag with the one after him on the list of grouptag
-  const handleDownGrpTag = (i: string) => {
+  //   const listElmt = Object.keys(data[elementTagNameProp])
+  //   const posElemt = listElmt.indexOf(i)
+  //   listElmt.splice(posElemt, 1)
+  //   listElmt.splice(posElemt + 1, 0, i)
+  //   const new_cat: { [key: string]: TagsGroup } = {}
+  //   listElmt.forEach(elt => {
+  //     new_cat[elt] = data[elementTagNameProp][elt]
+  //   })
+  //   for (const member in data[elementTagNameProp]) delete data[elementTagNameProp][member]
+  //   Object.assign(data[elementTagNameProp], new_cat)
+  //   setForceUpdate.toggle()
 
-    const listElmt = Object.keys(data[type_tag_name])
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: TagsGroup } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = data[type_tag_name][elt]
-    })
-    for (const member in data[type_tag_name]) delete data[type_tag_name][member]
-    Object.assign(data[type_tag_name], new_cat)
-    updateMenus[1](!updateMenus[0])
-
-  }
+  // }
   let variant_table_edit_tag = 'table_edit_tag_node'
-  if (type_tag_name == 'fluxTags') variant_table_edit_tag = 'table_edit_tag_link'
-  if (type_tag_name == 'dataTags') variant_table_edit_tag = 'table_edit_tag_data'
+  if (elementTagNameProp == 'flux_taggs') variant_table_edit_tag = 'table_edit_tag_link'
+  if (elementTagNameProp == 'data_taggs') variant_table_edit_tag = 'table_edit_tag_data'
   const tagSetting = (<>
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
     {t('Tags.GE')}:
@@ -163,16 +184,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_tags_group_key(evt.target.value)
-            updateMenus[1](!updateMenus[0])
+            setForceUpdate.toggle()
           }}
         value={tags_group_key}>
-        {Object.keys(data[type_tag_name]).map(
+        {list_group_tag.map(
           (key, i) =>
             <option
               key={i}
-              value={key}
+              value={key.id}
             >
-              {data[type_tag_name][key].group_name}
+              {list_group_tag[i].name}
             </option>
         )}
       </Select>
@@ -186,12 +207,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           size='sm'
           onClick={() => {
             const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-            const size_color = Object.keys(data[type_tag_name][tags_group_key].tags).length
+            const size_color = Object.keys(group_tag.tags).length
             for (const i in d3.range(size_color)) {
-              data[type_tag_name][tags_group_key].tags[element_tags[i]].color = d3.color(color_selected(+i / size_color))?.formatHex()
+              group_tag.tags[element_tags[i]].color = d3.color(color_selected(+i / size_color))?.formatHex() ?? 'grey'
+
             }
             redrawGenereal()
-            updateMenus[1](!updateMenus[0])
+            setForceUpdate.toggle()
           }}>
           <FaPalette />
         </Button>
@@ -204,7 +226,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           size='sm'
           onClick={() => {
             const color = element_tags.map(d => {
-              return data[type_tag_name][tags_group_key].tags[d].color
+              return group_tag.tags[d].color
             })
             let size_color = color.length
             for (const i in d3.range(size_color)) {
@@ -213,11 +235,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               const c = color.splice(color_to_select, 1)
               if (c != undefined && c != null) {
                 const v = c[0]
-                data[type_tag_name][tags_group_key].tags[element_tags[i]].color = v
+                group_tag.tags[element_tags[i]].color = v
               }
             }
             redrawGenereal()
-            updateMenus[1](!updateMenus[0])
+            setForceUpdate.toggle()
           }}>
           <FaRandom />
         </Button>
@@ -229,8 +251,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           variant='menuconfigpanel_option_select'
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data[type_tag_name][tags_group_key].color_map = evt.target.value
-              const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length
+              setColorMap(evt.target.value)
+              const nb_tags = Object.keys(group_tag.tags).length
               if (evt.target.value === 'custom') {
                 return
               }
@@ -244,13 +266,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               if (nb_tags < 11) {
                 step = Math.round(11 / nb_tags)
               }
-              Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
-                (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
+              Object.keys(group_tag.tags).forEach(
+                (tag_key, i) => group_tag.tags[tag_key].color = colors[i * step]
               )
               redrawGenereal()
-              updateMenus[1](!updateMenus[0])
+              setForceUpdate.toggle()
             }}
-          value={(Object.keys(data[type_tag_name]).length > 0 && data[type_tag_name][tags_group_key] && tags_group_key != '') ? data[type_tag_name][tags_group_key].color_map : ''}
+          // value={(list_group_tag.length > 0 && group_tag && tags_group_key != '') ? group_tag.color_map : ''}
+          value={color_map}
         >
           {colormaps.map(
             (cur_colormap, i) =>
@@ -280,7 +303,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               {t('Tags.Nom')}
             </Th>
             {/* Etiquette visible  */}
-            {type_tag_name !== 'dataTags' ?
+            {elementTagNameProp !== 'data_taggs' ?
               <Th>
                 {t('Tags.Visible')}
               </Th> : <></>
@@ -288,11 +311,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             <Th>
               {t('Tags.Couleur')}
             </Th>
-            {elementNameProp === 'nodes' ?
+            {/* {elementNameProp === 'nodes' ?
               <Th>
                 {t('Tags.Forme')}
               </Th> : <></>
-            }
+            } */}
           </Tr>
         </Thead>
 
@@ -300,7 +323,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         <Tbody>
           {element_tags.length > 0 ? element_tags.map(
             (tag_key, i) => {
-              const tag_visible = data[type_tag_name][tags_group_key].tags[tag_key].selected
+              const tag_visible = group_tag.tags[tag_key].selected
               return (
                 <Tr key={i.toString()} >
                   {/* Supprimer une etiquette  */}
@@ -322,21 +345,21 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           variant='menuconfigpanel_option_input_table'
                           id={i.toString()}
                           type="text"
-                          value={data[type_tag_name][tags_group_key].tags[tag_key].name}
+                          value={group_tag.tags[tag_key].name}
                           onChange={
                             (evt: React.ChangeEvent) => {
                               const new_nb_element = evt.target as HTMLInputElement
                               const name = new_nb_element.value
-                              data[type_tag_name][tags_group_key].tags[tag_key].name = name
+                              group_tag.tags[tag_key].name = name
                               redrawGenereal()
-                              updateMenus[1](!updateMenus[0])
+                              setForceUpdate.toggle()
                             }
                           } />
                       </InputGroup>
                     </OSTooltip>
                   </Td>
                   {/* Rendre ou non visible  */}
-                  {type_tag_name !== 'dataTags' ?
+                  {elementTagNameProp !== 'data_taggs' ?
                     <Td >
                       <OSTooltip label={t('Tags.tooltips.visible')}>
                         <Button
@@ -346,9 +369,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           onClick={
                             () => {
                               const visible = !tag_visible
-                              data[type_tag_name][tags_group_key].tags[tag_key].selected = visible
+                              group_tag.tags[tag_key].selected = visible
                               redrawGenereal()
-                              updateMenus[1](!updateMenus[0])
+                              setForceUpdate.toggle()
                             }}>{tag_visible ? <FaEye /> : <FaEyeSlash />}</Button>
                       </OSTooltip>
 
@@ -359,26 +382,26 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     <OSTooltip label={t('Tags.tooltips.couleur')}>
                       <Input padding='0.25rem' width='revert' height='revert'
                         type='color'
-                        value={data[type_tag_name][tags_group_key].tags[tag_key].color as string}
+                        value={group_tag.tags[tag_key].color as string}
                         onChange={
                           evt => {
-                            data[type_tag_name][tags_group_key].tags[tag_key].color = evt.target.value
+                            group_tag.tags[tag_key].color = evt.target.value
                             redrawGenereal()
-                            updateMenus[1](!updateMenus[0])
+                            setForceUpdate.toggle()
                           }} />
                     </OSTooltip>
                   </Td>
                   {/* Chosir la forme du noeud  */}
-                  {elementNameProp === 'nodes' ? (
+                  {/* {elementNameProp === 'nodes' ? (
                     <Td>
                       <OSTooltip label={t('Tags.tooltips.forme')}>
                         <Select variant='menuconfigpanel_option_select_table'
                           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
+                            group_tag.tags[tag_key].shape = evt.target.value
                             redrawGenereal()
-                            updateMenus[1](!updateMenus[0])
+                            setForceUpdate.toggle()
                           }}
-                          value={data[type_tag_name][tags_group_key].tags[tag_key].shape as string}
+                          value={group_tag.tags[tag_key].shape as string}
                         >
                           <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
                           <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
@@ -388,7 +411,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                   ) :
                     (<></>)
 
-                  }
+                  } */}
                 </Tr>
               )
             }) : (<></>)}
@@ -419,13 +442,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
               <Th>{t('Tags.Bannière')}</Th>
-              {(type_tag_name != 'dataTags') ? <Th>{t('Tags.Position')}</Th> : <></>}
+              {/* {(elementTagNameProp != 'data_taggs') ? <Th>{t('Tags.Position')}</Th> : <></>} */}
             </Tr>
           </Thead>
           {/* Liste des groupes d'étiquettes  */}
           <Tbody>
             {
-              Object.keys(data[type_tag_name]).map(
+              list_group_tag.map(
                 (tags_group_key, i) => {
                   return (
                     <Tr key={i.toString()}>
@@ -435,7 +458,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           <Button
                             size={'sm'}
                             variant='menuconfigpanel_del_button_in_table'
-                            onClick={() => handleDelGroupTag(tags_group_key)}>
+                            onClick={() => handleDelGroupTag(tags_group_key.id)}>
                             <FaMinus />
                           </Button>
                         </OSTooltip>
@@ -448,12 +471,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               variant='menuconfigpanel_option_input_table'
                               id={i.toString()}
                               type="text"
-                              value={data[type_tag_name][tags_group_key].group_name}
+                              value={group_tag.name}
                               onChange={
                                 (evt: React.ChangeEvent) => {
                                   const new_name = (evt.target as HTMLInputElement).value
-                                  data[type_tag_name][tags_group_key].group_name = new_name
-                                  updateMenus[1](!updateMenus[0])
+                                  group_tag.name = new_name
+                                  setForceUpdate.toggle()
                                 }} />
                           </InputGroup>
                         </OSTooltip>
@@ -463,19 +486,19 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                         <OSTooltip label={t('Tags.tooltips.banner')}>
                           <Select
                             variant='menuconfigpanel_option_select_table'
-                            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
-                            value={data[type_tag_name][tags_group_key].banner}
+                            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key.id, (evt.target.value as tag_banner_type))}
+                            value={group_tag.banner}
                           >
-                            {(type_tag_name != 'dataTags') ? <option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option> : <></>}
+                            {(elementTagNameProp != 'data_taggs') ? <option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option> : <></>}
                             <option key={'one' + i} id='OneBaner' value='one'>{t('Tags.Unique')}</option>
                             <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
                           </Select>
                         </OSTooltip>
                       </Td>
                       {/* Monter ou descendre groupe d'étiquette  */}
-                      {(type_tag_name != 'dataTags') ?
+                      {/* {(elementTagNameProp != 'data_taggs') ?
                         <Td>
-                          {/* Monter le groupe d'étiquette */}
+                           Monter le groupe d'étiquette *
                           <OSTooltip label={t('Tags.tooltips.up')}>
                             <Button
                               variant='menuconfigpanel_option_btn_in_table'
@@ -484,7 +507,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               <FaArrowAltCircleUp />
                             </Button>
                           </OSTooltip>
-                          {/* Descendre le groupe d'étiquettes  */}
+                           Descendre le groupe d'étiquettes  
                           <OSTooltip label={t('Tags.tooltips.down')}>
                             <Button
                               variant='menuconfigpanel_option_btn_in_table'
@@ -494,14 +517,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             </Button>
                           </OSTooltip>
                         </Td> : <></>
-                      }
+                      } */}
                     </Tr>
                   )
                 })
             }
           </Tbody>
         </Table></TableContainer>
-      {Object.keys(data[type_tag_name]).length > 0 ? tagSetting : <></>}
+      {list_group_tag.length > 0 ? tagSetting : <></>}
     </Box>
   )
 }
