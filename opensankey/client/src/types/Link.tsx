@@ -28,9 +28,6 @@ import {
 import {
   Class_Tag
 } from './Tag'
-import { Class_Data } from './Data'
-import { Class_MenuConfig } from './MenuConfig'
-import { Class_NodeElement } from './Node'
 import * as d3 from 'd3'
 
 // CUSTOM TYPES **************************************************************************
@@ -360,7 +357,9 @@ export class Class_LinkElement extends Class_Element {
     this._target = value
   }
 
-
+  public deRefTag(tag:Class_Tag){
+    delete this.tags[tag.id]
+  } 
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -554,11 +553,11 @@ export class Class_LinkElement extends Class_Element {
 
   public get link_stroke_width(){
     const scale = d3.scaleLinear()
-      .domain([0, this.getDrawingArea().scale])
+      .domain([0, this.drawing_area.scale])
       .range([0, 100])
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
-      .range([0, this.getDrawingArea().scale])    
+      .range([0, this.drawing_area.scale])    
     return scale(this.thickness)
   }
 
@@ -571,7 +570,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set orientation(_: string) { this.display.local.orientation = _ }
+  public set orientation(_: string) { this._display.local.orientation = _ }
 
   public get left_horiz_shift() {
     if (this._display.local.left_horiz_shift !== undefined) {
@@ -581,7 +580,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set left_horiz_shift(_: number) { this.display.local.left_horiz_shift = _ }
+  public set left_horiz_shift(_: number) { this._display.local.left_horiz_shift = _ }
 
   public get right_horiz_shift() {
     if (this._display.local.right_horiz_shift !== undefined) {
@@ -591,7 +590,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set right_horiz_shift(_: number) { this.display.local.right_horiz_shift = _ }
+  public set right_horiz_shift(_: number) { this._display.local.right_horiz_shift = _ }
 
   public get vert_shift() {
     if (this._display.local.vert_shift !== undefined) {
@@ -601,7 +600,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set vert_shift(_: number) { this.display.local.vert_shift = _ }
+  public set vert_shift(_: number) { this._display.local.vert_shift = _ }
 
   public get curvature() {
     if (this._display.local.curvature !== undefined) {
@@ -611,7 +610,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set curvature(_: number) { this.display.local.curvature = _ }
+  public set curvature(_: number) { this._display.local.curvature = _ }
 
   public get curved() {
     if (this._display.local.curved !== undefined) {
@@ -621,7 +620,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set curved(_: boolean) { this.display.local.curved = _ }
+  public set curved(_: boolean) { this._display.local.curved = _ }
 
   public get recycling() {
     if (this._display.local.recycling !== undefined) {
@@ -631,7 +630,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set recycling(_: boolean) { this.display.local.recycling = _ }
+  public set recycling(_: boolean) { this._display.local.recycling = _ }
 
   public get arrow_size() {
     if (this._display.local.arrow_size !== undefined) {
@@ -641,7 +640,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set arrow_size(_: number) { this.display.local.arrow_size = _ }
+  public set arrow_size(_: number) { this._display.local.arrow_size = _ }
 
   public get label_position() {
     if (this._display.local.label_position !== undefined) {
@@ -651,7 +650,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set label_position(_: string) { this.display.local.label_position = _ }
+  public set label_position(_: string) { this._display.local.label_position = _ }
 
   public get orthogonal_label_position() {
     if (this._display.local.orthogonal_label_position !== undefined) {
@@ -661,7 +660,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set orthogonal_label_position(_: string) { this.display.local.orthogonal_label_position = _ }
+  public set orthogonal_label_position(_: string) { this._display.local.orthogonal_label_position = _ }
 
   public get label_on_path() {
     if (this._display.local.label_on_path !== undefined) {
@@ -671,7 +670,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set label_on_path(_: boolean) { this.display.local.label_on_path = _ }
+  public set label_on_path(_: boolean) { this._display.local.label_on_path = _ }
 
   public get label_pos_auto() {
     if (this._display.local.label_pos_auto !== undefined) {
@@ -681,7 +680,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set label_pos_auto(_: boolean) { this.display.local.label_pos_auto = _ }
+  public set label_pos_auto(_: boolean) { this._display.local.label_pos_auto = _ }
 
   public get arrow() {
     if (this._display.local.arrow !== undefined) {
@@ -691,7 +690,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set arrow(_: boolean) { this.display.local.arrow = _ }
+  public set arrow(_: boolean) { this._display.local.arrow = _ }
 
   public get color() {
     if (this._display.local.color !== undefined) {
@@ -701,7 +700,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set color(_: string) { this.display.local.color = _ }
+  public set color(_: string) { this._display.local.color = _ }
 
   public get opacity() {
     if (this._display.local.opacity !== undefined) {
@@ -711,7 +710,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set opacity(_: number) { this.display.local.opacity = _ }
+  public set opacity(_: number) { this._display.local.opacity = _ }
 
   public get dashed() {
     if (this._display.local.dashed !== undefined) {
@@ -721,7 +720,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set dashed(_: boolean) { this.display.local.dashed = _ }
+  public set dashed(_: boolean) { this._display.local.dashed = _ }
 
   public get label_visible() {
     if (this._display.local.label_visible !== undefined) {
@@ -731,7 +730,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set label_visible(_: boolean) { this.display.local.label_visible = _ }
+  public set label_visible(_: boolean) { this._display.local.label_visible = _ }
 
   public get label_font_size() {
     if (this._display.local.label_font_size !== undefined) {
@@ -741,7 +740,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set label_font_size(_: number) { this.display.local.label_font_size = _ }
+  public set label_font_size(_: number) { this._display.local.label_font_size = _ }
 
   public get text_color() {
     if (this._display.local.text_color !== undefined) {
@@ -751,7 +750,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set text_color(_: string) { this.display.local.text_color = _ }
+  public set text_color(_: string) { this._display.local.text_color = _ }
 
   public get to_precision() {
     if (this._display.local.to_precision !== undefined) {
@@ -761,7 +760,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set to_precision(_: boolean) { this.display.local.to_precision = _ }
+  public set to_precision(_: boolean) { this._display.local.to_precision = _ }
 
   public get scientific_precision() {
     if (this._display.local.scientific_precision !== undefined) {
@@ -771,7 +770,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set scientific_precision(_: number) { this.display.local.scientific_precision = _ }
+  public set scientific_precision(_: number) { this._display.local.scientific_precision = _ }
 
   public get font_family() {
     if (this._display.local.font_family !== undefined) {
@@ -781,7 +780,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set font_family(_: string) { this.display.local.font_family = _ }
+  public set font_family(_: string) { this._display.local.font_family = _ }
 
   public get label_unit_visible() {
     if (this._display.local.label_unit_visible !== undefined) {
@@ -791,7 +790,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set label_unit_visible(_: boolean) { this.display.local.label_unit_visible = _ }
+  public set label_unit_visible(_: boolean) { this._display.local.label_unit_visible = _ }
 
   public get label_unit() {
     if (this._display.local.label_unit !== undefined) {
@@ -801,7 +800,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return ''
   }
-  public set label_unit(_: string) { this.display.local.label_unit = _ }
+  public set label_unit(_: string) { this._display.local.label_unit = _ }
 
   public get custom_digit() {
     if (this._display.local.custom_digit !== undefined) {
@@ -811,7 +810,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return false
   }
-  public set custom_digit(_: boolean) { this.display.local.custom_digit = _ }
+  public set custom_digit(_: boolean) { this._display.local.custom_digit = _ }
 
   public get nb_digit() {
     if (this._display.local.nb_digit !== undefined) {
@@ -821,7 +820,7 @@ export class Class_LinkElement extends Class_Element {
     }
     return 0
   }
-  public set nb_digit(_: number) { this.display.local.nb_digit = _ }
+  public set nb_digit(_: number) { this._display.local.nb_digit = _ }
 
 
 
