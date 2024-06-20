@@ -152,6 +152,10 @@ export class Class_NodeElement extends Class_Element {
     return this.name
   }
 
+  public deRefTag(tag:Class_Tag){
+    delete this.tags[tag.id]
+  } 
+
   // PRIVATE METHODS ====================================================================
 
   /**

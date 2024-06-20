@@ -4,6 +4,9 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
+import { Class_LinkElement } from "./Link"
+import { Class_NodeElement } from "./Node"
+
 // External imports
 
 // Local types
@@ -23,6 +26,7 @@ export class Class_Tag {
   // Mandatory Attributes ========================================
   // Name
   private _id: string
+
   private _name: string
 
   // Group where it belong
@@ -31,6 +35,7 @@ export class Class_Tag {
   private _color: string
   // Boolean to show elements that are assigned to this tag
   private _selected: boolean
+  private list_ref:(Class_LinkElement|Class_NodeElement)[] 
 
   
   // Constructor =================================================
@@ -40,6 +45,7 @@ export class Class_Tag {
     this._group = group
     this._color='grey'
     this._selected=true
+    this.list_ref=[]
   }
 
   // Others Attributes ============================================
@@ -47,7 +53,15 @@ export class Class_Tag {
   // shape: Type_ElementShape = structuredClone(default_element_shape)
   // shape: Class_ElementShape = new Class_NodeShape
 
+  public deReferencement(){
+    this.list_ref.forEach(element=>{
+      element.deRefTag(this)
+    })
+  }
+
   // =========== Getter & Setter ===================
+  public get id(): string {return this._id}
+  
   public get color(): string {return this._color}
   public set color(value: string) {this._color = value}
 
@@ -67,7 +81,6 @@ export class Class_TagGroup {
   // List of tags
   private _tags: { [_: string]: Class_Tag} 
 
-
   private _show_legend: boolean
   private _banner: tag_banner_type
 
@@ -86,6 +99,10 @@ export class Class_TagGroup {
   public addTag(id: string, name: string) {
     const tag = new Class_Tag(id, name, this)
     this._tags[id] = tag
+  }
+
+  public deleteRef(){
+    Object.values(this._tags).forEach(tag=>tag.deReferencement())
   }
 
   // =========== Getter & Setter ===================
