@@ -1,3 +1,4 @@
+// External libs
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import {
   FaAlignCenter,
@@ -44,7 +45,16 @@ import {
   useBoolean,
 } from '@chakra-ui/react'
 
-import { SankeyNodeAttrLocal } from '../types/Types'
+// Local types
+import {
+  Class_NodeElement
+} from '../types/Node'
+import {
+  OpenSankeyConfigurationNodesAttributesFType,
+  SankeyWrapperConfigInModalOrMenuType
+} from './types/SankeyMenuConfigurationNodesAttributesTypes'
+
+// Local functions
 import {
   ApplyStyleToNodes,
   CutName,
@@ -53,8 +63,6 @@ import {
   ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
-import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModalOrMenuType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import { Class_NodeElement } from '../types/Node'
 
 export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
@@ -85,9 +93,9 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const { RedrawLinks } = link_function
 
   /**
- * Function used to reset node modified (selected if in menu config else all node)
- *
- */
+   * Function used to reset node modified (selected if in menu config else all node)
+   *
+   */
   const newUpdateMenuConfigNode = () => {
     ComponentUpdater.updateComponenSaveInCache.current(false)
     list_nodes_to_reset.forEach(n => n.reset())
@@ -182,10 +190,10 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           is_indeterminatae
         }
         onChange={(evt) => {
-
           if (menu_for_style) {
             new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_visible = evt.target.checked
-          } else {
+          }
+          else {
             list_style_or_nodes.forEach(node => node.shape_visible = evt.target.checked)
           }
           newUpdateMenuConfigNode()
