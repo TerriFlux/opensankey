@@ -3,12 +3,11 @@ import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, application
 export type SankeySettingsEditionElementTagsTypes = {
     applicationContext:applicationContextType,
     applicationData : applicationDataType,
-    elementTagNameProp: 'nodeTags' | 'fluxTags' | 'dataTags',
+    elementTagNameProp: 'node_taggs' | 'flux_taggs' | 'data_taggs',
     elementNameProp: 'nodes' | 'links' | 'none',
     node_function:NodeFunctionTypes,
     link_function:LinkFunctionTypes,
     ComponentUpdater:ComponentUpdaterType,
-    updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
     reDrawLegend:()=>void
   }
   
