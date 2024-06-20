@@ -88,6 +88,14 @@ export abstract class Class_Element {
   protected _is_mouse_over: boolean = false
 
   /**
+   * Is this element grabbed by mouse (default=false)
+   * @protected
+   * @type {boolean}
+   * @memberof Class_Element
+   */
+  protected _is_mouse_grabbed: boolean = false
+
+  /**
  * Config menu ref to html element & function to update it
  * @protected
  * @type {string}
@@ -174,6 +182,7 @@ export abstract class Class_Element {
   protected draw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
+      // Set d3 selection
       this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
         .datum(this)
         .append('g')
@@ -253,6 +262,22 @@ export abstract class Class_Element {
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleRMBCLick(event))
+      // Drag events TODO
+      this.d3_selection?.call(
+        d3.drag<SVGGElement, this>().on(
+          'start',
+          (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+            this.eventMouseDragStart(event)))
+      this.d3_selection?.call(
+        d3.drag<SVGGElement, this>().on(
+          'drag',
+          (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+            this.eventMouseDrag(event)))
+      this.d3_selection?.call(
+        d3.drag<SVGGElement, this>().on(
+          'end',
+          (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+            this.eventMouseDragEnd(event)))
     }
   }
 
@@ -302,6 +327,7 @@ export abstract class Class_Element {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir clique gauche sur element */
+    this._is_mouse_grabbed = true
   }
 
   /**
@@ -314,6 +340,7 @@ export abstract class Class_Element {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir clique gauche sur element */
+    this._is_mouse_grabbed = false
   }
 
   /**
@@ -349,6 +376,42 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   protected eventMouseMove(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir  */
+  }
+
+  /**
+   * Define event when mouse drag starts
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseDragStart(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir  */
+  }
+
+  /**
+   * Define event when mouse drag element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseDrag(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir  */
+  }
+
+  /**
+   * Define event when mouse drag ends
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseDragEnd(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir  */
