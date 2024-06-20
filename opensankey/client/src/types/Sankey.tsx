@@ -1,5 +1,5 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
 // Date : 29/05/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
@@ -7,6 +7,12 @@
 // External imports
 
 // Local types
+import {
+  Class_MenuConfig
+} from './MenuConfig'
+import {
+  Class_DrawingArea
+} from './DrawingArea'
 import {
   Class_LinkElement,
   Class_LinkStyle,
@@ -21,17 +27,9 @@ import {
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
-import {
-  Class_DrawingArea
-} from './DrawingArea'
 
-// Local functions
-import {
-  addNewNodeToSankey
-} from '../functions/draw/Sankey'
-import { Class_MenuConfig } from './MenuConfig'
 
-/**
+// CLASS SANKEY *************************************************************************/**
  * Type of group of Class_TagGroup
  */
 export type MacroTagGroupType = 'node_taggs' | 'flux_taggs' | 'data_taggs'
@@ -44,11 +42,64 @@ export type MacroTagGroupType = 'node_taggs' | 'flux_taggs' | 'data_taggs'
  */
 export class Class_Sankey {
 
-  // Existing styles
-  flux_styles: { [_: string]: Class_LinkStyle } = { 'default': default_link_style } // TODO create defaut style
-  node_styles: { [_: string]: Class_NodeStyle } = { 'default': default_node_style }
+  // PUBLIC ATTRIBUTES ==================================================================
 
-  // CONSTRUCTOR ==============================================================
+  /**
+   * Drawing area where sankey belongs
+   * @type {Class_DrawingArea}
+   * @memberof Class_Sankey
+   */
+  public drawing_area: Class_DrawingArea
+
+  // Tags
+  public node_taggs: { [_: string]: Class_Tagg } = {}
+  public flux_taggs: { [_: string]: Class_Tagg } = {}
+  public data_taggs: { [_: string]: Class_Tagg } = {}
+  public level_taggs: { [_: string]: Class_Tagg } = {}
+
+  // TODO a implementer
+  // left_shift: number,
+  // right_shift: number,
+  // legend_position: number[],
+  // display_legend_scale:boolean,
+  // legend_police:number,
+  // mask_legend:boolean,
+  // legend_bg_color:string,
+  // legend_bg_opacity:number,
+  // legend_bg_border:boolean,
+  // legend_show_dataTags:boolean,
+  // display_style : display_styleType,
+  // linkZIndex:string[]
+  // colorMap: string,
+  // nodesColorMap: string,
+  // linksColorMap: string,
+  // legend_width:number,
+  // node_label_separator:string
+
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Nodes
+  private _nodes: { [_: string]: Class_NodeElement } = {}
+
+  // Links
+  private _links: { [_: string]: Class_LinkElement } = {}
+
+  // Existing styles
+  private _link_styles: { [_: string]: Class_LinkStyle } = { 'default':  default_link_style  } // TODO create defaut style
+  private _node_styles: { [_: string]: Class_NodeStyle } = {'default': default_node_style }
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  /**
+   * Config menu ref to html element & function to update it
+   * @protected
+   * @type {string}
+   * @memberof Class_Element
+   */
+  protected menu_config: Class_MenuConfig
+
+  // CONSTRUCTOR ========================================================================
 
   /**
    * Creates an instance of Class_Sankey.
@@ -66,38 +117,26 @@ export class Class_Sankey {
     this.data_taggs={}
   }
 
-  // CONSTRUCTED ATTRIBUTES ====================================================
+  // GETTERS / SETTERS ==================================================================
+
+  // Nodes related ----------------------------------------------------------------------
 
   /**
-   * Drawing area where sankey belongs
-   * @type {Class_DrawingArea}
+   * Get all nodes as dict
+   * @readonly
    * @memberof Class_Sankey
    */
-  drawing_area: Class_DrawingArea
+  public drawing_area: Class_DrawingArea
 
-  /**
- * Config menu ref to html element & function to update it
- * @protected
- * @type {string}
- * @memberof Class_Element
- */
-  protected menu_config: Class_MenuConfig
-
-  // DEFAULT ATTRIBUTES =======================================================
-
-  // Nodes
-  nodes: { [_: string]: Class_NodeElement } = {}
-  // Links
-  links: { [_: string]: Class_LinkElement } = {}
   // Tags
-  node_taggs: { [_: string]: Class_TagGroup }
-  flux_taggs: { [_: string]: Class_TagGroup }
-  data_taggs: { [_: string]: Class_TagGroup }
-  level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
+  public node_taggs: { [_: string]: Class_Tagg } = {}
+  public flux_taggs: { [_: string]: Class_Tagg } = {}
+  public data_taggs: { [_: string]: Class_Tagg } = {}
+  public level_taggs: { [_: string]: Class_Tagg } = {}
 
+  // TODO a implementer
   // left_shift: number,
   // right_shift: number,
-
   // legend_position: number[],
   // display_legend_scale:boolean,
   // legend_police:number,
@@ -106,22 +145,19 @@ export class Class_Sankey {
   // legend_bg_opacity:number,
   // legend_bg_border:boolean,
   // legend_show_dataTags:boolean,
-
   // display_style : display_styleType,
-
   // linkZIndex:string[]
-
   // colorMap: string,
   // nodesColorMap: string,
   // linksColorMap: string,
-
   // legend_width:number,
   // node_label_separator:string
 
 
 
-  // PUBLIC METHODS ===========================================================
-  // Nodes related METHODS ==================================================================
+  // PUBLIC METHODS =====================================================================
+
+  // Nodes related ----------------------------------------------------------------------
 
   /**
    * Create and add a node for this Sankey
@@ -131,13 +167,21 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public addNewNode(id: string, name: string) {
-    return addNewNodeToSankey(this, this.menu_config, id, name)
+    const node = new Class_NodeElement(id, name, this.drawing_area, this.menu_config)
+    this.addNode(node)
+    return node
   }
+
+  /**
+   * Create and add a node for this Sankey with default name
+   * @return {*}
+   * @memberof Class_Sankey
+   */
   public addNewDefaultNode() {
-    const n = String(Object.values(this.nodes).length)
+    const n = String(Object.values(this._nodes).length)
     const id = 'node' + n
     const name = 'Node ' + n
-    return addNewNodeToSankey(this, this.menu_config, id, name,)
+    return this.addNewNode(id, name)
   }
 
   /**
@@ -147,19 +191,18 @@ export class Class_Sankey {
   * @memberof Class_Sankey
   */
   public getNode(id: string) {
-    if (id in this.nodes) {
-      return this.nodes[id]
+    if (id in this._nodes) {
+      return this._nodes[id]
     }
     return null
   }
 
   public getAllNodes() {
-    return this.nodes
+    return this._nodes
   }
 
-
   public getListAllNodes() {
-    return Object.values(this.nodes)
+    return Object.values(this._nodes)
   }
 
   /**
@@ -169,7 +212,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public getNameSortedNodes() {
-    return Object.entries(this.nodes)
+    return Object.entries(this._nodes)
       .sort(([, a], [, b]) =>
         (a.name > b.name) ?
           1 :
@@ -187,7 +230,7 @@ export class Class_Sankey {
   */
   public getAllNodesSelected() {
 
-    return Object.values(this.nodes)
+    return Object.values(this._nodes)
       .filter(n => n.isSelected())
   }
 
@@ -205,19 +248,15 @@ export class Class_Sankey {
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public addNode(node: Class_NodeElement) { this.nodes[node.id] = node }
+  public addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
 
   /**
-   * remove a given node from Sankey
+   * Remove a given node from Sankey
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
   public removeNode(node: Class_NodeElement) {
-    delete this.nodes[node.id]
-  }
-
-  public removeLink(link: Class_LinkElement) {
-    delete this.links[link.id]
+    delete this._nodes[node.id]
   }
 
   // public setValueForNodeAttribute(node: Class_Node){
@@ -257,61 +296,80 @@ export class Class_Sankey {
    * @param {Class_LinkElement} link
    * @memberof Class_Sankey
    */
-  public addLink(link: Class_LinkElement) { this.links[link.id] = link }
+  public addLink(link: Class_LinkElement) { this._links[link.id] = link }
 
   public getLink(id: string) {
-    if (id in this.links) {
-      return this.links[id]
+    if (id in this._links) {
+      return this._links[id]
     }
     return null
   }
-  /**
- *
- *
- * @return {Class_LinkElement} 
- * @memberof Class_Sankey
- */
-  public getAllLinks() {
-    return this.links
-  }
 
-
-  /** 
- * Return a list with all the links of the sankey
- * @return {Class_LinkElement[]} 
- * @memberof Class_Sankey
- */
-  public getListAllLinks() {
-    return Object.values(this.links)
-  }
-  /**
-     * Return array of link who have is_selected at true
-     *
-     * @return {Class_LinkElement[]} 
-     * @memberof Class_Sankey
-     */
-  public getAllLinksSelected() {
-
-    return Object.values(this.links)
-      .filter(l => l.isSelected())
-  }
 
   /**
-   *  Reset all selected links
-   *
+   * Remove a given link from sankey
+   * @param {Class_LinkElement} link
    * @memberof Class_Sankey
    */
-  public drawAllLinksSelected() {
-    this.getAllLinksSelected().forEach(l => l.reset())
+  public removeLink(link: Class_LinkElement) {
+    delete this._links[link.id]
   }
 
   /**
-   *  Reset links in parameter
+   * Create a TagGroup and add it to to specified group
    *
+   * @return {*} 
    * @memberof Class_Sankey
    */
-  public drawTheseLinks(links: Class_LinkElement[]) {
-    links.forEach(l => l.reset())
+  public CreateNewTagGroup(type_group: MacroTagGroupType) {
+    const key = Object.keys(this[type_group]).length
+    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
+    this[type_group][new_grp.id] = new_grp
+    return new_grp.id
+  }
+
+  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
+    delete this[type_group][key_to_delete]
+  }
+
+  /**
+   * Return list of group tag from specified group type
+   *
+   * @param {MacroTagGroupType} type_group
+   * @return {*} 
+   * @memberof Class_Sankey
+   */
+  public getListGroupTagOf(type_group: MacroTagGroupType) {
+    return Object.values(this[type_group])
+  }
+
+  /**
+   * Create a TagGroup and add it to to specified group
+   *
+   * @return {*} 
+   * @memberof Class_Sankey
+   */
+  public CreateNewTagGroup(type_group: MacroTagGroupType) {
+    const key = Object.keys(this[type_group]).length
+    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
+    this[type_group][new_grp.id] = new_grp
+    return new_grp.id
+  }
+
+  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
+    delete this[type_group][key_to_delete]
+  }
+
+
+  /**
+   * Return list of group tag from specified group type
+   *
+   * @param {MacroTagGroupType} type_group
+   * @return {*} 
+   * @memberof Class_Sankey
+   */
+  public getListGroupTagOf(type_group: MacroTagGroupType) {
+    return Object.values(this[type_group])
   }
 
   /**
