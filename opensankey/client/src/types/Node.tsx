@@ -870,7 +870,19 @@ export class Class_NodeElement extends Class_Element {
   protected eventMouseDrag(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    /* TODO définir  */
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      /* TODO définir  */
+    }
+    // SELECTION MODE =========================================================
+    else {
+      // Set position
+      const mouse_position = d3.pointer(event)
+      // Update node position
+      this.setPosXY(mouse_position[0], mouse_position[1])
+    }
   }
 
   // PRIVATE METHODS ====================================================================
