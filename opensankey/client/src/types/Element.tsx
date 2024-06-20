@@ -123,6 +123,14 @@ export abstract class Class_Element {
     this._menu_config = menu_config
   }
 
+  /**
+   * Define deletion behavior
+   * @memberof Class_Element
+   */
+  public delete() {
+    this.unDraw()
+  }
+
   // PUBLIC METHODS =====================================================================
   public reset() {
     // Clear D3

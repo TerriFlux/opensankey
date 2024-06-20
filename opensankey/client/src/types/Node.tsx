@@ -78,14 +78,15 @@ export class Class_NodeElement extends Class_Element {
   // Name Labels
   private _name_label_separator: string = ''
 
-  // Tags
-  private _tags: { [_: string]: Class_Tag } = {}
-
   // Related links
   private _input_links: { [_: string]: Class_LinkElement } = {}
   private _output_links: { [_: string]: Class_LinkElement } = {}
 
+  // Tags
+  private _tags: { [_: string]: Class_Tag } = {}
+
   // Arrows
+  // TODO deplacer dans shape
   private arrow_angle_factor: number = 10
   private arrow_angle_direction: string = 'hh'
 
@@ -114,6 +115,32 @@ export class Class_NodeElement extends Class_Element {
       style: default_node_style,
       local: new Class_NodeAttribute()
     }
+  }
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Node
+   */
+  public delete() {
+    // Delete on drawing area
+    this.unDraw()
+    // Delete related links
+    Object.values(this._input_links)
+      .forEach(link => {
+        link.delete()
+      })
+    this._input_links = {}
+    Object.values(this._output_links)
+      .forEach(link => {
+        link.delete()
+      })
+    this._output_links = {}
+    // Unref tag
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.removeReference(this)
+      })
+    this._tags = {}
   }
 
   // GETTERS / SETTERS ==================================================================
