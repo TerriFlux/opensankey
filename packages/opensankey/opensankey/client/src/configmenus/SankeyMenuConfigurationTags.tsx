@@ -99,10 +99,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // redrawGenereal()
 
     // New
-    const grp_key = new_data.drawing_area.sankey.createTagGroup(elementTagNameProp)
-    set_tags_group_key(grp_key)
+    const tag_group = new_data.drawing_area.sankey.createTagGroup(elementTagNameProp)
+    set_tags_group_key(tag_group.id)
     setForceUpdate.toggle()
-
   }
 
 
@@ -118,26 +117,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   // Delete a groupTag
   const handleDelGroupTag = (tags_group_key: string) => {
 
-    let elements: Class_NodeElement[] | Class_LinkElement[]
-    if (elementNameProp === 'nodes') {
-      element = new_data.drawing_area.sankey.nodes_list
-
-    const elementName = elementNameProp === 'nodes' ? 'nodes_list' : 'links_list'
     // delete group_tag
-    new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tags_group_key)
-    Object.values(new_data.drawing_area.sankey[elementName]).forEach(
-      n => {
-        if (n.colorTag === tags_group_key) {
-          n.colorTag = ''
-        }
-        if (elementNameProp === 'nodes') {
-          delete n.tags[tags_group_key]
-        }
-      })
-    if (list_group_tag.length > 0) {
-      const lastElmt = list_group_tag[list_group_tag.length - 1].id
-      set_tags_group_key(lastElmt)
-    }
+    new_data.drawing_area.sankey.removeTagGroupWithId(elementTagNameProp, tags_group_key)
+
     // If we delete a group data tag then we have to reset links value since the link value tree structure change drastically
     // if (elementTagNameProp === 'data_taggs') {
     //   resetLinkValueAfterDeleteDTGrp(data)

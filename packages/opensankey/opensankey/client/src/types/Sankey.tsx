@@ -26,7 +26,11 @@ import {
 import {
   Class_TagGroup
 } from './Tag'
+import { type } from 'os'
 
+// SPECIFIC TYPES ***********************************************************************
+
+export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -309,30 +313,69 @@ export class Class_Sankey {
   // Tags related ------------------------------------------------------------------------
 
   /**
+   * Add a tagGroup to Sankey
+   * @param {string} id
+   * @param {string} name
+   * @param {Type_MacroTagGroup} type_group
+   * @return {*}  {Class_TagGroup}
+   * @memberof Class_Sankey
+   */
+  public addTagGroup(id: string, name: string, type_group: Type_MacroTagGroup): Class_TagGroup {
+    if (!this[type_group][id]) {
+      const tag_group = new Class_TagGroup(id, name)
+      this[type_group][id] = tag_group
+      return tag_group
+    }
+    else {
+      return this.addTagGroup(id+'_0', name+'_0', type_group)
+    }
+  }
+
+  /**
    * Create a TagGroup and add it to to specified group
    *
    * @return {*}
    * @memberof Class_Sankey
    */
-  public createTagGroup() {
-    const key = Object.keys(this[type_group]).length
-    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
-    this[type_group][new_grp.id] = new_grp
-    return new_grp.id
+  public createTagGroup(type_group: Type_MacroTagGroup) {
+    const n = Object.values(this[type_group]).length
+    const id = type_group + n
+    const name = 'Tag Group ' + n
+    return this.addTagGroup(id, name, type_group)
   }
 
-  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
-    delete this[type_group][key_to_delete]
+  /**
+   * Properly remove tag group related to given id
+   * @param {Type_MacroTagGroup} type_group
+   * @param {string} id
+   * @memberof Class_Sankey
+   */
+  public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
+    if (this[type_group][id] !== undefined) {
+      this[type_group][id].delete()
+      delete this[type_group][id]
+    }
+  }
+
+  /**
+   * Properly remove tag group
+   *
+   * @param {Type_MacroTagGroup} type_group
+   * @param {Class_TagGroup} _
+   * @memberof Class_Sankey
+   */
+  public removeTagGroup(type_group: Type_MacroTagGroup, _: Class_TagGroup) {
+    this.removeTagGroupWithId(type_group, _.id)
   }
 
   /**
    * Return list of group tag from specified group type
    *
-   * @param {MacroTagGroupType} type_group
+   * @param {Type_MacroTagGroup} type_group
    * @return {*}
    * @memberof Class_Sankey
    */
-  public getListGroupTagOf(type_group: MacroTagGroupType) {
+  public getListGroupTagOf(type_group: Type_MacroTagGroup) {
     return Object.values(this[type_group])
   }
 }
