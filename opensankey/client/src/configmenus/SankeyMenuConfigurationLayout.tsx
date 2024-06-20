@@ -111,7 +111,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
         <OSTooltip label={t('MEP.tooltips.TCG')}>
           <ConfigLayoutNumberInput
             value_attr={new_data.drawing_area.grid_size}
-            function_onCahnge={(_, value) => new_data.drawing_area.grid_size = value}
+            function_onChange={(_, value) => new_data.drawing_area.grid_size = value}
             function_onBlur={() => DrawGrid(data)}
             minimum_value={10}
             stepper={true}
@@ -140,10 +140,11 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
 
         <ConfigLayoutNumberInput
           value_attr={new_data.drawing_area.scale}
-          function_onCahnge={(_, value) => new_data.drawing_area.scale = value}
+          function_onChange={(_, value) => new_data.drawing_area.scale = value}
           function_onBlur={() => {
-            new_data.drawing_area.sankey.getListAllNodes().forEach(n=>n.reset())
-            new_data.drawing_area.sankey.getListAllLinks().forEach(l=>l.reset())
+            // TODO Est-ce vraiment necessaire ?
+            new_data.drawing_area.sankey.nodes_list.forEach(n=>n.reset())
+            new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
             // reDrawLegend()
             // RedrawNodes(Object.values(applicationData.display_nodes))
             // RedrawLinks(Object.values(applicationData.display_links))
@@ -200,7 +201,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
 
           <ConfigLayoutNumberInput
             value_attr={new_data.minimum_flux}
-            function_onCahnge={(_, value) => new_data.minimum_flux = value}
+            function_onChange={(_, value) => new_data.minimum_flux = value}
             function_onBlur={() => {
               RedrawNodes(Object.values(applicationData.display_nodes))
               RedrawLinks(Object.values(applicationData.display_links))
@@ -221,7 +222,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
 
           <ConfigLayoutNumberInput
             value_attr={new_data.maximum_flux}
-            function_onCahnge={(_, value) => new_data.maximum_flux = value}
+            function_onChange={(_, value) => new_data.maximum_flux = value}
             function_onBlur={() => {
               RedrawNodes(Object.values(applicationData.display_nodes))
               RedrawLinks(Object.values(applicationData.display_links))
@@ -517,7 +518,7 @@ type ConfigLayoutNumberInputType = {
   maximum_value?: number
   stepper?: boolean
   unitText?: string
-  function_onCahnge: (s: string, val: number) => void
+  function_onChange: (s: string, val: number) => void
   function_onBlur: () => void
 }
 /**
@@ -539,7 +540,7 @@ export const ConfigLayoutNumberInput: FunctionComponent<ConfigLayoutNumberInputT
   maximum_value,
   stepper = false,
   unitText,
-  function_onCahnge,
+  function_onChange,
   function_onBlur
 }) => {
   // const [update,setUpdate]=useState(false)
@@ -567,7 +568,7 @@ export const ConfigLayoutNumberInput: FunctionComponent<ConfigLayoutNumberInputT
       value={val as number}
       onChange={(_, value) => {
         // (data[var_of_data] as number)=value
-        function_onCahnge(_, value)
+        function_onChange(_, value)
 
         setVal(value)
         if (isModifying.current) {

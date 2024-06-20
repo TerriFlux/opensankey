@@ -122,7 +122,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     let elements: Class_NodeElement[] | Class_LinkElement[]
     if (elementNameProp === 'nodes') {
       element = new_data.drawing_area.sankey.nodes_list
-    
+    }
+
     const elementName = elementNameProp === 'nodes' ? 'nodes_list' : 'links_list'
     // delete group_tag
     new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tags_group_key)
@@ -513,7 +514,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               <FaArrowAltCircleUp />
                             </Button>
                           </OSTooltip>
-                           Descendre le groupe d'étiquettes  
+                           Descendre le groupe d'étiquettes
                           <OSTooltip label={t('Tags.tooltips.down')}>
                             <Button
                               variant='menuconfigpanel_option_btn_in_table'

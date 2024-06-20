@@ -130,12 +130,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     .filter(d => (
       data.displayed_node_selector) ? (d.id) : true)
     .map(d => {
-      return { 'label': d.getName(), 'value': d.id }
+      return { 'label': d.name, 'value': d.id }
     })
 
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
-  const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.getName(), 'value': d.id } })
+  const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.name, 'value': d.id } })
 
   // Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
@@ -296,14 +296,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             isDisabled={!applicationContext.has_free_account && Object.keys(new_nodes_sorted).length > 15}
             onClick={() => {
               Object.values(applicationData.display_nodes).forEach(n => DeselectVisualyNodes(n))
-
+              // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
-              new_node.name = 'Unknown Node'
+              // Add node to selection
+              new_data.drawing_area.addNodeToSelection(new_node)
               // Set position
               new_node.setPosXY(50, 50)
-              new_data.drawing_area.addNodeToSelection(new_node)
-              new_node.reset()
-
               // AddNewNode(applicationData, multi_selected_nodes, node_function)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               // SelectVisualyNodes(multi_selected_nodes.current[0])
@@ -381,9 +379,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     return
                   }
                   new_nodes_sorted_selected[0].name = evt.target.value
-                  const d = new_nodes_sorted_selected[0]
-                  d.reset()
-
                   setForceUpdate.toggle()
                 }}
                 isDisabled={(new_nodes_sorted_selected.length == 1) ? false : true}
