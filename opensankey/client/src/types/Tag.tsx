@@ -57,7 +57,7 @@ export class Class_Tag {
     // Unref this tag from all references
     Object.values(this._references)
       .forEach(element=>{
-        element.deRefTag(this)
+        element.removeTag(this)
       })
     this._references = {}
     // Garbage collection will do the rest
@@ -83,8 +83,8 @@ export class Class_Tag {
 
   public removeReference(_: Type_TagReference) {
     if (this._references[_.id] !== undefined) {
-      _.deRefTag(this)
       delete this._references[_.id]
+      _.removeTag(this)
     }
   }
 }

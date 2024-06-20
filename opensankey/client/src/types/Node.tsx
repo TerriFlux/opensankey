@@ -12,6 +12,7 @@ import {
   Type_ElementPosition,
   default_element_color,
   default_element_position,
+  default_font,
 } from './Utils'
 import {
   Class_MenuConfig
@@ -34,6 +35,35 @@ import {
   PathNodeArrowShape
 } from '../draw/SankeyDrawFunction'
 
+
+// SPECIFIC TYPES ***********************************************************************
+
+type Type_Shape = 'ellipse' | 'rect' | 'arrow'
+
+// SPECIFIC CONSTANTS *******************************************************************
+
+const default_shape_type: Type_Shape = 'rect'
+const default_shape_arrow_angle_factor = 30
+const default_shape_arrow_angle_direction = 'right'
+const default_shape_visible = true
+const default_shape_min_width = 40
+const default_shape_min_height = 40
+const default_shape_color = default_element_color
+const default_shape_color_sustainable = false
+const default_label_font_family = default_font
+const default_label_font_size = 14
+const default_label_color = false
+const default_label_uppercase = false
+const default_label_bold = false
+const default_label_italic = false
+const default_label_background = false
+const default_name_label_visible = true
+const default_name_label_vert = 'bottom'
+const default_name_label_horiz = 'middle'
+const default_value_label_visible = false
+const default_value_label_vert = 'top'
+const default_value_label_horiz  = 'middle'
+const default_label_box_width = 150
 
 // CLASS NODE_ELEMENT *******************************************************************
 
@@ -66,8 +96,8 @@ export class Class_NodeElement extends Class_Element {
   protected _display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
-    local: Class_NodeAttribute
-    style: Class_NodeAttribute
+    style: Class_NodeStyle,
+    attributes: Class_NodeAttribute
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -112,8 +142,8 @@ export class Class_NodeElement extends Class_Element {
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
-      style: default_node_style,
-      local: new Class_NodeAttribute()
+      style: drawing_area.sankey.default_node_style,
+      attributes: new Class_NodeAttribute()
     }
   }
 
@@ -216,7 +246,7 @@ export class Class_NodeElement extends Class_Element {
     (to see exemple, look function SetNodeHeight )
 
     */
-    return this.min_width
+    return this.shape_min_width
   }
 
   /**
@@ -232,7 +262,7 @@ export class Class_NodeElement extends Class_Element {
     (to see exemple, look function SetNodeHeight )
 
     */
-    return this.min_height
+    return this.shape_min_height
   }
 
   /**
@@ -248,8 +278,10 @@ export class Class_NodeElement extends Class_Element {
   * Set style key of node
   * @memberof Class_Node
   */
-  public set style(new_style: Class_NodeStyle) {
-    this._display.style = new_style
+  public set style(_: Class_NodeStyle) {
+    this._display.style.removeReference(this)
+    this._display.style = _
+    _.addReference(this)
     this.reset()
   }
 
@@ -258,12 +290,13 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public get shape_visible() {
-    if (this._display.local.shape_visible !== undefined) {
-      return this._display.local.shape_visible
-    } else if (this._display.style.shape_visible !== undefined) {
+    if (this._display.attributes.shape_visible !== undefined) {
+      return this._display.attributes.shape_visible
+    }
+    else if (this._display.style.shape_visible !== undefined) {
       return this._display.style.shape_visible
     }
-    return false
+    return default_shape_visible
   }
 
   /**
@@ -271,7 +304,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set shape_visible(_: boolean) {
-    this._display.local.shape_visible = _
+    this._display.attributes.shape_visible = _
     this.drawShape()
   }
 
@@ -279,21 +312,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get min_width() {
-    if (this._display.local.min_width !== undefined) {
-      return this._display.local.min_width
-    } else if (this._display.style.min_width !== undefined) {
-      return this._display.style.min_width
+  public get shape_min_width() {
+    if (this._display.attributes.shape_min_width !== undefined) {
+      return this._display.attributes.shape_min_width
+    } else if (this._display.style.shape_min_width !== undefined) {
+      return this._display.style.shape_min_width
     }
-    return 0
+    return default_shape_min_width
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set min_width(_: number) {
-    this._display.local.min_width = _
+  public set shape_min_width(_: number) {
+    this._display.attributes.shape_min_width = _
     this.drawShape()
   }
 
@@ -301,21 +334,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get min_height() {
-    if (this._display.local.min_height !== undefined) {
-      return this._display.local.min_height
-    } else if (this._display.style.min_height !== undefined) {
-      return this._display.style.min_height
+  public get shape_min_height() {
+    if (this._display.attributes.shape_min_height !== undefined) {
+      return this._display.attributes.shape_min_height
+    } else if (this._display.style.shape_min_height !== undefined) {
+      return this._display.style.shape_min_height
     }
-    return 0
+    return default_shape_min_height
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set min_height(_: number) {
-    this._display.local.min_height = _
+  public set shape_min_height(_: number) {
+    this._display.attributes.shape_min_height = _
     this.drawShape()
   }
 
@@ -323,21 +356,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get color() {
-    if (this._display.local.color !== undefined) {
-      return this._display.local.color
-    } else if (this._display.style.color !== undefined) {
-      return this._display.style.color
+  public get shape_color() {
+    if (this._display.attributes.shape_color !== undefined) {
+      return this._display.attributes.shape_color
+    } else if (this._display.style.shape_color !== undefined) {
+      return this._display.style.shape_color
     }
-    return ''
+    return default_shape_color
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set color(_: string) {
-    this._display.local.color = _
+  public set shape_color(_: string) {
+    this._display.attributes.shape_color = _
     this.drawShape()
   }
 
@@ -345,21 +378,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get shape() {
-    if (this._display.local.shape !== undefined) {
-      return this._display.local.shape
-    } else if (this._display.style.shape !== undefined) {
-      return this._display.style.shape
+  public get shape_type() {
+    if (this._display.attributes.shape_type !== undefined) {
+      return this._display.attributes.shape_type
+    } else if (this._display.style.shape_type !== undefined) {
+      return this._display.style.shape_type
     }
-    return 'rect'
+    return default_shape_type
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set shape(_: 'ellipse' | 'rect' | 'arrow') {
-    this._display.local.shape = _
+  public set shape_type(_: Type_Shape) {
+    this._display.attributes.shape_type = _
     this.drawShape()
   }
 
@@ -367,21 +400,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get node_arrow_angle_factor() {
-    if (this._display.local.node_arrow_angle_factor !== undefined) {
-      return this._display.local.node_arrow_angle_factor
-    } else if (this._display.style.node_arrow_angle_factor !== undefined) {
-      return this._display.style.node_arrow_angle_factor
+  public get shape_arrow_angle_factor() {
+    if (this._display.attributes.shape_arrow_angle_factor !== undefined) {
+      return this._display.attributes.shape_arrow_angle_factor
+    } else if (this._display.style.shape_arrow_angle_factor !== undefined) {
+      return this._display.style.shape_arrow_angle_factor
     }
-    return 0
+    return default_shape_arrow_angle_factor
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set node_arrow_angle_factor(_: number) {
-    this._display.local.node_arrow_angle_factor = _
+  public set shape_arrow_angle_factor(_: number) {
+    this._display.attributes.shape_arrow_angle_factor = _
     this.drawShape()
   }
 
@@ -389,21 +422,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get node_arrow_angle_direction() {
-    if (this._display.local.node_arrow_angle_direction !== undefined) {
-      return this._display.local.node_arrow_angle_direction
-    } else if (this._display.style.node_arrow_angle_direction !== undefined) {
-      return this._display.style.node_arrow_angle_direction
+  public get shape_arrow_angle_direction() {
+    if (this._display.attributes.shape_arrow_angle_direction !== undefined) {
+      return this._display.attributes.shape_arrow_angle_direction
+    } else if (this._display.style.shape_arrow_angle_direction !== undefined) {
+      return this._display.style.shape_arrow_angle_direction
     }
-    return 'right'
+    return default_shape_arrow_angle_direction
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set node_arrow_angle_direction(_: string) {
-    this._display.local.node_arrow_angle_direction = _
+  public set shape_arrow_angle_direction(_: string) {
+    this._display.attributes.shape_arrow_angle_direction = _
     this.drawShape()
   }
 
@@ -411,21 +444,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get color_sustainable() {
-    if (this._display.local.color_sustainable !== undefined) {
-      return this._display.local.color_sustainable
-    } else if (this._display.style.color_sustainable !== undefined) {
-      return this._display.style.color_sustainable
+  public get shape_color_sustainable() {
+    if (this._display.attributes.shape_color_sustainable !== undefined) {
+      return this._display.attributes.shape_color_sustainable
+    } else if (this._display.style.shape_color_sustainable !== undefined) {
+      return this._display.style.shape_color_sustainable
     }
-    return false
+    return default_shape_color_sustainable
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set color_sustainable(_: boolean) {
-    this._display.local.color_sustainable = _
+  public set shape_color_sustainable(_: boolean) {
+    this._display.attributes.shape_color_sustainable = _
     this.drawShape()
   }
 
@@ -434,21 +467,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_visible() {
-    if (this._display.local.label_visible !== undefined) {
-      return this._display.local.label_visible
-    } else if (this._display.style.label_visible !== undefined) {
-      return this._display.style.label_visible
+  public get name_label_visible() {
+    if (this._display.attributes.name_label_visible !== undefined) {
+      return this._display.attributes.name_label_visible
+    } else if (this._display.style.name_label_visible !== undefined) {
+      return this._display.style.name_label_visible
     }
-    return false
+    return default_name_label_visible
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_visible(_: boolean) {
-    this._display.local.label_visible = _
+  public set name_label_visible(_: boolean) {
+    this._display.attributes.name_label_visible = _
     this.drawLabel()
   }
 
@@ -456,21 +489,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get font_family() {
-    if (this._display.local.font_family !== undefined) {
-      return this._display.local.font_family
-    } else if (this._display.style.font_family !== undefined) {
-      return this._display.style.font_family
+  public get name_label_font_family() {
+    if (this._display.attributes.name_label_font_family !== undefined) {
+      return this._display.attributes.name_label_font_family
+    } else if (this._display.style.name_label_font_family !== undefined) {
+      return this._display.style.name_label_font_family
     }
-    return ''
+    return default_label_font_family
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set font_family(_: string) {
-    this._display.local.font_family = _
+  public set name_label_font_family(_: string) {
+    this._display.attributes.name_label_font_family = _
     this.drawLabel()
   }
 
@@ -478,21 +511,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get font_size() {
-    if (this._display.local.font_size !== undefined) {
-      return this._display.local.font_size
-    } else if (this._display.style.font_size !== undefined) {
-      return this._display.style.font_size
+  public get name_label_font_size() {
+    if (this._display.attributes.name_label_font_size !== undefined) {
+      return this._display.attributes.name_label_font_size
+    } else if (this._display.style.name_label_font_size !== undefined) {
+      return this._display.style.name_label_font_size
     }
-    return 10
+    return default_label_font_size
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set font_size(_: number) {
-    this._display.local.font_size = _
+  public set name_label_font_size(_: number) {
+    this._display.attributes.name_label_font_size = _
     this.drawLabel()
   }
 
@@ -500,21 +533,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get uppercase() {
-    if (this._display.local.uppercase !== undefined) {
-      return this._display.local.uppercase
-    } else if (this._display.style.uppercase !== undefined) {
-      return this._display.style.uppercase
+  public get name_label_uppercase() {
+    if (this._display.attributes.name_label_uppercase !== undefined) {
+      return this._display.attributes.name_label_uppercase
+    } else if (this._display.style.name_label_uppercase !== undefined) {
+      return this._display.style.name_label_uppercase
     }
-    return false
+    return default_label_uppercase
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set uppercase(_: boolean) {
-    this._display.local.uppercase = _
+  public set name_label_uppercase(_: boolean) {
+    this._display.attributes.name_label_uppercase = _
     this.drawLabel()
   }
 
@@ -522,21 +555,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get bold() {
-    if (this._display.local.bold !== undefined) {
-      return this._display.local.bold
-    } else if (this._display.style.bold !== undefined) {
-      return this._display.style.bold
+  public get name_label_bold() {
+    if (this._display.attributes.name_label_bold !== undefined) {
+      return this._display.attributes.name_label_bold
+    } else if (this._display.style.name_label_bold !== undefined) {
+      return this._display.style.name_label_bold
     }
-    return false
+    return default_label_bold
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set bold(_: boolean) {
-    this._display.local.bold = _
+  public set name_label_bold(_: boolean) {
+    this._display.attributes.name_label_bold = _
     this.drawLabel()
   }
 
@@ -544,21 +577,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get italic() {
-    if (this._display.local.italic !== undefined) {
-      return this._display.local.italic
-    } else if (this._display.style.italic !== undefined) {
-      return this._display.style.italic
+  public get name_label_italic() {
+    if (this._display.attributes.name_label_italic !== undefined) {
+      return this._display.attributes.name_label_italic
+    } else if (this._display.style.name_label_italic !== undefined) {
+      return this._display.style.name_label_italic
     }
-    return false
+    return default_label_italic
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set italic(_: boolean) {
-    this._display.local.italic = _
+  public set name_label_italic(_: boolean) {
+    this._display.attributes.name_label_italic = _
     this.drawLabel()
   }
 
@@ -566,21 +599,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_box_width() {
-    if (this._display.local.label_box_width !== undefined) {
-      return this._display.local.label_box_width
-    } else if (this._display.style.label_box_width !== undefined) {
-      return this._display.style.label_box_width
+  public get name_label_box_width() {
+    if (this._display.attributes.name_label_box_width !== undefined) {
+      return this._display.attributes.name_label_box_width
+    } else if (this._display.style.name_label_box_width !== undefined) {
+      return this._display.style.name_label_box_width
     }
-    return 0
+    return default_label_box_width
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_box_width(_: number) {
-    this._display.local.label_box_width = _
+  public set name_label_box_width(_: number) {
+    this._display.attributes.name_label_box_width = _
     this.drawLabel()
   }
 
@@ -588,21 +621,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_color() {
-    if (this._display.local.label_color !== undefined) {
-      return this._display.local.label_color
-    } else if (this._display.style.label_color !== undefined) {
-      return this._display.style.label_color
+  public get name_label_color() {
+    if (this._display.attributes.name_label_color !== undefined) {
+      return this._display.attributes.name_label_color
+    } else if (this._display.style.name_label_color !== undefined) {
+      return this._display.style.name_label_color
     }
-    return false
+    return default_label_color
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_color(_: boolean) {
-    this._display.local.label_color = _
+  public set name_label_color(_: boolean) {
+    this._display.attributes.name_label_color = _
     this.drawLabel()
   }
 
@@ -610,21 +643,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_vert() {
-    if (this._display.local.label_vert !== undefined) {
-      return this._display.local.label_vert
-    } else if (this._display.style.label_vert !== undefined) {
-      return this._display.style.label_vert
+  public get name_label_vert() {
+    if (this._display.attributes.name_label_vert !== undefined) {
+      return this._display.attributes.name_label_vert
+    } else if (this._display.style.name_label_vert !== undefined) {
+      return this._display.style.name_label_vert
     }
-    return ''
+    return default_name_label_vert
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_vert(_: string) {
-    this._display.local.label_vert = _
+  public set name_label_vert(_: string) {
+    this._display.attributes.name_label_vert = _
     this.drawLabel()
   }
 
@@ -632,21 +665,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_horiz() {
-    if (this._display.local.label_horiz !== undefined) {
-      return this._display.local.label_horiz
-    } else if (this._display.style.label_horiz !== undefined) {
-      return this._display.style.label_horiz
+  public get name_label_horiz() {
+    if (this._display.attributes.name_label_horiz !== undefined) {
+      return this._display.attributes.name_label_horiz
+    } else if (this._display.style.name_label_horiz !== undefined) {
+      return this._display.style.name_label_horiz
     }
-    return ''
+    return default_name_label_horiz
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_horiz(_: string) {
-    this._display.local.label_horiz = _
+  public set name_label_horiz(_: string) {
+    this._display.attributes.name_label_horiz = _
     this.drawLabel()
   }
 
@@ -654,21 +687,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_background() {
-    if (this._display.local.label_background !== undefined) {
-      return this._display.local.label_background
-    } else if (this._display.style.label_background !== undefined) {
-      return this._display.style.label_background
+  public get name_label_background() {
+    if (this._display.attributes.name_label_background !== undefined) {
+      return this._display.attributes.name_label_background
+    } else if (this._display.style.name_label_background !== undefined) {
+      return this._display.style.name_label_background
     }
-    return false
+    return default_label_background
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_background(_: boolean) {
-    this._display.local.label_background = _
+  public set name_label_background(_: boolean) {
+    this._display.attributes.name_label_background = _
     this.drawLabel()
   }
 
@@ -676,21 +709,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get show_value() {
-    if (this._display.local.show_value !== undefined) {
-      return this._display.local.show_value
-    } else if (this._display.style.show_value !== undefined) {
-      return this._display.style.show_value
+  public get value_label_visible() {
+    if (this._display.attributes.value_label_visible !== undefined) {
+      return this._display.attributes.value_label_visible
+    } else if (this._display.style.value_label_visible !== undefined) {
+      return this._display.style.value_label_visible
     }
-    return false
+    return default_value_label_visible
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set show_value(_: boolean) {
-    this._display.local.show_value = _
+  public set value_label_visible(_: boolean) {
+    this._display.attributes.value_label_visible = _
     this.drawLabel()
   }
 
@@ -698,21 +731,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_vert_valeur() {
-    if (this._display.local.label_vert_valeur !== undefined) {
-      return this._display.local.label_vert_valeur
-    } else if (this._display.style.label_vert_valeur !== undefined) {
-      return this._display.style.label_vert_valeur
+  public get value_label_vert() {
+    if (this._display.attributes.value_label_vert !== undefined) {
+      return this._display.attributes.value_label_vert
+    } else if (this._display.style.value_label_vert !== undefined) {
+      return this._display.style.value_label_vert
     }
-    return ''
+    return default_value_label_vert
   }
 
   /**
    *
    TODO Description * @memberof Class_NodeElement
    */
-  public set label_vert_valeur(_: string) {
-    this._display.local.label_vert_valeur = _
+  public set value_label_vert(_: string) {
+    this._display.attributes.value_label_vert = _
     this.drawLabel()
   }
 
@@ -720,13 +753,13 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get label_horiz_valeur() {
-    if (this._display.local.label_horiz_valeur !== undefined) {
-      return this._display.local.label_horiz_valeur
-    } else if (this._display.style.label_horiz_valeur !== undefined) {
-      return this._display.style.label_horiz_valeur
+  public get value_label_horiz() {
+    if (this._display.attributes.value_label_horiz !== undefined) {
+      return this._display.attributes.value_label_horiz
+    } else if (this._display.style.value_label_horiz !== undefined) {
+      return this._display.style.value_label_horiz
     }
-    return ''
+    return default_value_label_horiz
   }
 
   /**
@@ -734,7 +767,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set label_horiz_valeur(_: string) {
-    this._display.local.label_horiz_valeur = _
+    this._display.attributes.value_label_horiz = _
     this.drawLabel()
   }
 
@@ -742,21 +775,21 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get value_font_size() {
-    if (this._display.local.value_font_size !== undefined) {
-      return this._display.local.value_font_size
-    } else if (this._display.style.value_font_size !== undefined) {
-      return this._display.style.value_font_size
+  public get value_label_font_size() {
+    if (this._display.attributes.value_label_font_size !== undefined) {
+      return this._display.attributes.value_label_font_size
+    } else if (this._display.style.value_label_font_size !== undefined) {
+      return this._display.style.value_label_font_size
     }
-    return 0
+    return default_label_font_size
   }
 
   /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set value_font_size(_: number) {
-    this._display.local.value_font_size = _
+  public set value_label_font_size(_: number) {
+    this._display.attributes.value_label_font_size = _
     this.drawLabel()
   }
 
@@ -775,7 +808,7 @@ export class Class_NodeElement extends Class_Element {
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
     this.d3_selection?.style('display', this.getDisplayValue())
-    this.d3_selection?.style('font-family', this.font_family)
+    this.d3_selection?.style('font-family', this.name_label_font_family)
     // Draw shape
     this.drawShape()
     // Draw label
@@ -798,13 +831,13 @@ export class Class_NodeElement extends Class_Element {
         if (this.hasInputLinks()) {
           // Node is export
           const input_link = this.getFirstInputLink()
-          // if (!input_link?.display.shape.getVisible()) {
+          // if (!input_link?.display.shape_type.getVisible()) {
           //   return 'translate(0, 0)'
           // }
 
           // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
           const source_node = input_link!.source
-          // if (!source_node.display.shape.getVisible()) {
+          // if (!source_node.display.shape_type.getVisible()) {
           if (!source_node.shape_visible) {
             return 'translate(0, 0)'
           }
@@ -814,7 +847,7 @@ export class Class_NodeElement extends Class_Element {
         else if (this.hasOutputLinks()) {
           // Node is import
           const output_link = this.getFirstOutputLink()
-          // if (!output_link?.display.shape.getVisible()) {
+          // if (!output_link?.display.shape_type.getVisible()) {
           //   return 'translate(0,0)'
           // }
 
@@ -920,11 +953,11 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawShape() {
-    const node_shape = this.shape
+    const node_shape = this.shape_type
     const min_width = this.width
     const min_height = this.height
     const node_visible = this.shape_visible
-    const node_color = this.color
+    const node_color = this.shape_color
     // Get drawing scale
     const scale = d3.scaleLinear()
       .range([0, 100])
@@ -979,7 +1012,7 @@ export class Class_NodeElement extends Class_Element {
     // Clean previous label
     this.d3_selection?.selectAll('.label').remove()
     // Add name label
-    if (this.label_visible) {
+    if (this.name_label_visible) {
       const width = this.width as number
       const height = this.height as number
 
@@ -989,38 +1022,38 @@ export class Class_NodeElement extends Class_Element {
 
       // Init pos_x_label as if it was at the right of the node
       let pos_x_label = width
-      if (this.label_horiz === 'left') {
+      if (this.name_label_horiz === 'left') {
         pos_x_label = 0
-      } else if (this.label_horiz === 'middle') {
+      } else if (this.name_label_horiz === 'middle') {
         pos_x_label = width / 2
       }
 
       // Init text_anchor_label as if it was at the rights of the node
       let text_anchor_label = 'start'
-      if (this.label_horiz == 'left') {
+      if (this.name_label_horiz == 'left') {
         text_anchor_label = 'end'
-      } else if (this.label_horiz == 'middle') {
+      } else if (this.name_label_horiz == 'middle') {
         text_anchor_label = 'middle'
       }
 
       // Init pos_y_label as if it was at the bottom of the node
-      let pos_y_label = height + this.font_size
-      if (this.label_vert === 'top') {
+      let pos_y_label = height + this.name_label_font_size
+      if (this.name_label_vert === 'top') {
         pos_y_label = 0
-      } else if (this.label_vert === 'middle') {
+      } else if (this.name_label_vert === 'middle') {
         pos_y_label = height / 2
       }
 
       // Add name label background
-      if (this.label_background) {
+      if (this.name_label_background) {
         this.d3_selection?.append('rect')
           .classed('label', true)
           .classed('label_background', true)
           .attr('id', 'label_background_' + this.id)
           .attr('x', pos_x_label)
           .attr('y', pos_y_label)
-          .attr('width', this.name_label.length * (this.font_size as number))
-          .attr('height', (this.font_size as number))
+          .attr('width', this.name_label.length * (this.name_label_font_size as number))
+          .attr('height', (this.name_label_font_size as number))
           .attr('fill', 'white')
           .attr('fill-opacity', 0.55)
           .attr('rx', 4)
@@ -1030,18 +1063,18 @@ export class Class_NodeElement extends Class_Element {
       this.d3_selection?.append('text')
         .classed('label', true)
         .classed('label_text', true)
-        .attr('fill', this.label_color ? 'white' : 'black')
+        .attr('fill', this.name_label_color ? 'white' : 'black')
         .attr('id', 'label_text_' + this.id)
         .attr('x', pos_x_label)
         .attr('y', pos_y_label)
         .attr('text-anchor', text_anchor_label)
         .style('text-align', 'center')
-        .style('font-weight', this.bold ? 'bold' : 'normal')
-        .style('font-style', this.italic ? 'italic' : 'normal')
-        .style('font-size', String(this.font_size) + 'px')
-        .style('font-family', this.font_family)
+        .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
+        .style('font-style', this.name_label_italic ? 'italic' : 'normal')
+        .style('font-size', String(this.name_label_font_size) + 'px')
+        .style('font-family', this.name_label_font_family)
         .style('stroke', 'none')
-        .style('text-transform', this.uppercase ? 'uppercase' : 'none')
+        .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(this.name_label)
       // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
       // Add an input to change the name of the node
@@ -1053,7 +1086,7 @@ export class Class_NodeElement extends Class_Element {
           .attr('x', width)
           .attr('y', height)
           .style('width', String(this._name.length) + 'rem')
-          .attr('height', Number(this.font_size) + 2)
+          .attr('height', Number(this.name_label_font_size) + 2)
           .style('display', 'none')
           .append('xhtml:div')
           .append('input')
@@ -1062,7 +1095,7 @@ export class Class_NodeElement extends Class_Element {
           .attr('id', 'input_label_' + this.id)
           .attr('type', 'text')
           .attr('value', this._name)
-          .style('font-size', String(this.font_size) + 'px')
+          .style('font-size', String(this.name_label_font_size) + 'px')
       }
     }
   }
@@ -1102,8 +1135,15 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC METHODS =====================================================================
 
-  public deRefTag(tag: Class_Tag) {
-    delete this._tags[tag.id]
+  public removeTag(tag: Class_Tag) {
+    if (this._tags[tag.id] !== undefined) {
+      delete this._tags[tag.id]
+      tag.removeReference(this)
+    }
+  }
+
+  public useDefaultStyle() {
+    this.style = this.drawing_area.sankey.default_node_style
   }
 
   public isEqual(_: Class_NodeElement) {
@@ -1111,70 +1151,70 @@ export class Class_NodeElement extends Class_Element {
     if (this.shape_visible !== _.shape_visible) {
       return false
     }
-    if (this.label_visible !== _.label_visible) {
+    if (this.name_label_visible !== _.name_label_visible) {
       return false
     }
-    if (this.min_width !== _.min_width) {
+    if (this.shape_min_width !== _.shape_min_width) {
       return false
     }
-    if (this.min_height !== _.min_height) {
+    if (this.shape_min_height !== _.shape_min_height) {
       return false
     }
-    if (this.color !== _.color) {
+    if (this.shape_color !== _.shape_color) {
       return false
     }
-    if (this.shape !== _.shape) {
+    if (this.shape_type !== _.shape_type) {
       return false
     }
-    if (this.node_arrow_angle_factor !== _.node_arrow_angle_factor) {
+    if (this.shape_arrow_angle_factor !== _.shape_arrow_angle_factor) {
       return false
     }
-    if (this.node_arrow_angle_direction !== _.node_arrow_angle_direction) {
+    if (this.shape_arrow_angle_direction !== _.shape_arrow_angle_direction) {
       return false
     }
-    if (this.color_sustainable !== _.color_sustainable) {
+    if (this.shape_color_sustainable !== _.shape_color_sustainable) {
       return false
     }
-    if (this.font_family !== _.font_family) {
+    if (this.name_label_font_family !== _.name_label_font_family) {
       return false
     }
-    if (this.font_size !== _.font_size) {
+    if (this.name_label_font_size !== _.name_label_font_size) {
       return false
     }
-    if (this.uppercase !== _.uppercase) {
+    if (this.name_label_uppercase !== _.name_label_uppercase) {
       return false
     }
-    if (this.bold !== _.bold) {
+    if (this.name_label_bold !== _.name_label_bold) {
       return false
     }
-    if (this.italic !== _.italic) {
+    if (this.name_label_italic !== _.name_label_italic) {
       return false
     }
-    if (this.label_box_width !== _.label_box_width) {
+    if (this.name_label_box_width !== _.name_label_box_width) {
       return false
     }
-    if (this.label_color !== _.label_color) {
+    if (this.name_label_color !== _.name_label_color) {
       return false
     }
-    if (this.label_vert !== _.label_vert) {
+    if (this.name_label_vert !== _.name_label_vert) {
       return false
     }
-    if (this.label_horiz !== _.label_horiz) {
+    if (this.name_label_horiz !== _.name_label_horiz) {
       return false
     }
-    if (this.label_background !== _.label_background) {
+    if (this.name_label_background !== _.name_label_background) {
       return false
     }
-    if (this.show_value !== _.show_value) {
+    if (this.value_label_visible !== _.value_label_visible) {
       return false
     }
-    if (this.label_vert_valeur !== _.label_vert_valeur) {
+    if (this.value_label_vert !== _.value_label_vert) {
       return false
     }
-    if (this.label_horiz_valeur !== _.label_horiz_valeur) {
+    if (this.value_label_horiz !== _.value_label_horiz) {
       return false
     }
-    if (this.value_font_size !== _.value_font_size) {
+    if (this.value_label_font_size !== _.value_label_font_size) {
       return false
     }
     return true
@@ -1204,6 +1244,7 @@ export class Class_NodeElement extends Class_Element {
   }
 }
 
+// CLASS NODE ATTRIBUTES ****************************************************************
 
 /**
  * Define all attributes that can be apply to a node
@@ -1212,38 +1253,123 @@ export class Class_NodeElement extends Class_Element {
  * @class Class_NodeAttribute
  */
 export class Class_NodeAttribute {
-  // idNode?: string
-  // name?: string
 
-  // Parameter of node shape
-  shape_visible?: boolean
-  label_visible?: boolean
-  min_width?: number
-  min_height?: number
-  color?: string
-  shape?: 'ellipse' | 'rect' | 'arrow'
-  node_arrow_angle_factor?: number
-  node_arrow_angle_direction?: string
-  color_sustainable?: boolean
+  // PUBLIC ATTRIBUTES ==================================================================
+
+  // Parameters for shape
+  protected _shape_visible?: boolean
+  protected _shape_type?: Type_Shape
+  protected _shape_min_width?: number
+  protected _shape_min_height?: number
+  protected _shape_color?: string
+  protected _shape_color_sustainable?: boolean
+  protected _shape_arrow_angle_factor?: number
+  protected _shape_arrow_angle_direction?: string
 
   // Parameter of node label
-  font_family?: string
-  font_size?: number
-  uppercase?: boolean
-  bold?: boolean
-  italic?: boolean
-  label_box_width?: number
-  label_color?: boolean
-  label_vert?: string
-  label_horiz?: string
-  label_background?: boolean
+  protected _name_label_visible?: boolean
+  protected _name_label_font_family?: string
+  protected _name_label_font_size?: number
+  protected _name_label_uppercase?: boolean
+  protected _name_label_bold?: boolean
+  protected _name_label_italic?: boolean
+  protected _name_label_box_width?: number
+  protected _name_label_color?: boolean
+  protected _name_label_vert?: string
+  protected _name_label_horiz?: string
+  protected _name_label_background?: boolean
 
   // Parameter of node value label
-  show_value?: boolean
-  label_vert_valeur?: string
-  label_horiz_valeur?: string
-  value_font_size?: number
+  protected _value_label_visible?: boolean
+  protected _value_label_font_family?: string
+  protected _value_label_font_size?: number
+  protected _value_label_uppercase?: boolean
+  protected _value_label_bold?: boolean
+  protected _value_label_italic?: boolean
+  protected _value_label_box_width?: number
+  protected _value_label_color?: boolean
+  protected _value_label_vert?: string
+  protected _value_label_horiz?: string
+  protected _value_label_background?: boolean
+
+  // GETTERS ============================================================================
+
+  // Parameters for shape
+  public get shape_visible() { return this._shape_visible }
+  public get shape_type() { return this._shape_type }
+  public get shape_min_width() { return this._shape_min_width }
+  public get shape_min_height() { return this._shape_min_height }
+  public get shape_color() { return this._shape_color }
+  public get shape_color_sustainable() { return this._shape_color_sustainable }
+  public get shape_arrow_angle_factor() { return this._shape_arrow_angle_factor }
+  public get shape_arrow_angle_direction() { return this._shape_arrow_angle_direction }
+
+  // Parameter of node label
+  public get name_label_visible() { return this._name_label_visible }
+  public get name_label_font_family() { return this._name_label_font_family }
+  public get name_label_font_size() { return this._name_label_font_size }
+  public get name_label_uppercase() { return this._name_label_uppercase }
+  public get name_label_bold() { return this._name_label_bold }
+  public get name_label_italic() { return this._name_label_italic }
+  public get name_label_box_width() { return this._name_label_box_width }
+  public get name_label_color() { return this._name_label_color }
+  public get name_label_vert() { return this._name_label_vert }
+  public get name_label_horiz() { return this._name_label_horiz }
+  public get name_label_background() { return this._name_label_background }
+
+  // Parameter of node value label
+  public get value_label_visible() { return this._value_label_visible }
+  public get value_label_font_family() { return this._value_label_font_family }
+  public get value_label_font_size() { return this._value_label_font_size }
+  public get value_label_uppercase() { return this._value_label_uppercase }
+  public get value_label_bold() { return this._value_label_bold }
+  public get value_label_italic() { return this._value_label_italic }
+  public get value_label_box_width() { return this._value_label_box_width }
+  public get value_label_color() { return this._value_label_color }
+  public get value_label_vert() { return this._value_label_vert }
+  public get value_label_horiz() { return this._value_label_horiz }
+  public get value_label_background() { return this._value_label_background }
+
+  // SETTERS ============================================================================
+
+  // Parameters for shape
+  public set shape_visible(_: boolean | undefined) { this._shape_visible = _ }
+  public set shape_type(_: Type_Shape | undefined) { this._shape_type = _ }
+  public set shape_min_width(_: number | undefined) { this._shape_min_width = _ }
+  public set shape_min_height(_: number | undefined) { this._shape_min_height = _ }
+  public set shape_color(_: string | undefined) { this._shape_color = _ }
+  public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _ }
+  public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _ }
+  public set shape_arrow_angle_direction(_: string | undefined) { this._shape_arrow_angle_direction = _ }
+
+  // Parameter of node label
+  public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _ }
+  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _ }
+  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _ }
+  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _ }
+  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _ }
+  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _ }
+  public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _ }
+  public set name_label_color(_: boolean | undefined) { this._name_label_color = _ }
+  public set name_label_vert(_: string | undefined) { this._name_label_vert = _ }
+  public set name_label_horiz(_: string | undefined) { this._name_label_horiz = _ }
+  public set name_label_background(_: boolean | undefined) { this._name_label_background = _ }
+
+  // Parameter of node value label
+  public set value_label_visible(_: boolean | undefined) { this._value_label_visible = _ }
+  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _ }
+  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _ }
+  public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _ }
+  public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _ }
+  public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _ }
+  public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _ }
+  public set value_label_color(_: boolean | undefined) { this._value_label_color = _ }
+  public set value_label_vert(_: string | undefined) { this._value_label_vert = _ }
+  public set value_label_horiz(_: string | undefined) { this._value_label_horiz = _ }
+  public set value_label_background(_: boolean | undefined) { this._value_label_background = _ }
 }
+
+// CLASS NODE STYLE *********************************************************************
 
 /**
  * Define style for nodes
@@ -1253,94 +1379,123 @@ export class Class_NodeAttribute {
  * @extends {Class_NodeAttribute}
  */
 export class Class_NodeStyle extends Class_NodeAttribute {
-  constructor() {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _is_deletable: boolean
+
+  private _references: {[_: string]: Class_NodeElement} = {}
+
+  // CONSTRUCTOR ========================================================================
+  constructor(
+    is_deletable: boolean = true
+  ) {
     super()
-    this.shape_visible = default_node_style['shape_visible']
-    this.label_visible = default_node_style['label_visible']
-    this.min_width = default_node_style['min_width']
-    this.min_height = default_node_style['min_height']
-    this.color = default_node_style['color']
-    this.shape = default_node_style['shape']
-    this.node_arrow_angle_factor = default_node_style['node_arrow_angle_factor']
-    this.node_arrow_angle_direction = default_node_style['node_arrow_angle_direction']
-    this.color_sustainable = default_node_style['color_sustainable']
-    this.font_family = default_node_style['font_family']
-    this.font_size = default_node_style['font_size']
-    this.uppercase = default_node_style['uppercase']
-    this.bold = default_node_style['bold']
-    this.italic = default_node_style['italic']
-    this.label_box_width = default_node_style['label_box_width']
-    this.label_color = default_node_style['label_color']
-    this.label_vert = default_node_style['label_vert']
-    this.label_horiz = default_node_style['label_horiz']
-    this.label_background = default_node_style['label_background']
-    this.show_value = default_node_style['show_value']
-    this.label_vert_valeur = default_node_style['label_vert_valeur']
-    this.label_horiz_valeur = default_node_style['label_horiz_valeur']
-    this.value_font_size = default_node_style['value_font_size']
+    // Set as deletable or not
+    this._is_deletable = is_deletable
+
+    // Parameters for shape
+    this.shape_visible = default_shape_visible
+    this.shape_type = default_shape_type
+    this.shape_min_width = default_shape_min_width
+    this.shape_min_height = default_shape_min_height
+    this.shape_color = default_shape_color
+    this.shape_color_sustainable = default_shape_color_sustainable
+    this.shape_arrow_angle_factor = default_shape_arrow_angle_factor
+    this.shape_arrow_angle_direction = default_shape_arrow_angle_direction
+
+    // Parameter of node label
+    this.name_label_visible = default_name_label_visible
+    this.name_label_font_family = default_label_font_family
+    this.name_label_font_size = default_label_font_size
+    this.name_label_uppercase = default_label_uppercase
+    this.name_label_bold = default_label_bold
+    this.name_label_italic = default_label_italic
+    this.name_label_box_width = default_label_box_width
+    this.name_label_color = default_label_color
+    this.name_label_vert = default_name_label_vert
+    this.name_label_horiz = default_name_label_horiz
+    this.name_label_background = default_label_background
+
+    // Parameter of node value label
+    this.value_label_visible = default_value_label_visible
+    this.value_label_font_family = default_label_font_family
+    this.value_label_font_size = default_label_font_size
+    this.value_label_uppercase = default_label_uppercase
+    this.value_label_bold = default_label_bold
+    this.value_label_italic = default_label_italic
+    this.value_label_box_width = default_label_box_width
+    this.value_label_color = default_label_color
+    this.value_label_vert = default_value_label_vert
+    this.value_label_horiz = default_value_label_horiz
+    this.value_label_background = default_label_background
   }
-}
 
-export type Type_Node_Style = {
-  idNode: string,
-  name: string,
+  public delete() {
+    // Switch all refs to default style
+    Object.values(this._references)
+      .forEach(ref => ref.useDefaultStyle())
+    this._references = {}
+    // Garbage collector will do the rest....
+  }
 
-  // Parameter of node shape
-  shape_visible: boolean,
-  label_visible: boolean,
-  min_width: number,
-  min_height: number,
-  color: string,
-  shape: 'ellipse' | 'rect' | 'arrow',
-  node_arrow_angle_factor: number,
-  node_arrow_angle_direction: string,
-  color_sustainable: boolean,
+  // SETTERS ============================================================================
+
+  // Parameters for shape
+  public set shape_visible(_: boolean) { this._shape_visible = _; this.updateReferencesDraw() }
+  public set shape_type(_: Type_Shape) { this._shape_type = _; this.updateReferencesDraw() }
+  public set shape_min_width(_: number) { this._shape_min_width = _; this.updateReferencesDraw() }
+  public set shape_min_height(_: number) { this._shape_min_height = _; this.updateReferencesDraw() }
+  public set shape_color(_: string) { this._shape_color = _; this.updateReferencesDraw() }
+  public set shape_color_sustainable(_: boolean) { this._shape_color_sustainable = _; this.updateReferencesDraw() }
+  public set shape_arrow_angle_factor(_: number) { this._shape_arrow_angle_factor = _; this.updateReferencesDraw() }
+  public set shape_arrow_angle_direction(_: string) { this._shape_arrow_angle_direction = _; this.updateReferencesDraw() }
 
   // Parameter of node label
-  font_family: string,
-  font_size: number,
-  uppercase: boolean,
-  bold: boolean,
-  italic: boolean,
-  label_box_width: number,
-  label_color: boolean,
-  label_vert: string,
-  label_horiz: string,
-  label_background: boolean,
+  public set name_label_visible(_: boolean) { this._name_label_visible = _; this.updateReferencesDraw() }
+  public set name_label_font_family(_: string) { this._name_label_font_family = _; this.updateReferencesDraw() }
+  public set name_label_font_size(_: number) { this._name_label_font_size = _; this.updateReferencesDraw() }
+  public set name_label_uppercase(_: boolean) { this._name_label_uppercase = _; this.updateReferencesDraw() }
+  public set name_label_bold(_: boolean) { this._name_label_bold = _; this.updateReferencesDraw() }
+  public set name_label_italic(_: boolean) { this._name_label_italic = _; this.updateReferencesDraw() }
+  public set name_label_box_width(_: number) { this._name_label_box_width = _; this.updateReferencesDraw() }
+  public set name_label_color(_: boolean) { this._name_label_color = _; this.updateReferencesDraw() }
+  public set name_label_vert(_: string) { this._name_label_vert = _; this.updateReferencesDraw() }
+  public set name_label_horiz(_: string) { this._name_label_horiz = _; this.updateReferencesDraw() }
+  public set name_label_background(_: boolean) { this._name_label_background = _; this.updateReferencesDraw() }
 
   // Parameter of node value label
-  show_value: boolean,
-  label_vert_valeur: string,
-  label_horiz_valeur: string,
-  value_font_size: number,
-}
+  public set value_label_visible(_: boolean) { this._value_label_visible = _; this.updateReferencesDraw() }
+  public set value_label_font_family(_: string) { this._value_label_font_family = _; this.updateReferencesDraw() }
+  public set value_label_font_size(_: number) { this._value_label_font_size = _; this.updateReferencesDraw() }
+  public set value_label_uppercase(_: boolean) { this._value_label_uppercase = _; this.updateReferencesDraw() }
+  public set value_label_bold(_: boolean) { this._value_label_bold = _; this.updateReferencesDraw() }
+  public set value_label_italic(_: boolean) { this._value_label_italic = _; this.updateReferencesDraw() }
+  public set value_label_box_width(_: number) { this._value_label_box_width = _; this.updateReferencesDraw() }
+  public set value_label_color(_: boolean) { this._value_label_color = _; this.updateReferencesDraw() }
+  public set value_label_vert(_: string) { this._value_label_vert = _; this.updateReferencesDraw() }
+  public set value_label_horiz(_: string) { this._value_label_horiz = _; this.updateReferencesDraw() }
+  public set value_label_background(_: boolean) { this._value_label_background = _; this.updateReferencesDraw() }
 
-export const default_node_style: Type_Node_Style = {
-  idNode: 'default',
-  name: 'Style par défaut',
-  shape: 'rect',
-  node_arrow_angle_factor: 30,
-  node_arrow_angle_direction: 'right',
-  shape_visible: true,
-  label_visible: true,
-  min_width: 40,
-  min_height: 40,
-  color: default_element_color,
-  color_sustainable: false,
+  // PUBLIC METHODS =======================================================================
 
-  font_family: 'Cormorant',
-  font_size: 14,
-  uppercase: false,
-  bold: false,
-  italic: false,
-  label_vert: 'bottom',
-  label_horiz: 'middle',
-  label_background: false,
+  public addReference(_: Class_NodeElement) {
+    if (!this._references[_.id]) {
+      this._references[_.id] = _
+    }
+  }
 
-  show_value: false,
-  label_vert_valeur: 'top',
-  label_horiz_valeur: 'middle',
-  value_font_size: 14,
-  label_box_width: 150,
-  label_color: false,
+  public removeReference(_: Class_NodeElement) {
+    if (this._references[_.id] !== undefined) {
+      delete this._references[_.id]
+      _.useDefaultStyle()
+    }
+  }
+
+  // PRIVATE METHODS ======================================================================
+
+  private updateReferencesDraw() {
+    Object.values(this._references)
+      .forEach(ref => ref.reset())
+  }
 }

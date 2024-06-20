@@ -176,6 +176,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const value_label_horiz_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_horiz_valeur : (list_nodes_selected[0]?.label_horiz_valeur ?? false)
   const value_value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_font_size : (list_nodes_selected[0]?.value_font_size ?? false)
 
+  let element
 
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
   const content_appearence = <Box layerStyle='menuconfigpanel_grid' >

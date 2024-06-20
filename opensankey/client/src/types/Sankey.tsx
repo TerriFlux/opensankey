@@ -20,8 +20,7 @@ import {
 } from './Link'
 import {
   Class_NodeElement,
-  Class_NodeStyle,
-  default_node_style,
+  Class_NodeStyle
 } from './Node'
 import {
   Class_TagGroup
@@ -31,6 +30,10 @@ import { type } from 'os'
 // SPECIFIC TYPES ***********************************************************************
 
 export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
+
+// SPECIFIC CONSTANTS *******************************************************************
+
+const default_node_style = new Class_NodeStyle(false)
 
 // CLASS SANKEY *************************************************************************
 /**

@@ -357,9 +357,12 @@ export class Class_LinkElement extends Class_Element {
     this._target = value
   }
 
-  public deRefTag(tag:Class_Tag){
-    delete this.tags[tag.id]
-  } 
+  public removeTag(tag:Class_Tag){
+    if (this.tags[tag.id] !== undefined) {
+      delete this.tags[tag.id]
+      tag.removeReference(this)
+    }
+  }
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -557,7 +560,7 @@ export class Class_LinkElement extends Class_Element {
       .range([0, 100])
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
-      .range([0, this.drawing_area.scale])    
+      .range([0, this.drawing_area.scale])
     return scale(this.thickness)
   }
 
