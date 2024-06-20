@@ -1662,7 +1662,7 @@ const clean_data_local=(data:SankeyData)=>{
 
   // Clean links local
   Object.values(data.links).forEach(l=>{
-    if(l.local!==undefined && l.local!==null){
+    if(l.local!==undefined && l.local!==null && l.style !== undefined){
       Object.keys(l.local).forEach((k_l : string)=>{
         const k_l_c=k_l as keyof SankeyLinkAttrLocal
         const k_s_c=k_l as keyof SankeyLinkStyle
