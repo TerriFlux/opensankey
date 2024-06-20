@@ -1,29 +1,29 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
 // Date : 29/05/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
+// Local types
 import { Class_LinkElement } from "./Link"
 import { Class_NodeElement } from "./Node"
+import { default_grey_color } from "./Utils"
 
-// External imports
 
-// Local types
-// import { Class_ElementShape } from './Element'
-// import { Class_NodeShape } from './Node'
+// SPECIFIC TYPES ***********************************************************************
 
-// Local functions
 export type tag_banner_type='none'|'one'|'multi'
 
+type Type_TagReference = Class_NodeElement | Class_LinkElement
 
+
+// CLASS TAG ****************************************************************************
 /**
  * Class that define a Tag object
- *
  * @class Class_Tag
  */
 export class Class_Tag {
-  // Mandatory Attributes ========================================
+  // PRIVATE ATTRIBUTES =================================================================
   // Name
   private _id: string
 
@@ -31,81 +31,115 @@ export class Class_Tag {
 
   // Group where it belong
   private _group: Class_TagGroup
-  // Color of tag
-  private _color: string
-  // Boolean to show elements that are assigned to this tag
-  private _selected: boolean
-  private list_ref:(Class_LinkElement|Class_NodeElement)[] 
 
-  
-  // Constructor =================================================
+  // List of elements that relates to this tag
+  private _references: {[_: string]: Type_TagReference} = {}
+
+  // Color of tag
+  private _color: string = default_grey_color
+
+  // Boolean to show elements that are assigned to this tag
+  private _selected: boolean = true
+
+  // Constructor ========================================================
   constructor(id: string, name: string, group: Class_TagGroup) {
     this._id = id
     this._name = name
     this._group = group
-    this._color='grey'
-    this._selected=true
-    this.list_ref=[]
+    this._color
   }
 
-  // Others Attributes ============================================
-  // Display attributes
-  // shape: Type_ElementShape = structuredClone(default_element_shape)
-  // shape: Class_ElementShape = new Class_NodeShape
-
-  public deReferencement(){
-    this.list_ref.forEach(element=>{
-      element.deRefTag(this)
-    })
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  public delete() {
+    // Unref this tag from all references
+    Object.values(this._references)
+      .forEach(element=>{
+        element.deRefTag(this)
+      })
+    this._references = {}
+    // Garbage collection will do the rest
   }
 
-  // =========== Getter & Setter ===================
-  public get id(): string {return this._id}
-  
-  public get color(): string {return this._color}
+  // GETTERS / SETTERS ==================================================================
+
+  public get id() {return this._id}
+
+  public get name() {return this._name}
+  public set name(value: string) {this._name = value}
+
+  public get color() {return this._color}
   public set color(value: string) {this._color = value}
 
-  public get selected(): boolean {return this._selected}
+  public get selected() {return this._selected}
   public set selected(value: boolean) {this._selected = value}
 
-  public get name(): string {return this._name}
-  public set name(value: string) {this._name = value}
+  // PUBLIC METHODS =====================================================================
+  public addReference(_: Type_TagReference) {
+    if (!this._references[_.id]) this._references[_.id] = _
+  }
+
+  public removeReference(_: Type_TagReference) {
+    if (this._references[_.id] !== undefined) {
+      _.deRefTag(this)
+      delete this._references[_.id]
+    }
+  }
 }
 
+// CLASS TAGGROUP ***********************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
 export class Class_TagGroup {
-  // Mandatory Attributes ========================================
+
+  // PRIVATE ATTRIBUTES =================================================================
   // Name
   private _id: string
   private _name: string
 
   // List of tags
-  private _tags: { [_: string]: Class_Tag} 
+  private _tags: {[_: string]: Class_Tag} = {}
 
-  private _show_legend: boolean
-  private _banner: tag_banner_type
+  // Display attributes
+  private _show_legend: boolean = false
+  private _banner: tag_banner_type = 'one'
 
 
-  // Constructor =================================================
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
   constructor(id: string, name: string) {
     this._id = id
     this._name = name
-    this._tags = {}
-    this._show_legend=false
-    this._banner='one'
-
+    // Create a first default tag
     this.addTag('etiquette0', 'Etiquette 0')
   }
 
-  public addTag(id: string, name: string) {
-    const tag = new Class_Tag(id, name, this)
-    this._tags[id] = tag
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  public delete() {
+    // Unref this tag from all references
+    Object.values(this._tags)
+      .forEach(element=>{
+        element.delete()
+      })
+    this._tags = {}
+    // Garbage collection will do the rest ...
   }
 
-  public deleteRef(){
-    Object.values(this._tags).forEach(tag=>tag.deReferencement())
-  }
+  // GETTERS / SETTERS ==================================================================
 
-  // =========== Getter & Setter ===================
   public get id(): string {return this._id}
   public set id(value: string) {this._id = value}
 
@@ -117,18 +151,38 @@ export class Class_TagGroup {
 
   public get banner(): tag_banner_type {return this._banner}
   public set banner(value: tag_banner_type) {this._banner = value}
+
+  // PUBLIC METHODS =====================================================================
+
+  public addTag(id: string, name: string) {
+    if (!this._tags[id]) {
+      const tag = new Class_Tag(id, name, this)
+      this._tags[id] = tag
+    }
+    else {
+      this.addTag(id+'_0', name+'_0')
+    }
+  }
+
+  public addDefaultTag() {
+    const n = String(Object.values(this._tags).length)
+    const id = 'etiquette' + n
+    const name = 'Etiquette ' + n
+    this.addTag(id, name)
+  }
+
+  public removeTag(_: Class_Tag) {
+    if (this._tags[_.id] !== undefined) {
+      _.delete()
+      delete this._tags[_.id]
+    }
+  }
 }
 
-// SPECIAL TAG GROUP FOR NODE LEVEL
-export class Class_TagGroupNodeLevel extends Class_TagGroup{
-  // Class Attributes====================
-  private _siblings:string[]
-  private _activated:boolean
+// CLASS TAGGROUP FOR NODES LEVELS ******************************************************
 
-  // Constructor=======================
-  constructor(id: string, name: string){
-    super(id,name)
-    this._siblings=[]
-    this._activated=false
-  }
+export class Class_TagGroupNodeLevel extends Class_TagGroup{
+  // PRIVATE ATTRIBUTES==================================================================
+  private _siblings: string[] = []
+  private _activated: boolean = false
 }

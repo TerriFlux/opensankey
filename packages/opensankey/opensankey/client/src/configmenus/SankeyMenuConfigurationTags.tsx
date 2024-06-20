@@ -99,7 +99,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // redrawGenereal()
 
     // New
-    const grp_key = new_data.drawing_area.sankey.CreateNewTagGroup(elementTagNameProp)
+    const grp_key = new_data.drawing_area.sankey.createTagGroup(elementTagNameProp)
     set_tags_group_key(grp_key)
     setForceUpdate.toggle()
 

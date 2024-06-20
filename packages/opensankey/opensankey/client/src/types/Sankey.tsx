@@ -314,7 +314,7 @@ export class Class_Sankey {
    * @return {*}
    * @memberof Class_Sankey
    */
-  public CreateNewTagGroup(type_group: MacroTagGroupType) {
+  public createTagGroup() {
     const key = Object.keys(this[type_group]).length
     const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
     this[type_group][new_grp.id] = new_grp
@@ -335,5 +335,4 @@ export class Class_Sankey {
   public getListGroupTagOf(type_group: MacroTagGroupType) {
     return Object.values(this[type_group])
   }
-
 }
