@@ -305,4 +305,35 @@ export class Class_Sankey {
   public removeLink(link: Class_LinkElement) {
     delete this._links[link.id]
   }
+
+  // Tags related ------------------------------------------------------------------------
+
+  /**
+   * Create a TagGroup and add it to to specified group
+   *
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public CreateNewTagGroup(type_group: MacroTagGroupType) {
+    const key = Object.keys(this[type_group]).length
+    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
+    this[type_group][new_grp.id] = new_grp
+    return new_grp.id
+  }
+
+  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
+    delete this[type_group][key_to_delete]
+  }
+
+  /**
+   * Return list of group tag from specified group type
+   *
+   * @param {MacroTagGroupType} type_group
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public getListGroupTagOf(type_group: MacroTagGroupType) {
+    return Object.values(this[type_group])
+  }
+
 }
