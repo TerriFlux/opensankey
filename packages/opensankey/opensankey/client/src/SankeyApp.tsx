@@ -105,7 +105,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     {},
     {}
   )
-  applicationData.new_data = new Class_ApplicationData(window, false)
+  // applicationData.new_data = new Class_ApplicationData(window, false)
   const applicationState = initializeElementSelected()
   applicationState.userScaleRef.current = applicationData.data.user_scale // TODO
   const dict_hook_ref_setter_show_dialog_components = initializeShowDialog()
