@@ -82,7 +82,7 @@ export class Class_TagGroup {
   private _tags: { [_: string]: Class_Tag} 
 
   private _show_legend: boolean
-  private _banner: tag_banner_type
+  protected _banner: tag_banner_type
 
 
   // Constructor =================================================
@@ -117,13 +117,16 @@ export class Class_TagGroup {
 
   public get banner(): tag_banner_type {return this._banner}
   public set banner(value: tag_banner_type) {this._banner = value}
+
+  public get show_legend(): boolean {return this._show_legend}
+  public set show_legend(value: boolean) {this._show_legend = value}
 }
 
 // SPECIAL TAG GROUP FOR NODE LEVEL
 export class Class_TagGroupNodeLevel extends Class_TagGroup{
   // Class Attributes====================
-  private _siblings:string[]
-  private _activated:boolean
+  private _siblings: string[]
+  private _activated: boolean
 
   // Constructor=======================
   constructor(id: string, name: string){
@@ -131,4 +134,12 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup{
     this._siblings=[]
     this._activated=false
   }
+
+  // ============ Getter & Setter ==============
+  public get siblings(): string[] {return this._siblings}
+  public set siblings(value: string[]) {this._siblings = value}
+
+  public get activated(): boolean {return this._activated}
+  public set activated(value: boolean) {this._activated = value}
+
 }

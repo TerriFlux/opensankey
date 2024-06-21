@@ -1,12 +1,8 @@
 import { TFunction } from 'i18next'
 import {
-  ComponentUpdaterType,
-  LinkFunctionTypes,
-  NodeFunctionTypes,
-  SankeyData, SankeyNode, applicationContextType,
-  applicationDataType, applicationStateType, treeFolderType
+  SankeyData, SankeyNode, 
+  treeFolderType
 } from '../../types/Types'
-import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 
 
