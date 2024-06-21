@@ -109,11 +109,12 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               {t('Menu.choseTransforDifficulty')}
             </Box>
             <Box layerStyle='options_3cols' >
-              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_secondary' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('simple')}}>Basiques</Button>
-              <Button variant={mode_trans=='expert'?'menuconfigpanel_del_button' : 'menuconfigpanel_option_button_light'} onClick={()=>{set_mode_trans('expert')}}>Tous</Button>
+              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={()=>{set_mode_trans('simple')}}>Simple</Button>
+              <Button variant={mode_trans=='avancé'?'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
+              <Button variant={mode_trans=='expert'?'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
             </Box>
           </Box>
-  
+
           <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Shortcuts')}</Box>
@@ -160,7 +161,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Topology')}</Box>
                 <Box layerStyle='options_4cols' >
                   <Button
-                    variant={ dataVarToUpdate.current.includes('addNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={ dataVarToUpdate.current.includes('addNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('addNode')){
                         dataVarToUpdate.current.push('addNode')
@@ -172,7 +173,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     }
                   >{t('Menu.Transformation.addNode')}</Button>
                   <Button
-                    variant={ dataVarToUpdate.current.includes('removeNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={ dataVarToUpdate.current.includes('removeNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('removeNode')){
                         dataVarToUpdate.current.push('removeNode')
@@ -184,7 +185,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     }
                   >{t('Menu.Transformation.removeNode')}</Button>
                   <Button
-                    variant={ dataVarToUpdate.current.includes('addFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={ dataVarToUpdate.current.includes('addFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('addFlux')){
                         dataVarToUpdate.current.push('addFlux')
@@ -195,7 +196,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                       }}
                     }>{t('Menu.Transformation.addFlux')}</Button>
                   <Button
-                    variant={ dataVarToUpdate.current.includes('removeFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={ dataVarToUpdate.current.includes('removeFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('removeFlux')){
                         dataVarToUpdate.current.push('removeFlux')
@@ -214,7 +215,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
               <Box layerStyle='options_4cols' >
                 <Button
-                  variant={ dataVarToUpdate.current.includes('posNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  variant={ dataVarToUpdate.current.includes('posNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                   onClick={() => {
                     if(!dataVarToUpdate.current.includes('posNode')){
                       dataVarToUpdate.current.push('posNode')
@@ -225,7 +226,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     }}
                   }>{t('Menu.Transformation.PosNoeud')}</Button>
                 <Button
-                  variant={ dataVarToUpdate.current.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  variant={ dataVarToUpdate.current.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                   onClick={() => {
                     if(!dataVarToUpdate.current.includes('posFlux')){
                       dataVarToUpdate.current.push('posFlux')
@@ -247,7 +248,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
                 <Box layerStyle='options_4cols' >
                   <Button
-                    variant={ dataVarToUpdate.current.includes('Values')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={ dataVarToUpdate.current.includes('Values')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('Values')){
                         dataVarToUpdate.current.push('Values')
@@ -270,7 +271,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'><Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
               <Box layerStyle='options_4cols' >
                 <Button
-                  variant={dataVarToUpdate.current.includes('attrNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  variant={dataVarToUpdate.current.includes('attrNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                   onClick={() => {
                     if(!dataVarToUpdate.current.includes('attrNode')){
                       dataVarToUpdate.current.push('attrNode')
@@ -283,7 +284,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   }
                 >{t('Menu.Transformation.attrNode')}</Button>
                 <Button
-                  variant={dataVarToUpdate.current.includes('attrFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  variant={dataVarToUpdate.current.includes('attrFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                   onClick={() =>{
                     if(!dataVarToUpdate.current.includes('attrFlux')){
                       dataVarToUpdate.current.push('attrFlux')
@@ -304,7 +305,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
                 <Box layerStyle='options_4cols' >
                   <Button
-                    variant={dataVarToUpdate.current.includes('tagNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={dataVarToUpdate.current.includes('tagNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() =>{
                       if(!dataVarToUpdate.current.includes('tagNode')){
                         dataVarToUpdate.current.push('tagNode')
@@ -317,7 +318,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     }
                   >{t('Menu.Transformation.tagNode')}</Button>
                   <Button
-                    variant={dataVarToUpdate.current.includes('tagFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={dataVarToUpdate.current.includes('tagFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('tagFlux')){
                         dataVarToUpdate.current.push('tagFlux')
@@ -329,7 +330,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     }
                   >{t('Menu.Transformation.tagFlux')}</Button>
                   <Button
-                    variant={dataVarToUpdate.current.includes('tagData')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={dataVarToUpdate.current.includes('tagData')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('tagData')){
                         dataVarToUpdate.current.push('tagData')
@@ -350,7 +351,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
                 <Box layerStyle='options_4cols' >
                   <Button
-                    variant={dataVarToUpdate.current.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                    variant={dataVarToUpdate.current.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                     onClick={() => {
                       if(!dataVarToUpdate.current.includes('tagLevel')){
                         dataVarToUpdate.current.push('tagLevel')
@@ -369,7 +370,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
               <Box layerStyle='options_4cols' >
                 <Button
-                  variant={dataVarToUpdate.current.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+                  variant={dataVarToUpdate.current.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                   onClick={() =>{
                     if(!dataVarToUpdate.current.includes('attrGeneral')){
                       dataVarToUpdate.current.push('attrGeneral')
@@ -450,7 +451,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   value={stretchFactorH}
                   onChange={evt=>{
                     set_stretchFactorH(+evt)
-                  }}>            
+                  }}>
                   <NumberInputField/>
                   <NumberInputStepper>
                     <NumberIncrementStepper/>
@@ -480,7 +481,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   value={stretchFactorV}
                   onChange={evt=>{
                     set_stretchFactorV(+evt)
-                  }}>            
+                  }}>
                   <NumberInputField/>
                   <NumberInputStepper>
                     <NumberIncrementStepper/>
@@ -532,9 +533,9 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
           </Box>
         </Box>
       </TabPanel>
-    
+
     </TabPanels>
-    
+
   </Tabs>
   const dragLayout= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -611,7 +612,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
           <span/>
           <Box layerStyle='options_2cols' >
- 
+
             <Button
               variant='menuconfigpanel_option_button'
               onClick={
@@ -628,8 +629,8 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
                 }
               }>{t('Menu.SaveJSON')}
             </Button>
-            <Button     
-              variant='menuconfigpanel_del_button'   
+            <Button
+              variant='menuconfigpanel_del_button'
               onClick={
                 () => {
                   set_show_save_json_modal(false)
