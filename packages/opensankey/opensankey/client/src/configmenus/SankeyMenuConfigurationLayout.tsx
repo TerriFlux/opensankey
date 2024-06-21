@@ -30,11 +30,13 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
   ComponentUpdater
 }) => {
   const { t } = applicationContext
-  const { data, set_data, new_data } = applicationData
+  const { new_data } = applicationData
   const { RedrawNodes } = node_function
   const { RedrawLinks } = link_function
 
-  const [legend_position, set_legend_position] = useState(data.legend_position)
+  // const [legend_position, set_legend_position] = useState(data.legend_position)
+  const [leg_pos_x, setLegPosX] = useState(new_data.drawing_area.legend.position_x)
+  const [leg_pos_y, setLegPosY] = useState(new_data.drawing_area.legend.position_y)
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigLayout.current = setForceUpdate.toggle
 
@@ -112,10 +114,10 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           <ConfigLayoutNumberInput
             value_attr={new_data.drawing_area.grid_size}
             function_onCahnge={(_, value) => new_data.drawing_area.grid_size = value}
-            function_onBlur={() => DrawGrid(data)}
+            function_onBlur={() => new_data.drawing_area.drawGrid()}
             minimum_value={10}
             stepper={true}
-            unitText={right_addon_pixel(data.grid_square_size)}
+            unitText={right_addon_pixel(new_data.drawing_area.grid_size)}
           />
         </OSTooltip>
       </Box>
@@ -142,8 +144,8 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           value_attr={new_data.drawing_area.scale}
           function_onCahnge={(_, value) => new_data.drawing_area.scale = value}
           function_onBlur={() => {
-            new_data.drawing_area.selected_nodes_list.forEach(n=>n.reset())
-            new_data.drawing_area.selected_links_list.forEach(l=>l.reset())
+            new_data.drawing_area.selected_nodes_list.forEach(n => n.reset())
+            new_data.drawing_area.selected_links_list.forEach(l => l.reset())
             // reDrawLegend()
             // RedrawNodes(Object.values(applicationData.display_nodes))
             // RedrawLinks(Object.values(applicationData.display_links))
@@ -206,7 +208,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
               RedrawLinks(Object.values(applicationData.display_links))
               ComponentUpdater.updateComponenSaveInCache.current(false)
             }}
-            unitText={right_addon_pixel(data.minimum_flux!)}
+            unitText={right_addon_pixel(new_data.minimum_flux!)}
           />
 
         </OSTooltip>
@@ -227,7 +229,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
               RedrawLinks(Object.values(applicationData.display_links))
               ComponentUpdater.updateComponenSaveInCache.current(false)
             }}
-            unitText={right_addon_pixel(data.maximum_flux!)}
+            unitText={right_addon_pixel(new_data.maximum_flux!)}
           />
         </OSTooltip>
       </Box>
@@ -241,12 +243,11 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
     >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={data.mask_legend ? <FaEye /> : <FaEyeSlash />}
-        isChecked={data.mask_legend}
+        icon={!new_data.drawing_area.legend.masked ? <FaEye /> : <FaEyeSlash />}
+        isChecked={!new_data.drawing_area.legend.masked}
         onChange={(evt) => {
-          data.mask_legend = evt.target.checked
+          new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
           setForceUpdate.toggle()
-          reDrawLegend()
         }}
       >
         {t('Menu.Leg')}
@@ -255,7 +256,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (data.mask_legend ? '' : 'none') }}
+      style={{ display: (new_data.drawing_area.legend.masked ? 'none' : '') }}
     >
       <Box
         as='span'
@@ -278,16 +279,13 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           {t('Menu.fontSize')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
-          <></>
-          {/* <ConfigLayoutNumberInput
-            data={applicationData.data}
-            var_of_data={'legend_police'}
-            function_onBlur={() => {
-              reDrawLegend()
-            }}
+          <ConfigLayoutNumberInput
+            value_attr={new_data.drawing_area.legend.legend_police}
+            function_onCahnge={(s, val) => new_data.drawing_area.legend.legend_police}
+            function_onBlur={() => { }}
             minimum_value={1}
             stepper={true}
-          /> */}
+          />
 
         </OSTooltip>
       </Box>
@@ -310,10 +308,9 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           <Input
             variant='menuconfigpanel_option_input_color'
             type='color'
-            value={data.legend_bg_color}
+            value={new_data.drawing_area.legend.legend_bg_color}
             onChange={evt => {
-              data.legend_bg_color = evt.target.value
-              reDrawLegend()
+              new_data.drawing_area.legend.legend_bg_color = evt.target.value
               setForceUpdate.toggle()
             }}
           />
@@ -330,19 +327,15 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           {t('Menu.LegBgOpacity')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
-          <></>
-          {/* <ConfigLayoutNumberInput
-            data={applicationData.data}
-            var_of_data={'legend_bg_opacity'}
-            function_onBlur={() => {
-              reDrawLegend()
-            }}
+          <ConfigLayoutNumberInput
+            value_attr={new_data.drawing_area.legend.legend_bg_opacity}
+            function_onCahnge={(s,val)=>new_data.drawing_area.legend.legend_bg_opacity=val}
+            function_onBlur={() => {}}
             minimum_value={0}
             maximum_value={100}
             stepper={true}
             unitText='%'
-          /> */}
-
+          />
         </OSTooltip>
       </Box>
 
@@ -351,10 +344,9 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
 
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
-          isChecked={data.legend_bg_border}
+          isChecked={new_data.drawing_area.legend.legend_bg_border}
           onChange={(evt) => {
-            data.legend_bg_border = evt.target.checked
-            reDrawLegend()
+            new_data.drawing_area.legend.legend_bg_border = evt.target.checked
             setForceUpdate.toggle()
           }}
         >
@@ -384,12 +376,11 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
               variant='menuconfigpanel_option_numberinput_with_right_addon'
               min={0}
               step={1}
-              value={Math.round(legend_position[0])}
+              value={Math.round(leg_pos_x)}
               inputMode='numeric'
-              onChange={value => set_legend_position([Number(value), legend_position[1]])}
+              onChange={value => setLegPosX(Number(value))}
               onBlur={() => {
-                data.legend_position = legend_position
-                reDrawLegend()
+                new_data.drawing_area.legend.position_x = leg_pos_x
                 setForceUpdate.toggle()
               }}
             >
@@ -400,7 +391,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
               </NumberInputStepper>
             </NumberInput>
             <InputRightAddon>
-              {right_addon_pixel(Math.round(legend_position[0]))}
+              {right_addon_pixel(Math.round(leg_pos_x))}
             </InputRightAddon>
           </InputGroup>
         </OSTooltip>
@@ -423,12 +414,11 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
               variant='menuconfigpanel_option_numberinput_with_right_addon'
               min={0}
               step={1}
-              value={Math.round(legend_position[1])}
+              value={Math.round(leg_pos_y)}
               inputMode='numeric'
-              onChange={value => set_legend_position([legend_position[0], Number(value)])}
+              onChange={value => setLegPosY(Number(value))}
               onBlur={() => {
-                data.legend_position = legend_position
-                reDrawLegend()
+                new_data.drawing_area.legend.position_y = leg_pos_y
                 setForceUpdate.toggle()
               }}
             >
@@ -439,7 +429,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
               </NumberInputStepper>
             </NumberInput>
             <InputRightAddon>
-              {right_addon_pixel(Math.round(legend_position[1]))}
+              {right_addon_pixel(Math.round(leg_pos_y))}
             </InputRightAddon>
           </InputGroup>
         </OSTooltip>
@@ -454,19 +444,16 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegWidth')}
         </Box>
-        {/* <OSTooltip label={t('Menu.tooltips.LegWidth')}>
-
+        <OSTooltip label={t('Menu.tooltips.LegWidth')}>
           <ConfigLayoutNumberInput
-            // data={applicationData.data}
-            // var_of_data={'legend_width'}
-            function_onBlur={() => {
-              reDrawLegend()
-            }}
+            value_attr={new_data.drawing_area.legend.width}
+            function_onCahnge={(s, val) => new_data.drawing_area.legend.width = val}
+            function_onBlur={() => { }}
             minimum_value={0}
             stepper={true}
-            unitText={right_addon_pixel(data.legend_width)}
+            unitText={right_addon_pixel(new_data.drawing_area.legend.width)}
           />
-        </OSTooltip> */}
+        </OSTooltip>
       </Box>
 
       <Box
@@ -479,11 +466,10 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
       <Box as='span'>
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
-          isChecked={data.display_legend_scale}
-          checked={data.display_legend_scale}
+          isChecked={new_data.drawing_area.legend.display_legend_scale}
+          checked={new_data.drawing_area.legend.display_legend_scale}
           onChange={(evt) => {
-            data.display_legend_scale = evt.target.checked
-            reDrawLegend()
+            new_data.drawing_area.legend.display_legend_scale = evt.target.checked
             setForceUpdate.toggle()
           }}
         >
@@ -494,11 +480,10 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
       {/* Afficher les dataTags dans la légende*/}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
-        isChecked={data.legend_show_dataTags}
-        checked={data.legend_show_dataTags}
+        isChecked={new_data.drawing_area.legend.legend_show_dataTags}
+        checked={new_data.drawing_area.legend.legend_show_dataTags}
         onChange={(evt) => {
-          data.legend_show_dataTags = evt.target.checked
-          reDrawLegend()
+          new_data.drawing_area.legend.legend_show_dataTags = evt.target.checked
           setForceUpdate.toggle()
         }}
       >

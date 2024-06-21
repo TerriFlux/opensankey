@@ -1,11 +1,11 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle } from '../types/Types'
+import { SankeyData } from '../types/Types'
 import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaEyeSlash, FaEye, FaChevronDown, FaUndo } from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'react-icons/fa'
 
 import { Box, Button, Checkbox, Input, InputGroup, InputRightAddon, Menu, MenuButton, MenuItem, MenuList, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 
-import { ReturnCorrectLinkAttributeValue, AssignLinkValueToCorrectVar, IsAllLinkAttrSameValue, IsLinkDiplayingValueLocal, CutName, TooltipValueSurcharge, OSTooltip } from './SankeyUtils'
+import { IsLinkDiplayingValueLocal, CutName, TooltipValueSurcharge, OSTooltip } from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
 import { Class_LinkElement } from '../types/Link'
 
