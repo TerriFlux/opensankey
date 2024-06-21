@@ -168,7 +168,7 @@ export class Class_NodeElement extends Class_Element {
     const min_width = this.width
     const min_height = this.height
     const node_visible = this.shape_visible
-    const node_color = this.color
+    const node_color = this.NodeColorToUse()
     // Get drawing scale
     const scale = d3.scaleLinear()
       .range([0, 100])
@@ -668,6 +668,17 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  private NodeColorToUse(){
+    if(!this.colorSustainable && this.drawing_area.sankey.nodesColorMap!=='no_colormap' && this.tags[this.drawing_area.sankey.nodesColorMap].length>0){
+      // const grp_tag_color_to_use=this.drawing_area.sankey.node_taggs[this.drawing_area.sankey.nodesColorMap]
+      const list_tag_from_grp_to_use_color=this.tags[this.drawing_area.sankey.nodesColorMap]
+      return list_tag_from_grp_to_use_color[0].color
+      
+    }else{
+      return this.color
+    }
+  }
+
 
   public get shape_visible() {
     if (this._display.local.shape_visible !== undefined) {
@@ -713,7 +724,7 @@ export class Class_NodeElement extends Class_Element {
   public set min_height(_: number) { this._display.local.min_height = _ }
 
   public get color() {
-    if (this._display.local.color !== undefined) {
+     if (this._display.local.color !== undefined) {
       return this._display.local.color
     } else if (this._display.style.color !== undefined) {
       return this._display.style.color

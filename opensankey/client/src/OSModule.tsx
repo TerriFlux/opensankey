@@ -612,8 +612,6 @@ export const moduleDialogs : module_dialogsType = (
     <SankeyMenuConfigurationNodesTooltip
       applicationData={applicationData}
       applicationContext={applicationContext}
-      applicationState ={applicationState}
-      ComponentUpdater={ComponentUpdater}
       menu_for_modal = {true}
     />,
     contextMenu.pointer_pos,
@@ -817,9 +815,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='node_taggs'
-      elementNameProp='nodes'
-      node_function={node_function}
-      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
@@ -827,9 +822,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='flux_taggs'
-      elementNameProp='links'
-      node_function={node_function}
-      link_function={link_function}
+
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
@@ -837,9 +830,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='data_taggs'
-      elementNameProp='links'
-      node_function={node_function}
-      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,

@@ -24,7 +24,8 @@ import {
   default_node_style,
 } from './Node'
 import {
-  Class_TagGroup
+  Class_TagGroup,
+  Class_TagGroupNodeLevel
 } from './Tag'
 
 
@@ -52,7 +53,7 @@ export class Class_Sankey {
   public node_taggs: { [_: string]: Class_TagGroup } = {}
   public flux_taggs: { [_: string]: Class_TagGroup } = {}
   public data_taggs: { [_: string]: Class_TagGroup } = {}
-  public level_taggs: { [_: string]: Class_TagGroup } = {}
+  public level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // TODO a implementer
   // left_shift: number,
@@ -67,9 +68,7 @@ export class Class_Sankey {
   // legend_show_dataTags:boolean,
   // display_style : display_styleType,
   // linkZIndex:string[]
-  // colorMap: string,
-  // nodesColorMap: string,
-  // linksColorMap: string,
+
   // legend_width:number,
   // node_label_separator:string
 
@@ -85,6 +84,11 @@ export class Class_Sankey {
   // Existing styles
   private _link_styles: { [_: string]: Class_LinkStyle } = {'default': default_link_style } // TODO create defaut style
   private _node_styles: { [_: string]: Class_NodeStyle } = {'default': default_node_style }
+
+  // Variable determining if we apply tag color to elements
+  private _colorMap: string
+  private _nodesColorMap: string
+  private _linksColorMap: string
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -109,6 +113,9 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config=menu_config
+    this._colorMap='no_colormap'
+    this._nodesColorMap='no_colormap'
+    this._linksColorMap='no_colormap'
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -224,6 +231,16 @@ export class Class_Sankey {
   public get default_link_style() {
     return this._link_styles['default']
   }
+
+  public get colorMap(): string {return this._colorMap}
+  public set colorMap(value: string) {this._colorMap = value}
+
+  public get nodesColorMap(): string {return this._nodesColorMap}
+  public set nodesColorMap(value: string) {this._nodesColorMap = value}
+
+  public get linksColorMap(): string {return this._linksColorMap}
+  public set linksColorMap(value: string) {this._linksColorMap = value}
+
 
   // PUBLIC METHODS =====================================================================
 

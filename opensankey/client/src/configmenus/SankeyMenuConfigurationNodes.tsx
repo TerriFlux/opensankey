@@ -96,8 +96,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
       applicationData={applicationData}
       applicationContext={applicationContext}
-      applicationState={applicationState}
-      ComponentUpdater={ComponentUpdater}
       menu_for_modal={false}
     />
   }
