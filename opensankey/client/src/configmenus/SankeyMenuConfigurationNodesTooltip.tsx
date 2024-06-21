@@ -6,8 +6,6 @@ import { OSTooltip } from './SankeyUtils'
 export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
   applicationData,
   applicationContext,
-  applicationState,
-  ComponentUpdater,
   menu_for_modal
 }) => {
   const { t } = applicationContext

@@ -26,6 +26,7 @@ import {
 import {
   Class_ApplicationData
 } from './ApplicationData'
+import { Class_Legend } from './Legend'
 
 
 
@@ -81,6 +82,13 @@ export class Class_DrawingArea {
   public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
+   * d3 selection of svg group that contains drawing area legend elements
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
+  public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
    * Is drawing area in publish _mode or not. If so, blocks all interactions with it
    * @type {boolean}
    * @memberof Class_DrawingArea
@@ -115,7 +123,8 @@ export class Class_DrawingArea {
 
   // Elements that are contained in this area
   private _sankey: Class_Sankey
-  // private legend: Class_Element = new Class_Element('legend', this, 'g_legend')
+  private _legend: Class_Legend 
+
   // private text_areas: { [id: string]: Class_Element } = {}
 
   // Elements that are selected in this area
@@ -156,6 +165,7 @@ export class Class_DrawingArea {
     this.application_data = application_data
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
     this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
+    this._legend= new Class_Legend( this,this.application_data.menu_configuration)
     // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
 
@@ -178,12 +188,14 @@ export class Class_DrawingArea {
     this.d3_selection_grid = this.d3_selection.append('g').attr('id', 'g_grid')
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
+    this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
 
     // TODO ajouter groupes pour autres élements
     // Draw Everything
     this.drawElements()
     // Added events listeners
     this.setEventsListeners()
+    this.legend.draw()
   }
 
   /**
@@ -212,6 +224,10 @@ export class Class_DrawingArea {
 
   // Sankey
   public get sankey() { return this._sankey }
+
+  // Legend
+  public get legend(): Class_Legend {return this._legend}
+  public set legend(value: Class_Legend) {this._legend = value}
 
   // Selections
   public get selected_nodes_list() { return this._sankey_selection.nodes_list }
@@ -245,7 +261,7 @@ export class Class_DrawingArea {
 
   // Grid visibility
   public get grid_visible() { return this._grid_visible }
-  public set grid_visible(_:boolean){this._grid_visible=_}
+  public set grid_visible(_:boolean){this._grid_visible=_;this.drawGrid()}
   public setGridVisible() { this.grid_visible = true; this.drawGrid() }
   public setGridInvisible() { this.grid_visible = false; this.drawGrid() }
 
@@ -385,7 +401,7 @@ export class Class_DrawingArea {
    * @private
    * @memberof Class_DrawingArea
    */
-  private drawGrid() {
+  public drawGrid() {
     // Clean if needed
     this.d3_selection_grid?.selectAll('.line').remove()
     // Draw only if asked OR outside publishing mode
