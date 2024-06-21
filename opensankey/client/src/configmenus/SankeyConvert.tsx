@@ -1405,7 +1405,7 @@ export const convert_links:convert_linksFuncType = (
           }
           (editable_link.value2 as SankeyLinkValue) = {
             value : the_value as number,
-            display_value : the_display_value as string,
+            display_value: the_display_value == 'default' ? '' : the_display_value,
             tags            : {},
             extension : {}
           }
