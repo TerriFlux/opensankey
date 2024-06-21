@@ -39,7 +39,6 @@ import {
 import { ToolbarBuilder } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
-import { OpenSankeyMenuConfigurationNodes } from './configmenus/SankeyMenuConfigurationNodes'
 import { OpenSankeyConfigurationNodesAttributes } from './configmenus/SankeyMenuConfigurationNodesAttributes'
 import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
@@ -373,16 +372,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   Object.assign(sankey_menus,additionalMenus.sankey_menus)
 
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(
-    applicationContext,
-    applicationData,
-    applicationState,
-    menu_configuration_nodes_attributes,
-    GetLinkValue,
-    node_function,link_function,
-    ComponentUpdater
-  )
-  Object.assign(menu_configuration_nodes,additionalMenus.additional_menu_configuration_nodes)
 
   const regular_ui = OpenSankeyDefaultModalePreferenceContent(
     applicationContext.t,
@@ -405,10 +394,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     applicationDraw,
     ComponentUpdater,
     updateMenus,
-    menu_configuration_nodes,
     config_link_data,
     config_link_attr,
     contextMenu,
+    menu_configuration_nodes_attributes,
+    additionalMenus,
     ref_alt_key_pressed
   )
 

@@ -152,6 +152,9 @@ export class Class_TagGroup {
   public get banner(): tag_banner_type {return this._banner}
   public set banner(value: tag_banner_type) {this._banner = value}
 
+  public get show_legend(): boolean {return this._show_legend}
+  public set show_legend(value: boolean) {this._show_legend = value}
+
   // PUBLIC METHODS =====================================================================
 
   public addTag(id: string, name: string) {
@@ -182,7 +185,16 @@ export class Class_TagGroup {
 // CLASS TAGGROUP FOR NODES LEVELS ******************************************************
 
 export class Class_TagGroupNodeLevel extends Class_TagGroup{
+
   // PRIVATE ATTRIBUTES==================================================================
   private _siblings: string[] = []
   private _activated: boolean = false
+
+  // GETTERS / SETTERS ==================================================================
+
+  public get siblings(): string[] {return this._siblings}
+  public set siblings(value: string[]) {this._siblings = value}
+
+  public get activated(): boolean {return this._activated}
+  public set activated(value: boolean) {this._activated = value}
 }

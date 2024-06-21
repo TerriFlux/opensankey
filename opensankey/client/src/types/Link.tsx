@@ -156,7 +156,7 @@ export class Class_LinkElement extends Class_Element {
   *   }}
   * @memberof Class_LinkElement
   */
- protected _display: {
+  protected _display: {
    drawing_area: Class_DrawingArea,
    position: Type_ElementPosition,
    local: Class_LinkAttribute,
@@ -183,7 +183,7 @@ export class Class_LinkElement extends Class_Element {
       source.id + '-->' + target.id,
       menu_config,
       'g_links')
-      // Init other class attributes
+    // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
@@ -363,6 +363,7 @@ export class Class_LinkElement extends Class_Element {
       tag.removeReference(this)
     }
   }
+
   // PROTECTED METHODS ==================================================================
 
   /**

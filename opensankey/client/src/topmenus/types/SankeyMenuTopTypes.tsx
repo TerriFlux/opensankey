@@ -14,7 +14,6 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
  */
 export type AddAllDropDownFluxFType = (
   t:TFunction,
-  fluxTags: TagsCatalog,
   applicationData:applicationDataType,
   redrawNodeLinkLegend:()=>void,
   recomputeDisplayedElement:()=>void,

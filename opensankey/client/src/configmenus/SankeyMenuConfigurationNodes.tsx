@@ -18,6 +18,7 @@ import {
 
 /*************************************************************************************************/
 import {
+  AdditionalMenusType,
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
@@ -25,10 +26,6 @@ import {
   applicationContextType,
   applicationDataType,
   applicationStateType} from '../types/Types'
-import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
-import {
-  OpenSankeyMenuConfigurationNodesFType,
-} from './types/SankeyMenuConfigurationNodesTypes'
 
 /*************************************************************************************************/
 import {
@@ -48,64 +45,16 @@ type SankeyEditionTypes = {
   applicationContext: applicationContextType,
   applicationData: applicationDataType,
   applicationState: applicationStateType,
+  menu_configuration_nodes_attributes:JSX.Element,
   multi_selected_nodes: { current: SankeyNode[] },
-  menu_configuration_nodes: { [s: string]: JSX.Element },
   link_function: LinkFunctionTypes,
   ComponentUpdater: ComponentUpdaterType,
-  node_function: NodeFunctionTypes
+  node_function: NodeFunctionTypes,
+  additionalMenus:AdditionalMenusType
 }
 
 /*************************************************************************************************/
-export const OpenSankeyMenuConfigurationNodes: OpenSankeyMenuConfigurationNodesFType = (
-  applicationContext,
-  applicationData,
-  applicationState,
-  menu_configuration_nodes_attributes,
-  GetLinkValue: GetLinkValueFuncType,
-  node_function, link_function,
-  ComponentUpdater
-) => {
-  const { data } = applicationData
 
-  const ui: { [s: string]: JSX.Element } = {
-    'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
-      menu_to_wrap={menu_configuration_nodes_attributes}
-      for_modal={false}
-      idTab={'node_attr'}
-    />,
-    'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
-      applicationData={applicationData}
-      applicationContext={applicationContext}
-      applicationState={applicationState}
-      ComponentUpdater={ComponentUpdater}
-      menu_for_modal={false}
-    />
-  }
-
-  if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN')) {
-    ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      applicationState={applicationState}
-      node_function={node_function}
-      ComponentUpdater={ComponentUpdater}
-      menu_for_modal={false}
-    />
-  }
-
-  ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
-    applicationContext={applicationContext}
-    applicationData={applicationData}
-    applicationState={applicationState}
-    GetLinkValue={GetLinkValue}
-    node_function={node_function}
-    link_function={link_function}
-    ComponentUpdater={ComponentUpdater}
-    menu_for_modal={false}
-  />
-
-  return ui
-}
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
@@ -113,7 +62,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     applicationData,
     applicationState,
     multi_selected_nodes,
-    menu_configuration_nodes,
+    menu_configuration_nodes_attributes,
     link_function,
     ComponentUpdater,
     node_function
@@ -136,6 +85,41 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
   const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.name, 'value': d.id } })
+
+
+  const ui: { [s: string]: JSX.Element } = {
+    'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
+      menu_to_wrap={menu_configuration_nodes_attributes}
+      for_modal={false}
+      idTab={'node_attr'}
+    />,
+    'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
+      applicationData={applicationData}
+      applicationContext={applicationContext}
+      menu_for_modal={false}
+    />
+  }
+
+  if (Object.keys(new_data.drawing_area.sankey.node_taggs).length > 0 ) {
+    ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
+      applicationContext={applicationContext}
+      applicationData={applicationData}
+      applicationState={applicationState}
+      node_function={node_function}
+      ComponentUpdater={ComponentUpdater}
+      menu_for_modal={false}
+    />
+  }
+
+  ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
+    applicationContext={applicationContext}
+    applicationData={applicationData}
+    applicationState={applicationState}
+    node_function={node_function}
+    link_function={link_function}
+    ComponentUpdater={ComponentUpdater}
+    menu_for_modal={false}
+  />
 
   // Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
@@ -395,7 +379,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             <TabList>
               {
                 Object
-                  .keys(menu_configuration_nodes)
+                  .keys(ui)
                   .map((key) => {
                     return <Tab>
                       <Box layerStyle='submenuconfig_tab' >
@@ -409,7 +393,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             <TabPanels>
               {
                 Object
-                  .values(menu_configuration_nodes)
+                  .values(ui)
                   .map((c: ReactElementLike) => {
                     return c
                   })

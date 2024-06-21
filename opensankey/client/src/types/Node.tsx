@@ -205,6 +205,10 @@ export class Class_NodeElement extends Class_Element {
     return this._name
   }
 
+  public deRefTag(tag:Class_Tag){
+    delete this.tags[tag.id]
+  }
+
   /**
    * Get node value formatted as label
    * @readonly
@@ -957,7 +961,7 @@ export class Class_NodeElement extends Class_Element {
     const min_width = this.width
     const min_height = this.height
     const node_visible = this.shape_visible
-    const node_color = this.shape_color
+    const node_color = this.getShapeColorToUse()
     // Get drawing scale
     const scale = d3.scaleLinear()
       .range([0, 100])
@@ -1024,7 +1028,8 @@ export class Class_NodeElement extends Class_Element {
       let pos_x_label = width
       if (this.name_label_horiz === 'left') {
         pos_x_label = 0
-      } else if (this.name_label_horiz === 'middle') {
+      }
+      else if (this.name_label_horiz === 'middle') {
         pos_x_label = width / 2
       }
 
@@ -1032,7 +1037,8 @@ export class Class_NodeElement extends Class_Element {
       let text_anchor_label = 'start'
       if (this.name_label_horiz == 'left') {
         text_anchor_label = 'end'
-      } else if (this.name_label_horiz == 'middle') {
+      }
+      else if (this.name_label_horiz == 'middle') {
         text_anchor_label = 'middle'
       }
 
@@ -1131,6 +1137,21 @@ export class Class_NodeElement extends Class_Element {
       return 'none'
     }
     return 'inline'
+  }
+
+  private getShapeColorToUse(){
+    if (
+      (!this.shape_color_sustainable) &&
+      (this.drawing_area.sankey.nodesColorMap !== 'no_colormap') &&
+      (this.drawing_area.sankey.nodesColorMap in this.tags ) &&
+      (this.tags[this.drawing_area.sankey.nodesColorMap].length > 0)
+    ){
+      const list_tag_from_grp_to_use_color=this.tags[this.drawing_area.sankey.nodesColorMap]
+      return list_tag_from_grp_to_use_color[0].color
+    }
+    else{
+      return this.shape_color
+    }
   }
 
   // PUBLIC METHODS =====================================================================

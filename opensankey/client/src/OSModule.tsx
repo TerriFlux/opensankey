@@ -211,25 +211,25 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
   }
   const reDrawLegend=()=>{
-    DrawLegend(
-      applicationData,
-      applicationContext,
-      contextMenu,
-      GetLinkValue,
-      applicationState.legend_clicked,
-      ComponentUpdater,
-      reDrawLegend, //TODO why
-      resizeCanvas
-    )
-    //if(!windowSankey.SankeyToolsStatic){ TODO
-    const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-    g_legend.call( drag_legend(
-      resizeCanvas,
-      node_function,
-      link_function,
-      applicationData,
-      applicationState
-    ))
+    // DrawLegend(
+    //   applicationData,
+    //   applicationContext,
+    //   contextMenu,
+    //   GetLinkValue,
+    //   applicationState.legend_clicked,
+    //   ComponentUpdater,
+    //   reDrawLegend, //TODO why
+    //   resizeCanvas
+    // )
+    // //if(!windowSankey.SankeyToolsStatic){ TODO
+    // const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    // g_legend.call( drag_legend(
+    //   resizeCanvas,
+    //   node_function,
+    //   link_function,
+    //   applicationData,
+    //   applicationState
+    // ))
   }
   return {
     GetSankeyMinWidthAndHeight,
@@ -425,8 +425,6 @@ export const DrawAll : DrawAllType = (
     dict_hook_ref_setter_show_dialog_components
   )
 
-
-
   // Legend
   applicationDraw.reDrawLegend()
 }
@@ -551,7 +549,6 @@ export const moduleDialogs : module_dialogsType = (
       applicationContext={applicationContext}
       applicationData={applicationData}
       applicationState={applicationState}
-      GetLinkValue={GetLinkValue}
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
@@ -613,8 +610,6 @@ export const moduleDialogs : module_dialogsType = (
     <SankeyMenuConfigurationNodesTooltip
       applicationData={applicationData}
       applicationContext={applicationContext}
-      applicationState ={applicationState}
-      ComponentUpdater={ComponentUpdater}
       menu_for_modal = {true}
     />,
     contextMenu.pointer_pos,
@@ -791,10 +786,11 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   applicationDraw,
   ComponentUpdater,
   updateMenus,
-  menu_configuration_nodes,
   config_link_data,
   config_link_attr,
   contextMenu,
+  menu_configuration_nodes_attributes,
+  additionalMenus,
   ref_alt_key_pressed
 )=>{
   return OpenSankeyConfigurationsMenus(
@@ -817,9 +813,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='node_taggs'
-      elementNameProp='nodes'
-      node_function={node_function}
-      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
@@ -827,9 +820,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='flux_taggs'
-      elementNameProp='links'
-      node_function={node_function}
-      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
@@ -837,13 +827,10 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='data_taggs'
-      elementNameProp='links'
-      node_function={node_function}
-      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
-    menu_configuration_nodes,
+    menu_configuration_nodes_attributes,
     MenuConfigurationLinks(
       applicationData,
       applicationState,
@@ -859,7 +846,8 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     ComponentUpdater,
     contextMenu,
     ref_alt_key_pressed,
-    node_function
+    node_function,
+    additionalMenus
   )
 }
 

@@ -492,7 +492,6 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   applicationContext,
   applicationData,
   applicationState,
-  GetLinkValue,
   node_function,
   link_function,
   ComponentUpdater,
@@ -501,6 +500,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   const { t } = applicationContext
   const { data, display_nodes, display_links,new_data } = applicationData
   const { multi_selected_nodes, multi_selected_links } = applicationState
+  const {GetLinkValue}=link_function
   const [ link_io, set_link_io ] = useState('output')
   const [ link_pos, set_link_pos ] = useState('right')
   const [ tab_colored, set_tab_colored ] = useState(false)
