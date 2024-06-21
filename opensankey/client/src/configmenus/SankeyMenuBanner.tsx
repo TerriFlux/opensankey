@@ -823,17 +823,17 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <Col><FontAwesomeIcon icon={faSliders} /></Col>
     </Button>
   </OSTooltip>
-    {/* Popover to display the link-filter */}
-    <Overlay
-      key={'overlay-popover-link-filter'}
-      placement={'left'}
-      target={ref_btn_target_link_threshold}
-      rootClose
-      show={s_show_link_threshold}
-      onHide={sShowLinkThreshold.off}
-    >
-      {popover_link_visual_filter}
-    </Overlay></>
+  {/* Popover to display the link-filter */}
+  <Overlay
+    key={'overlay-popover-link-filter'}
+    placement={'left'}
+    target={ref_btn_target_link_threshold}
+    rootClose
+    show={s_show_link_threshold}
+    onHide={sShowLinkThreshold.off}
+  >
+    {popover_link_visual_filter}
+  </Overlay></>
 
 
   const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
@@ -846,17 +846,17 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
     </Button>
   </OSTooltip>
-    {/* Popover to display selector of datatype */}
-    <Overlay
-      key={'overlay-popover-data-type'}
-      placement={'left'}
-      target={ref_btn_data_type}
-      rootClose
-      show={s_show_data_type}
-      onHide={() => { sShowDataType.off() }}
-    >
-      {struc_data_reconciled}
-    </Overlay>
+  {/* Popover to display selector of datatype */}
+  <Overlay
+    key={'overlay-popover-data-type'}
+    placement={'left'}
+    target={ref_btn_data_type}
+    rootClose
+    show={s_show_data_type}
+    onHide={() => { sShowDataType.off() }}
+  >
+    {struc_data_reconciled}
+  </Overlay>
   </>
     :
     <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
@@ -981,11 +981,11 @@ export const stretchButtons: stretchButtonsFType = (
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
   </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-      <Button variant='dark' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
-        <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
-      </Button>
-    </OSTooltip></>
+  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+    <Button variant='dark' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
+      <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
+    </Button>
+  </OSTooltip></>
 }
 
 /**
