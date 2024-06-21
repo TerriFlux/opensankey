@@ -768,10 +768,11 @@ link_function:LinkFunctionTypes,
 applicationDraw:applicationDrawType,
 ComponentUpdater:ComponentUpdaterType,
 updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
-menu_configuration_nodes:{[s: string]: JSX.Element;},
 config_link_data:JSX.Element,
 config_link_attr:JSX.Element,
 contextMenu:contextMenuType,
+menu_configuration_nodes_attributes:JSX.Element,
+additionalMenus:AdditionalMenusType,
 ref_alt_key_pressed: React.MutableRefObject<boolean>
 )=>JSX.Element[]
 

@@ -551,7 +551,6 @@ export const moduleDialogs : module_dialogsType = (
       applicationContext={applicationContext}
       applicationData={applicationData}
       applicationState={applicationState}
-      GetLinkValue={GetLinkValue}
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
@@ -791,10 +790,11 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   applicationDraw,
   ComponentUpdater,
   updateMenus,
-  menu_configuration_nodes,
   config_link_data,
   config_link_attr,
   contextMenu,
+  menu_configuration_nodes_attributes,
+  additionalMenus,
   ref_alt_key_pressed
 )=>{
   return OpenSankeyConfigurationsMenus(
@@ -843,7 +843,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       ComponentUpdater={ComponentUpdater}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
-    menu_configuration_nodes,
+    menu_configuration_nodes_attributes,
     MenuConfigurationLinks(
       applicationData,
       applicationState,
@@ -859,7 +859,8 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     ComponentUpdater,
     contextMenu,
     ref_alt_key_pressed,
-    node_function
+    node_function,
+    additionalMenus
   )
 }
 

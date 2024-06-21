@@ -4,8 +4,8 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-import { Class_LinkElement } from "./Link"
-import { Class_NodeElement } from "./Node"
+import { Class_LinkElement } from './Link'
+import { Class_NodeElement } from './Node'
 
 // External imports
 
