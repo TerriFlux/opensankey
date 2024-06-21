@@ -150,9 +150,9 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
 
             <Box>
               <ButtonGroup isAttached>
-                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_secondary' : 'menuconfigpanel_option_button_light'} >Infos</Button>
-                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_del_button' : 'menuconfigpanel_option_button_light'} >Erreurs</Button>
-                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary' : 'menuconfigpanel_option_button_light'} >Debug</Button>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button_'} >Infos</Button>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
               </ButtonGroup>
             </Box>
             {processing ? (
