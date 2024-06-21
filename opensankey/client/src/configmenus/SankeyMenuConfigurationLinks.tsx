@@ -15,7 +15,6 @@ import {
 import { ReactElementLike } from 'prop-types'
 
 import {
-  SankeyLink,
   SankeyNode,
   applicationContextType,
   applicationDataType,
@@ -23,13 +22,7 @@ import {
 } from '../types/Types'
 import { SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
 import {
-  DefaultLink,
   DeleteLink,
-  ReturnValueLink,
-  AssignLinkValueToCorrectVar,
-  ReturnCorrectLinkAttributeValue,
-  AddNewNode,
-  windowSankey,
   OSTooltip
 } from './SankeyUtils'
 
@@ -38,7 +31,7 @@ import { selected_type } from '../topmenus/SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
-import { ValueSelectedParameter, NodeVisibleOnsSvg, SelectVisualyLinks, DeselectVisualyLinks } from '../draw/SankeyDrawFunction'
+import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 
 import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

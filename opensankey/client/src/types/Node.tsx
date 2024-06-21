@@ -724,7 +724,7 @@ export class Class_NodeElement extends Class_Element {
   public set min_height(_: number) { this._display.local.min_height = _ }
 
   public get color() {
-     if (this._display.local.color !== undefined) {
+    if (this._display.local.color !== undefined) {
       return this._display.local.color
     } else if (this._display.style.color !== undefined) {
       return this._display.style.color

@@ -1,8 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
 import {
-  SankeyNode,
-} from '../types/Types'
-import {
   Box,
   Checkbox,
   Select,
