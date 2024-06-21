@@ -9,16 +9,7 @@ import {
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 
-export type OpenSankeyMenuConfigurationNodesFType = (
-  applicationContext : applicationContextType,
-  applicationData : applicationDataType,
-  applicationState : applicationStateType,
-  menu_configuration_nodes_attributes:JSX.Element,
-  GetLinkValue:GetLinkValueFuncType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
-) => { [s: string]: JSX.Element; }
+
 
 export type tree_data_nodesFType=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
   filter_node_selector:string[]

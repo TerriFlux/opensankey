@@ -24,14 +24,11 @@ import {
   default_node_style,
 } from './Node'
 import {
-  Class_TagGroup,
-  Class_TagGroupNodeLevel
+  Class_TagGroup
 } from './Tag'
 
 
-// CLASS SANKEY *************************************************************************/**
- * Type of group of Class_TagGroup
- */
+// CLASS SANKEY *************************************************************************
 export type MacroTagGroupType = 'node_taggs' | 'flux_taggs' | 'data_taggs'
 
 /**
@@ -52,10 +49,10 @@ export class Class_Sankey {
   public drawing_area: Class_DrawingArea
 
   // Tags
-  public node_taggs: { [_: string]: Class_Tagg } = {}
-  public flux_taggs: { [_: string]: Class_Tagg } = {}
-  public data_taggs: { [_: string]: Class_Tagg } = {}
-  public level_taggs: { [_: string]: Class_Tagg } = {}
+  public node_taggs: { [_: string]: Class_TagGroup } = {}
+  public flux_taggs: { [_: string]: Class_TagGroup } = {}
+  public data_taggs: { [_: string]: Class_TagGroup } = {}
+  public level_taggs: { [_: string]: Class_TagGroup } = {}
 
   // TODO a implementer
   // left_shift: number,
@@ -86,7 +83,7 @@ export class Class_Sankey {
   private _links: { [_: string]: Class_LinkElement } = {}
 
   // Existing styles
-  private _link_styles: { [_: string]: Class_LinkStyle } = { 'default':  default_link_style  } // TODO create defaut style
+  private _link_styles: { [_: string]: Class_LinkStyle } = {'default': default_link_style } // TODO create defaut style
   private _node_styles: { [_: string]: Class_NodeStyle } = {'default': default_node_style }
 
   // PROTECTED ATTRIBUTES ===============================================================
@@ -111,10 +108,7 @@ export class Class_Sankey {
 
   ) {
     this.drawing_area = drawing_area
-    this.menu_config = menu_config
-    this.node_taggs={}
-    this.flux_taggs={}
-    this.data_taggs={}
+    this.menu_config=menu_config
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -126,34 +120,110 @@ export class Class_Sankey {
    * @readonly
    * @memberof Class_Sankey
    */
-  public drawing_area: Class_DrawingArea
+  public get nodes_dict() {
+    return this._nodes
+  }
 
-  // Tags
-  public node_taggs: { [_: string]: Class_Tagg } = {}
-  public flux_taggs: { [_: string]: Class_Tagg } = {}
-  public data_taggs: { [_: string]: Class_Tagg } = {}
-  public level_taggs: { [_: string]: Class_Tagg } = {}
+  /**
+   * Get all nodes as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get nodes_list() {
+    return Object.values(this._nodes)
+  }
 
-  // TODO a implementer
-  // left_shift: number,
-  // right_shift: number,
-  // legend_position: number[],
-  // display_legend_scale:boolean,
-  // legend_police:number,
-  // mask_legend:boolean,
-  // legend_bg_color:string,
-  // legend_bg_opacity:number,
-  // legend_bg_border:boolean,
-  // legend_show_dataTags:boolean,
-  // display_style : display_styleType,
-  // linkZIndex:string[]
-  // colorMap: string,
-  // nodesColorMap: string,
-  // linksColorMap: string,
-  // legend_width:number,
-  // node_label_separator:string
+  /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get nodes_list_sorted() {
+    return Object.entries(this._nodes)
+      .sort(([, a], [, b]) =>
+        (a.name > b.name) ?
+          1 :
+          ((b.name > a.name) ?
+            -1 :
+            0)
+      ).map(n => n[1])
+  }
+
+  // Links related ----------------------------------------------------------------------
+
+  /**
+   * Return a dict with all the links of the sankey
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get links_dict() {
+    return this._links
+  }
+
+  /**
+   * Return a list with all the links of the sankey
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get links_list() {
+    return Object.values(this._links)
+  }
+
+  /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get links_list_sorted() {
+    return Object.entries(this._links)
+      .sort(([, a], [, b]) =>
+        (a.id > b.id) ?
+          1 :
+          ((b.id > a.id) ?
+            -1 :
+            0)
+      ).map(link => link[1])
+  }
+
+  /**
+   * Return default style for nodes
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get default_node_style() {
+    return this._node_styles['default']
+  }
 
 
+
+  // Styles related ---------------------------------------------------------------------
+
+  /**
+   * Return the object containing all the style
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get node_styles_dict() {
+    return this._node_styles
+  }
+
+  /**
+   * Return the object containing all the style
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_dict() {
+    return this._link_styles
+  }
+
+  /**
+   * Return default link style
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get default_link_style() {
+    return this._link_styles['default']
+  }
 
   // PUBLIC METHODS =====================================================================
 
@@ -197,52 +267,6 @@ export class Class_Sankey {
     return null
   }
 
-  public getAllNodes() {
-    return this._nodes
-  }
-
-  public getListAllNodes() {
-    return Object.values(this._nodes)
-  }
-
-  /**
-   * Return an array of Class_Node sorted by name
-   *
-   * @return {Class_Node[]} 
-   * @memberof Class_Sankey
-   */
-  public getNameSortedNodes() {
-    return Object.entries(this._nodes)
-      .sort(([, a], [, b]) =>
-        (a.name > b.name) ?
-          1 :
-          ((b.name > a.name) ?
-            -1 :
-            0)
-      ).map(n => n[1])
-  }
-
-  /**
-  * Return an array of Class_Node selected
-  *
-  * @return {Class_Node[]} 
-  * @memberof Class_Sankey
-  */
-  public getAllNodesSelected() {
-
-    return Object.values(this._nodes)
-      .filter(n => n.isSelected())
-  }
-
-  /**
-   *  Reset all selected nodes
-   *
-   * @memberof Class_Sankey
-   */
-  public drawAllNodeSelected() {
-    this.getAllNodesSelected().forEach(n => n.reset())
-  }
-
   /**
    * Add a given node to Sankey
    * @param {Class_Node} node
@@ -259,37 +283,7 @@ export class Class_Sankey {
     delete this._nodes[node.id]
   }
 
-  // public setValueForNodeAttribute(node: Class_Node){
-  //   if(node.getLocalAttr()===undefined){
-  //     node.setLocalAttr({})
-  //   }
-  //   node.getLocalAttr()
-
-  // }
-
-  /**
- * Return the object containing all the style
- *
- * @return {*} 
- * @memberof Class_ApplicationData
- */
-  public getAllNodesStyle() {
-    return this.node_styles
-  }
-
-  /**
-     * Function that return the value of a key k of style keyOfStyle
-     *
-     * @param {keyof Type_Node_Style} k
-     * @return {*} 
-     * @memberof Class_ApplicationData
-     */
-  // public getStyleNodeValue(keyOfStyle:string,k:keyof Type_Node_Style){
-  //   return this.node_styles[keyOfStyle][k]
-  // }
-
-
-  // Links related METHODS ==================================================================
+  // Links related ----------------------------------------------------------------------
 
   /**
    * Add a given link to Sankey
@@ -305,7 +299,6 @@ export class Class_Sankey {
     return null
   }
 
-
   /**
    * Remove a given link from sankey
    * @param {Class_LinkElement} link
@@ -314,7 +307,6 @@ export class Class_Sankey {
   public removeLink(link: Class_LinkElement) {
     delete this._links[link.id]
   }
-
   /**
    * Create a TagGroup and add it to to specified group
    *
@@ -342,64 +334,4 @@ export class Class_Sankey {
   public getListGroupTagOf(type_group: MacroTagGroupType) {
     return Object.values(this[type_group])
   }
-
-  /**
-   * Create a TagGroup and add it to to specified group
-   *
-   * @return {*} 
-   * @memberof Class_Sankey
-   */
-  public CreateNewTagGroup(type_group: MacroTagGroupType) {
-    const key = Object.keys(this[type_group]).length
-    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
-    this[type_group][new_grp.id] = new_grp
-    return new_grp.id
-  }
-
-  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
-    delete this[type_group][key_to_delete]
-  }
-
-
-  /**
-   * Return list of group tag from specified group type
-   *
-   * @param {MacroTagGroupType} type_group
-   * @return {*} 
-   * @memberof Class_Sankey
-   */
-  public getListGroupTagOf(type_group: MacroTagGroupType) {
-    return Object.values(this[type_group])
-  }
-
-  /**
-   * Create a TagGroup and add it to to specified group
-   *
-   * @return {*} 
-   * @memberof Class_Sankey
-   */
-  public CreateNewTagGroup(type_group: MacroTagGroupType) {
-    const key = Object.keys(this[type_group]).length
-    const new_grp = new Class_TagGroup(type_group + key, 'Tag Group ' + key)
-    this[type_group][new_grp.id] = new_grp
-    return new_grp.id
-  }
-
-  public removeTagGroup(type_group: MacroTagGroupType, key_to_delete: string) {
-    delete this[type_group][key_to_delete]
-  }
-
-  /**
-   * Return list of group tag from specified group type
-   *
-   * @param {MacroTagGroupType} type_group
-   * @return {*} 
-   * @memberof Class_Sankey
-   */
-  public getListGroupTagOf(type_group: MacroTagGroupType) {
-    return Object.values(this[type_group])
-  }
-
-
-
 }

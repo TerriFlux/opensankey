@@ -29,8 +29,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const { new_data } = applicationData
   const { t } = applicationContext
   const [, setForceUpdate] = useBoolean()
-  const [tags_group_key, set_tags_group_key] = useState('')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey[elementTagNameProp]).length>0?Object.keys(new_data.drawing_area.sankey[elementTagNameProp])[0]:'')
   const [color_map,setColorMap]=useState('jet')
+
   /**
    * Current tag group modifying
    */
@@ -118,23 +119,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   // Delete a groupTag
   const handleDelGroupTag = (tags_group_key: string) => {
+    new_data.drawing_area.sankey[elementTagNameProp][tags_group_key].deleteRef()
 
-    let elements: Class_NodeElement[] | Class_LinkElement[]
-    if (elementNameProp === 'nodes') {
-      element = new_data.drawing_area.sankey.nodes_list
-    
-    const elementName = elementNameProp === 'nodes' ? 'nodes_list' : 'links_list'
-    // delete group_tag
-    new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tags_group_key)
-    Object.values(new_data.drawing_area.sankey[elementName]).forEach(
-      n => {
-        if (n.colorTag === tags_group_key) {
-          n.colorTag = ''
-        }
-        if (elementNameProp === 'nodes') {
-          delete n.tags[tags_group_key]
-        }
-      })
     if (list_group_tag.length > 0) {
       const lastElmt = list_group_tag[list_group_tag.length - 1].id
       set_tags_group_key(lastElmt)

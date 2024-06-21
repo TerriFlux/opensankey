@@ -49,14 +49,15 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
   menu_configuration_node_tags,
   menu_configuration_link_tags,
   menu_configuration_data_tags,
-  menu_configuration_nodes,
+  menu_configuration_nodes_attributes,
   menu_configuration_links,
   additional_accordion_edition_elements,
   link_function,
   ComponentUpdater,
   contextMenu,
   alt_key_pressed,
-  node_function
+  node_function,
+  additionalMenus
 
 ) => {
   const { data, new_data } = applicationData
@@ -131,10 +132,11 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
                 applicationData={applicationData}
                 applicationState={applicationState}
                 multi_selected_nodes={multi_selected_nodes}
-                menu_configuration_nodes={menu_configuration_nodes}
+                menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
                 node_function={node_function}
+                additionalMenus={additionalMenus}
               />
             </AccordionPanel>
           </AccordionItem>
