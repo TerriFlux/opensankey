@@ -54,12 +54,16 @@ export class Class_ApplicationData {
   menu_configuration: Class_MenuConfig
 
   // Display
-  show_structure: Type_Structure = 'reconciled'
+  private _show_structure: Type_Structure = 'reconciled'
+
   fit_screen: boolean
 
   // Limitations
   private _maximum_flux?: number
   private _minimum_flux?: number
+
+  private _filter_label: number = 0
+
 
 
   // OPTIONNAL ATTRIBUTES ===============================================================
@@ -104,21 +108,23 @@ export class Class_ApplicationData {
   // GETTERS / SETTERS ==================================================================
   // TODO getter / setters for application data
 
-  public get maximum_flux(): number | undefined {
-    return this._maximum_flux
-  }
+  public get maximum_flux(): number | undefined {return this._maximum_flux}
   public set maximum_flux(value: number | undefined) {
     if (value === undefined || value > 0) {
       this._maximum_flux = value
     }
   }
 
-  public get minimum_flux(): number | undefined {
-    return this._minimum_flux
-  }
+  public get minimum_flux(): number | undefined {return this._minimum_flux}
   public set minimum_flux(value: number | undefined) {
     if (value === undefined || value > 0) {
       this._minimum_flux = value
     }
   }
+
+  public get show_structure(): Type_Structure {return this._show_structure}
+  public set show_structure(value: Type_Structure) {this._show_structure = value}
+
+  public get filter_label(): number {return this._filter_label}
+  public set filter_label(value: number) {this._filter_label = value}
 }

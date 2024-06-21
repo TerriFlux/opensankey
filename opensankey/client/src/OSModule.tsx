@@ -211,25 +211,25 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
   }
   const reDrawLegend=()=>{
-    DrawLegend(
-      applicationData,
-      applicationContext,
-      contextMenu,
-      GetLinkValue,
-      applicationState.legend_clicked,
-      ComponentUpdater,
-      reDrawLegend, //TODO why
-      resizeCanvas
-    )
-    //if(!windowSankey.SankeyToolsStatic){ TODO
-    const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-    g_legend.call( drag_legend(
-      resizeCanvas,
-      node_function,
-      link_function,
-      applicationData,
-      applicationState
-    ))
+    // DrawLegend(
+    //   applicationData,
+    //   applicationContext,
+    //   contextMenu,
+    //   GetLinkValue,
+    //   applicationState.legend_clicked,
+    //   ComponentUpdater,
+    //   reDrawLegend, //TODO why
+    //   resizeCanvas
+    // )
+    // //if(!windowSankey.SankeyToolsStatic){ TODO
+    // const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    // g_legend.call( drag_legend(
+    //   resizeCanvas,
+    //   node_function,
+    //   link_function,
+    //   applicationData,
+    //   applicationState
+    // ))
   }
   return {
     GetSankeyMinWidthAndHeight,

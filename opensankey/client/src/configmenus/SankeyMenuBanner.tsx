@@ -11,12 +11,10 @@ import {
   FormControl,
   Overlay
 } from 'react-bootstrap'
-import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType } from '../types/Types'
+import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsGroup, applicationDataType } from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import {
-  FindMaxLinkValue,
   AdjustSankeyZone,
-  RecursionDataTag,
   OSTooltip
 } from './SankeyUtils'
 import * as d3 from 'd3'
@@ -51,7 +49,6 @@ import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
 import { Class_TagGroup, Class_TagGroupNodeLevel } from '../types/Tag'
 import { Class_Sankey } from '../types/Sankey'
-import { link } from 'fs'
 
 
 
@@ -94,24 +91,24 @@ export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
   node_function,
   link_function,
 ) => {
-  const { data } = applicationData
-  const { levelTags } = data
+  const { new_data } = applicationData
+  const { level_taggs } = new_data.drawing_area.sankey
 
-  if (Object.keys(levelTags).includes('Primaire')) {
+  if (Object.keys(level_taggs).includes('Primaire')) {
 
-    if (Object.keys(levelTags['Primaire'].tags).length < 2) {
+    if (Object.keys(level_taggs['Primaire'].tags).length < 2) {
       return <></>
     }
-    const tmp = Object.entries(levelTags['Primaire'].tags).filter(tag => tag[1].selected)
+    const tmp = Object.entries(level_taggs['Primaire'].tags).filter(tag => tag[1].selected)
     const selected = tmp.length > 0 ? tmp[0][0] : ''
     return (
       <>
         <tr>
           <td >
-            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            {<Form.Select style={{ width: '200px', color: 'black' }} key={level_taggs['Primaire'].name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
 
-              delete_local_aggregation(data)
-              // handleSimpleDropdown(evt, levelTags['Primaire'])
+              // delete_local_aggregation(data)
+              handleSimpleDropdown(evt, level_taggs['Primaire'])
               redrawSankeyWithSelectedTag(
                 applicationData,
                 GetSankeyMinWidthAndHeight,
@@ -119,7 +116,7 @@ export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
                 link_function
               )
             }}>{
-                Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag], i) => {
+                Object.entries(level_taggs['Primaire'].tags).map(([tag_key, tag], i) => {
                   return (<option key={i} value={tag_key}>{tag.name}</option>)
                 })}
             </Form.Select>}
@@ -162,11 +159,11 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
   const color = 'black'
   const { new_data } = applicationData
   const { t } = applicationContext
-  const { GetSankeyMinWidthAndHeight, reDrawLegend } = applicationDraw
+  const { GetSankeyMinWidthAndHeight } = applicationDraw
   const [forceUpdate, setForceUpdate] = useBoolean()
-  const {node_taggs,level_taggs,nodesColorMap,data_taggs,nodes_dict,flux_taggs}=new_data.drawing_area.sankey
+  const { node_taggs, level_taggs, nodesColorMap, data_taggs, nodes_dict, flux_taggs } = new_data.drawing_area.sankey
 
-  let banner_grouptag:[string,Class_TagGroup][] | [string,Class_TagGroupNodeLevel][] = Object.entries(node_taggs).filter(([, tags_group]) => tags_group.banner !== 'none')
+  let banner_grouptag: [string, Class_TagGroup][] | [string, Class_TagGroupNodeLevel][] = Object.entries(node_taggs).filter(([, tags_group]) => tags_group.banner !== 'none')
   if (level) {
     const nb_level_tag = Object.values(level_taggs).filter(tags_group => (Object.keys(tags_group.tags).length > 0)).length
     if (nb_level_tag > 1) {
@@ -177,9 +174,11 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
   }
 
   const redrawNodeLinkLegend = () => {
-    new_data.drawing_area.sankey.nodes_list.forEach(n=>n.reset())
-    new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
-    reDrawLegend()
+    new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
+    new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
+    console.log(new_data.drawing_area.legend)
+    new_data.drawing_area.legend.reset()
+
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
   const allDD = banner_grouptag.map(([, tags_group]) => {
@@ -223,10 +222,10 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
                     Object.values(node_taggs).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
 
-                    new_data.drawing_area.sankey.nodesColorMap  = 'no_colormap'
+                    new_data.drawing_area.sankey.nodesColorMap = 'no_colormap'
                     if (evt.target.checked) {
 
-                      new_data.drawing_area.sankey.nodesColorMap  = tags_selected[0]
+                      new_data.drawing_area.sankey.nodesColorMap = tags_selected[0]
                       node_taggs[tags_selected[0]].show_legend = true
                     }
                     redrawSankeyWithSelectedTag(applicationData, GetSankeyMinWidthAndHeight, node_function, link_function)
@@ -239,7 +238,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
         </FormGroup>)
     }
     else if (level && Object.values(tags_group.tags).length > 0) {
-      const tags_group_node_level=tags_group as Class_TagGroupNodeLevel
+      const tags_group_node_level = tags_group as Class_TagGroupNodeLevel
       if (Object.keys(tags_group_node_level.tags).length < 1) {
         return <></>
       }
@@ -340,10 +339,10 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
                     Object.values(node_taggs).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
 
-                    new_data.drawing_area.sankey.nodesColorMap  = 'no_colormap'
+                    new_data.drawing_area.sankey.nodesColorMap = 'no_colormap'
 
                     if (evt.target.checked) {
-                      new_data.drawing_area.sankey.nodesColorMap  = tags_selected[0]
+                      new_data.drawing_area.sankey.nodesColorMap = tags_selected[0]
                       node_taggs[tags_selected[0]].show_legend = true
                     }
                     setForceUpdate.toggle()
@@ -386,7 +385,7 @@ const handleSimpleDropdown = (
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: Class_TagGroup, sankey_data:Class_Sankey,
+const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: Class_TagGroup, sankey_data: Class_Sankey,
 ) => {
   const tab_sel = selected.map((d) => {
     return d.value
@@ -451,7 +450,8 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   applicationDraw
 }) => {
 
-  const { data, new_data } = applicationData
+  const { new_data } = applicationData
+  const { sankey } = new_data.drawing_area
   const { t } = applicationContext
   // const { ref_getter_mode_selection, ref_setter_mode_selection } = applicationState
   const { recomputeDisplayedElement } = node_function
@@ -473,10 +473,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   const [s_show_detail_level, sShowDetailLevel] = useBoolean()
   const [s_show_data_type, sShowDataType] = useBoolean()
 
-  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(data.show_structure))
+  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.show_structure))
   const [s_force_update, sforceUpdate] = useBoolean()
-  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(data.show_structure)
-  const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
+  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.show_structure)
+  const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
   // const [mode_selection, sModeSelection] = useState('ln')
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentToolbar.current = setForceUpdate.toggle
@@ -484,44 +484,47 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   // ref_getter_mode_selection.current = mode_selection
   // ref_setter_mode_selection.current = sModeSelection
 
-  const node_filter = Object.entries(new_data.drawing_area.sankey.node_taggs).filter(([, v]) => v.banner !== 'none' ).length > 0
+  const node_filter = Object.entries(new_data.drawing_area.sankey.node_taggs).filter(([, v]) => v.banner !== 'none').length > 0
   const flux_filter = Object.entries(new_data.drawing_area.sankey.flux_taggs).filter(([, v]) => v.banner !== 'none').length > 0
   const level_filter = Object.entries(new_data.drawing_area.sankey.level_taggs).length > 0
-  const DT_length = Object.keys(data.dataTags).length
+  const DT_length = Object.keys(new_data.drawing_area.sankey.data_taggs).length
   const opacity_advanced = !window.SankeyToolsStatic ? '0.3' : '0'
 
   /**
    * Change the mouse behavior
    */
-  const setSelectionMode = (val: string) => {
-    // sModeSelection(val)
-    //- trigger update
-    const tutu = filter
-    set_current_filter(filter + 1)
-    set_current_filter(tutu)
-    d3.selectAll(' .opensankey #svg #path-flux').remove()
-    if (val == 's' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)) {
-      data.nodes = Object.fromEntries(Object.entries(data.nodes).filter(n => n[1].name != 'node_tmp'))
-      first_selected_node.current = undefined
-    }
-  }
+  // const setSelectionMode = (val: string) => {
+  //   // sModeSelection(val)
+  //   //- trigger update
+  //   const tutu = filter
+  //   set_current_filter(filter + 1)
+  //   set_current_filter(tutu)
+  //   d3.selectAll(' .opensankey #svg #path-flux').remove()
+  //   if (val == 's' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)) {
+  //     data.nodes = Object.fromEntries(Object.entries(data.nodes).filter(n => n[1].name != 'node_tmp'))
+  //     first_selected_node.current = undefined
+  //   }
+  // }
 
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   let max_link_value = 0
-  Object.values(data.links).forEach(link => {
-    const new_max_link_value = FindMaxLinkValue(
-      max_link_value,
-      link.value
-    )
-    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
-  })
+  // TODO re implement it with new value class
+
+  // Object.values(sankey.links_dict).forEach(link => {
+  //   const new_max_link_value = FindMaxLinkValue(
+  //     max_link_value,
+  //     link.value
+  //   )
+  //   max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
+  // })
   max_link_value += 1
 
   const redrawNodeLinkLegend = () => {
     node_function.RedrawNodes(Object.values(applicationData.display_nodes))
     link_function.RedrawLinks(Object.values(applicationData.display_links))
-    reDrawLegend()
+    new_data.drawing_area.legend.reset()
+
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
 
@@ -589,9 +592,9 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
             <Form.Range
               min="0"
               max={max_link_value}
-              value={data.display_style.filter_label}
+              value={new_data.filter_label}
               onChange={evt => {
-                applicationData.data.display_style.filter_label = +evt.target.value
+                applicationData.new_data.filter_label = +evt.target.value
                 setForceUpdate.toggle()
                 redrawNodeLinkLegend()
               }}
@@ -603,13 +606,13 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
               type='number'
               min={0}
               max={max_link_value}
-              value={data.display_style.filter_label}
+              value={new_data.filter_label}
               onChange={(evt) => {
                 let tmp = +evt.target.value
                 if (tmp > max_link_value) {
                   tmp = max_link_value
                 }
-                applicationData.data.display_style.filter_label = tmp
+                applicationData.new_data.filter_label = tmp
                 setForceUpdate.toggle()
                 redrawNodeLinkLegend()
               }}
@@ -631,7 +634,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
         <Form.Select
           value={s_type_value}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            data.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
+            new_data.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
             sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled')
             if (evt.target.value === 'reconciled') {
               sIsDataTypeReconcilied(true)
@@ -650,9 +653,9 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <Form.Group style={{ display: s_is_data_type_reconcilied ? '' : 'none' }} as={Row}>
         <Form.Label>{t('Banner.indetermined_value')}</Form.Label>
         <Form.Select
-          value={data.show_structure}
+          value={new_data.show_structure}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            data.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+            new_data.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
             setForceUpdate.toggle()
             redrawNodeLinkLegend()
           }}>
@@ -706,25 +709,18 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
           <FormCheck
             type='switch'
             style={{ marginLeft: '-2em' }}
-            checked={(DT_length > 0) ? (Object.values(data.dataTags).slice(DT_length - 1, DT_length)[0].show_legend) : false}
+            checked={(DT_length > 0) ? (Object.values(new_data.drawing_area.sankey.data_taggs).slice(DT_length - 1, DT_length)[0].show_legend) : false}
             onChange={evt => {
               //Déselecitonne tous les type de tag
-              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(sankey.flux_taggs).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(new_data.drawing_area.sankey.data_taggs).forEach(tags_group => tags_group.show_legend = false)
 
-              Object.values(data.links).forEach(el => {
-                el.colorTag = 'no_colormap'
-              })
-
-              data.linksColorMap = 'no_colormap'
+              sankey.linksColorMap = 'no_colormap'
 
               //Met le dernier dataTag en tant que couleur a suivre pour les flux
               if (evt.target.checked) {
-                Object.values(data.links).forEach(el => {
-                  el.colorTag = 'no_colormap'
-                })
-                data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(DT_length - 1, DT_length)[0]
-                Object.values(data.dataTags).slice(DT_length - 1, DT_length)[0].show_legend = evt.target.checked
+                sankey.linksColorMap = 'dataTags_' + Object.keys(new_data.drawing_area.sankey.data_taggs).slice(DT_length - 1, DT_length)[0]
+                Object.values(new_data.drawing_area.sankey.data_taggs).slice(DT_length - 1, DT_length)[0].show_legend = evt.target.checked
               }
 
               setForceUpdate.toggle()
@@ -741,7 +737,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{ marginLeft: '5px' }}>
       {legend_filter}
-      {AddAllDropDownFlux(t, data.fluxTags, applicationData, redrawNodeLinkLegend, recomputeDisplayedElement, node_function, link_function, GetSankeyMinWidthAndHeight)}
+      {AddAllDropDownFlux(t, applicationData, redrawNodeLinkLegend, recomputeDisplayedElement, node_function, link_function, GetSankeyMinWidthAndHeight)}
     </Popover.Body>
   </Popover>
 
@@ -827,17 +823,17 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <Col><FontAwesomeIcon icon={faSliders} /></Col>
     </Button>
   </OSTooltip>
-  {/* Popover to display the link-filter */}
-  <Overlay
-    key={'overlay-popover-link-filter'}
-    placement={'left'}
-    target={ref_btn_target_link_threshold}
-    rootClose
-    show={s_show_link_threshold}
-    onHide={ sShowLinkThreshold.off }
-  >
-    {popover_link_visual_filter}
-  </Overlay></>
+    {/* Popover to display the link-filter */}
+    <Overlay
+      key={'overlay-popover-link-filter'}
+      placement={'left'}
+      target={ref_btn_target_link_threshold}
+      rootClose
+      show={s_show_link_threshold}
+      onHide={sShowLinkThreshold.off}
+    >
+      {popover_link_visual_filter}
+    </Overlay></>
 
 
   const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
@@ -850,22 +846,22 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
     </Button>
   </OSTooltip>
-  {/* Popover to display selector of datatype */}
-  <Overlay
-    key={'overlay-popover-data-type'}
-    placement={'left'}
-    target={ref_btn_data_type}
-    rootClose
-    show={s_show_data_type}
-    onHide={() => { sShowDataType.off() }}
-  >
-    {struc_data_reconciled}
-  </Overlay>
+    {/* Popover to display selector of datatype */}
+    <Overlay
+      key={'overlay-popover-data-type'}
+      placement={'left'}
+      target={ref_btn_data_type}
+      rootClose
+      show={s_show_data_type}
+      onHide={() => { sShowDataType.off() }}
+    >
+      {struc_data_reconciled}
+    </Overlay>
   </>
     :
     <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
       <Button variant={'success'} onClick={() => {
-        data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+        new_data.show_structure = new_data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
         setForceUpdate.toggle()
         redrawNodeLinkLegend()
 
@@ -889,7 +885,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       target={ref_btn_node_tag_filter}
       rootClose
       show={s_show_node_tag_filter}
-      onHide={sShowNodeTagFilter.off }
+      onHide={sShowNodeTagFilter.off}
     >
       {filter_color_node}
     </Overlay>
@@ -912,14 +908,14 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       target={ref_btn_link_tag_filter}
       rootClose
       show={s_show_link_tag_filter}
-      onHide={sShowLinkTagFilter.off }
+      onHide={sShowLinkTagFilter.off}
     >
       {filter_color_link}
     </Overlay></>
     :
     <></>
 
-  const btn_show_data_filter = (Object.values(data.dataTags).length > 0) ? <>
+  const btn_show_data_filter = (Object.values(new_data.drawing_area.sankey.data_taggs).length > 0) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_data_tag_filter')}>
       <Button ref={ref_btn_data_tag_filter} size='sm' style={{ color: '#fff', background: '#B13F06', borderColor: '#B13F06' }}
         onClick={sShowDataTagFilter.toggle}
@@ -933,7 +929,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       target={ref_btn_data_tag_filter}
       rootClose
       show={s_show_data_tag_filter}
-      onHide={sShowDataTagFilter.off }
+      onHide={sShowDataTagFilter.off}
     >
       {filter_data}
     </Overlay></>
@@ -985,11 +981,11 @@ export const stretchButtons: stretchButtonsFType = (
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='dark' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
-      <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='dark' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
+        <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
+      </Button>
+    </OSTooltip></>
 }
 
 /**
@@ -997,7 +993,6 @@ export const stretchButtons: stretchButtonsFType = (
  */
 export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
   t: TFunction,
-  fluxTags: TagsCatalog,
   applicationData,
   redrawNodeLinkLegend,
   recomputeDisplayedElement,
@@ -1007,11 +1002,11 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
 ) => {
   const [, setForceUpdate] = useBoolean()
   const { new_data } = applicationData
-  const {node_taggs,level_taggs,linksColorMap,data_taggs,links_dict,flux_taggs}=new_data.drawing_area.sankey
+  const { node_taggs, level_taggs, linksColorMap, data_taggs, links_dict, flux_taggs } = new_data.drawing_area.sankey
 
   const banner_grouptag = Object.values(flux_taggs).filter(tags_group => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(tags_group => {
-    const the_tags_group = tags_group 
+    const the_tags_group = tags_group
     const tags_selected = Object.entries(flux_taggs).filter((k) => { return k[1] == the_tags_group })[0]
 
     if (the_tags_group.banner == 'one') {
@@ -1048,15 +1043,10 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
                     Object.values(flux_taggs).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
 
-                    // Object.values(data.links).forEach(el => {
-                    //   el.colorTag = 'no_colormap'
-                    // })
                     new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
 
                     if (evt.target.checked) {
-                      // Object.values(links_dict).forEach(el => {
-                      //   el.colorTag = tags_selected[0]
-                      // })
+
                       new_data.drawing_area.sankey.linksColorMap = tags_selected[0]
                       flux_taggs[tags_selected[0]].show_legend = true
                     }
@@ -1117,14 +1107,8 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
                     Object.values(flux_taggs).forEach(tags_group => { tags_group.show_legend = false })
                     Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
 
-                    // Object.values(data.links).forEach(el => {
-                    //   el.colorTag = 'no_colormap'
-                    // })
                     new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
                     if (evt.target.checked) {
-                      // Object.values(data['links']).forEach(el => {
-                      //   el.colorTag = tags_selected[0]
-                      // })
                       new_data.drawing_area.sankey.linksColorMap = tags_selected[0]
                       flux_taggs[tags_selected[0]].show_legend = true
                     }
@@ -1151,7 +1135,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
   ComponentUpdater }
 ) => {
   const { new_data } = applicationData
-  const {node_taggs,level_taggs,linksColorMap,data_taggs,nodes_dict,links_dict,flux_taggs}=new_data.drawing_area.sankey
+  const { node_taggs, level_taggs, linksColorMap, data_taggs, nodes_dict, links_dict, flux_taggs } = new_data.drawing_area.sankey
 
   const [forceUpdate, setForceUpdate] = useBoolean()
   const banner_grouptag = Object.entries(data_taggs).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
@@ -1279,7 +1263,7 @@ export const redrawSankeyWithSelectedTag = (
   node_function: NodeFunctionTypes,
   link_function: LinkFunctionTypes
 ) => {
-  const { data } = applicationData
+  const { data, new_data } = applicationData
   const old_displayed_nodes = Object.values(applicationData.display_nodes).map(n => n.idNode)
   const old_displayed_links = Object.values(applicationData.display_links).map(l => l.idLink)
 
@@ -1298,6 +1282,8 @@ export const redrawSankeyWithSelectedTag = (
   const ll = new_displayed_links.filter(lid => !old_displayed_links.includes(lid))
   node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   link_function.RedrawLinks(Object.values(applicationData.display_links))
+  new_data.drawing_area.legend.reset()
+
   if (ll.length != 0) {
     link_function.CreateLinksOnSVG(ll.map(id => data.links[id]))
     // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links

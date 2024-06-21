@@ -9,9 +9,9 @@ import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigu
 import { TableContainer, Table, Th, Thead, Tr, Button, Tbody, Td, Box, Input, InputGroup, Select, useBoolean } from '@chakra-ui/react'
 import { tag_banner_type } from '../types/Tag'
 const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
-  d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
-  d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
-  d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
+d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
+d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
+d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
 
 const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({
   applicationContext,
@@ -21,11 +21,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   reDrawLegend
 }) => {
   const { new_data } = applicationData
-  const {sankey}=new_data.drawing_area
+  const { sankey } = new_data.drawing_area
   const { t } = applicationContext
   const [, setForceUpdate] = useBoolean()
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey[elementTagNameProp]).length>0?Object.keys(new_data.drawing_area.sankey[elementTagNameProp])[0]:'')
-  const [color_map,setColorMap]=useState('jet')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey[elementTagNameProp]).length > 0 ? Object.keys(new_data.drawing_area.sankey[elementTagNameProp])[0] : '')
+  const [color_map, setColorMap] = useState('jet')
 
   /**
    * Current tag group modifying
@@ -53,12 +53,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const redrawGenereal = () => {
     // node_function.RedrawNodes(Object.values(applicationData.display_nodes))
     // link_function.RedrawLinks(Object.values(applicationData.display_links))
-    sankey.nodes_list.forEach(n=>n.reset())
-    sankey.links_list.forEach(l=>l.reset())
+    sankey.nodes_list.forEach(n => n.reset())
+    sankey.links_list.forEach(l => l.reset())
+    new_data.drawing_area.legend.reset()
     new_data.menu_configuration.updateComponentToolbar.current()
 
     updateComponenSaveInCache.current(false)
-    reDrawLegend()
   }
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
@@ -100,6 +100,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // New
     const grp_key = new_data.drawing_area.sankey.CreateNewTagGroup(elementTagNameProp)
     set_tags_group_key(grp_key)
+    redrawGenereal()
+
     setForceUpdate.toggle()
 
   }
