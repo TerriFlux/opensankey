@@ -746,10 +746,10 @@ export const convert_nodes:convert_nodesFuncType = (
       n.inputLinksId = []
       n.outputLinksId = [];
       (n_depreciated.input_links as number[]).forEach(link_idx => {
-        n.inputLinksId.push(data.links['link' + link_idx].idLink)
+        n.inputLinksId.push('link' + link_idx)
       });
       (n_depreciated.output_links as number[]).forEach(link_idx => {
-        n.outputLinksId.push(data.links['link' + link_idx].idLink)
+        n.outputLinksId.push('link' + link_idx)
       })
       delete n_depreciated.output_links
       delete n_depreciated.input_links
