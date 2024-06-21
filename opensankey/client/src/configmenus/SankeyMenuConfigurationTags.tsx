@@ -305,7 +305,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                   {/* Supprimer une etiquette  */}
                   <Td >
                     <OSTooltip label={t('Tags.tooltips.rm')}>
-                      <Button size={'sm'}
+                      <Button
                         variant='menuconfigpanel_del_button_in_table'
                         value='-' onClick={() => { handleDelTag(tag_key) }}>
                         <FaMinus />
