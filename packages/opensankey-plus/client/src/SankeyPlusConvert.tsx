@@ -227,13 +227,13 @@ export const OSPDiagramSelector : OSPDiagramSelectorFType = (
         <Box layerStyle='options_2cols'>
 
           <Button
-            variant={s_diagram_type==='File'?'menuconfigpanel_option_button_secondary':'menuconfigpanel_option_button_light'}
+            variant={s_diagram_type==='File'?'menuconfigpanel_option_button_secondary_activated':'menuconfigpanel_option_button_secondary'}
             onClick={
               () => {
                 sDiagramType('File')
               }}>{t('Menu.other_file')}</Button>
           <Button
-            variant={s_diagram_type==='View'?'menuconfigpanel_option_button_secondary':'menuconfigpanel_option_button_light'}
+            variant={s_diagram_type==='View'?'menuconfigpanel_option_button_secondary_activated':'menuconfigpanel_option_button_secondary'}
             onClick={
               () => {
                 sDiagramType('View')
@@ -356,7 +356,7 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
       <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.freeLabels')}</Box>
       <Box layerStyle='options_4cols' >
         <Button
-          variant={dataVarToUpdate.current.includes('freeLabels')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+          variant={dataVarToUpdate.current.includes('freeLabels')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
           onClick={() => {
             if(!dataVarToUpdate.current.includes('freeLabels')){
               dataVarToUpdate.current.push('freeLabels')
@@ -376,7 +376,7 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
         <Box layerStyle='options_4cols' >
           <Button
             disabled={!is_current_data_master}
-            variant={dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+            variant={dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
             onClick={() => {
               if(!dataVarToUpdate.current.includes('Views')){
                 dataVarToUpdate.current.push('Views')
@@ -397,7 +397,7 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
         <Box layerStyle='options_4cols' >
           <Button
             disabled={!is_current_data_master}
-            variant={dataVarToUpdate.current.includes('icon_catalog')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button_light'}
+            variant={dataVarToUpdate.current.includes('icon_catalog')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
             onClick={() => {
               if(!dataVarToUpdate.current.includes('icon_catalog')){
                 dataVarToUpdate.current.push('icon_catalog')
