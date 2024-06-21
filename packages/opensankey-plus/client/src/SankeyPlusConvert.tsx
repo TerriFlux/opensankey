@@ -94,27 +94,29 @@ export const plus_convert_data : plus_convert_dataFType = (
 
       if(l.name!==undefined){
         l.content=l.name
-        if (l.font_uppercase) {
-          l.content = l.content.toUpperCase()
-        }
-        if (l.font_size === 40) {
-          l.content=l.content?'<h3>'+l.content+'</h3>':''
-        } else if (l.font_size === 30) {
-          l.content=l.content?'<h4>'+l.content+'</h4>':''
-        } else {
-          l.content=l.content?l.content:''
-        }
-        if (l.font_weight) {
-          l.content=l.content?'<strong>'+l.content+'</strong>':''
-        }
-        if (l.position_horiz === 'gauche' ) {
-          l.content=l.content?'<p class="ql-align-left">'+l.content+'</p>':''
-        }
-        if (l.position_horiz === 'centre' ) {
-          l.content=l.content?'<p class="ql-align-center">'+l.content+'</p>':''
-        }
-        if (l.position_horiz === 'droite' ) {
-          l.content=l.content?'<p class="ql-align-right">'+l.content+'</p>':''
+        if (!l.content.includes('<p')) {
+          if (l.font_uppercase && !l.content.includes('ql-align-center')) {
+            l.content = l.content.toUpperCase()
+          }
+          if (l.font_size === 40) {
+            l.content=l.content?'<h3>'+l.content+'</h3>':''
+          } else if (l.font_size === 30) {
+            l.content=l.content?'<h4>'+l.content+'</h4>':''
+          } else {
+            l.content=l.content?l.content:''
+          }
+          if (l.font_weight) {
+            l.content=l.content?'<strong>'+l.content+'</strong>':''
+          }
+          if (l.position_horiz === 'gauche' ) {
+            l.content=l.content?'<p class="ql-align-left">'+l.content+'</p>':''
+          }
+          if (l.position_horiz === 'centre' ) {
+            l.content=l.content?'<p class="ql-align-center">'+l.content+'</p>':''
+          }
+          if (l.position_horiz === 'droite' ) {
+            l.content=l.content?'<p class="ql-align-right">'+l.content+'</p>':''
+          }
         }
         // if (l.position_vert === 'haut' ) {
         //  not possible to convert
