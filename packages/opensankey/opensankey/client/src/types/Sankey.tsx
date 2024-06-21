@@ -199,8 +199,6 @@ export class Class_Sankey {
     return this._node_styles['default']
   }
 
-
-
   // Styles related ---------------------------------------------------------------------
 
   /**
