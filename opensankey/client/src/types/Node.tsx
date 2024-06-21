@@ -669,11 +669,9 @@ export class Class_NodeElement extends Class_Element {
   }
 
   private NodeColorToUse(){
-    if(!this.colorSustainable && this.drawing_area.sankey.nodesColorMap!=='no_colormap' && this.tags[this.drawing_area.sankey.nodesColorMap].length>0){
-      // const grp_tag_color_to_use=this.drawing_area.sankey.node_taggs[this.drawing_area.sankey.nodesColorMap]
+    if(!this.colorSustainable && this.drawing_area.sankey.nodesColorMap!=='no_colormap' && this.drawing_area.sankey.nodesColorMap in  this.tags&&  this.tags[this.drawing_area.sankey.nodesColorMap].length>0){
       const list_tag_from_grp_to_use_color=this.tags[this.drawing_area.sankey.nodesColorMap]
       return list_tag_from_grp_to_use_color[0].color
-      
     }else{
       return this.color
     }

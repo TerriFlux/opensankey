@@ -521,8 +521,8 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   max_link_value += 1
 
   const redrawNodeLinkLegend = () => {
-    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-    link_function.RedrawLinks(Object.values(applicationData.display_links))
+    new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
+    new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
     new_data.drawing_area.legend.reset()
 
     ComponentUpdater.updateComponenSaveInCache.current(false)
@@ -1282,6 +1282,9 @@ export const redrawSankeyWithSelectedTag = (
   const ll = new_displayed_links.filter(lid => !old_displayed_links.includes(lid))
   node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   link_function.RedrawLinks(Object.values(applicationData.display_links))
+  
+  new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
+  new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
   new_data.drawing_area.legend.reset()
 
   if (ll.length != 0) {
