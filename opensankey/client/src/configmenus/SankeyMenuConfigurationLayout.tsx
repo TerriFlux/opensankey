@@ -142,8 +142,8 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           value_attr={new_data.drawing_area.scale}
           function_onCahnge={(_, value) => new_data.drawing_area.scale = value}
           function_onBlur={() => {
-            new_data.drawing_area.sankey.getListAllNodes().forEach(n=>n.reset())
-            new_data.drawing_area.sankey.getListAllLinks().forEach(l=>l.reset())
+            new_data.drawing_area.selected_nodes_list.forEach(n=>n.reset())
+            new_data.drawing_area.selected_links_list.forEach(l=>l.reset())
             // reDrawLegend()
             // RedrawNodes(Object.values(applicationData.display_nodes))
             // RedrawLinks(Object.values(applicationData.display_links))
