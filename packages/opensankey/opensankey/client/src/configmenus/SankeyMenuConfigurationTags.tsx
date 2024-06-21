@@ -3,13 +3,11 @@ import React, { useState, FunctionComponent } from 'react'
 import { FaPlus, FaMinus, FaPalette, FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
-import { AddTag, AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp, OSTooltip } from './SankeyUtils'
+import { GetRandomInt, OSTooltip } from './SankeyUtils'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
 import { TableContainer, Table, Th, Thead, Tr, Button, Tbody, Td, Box, Input, InputGroup, Select, useBoolean } from '@chakra-ui/react'
 import { tag_banner_type } from '../types/Tag'
-import { Class_NodeElement } from '../types/Node'
-import { Class_LinkElement } from '../types/Link'
 const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
   d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
   d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
@@ -19,17 +17,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   applicationContext,
   applicationData,
   elementTagNameProp,
-  elementNameProp,
-  node_function,
-  link_function,
   ComponentUpdater,
   reDrawLegend
 }) => {
   const { new_data } = applicationData
+  const { sankey } = new_data.drawing_area
   const { t } = applicationContext
   const [, setForceUpdate] = useBoolean()
-  const [tags_group_key, set_tags_group_key] = useState('')
-  const [color_map,setColorMap]=useState('jet')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey[elementTagNameProp]).length > 0 ? Object.keys(new_data.drawing_area.sankey[elementTagNameProp])[0] : '')
+  const [color_map, setColorMap] = useState('jet')
+
   /**
    * Current tag group modifying
    */
@@ -54,12 +51,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   ]
 
   const redrawGenereal = () => {
-    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-    link_function.RedrawLinks(Object.values(applicationData.display_links))
+    // node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+    // link_function.RedrawLinks(Object.values(applicationData.display_links))
+    sankey.nodes_list.forEach(n => n.reset())
+    sankey.links_list.forEach(l => l.reset())
+    new_data.drawing_area.legend.reset()
     new_data.menu_configuration.updateComponentToolbar.current()
 
     updateComponenSaveInCache.current(false)
-    reDrawLegend()
   }
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
@@ -116,16 +115,19 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   // Delete a groupTag
   const handleDelGroupTag = (tags_group_key: string) => {
-
     // delete group_tag
     new_data.drawing_area.sankey.removeTagGroupWithId(elementTagNameProp, tags_group_key)
+
+    if (list_group_tag.length > 0) {
+      const lastElmt = list_group_tag[list_group_tag.length - 1].id
+      set_tags_group_key(lastElmt)
+    }
 
     // If we delete a group data tag then we have to reset links value since the link value tree structure change drastically
     // if (elementTagNameProp === 'data_taggs') {
     //   resetLinkValueAfterDeleteDTGrp(data)
     // }
     setForceUpdate.toggle()
-    redrawGenereal()
   }
 
   // Switch the position of the groupTag with the one before him on the list of grouptag
