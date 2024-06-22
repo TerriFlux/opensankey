@@ -1,6 +1,6 @@
 import { SankeyData, SankeyLink, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyle,SankeyLinkAttrLocal, SankeyNodeAttrLocal} from '../types/Types'
 import colormap from 'colormap'
-import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
+import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle, AssignNodeLocalAttribute} from './SankeyUtils'
 
 import { ConvertDataFuncType, complete_sankey_dataFunctType, compute_flux_maxFType, compute_initial_colorsFType, convert_booleanFType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from './types/SankeyConvertTypes'
 import {
@@ -893,14 +893,26 @@ export const convert_nodes:convert_nodesFuncType = (
       }
     }
 
-    if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
+    if (n.name.includes('(I') && n.outputLinksId.length > 0 ) {
+      n.tags['Type de noeud'] = ['echange']
       if (data_to_convert.display_style.trade_close !== undefined) {
         n_depreciated.trade_close = data_to_convert.display_style.trade_close
       }
-    } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
+      n.position = 'relative'
+      n.x = data_to_convert.trade_close_hspace as number
+      n.y = data_to_convert.trade_close_vspace as number
+      AssignNodeLocalAttribute(n,'label_visible', false)
+      AssignNodeLocalAttribute(n,'shape_visible', false)
+    } else if (n.name.includes('(E') && !n.name.includes('(EA)') ) {
+      n.tags['Type de noeud'] = ['echange']
       if (data_to_convert.display_style.trade_close !== undefined) {
         n_depreciated.trade_close = data_to_convert.display_style.trade_close
       }
+      n.position = 'relative'
+      n.x = data_to_convert.trade_close_hspace as number
+      n.y = data_to_convert.trade_close_vspace as number
+      AssignNodeLocalAttribute(n,'label_visible', false)
+      AssignNodeLocalAttribute(n,'shape_visible', false)
     }
     if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
       n.position = 'relative'
@@ -1178,9 +1190,10 @@ export const convert_links:convert_linksFuncType = (
         AssignLinkLocalAttribute(l,'orientation','hv')
       }
     }
-    if ('frozen' in l) {
-      delete l_convert.frozen
-    }
+    // if ('frozen' in l) {
+    //   l.
+    //   delete l_convert.frozen
+    // }
     if ('link_reverse' in l) {
       delete l_convert.link_reverse
     }
@@ -1529,9 +1542,21 @@ export const convert_data:ConvertDataFuncType = (
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
   }
+
+
   convert_tags(data)
   convert_nodes(data)
   convert_links(data)
+
+  if (data_to_convert.node_width ) {
+   Object.values(data.nodes).forEach(n=>{
+    n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
+    n.local.node_width=(data_to_convert.node_width)
+   }) 
+  }
+  if (data.version === "0.3") {
+    data.style_node['default'].node_height = 3
+  }
 
   if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
     data.linkZIndex=Object.values(data.links).map(l=>l.idLink)
