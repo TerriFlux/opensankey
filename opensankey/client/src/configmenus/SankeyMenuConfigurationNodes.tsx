@@ -170,7 +170,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         {/* Position custom pour MultiSelect */}
         <Box
           height='2rem'
-          width='100%'
+          width='14.75rem'
         >
           <MultiSelect
             options={INITIAL_OPTIONS}
