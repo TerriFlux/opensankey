@@ -1277,7 +1277,11 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
  *  - if we add a new tag to a group leaf (in that case grp2) we just add a new value possible :
  *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}, tag2_grp2:{value:'',display_value:'',...}}}
  */
-const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>{
+const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(
+  link_value:SankeyLinkValueDict,
+  index_of_grp_tag:number,
+  current_index:number
+)=>{
   if(current_index<index_of_grp_tag){
     const next_link_value_depth=Object.values(link_value)[0] as SankeyLinkValueDict
     return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1)
@@ -1293,7 +1297,9 @@ const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagTyp
  */
 const addNewSubTreeValueToLink=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number,new_value:[string, SankeyLinkValueDict | SankeyLinkValue])=>{
   if(current_index<index_of_grp_tag){
-    Object.values(link_value).forEach(lv=>addNewSubTreeValueToLink(lv as SankeyLinkValueDict,index_of_grp_tag,current_index+1,new_value))
+    Object.values(link_value).forEach(lv=>
+      addNewSubTreeValueToLink(lv as SankeyLinkValueDict,index_of_grp_tag,current_index+1,new_value)
+    )
   }else{
     link_value[new_value[0]]=JSON.parse(JSON.stringify(new_value[1]))
   }
