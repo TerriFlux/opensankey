@@ -384,7 +384,7 @@ export const menutop_button_goto_dashboard = defineStyle({
   alignSelf: 'center',
   justifySelf: 'center',
   height:'3rem',
-  width: '4rem',
+  width: '10rem',
   border: 'solid 1px ',
   borderRadius: '6px',
   borderColor: 'primaire.2',
