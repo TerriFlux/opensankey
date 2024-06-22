@@ -1655,7 +1655,7 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
           <CardFooter>
             <ButtonGroup>
               {/* Button to open directly the JSON file */}
-              <Button variant='menutop_button_goto_dashboard'
+              <Button variant='toolbar_button_6'
                 onClick={() => {
                   UploadExemple(
                     ('Formations/Tutoriels/'+(d[0])+'/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
