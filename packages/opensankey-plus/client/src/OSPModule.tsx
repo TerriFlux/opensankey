@@ -480,14 +480,17 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     has_open_sankey_plus={true}
   />
 
-  additionalMenus.externale_navbar_item['view']=<OSPBannerView
-    applicationData={applicationData as OSPApplicationDataType}
-    applicationContext={OSPApplicationContext}
-    dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType)}
-    convert_data={applicationData.convert_data}
-    view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
-  />
-
+  const OSPApplicationData = applicationData as OSPApplicationDataType
+  const has_views = OSPApplicationData.master_data &&  OSPApplicationData.master_data.view.length > 0 
+  if (!window.SankeyToolsStatic || has_views ) {
+    additionalMenus.externale_navbar_item['view']=<OSPBannerView
+      applicationData={applicationData as OSPApplicationDataType}
+      applicationContext={OSPApplicationContext}
+      dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType)}
+      convert_data={applicationData.convert_data}
+      view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
+    />
+  }
 
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon']=<OSPNodeIcon

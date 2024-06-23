@@ -51,7 +51,7 @@ export const resources = {
         'presentation_OSS': 'SankeySuite is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
         afm_reconcil_json: 'Reconciling actual sankey diagram',
         afm_reconcil_excel: 'Reconciling an excel file',
-        view_actual_file: 'View from current file',
+        view_actual_file: 'Views',
         other_file: 'Other file',
         trade_close: 'Close to node',
         Transformation: {
@@ -557,7 +557,7 @@ export const resources = {
         'presentation_OSS': 'SankeySuite est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
         afm_reconcil_json: 'Réconcilier le diagramme de Sankey actuel',
         afm_reconcil_excel: 'Réconcilier un fichier Excel',
-        view_actual_file: 'Vue du fichier actuel',
+        view_actual_file: 'Vues',
         other_file: 'Autre fichier',
         trade_close: 'Près du noeud',
         Transformation: {
