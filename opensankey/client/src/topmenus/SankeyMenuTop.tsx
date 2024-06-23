@@ -39,6 +39,8 @@ import {
   Tabs,
   Toast,
   Text,
+  FormControl,
+  Select,
 } from '@chakra-ui/react'
 import {
   SankeyData,
@@ -129,7 +131,8 @@ import {
   DrawerContent
 } from '@chakra-ui/react'
 import {
-  DataTagSelector
+  DataTagSelector,
+  setDiagram
 } from '../configmenus/SankeyMenuBanner'
 
 
@@ -269,12 +272,31 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       Object.keys(sous_filieres).forEach(s => diagrams[s] = [s])
     }
   }
+  const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui: { [s: string]: JSX.Element[] } = {}
-
+  let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Box
+    margin='0.25rem'
+    alignSelf='center'
+    justifySelf='center'
+  ><FormControl key={'1'} >
+    <Select style={{ width: '200px', color:'black' }}
+      onChange={evt=> {
+        sDiagram(evt.target.value)
+        setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+      }}
+      value={s_diagram}>
+      {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+    </Select>
+  </FormControl></Box> : <React.Fragment key={'1'} />
+  if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
   const excel_element = window.sankey && window.sankey.excel ? (
-    <Box >
+    <Box
+      margin='0.25rem'
+      alignSelf='center'
+      justifySelf='center'
+    >
       <Button
       // href={window.sankey.excel}
       >{t('Banner.tl')}</Button>
@@ -1045,7 +1067,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   />
 
   // Create the menu nav that can be slightly different if it in static
-  const menu_nav = (!window.SankeyToolsStatic) ? (<Box>
+  const menu_nav = <Box>
     <Tabs variant={'tabs_navbar'}>
       <TabList>
         {Object.keys(ordered_menu).map(m => {
@@ -1082,7 +1104,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     </Tabs>
 
   </Box>
-  ) : <ButtonGroup> {Object.keys(ordered_menu).map(k => <React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
+
 
   const content_support = <>
     <Text
@@ -1110,6 +1132,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const show_data = Object.values(data_tags).length > 0
   let DDDT = <></>
   let menutop_grid_template = '10rem 10rem auto 0rem 12rem'
+  if (window.SankeyToolsStatic) {
+    menutop_grid_template = '10rem 30rem auto 0rem 12rem'
+  }
   if (show_data) {
     DDDT = <DataTagSelector
       applicationData={applicationData}
@@ -1119,7 +1144,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
       ComponentUpdater={ComponentUpdater}
       in_popover={false}
     />
-    menutop_grid_template = '10rem 10rem auto 15rem 13rem'
+    if (!window.SankeyToolsStatic) {
+      menutop_grid_template = '10rem 30rem auto 15rem 13rem'
+    }
   }
   const modal_resolution_png = Modale_resolution_png(applicationContext.t,
     dict_hook_ref_setter_show_dialog_components, applicationData, contextMenu.pointer_pos
@@ -1181,19 +1208,32 @@ export const Menu: FunctionComponent<MenuTypes> = (
             justifySelf='center'
           >
             <Image
+              layerStyle="image_layout"
               src={applicationContext.logo}
             />
-            {window.SankeyToolsStatic ? window.sankey.header : <></>}
           </Box>
-
-          {menu_nav}
-
+          {window.SankeyToolsStatic && window.sankey.header ?           <Box
+            margin='0.25rem'
+            alignSelf='center'
+            justifySelf='center'
+          ><Text
+              fontStyle='h1'>
+              {window.sankey.header}</Text>          </Box>:
+          <></>}
+          {!window.SankeyToolsStatic ? menu_nav :<></>}
+          {window.SankeyToolsStatic ? <ButtonGroup> {Object.keys(ordered_menu).map(k => ordered_menu[k])}</ButtonGroup> :<></>}
           <Box
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
           >
             {DDDT}
+          </Box>
+          <Box
+            margin='0.25rem'
+            alignSelf='center'
+            justifySelf='center'
+          >
             {Object.keys(menus).includes('unité') ? <>
               {menus['unité']}
             </> : <></>}
