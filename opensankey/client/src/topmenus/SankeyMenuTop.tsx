@@ -1133,7 +1133,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   let DDDT = <></>
   let menutop_grid_template = '10rem 10rem auto 0rem 12rem'
   if (window.SankeyToolsStatic) {
-    menutop_grid_template = '10rem 30rem auto 0rem 12rem'
+    menutop_grid_template = '100px 30rem auto 20rem 12rem'
   }
   if (show_data) {
     DDDT = <DataTagSelector
@@ -1145,7 +1145,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       in_popover={false}
     />
     if (!window.SankeyToolsStatic) {
-      menutop_grid_template = '10rem 30rem auto 15rem 13rem'
+      menutop_grid_template = '10rem 30rem auto 20rem 13rem'
     }
   }
   const modal_resolution_png = Modale_resolution_png(applicationContext.t,
@@ -1201,17 +1201,17 @@ export const Menu: FunctionComponent<MenuTypes> = (
             />
           </Box> : <></>
           }
-
-          <Box
-            margin='0.25rem'
-            alignSelf='center'
-            justifySelf='center'
-          >
-            <Image
-              layerStyle="image_layout"
-              src={applicationContext.logo}
-            />
-          </Box>
+          { applicationContext.logo != '' ?
+            <Box
+              margin='0.25rem'
+              alignSelf='center'
+              justifySelf='center'
+            >
+              <Image
+                layerStyle="image_layout"
+                src={applicationContext.logo}
+              />
+            </Box> : <Box></Box>}
           {window.SankeyToolsStatic && window.sankey.header ?           <Box
             margin='0.25rem'
             alignSelf='center'
