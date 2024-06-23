@@ -1130,10 +1130,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   const data_tags = Object.assign({}, applicationData.data.dataTags)
   const show_data = Object.values(data_tags).length > 0
+
+  const unit_rem = Object.keys(menus).includes('unité') ? '10rem' : '0rem'
+  const data_rem = show_data ? '10rem' : '0rem'
   let DDDT = <></>
-  let menutop_grid_template = '10rem 10rem auto 0rem 0rem 12rem'
+  let menutop_grid_template = '10rem 10rem auto '+ data_rem + ' ' + unit_rem + ' 12rem'
   if (window.SankeyToolsStatic) {
-    menutop_grid_template = '100px 30rem auto 20rem 12rem'
+    menutop_grid_template = '100px 30rem auto '+ data_rem + ' ' + unit_rem
   }
   if (show_data) {
     DDDT = <DataTagSelector
@@ -1144,9 +1147,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
       ComponentUpdater={ComponentUpdater}
       in_popover={false}
     />
-    if (!window.SankeyToolsStatic) {
-      menutop_grid_template = '10rem 30rem auto 20rem 0rem 13rem'
-    }
   }
   const modal_resolution_png = Modale_resolution_png(applicationContext.t,
     dict_hook_ref_setter_show_dialog_components, applicationData, contextMenu.pointer_pos
