@@ -109,9 +109,8 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               {t('Menu.choseTransforDifficulty')}
             </Box>
             <Box layerStyle='options_3cols' >
-              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={()=>{set_mode_trans('simple')}}>Simple</Button>
-              <Button variant={mode_trans=='avancé'?'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
-              <Button variant={mode_trans=='expert'?'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
+              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={()=>{set_mode_trans('simple')}}>Basiques</Button>
+              <Button variant={mode_trans=='expert'?'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} onClick={()=>{set_mode_trans('expert')}}>Tous</Button>
             </Box>
           </Box>
 
