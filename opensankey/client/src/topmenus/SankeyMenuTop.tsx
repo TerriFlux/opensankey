@@ -1131,7 +1131,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const data_tags = Object.assign({}, applicationData.data.dataTags)
   const show_data = Object.values(data_tags).length > 0
   let DDDT = <></>
-  let menutop_grid_template = '10rem 10rem auto 0rem 12rem'
+  let menutop_grid_template = '10rem 10rem auto 0rem 0rem 12rem'
   if (window.SankeyToolsStatic) {
     menutop_grid_template = '100px 30rem auto 20rem 12rem'
   }
@@ -1145,7 +1145,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       in_popover={false}
     />
     if (!window.SankeyToolsStatic) {
-      menutop_grid_template = '10rem 30rem auto 20rem 13rem'
+      menutop_grid_template = '10rem 30rem auto 20rem 0rem 13rem'
     }
   }
   const modal_resolution_png = Modale_resolution_png(applicationContext.t,
@@ -1208,7 +1208,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
               justifySelf='center'
             >
               <Image
-                layerStyle="image_layout"
                 src={applicationContext.logo}
               />
             </Box> : <Box></Box>}
