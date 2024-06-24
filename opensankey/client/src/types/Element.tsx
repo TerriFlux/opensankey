@@ -155,10 +155,11 @@ export abstract class Class_Element {
 
   // Position
   public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _; this.reset() }
+  public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
   public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _; this.reset() }
-  public setPosXY(x: number, y: number) { this.position_x = x; this.position_y = y; this.reset() }
+  public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
+  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.reset() }
+  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
   public get position_type() { return this._display.position.type }
   public set position_type(_: Type_Position) { this._display.position.type = _; this.reset() }
 
