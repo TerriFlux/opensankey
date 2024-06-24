@@ -5,6 +5,7 @@
 // ==================================================================================================
 
 // External imports
+import * as d3 from 'd3'
 
 // Local types
 import {
@@ -28,12 +29,44 @@ import {
 import {
   Class_Tag
 } from './Tag'
-import * as d3 from 'd3'
+import {
+  Class_Data
+} from './Data'
 
-// CUSTOM TYPES **************************************************************************
+// SPECIFIC TYPES ***********************************************************************
 
 type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 
+// SPECIFIC CONSTANTS *******************************************************************
+
+const default_shape_arrow_size = 10
+const default_shape_color = default_element_color
+const default_shape_curvature = 0.5
+const default_shape_is_arrow = true
+const default_shape_is_curved = true
+const default_shape_is_dashed = false
+const default_shape_is_recycling = false
+const default_shape_opacity = 0.85
+const default_shape_orientation = 'hh'
+const default_shape_starting_curve = 0.05
+const default_shape_ending_curve = 0.95
+const default_shape_starting_tangeant = 0.5
+const default_shape_ending_tangeant = 0.5
+const default_shape_vert_shift = 0
+const default_value_label_color = 'black'
+const default_value_label_custom_digit = false
+const default_value_label_font_family = 'Arialserif'
+const default_value_label_font_size = 20
+const default_value_label_is_visible = true
+const default_value_label_nb_digit = 0
+const default_value_label_on_path = true
+const default_value_label_orthogonal_position = 'middle'
+const default_value_label_pos_auto = false
+const default_value_label_position = 'middle'
+const default_value_label_scientific_precision = 5
+const default_value_label_to_precision = false
+const default_value_label_unit = ''
+const default_value_label_unit_visible = false
 
 // CLASS LINK ELEMENT ********************************************************************
 
@@ -49,76 +82,11 @@ export class Class_LinkElement extends Class_Element {
   // Labels
   // TODO set as private and add getter & setter
   public label?: Type_Label
-  public tags: { [_: string]: Class_Tag } = {}
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  /**
-   * Thinckness of the drawned link
-   *
-   * @protected
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  protected thickness: number = 20
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  /**
-   * Orientation of link element
-   * @private
-   * @type {Type_Orientation}
-   * @memberof Class_LinkElement
-   */
-  // private orientation: Type_Orientation = 'hh'
-
-  /**
-   * First curvature point, ie point where first bezier curve occurs
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private starting_curve_point: number = 0.0
-
-  /**
-   * Second curvature point, ie point where first bezier curve occurs
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private ending_curve_point: number = 1.0
-
-  /**
-   * TODO
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private starting_tagent_lenght: number = 0.5
-
-  /**
-   * TODO
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private ending_tagent_lenght: number = 0.5
-
-  /**
-   * TODO
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private _x_label?: number
-
-  /**
-   * TODO
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private _y_label?: number
+  // Links Tags
+  private _tags: { [_: string]: Class_Tag } = {}
 
   /**
   * Node from which link starts
@@ -139,10 +107,35 @@ export class Class_LinkElement extends Class_Element {
   /**
    * Value of link
    * @private
+   * @type {Class_Data}
+   * @memberof Class_LinkElement
+   */
+  private _values: Class_Data[] = []
+
+  /**
+   * Thinckness of the drawned link
+   *
+   * @protected
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private _value: number
+  private thickness: number = 20
+
+  /**
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  private _x_label?: number
+
+  /**
+   * TODO
+   * @private
+   * @type {number}
+   * @memberof Class_LinkElement
+   */
+  private _y_label?: number
 
   // PROTECTED ATTRIBUTES ===============================================================
   /**
@@ -190,7 +183,6 @@ export class Class_LinkElement extends Class_Element {
       local: new Class_LinkAttribute(),
       style: drawing_area.sankey.default_link_style
     }
-    this._value = 10
     this._source = source
     this._source.addOutputLink(this)
     this._target = target
@@ -224,96 +216,92 @@ export class Class_LinkElement extends Class_Element {
   }
 
   public isEqual(_: Class_LinkElement) {
-
-    if (this.orientation !== _.orientation) {
+    if (this.shape_orientation !== _.shape_orientation) {
       return false
     }
-    if (this.left_horiz_shift !== _.left_horiz_shift) {
+    if (this.shape_starting_curve !== _.shape_starting_curve) {
       return false
     }
-    if (this.right_horiz_shift !== _.right_horiz_shift) {
+    if (this.shape_ending_curve !== _.shape_ending_curve) {
       return false
     }
-    if (this.vert_shift !== _.vert_shift) {
+    if (this.shape_vert_shift !== _.shape_vert_shift) {
       return false
     }
-    if (this.curvature !== _.curvature) {
+    if (this.shape_curvature !== _.shape_curvature) {
       return false
     }
-    if (this.curved !== _.curved) {
+    if (this.shape_is_curved !== _.shape_is_curved) {
       return false
     }
-    if (this.recycling !== _.recycling) {
+    if (this.shape_is_recycling !== _.shape_is_recycling) {
       return false
     }
-    if (this.arrow_size !== _.arrow_size) {
+    if (this.shape_arrow_size !== _.shape_arrow_size) {
       return false
     }
-    if (this.label_position !== _.label_position) {
+    if (this.value_label_position !== _.value_label_position) {
       return false
     }
-    if (this.orthogonal_label_position !== _.orthogonal_label_position) {
+    if (this.value_label_orthogonal_position !== _.value_label_orthogonal_position) {
       return false
     }
-    if (this.label_on_path !== _.label_on_path) {
+    if (this.value_label_on_path !== _.value_label_on_path) {
       return false
     }
-    if (this.label_pos_auto !== _.label_pos_auto) {
+    if (this.value_label_pos_auto !== _.value_label_pos_auto) {
       return false
     }
-    if (this.arrow !== _.arrow) {
+    if (this.shape_is_arrow !== _.shape_is_arrow) {
       return false
     }
-    if (this.color !== _.color) {
+    if (this.shape_color !== _.shape_color) {
       return false
     }
-    if (this.opacity !== _.opacity) {
+    if (this.shape_opacity !== _.shape_opacity) {
       return false
     }
-    if (this.dashed !== _.dashed) {
+    if (this.shape_is_dashed !== _.shape_is_dashed) {
       return false
     }
-    if (this.label_visible !== _.label_visible) {
+    if (this.value_label_is_visible !== _.value_label_is_visible) {
       return false
     }
-    if (this.label_font_size !== _.label_font_size) {
+    if (this.value_label_font_size !== _.value_label_font_size) {
       return false
     }
-    if (this.text_color !== _.text_color) {
+    if (this.value_label_color !== _.value_label_color) {
       return false
     }
-    if (this.to_precision !== _.to_precision) {
+    if (this.value_label_to_precision !== _.value_label_to_precision) {
       return false
     }
-    if (this.scientific_precision !== _.scientific_precision) {
+    if (this.value_label_scientific_precision !== _.value_label_scientific_precision) {
       return false
     }
-    if (this.font_family !== _.font_family) {
+    if (this.value_label_font_family !== _.value_label_font_family) {
       return false
     }
-    if (this.label_unit_visible !== _.label_unit_visible) {
+    if (this.value_label_unit_visible !== _.value_label_unit_visible) {
       return false
     }
-    if (this.label_unit !== _.label_unit) {
+    if (this.value_label_unit !== _.value_label_unit) {
       return false
     }
-    if (this.custom_digit !== _.custom_digit) {
+    if (this.value_label_custom_digit !== _.value_label_custom_digit) {
       return false
     }
-    if (this.nb_digit !== _.nb_digit) {
+    if (this.value_label_nb_digit !== _.value_label_nb_digit) {
       return false
     }
-
     return true
   }
 
-  // GETTER / SETTER ====================================================================
-
   // Orientation
-  public isHorizontal() { return this.orientation === 'hh' }
-  public isVertical() { return this.orientation === 'vv' }
-  public isHorizontalVertical() { return this.orientation === 'hv' }
-  public isVerticalHorizontal() { return this.orientation === 'hv' }
+  public isHorizontal() { return this.shape_orientation === 'hh' }
+  public isVertical() { return this.shape_orientation === 'vv' }
+  public isHorizontalVertical() { return this.shape_orientation === 'hv' }
+  public isVerticalHorizontal() { return this.shape_orientation === 'hv' }
 
   // Coordinates
   public getStartingPointX() { return this.position_x }
@@ -321,45 +309,14 @@ export class Class_LinkElement extends Class_Element {
   public getEndingPointX() { return this.position_x }
   public getEndingPointY() { return this.position_y }
 
-  // Curvature points
-  public getStartingCurvePoint() { return this.starting_curve_point }
-  public setStartingCurvePoint(_: number) {
-    if ((_ > 0) && (_ < this.ending_curve_point)) {
-      this.starting_curve_point = _
-      this.reset()
-    }
-  }
-  public getEndingCurvePoint() {
-    return this.ending_curve_point
-  }
-  public setEndingCurvePoint(_: number) {
-    if ((_ > this.starting_curve_point) && (_ < 1)) {
-      this.ending_curve_point = _
-      this.reset()
-    }
-  }
-
   /**
-   *
-   * Getter & Setter of class attributes
+   * Remove given tag from link
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
    */
-
-  public get source(): Class_NodeElement {
-    return this._source
-  }
-  public set source(value: Class_NodeElement) {
-    this._source = value
-  }
-  public get target(): Class_NodeElement {
-    return this._target
-  }
-  public set target(value: Class_NodeElement) {
-    this._target = value
-  }
-
   public removeTag(tag:Class_Tag){
-    if (this.tags[tag.id] !== undefined) {
-      delete this.tags[tag.id]
+    if (this._tags[tag.id] !== undefined) {
+      delete this._tags[tag.id]
       tag.removeReference(this)
     }
   }
@@ -397,11 +354,15 @@ export class Class_LinkElement extends Class_Element {
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
       .attr('fill', 'none')
-      .attr('stroke', this.color)
-      .attr('stroke-opacity', this.opacity)
+      .attr('stroke', this.shape_color)
+      .attr('stroke-opacity', this.shape_opacity)
       .attr('stroke-width', this.link_stroke_width)
-      .attr('stroke-dasharray',this.dashed?'10,5':'')
+      .attr('stroke-dasharray',this.shape_is_dashed?'10,5':'')
     // TODO apply opacity and other attributes
+  }
+
+  private drawLabel() {
+
   }
 
   private getBezierPath() {
@@ -426,8 +387,8 @@ export class Class_LinkElement extends Class_Element {
     }
 
     // Shifts
-    const starting_shift = this.getLenght() * this.starting_curve_point
-    const ending_shift = this.getLenght() * (1 - this.ending_curve_point)
+    const starting_shift = this.getLenght() * this.shape_starting_curve
+    const ending_shift = this.getLenght() * (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -464,24 +425,24 @@ export class Class_LinkElement extends Class_Element {
     let x2, y2
     let x4, y4
     if (this.isHorizontal() || this.isHorizontalVertical()) {
-      x2 = x1 + (x5 - x1) * this.starting_tagent_lenght
+      x2 = x1 + (x5 - x1) * this.shape_starting_tangeant
       y2 = y1
     }
     else {
       x2 = x1
-      y2 = y1 + (y5 - y1) * this.starting_tagent_lenght
+      y2 = y1 + (y5 - y1) * this.shape_starting_tangeant
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x4 = x5 + (x1 - x5) * this.ending_tagent_lenght
+      x4 = x5 + (x1 - x5) * this.shape_ending_tangeant
       y4 = y5
     }
     else {
       x4 = x5
-      y4 = y5 + (y1 - y5) * this.starting_tagent_lenght
+      y4 = y5 + (y1 - y5) * this.shape_starting_tangeant
     }
 
     // Return paths
-    if (!this.curved) {
+    if (!this.shape_is_curved) {
       return 'M ' + x0 + ',' + y0
         + ' L ' + x1 + ',' + y1
         + ' L ' + x5 + ',' + y5
@@ -496,7 +457,6 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-
   public getShapeWidth() {
     const source_x = this.source.position_x
     const target_x = this.target.position_x
@@ -508,6 +468,7 @@ export class Class_LinkElement extends Class_Element {
     }
   }
   public setShapeWidth(_: number) { /* Does nothing */ }
+
   public getShapeHeight() {
     const source_y = this.source.position_y
     const target_y = this.target.position_y
@@ -536,6 +497,7 @@ export class Class_LinkElement extends Class_Element {
     }
   }
   public setPosX(_: number) { /* Does nothing */ }
+
   public getPosY() {
     const source_y = this.source.position_y
     const target_y = this.target.position_y
@@ -553,6 +515,7 @@ export class Class_LinkElement extends Class_Element {
     }
   }
   public setPosY(_: number) { /* Does nothing */ }
+
   public setPosXY(_: number, __: number) { /* Does nothing */ }
 
   public get link_stroke_width(){
@@ -565,541 +528,881 @@ export class Class_LinkElement extends Class_Element {
     return scale(this.thickness)
   }
 
-  // ==========Setter & Getter of link attribute/style=====================
-  public get orientation() {
-    if (this._display.local.orientation !== undefined) {
-      return this._display.local.orientation
-    } else if (this._display.style.orientation !== undefined) {
-      return this._display.style.orientation
-    }
-    return ''
+  // GETTERS / SETTERS ==================================================================
+
+  /**
+   * Get source node
+   * @memberof Class_LinkElement
+   */
+  public get source(): Class_NodeElement {
+    return this._source
   }
-  public set orientation(_: string) { this._display.local.orientation = _ }
 
-  public get left_horiz_shift() {
-    if (this._display.local.left_horiz_shift !== undefined) {
-      return this._display.local.left_horiz_shift
-    } else if (this._display.style.left_horiz_shift !== undefined) {
-      return this._display.style.left_horiz_shift
-    }
-    return 0
+  /**
+   * set source node
+   * @memberof Class_LinkElement
+   */
+  public set source(value: Class_NodeElement) {
+    this._source = value
+    this.reset()
   }
-  public set left_horiz_shift(_: number) { this._display.local.left_horiz_shift = _ }
 
-  public get right_horiz_shift() {
-    if (this._display.local.right_horiz_shift !== undefined) {
-      return this._display.local.right_horiz_shift
-    } else if (this._display.style.right_horiz_shift !== undefined) {
-      return this._display.style.right_horiz_shift
-    }
-    return 0
+  /**
+   * get destination node
+   * @memberof Class_LinkElement
+   */
+  public get target(): Class_NodeElement {
+    return this._target
   }
-  public set right_horiz_shift(_: number) { this._display.local.right_horiz_shift = _ }
 
-  public get vert_shift() {
-    if (this._display.local.vert_shift !== undefined) {
-      return this._display.local.vert_shift
-    } else if (this._display.style.vert_shift !== undefined) {
-      return this._display.style.vert_shift
-    }
-    return 0
+  /**
+   * Set destination node
+   * @memberof Class_LinkElement
+   */
+  public set target(value: Class_NodeElement) {
+    this._target = value
+    this.reset()
   }
-  public set vert_shift(_: number) { this._display.local.vert_shift = _ }
 
-  public get curvature() {
-    if (this._display.local.curvature !== undefined) {
-      return this._display.local.curvature
-    } else if (this._display.style.curvature !== undefined) {
-      return this._display.style.curvature
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_orientation() {
+    if (this._display.local.shape_orientation !== undefined) {
+      return this._display.local.shape_orientation
+    } else if (this._display.style.shape_orientation !== undefined) {
+      return this._display.style.shape_orientation
     }
-    return 0
+    return default_shape_orientation
   }
-  public set curvature(_: number) { this._display.local.curvature = _ }
 
-  public get curved() {
-    if (this._display.local.curved !== undefined) {
-      return this._display.local.curved
-    } else if (this._display.style.curved !== undefined) {
-      return this._display.style.curved
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_orientation(_: Type_Orientation) { this._display.local.shape_orientation = _; this.drawShape()}
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_starting_curve() {
+    if (this._display.local.shape_starting_curve !== undefined) {
+      return this._display.local.shape_starting_curve
+    } else if (this._display.style.shape_starting_curve !== undefined) {
+      return this._display.style.shape_starting_curve
     }
-    return false
+    return default_shape_starting_curve
   }
-  public set curved(_: boolean) { this._display.local.curved = _ }
 
-  public get recycling() {
-    if (this._display.local.recycling !== undefined) {
-      return this._display.local.recycling
-    } else if (this._display.style.recycling !== undefined) {
-      return this._display.style.recycling
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_starting_curve(_: number) {
+    if (_ >= 0 && _ < this.shape_ending_curve) {
+      this._display.local.shape_starting_curve = _
+      this.drawShape()
     }
-    return false
   }
-  public set recycling(_: boolean) { this._display.local.recycling = _ }
 
-  public get arrow_size() {
-    if (this._display.local.arrow_size !== undefined) {
-      return this._display.local.arrow_size
-    } else if (this._display.style.arrow_size !== undefined) {
-      return this._display.style.arrow_size
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_ending_curve() {
+    if (this._display.local.shape_ending_curve !== undefined) {
+      return this._display.local.shape_ending_curve
+    } else if (this._display.style.shape_ending_curve !== undefined) {
+      return this._display.style.shape_ending_curve
     }
-    return 0
+    return default_shape_ending_curve
   }
-  public set arrow_size(_: number) { this._display.local.arrow_size = _ }
 
-  public get label_position() {
-    if (this._display.local.label_position !== undefined) {
-      return this._display.local.label_position
-    } else if (this._display.style.label_position !== undefined) {
-      return this._display.style.label_position
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_ending_curve(_: number) {
+    if (_ < 1 && _ > this.shape_starting_curve){
+      this._display.local.shape_ending_curve = _
+      this.drawShape()
     }
-    return ''
   }
-  public set label_position(_: string) { this._display.local.label_position = _ }
 
-  public get orthogonal_label_position() {
-    if (this._display.local.orthogonal_label_position !== undefined) {
-      return this._display.local.orthogonal_label_position
-    } else if (this._display.style.orthogonal_label_position !== undefined) {
-      return this._display.style.orthogonal_label_position
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_starting_tangeant() {
+    if (this._display.local.shape_starting_tangeant !== undefined) {
+      return this._display.local.shape_starting_tangeant
+    } else if (this._display.style.shape_starting_tangeant !== undefined) {
+      return this._display.style.shape_starting_tangeant
     }
-    return ''
+    return default_shape_starting_tangeant
   }
-  public set orthogonal_label_position(_: string) { this._display.local.orthogonal_label_position = _ }
 
-  public get label_on_path() {
-    if (this._display.local.label_on_path !== undefined) {
-      return this._display.local.label_on_path
-    } else if (this._display.style.label_on_path !== undefined) {
-      return this._display.style.label_on_path
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_starting_tangeant(_: number) { this._display.local.shape_starting_tangeant = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_ending_tangeant() {
+    if (this._display.local.shape_ending_tangeant !== undefined) {
+      return this._display.local.shape_ending_tangeant
+    } else if (this._display.style.shape_ending_tangeant !== undefined) {
+      return this._display.style.shape_ending_tangeant
     }
-    return false
+    return default_shape_ending_tangeant
   }
-  public set label_on_path(_: boolean) { this._display.local.label_on_path = _ }
 
-  public get label_pos_auto() {
-    if (this._display.local.label_pos_auto !== undefined) {
-      return this._display.local.label_pos_auto
-    } else if (this._display.style.label_pos_auto !== undefined) {
-      return this._display.style.label_pos_auto
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_ending_tangeant(_: number) { this._display.local.shape_ending_tangeant = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_vert_shift() {
+    if (this._display.local.shape_vert_shift !== undefined) {
+      return this._display.local.shape_vert_shift
+    } else if (this._display.style.shape_vert_shift !== undefined) {
+      return this._display.style.shape_vert_shift
     }
-    return false
+    return default_shape_vert_shift
   }
-  public set label_pos_auto(_: boolean) { this._display.local.label_pos_auto = _ }
 
-  public get arrow() {
-    if (this._display.local.arrow !== undefined) {
-      return this._display.local.arrow
-    } else if (this._display.style.arrow !== undefined) {
-      return this._display.style.arrow
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_vert_shift(_: number) { this._display.local.shape_vert_shift = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_curvature() {
+    if (this._display.local.shape_curvature !== undefined) {
+      return this._display.local.shape_curvature
+    } else if (this._display.style.shape_curvature !== undefined) {
+      return this._display.style.shape_curvature
     }
-    return false
+    return default_shape_curvature
   }
-  public set arrow(_: boolean) { this._display.local.arrow = _ }
 
-  public get color() {
-    if (this._display.local.color !== undefined) {
-      return this._display.local.color
-    } else if (this._display.style.color !== undefined) {
-      return this._display.style.color
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_curvature(_: number) { this._display.local.shape_curvature = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_is_curved() {
+    if (this._display.local.shape_is_curved !== undefined) {
+      return this._display.local.shape_is_curved
+    } else if (this._display.style.shape_is_curved !== undefined) {
+      return this._display.style.shape_is_curved
     }
-    return ''
+    return default_shape_is_curved
   }
-  public set color(_: string) { this._display.local.color = _ }
 
-  public get opacity() {
-    if (this._display.local.opacity !== undefined) {
-      return this._display.local.opacity
-    } else if (this._display.style.opacity !== undefined) {
-      return this._display.style.opacity
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_is_curved(_: boolean) { this._display.local.shape_is_curved = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_is_recycling() {
+    if (this._display.local.shape_is_recycling !== undefined) {
+      return this._display.local.shape_is_recycling
+    } else if (this._display.style.shape_is_recycling !== undefined) {
+      return this._display.style.shape_is_recycling
     }
-    return 0
+    return default_shape_is_recycling
   }
-  public set opacity(_: number) { this._display.local.opacity = _ }
 
-  public get dashed() {
-    if (this._display.local.dashed !== undefined) {
-      return this._display.local.dashed
-    } else if (this._display.style.dashed !== undefined) {
-      return this._display.style.dashed
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_is_recycling(_: boolean) { this._display.local.shape_is_recycling = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_arrow_size() {
+    if (this._display.local.shape_arrow_size !== undefined) {
+      return this._display.local.shape_arrow_size
+    } else if (this._display.style.shape_arrow_size !== undefined) {
+      return this._display.style.shape_arrow_size
     }
-    return false
+    return default_shape_arrow_size
   }
-  public set dashed(_: boolean) { this._display.local.dashed = _ }
 
-  public get label_visible() {
-    if (this._display.local.label_visible !== undefined) {
-      return this._display.local.label_visible
-    } else if (this._display.style.label_visible !== undefined) {
-      return this._display.style.label_visible
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_arrow_size(_: number) { this._display.local.shape_arrow_size = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_position() {
+    if (this._display.local.value_label_position !== undefined) {
+      return this._display.local.value_label_position
+    } else if (this._display.style.value_label_position !== undefined) {
+      return this._display.style.value_label_position
     }
-    return false
+    return default_value_label_position
   }
-  public set label_visible(_: boolean) { this._display.local.label_visible = _ }
 
-  public get label_font_size() {
-    if (this._display.local.label_font_size !== undefined) {
-      return this._display.local.label_font_size
-    } else if (this._display.style.label_font_size !== undefined) {
-      return this._display.style.label_font_size
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_position(_: string) { this._display.local.value_label_position = _; this.drawLabel() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_orthogonal_position() {
+    if (this._display.local.value_label_orthogonal_position !== undefined) {
+      return this._display.local.value_label_orthogonal_position
+    } else if (this._display.style.value_label_orthogonal_position !== undefined) {
+      return this._display.style.value_label_orthogonal_position
     }
-    return 0
+    return default_value_label_orthogonal_position
   }
-  public set label_font_size(_: number) { this._display.local.label_font_size = _ }
 
-  public get text_color() {
-    if (this._display.local.text_color !== undefined) {
-      return this._display.local.text_color
-    } else if (this._display.style.text_color !== undefined) {
-      return this._display.style.text_color
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_orthogonal_position(_: string) { this._display.local.value_label_orthogonal_position = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_on_path() {
+    if (this._display.local.value_label_on_path !== undefined) {
+      return this._display.local.value_label_on_path
+    } else if (this._display.style.value_label_on_path !== undefined) {
+      return this._display.style.value_label_on_path
     }
-    return ''
+    return default_value_label_on_path
   }
-  public set text_color(_: string) { this._display.local.text_color = _ }
 
-  public get to_precision() {
-    if (this._display.local.to_precision !== undefined) {
-      return this._display.local.to_precision
-    } else if (this._display.style.to_precision !== undefined) {
-      return this._display.style.to_precision
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_on_path(_: boolean) { this._display.local.value_label_on_path = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_pos_auto() {
+    if (this._display.local.value_label_pos_auto !== undefined) {
+      return this._display.local.value_label_pos_auto
+    } else if (this._display.style.value_label_pos_auto !== undefined) {
+      return this._display.style.value_label_pos_auto
     }
-    return false
+    return default_value_label_pos_auto
   }
-  public set to_precision(_: boolean) { this._display.local.to_precision = _ }
 
-  public get scientific_precision() {
-    if (this._display.local.scientific_precision !== undefined) {
-      return this._display.local.scientific_precision
-    } else if (this._display.style.scientific_precision !== undefined) {
-      return this._display.style.scientific_precision
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_pos_auto(_: boolean) { this._display.local.value_label_pos_auto = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_is_arrow() {
+    if (this._display.local.shape_is_arrow !== undefined) {
+      return this._display.local.shape_is_arrow
+    } else if (this._display.style.shape_is_arrow !== undefined) {
+      return this._display.style.shape_is_arrow
     }
-    return 0
+    return default_shape_is_arrow
   }
-  public set scientific_precision(_: number) { this._display.local.scientific_precision = _ }
 
-  public get font_family() {
-    if (this._display.local.font_family !== undefined) {
-      return this._display.local.font_family
-    } else if (this._display.style.font_family !== undefined) {
-      return this._display.style.font_family
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_is_arrow(_: boolean) { this._display.local.shape_is_arrow = _; this.drawShape()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_color() {
+    if (this._display.local.shape_color !== undefined) {
+      return this._display.local.shape_color
+    } else if (this._display.style.shape_color !== undefined) {
+      return this._display.style.shape_color
     }
-    return ''
+    return default_shape_color
   }
-  public set font_family(_: string) { this._display.local.font_family = _ }
 
-  public get label_unit_visible() {
-    if (this._display.local.label_unit_visible !== undefined) {
-      return this._display.local.label_unit_visible
-    } else if (this._display.style.label_unit_visible !== undefined) {
-      return this._display.style.label_unit_visible
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_color(_: string) { this._display.local.shape_color = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_opacity() {
+    if (this._display.local.shape_opacity !== undefined) {
+      return this._display.local.shape_opacity
+    } else if (this._display.style.shape_opacity !== undefined) {
+      return this._display.style.shape_opacity
     }
-    return false
+    return default_shape_opacity
   }
-  public set label_unit_visible(_: boolean) { this._display.local.label_unit_visible = _ }
 
-  public get label_unit() {
-    if (this._display.local.label_unit !== undefined) {
-      return this._display.local.label_unit
-    } else if (this._display.style.label_unit !== undefined) {
-      return this._display.style.label_unit
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_opacity(_: number) { this._display.local.shape_opacity = _; this.drawShape()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_is_dashed() {
+    if (this._display.local.shape_is_dashed !== undefined) {
+      return this._display.local.shape_is_dashed
+    } else if (this._display.style.shape_is_dashed !== undefined) {
+      return this._display.style.shape_is_dashed
     }
-    return ''
+    return default_shape_is_dashed
   }
-  public set label_unit(_: string) { this._display.local.label_unit = _ }
 
-  public get custom_digit() {
-    if (this._display.local.custom_digit !== undefined) {
-      return this._display.local.custom_digit
-    } else if (this._display.style.custom_digit !== undefined) {
-      return this._display.style.custom_digit
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_is_dashed(_: boolean) { this._display.local.shape_is_dashed = _; this.drawShape() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_is_visible() {
+    if (this._display.local.value_label_is_visible !== undefined) {
+      return this._display.local.value_label_is_visible
+    } else if (this._display.style.value_label_is_visible !== undefined) {
+      return this._display.style.value_label_is_visible
     }
-    return false
+    return default_value_label_is_visible
   }
-  public set custom_digit(_: boolean) { this._display.local.custom_digit = _ }
 
-  public get nb_digit() {
-    if (this._display.local.nb_digit !== undefined) {
-      return this._display.local.nb_digit
-    } else if (this._display.style.nb_digit !== undefined) {
-      return this._display.style.nb_digit
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_is_visible(_: boolean) { this._display.local.value_label_is_visible = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_font_size() {
+    if (this._display.local.value_label_font_size !== undefined) {
+      return this._display.local.value_label_font_size
+    } else if (this._display.style.value_label_font_size !== undefined) {
+      return this._display.style.value_label_font_size
     }
-    return 0
+    return default_value_label_font_size
   }
-  public set nb_digit(_: number) { this._display.local.nb_digit = _ }
 
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_font_size(_: number) { this._display.local.value_label_font_size = _; this.drawLabel()  }
 
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_color() {
+    if (this._display.local.value_label_color !== undefined) {
+      return this._display.local.value_label_color
+    } else if (this._display.style.value_label_color !== undefined) {
+      return this._display.style.value_label_color
+    }
+    return default_value_label_color
+  }
 
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_color(_: string) { this._display.local.value_label_color = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_to_precision() {
+    if (this._display.local.value_label_to_precision !== undefined) {
+      return this._display.local.value_label_to_precision
+    } else if (this._display.style.value_label_to_precision !== undefined) {
+      return this._display.style.value_label_to_precision
+    }
+    return default_value_label_to_precision
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_to_precision(_: boolean) { this._display.local.value_label_to_precision = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_scientific_precision() {
+    if (this._display.local.value_label_scientific_precision !== undefined) {
+      return this._display.local.value_label_scientific_precision
+    } else if (this._display.style.value_label_scientific_precision !== undefined) {
+      return this._display.style.value_label_scientific_precision
+    }
+    return default_value_label_scientific_precision
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_scientific_precision(_: number) { this._display.local.value_label_scientific_precision = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_font_family() {
+    if (this._display.local.value_label_font_family !== undefined) {
+      return this._display.local.value_label_font_family
+    } else if (this._display.style.value_label_font_family !== undefined) {
+      return this._display.style.value_label_font_family
+    }
+    return default_value_label_font_family
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_font_family(_: string) { this._display.local.value_label_font_family = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_unit_visible() {
+    if (this._display.local.value_label_unit_visible !== undefined) {
+      return this._display.local.value_label_unit_visible
+    } else if (this._display.style.value_label_unit_visible !== undefined) {
+      return this._display.style.value_label_unit_visible
+    }
+    return default_value_label_unit_visible
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_unit_visible(_: boolean) { this._display.local.value_label_unit_visible = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_unit() {
+    if (this._display.local.value_label_unit !== undefined) {
+      return this._display.local.value_label_unit
+    } else if (this._display.style.value_label_unit !== undefined) {
+      return this._display.style.value_label_unit
+    }
+    return default_value_label_unit
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_unit(_: string) { this._display.local.value_label_unit = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_custom_digit() {
+    if (this._display.local.value_label_custom_digit !== undefined) {
+      return this._display.local.value_label_custom_digit
+    } else if (this._display.style.value_label_custom_digit !== undefined) {
+      return this._display.style.value_label_custom_digit
+    }
+    return default_value_label_custom_digit
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_custom_digit(_: boolean) { this._display.local.value_label_custom_digit = _; this.drawLabel()  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get value_label_nb_digit() {
+    if (this._display.local.value_label_nb_digit !== undefined) {
+      return this._display.local.value_label_nb_digit
+    } else if (this._display.style.value_label_nb_digit !== undefined) {
+      return this._display.style.value_label_nb_digit
+    }
+    return default_value_label_nb_digit
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_nb_digit(_: number) { this._display.local.value_label_nb_digit = _; this.drawLabel()  }
 }
 
 
-// CLASS LINK ***************************************************************************
+// CLASS LINK ATTRIBUTES ****************************************************************
+
 /**
- * Class that define a link object for a Sankey
+ * Define all attributes that can be applyied to a link
  *
- * @class Class_Link
- * @extends {Class_LinkElement}
+ * @export
+ * @class Class_LinkAttribute
  */
-// export class Class_Link extends Class_LinkElement {
-
-//   // PUBLIC ATTRIBUTES ==================================================================
-
-//   /**
-//    * Related tags
-//    * @type {{[_:string] : Class_Tag}}
-//    * @memberof Class_Link
-//    */
-
-//   // PRIVATE ATTRIBUTES =================================================================
-
-
-//   /**
-//    * Datas of this link
-//    * @private
-//    * @type {Class_Data[]}
-//    * @memberof Class_Link
-//    */
-// private datas: Class_Data[] = [new Class_Data()]
-
-//   // TODO comment the rest
-//   private color_sustainable: boolean = false
-//   // Tooltips
-//   private tooltip_text?: string
-
-//   // CONSTRUCTOR ========================================================================
-
-//   /**
-//    * Creates an instance of Class_Link.
-//    * @param {Class_NodeElement} source
-//    * @param {Class_NodeElement} target
-//    * @param {Class_DrawingArea} drawing_area
-//    * @memberof Class_Link
-//    */
-//   constructor(
-//     source: Class_NodeElement,
-//     target: Class_NodeElement,
-//     drawing_area: Class_DrawingArea,
-//     menu_config: Class_MenuConfig,
-
-//   ) {
-//     super(
-//       source,
-//       target,
-//       drawing_area,
-//       menu_config
-//     )
-//     // // Surcharge with source & target
-//     // this.source = source
-//     // this.source.addOutputLink(this)
-//     // this.target = target
-//     // this.target.addInputLink(this)
-//   }
-
-//   // PUBLIC METHODS =====================================================================
-
-//   // Tags
-//   public addTag(tag: Class_Tag) { this.tags[tag.id] = tag }
-
-//   // GETTERS / SETTERS ==================================================================
-
-//   // // Source node
-//   // public getNodeSource() { return this.source }
-//   // public setNodeSource(_: Class_NodeElement) { this.source = _ }
-
-//   // // Target node
-//   // public getNodeTarget() { return this.target }
-//   // public setNodeTarget(_: Class_NodeElement) { this.target = _ }
-
-//   // Override positionning
-//   // public getPosX() {
-//   //   const source_x = this.source.position_x
-//   //   const target_x = this.target.position_x
-//   //   if (source_x <= target_x) {
-//   //     let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
-//   //     if (this.isHorizontal() || this.isHorizontalVertical()) {
-//   //       dx = this.source.getDisplay().shape.getWidth()
-//   //     }
-//   //     return source_x + dx
-//   //   }
-//   //   else {
-//   //     const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-//   //     return source_x + dx
-//   //   }
-//   // }
-//   public setPosX(_: number) { /* Does nothing */ }
-//   // public getPosY() {
-//   //   const source_y = this.source.position_y
-//   //   const target_y = this.target.position_y
-//   //   if (source_y <= target_y) {
-//   //     let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
-//   //     if (this.isVertical() || this.isVerticalHorizontal()) {
-//   //       dy = this.source.getDisplay().shape.getHeight()
-
-//   //     }
-//   //     return source_y + dy
-//   //   }
-//   //   else {
-//   //     const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-//   //     return source_y + dy
-//   //   }
-//   // }
-//   public setPosY(_: number) { /* Does nothing */ }
-//   public setPosXY(_: number, __: number) { /* Does nothing */ }
-//   public setPosType(_: Type_Position) { /* Does nothing */ }
-
-//   // Override width & height
-//   // public getShapeWidth() {
-//   //   const source_x = this.source.position_x
-//   //   const target_x = this.target.position_x
-//   //   if (source_x <= target_x) {
-//   //     return target_x - this.position_x
-//   //   }
-//   //   else {
-//   //     return this.position_x - target_x - this.target.getDisplay().shape.getWidth()
-//   //   }
-//   // }
-//   // public setShapeWidth(_: number) { /* Does nothing */ }
-//   // public getShapeHeight() {
-//   //   const source_y = this.source.position_y
-//   //   const target_y = this.target.position_y
-//   //   if (source_y <= target_y) {
-//   //     return target_y - this.position_y
-//   //   }
-//   //   else {
-//   //     return this.position_y - target_y - this.target.getDisplay().shape.getHeight()
-//   //   }
-//   // }
-//   public setShapeHeight(_: number) { /* Does nothing */ }
-// }
-
-
 export class Class_LinkAttribute {
-  // Geometry link
-  orientation?: string
-  left_horiz_shift?: number
-  right_horiz_shift?: number
-  vert_shift?: number
-  curvature?: number
-  curved?: boolean
-  recycling?: boolean
-  arrow_size?: number
+  // Shape type
+  protected _shape_is_curved?: boolean
+  protected _shape_curvature?: number
+  protected _shape_is_recycling?: boolean
+
+  // Shape orientation
+  protected _shape_orientation?: Type_Orientation
+  protected _shape_starting_curve?: number
+  protected _shape_ending_curve?: number
+  protected _shape_starting_tangeant?: number
+  protected _shape_ending_tangeant?: number
+  protected _shape_vert_shift?: number
+
+  // Shape's arrow attributes
+  protected _shape_is_arrow?: boolean
+  protected _shape_arrow_size?: number
+
+  // Shape's Filling attributes
+  protected _shape_is_dashed?: boolean
+  protected _shape_color?: string
+  protected _shape_opacity?: number
 
   // Geometry link labels
-  label_position?: string
-  orthogonal_label_position?: string
-  label_on_path?: boolean
-  label_pos_auto?: boolean
+  protected _value_label_position?: string
+  protected _value_label_orthogonal_position?: string
+  protected _value_label_on_path?: boolean
+  protected _value_label_pos_auto?: boolean
 
-  //Attributes link
-  arrow?: boolean
-  color?: string
-  opacity?: number
-  dashed?: boolean
-  //Attributes link labels
-  label_visible?: boolean
-  label_font_size?: number
-  text_color?: string
-  to_precision?: boolean
-  scientific_precision?: number
-  font_family?: string
-  label_unit_visible?: boolean
-  label_unit?: string
-  custom_digit?: boolean
-  nb_digit?: number
+  // Value label display
+  protected _value_label_is_visible?: boolean
+  protected _value_label_font_family?: string
+  protected _value_label_font_size?: number
+  protected _value_label_color?: string
+  protected _value_label_to_precision?: boolean
+  protected _value_label_scientific_precision?: number
+  protected _value_label_custom_digit?: boolean
+  protected _value_label_nb_digit?: number
+  protected _value_label_unit_visible?: boolean
+  protected _value_label_unit?: string
 
+  // GETTERS ============================================================================
+
+  // Shape type
+  public get shape_is_curved() {return this._shape_is_curved }
+  public get shape_curvature() { return this._shape_curvature }
+  public get shape_is_recycling() {return this._shape_is_recycling }
+
+  // Shape orientation
+  public get shape_orientation() { return this._shape_orientation }
+  public get shape_starting_curve() { return this._shape_starting_curve }
+  public get shape_ending_curve() { return this._shape_ending_curve }
+  public get shape_starting_tangeant() { return this._shape_starting_tangeant }
+  public get shape_ending_tangeant() { return this._shape_ending_tangeant }
+  public get shape_vert_shift() { return this._shape_vert_shift }
+
+  // Shape's arrow attributes
+  public get shape_is_arrow() {return this._shape_is_arrow }
+  public get shape_arrow_size() { return this._shape_arrow_size }
+
+  // Shape's Filling attributes
+  public get shape_is_dashed() {return this._shape_is_dashed }
+  public get shape_color() { return this._shape_color }
+  public get shape_opacity() { return this._shape_opacity }
+
+  // Geometry link labels
+  public get value_label_position() { return this._value_label_position }
+  public get value_label_orthogonal_position() { return this._value_label_orthogonal_position }
+  public get value_label_on_path() {return this._value_label_on_path }
+  public get value_label_pos_auto() {return this._value_label_pos_auto }
+
+  // Value label display
+  public get value_label_is_visible() {return this._value_label_is_visible }
+  public get value_label_font_family() { return this._value_label_font_family }
+  public get value_label_font_size() { return this._value_label_font_size }
+  public get value_label_color() { return this._value_label_color }
+  public get value_label_to_precision() {return this._value_label_to_precision }
+  public get value_label_scientific_precision() { return this._value_label_scientific_precision }
+  public get value_label_custom_digit() {return this._value_label_custom_digit }
+  public get value_label_nb_digit() { return this._value_label_nb_digit }
+  public get value_label_unit_visible() {return this._value_label_unit_visible }
+  public get value_label_unit() { return this._value_label_unit }
+
+
+  // SETTERS ============================================================================
+
+  // Shape type
+  public set shape_is_curved(_: boolean | undefined) { this._shape_is_curved = _ }
+  public set shape_curvature(_: number | undefined) { this._shape_curvature = _ }
+  public set shape_is_recycling(_: boolean | undefined) { this._shape_is_recycling = _ }
+
+  // Shape orientation
+  public set shape_orientation(_: Type_Orientation | undefined) { this._shape_orientation = _ }
+  public set shape_starting_curve(_: number | undefined) { this._shape_starting_curve = _ }
+  public set shape_ending_curve(_: number | undefined) { this._shape_ending_curve = _ }
+  public set shape_starting_tangeant(_: number | undefined) { this._shape_starting_tangeant = _ }
+  public set shape_ending_tangeant(_: number | undefined) { this._shape_ending_tangeant = _ }
+  public set shape_vert_shift(_: number | undefined) { this._shape_vert_shift = _ }
+
+  // Shape's arrow attributes
+  public set shape_is_arrow(_: boolean | undefined) { this._shape_is_arrow = _ }
+  public set shape_arrow_size(_: number | undefined) { this._shape_arrow_size = _ }
+
+  // Shape's Filling attributes
+  public set shape_is_dashed(_: boolean | undefined) { this._shape_is_dashed = _ }
+  public set shape_color(_: string | undefined) { this._shape_color = _ }
+  public set shape_opacity(_: number | undefined) { this._shape_opacity = _ }
+
+  // Geometry link labels
+  public set value_label_position(_: string | undefined) { this._value_label_position = _ }
+  public set value_label_orthogonal_position(_: string | undefined) { this._value_label_orthogonal_position = _ }
+  public set value_label_on_path(_: boolean | undefined) { this._value_label_on_path = _ }
+  public set value_label_pos_auto(_: boolean | undefined) { this._value_label_pos_auto = _ }
+
+  // Value label display
+  public set value_label_is_visible(_: boolean | undefined) { this._value_label_is_visible = _ }
+  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _ }
+  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _ }
+  public set value_label_color(_: string | undefined) { this._value_label_color = _ }
+  public set value_label_to_precision(_: boolean | undefined) { this._value_label_to_precision = _ }
+  public set value_label_scientific_precision(_: number | undefined) { this._value_label_scientific_precision = _ }
+  public set value_label_custom_digit(_: boolean | undefined) { this._value_label_custom_digit = _ }
+  public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _ }
+  public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _ }
+  public set value_label_unit(_: string | undefined) { this._value_label_unit = _ }
 }
 
 
+// CLASS LINK STYLE *********************************************************************
 
+/**
+ * Define style for links
+ *
+ * @export
+ * @class Class_LinkStyle
+ * @extends {Class_LinkAttribute}
+ */
 export class Class_LinkStyle extends Class_LinkAttribute {
 
-  constructor() {
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _id: string
+
+  private _is_deletable: boolean
+
+  private _references: {[_: string]: Class_NodeElement} = {}
+
+  // CONSTRUCTOR ========================================================================
+  constructor(
+    id: string,
+    is_deletable: boolean = true
+  ) {
+    // Instantiate super class
     super()
-    this.orientation = default_link_style['orientation']
-    this.left_horiz_shift = default_link_style['left_horiz_shift']
-    this.right_horiz_shift = default_link_style['right_horiz_shift']
-    this.vert_shift = default_link_style['vert_shift']
-    this.curvature = default_link_style['curvature']
-    this.curved = default_link_style['curved']
-    this.recycling = default_link_style['recycling']
-    this.arrow_size = default_link_style['arrow_size']
-    this.label_position = default_link_style['label_position']
-    this.orthogonal_label_position = default_link_style['orthogonal_label_position']
-    this.label_on_path = default_link_style['label_on_path']
-    this.label_pos_auto = default_link_style['label_pos_auto']
-    this.arrow = default_link_style['arrow']
-    this.color = default_link_style['color']
-    this.opacity = default_link_style['opacity']
-    this.dashed = default_link_style['dashed']
-    this.label_visible = default_link_style['label_visible']
-    this.label_font_size = default_link_style['label_font_size']
-    this.text_color = default_link_style['text_color']
-    this.to_precision = default_link_style['to_precision']
-    this.scientific_precision = default_link_style['scientific_precision']
-    this.font_family = default_link_style['font_family']
-    this.label_unit_visible = default_link_style['label_unit_visible']
-    this.label_unit = default_link_style['label_unit']
-    this.custom_digit = default_link_style['custom_digit']
-    this.nb_digit = default_link_style['nb_digit']
+
+    // Set id
+    this._id = id
+
+    // Set as deletable or not
+    this._is_deletable = is_deletable
+
+    // Parameters for shape
+    this._shape_arrow_size = default_shape_arrow_size
+    this._shape_color = default_shape_color
+    this._shape_curvature = default_shape_curvature
+    this._shape_is_arrow = default_shape_is_arrow
+    this._shape_is_curved = default_shape_is_curved
+    this._shape_is_dashed = default_shape_is_dashed
+    this._shape_is_recycling = default_shape_is_recycling
+    this._shape_opacity = default_shape_opacity
+    this._shape_orientation = default_shape_orientation
+
+    this._shape_starting_curve = default_shape_starting_curve
+    this._shape_ending_curve = default_shape_ending_curve
+    this._shape_starting_tangeant = default_shape_starting_tangeant
+    this._shape_ending_tangeant = default_shape_ending_tangeant
+
+    this._shape_vert_shift = default_shape_vert_shift
+
+    this._value_label_color = default_value_label_color
+    this._value_label_custom_digit = default_value_label_custom_digit
+    this._value_label_font_family = default_value_label_font_family
+    this._value_label_font_size = default_value_label_font_size
+    this._value_label_is_visible = default_value_label_is_visible
+    this._value_label_nb_digit = default_value_label_nb_digit
+    this._value_label_on_path = default_value_label_on_path
+    this._value_label_orthogonal_position = default_value_label_orthogonal_position
+    this._value_label_pos_auto = default_value_label_pos_auto
+    this._value_label_position = default_value_label_position
+    this._value_label_scientific_precision = default_value_label_scientific_precision
+    this._value_label_to_precision = default_value_label_to_precision
+    this._value_label_unit = default_value_label_unit
+    this._value_label_unit_visible = default_value_label_unit_visible
+  }
+
+  public delete() {
+    if (this._is_deletable) {
+      // Switch all refs to default style
+      Object.values(this._references)
+        .forEach(ref => ref.useDefaultStyle())
+      this._references = {}
+      // Garbage collector will do the rest....
+    }
+  }
+
+  // GETTERS ============================================================================
+
+  /**
+   * get id of style
+   *
+   * @readonly
+   * @memberof Class_NodeStyle
+   */
+  public get id() {return this._id}
+
+  // SETTERS ============================================================================
+
+  // Shape type
+  public set shape_is_curved(_: boolean) { this._shape_is_curved = _; this.updateReferencesDraw() }
+  public set shape_curvature(_: number) { this._shape_curvature = _; this.updateReferencesDraw() }
+  public set shape_is_recycling(_: boolean) { this._shape_is_recycling = _; this.updateReferencesDraw() }
+
+  // Shape orientation
+  public set shape_orientation(_: Type_Orientation) { this._shape_orientation = _; this.updateReferencesDraw() }
+  public set shape_starting_curve(_: number) {
+    if (_ >= 0 && _ < this.shape_ending_curve) {
+      this._shape_starting_curve = _
+      this.updateReferencesDraw()
+    }
+  }
+  public set shape_ending_curve(_: number) {
+    if (_ <= 1 && _ > this.shape_starting_curve) {
+      this._shape_ending_curve = _
+      this.updateReferencesDraw()
+    }
+  }
+  public set shape_starting_tangeant(_: number) { this._shape_starting_tangeant = _; this.updateReferencesDraw() }
+  public set shape_ending_tangeant(_: number) { this._shape_ending_tangeant = _; this.updateReferencesDraw() }
+  public set shape_vert_shift(_: number) { this._shape_vert_shift = _; this.updateReferencesDraw() }
+
+  // Shape's arrow attributes
+  public set shape_is_arrow(_: boolean) { this._shape_is_arrow = _; this.updateReferencesDraw() }
+  public set shape_arrow_size(_: number) { this._shape_arrow_size = _; this.updateReferencesDraw() }
+
+  // Shape's Filling attributes
+  public set shape_is_dashed(_: boolean) { this._shape_is_dashed = _; this.updateReferencesDraw() }
+  public set shape_color(_: string) { this._shape_color = _; this.updateReferencesDraw() }
+  public set shape_opacity(_: number) { this._shape_opacity = _; this.updateReferencesDraw() }
+
+  // Geometry link labels
+  public set value_label_position(_: string) { this._value_label_position = _; this.updateReferencesDraw() }
+  public set value_label_orthogonal_position(_: string) { this._value_label_orthogonal_position = _; this.updateReferencesDraw() }
+  public set value_label_on_path(_: boolean) { this._value_label_on_path = _; this.updateReferencesDraw() }
+  public set value_label_pos_auto(_: boolean) { this._value_label_pos_auto = _; this.updateReferencesDraw() }
+
+  // Value label display
+  public set value_label_is_visible(_: boolean) { this._value_label_is_visible = _; this.updateReferencesDraw() }
+  public set value_label_font_family(_: string) { this._value_label_font_family = _; this.updateReferencesDraw() }
+  public set value_label_font_size(_: number) { this._value_label_font_size = _; this.updateReferencesDraw() }
+  public set value_label_color(_: string) { this._value_label_color = _; this.updateReferencesDraw() }
+  public set value_label_to_precision(_: boolean) { this._value_label_to_precision = _; this.updateReferencesDraw() }
+  public set value_label_scientific_precision(_: number) { this._value_label_scientific_precision = _; this.updateReferencesDraw() }
+  public set value_label_custom_digit(_: boolean) { this._value_label_custom_digit = _; this.updateReferencesDraw() }
+  public set value_label_nb_digit(_: number) { this._value_label_nb_digit = _; this.updateReferencesDraw() }
+  public set value_label_unit_visible(_: boolean) { this._value_label_unit_visible = _; this.updateReferencesDraw() }
+  public set value_label_unit(_: string) { this._value_label_unit = _; this.updateReferencesDraw() }
+
+  // PUBLIC METHODS =======================================================================
+
+  public addReference(_: Class_NodeElement) {
+    if (!this._references[_.id]) {
+      this._references[_.id] = _
+    }
+  }
+
+  public removeReference(_: Class_NodeElement) {
+    if (this._references[_.id] !== undefined) {
+      delete this._references[_.id]
+      _.useDefaultStyle()
+    }
+  }
+
+  // PRIVATE METHODS ======================================================================
+
+  private updateReferencesDraw() {
+    Object.values(this._references)
+      .forEach(ref => ref.reset())
   }
 }
 
-export type SankeyLinkAttrType = {
-
-  // Geometry/appearence
-  orientation: string,
-  arrow: boolean,
-  color: string,
-  opacity: number,
-  left_horiz_shift: number,
-  right_horiz_shift: number,
-  vert_shift: number,
-  curvature: number,
-  curved: boolean,
-  recycling: boolean,
-  arrow_size: number,
-  dashed: boolean,
-  // Label
-  label_position: string,
-  orthogonal_label_position: string,
-  label_on_path: boolean,
-  label_pos_auto: boolean,
-
-  label_visible: boolean,
-  label_font_size: number,
-  text_color: string,
-  to_precision: boolean,
-  scientific_precision: number,
-  font_family: string,
-  label_unit_visible: boolean,
-  label_unit: string,
-  custom_digit: boolean,
-  nb_digit: number,
-}
-
-export const default_link_style: SankeyLinkAttrType = {
-  color: default_element_color,
-  recycling: false,
-  curved: true,
-  arrow: true,
-  text_color: 'black',
-  label_position: 'middle',
-  orthogonal_label_position: 'middle',
-  curvature: 0.5,
-  label_visible: true,
-  label_on_path: true,
-  label_pos_auto: false,
-  label_font_size: 20,
-  orientation: 'hh',
-  left_horiz_shift: 0.05,
-  right_horiz_shift: 0.95,
-  vert_shift: 0,
-  opacity: 0.85,
-  to_precision: false,
-  scientific_precision: 5,
-  arrow_size: 10,
-  font_family: 'Arial,serif',
-  label_unit_visible: false,
-  label_unit: '',
-  custom_digit: false,
-  nb_digit: 0,
-  dashed: false
-}
