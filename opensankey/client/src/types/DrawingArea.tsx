@@ -506,7 +506,7 @@ export class Class_DrawingArea {
         const new_node = this.addNewDefaultNodeToSankey()
         // Set position
         const mouse_position = d3.pointer(event)
-        new_node.setPosXY(mouse_position[0], mouse_position[1])
+        new_node.initPosXY(mouse_position[0], mouse_position[1])
         this.application_data.menu_configuration.updateMenuEditionNode()
 
         // TODO remove test

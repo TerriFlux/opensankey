@@ -62,7 +62,7 @@ const default_name_label_vert = 'bottom'
 const default_name_label_horiz = 'middle'
 const default_value_label_visible = false
 const default_value_label_vert = 'top'
-const default_value_label_horiz  = 'middle'
+const default_value_label_horiz = 'middle'
 const default_label_box_width = 150
 
 // CLASS NODE_ELEMENT *******************************************************************
@@ -175,7 +175,7 @@ export class Class_NodeElement extends Class_Element {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get tags(){return this._tags}
+  public get tags() { return this._tags }
 
   /**
    * Get node name
@@ -207,7 +207,7 @@ export class Class_NodeElement extends Class_Element {
     return this._name
   }
 
-  public deRefTag(tag:Class_Tag){
+  public deRefTag(tag: Class_Tag) {
     delete this._tags[tag.id]
   }
 
@@ -938,17 +938,26 @@ export class Class_NodeElement extends Class_Element {
   ) {
     // Get related drawing area
     const drawing_area = this.drawing_area
-    // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()) {
-      /* TODO définir  */
+    const nodes_selected = drawing_area.selected_nodes_list
+
+    // Only trigger the drag if we drag a selected node
+    if (nodes_selected.includes(this)) {
+
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position  
+        nodes_selected
+          .forEach(n => {
+            n.setPosXY(n.position_x+event.dx,n.position_y+event.dy)
+          })
+      }
     }
-    // SELECTION MODE =========================================================
-    else {
-      // Set position
-      const mouse_position = d3.pointer(event)
-      // Update node position
-      this.setPosXY(mouse_position[0], mouse_position[1])
-    }
+
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1006,7 +1015,7 @@ export class Class_NodeElement extends Class_Element {
       .attr('fill-opacity', node_visible ? '1' : '0')
       .attr('fill', node_color)
       .style('stroke', 'black')
-      .style('stroke-width', this.isSelected() ? 3 : 0) 
+      .style('stroke-width', this.isSelected() ? 3 : 0)
 
   }
 
@@ -1143,17 +1152,17 @@ export class Class_NodeElement extends Class_Element {
     return 'inline'
   }
 
-  private getShapeColorToUse(){
+  private getShapeColorToUse() {
     if (
       (!this.shape_color_sustainable) &&
       (this.drawing_area.sankey.nodesColorMap !== 'no_colormap') &&
-      (this.drawing_area.sankey.nodesColorMap in this._tags ) &&
+      (this.drawing_area.sankey.nodesColorMap in this._tags) &&
       (this._tags[this.drawing_area.sankey.nodesColorMap])
-    ){
-      const list_tag_from_grp_to_use_color=this._tags[this.drawing_area.sankey.nodesColorMap]
+    ) {
+      const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.nodesColorMap]
       return list_tag_from_grp_to_use_color.color
     }
-    else{
+    else {
       return this.shape_color
     }
   }
@@ -1409,7 +1418,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _is_deletable: boolean
 
-  private _references: {[_: string]: Class_NodeElement} = {}
+  private _references: { [_: string]: Class_NodeElement } = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(
