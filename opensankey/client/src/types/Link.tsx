@@ -49,8 +49,7 @@ export class Class_LinkElement extends Class_Element {
   // Labels
   // TODO set as private and add getter & setter
   public label?: Type_Label
-  public tags: { [_: string]: Class_Tag } = {}
-
+  private _tags: { [_: string]: Class_Tag } = {}
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -307,6 +306,18 @@ export class Class_LinkElement extends Class_Element {
     return true
   }
 
+  protected element_displayed(){
+    // TODO : functions that check if source & target are displayed (might be good to use a variable isVisible in nodes instead of calling node.element_displayed() )
+
+    return this.element_tag_displayed() // && this.checkSourceTargetDisplayed()
+  }
+  private element_tag_displayed(){
+    // If link has tags :
+    //  - check if any of them is selected at false
+    // else if the link doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
+  }
+
   // GETTER / SETTER ====================================================================
 
   // Orientation
@@ -357,6 +368,7 @@ export class Class_LinkElement extends Class_Element {
     this._target = value
   }
 
+  public get tags(){return this._tags}
   public removeTag(tag:Class_Tag){
     if (this.tags[tag.id] !== undefined) {
       delete this.tags[tag.id]
@@ -397,7 +409,7 @@ export class Class_LinkElement extends Class_Element {
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
       .attr('fill', 'none')
-      .attr('stroke', this.color)
+      .attr('stroke', this.getLinkColorToUse())
       .attr('stroke-opacity', this.opacity)
       .attr('stroke-width', this.link_stroke_width)
       .attr('stroke-dasharray',this.dashed?'10,5':'')
@@ -563,6 +575,79 @@ export class Class_LinkElement extends Class_Element {
       .domain([0, 100])
       .range([0, this.drawing_area.scale])
     return scale(this.thickness)
+  }
+
+
+  /**
+   * Deal with simple left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Node
+   */
+  protected eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      // Purge selection list
+      drawing_area.purgeSelection()
+      // Close all menus
+      drawing_area.application_data.closeAllMenus()
+    }
+    // SELECTION MODE =========================================================
+    else if (drawing_area.isInSelectionMode()) {
+      // ALT
+      if (event.altKey) {
+        // Purge selection list
+        drawing_area.purgeSelection()
+        // Show tooltip
+        // this.showTooltip()
+      }
+      // SHIFT
+      else if (event.shiftKey) {
+        // Add node to selection
+        drawing_area.addLinkToSelection(this)
+  
+        // Open related menu
+        this.menu_config.OpenConfigMenu()
+        this.menu_config.OpenConfigMenuElements()
+        this.menu_config.OpenConfigMenuElementsLinks()
+        // Update components related to node edition
+        this.menu_config.updateMenuEditionLink()
+  
+      } else if (event.ctrlKey) {
+        // Add node to selection
+        drawing_area.addLinkToSelection(this)
+  
+        // Update components related to node edition
+        this.menu_config.updateMenuEditionNode()
+      }
+      // OTHERS
+      else {
+        // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
+        // Purge selection list
+        drawing_area.purgeSelection()
+        // Add node to selection
+        drawing_area.addLinkToSelection(this)
+      }
+    }
+  }
+
+  
+  private getLinkColorToUse() {
+    if (
+      (this.drawing_area.sankey.linksColorMap !== 'no_colormap') &&
+      (this.drawing_area.sankey.linksColorMap in this._tags) &&
+      (this._tags[this.drawing_area.sankey.linksColorMap])
+    ) {
+      const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.linksColorMap]
+      return list_tag_from_grp_to_use_color.color
+    }
+    else {
+      return this.color
+    }
   }
 
   // ==========Setter & Getter of link attribute/style=====================
