@@ -120,6 +120,7 @@ export class Class_NodeElement extends Class_Element {
   private arrow_angle_factor: number = 10
   private arrow_angle_direction: string = 'hh'
 
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -172,6 +173,28 @@ export class Class_NodeElement extends Class_Element {
       })
     this._tags = {}
   }
+
+  protected element_displayed(){
+  
+    return this.element_tag_displayed()
+  }
+
+
+  /**
+ * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+ * if that the case then we don't draw the node
+ *
+ * @private
+ * @return {*} 
+ * @memberof Class_NodeElement
+ */
+  private element_tag_displayed(){
+  // If node has tags :
+  //  - check if any of them is selected at false
+  // else if the node doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
+  }
+
 
   // GETTERS / SETTERS ==================================================================
 
