@@ -157,9 +157,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     if (list_style_or_links.length == 0) {
       return 0.5
     }
-    const current_link = list_style_or_links[0]
-    const left_shift = current_link.left_horiz_shift as number
-    const right_shift = current_link.right_horiz_shift as number
+    // const current_link = list_style_or_links[0]
+    const left_shift = value_left_horiz_shift as number
+    const right_shift = value_right_horiz_shift as number
 
     return parseFloat(((left_shift + right_shift) / 2).toPrecision(2))
   }
@@ -170,7 +170,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     }
     const current_link = list_style_or_links[0]
     // const the_shift = ((ReturnCorrectLinkAttributeValue(data, current_link, 'right_horiz_shift', menu_for_style) as number) - (ReturnCorrectLinkAttributeValue(data, current_link, 'left_horiz_shift', menu_for_style) as number)) / 2
-    const the_shift = ( current_link.right_horiz_shift as number) - (current_link.left_horiz_shift as number) / 2
+    const the_shift = ( value_right_horiz_shift as number) - (value_left_horiz_shift as number) / 2
     return parseFloat(the_shift.toPrecision(2))
   }
 

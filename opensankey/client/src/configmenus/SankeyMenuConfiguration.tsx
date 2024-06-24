@@ -50,7 +50,8 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
   menu_configuration_link_tags,
   menu_configuration_data_tags,
   menu_configuration_nodes_attributes,
-  menu_configuration_links,
+  menu_config_link_data,
+  menu_config_link_attr,
   additional_accordion_edition_elements,
   link_function,
   ComponentUpdater,
@@ -160,7 +161,8 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
                 applicationData={applicationData}
                 applicationContext={applicationContext}
                 applicationState={applicationState}
-                menu_configuration_links={menu_configuration_links}
+                menu_config_link_data={menu_config_link_data}
+                menu_config_link_attr={menu_config_link_attr}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
                 contextMenu={contextMenu}
