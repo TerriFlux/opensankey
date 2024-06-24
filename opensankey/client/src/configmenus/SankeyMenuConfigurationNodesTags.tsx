@@ -86,10 +86,8 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                     const visible = evt.target.checked
                     list_node_selected.map(d => {
                       if (visible) {
-                        if (!d.tags[tags_group_key]) {
-                          d.tags[tags_group_key] = []
-                        }
-                        d.tags[tags_group_key].push(tags[1])
+
+                        d.tags[tags_group_key]=tags[1]
                         // If the groue tage is 'Type de noeud' then we change the style
                         // to style of product or sector
                         // if(tags_group_key==='Type de noeud'){
@@ -101,7 +99,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                         // }
                       } else {
                         // Remove deselected tag from array of selected for the groupe tag tags_group_key of selected nodes
-                        d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[1]),1)
+                        delete d.tags[tags_group_key]
 
                         // If the groue tage is 'Type de noeud' then we change the style
                         // to style of product or sector according to tag still affected
@@ -159,7 +157,7 @@ const IsAllNodeTagsSame=(list_nodes:Class_NodeElement[],tag_class_obj:Class_Tag,
     // For each selected nodes
 
     list_nodes.map((d,i) => {
-      const val=(key_grp_tag in d.tags && d.tags[key_grp_tag].includes(tag_class_obj))
+      const val=(key_grp_tag in d.tags && d.tags[key_grp_tag]===tag_class_obj)
       if(i===0){
         store_value=[val,false]
       }else{

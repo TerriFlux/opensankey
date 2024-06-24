@@ -153,28 +153,28 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const is_indeterminatae = !list_nodes_selected.every(check_indeterminate)
 
   const value_shape_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_visible : (list_nodes_selected[0]?.shape_visible ?? false)
-  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_visible : (list_nodes_selected[0]?.label_visible ?? false)
-  const value_min_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].min_width : (list_nodes_selected[0]?.min_width ?? false)
-  const value_min_height = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].min_height : (list_nodes_selected[0]?.min_height ?? false)
-  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].color : (list_nodes_selected[0]?.color ?? false)
-  const value_shape = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape : (list_nodes_selected[0]?.shape ?? false)
-  const value_node_arrow_angle_factor = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].node_arrow_angle_factor : (list_nodes_selected[0]?.node_arrow_angle_factor ?? false)
-  const value_node_arrow_angle_direction = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].node_arrow_angle_direction : (list_nodes_selected[0]?.node_arrow_angle_direction ?? false)
-  const value_colorSustainable = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].color_sustainable : (list_nodes_selected[0]?.color_sustainable ?? false)
-  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].font_family : (list_nodes_selected[0]?.font_family ?? false)
-  const value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].font_size : (list_nodes_selected[0]?.font_size ?? false)
-  const value_uppercase = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].uppercase : (list_nodes_selected[0]?.uppercase ?? false)
-  const value_bold = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].bold : (list_nodes_selected[0]?.bold ?? false)
-  const value_italic = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].italic : (list_nodes_selected[0]?.italic ?? false)
-  const value_label_box_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_box_width : (list_nodes_selected[0]?.label_box_width ?? false)
-  const value_label_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_color : (list_nodes_selected[0]?.label_color ?? false)
-  const value_label_vert = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_vert : (list_nodes_selected[0]?.label_vert ?? false)
-  const value_label_horiz = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_horiz : (list_nodes_selected[0]?.label_horiz ?? false)
-  const value_label_background = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_background : (list_nodes_selected[0]?.label_background ?? false)
-  const value_show_value = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].show_value : (list_nodes_selected[0]?.show_value ?? false)
-  const value_label_vert_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_vert_valeur : (list_nodes_selected[0]?.label_vert_valeur ?? false)
-  const value_label_horiz_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].label_horiz_valeur : (list_nodes_selected[0]?.label_horiz_valeur ?? false)
-  const value_value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_font_size : (list_nodes_selected[0]?.value_font_size ?? false)
+  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_visible : (list_nodes_selected[0]?.name_label_visible ?? false)
+  const value_min_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_min_width : (list_nodes_selected[0]?.shape_min_width ?? false)
+  const value_min_height = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_min_height : (list_nodes_selected[0]?.shape_min_height ?? false)
+  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_color : (list_nodes_selected[0]?.shape_color ?? false)
+  const value_shape = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_type : (list_nodes_selected[0]?.shape_type ?? false)
+  const value_node_arrow_angle_factor = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_arrow_angle_factor : (list_nodes_selected[0]?.shape_arrow_angle_factor ?? false)
+  const value_node_arrow_angle_direction = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_arrow_angle_direction : (list_nodes_selected[0]?.shape_arrow_angle_direction ?? false)
+  const value_colorSustainable = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].shape_color_sustainable : (list_nodes_selected[0]?.shape_color_sustainable ?? false)
+  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_font_family : (list_nodes_selected[0]?.name_label_font_family ?? false)
+  const value_label_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_font_size : (list_nodes_selected[0]?.name_label_font_size ?? false)
+  const value_uppercase = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_uppercase : (list_nodes_selected[0]?.name_label_uppercase ?? false)
+  const value_bold = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_bold : (list_nodes_selected[0]?.name_label_bold ?? false)
+  const value_italic = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_italic : (list_nodes_selected[0]?.name_label_italic ?? false)
+  const value_label_box_width = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_box_width : (list_nodes_selected[0]?.name_label_box_width ?? false)
+  const value_label_color = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_color : (list_nodes_selected[0]?.name_label_color ?? false)
+  const value_label_vert = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_vert : (list_nodes_selected[0]?.name_label_vert ?? false)
+  const value_label_horiz = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_horiz : (list_nodes_selected[0]?.name_label_horiz ?? false)
+  const value_label_background = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].name_label_background : (list_nodes_selected[0]?.name_label_background ?? false)
+  const value_show_value = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_label_visible : (list_nodes_selected[0]?.value_label_visible ?? false)
+  const value_label_vert_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_label_vert : (list_nodes_selected[0]?.value_label_vert ?? false)
+  const value_label_horiz_valeur = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_label_horiz : (list_nodes_selected[0]?.value_label_horiz ?? false)
+  const value_value_font_size = (menu_for_style) ? new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current].value_label_font_size : (list_nodes_selected[0]?.value_label_font_size ?? false)
 
   let element
 
@@ -238,7 +238,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             type='color'
             value={value_color}
             onChange={evt => {
-              list_style_or_nodes.forEach(n => n.color = evt.target.value)
+              list_style_or_nodes.forEach(n => n.shape_color = evt.target.value)
               newUpdateMenuConfigNode()
               updateLinkAttachedToNodes()
             }}
@@ -252,7 +252,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              list_style_or_nodes.forEach(n => n.color_sustainable = !value_colorSustainable)
+              list_style_or_nodes.forEach(n => n.shape_color_sustainable = !value_colorSustainable)
 
               newUpdateMenuConfigNode()
             }}
@@ -281,7 +281,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              list_style_or_nodes.forEach(n => n.shape = 'ellipse')
+              list_style_or_nodes.forEach(n => n.shape_type = 'ellipse')
               newUpdateMenuConfigNode()
               updateLinkAttachedToNodes()
             }}
@@ -304,7 +304,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              list_style_or_nodes.forEach(n => n.shape = 'rect')
+              list_style_or_nodes.forEach(n => n.shape_type = 'rect')
               newUpdateMenuConfigNode()
               updateLinkAttachedToNodes()
             }}
@@ -329,7 +329,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button'
             }
             onClick={() => {
-              list_style_or_nodes.forEach(n => n.shape = 'arrow')
+              list_style_or_nodes.forEach(n => n.shape_type = 'arrow')
               // assignValueToVar('shape', 'arrow')
 
               newUpdateMenuConfigNode()
@@ -372,7 +372,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 value={value_node_arrow_angle_factor}
                 onChange={(value) => {
                   // assignValueToVar('node_arrow_angle_factor', value)
-                  list_style_or_nodes.forEach(n => n.node_arrow_angle_factor = value)
+                  list_style_or_nodes.forEach(n => n.shape_arrow_angle_factor = value)
 
                   newUpdateMenuConfigNode()
                   // Redraw only sabot of link attached to the node already shaped as an arrow
@@ -405,7 +405,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 }
                 minWidth={0}
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.node_arrow_angle_direction = 'left')
+                  list_style_or_nodes.forEach(n => n.shape_arrow_angle_direction = 'left')
 
                   newUpdateMenuConfigNode()
                   // Redraw only sabot of link attached to the node already shaped as an arrow
@@ -423,7 +423,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 }
                 minWidth={0}
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.node_arrow_angle_direction = 'right')
+                  list_style_or_nodes.forEach(n => n.shape_arrow_angle_direction = 'right')
 
                   newUpdateMenuConfigNode()
                   // Redraw only sabot of link attached to the node already shaped as an arrow
@@ -440,7 +440,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 }
                 minWidth={0}
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.node_arrow_angle_direction = 'top')
+                  list_style_or_nodes.forEach(n => n.shape_arrow_angle_direction = 'top')
 
                   newUpdateMenuConfigNode()
                   // Redraw only sabot of link attached to the node already shaped as an arrow
@@ -457,7 +457,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 }
                 minWidth={0}
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.node_arrow_angle_direction = 'bottom')
+                  list_style_or_nodes.forEach(n => n.shape_arrow_angle_direction = 'bottom')
                   newUpdateMenuConfigNode()
                   // Redraw only sabot of link attached to the node already shaped as an arrow
                   link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n => ReturnValueNode(data, n, 'shape') === 'arrow'))
@@ -483,7 +483,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         </Box>
         <ConfigNodeAttributeNumberInput
           valueOfAttr={value_min_width}
-          function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.min_width = val)}
+          function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.shape_min_width = val)}
           menu_for_style={menu_for_style}
           function_onBlur={() => {
             newUpdateMenuConfigNode()
@@ -505,7 +505,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         </Box>
         <ConfigNodeAttributeNumberInput
           valueOfAttr={value_min_height}
-          function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.min_height = val)}
+          function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.shape_min_height = val)}
           menu_for_style={menu_for_style}
           function_onBlur={() => {
             newUpdateMenuConfigNode()
@@ -535,7 +535,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         isIndeterminate={is_indeterminatae}
         isChecked={value_label_visible}
         onChange={(evt) => {
-          list_style_or_nodes.forEach(n => n.label_visible = evt.target.checked)
+          list_style_or_nodes.forEach(n => n.name_label_visible = evt.target.checked)
           newUpdateMenuConfigNode()
         }}
       >
@@ -566,7 +566,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             isIndeterminate={is_indeterminatae}
             isChecked={value_label_color}
             onChange={(evt) => {
-              list_style_or_nodes.forEach(n => n.label_color = evt.target.checked)
+              list_style_or_nodes.forEach(n => n.name_label_color = evt.target.checked)
               newUpdateMenuConfigNode()
             }}>
             <OSTooltip label={t('Noeud.labels.tooltips.lb')}>
@@ -593,7 +593,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 paddingEnd='0'
                 minWidth='0'
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.bold = !value_bold)
+                  list_style_or_nodes.forEach(n => n.name_label_bold = !value_bold)
                   newUpdateMenuConfigNode()
                 }}
               >
@@ -611,7 +611,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 paddingEnd='0'
                 minWidth='0'
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.uppercase = !value_uppercase)
+                  list_style_or_nodes.forEach(n => n.name_label_uppercase = !value_uppercase)
                   newUpdateMenuConfigNode()
                 }}
               >
@@ -629,7 +629,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 paddingEnd='0'
                 minWidth='0'
                 onClick={() => {
-                  list_style_or_nodes.forEach(n => n.italic = !value_italic)
+                  list_style_or_nodes.forEach(n => n.name_label_italic = !value_italic)
 
                   newUpdateMenuConfigNode()
                 }}
@@ -644,7 +644,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 value_font_family
               }
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                list_style_or_nodes.forEach(n => n.font_family = evt.target.value)
+                list_style_or_nodes.forEach(n => n.name_label_font_family = evt.target.value)
                 newUpdateMenuConfigNode()
               }}>
               {
@@ -661,8 +661,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               }
             </Select>
             <ConfigNodeAttributeNumberInput
-              valueOfAttr={value_font_size}
-              function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.font_size = val)}
+              valueOfAttr={value_label_font_size}
+              function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.name_label_font_size = val)}
               menu_for_style={menu_for_style}
               function_onBlur={() => {
                 newUpdateMenuConfigNode()
@@ -679,7 +679,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             isIndeterminate={is_indeterminatae}
             isChecked={value_label_background}
             onChange={(evt) => {
-              list_style_or_nodes.forEach(n => n.label_background = evt.target.checked)
+              list_style_or_nodes.forEach(n => n.name_label_background = evt.target.checked)
               newUpdateMenuConfigNode()
             }}
           >
@@ -708,7 +708,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
 
               <ConfigNodeAttributeNumberInput
                 valueOfAttr={value_label_box_width}
-                function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.label_box_width = val)}
+                function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.name_label_box_width = val)}
                 menu_for_style={menu_for_style}
                 function_onBlur={() => newUpdateMenuConfigNode()}
                 stepper={true}
@@ -740,7 +740,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       // TODO : Delete x_label & y_label when we modify label position (horizontally & vertically)
-                      list_style_or_nodes.forEach(n => n.label_horiz = 'left')
+                      list_style_or_nodes.forEach(n => n.name_label_horiz = 'left')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -760,7 +760,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_horiz = 'middle')
+                      list_style_or_nodes.forEach(n => n.name_label_horiz = 'middle')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -780,7 +780,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_horiz = 'right')
+                      list_style_or_nodes.forEach(n => n.name_label_horiz = 'right')
                       newUpdateMenuConfigNode()
                     }}>
                     <FaAlignRight />
@@ -802,7 +802,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_vert = 'top')
+                      list_style_or_nodes.forEach(n => n.name_label_vert = 'top')
 
                       newUpdateMenuConfigNode()
                     }}
@@ -823,7 +823,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_vert = 'middle')
+                      list_style_or_nodes.forEach(n => n.name_label_vert = 'middle')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -843,7 +843,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_vert = 'bottom')
+                      list_style_or_nodes.forEach(n => n.name_label_vert = 'bottom')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -869,16 +869,16 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         isIndeterminate={is_indeterminatae}
         isChecked={value_show_value}
         onChange={(evt) => {
-          list_style_or_nodes.forEach(n => n.show_value = evt.target.checked)
+          list_style_or_nodes.forEach(n => n.value_label_visible = evt.target.checked)
           newUpdateMenuConfigNode()
         }}
       >
         <OSTooltip label={t('Noeud.labels.tooltips.vdv')}>
           {t('Noeud.labels.vdv')}
         </OSTooltip>
-        {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'show_value', menu_for_style) ?
+        {/* {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'value_label_visible', menu_for_style) ?
           TooltipValueSurcharge('node_var', t) :
-          <></>)}
+          <></>)} */}
       </Checkbox>
     </Box>
 
@@ -897,7 +897,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             <ConfigNodeAttributeNumberInput
               valueOfAttr={value_value_font_size}
               menu_for_style={menu_for_style}
-              function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.value_font_size = val)}
+              function_onChange={(_, val) => list_style_or_nodes.forEach(n => n.value_label_font_size = val)}
               function_onBlur={() => newUpdateMenuConfigNode()}
               stepper={true}
               minimum_value={11}
@@ -925,7 +925,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_horiz_valeur = 'top')
+                      list_style_or_nodes.forEach(n => n.value_label_horiz = 'left')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -945,7 +945,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_horiz_valeur = 'middle')
+                      list_style_or_nodes.forEach(n => n.value_label_horiz = 'middle')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -965,7 +965,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_horiz_valeur = 'right')
+                      list_style_or_nodes.forEach(n => n.value_label_horiz = 'right')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -988,7 +988,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_vert_valeur = 'top')
+                      list_style_or_nodes.forEach(n => n.value_label_vert = 'top')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -1008,7 +1008,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     minWidth='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_vert_valeur = 'middle')
+                      list_style_or_nodes.forEach(n => n.value_label_vert = 'middle')
                       newUpdateMenuConfigNode()
                     }}
                   >
@@ -1028,7 +1028,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingStart='0'
                     paddingEnd='0'
                     onClick={() => {
-                      list_style_or_nodes.forEach(n => n.label_vert_valeur = 'bottom')
+                      list_style_or_nodes.forEach(n => n.value_label_vert = 'bottom')
                       newUpdateMenuConfigNode()
                     }}
                   >

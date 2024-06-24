@@ -23,7 +23,8 @@ import {
   Class_NodeStyle
 } from './Node'
 import {
-  Class_TagGroup
+  Class_TagGroup,
+  Class_TagGroupNodeLevel
 } from './Tag'
 import { type } from 'os'
 
@@ -57,7 +58,7 @@ export class Class_Sankey {
   public node_taggs: { [_: string]: Class_TagGroup } = {}
   public flux_taggs: { [_: string]: Class_TagGroup } = {}
   public data_taggs: { [_: string]: Class_TagGroup } = {}
-  public level_taggs: { [_: string]: Class_TagGroup } = {}
+  public level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // TODO a implementer
   // left_shift: number,
@@ -91,6 +92,10 @@ export class Class_Sankey {
   private _link_styles: { [_: string]: Class_LinkStyle } = {'default': default_link_style } // TODO create defaut style
   private _node_styles: { [_: string]: Class_NodeStyle } = {'default': default_node_style }
 
+  // Variable determining if we apply tag color to elements
+  private _colorMap: string
+  private _nodesColorMap: string
+  private _linksColorMap: string
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -114,10 +119,20 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config=menu_config
+    this._colorMap='no_colormap'
+    this._nodesColorMap='no_colormap'
+    this._linksColorMap='no_colormap'
   }
 
   // GETTERS / SETTERS ==================================================================
+  public get colorMap(): string {return this._colorMap}
+  public set colorMap(value: string) {this._colorMap = value}
 
+  public get nodesColorMap(): string {return this._nodesColorMap}
+  public set nodesColorMap(value: string) {this._nodesColorMap = value}
+
+  public get linksColorMap(): string {return this._linksColorMap}
+  public set linksColorMap(value: string) {this._linksColorMap = value}
   // Nodes related ----------------------------------------------------------------------
 
   /**
