@@ -27,7 +27,7 @@ import {
 } from './SankeyUtils'
 
 import { MultiSelect } from 'react-multi-select-component'
-import { selected_type } from '../topmenus/SankeyMenuTop'
+import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
@@ -158,7 +158,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           width='14.75rem'
         >
           <MultiSelect
-            valueRenderer={(selected: selected_type[]) => {
+            valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
               return selected.filter(d => d !== undefined).length ? selected.map(({ label }) => label + ', ') : 'Aucun flux sélectionné'
             }}
             labelledBy='TODO Change'
