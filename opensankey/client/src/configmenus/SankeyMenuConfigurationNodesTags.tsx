@@ -84,7 +84,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                   isChecked={allChecked[0] as boolean}
                   onChange={(evt) => {
                     const visible = evt.target.checked
-                    list_node_selected.map(d => {
+                    list_node_selected.forEach(d => {
                       if (visible) {
 
                         d.tags[tags_group_key]=tags[1]

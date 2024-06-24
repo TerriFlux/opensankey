@@ -102,6 +102,8 @@ export abstract class Class_Element {
  * @memberof Class_Element
  */
   private _menu_config: Class_MenuConfig
+  
+  protected abstract element_displayed():boolean
 
 
   // CONSTRUCTOR ========================================================================
@@ -135,12 +137,15 @@ export abstract class Class_Element {
   public reset() {
     // Clear D3
     this.unDraw()
-    // Draw element on D3
-    this.draw()
-    // Position element on D3
-    this.applyPosition()
-    // Add events listeners
-    this.setEventsListeners()
+    if(this.element_displayed()){
+      // Draw element on D3
+      this.draw()
+      // Position element on D3
+      this.applyPosition()
+      // Add events listeners
+      this.setEventsListeners()
+    }
+   
   }
 
   // GETTERS / SETTERS ==================================================================
