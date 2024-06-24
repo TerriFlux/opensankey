@@ -16,7 +16,7 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
   const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
   let tmp_editor_content_tooltip = editor_content_tooltip
   const new_nodes_sorted = new_data.drawing_area.selected_nodes_list_sorted
-  const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.isSelected())
+  const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.is_selected)
   let s_tmp_editor_content_changed = false
   if (new_nodes_sorted_selected.length>0) {
     if (new_nodes_sorted_selected[0].tooltip_text !== editor_content_tooltip) {

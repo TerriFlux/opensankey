@@ -1006,7 +1006,7 @@ export class Class_NodeElement extends Class_Element {
       .attr('fill-opacity', node_visible ? '1' : '0')
       .attr('fill', node_color)
       .style('stroke', 'black')
-      .style('stroke-width', this.isSelected() ? 3 : 0) 
+      .style('stroke-width', this.is_selected ? 3 : 0)
 
   }
 

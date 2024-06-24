@@ -20,6 +20,10 @@ import {
   Type_Position
 } from './Utils'
 
+// CONSTANT *****************************************************************************
+const const_default_position_x = 50
+const const_default_position_y = 50
+
 
 // CLASS ELEMENT ************************************************************************
 /**
@@ -78,6 +82,14 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   protected _is_selected: boolean = false
+
+  /**
+   * Is element currently drawn
+   * @protected
+   * @type {boolean}
+   * @memberof Class_Element
+   */
+  protected _is_visible: boolean = true
 
   /**
    * Is mouse cursor over element d3 selection (default=false)
@@ -143,6 +155,11 @@ export abstract class Class_Element {
     this.setEventsListeners()
   }
 
+  // Positioning
+  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
+  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.reset() }
+  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
+
   // GETTERS / SETTERS ==================================================================
   // Name
   public get id() { return this._id }
@@ -155,17 +172,21 @@ export abstract class Class_Element {
 
   // Position
   public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _; this.reset() }
+  public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
   public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _; this.reset() }
-  public setPosXY(x: number, y: number) { this.position_x = x; this.position_y = y; this.reset() }
+  public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
   public get position_type() { return this._display.position.type }
   public set position_type(_: Type_Position) { this._display.position.type = _; this.reset() }
 
   // Selection
   public setSelected() { this._is_selected = true; this.reset() }
   public setUnSelected() { this._is_selected = false; this.reset() }
-  public isSelected() { return this._is_selected }
+  public get is_selected() { return this._is_selected }
+
+  // Visible
+  public setVisible() { this._is_visible = true; this.reset() }
+  public setInvisble() { this._is_visible = false; this.reset() }
+  public get is_visible() { return this._is_visible }
 
   // Mouse is over element
   public isMouseOver() { return this._is_mouse_over }
@@ -195,7 +216,7 @@ export abstract class Class_Element {
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this._id)
-        // .style('stroke-width', this.isSelected() ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
+        // .style('stroke-width', this.is_selected ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
         // .style('stroke', 'black') Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
     }
   }
@@ -273,10 +294,11 @@ export abstract class Class_Element {
       // Drag events TODO
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       this.d3_selection?.call(
-        d3.drag<SVGGElement, this>().on(
-          'start',
-          (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-            this.eventMouseDragStart(event))
+        d3.drag<SVGGElement, this>()
+          .on(
+            'start',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragStart(event))
           .on(
             'drag',
             (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>

@@ -32,7 +32,7 @@ import {
   faCompress,
   faDatabase
 } from '@fortawesome/free-solid-svg-icons'
-import { selected_type } from '../topmenus/SankeyMenuTop'
+import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 import { TFunction } from 'i18next'
 import { ConvertDataFuncType } from './types/SankeyConvertTypes'
 import {
@@ -312,7 +312,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
               <Col xs={10}>
                 <MultiSelect
                   className={'multidropdown_filter_node_link'}
-                  valueRenderer={(selected: selected_type[]) => {
+                  valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
                     return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
                   }}
                   labelledBy={'dropdown_node_filter'}
@@ -1077,7 +1077,7 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
                 <MultiSelect
                   className={'multidropdown_filter_node_link'}
                   // style={{ color: 'black',width:'200px' }}
-                  valueRenderer={(selected: selected_type[]) => {
+                  valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
                     return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
                   }}
                   labelledBy={'dropdown_node_filter'}
@@ -1282,7 +1282,7 @@ export const redrawSankeyWithSelectedTag = (
   const ll = new_displayed_links.filter(lid => !old_displayed_links.includes(lid))
   node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   link_function.RedrawLinks(Object.values(applicationData.display_links))
-  
+
   new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
   new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
   new_data.drawing_area.legend.reset()
