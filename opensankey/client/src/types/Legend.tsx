@@ -5,6 +5,7 @@ import { Class_DrawingArea } from './DrawingArea'
 import { Class_Element } from './Element'
 import { Class_MenuConfig } from './MenuConfig'
 import { Type_ElementPosition, default_element_color, default_element_position } from './Utils'
+import { MouseEvent } from 'react'
 
 
 export class Class_Legend extends Class_Element {
@@ -20,9 +21,9 @@ export class Class_Legend extends Class_Element {
   private _width: number = 180
 
   protected _display: {
-        drawing_area: Class_DrawingArea,
-        position: Type_ElementPosition,
-    }
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+  }
 
   /**Attribute for legend content positionning 
        Souldn't have getter & setter public because the variable is only use & computed when we draw the legend  */
@@ -40,8 +41,6 @@ export class Class_Legend extends Class_Element {
     menu_config: Class_MenuConfig,
   ) {
     super('legend_area', menu_config, 'grp_legend')
-
-
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position)
@@ -55,7 +54,6 @@ export class Class_Legend extends Class_Element {
     // Update class attributes
     this.d3_selection?.attr('class', 'ggrp_legend')
     // Apply styles
-    console.log(this._masked)
     this.d3_selection?.style('display', this._masked ? 'none' : '')
 
     // Draw Background 
@@ -81,9 +79,11 @@ export class Class_Legend extends Class_Element {
     if (sankey_has_dashed_links) {
       this.drawInfoDashedLink()
     }
-    if(this._display_legend_scale){
+    if (this._display_legend_scale) {
       this.drawSankeyScale()
     }
+
+    this.updateLegendHeight()
 
   }
 
@@ -100,7 +100,7 @@ export class Class_Legend extends Class_Element {
       .append('rect')
       .attr('class', 'zone_for_dragging')
       .attr('width', this._width)
-      .attr('height', this._width)
+      .attr('height', '0px')
       .attr('rx', '2px')
       .attr('ry', '2px')
       .attr('stroke-dasharray', () => '')
@@ -108,24 +108,21 @@ export class Class_Legend extends Class_Element {
       .attr('stroke-width', this._legend_bg_border ? 1 : 0)
       .attr('fill', this._legend_bg_color)
       .attr('fill-opacity', this._legend_bg_opacity / 100)
-      .on('mouseover', () => {
-
-        d3.select('.opensankey #g_legend .zone_for_dragging').attr('stroke-dasharray', '6,6')
-        d3.select('.opensankey #g_legend .zone_for_dragging').attr('stroke', this._legend_bg_color)
-      })
-      .on('mouseleave', () => {
-        d3.select('.opensankey #g_legend .zone_for_dragging').attr('stroke-dasharray', 'unherit')
-        d3.select('.opensankey #g_legend .zone_for_dragging').attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
-
-      })
-      .on('mousedown', () => {
-        this.setSelected()
-        d3.select('.opensankey #g_legend .zone_for_dragging').attr('stroke-dasharray', () => '6,6')
-        let h = document.getElementById('g_legend')?.getBoundingClientRect().height
-        h = h ? h : 50
-
-        //   draw_legend_handles(applicationData,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
-      })
+      
+    //  Event below get triggered when dragging 
+    // .on('mouseover', () => {
+    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
+    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
+    // })
+    // .on('mouseleave', () => {
+    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', 'unherit')
+    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
+    // })
+    // .on('mousedown', () => {
+    //   this.setSelected()
+    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', () => '6,6')
+    //   //   draw_legend_handles(applicationData,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+    // })
   }
 
   /**
@@ -135,17 +132,14 @@ export class Class_Legend extends Class_Element {
      * @memberof Class_Legend
      */
   private drawTagDisplayed() {
-    const { node_taggs, flux_taggs, data_taggs, nodesColorMap, linksColorMap, nodes_dict, links_dict } = this.drawing_area.sankey
+    const { node_taggs, flux_taggs, data_taggs, } = this.drawing_area.sankey
     // Get all grp tag insind one variable
     const all_tags = Object.assign({}, node_taggs, flux_taggs, data_taggs)
-    console.log(all_tags)
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
       // Ajout du tagGroup.name
       this.d3_selection?.append('text')
         .attr('id', 'GrpTag_title_' + tag_group[0])
-        .attr('transform', function () {
-          return 'translate(' + this.dx + ',' + this.dy + ' )'
-        })
+        .attr('transform', 'translate(' + this.dx + ',' + this.dy + ' )')
         .attr('x', 0)
         .attr('y', 5 + this._legend_police)
         .text(tag_group[1].name)
@@ -161,36 +155,36 @@ export class Class_Legend extends Class_Element {
 
       Object.entries(tag_group[1].tags)
         .filter((d) => d[1].selected)
-      // .filter(tag => {
-      //     // Filter tag that have elements associated to them displayed (nodes,links) 
-      //     if ( Object.keys(flux_taggs).includes(linksColorMap) && Object.keys(flux_taggs).includes(tag_group[0]) ) {
-      //         const t = Object.values(links_dict).filter(l => {
-      //             const tmp = GetLinkValue(data, l.idLink)
-      //             return (
-      //                 LinkVisible(l, data, display_nodes) &&
-      //                 tmp.tags[linksColorMap] &&
-      //                 tmp.tags[linksColorMap].includes(tag[1])
-      //             )
-      //         }).length
-      //         return t > 0
-      //     }
-      //     if ( Object.keys(node_taggs).includes(nodesColorMap) && Object.keys(node_taggs).includes(tag_group[0]) ) {
-      //         const node_visible = NodeVisibleOnsSvg()
-      //         const t2 = Object.values(nodes_dict).filter(n => {
-      //             return (
-      //                 n.tags[nodesColorMap] &&
-      //                 n.tags[nodesColorMap].includes(tag[1]) &&
-      //                 node_visible.includes(n.idNode) &&
-      //                 (n.position !== 'relative')
-      //             )
-      //         }).length
-      //         return t2 > 0
-      //     }
-      //     if (linksColorMap && linksColorMap.includes('dataTags_')) {
-      //         return true
-      //     }
-      //     return false
-      // })
+        // .filter(tag => {
+        //     // Filter tag that have elements associated to them displayed (nodes,links) 
+        //     if ( Object.keys(flux_taggs).includes(linksColorMap) && Object.keys(flux_taggs).includes(tag_group[0]) ) {
+        //         const t = Object.values(links_dict).filter(l => {
+        //             const tmp = GetLinkValue(data, l.idLink)
+        //             return (
+        //                 LinkVisible(l, data, display_nodes) &&
+        //                 tmp.tags[linksColorMap] &&
+        //                 tmp.tags[linksColorMap].includes(tag[1])
+        //             )
+        //         }).length
+        //         return t > 0
+        //     }
+        //     if ( Object.keys(node_taggs).includes(nodesColorMap) && Object.keys(node_taggs).includes(tag_group[0]) ) {
+        //         const node_visible = NodeVisibleOnsSvg()
+        //         const t2 = Object.values(nodes_dict).filter(n => {
+        //             return (
+        //                 n.tags[nodesColorMap] &&
+        //                 n.tags[nodesColorMap].includes(tag[1]) &&
+        //                 node_visible.includes(n.idNode) &&
+        //                 (n.position !== 'relative')
+        //             )
+        //         }).length
+        //         return t2 > 0
+        //     }
+        //     if (linksColorMap && linksColorMap.includes('dataTags_')) {
+        //         return true
+        //     }
+        //     return false
+        // })
         .forEach((tag) => {
           const tagElement = legendElements2?.append('g')
             .attr('id', 'tag_' + tag[1].name.replaceAll(' ', '__')
@@ -338,7 +332,7 @@ export class Class_Legend extends Class_Element {
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
 
     this.dy += this._legend_police
-    const free_value = this.d3_selection?.append('g').attr('id', 'g_legend_free_value').style('transform', 'translate(0,' + (this.dy) + 'px)').attr('font-size', this._legend_police + 'px')
+    const free_value = this.d3_selection?.append('g').attr('id', 'ggrp_legend_free_value').style('transform', 'translate(0,' + (this.dy) + 'px)').attr('font-size', this._legend_police + 'px')
 
     free_value?.append('text').text('*').attr('x', '5')
     // free_value?.append('text').attr('x', '35').text(t('MEP.show_legend_free_value')).call(this.wrapper)
@@ -353,11 +347,11 @@ export class Class_Legend extends Class_Element {
      */
   private drawInfoDashedLink() {
 
-    const dashed_link = this.d3_selection?.append('g').attr('id', 'g_legend_dashed_links').style('transform', 'translate(0,' + (this.dy) + 'px)').attr('font-size', this._legend_police + 'px')
+    const dashed_link = this.d3_selection?.append('g').attr('id', 'ggrp_legend_dashed_links').style('transform', 'translate(0,' + (this.dy) + 'px)').attr('font-size', this._legend_police + 'px')
     dashed_link?.append('path').attr('d', 'M 0 0 L 25 0  Z')
       .attr('fill', 'none')
       .attr('stroke-width', '5')
-      .attr('stroke', '#aaa')
+      .attr('stroke', 'red')
       .attr('stroke-opacity', 0.85)
       .attr('stroke-dasharray', '3,3')
 
@@ -369,31 +363,74 @@ export class Class_Legend extends Class_Element {
   }
 
 
-  private drawSankeyScale(){
-    this.dy+=this._legend_police
+  private drawSankeyScale() {
+    this.dy += this._legend_police
     d3.selectAll(' .opensankey #svg .g_scale').remove()
-    const g_scale=this.d3_selection?.append('g').attr('class','g_scale').style('transform', 'translate(0,' + (this.dy) + 'px)')
+    const g_scale = this.d3_selection?.append('g').attr('class', 'g_scale').style('transform', 'translate(0,' + (this.dy) + 'px)')
     // g_scale?.append('text').text(t('scale')+':').style('font-size',this._legend_police+'px')
-    g_scale?.append('text').text('scale'+':').style('font-size',this._legend_police+'px')
-      
-    const g_draggable=g_scale?.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate('+(7*(this._legend_police*0.75))+'px, -30px)')
-    g_draggable?.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
-    g_draggable?.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((this.drawing_area.scale/2)))
-      
-    let h:number|undefined
+    g_scale?.append('text').text('scale' + ':').style('font-size', this._legend_police + 'px')
+
+    const g_draggable = g_scale?.append('g').attr('class', 'g_draggable_scale').style('cursor', 'grab').style('transform', 'translate(' + (7 * (this._legend_police * 0.75)) + 'px, -30px)')
+    g_draggable?.append('rect').attr('width', '3px').attr('height', '50px').attr('fill', 'black')
+    g_draggable?.append('text').attr('class', 'measurment_scale').style('transform', 'translate(5px,25px)').text(Math.round((this.drawing_area.scale / 2)))
+
+    let h: number | undefined
     g_draggable?.call(d3.drag<SVGGElement, this, unknown>()
       .subject(Object)
-      .on('strat',()=>{
-        h = document.getElementById('g_legend')?.getBoundingClientRect().height
+      .on('strat', () => {
+        h = document.getElementById('ggrp_legend')?.getBoundingClientRect().height
       })
-      .on('drag', function (event,curr_leg) {
-                
-        h=h?h:50
-        d3.select('#g_legend .drag_zone_leg').attr('height',h)
-        if (event.x>0 && event.x<curr_leg.width && event.y <0 && event.y > -h+25) {
-          d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+      .on('drag', function (event, curr_leg) {
+
+        h = h ? h : 50
+        d3.select('#ggrp_legend .drag_zone_leg').attr('height', h)
+        if (event.x > 0 && event.x < curr_leg.width && event.y < 0 && event.y > -h + 25) {
+          d3.select(' .opensankey .g_draggable_scale').style('transform', 'translate(' + (event.x - 15) + 'px,' + (event.y - 25) + 'px)')
         }
       }))
+  }
+
+  private updateLegendHeight() {
+    let h = document.getElementById('grp_legend')?.getBoundingClientRect().height
+    h = h ? (h+this._legend_police) : 0
+    d3.select('#grp_legend .zone_for_dragging').attr('height', h)
+    const w = document.getElementById('grp_legend')?.getBoundingClientRect().width
+    if (w && w > this._width * 1.1) {
+      d3.select('#grp_legend .zone_for_dragging').attr('width', w)
+      this._width = w
+    }
+  }
+  
+
+
+  protected eventMouseOver(event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
+  }
+
+  protected eventMouseOut(event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', 'unherit')
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
+  }
+  // =============Drag Event================
+
+  protected eventMouseDragStart(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+  }
+
+  protected eventMouseDrag(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ): void {
+    this._display.position.x += (event.sourceEvent.movementX)
+    this._display.position.y += (event.sourceEvent.movementY)
+    this.d3_selection?.attr('transform', 'translate(' + (this.position_x) + ',' + this.position_y + ')')
+  }
+
+  protected eventMouseDragEnd(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    this.reset()
   }
 
   // =========== Getter & Setter ===============
@@ -424,6 +461,5 @@ export class Class_Legend extends Class_Element {
 
   public get width(): number { return this._width }
   public set width(value: number) { this._width = value; this.reset() }
-
 
 }

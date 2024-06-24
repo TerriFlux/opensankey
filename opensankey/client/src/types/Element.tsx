@@ -195,8 +195,8 @@ export abstract class Class_Element {
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this._id)
-        .style('stroke-width', this.isSelected() ? 3 : 0)
-        .style('stroke', 'black')
+        // .style('stroke-width', this.isSelected() ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
+        // .style('stroke', 'black') Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
     }
   }
 
@@ -243,10 +243,10 @@ export abstract class Class_Element {
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventDoubleLMBCLick(event))
       // Right mouse button maintained
-      this.d3_selection?.on(
-        'mousedown',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMaintainedClick(event))
+      // this.d3_selection?.on(
+      //   'mousedown',
+      //   (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+      //     this.eventMaintainedClick(event))
       this.d3_selection?.on(
         'mouseup',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
@@ -271,21 +271,22 @@ export abstract class Class_Element {
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleRMBCLick(event))
       // Drag events TODO
+      // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       this.d3_selection?.call(
         d3.drag<SVGGElement, this>().on(
           'start',
-          (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-            this.eventMouseDragStart(event)))
-      this.d3_selection?.call(
-        d3.drag<SVGGElement, this>().on(
-          'drag',
-          (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-            this.eventMouseDrag(event)))
-      this.d3_selection?.call(
-        d3.drag<SVGGElement, this>().on(
-          'end',
-          (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-            this.eventMouseDragEnd(event)))
+          (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+            this.eventMouseDragStart(event))
+          .on(
+            'drag',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDrag(event))
+          .on(
+            'end',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragEnd(event))
+      )
+
     }
   }
 
@@ -396,7 +397,7 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   protected eventMouseDragStart(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
@@ -408,7 +409,7 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   protected eventMouseDrag(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
@@ -420,7 +421,7 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   protected eventMouseDragEnd(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }

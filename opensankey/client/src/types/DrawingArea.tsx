@@ -193,9 +193,10 @@ export class Class_DrawingArea {
     // TODO ajouter groupes pour autres élements
     // Draw Everything
     this.drawElements()
+    this.legend.reset()
+
     // Added events listeners
     this.setEventsListeners()
-    this.legend.draw()
   }
 
   /**
@@ -287,6 +288,10 @@ export class Class_DrawingArea {
     for (const link_id in this.sankey.links_dict) {
       if (this.sankey.links_dict[link_id].isMouseOver())
         return false
+    }
+
+    if(this._legend.isMouseOver()){
+      return false
     }
     // Ok event
     return true
