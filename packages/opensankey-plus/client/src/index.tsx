@@ -602,6 +602,7 @@ root.render(
     installEventOnSVG={
       (
         contextMenu,
+        applicationContext,
         applicationData,
         uiElementsRef,
         applicationState,
@@ -613,6 +614,7 @@ root.render(
       )=>{
         InstallEventsOnSVG(  
           contextMenu,
+          applicationContext,
           applicationData,
           uiElementsRef,
           applicationState,
@@ -624,6 +626,7 @@ root.render(
         )
         OSPInstallEventsOnSVG(
           contextMenu,
+          applicationContext,
           applicationData,
           uiElementsRef,
           applicationState,
