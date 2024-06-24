@@ -112,7 +112,7 @@ export class Class_NodeElement extends Class_Element {
   private _input_links: { [_: string]: Class_LinkElement } = {}
   private _output_links: { [_: string]: Class_LinkElement } = {}
 
-  // Tags
+  // _tags
   private _tags: { [_: string]: Class_Tag } = {}
 
   // Arrows
@@ -175,6 +175,8 @@ export class Class_NodeElement extends Class_Element {
 
   // GETTERS / SETTERS ==================================================================
 
+  public get tags(){return this._tags}
+
   /**
    * Get node name
    * @memberof Class_NodeElement
@@ -206,7 +208,7 @@ export class Class_NodeElement extends Class_Element {
   }
 
   public deRefTag(tag:Class_Tag){
-    delete this.tags[tag.id]
+    delete this._tags[tag.id]
   }
 
   /**
@@ -744,7 +746,7 @@ export class Class_NodeElement extends Class_Element {
     return default_value_label_vert
   }
 
-  /**
+  /** Set value for value_label_vert
    *
    TODO Description * @memberof Class_NodeElement
    */
@@ -770,7 +772,7 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set label_horiz_valeur(_: string) {
+  public set value_label_horiz(_: string) {
     this._display.attributes.value_label_horiz = _
     this.drawLabel()
   }
@@ -1143,11 +1145,11 @@ export class Class_NodeElement extends Class_Element {
     if (
       (!this.shape_color_sustainable) &&
       (this.drawing_area.sankey.nodesColorMap !== 'no_colormap') &&
-      (this.drawing_area.sankey.nodesColorMap in this.tags ) &&
-      (this.tags[this.drawing_area.sankey.nodesColorMap].length > 0)
+      (this.drawing_area.sankey.nodesColorMap in this._tags ) &&
+      (this._tags[this.drawing_area.sankey.nodesColorMap])
     ){
-      const list_tag_from_grp_to_use_color=this.tags[this.drawing_area.sankey.nodesColorMap]
-      return list_tag_from_grp_to_use_color[0].color
+      const list_tag_from_grp_to_use_color=this._tags[this.drawing_area.sankey.nodesColorMap]
+      return list_tag_from_grp_to_use_color.color
     }
     else{
       return this.shape_color
