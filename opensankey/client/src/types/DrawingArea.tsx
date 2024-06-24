@@ -123,7 +123,7 @@ export class Class_DrawingArea {
 
   // Elements that are contained in this area
   private _sankey: Class_Sankey
-  private _legend: Class_Legend 
+  private _legend: Class_Legend
 
   // private text_areas: { [id: string]: Class_Element } = {}
 
@@ -233,6 +233,8 @@ export class Class_DrawingArea {
   // Selections
   public get selected_nodes_list() { return this._sankey_selection.nodes_list }
   public get selected_nodes_list_sorted() { return this._sankey_selection.nodes_list_sorted }
+  public get visible_and_selected_nodes_list() { return this._sankey_selection.visible_nodes_list }
+  public get visible_and_selected_nodes_list_sorted() { return this._sankey_selection.visible_nodes_list_sorted }
   public get selected_links_list() { return this._sankey_selection.links_list }
   public get selected_links_list_sorted() { return this._sankey_selection.links_list_sorted }
 
@@ -320,7 +322,7 @@ export class Class_DrawingArea {
     // Unselect all nodes
     Object.values(this._sankey_selection.nodes_list)
       .forEach((node) => node.setUnSelected())
-      // Unselect all links
+    // Unselect all links
     Object.values(this._sankey_selection.links_list)
       .forEach((link) => link.setUnSelected())
     // TODO Unselect other things
@@ -350,6 +352,27 @@ export class Class_DrawingArea {
   public removeNodeFromSelection(node: Class_NodeElement) {
     this._sankey_selection.removeNode(node)
     node.setUnSelected()
+  }
+
+  /**
+   * Delete a given node -> node will not exist anymore
+   * @param {Class_NodeElement} node
+   * @memberof Class_Sankey
+   */
+  public deleteNode(node: Class_NodeElement) {
+    // Remove refs from sankey and selection
+    this.sankey.removeNode(node)
+    this._sankey_selection.removeNode(node)
+    // Self delete node
+    node.delete()
+  }
+
+  public deleteSelectedNodes() {
+    // Get copy of selected nodes
+    const selected_nodes = this.selected_nodes_list
+    // Delete each one of them
+    selected_nodes.forEach(node => {this.deleteNode(node)})
+    // Then let garbage collector do the rest...
   }
 
   /**
