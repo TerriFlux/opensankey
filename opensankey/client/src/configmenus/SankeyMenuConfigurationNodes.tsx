@@ -37,7 +37,7 @@ import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodes
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
 import { DeselectVisualyNodes, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
-import { selected_type } from '../topmenus/SankeyMenuTop'
+import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 
 
 /*************************************************************************************************/
@@ -69,22 +69,26 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
 ) => {
   const { data, new_data } = applicationData
+
+  // Traduction
+  const { t } = applicationContext
+  // Set state & Ref for UI update
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigNode.current = setForceUpdate.toggle
-  const { t } = applicationContext
-  const new_nodes_sorted = new_data.drawing_area.sankey.nodes_list_sorted
-  const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.isSelected())
-  const INITIAL_OPTIONS = Object
-    .values(new_nodes_sorted)
-    .filter(d => (
-      data.displayed_node_selector) ? (d.id) : true)
-    .map(d => {
-      return { 'label': d.name, 'value': d.id }
-    })
-
-  // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
-
-  const selected: selected_type[] = new_nodes_sorted_selected.map((d) => { return { 'label': d.name, 'value': d.id } })
+  // Data to display in this menu
+  let nodes, selected_nodes
+  if (data.displayed_node_selector) {
+    // All availables nodes
+    nodes = new_data.drawing_area.sankey.nodes_list_sorted
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  }
+  else {
+    // Only visible nodes
+    nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+  }
+  const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
+  const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
 
 
   const ui: { [s: string]: JSX.Element } = {
@@ -133,26 +137,27 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           width='14.75rem'
         >
           <MultiSelect
-            options={INITIAL_OPTIONS}
-            value={selected}
+            options={entries_for_nodes}
+            value={entries_for_selected_nodes}
             labelledBy={t('Noeud.TS')}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              const new_sel = selected.map(d => d.value)
-              new_nodes_sorted.forEach(n => {
-                if (new_sel.includes(n.id)) {
+            onChange={(entries_for_selected_nodes: [{ label: string, value: string }]) => {
+              // Update selection list
+              const selected_nodes = entries_for_selected_nodes.map(d => d.value)
+              nodes.forEach(n => {
+                if (selected_nodes.includes(n.id)) {
                   new_data.drawing_area.addNodeToSelection(n)
-                } else {
+                }
+                else {
                   new_data.drawing_area.removeNodeFromSelection(n)
                 }
               })
-
+              // Update UI
               setForceUpdate.toggle()
               new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
               new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
-
             }}
-            valueRenderer={(selected: selected_type[]) => {
-              return selected.length ? selected.map(({ label }) => label + ', ') : t('Noeud.NS')
+            valueRenderer={(entries_for_selected_nodes: Type_MenuSelectionEntry[]) => {
+              return entries_for_selected_nodes.length ? entries_for_selected_nodes.map(({ label }) => label + ', ') : t('Noeud.NS')
             }}
           />
         </Box>
@@ -227,7 +232,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   //             state.checked=0
   //           }
   //           if(ev.path && ev.path.length>0 && ev.type==='checkNode'){
-  //             // check or uncheck node in tree folder depending on if it's already selected
+  //             // check or uncheck node in tree folder depending on if it's already entries_for_selected_nodes
   //             const idNodeSelected=getNodeFromTree(ev.path,tree_of_nodes)
   //             if(idNodeSelected.checked!==0.5){
   //               const newNodeSelected=data.nodes[idNodeSelected.id]
@@ -277,18 +282,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={!applicationContext.has_free_account && Object.keys(new_nodes_sorted).length > 15}
+            isDisabled={!applicationContext.has_free_account && Object.keys(nodes).length > 15}
             onClick={() => {
               Object.values(applicationData.display_nodes).forEach(n => DeselectVisualyNodes(n))
               // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
+              // Init to default position
+              new_node.initDefaultPosXY()
               // Add node to selection
               new_data.drawing_area.addNodeToSelection(new_node)
-              // Set position
-              new_node.setPosXY(50, 50)
-              // AddNewNode(applicationData, multi_selected_nodes, node_function)
+              // Update UI
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              // SelectVisualyNodes(multi_selected_nodes.current[0])
               new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
               setForceUpdate.toggle()
             }}>
@@ -305,18 +309,16 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.rm')}>
           <Button
             variant='menuconfigpanel_del_button'
-            isDisabled={multi_selected_nodes.current.length == 0}
+            isDisabled={selected_nodes.length === 0}
             onClick={
               () => {
-                deleteSelectedNodeFromData(applicationData, applicationState)
-
-                node_function.recomputeDisplayedElement()
-                node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-                link_function.RedrawLinks(Object.values(applicationData.display_links))
+                // Delete all selected nodes
+                applicationData.new_data.drawing_area.deleteSelectedNodes()
+                // UPdate ui
+                ComponentUpdater.updateComponenSaveInCache.current(false)
                 new_data.menu_configuration.updateComponentMenuConfigNode.current()
                 new_data.menu_configuration.updateComponentMenuConfigLink.current()
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-
+                setForceUpdate.toggle()
               }}>
             <FaMinus />
           </Button>
@@ -328,6 +330,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             variant='menuconfigpanel_option_button'
             onClick={
               () => {
+                // Update UI with only visible nodes / all nodes
                 data.displayed_node_selector = !data.displayed_node_selector
                 setForceUpdate.toggle()
               }}>
@@ -356,16 +359,16 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               <Input
                 variant='menuconfigpanel_option_input'
                 value={
-                  (new_nodes_sorted_selected.length != 1) ? '' : new_nodes_sorted_selected[0].name
+                  (selected_nodes.length != 1) ? '' : selected_nodes[0].name
                 }
                 onChange={evt => {
-                  if (new_nodes_sorted_selected.length != 1) {
+                  if (selected_nodes.length != 1) {
                     return
                   }
-                  new_nodes_sorted_selected[0].name = evt.target.value
+                  selected_nodes[0].name = evt.target.value
                   setForceUpdate.toggle()
                 }}
-                isDisabled={(new_nodes_sorted_selected.length == 1) ? false : true}
+                isDisabled={(selected_nodes.length == 1) ? false : true}
               />
             </InputGroup>
           </OSTooltip>
@@ -374,7 +377,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
       {/* Declenché si des neouds sont selectionnées */}
       {
-        (new_nodes_sorted_selected.length !== 0) ?
+        (selected_nodes.length !== 0) ?
           <Tabs>
             <TabList>
               {

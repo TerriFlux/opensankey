@@ -79,10 +79,10 @@ declare const window: Window &
  * Description placeholder
  *
  * @export
- * @typedef {selected_type}
+ * @typedef {Type_MenuSelectionEntry}
  */
-export type selected_type = {'label':string;'value':string}
-export const menu_config_width=450
+export type Type_MenuSelectionEntry = {'label':string; 'value':string}
+export const menu_config_width = 450
 /**
  * Variable that define the Menu element, it's variable and function
  *
@@ -442,7 +442,7 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
   const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
   dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current=set_h
   dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current=set_v
-  const content=<>      
+  const content=<>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.larg')}
@@ -514,7 +514,7 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
 
 const clickSavePNG = (
   h:number|undefined,
-  v:number|undefined,  
+  v:number|undefined,
 ) => {
   const svg = pre_process_export_svg()
   const html = ((svg.attr('title', 'test2')
@@ -1043,7 +1043,7 @@ const  DataTagsDDNavBar = (
         </Col>
       </Form.Group>
       </>)
-    
+
   })
   return allDD
 }

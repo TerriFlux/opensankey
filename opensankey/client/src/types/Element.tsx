@@ -20,6 +20,10 @@ import {
   Type_Position
 } from './Utils'
 
+// CONSTANT *****************************************************************************
+const const_default_position_x = 50
+const const_default_position_y = 50
+
 
 // CLASS ELEMENT ************************************************************************
 /**
@@ -80,6 +84,14 @@ export abstract class Class_Element {
   protected _is_selected: boolean = false
 
   /**
+   * Is element currently drawn
+   * @protected
+   * @type {boolean}
+   * @memberof Class_Element
+   */
+  protected _is_visible: boolean = true
+
+  /**
    * Is mouse cursor over element d3 selection (default=false)
    * @protected
    * @type {boolean}
@@ -137,16 +149,18 @@ export abstract class Class_Element {
   public reset() {
     // Clear D3
     this.unDraw()
-    if(this.element_displayed()){
-      // Draw element on D3
-      this.draw()
-      // Position element on D3
-      this.applyPosition()
-      // Add events listeners
-      this.setEventsListeners()
-    }
-   
+    // Draw element on D3
+    this.draw()
+    // Position element on D3
+    this.applyPosition()
+    // Add events listeners
+    this.setEventsListeners()
   }
+
+
+  // Positioning
+  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
+
 
   // GETTERS / SETTERS ==================================================================
   // Name
@@ -171,7 +185,12 @@ export abstract class Class_Element {
   // Selection
   public setSelected() { this._is_selected = true; this.reset() }
   public setUnSelected() { this._is_selected = false; this.reset() }
-  public isSelected() { return this._is_selected }
+  public get is_selected() { return this._is_selected }
+
+  // Visible
+  public setVisible() { this._is_visible = true; this.reset() }
+  public setInvisble() { this._is_visible = false; this.reset() }
+  public get is_visible() { return this._is_visible }
 
   // Mouse is over element
   public isMouseOver() { return this._is_mouse_over }
@@ -201,7 +220,7 @@ export abstract class Class_Element {
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this._id)
-        // .style('stroke-width', this.isSelected() ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
+        // .style('stroke-width', this.is_selected ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
         // .style('stroke', 'black') Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
     }
   }
@@ -279,10 +298,11 @@ export abstract class Class_Element {
       // Drag events TODO
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       this.d3_selection?.call(
-        d3.drag<SVGGElement, this>().on(
-          'start',
-          (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-            this.eventMouseDragStart(event))
+        d3.drag<SVGGElement, this>()
+          .on(
+            'start',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragStart(event))
           .on(
             'drag',
             (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
