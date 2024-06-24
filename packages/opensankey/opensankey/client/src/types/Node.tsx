@@ -112,7 +112,7 @@ export class Class_NodeElement extends Class_Element {
   private _input_links: { [_: string]: Class_LinkElement } = {}
   private _output_links: { [_: string]: Class_LinkElement } = {}
 
-  // _tags
+  // Node tags
   private _tags: { [_: string]: Class_Tag } = {}
 
   // Arrows
@@ -1284,7 +1284,7 @@ export class Class_NodeElement extends Class_Element {
  */
 export class Class_NodeAttribute {
 
-  // PUBLIC ATTRIBUTES ==================================================================
+  // PROTECTED ATTRIBUTES ===============================================================
 
   // Parameters for shape
   protected _shape_visible?: boolean
@@ -1470,11 +1470,13 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   }
 
   public delete() {
-    // Switch all refs to default style
-    Object.values(this._references)
-      .forEach(ref => ref.useDefaultStyle())
-    this._references = {}
-    // Garbage collector will do the rest....
+    if (this._is_deletable) {
+      // Switch all refs to default style
+      Object.values(this._references)
+        .forEach(ref => ref.useDefaultStyle())
+      this._references = {}
+      // Garbage collector will do the rest....
+    }
   }
 
   // GETTERS ============================================================================
