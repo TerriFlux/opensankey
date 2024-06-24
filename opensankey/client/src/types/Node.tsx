@@ -934,7 +934,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_Element
    */
   protected eventMouseDrag(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     // Get related drawing area
     const drawing_area = this.drawing_area
@@ -1006,6 +1006,8 @@ export class Class_NodeElement extends Class_Element {
       .attr('fill-opacity', node_visible ? '1' : '0')
       .attr('fill', node_color)
       .style('stroke', 'black')
+      .style('stroke-width', this.isSelected() ? 3 : 0) 
+
   }
 
   /**
