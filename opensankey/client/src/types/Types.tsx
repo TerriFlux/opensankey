@@ -624,6 +624,7 @@ export type DrawAllType = (
 
 export type InstallEventsOnSVGType = (
   contextMenu:contextMenuType,
+  applicationContext:applicationContextType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   applicationState:applicationStateType,
