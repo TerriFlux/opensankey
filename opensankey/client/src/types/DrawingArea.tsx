@@ -159,13 +159,13 @@ export class Class_DrawingArea {
     _width: number,
     application_data: Class_ApplicationData
   ) {
+    this.application_data = application_data
     // Init attributes
     this._height = _height
     this._width = _width
-    this.application_data = application_data
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
     this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
-    this._legend= new Class_Legend( this,this.application_data.menu_configuration)
+    this._legend = new Class_Legend( this,this.application_data.menu_configuration)
     // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
 

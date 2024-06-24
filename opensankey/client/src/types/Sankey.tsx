@@ -33,7 +33,8 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-const default_node_style = new Class_NodeStyle(false)
+export const default_style_name = 'Style par defaut'
+const default_node_style = new Class_NodeStyle(default_style_name, false)
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -87,8 +88,8 @@ export class Class_Sankey {
   private _links: { [_: string]: Class_LinkElement } = {}
 
   // Existing styles
-  private _link_styles: { [_: string]: Class_LinkStyle } = {'default': default_link_style } // TODO create defaut style
-  private _node_styles: { [_: string]: Class_NodeStyle } = {'default': default_node_style }
+  private _link_styles: { [_: string]: Class_LinkStyle } = {default_style_name: default_link_style } // TODO create defaut style
+  private _node_styles: { [_: string]: Class_NodeStyle } = {default_style_name: default_node_style }
 
   // Variable determining if we apply tag color to elements
   private _colorMap: string
@@ -222,14 +223,14 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get links_list_sorted() {
-    return Object.entries(this._links)
-      .sort(([, a], [, b]) =>
+    return this.links_list
+      .sort((a, b) =>
         (a.id > b.id) ?
           1 :
           ((b.id > a.id) ?
             -1 :
             0)
-      ).map(link => link[1])
+      )
   }
 
   /**
@@ -250,6 +251,30 @@ export class Class_Sankey {
    */
   public get node_styles_dict() {
     return this._node_styles
+  }
+
+  /**
+   * Return all the style as a list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get node_styles_list() {
+    return Object.values(this._node_styles)
+  }
+
+  /**
+   * Return all the style as a sorted list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get node_styles_list_sorted() {
+    return this.node_styles_list
+      .sort((a, b) =>
+        (a.id > b.id) ?
+          1 :
+          ((b.id > a.id) ?
+            -1 :
+            0))
   }
 
   /**

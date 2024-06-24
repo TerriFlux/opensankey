@@ -42,28 +42,28 @@ type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-const default_shape_type: Type_Shape = 'rect'
-const default_shape_arrow_angle_factor = 30
-const default_shape_arrow_angle_direction = 'right'
-const default_shape_visible = true
-const default_shape_min_width = 40
-const default_shape_min_height = 40
-const default_shape_color = default_element_color
-const default_shape_color_sustainable = false
-const default_label_font_family = default_font
-const default_label_font_size = 14
-const default_label_color = false
-const default_label_uppercase = false
-const default_label_bold = false
-const default_label_italic = false
-const default_label_background = false
-const default_name_label_visible = true
-const default_name_label_vert = 'bottom'
-const default_name_label_horiz = 'middle'
-const default_value_label_visible = false
-const default_value_label_vert = 'top'
-const default_value_label_horiz  = 'middle'
-const default_label_box_width = 150
+export const default_shape_type: Type_Shape = 'rect'
+export const default_shape_arrow_angle_factor = 30
+export const default_shape_arrow_angle_direction = 'right'
+export const default_shape_visible = true
+export const default_shape_min_width = 40
+export const default_shape_min_height = 40
+export const default_shape_color = default_element_color
+export const default_shape_color_sustainable = false
+export const default_label_font_family = default_font
+export const default_label_font_size = 14
+export const default_label_color = false
+export const default_label_uppercase = false
+export const default_label_bold = false
+export const default_label_italic = false
+export const default_label_background = false
+export const default_name_label_visible = true
+export const default_name_label_vert = 'bottom'
+export const default_name_label_horiz = 'middle'
+export const default_value_label_visible = false
+export const default_value_label_vert = 'top'
+export const default_value_label_horiz  = 'middle'
+export const default_label_box_width = 150
 
 // CLASS NODE_ELEMENT *******************************************************************
 
@@ -1160,6 +1160,11 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC METHODS =====================================================================
 
+  public resetAttributes() {
+    this._display.attributes = new Class_NodeAttribute()
+    this.reset()
+  }
+
   public removeTag(tag: Class_Tag) {
     if (this._tags[tag.id] !== undefined) {
       delete this._tags[tag.id]
@@ -1407,15 +1412,23 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   // PRIVATE ATTRIBUTES =================================================================
 
+  private _id: string
+
   private _is_deletable: boolean
 
   private _references: {[_: string]: Class_NodeElement} = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(
+    id: string,
     is_deletable: boolean = true
   ) {
+    // Instantiate super class
     super()
+
+    // Set id
+    this._id = id
+
     // Set as deletable or not
     this._is_deletable = is_deletable
 
@@ -1463,6 +1476,16 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._references = {}
     // Garbage collector will do the rest....
   }
+
+  // GETTERS ============================================================================
+
+  /**
+   * get id of style
+   *
+   * @readonly
+   * @memberof Class_NodeStyle
+   */
+  public get id() {return this._id}
 
   // SETTERS ============================================================================
 
