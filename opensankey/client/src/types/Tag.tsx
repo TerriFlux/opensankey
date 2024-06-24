@@ -5,9 +5,9 @@
 // ==================================================================================================
 
 // Local types
-import { Class_LinkElement } from "./Link"
-import { Class_NodeElement } from "./Node"
-import { default_grey_color } from "./Utils"
+import { Class_LinkElement } from './Link'
+import { Class_NodeElement } from './Node'
+import { default_grey_color } from './Utils'
 
 
 // SPECIFIC TYPES ***********************************************************************
