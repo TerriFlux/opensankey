@@ -26,7 +26,6 @@ import {
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
-import { type } from 'os'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -79,7 +78,6 @@ export class Class_Sankey {
   // legend_width:number,
   // node_label_separator:string
 
-
   // PRIVATE ATTRIBUTES =================================================================
 
   // Nodes
@@ -96,6 +94,7 @@ export class Class_Sankey {
   private _colorMap: string
   private _nodesColorMap: string
   private _linksColorMap: string
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -125,6 +124,7 @@ export class Class_Sankey {
   }
 
   // GETTERS / SETTERS ==================================================================
+
   public get colorMap(): string {return this._colorMap}
   public set colorMap(value: string) {this._colorMap = value}
 
@@ -133,6 +133,7 @@ export class Class_Sankey {
 
   public get linksColorMap(): string {return this._linksColorMap}
   public set linksColorMap(value: string) {this._linksColorMap = value}
+
   // Nodes related ----------------------------------------------------------------------
 
   /**
@@ -154,19 +155,45 @@ export class Class_Sankey {
   }
 
   /**
+   * Get all visible nodes as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_nodes_list() {
+    return Object.values(this._nodes)
+      .filter(node => node.is_visible)
+  }
+
+  /**
    * Get all nodes sorted by their names as a list
    * @readonly
    * @memberof Class_Sankey
    */
   public get nodes_list_sorted() {
-    return Object.entries(this._nodes)
-      .sort(([, a], [, b]) =>
+    return this.nodes_list
+      .sort((a, b) =>
         (a.name > b.name) ?
           1 :
           ((b.name > a.name) ?
             -1 :
             0)
-      ).map(n => n[1])
+      )
+  }
+
+  /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_nodes_list_sorted() {
+    return this.visible_nodes_list
+      .sort((a, b) =>
+        (a.name > b.name) ?
+          1 :
+          ((b.name > a.name) ?
+            -1 :
+            0)
+      )
   }
 
   // Links related ----------------------------------------------------------------------
@@ -293,12 +320,14 @@ export class Class_Sankey {
   public addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
 
   /**
-   * Remove a given node from Sankey
+   * Remove a given node from Sankey -> node may still exist somewhere
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
   public removeNode(node: Class_NodeElement) {
-    delete this._nodes[node.id]
+    if (this._nodes[node.id] !== undefined) {
+      delete this._nodes[node.id]
+    }
   }
 
   // Links related ----------------------------------------------------------------------
