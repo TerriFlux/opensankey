@@ -8,6 +8,7 @@ import { Box, Button, Checkbox, Input, InputGroup, InputRightAddon, Menu, MenuBu
 import { IsLinkDiplayingValueLocal, CutName, TooltipValueSurcharge, OSTooltip } from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
 import { Class_LinkElement } from '../types/Link'
+import { default_style_name } from '../types/Sankey'
 
 const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
   width="16"
@@ -78,7 +79,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
   // const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   // const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
-  const [, set_style_to_apply_to_link] = useState('default')
+  const [, set_style_to_apply_to_link] = useState(default_style_name)
   //const {updateComponentMenuConfigLink}=ComponentUpdater
 
   const links = new_data.drawing_area.sankey.links_dict

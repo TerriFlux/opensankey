@@ -15,8 +15,7 @@ import {
 } from './DrawingArea'
 import {
   Class_LinkElement,
-  Class_LinkStyle,
-  default_link_style,
+  Class_LinkStyle
 } from './Link'
 import {
   Class_NodeElement,
@@ -35,6 +34,7 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
 
 export const default_style_name = 'Style par defaut'
 const default_node_style = new Class_NodeStyle(default_style_name, false)
+const default_link_style = new Class_LinkStyle(default_style_name, false)
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -239,7 +239,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get default_node_style() {
-    return this._node_styles['default']
+    return this._node_styles[default_style_name]
   }
 
   // Styles related ---------------------------------------------------------------------
@@ -292,7 +292,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get default_link_style() {
-    return this._link_styles['default']
+    return this._link_styles[default_style_name]
   }
 
   // PUBLIC METHODS =====================================================================
