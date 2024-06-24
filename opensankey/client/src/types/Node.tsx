@@ -120,6 +120,7 @@ export class Class_NodeElement extends Class_Element {
   private arrow_angle_factor: number = 10
   private arrow_angle_direction: string = 'hh'
 
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -173,9 +174,31 @@ export class Class_NodeElement extends Class_Element {
     this._tags = {}
   }
 
+  protected element_displayed(){
+
+    return this.element_tag_displayed()
+  }
+
+
+  /**
+ * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+ * if that the case then we don't draw the node
+ *
+ * @private
+ * @return {*}
+ * @memberof Class_NodeElement
+ */
+  private element_tag_displayed(){
+  // If node has tags :
+  //  - check if any of them is selected at false
+  // else if the node doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
+  }
+
+
   // GETTERS / SETTERS ==================================================================
 
-  public get tags(){return this._tags}
+  public get tags() { return this._tags }
 
   /**
    * Get node name
@@ -207,7 +230,7 @@ export class Class_NodeElement extends Class_Element {
     return this._name
   }
 
-  public deRefTag(tag:Class_Tag){
+  public deRefTag(tag: Class_Tag) {
     delete this._tags[tag.id]
   }
 
@@ -938,17 +961,26 @@ export class Class_NodeElement extends Class_Element {
   ) {
     // Get related drawing area
     const drawing_area = this.drawing_area
-    // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()) {
-      /* TODO définir  */
+    const nodes_selected = drawing_area.selected_nodes_list
+
+    // Only trigger the drag if we drag a selected node
+    if (nodes_selected.includes(this)) {
+
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        nodes_selected
+          .forEach(n => {
+            n.setPosXY(n.position_x+event.dx,n.position_y+event.dy)
+          })
+      }
     }
-    // SELECTION MODE =========================================================
-    else {
-      // Set position
-      const mouse_position = d3.pointer(event)
-      // Update node position
-      this.setPosXY(mouse_position[0], mouse_position[1])
-    }
+
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1143,17 +1175,17 @@ export class Class_NodeElement extends Class_Element {
     return 'inline'
   }
 
-  private getShapeColorToUse(){
+  private getShapeColorToUse() {
     if (
       (!this.shape_color_sustainable) &&
       (this.drawing_area.sankey.nodesColorMap !== 'no_colormap') &&
-      (this.drawing_area.sankey.nodesColorMap in this._tags ) &&
+      (this.drawing_area.sankey.nodesColorMap in this._tags) &&
       (this._tags[this.drawing_area.sankey.nodesColorMap])
-    ){
-      const list_tag_from_grp_to_use_color=this._tags[this.drawing_area.sankey.nodesColorMap]
+    ) {
+      const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.nodesColorMap]
       return list_tag_from_grp_to_use_color.color
     }
-    else{
+    else {
       return this.shape_color
     }
   }
@@ -1416,7 +1448,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _is_deletable: boolean
 
-  private _references: {[_: string]: Class_NodeElement} = {}
+  private _references: { [_: string]: Class_NodeElement } = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(

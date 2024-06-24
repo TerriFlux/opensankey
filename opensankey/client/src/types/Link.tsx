@@ -339,6 +339,8 @@ export class Class_LinkElement extends Class_Element {
     }
     // Draw shape
     this.drawShape()
+    // Draw label
+    this.drawLabel()
   }
 
   // PRIVATE METHODS ====================================================================
@@ -354,7 +356,7 @@ export class Class_LinkElement extends Class_Element {
       .classed('link_shape', true)
       .attr('d', this.getBezierPath())
       .attr('fill', 'none')
-      .attr('stroke', this.shape_color)
+      .attr('stroke', this.getLinkColorToUse)
       .attr('stroke-opacity', this.shape_opacity)
       .attr('stroke-width', this.link_stroke_width)
       .attr('stroke-dasharray',this.shape_is_dashed?'10,5':'')
@@ -362,7 +364,21 @@ export class Class_LinkElement extends Class_Element {
   }
 
   private drawLabel() {
+    // TODO a faire
+  }
 
+  private getLinkColorToUse() {
+    if (
+      (this.drawing_area.sankey.linksColorMap !== 'no_colormap') &&
+      (this.drawing_area.sankey.linksColorMap in this._tags) &&
+      (this._tags[this.drawing_area.sankey.linksColorMap])
+    ) {
+      const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.linksColorMap]
+      return list_tag_from_grp_to_use_color.color
+    }
+    else {
+      return this.shape_color
+    }
   }
 
   private getBezierPath() {

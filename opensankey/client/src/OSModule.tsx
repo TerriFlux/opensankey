@@ -70,7 +70,6 @@ import { EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp } from '
 import * as SankeyConvert from './configmenus/SankeyConvert'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
-import { MenuConfigurationLinks } from './configmenus/SankeyMenuConfigurationLinks'
 import { keyHandler } from './draw/SankeyDraw'
 import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
 import { Form, Popover } from 'react-bootstrap'
@@ -831,16 +830,8 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     menu_configuration_nodes_attributes,
-    MenuConfigurationLinks(
-      applicationData,
-      applicationState,
-      applicationContext,
-      config_link_data,
-      config_link_attr,
-      link_function,
-      ComponentUpdater,
-      node_function
-    ),
+    config_link_data,
+    config_link_attr,
     additional_menus.additional_configuration_menus,
     link_function,
     ComponentUpdater,

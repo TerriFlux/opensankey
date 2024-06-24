@@ -115,6 +115,8 @@ export abstract class Class_Element {
  */
   private _menu_config: Class_MenuConfig
 
+  protected abstract element_displayed():boolean
+
 
   // CONSTRUCTOR ========================================================================
 
