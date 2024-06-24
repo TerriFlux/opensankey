@@ -458,6 +458,7 @@ export const DrawAll : DrawAllType = (
 
 export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   contextMenu,
+  applicationContext,
   applicationData,
   uiElementsRef,
   applicationState,
@@ -470,12 +471,11 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   const svgSankey=d3.select('.opensankey #svg')
 
   svgSankey.on('mousedown',evt=>{
-    const token = true
     EventOnZoneMouseDown(
       applicationData,
       applicationState,
       dict_hook_ref_setter_show_dialog_components,
-      token,
+      applicationContext.has_free_account,
       evt,
       applicationDraw.start_point,
       contextMenu.closeAllMenuContext,

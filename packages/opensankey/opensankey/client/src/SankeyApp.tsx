@@ -487,6 +487,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     if( !windowSankey.SankeyToolsStatic ){
       installEventOnSVG(
         contextMenu,
+        applicationContext,
         applicationData,
         uiElementsRef,
         applicationState,
