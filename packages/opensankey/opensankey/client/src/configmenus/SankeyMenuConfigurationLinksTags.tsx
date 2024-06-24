@@ -1,7 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import {SankeyLinkValue } from '../types/Types'
 import { Box, Checkbox, Select, TabPanel } from '@chakra-ui/react'
-import { updateLinkTagValue } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
@@ -13,54 +11,56 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   node_function,
   link_function
 })=>{
-  const {data}=applicationData
-  const {multi_selected_links}=applicationState
+  const {new_data}=applicationData
+  const { flux_taggs, data_taggs } = new_data.drawing_area.sankey
+  const selected_links=new_data.drawing_area.selected_links_list
+  const flux_reference_for_displayed_value=selected_links[0]
+
   const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
-  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+  const newEntries = new Map(Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
   }))
   const dataTagsSelected = Object.fromEntries(newEntries)
 
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.fluxTags).length > 0 ? Object.keys(data.fluxTags)[0] : '')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(flux_taggs).length > 0 ? Object.keys(flux_taggs)[0] : '')
   const [data_tags_selected, set_data_tags_selected] = useState(dataTagsSelected)
 
   if (Object.keys(data_tags_selected).length !== Object.keys(dataTagsSelected).length) {
     set_data_tags_selected(dataTagsSelected)
   }
-  const {fluxTags}=data
-  const tags_visible = Object.keys(fluxTags).length > 0
+  const tags_visible = Object.keys(flux_taggs).length > 0
 
-  const ValueSelectedParameter = (): SankeyLinkValue => {
-    if(multi_selected_links.current.length==0){
-      return ({} as SankeyLinkValue)
-    }else{
-      if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
-        let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
-        Object.values(data_tags_selected).map(tag_selected => {
-          if (val[tag_selected] === undefined) {
-            val[tag_selected] = {}
-          }
-          val = val[tag_selected]
-        })
-        return val
-      }
-      let val = JSON.parse(JSON.stringify(Object(data.links[multi_selected_links.current[0].idLink].value)))
-      Object.values(data_tags_selected).map(tag_selected => {
-        if (val[tag_selected] === undefined) {
-          val[tag_selected] = {'display_value': '',tags:{},value:0}
-        }
-        val = val[tag_selected]
-      })
-      return val
-    }
+  // const ValueSelectedParameter = (): SankeyLinkValue => {
+  //   if(multi_selected_links.current.length==0){
+  //     return ({} as SankeyLinkValue)
+  //   }else{
+  //     if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
+  //       let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
+  //       Object.values(data_tags_selected).map(tag_selected => {
+  //         if (val[tag_selected] === undefined) {
+  //           val[tag_selected] = {}
+  //         }
+  //         val = val[tag_selected]
+  //       })
+  //       return val
+  //     }
+  //     let val = JSON.parse(JSON.stringify(Object(data.links[multi_selected_links.current[0].idLink].value)))
+  //     Object.values(data_tags_selected).map(tag_selected => {
+  //       if (val[tag_selected] === undefined) {
+  //         val[tag_selected] = {'display_value': '',tags:{},value:0}
+  //       }
+  //       val = val[tag_selected]
+  //     })
+  //     return val
+  //   }
 
-  }
-  // Si le tags_group_key n'est pas (qu'il soit vide ou différent) dans la liste des keys de fluxTags, alors on met à jour en prenant le premier
-  if(!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length>0){
-    set_tags_group_key(Object.keys(fluxTags)[0])
+  // }
+  // Si le tags_group_key n'est pas (qu'il soit vide ou différent) dans la liste des keys de flux_taggs, alors on met à jour en prenant le premier
+  if(!Object.keys(flux_taggs).includes(tags_group_key) && Object.keys(flux_taggs).length>0){
+    set_tags_group_key(Object.keys(flux_taggs)[0])
   }
   const content =<Box
     layerStyle='menuconfigpanel_grid'
@@ -79,24 +79,24 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
       }}
       value={tags_group_key}
     >
-      {Object.entries(fluxTags).map(
+      {Object.entries(flux_taggs).map(
         (tags_group, i) =>
           <option
             key={i}
             value={tags_group[0]}>
-            {tags_group[1].group_name}
+            {tags_group[1].name}
           </option>)}
     </Select>
 
     {//Définition des valeurs selon les paramètre dataTags
-      Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+      Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
           return (<>
             <Box
               as='span'
               layerStyle='menuconfigpanel_part_title_3'
             >
-              {dataTag.group_name}
+              {dataTag.name}
             </Box>
             <Select
               variant='menuconfigpanel_option_select'
@@ -126,19 +126,27 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
     <Box
       layerStyle='menuconfigpanel_grid'
     >
-      {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
+      {tags_visible && tags_group_key != '' && Object.keys(flux_taggs).includes(tags_group_key) && selected_links.length!=0 ? Object.entries(flux_taggs[tags_group_key].tags).map(
         ([tag_key,tag]) => {
-          const is_selected= ValueSelectedParameter().tags[tags_group_key] && ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
+          const is_selected= flux_reference_for_displayed_value.tags[tags_group_key] && flux_reference_for_displayed_value.tags[tags_group_key]===(tag) 
           return (
             <Checkbox variant='menuconfigpanel_option_checkbox'
               isChecked={is_selected}
               onChange={(evt) => {
                 const visible = evt.target.checked
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
+                // Object.values(data.links).filter(f => selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                //   updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
+                // })
+                selected_links.forEach(l=>{
+                  if (visible) {
+                    l.tags[tags_group_key]=tag
+                  } else {
+                    // Remove deselected tag from links 
+                    delete l.tags[tags_group_key]
+                  }
                 })
-                node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-                link_function.RedrawLinks(multi_selected_links.current)
+                selected_links.forEach(l=>l.reset())
+
                 ComponentUpdater.updateComponenSaveInCache.current(false)
                 
                 setForceUpdate(!forceUpdate)

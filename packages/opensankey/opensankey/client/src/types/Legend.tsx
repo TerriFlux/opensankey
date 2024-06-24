@@ -433,6 +433,10 @@ export class Class_Legend extends Class_Element {
     this.reset()
   }
 
+  protected element_displayed(){
+    return true
+  }
+
   // =========== Getter & Setter ===============
 
   public get masked(): boolean { return this._masked }

@@ -15,10 +15,7 @@ import {
 import { ReactElementLike } from 'prop-types'
 
 import {
-  SankeyNode,
-  applicationContextType,
-  applicationDataType,
-  applicationStateType
+  SankeyNode
 } from '../types/Types'
 import { SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
 import {
@@ -31,29 +28,50 @@ import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
-import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 
-import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate } from '@fortawesome/free-solid-svg-icons'
 import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { Class_LinkElement } from '../types/Link'
-export const MenuConfigurationLinks: MenuConfigurationLinksFType = (
-  applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  applicationContext: applicationContextType,
-  menu_config_link_data,
-  menu_config_link_attr,
-  link_function,
-  ComponentUpdater,
-  node_function,
-) => {
-  const { t } = applicationContext
-  const { data } = applicationData
-  const { multi_selected_links } = applicationState
 
-  const { fluxTags } = data
+
+
+
+const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
+  { applicationData,
+    applicationState,
+    applicationContext,
+    menu_config_link_data,
+    menu_config_link_attr,
+    link_function,
+    ComponentUpdater,
+    contextMenu,
+    uiElementsRef,
+    alt_key_pressed,
+    dict_hook_ref_setter_show_dialog_components,
+    node_function
+  }
+) => {
+  const { data, set_data, new_data } = applicationData
+  const { flux_taggs, data_taggs } = new_data.drawing_area.sankey
+  const [, setForceUpdate] = useBoolean()
+  new_data.menu_configuration.updateComponentMenuConfigLink.current = setForceUpdate.toggle
+  const { t } = applicationContext
+  const { multi_selected_links, multi_selected_nodes, displayedInputLinkValueSetterRef } = applicationState
+  // const { fluxTags, dataTags } = data
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(flux_taggs).length > 0 ? Object.keys(flux_taggs)[0] : '')
+  const [pre_idSource, set_pre_idSource] = useState('none')
+  const [pre_idTarget, set_pre_idTarget] = useState('none')
+  applicationState.ref_pre_idSource.current = pre_idSource
+  applicationState.ref_pre_idTarget.current = pre_idTarget
+
+  if ((tags_group_key == '' && Object.keys(flux_taggs).length > 0) || (!Object.keys(flux_taggs).includes(tags_group_key) && Object.keys(flux_taggs).length > 0)) {
+    set_tags_group_key(Object.keys(flux_taggs)[0])
+  }
+
+  console.log('here')
+
   const ui: { [s: string]: JSX.Element } = {
     'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
       menu_to_wrap={menu_config_link_data}
@@ -73,60 +91,20 @@ export const MenuConfigurationLinks: MenuConfigurationLinksFType = (
       menu_for_modal={false}
     />
   }
-  const pre_tag_menu = <MenuConfigurationLinksTags
-    applicationContext={applicationContext}
-    applicationData={applicationData}
-    applicationState={applicationState}
-    menu_for_modal={false}
-    ComponentUpdater={ComponentUpdater}
-    node_function={node_function}
-    link_function={link_function}
-  />
-  if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')) {
-    ui['Noeud.tags_node.tags'] = pre_tag_menu
+
+  if (Object.keys(flux_taggs).length > 0 && data.accordeonToShow.includes('EF')) {
+    ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
+      applicationContext={applicationContext}
+      applicationData={applicationData}
+      applicationState={applicationState}
+      menu_for_modal={false}
+      ComponentUpdater={ComponentUpdater}
+      node_function={node_function}
+      link_function={link_function}
+    />
   }
 
-  return ui
-}
-
-
-
-const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { applicationData,
-    applicationState,
-    applicationContext,
-    menu_configuration_links,
-    link_function,
-    ComponentUpdater,
-    contextMenu,
-    uiElementsRef,
-    alt_key_pressed,
-    dict_hook_ref_setter_show_dialog_components,
-    node_function
-  }
-) => {
-  const { data, set_data, new_data } = applicationData
-
-  const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigLink.current = setForceUpdate.toggle
-  const { t } = applicationContext
-  const { multi_selected_links, multi_selected_nodes, displayedInputLinkValueSetterRef } = applicationState
-  const { fluxTags, dataTags } = data
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
-  const [pre_idSource, set_pre_idSource] = useState('none')
-  const [pre_idTarget, set_pre_idTarget] = useState('none')
-  applicationState.ref_pre_idSource.current = pre_idSource
-  applicationState.ref_pre_idTarget.current = pre_idTarget
-  const { ref_pre_idSource, ref_pre_idTarget } = applicationState
-  const { RedrawNodes } = node_function
-  const set_show_link = useState(true)[1]
-  const node_visible = NodeVisibleOnsSvg()
-
-  if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
-    set_tags_group_key(Object.keys(fluxTags)[0])
-  }
-
-  const newEntries = new Map(Object.entries(dataTags).map(([dataTagKey, dataTag]) => {
+  const newEntries = new Map(Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
@@ -250,7 +228,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     node_trgt.reset()
 
 
-    const n_link=new Class_LinkElement(node_src,node_trgt,new_data.drawing_area,new_data.menu_configuration)
+    const n_link = new Class_LinkElement(node_src, node_trgt, new_data.drawing_area, new_data.menu_configuration)
     new_data.drawing_area.sankey.addLink(n_link)
     new_data.drawing_area.addLinkToSelection(n_link)
     console.log(n_link)
@@ -293,7 +271,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       source_node.reset()
       previous_node.reset()
       // link_function.RedrawLinks(link_to_update)
-      link_to_update.forEach(l=>l.reset())
+      link_to_update.forEach(l => l.reset())
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     } else if (list_nodes.length > 1) {
@@ -358,7 +336,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       link_to_update.forEach(l => l.reset())
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
-    } else if (Object.keys(data.nodes).length > 1) {
+    } else if (new_data.drawing_area.sankey.nodes_list.length > 1) {
       set_pre_idTarget(changeEvent.target.value)
     }
     setForceUpdate.toggle()
@@ -515,7 +493,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <TabList>
             {
               Object
-                .keys(menu_configuration_links)
+                .keys(ui)
                 .map((key) => {
                   return <Tab>
                     <Box layerStyle='submenuconfig_tab' >
@@ -529,7 +507,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <TabPanels>
             {
               Object
-                .values(menu_configuration_links)
+                .values(ui)
                 .map((c: ReactElementLike) => {
                   return c
                 }
