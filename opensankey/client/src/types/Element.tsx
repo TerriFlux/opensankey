@@ -21,11 +21,21 @@ import {
 } from './Utils'
 
 // CONSTANT *****************************************************************************
+
 const const_default_position_x = 50
 const const_default_position_y = 50
 
 
+// SPECIFIC FUNCTIONS *******************************************************************
+
+export function sortElements(a: Class_Element, b: Class_Element) {
+  if (a.id > b.id) return 1
+  else if (a.id < b.id) return -1
+  else return 0
+}
+
 // CLASS ELEMENT ************************************************************************
+
 /**
  * Class that define a meta element to display on drawing area
  *
@@ -46,6 +56,7 @@ export abstract class Class_Element {
 
   /**
    * Id of element
+   * @private
    * @type {string}
    * @memberof Class_Element
    */
@@ -114,8 +125,6 @@ export abstract class Class_Element {
  * @memberof Class_Element
  */
   private _menu_config: Class_MenuConfig
-
-  protected abstract element_displayed():boolean
 
 
   // CONSTRUCTOR ========================================================================

@@ -1,4 +1,7 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent } from 'react'
+import { ReactElementLike } from 'prop-types'
+import { MultiSelect } from 'react-multi-select-component'
+import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 
 import {
   Box,
@@ -12,34 +15,28 @@ import {
   Tabs,
   useBoolean
 } from '@chakra-ui/react'
-import { ReactElementLike } from 'prop-types'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRotate } from '@fortawesome/free-solid-svg-icons'
 
+/*************************************************************************************************/
 import {
-  SankeyNode
-} from '../types/Types'
-import { SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
+  SankeyMenuConfigurationLinksTypes
+} from './types/SankeyMenuConfigurationLinksTypes'
 import {
-  DeleteLink,
   OSTooltip
 } from './SankeyUtils'
 
-import { MultiSelect } from 'react-multi-select-component'
+/*************************************************************************************************/
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
-import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRotate } from '@fortawesome/free-solid-svg-icons'
-import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
-import { Class_LinkElement } from '../types/Link'
 
 
-
-
+/*************************************************************************************************/
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { applicationData,
+  {
+    applicationData,
     applicationState,
     applicationContext,
     menu_config_link_data,
@@ -53,25 +50,53 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     node_function
   }
 ) => {
-  const { data, set_data, new_data } = applicationData
-  const { flux_taggs, data_taggs } = new_data.drawing_area.sankey
+  // Old
+  const { data, new_data } = applicationData
+  // Traduction
+  const { t } = applicationContext
+  // Set state & Ref for UI update
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigLink.current = setForceUpdate.toggle
-  const { t } = applicationContext
-  const { multi_selected_links, multi_selected_nodes, displayedInputLinkValueSetterRef } = applicationState
-  // const { fluxTags, dataTags } = data
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(flux_taggs).length > 0 ? Object.keys(flux_taggs)[0] : '')
-  const [pre_idSource, set_pre_idSource] = useState('none')
-  const [pre_idTarget, set_pre_idTarget] = useState('none')
-  applicationState.ref_pre_idSource.current = pre_idSource
-  applicationState.ref_pre_idTarget.current = pre_idTarget
 
-  if ((tags_group_key == '' && Object.keys(flux_taggs).length > 0) || (!Object.keys(flux_taggs).includes(tags_group_key) && Object.keys(flux_taggs).length > 0)) {
-    set_tags_group_key(Object.keys(flux_taggs)[0])
+  // Links to display in selection menus ------------------------------------------------
+  let links, selected_links
+  if (data.displayed_link_selector) {
+    // All availables links
+    links = new_data.drawing_area.sankey.links_list
+    selected_links = new_data.drawing_area.selected_links_list
+  }
+  else {
+    // Only visible links
+    links = new_data.drawing_area.sankey.visible_links_list
+    selected_links = new_data.drawing_area.visible_and_selected_links_list
+  }
+  const entries_for_links = links.map((d) => { return { 'label': d.name, 'value': d.id } })
+  const entries_for_selected_links = selected_links.map((d) => { return { 'label': d.name, 'value': d.id } })
+
+  // Nodes to display in selection menus ------------------------------------------------
+  const nodes = new_data.drawing_area.sankey.nodes_list
+  const addDropSource = () => {
+    if (nodes.length >= 2) {
+      return (
+        <>
+          <option hidden key={'no_target'} value={''}> </option>
+          {nodes.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+        </>
+      )
+    }
+  }
+  const addDropTarget = () => {
+    if (nodes.length >= 2) {
+      return (
+        <>
+          <option hidden key={'no_cible'} value={''}> </option>
+          {nodes.map((n, i) => <option key={i} value={n.id} >{n.name}</option>)}
+        </>
+      )
+    }
   }
 
-  console.log('here')
-
+  // Sub-menus --------------------------------------------------------------------------
   const ui: { [s: string]: JSX.Element } = {
     'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
       menu_to_wrap={menu_config_link_data}
@@ -85,14 +110,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     />,
     'Flux.IS': <MenuConfigurationLinksTooltip
       applicationData={applicationData}
-      ComponentUpdater={ComponentUpdater}
-      multi_selected_links={multi_selected_links}
-      t={t}
+      applicationContext={applicationContext}
       menu_for_modal={false}
     />
   }
 
-  if (Object.keys(flux_taggs).length > 0 && data.accordeonToShow.includes('EF')) {
+  if (
+    (new_data.drawing_area.sankey.flux_taggs_list.length > 0) &&
+    data.accordeonToShow.includes('EF')
+  ) {
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
       applicationContext={applicationContext}
       applicationData={applicationData}
@@ -104,26 +130,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     />
   }
 
-  const newEntries = new Map(Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
-    return (Object.keys(dataTag.tags).length > 0) ? [
-      dataTagKey,
-      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-  }))
-
-  //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
-  const tags_selected = Object.fromEntries(newEntries)
-
-  //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
-  delete tags_selected['n']
-
-  const list_nodes = new_data.drawing_area.sankey.nodes_list
-  const list_links = new_data.drawing_area.sankey.links_list
-  const list_links_selected = new_data.drawing_area.selected_links_list
-
-  // const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
-  const INITIAL_OPTIONS_LINKS = list_links.map((d) => { return { 'label': (d.source.name + '--->' + d.target.name), 'value': d.id } })
-  const selected_links = list_links_selected.map((d) => { return { 'label': (d.source.name + '--->' + d.target.name), 'value': d.id } })
-
+  // Selection menu for links -----------------------------------------------------------
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
     const DD = (
@@ -136,29 +143,29 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           width='14.75rem'
         >
           <MultiSelect
-            valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
-              return selected.filter(d => d !== undefined).length ? selected.map(({ label }) => label + ', ') : 'Aucun flux sélectionné'
+            valueRenderer={(entries: Type_MenuSelectionEntry[]) => {
+              return entries.filter(d => d !== undefined).length ? entries.map(({ label }) => label + ', ') : 'Aucun flux sélectionné'
             }}
             labelledBy='TODO Change'
-            options={INITIAL_OPTIONS_LINKS}
-            value={selected_links}
+            options={entries_for_links}
+            value={entries_for_selected_links}
             overrideStrings={{
               'selectAll': 'Tout sélectionner',
             }}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              const new_sel = selected.map(d => d.value)
-              list_links.forEach(link => {
-                if (new_sel.includes(link.id)) {
+            onChange={(entries: Type_MenuSelectionEntry[]) => {
+              // Update selection of links
+              const entries_values = entries.map(d => d.value)
+              links.forEach(link => {
+                if (entries_values.includes(link.id)) {
                   new_data.drawing_area.addLinkToSelection(link)
-                } else {
+                }
+                else {
                   new_data.drawing_area.removeLinkFromSelection(link)
                 }
               })
-
+              // Update UI
               setForceUpdate.toggle()
               new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
-
-
             }}
           />
         </Box>
@@ -166,183 +173,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     return DD
   }
 
-  //Add new link and selection it
-  const add_new_link = () => {
-    // const { nodes, links } = data
 
-    // if (Object.keys(nodes).length < 2) {
-    //   if (Object.keys(nodes).length == 0) {
-    //     AddNewNode(applicationData, multi_selected_nodes, node_function)
-    //   }
-    //   AddNewNode(applicationData, multi_selected_nodes, node_function)
-    // }
-    // const link: SankeyLink = DefaultLink(data)
-    // // Méthode pour incrementer idNode
-    // let idLink = Object.keys(data.links).length
-    // while (data.links['link' + idLink]) {
-    //   idLink = idLink + 1
-    // }
-    // link.idLink = 'link' + idLink
-    // links[link.idLink] = link
-    // const node_keys = Object.keys(nodes)
-    // let ids = node_keys[0]
-    // let idt = node_keys[1]
-
-    // if (ref_pre_idSource.current !== 'none') {
-    //   ids = ref_pre_idSource.current
-    // }
-    // if (ref_pre_idTarget.current !== 'none') {
-    //   idt = ref_pre_idTarget.current
-    // }
-
-    // link.idSource = nodes[ids].idNode
-    // link.idTarget = nodes[idt].idNode
-    // if (link.idSource === link.idTarget) {
-    //   AssignLinkValueToCorrectVar(link, 'recycling', true, false)
-
-    // }
-
-    // nodes[ids].outputLinksId.push(link.idLink)
-    // nodes[idt].inputLinksId.push(link.idLink)
-
-    // multi_selected_links.current = [link]
-    // applicationState.ref_display_link_opacity.current.forEach(setter => setter(
-    //   ReturnCorrectLinkAttributeValue(data, link, 'opacity', false) as string)
-    // )
-    // data.linkZIndex.push(link.idLink)
-    // ComponentUpdater.updateComponenSaveInCache.current(false)
-    // set_data({ ...data })
-    // set_show_link(true)
-    const node_src = new_data.drawing_area.addNewDefaultNodeToSankey()
-    node_src.name = 'Unknown source'
-    // Set position
-    node_src.setPosXY(50, 50)
-    new_data.drawing_area.addNodeToSelection(node_src)
-    node_src.reset()
-
-    const node_trgt = new_data.drawing_area.addNewDefaultNodeToSankey()
-    node_src.name = 'Unknown target'
-    // Set position
-    node_trgt.setPosXY(150, 150)
-    new_data.drawing_area.addNodeToSelection(node_trgt)
-    node_trgt.reset()
-
-
-    const n_link = new Class_LinkElement(node_src, node_trgt, new_data.drawing_area, new_data.menu_configuration)
-    new_data.drawing_area.sankey.addLink(n_link)
-    new_data.drawing_area.addLinkToSelection(n_link)
-    console.log(n_link)
-    n_link.reset()
-    setForceUpdate.toggle()
-    ComponentUpdater.updateComponenSaveInCache.current(false)
-
-  }
-
-
-  //Change the source of selected link
-  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if (list_links_selected.length > 0) {
-      const nodes = new_data.drawing_area.sankey.nodes_dict
-      const link = list_links_selected[0]
-
-      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-      const previous_node = link.source
-      previous_node.output_links_list.splice(previous_node.output_links_list.indexOf(link), 1)
-
-      const source_node = nodes[changeEvent.target.value]
-      link.source = source_node
-      if (link.source === link.target) {
-        // TODO : when a version of AssignLinkValueToCorrectVar is implemented
-        // with the class system then use it here
-
-        // AssignLinkValueToCorrectVar(link,'recycling',true,false)
-      }
-      source_node.output_links_list.push(link)
-
-      // Create a variable containing all links to update
-      let link_to_update = []
-      link_to_update.push(link)
-      link_to_update = link_to_update.concat(previous_node.output_links_list.map(lid => lid))
-      link_to_update = link_to_update.concat(previous_node.input_links_list.map(lid => lid))
-      link_to_update = link_to_update.concat(source_node.output_links_list.map(lid => lid))
-      link_to_update = link_to_update.concat(source_node.input_links_list.map(lid => lid))
-
-      // RedrawNodes([source_node, previous_node])
-      source_node.reset()
-      previous_node.reset()
-      // link_function.RedrawLinks(link_to_update)
-      link_to_update.forEach(l => l.reset())
-      ComponentUpdater.updateComponenSaveInCache.current(false)
-
-    } else if (list_nodes.length > 1) {
-      set_pre_idSource(changeEvent.target.value)
-    }
-    setForceUpdate.toggle()
-  }
-
-  const addDropSource = () => {
-    if (list_nodes.length >= 2) {
-      return (<>
-        <option hidden key={'no_target'} value={''}> </option>
-        {list_nodes.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
-      </>
-      )
-    }
-  }
-
-  const addDropCible = () => {
-    if (list_nodes.length >= 2) {
-      return (<>
-        <option hidden key={'no_cible'} value={''}> </option>
-        {list_nodes.map((n, i) => <option key={i} value={n.id} >{n.name}</option>)}
-      </>
-      )
-    }
-  }
-
-  //Change the target of selected link
-  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if (list_links_selected.length > 0) {
-      const nodes = new_data.drawing_area.sankey.nodes_dict
-      const link = list_links_selected[0]
-      const previous_node = nodes[link.id]
-      previous_node.input_links_list.splice(previous_node.input_links_list.indexOf(list_links_selected[0]), 1)
-
-      const target_node = nodes[changeEvent.target.value]
-      link.target = target_node
-      if (link.source === link.target) {
-        // TODO : when a version of AssignLinkValueToCorrectVar is implemented
-        // with the class system then use it here
-
-        // AssignLinkValueToCorrectVar(link,'recycling',true,false)
-      }
-      target_node.input_links_list.push(list_links_selected[0])
-
-
-
-      // Create a variable containing all links to update
-      let link_to_update = []
-      link_to_update.push(link)
-      link_to_update = link_to_update.concat(previous_node.output_links_list.map(lid => lid))
-      link_to_update = link_to_update.concat(previous_node.input_links_list.map(lid => lid))
-      link_to_update = link_to_update.concat(target_node.output_links_list.map(lid => lid))
-      link_to_update = link_to_update.concat(target_node.input_links_list.map(lid => lid))
-
-      // RedrawNodes([target_node,previous_node])
-      previous_node.reset()
-      target_node.reset()
-
-      // link_function.RedrawLinks(link_to_update)
-      link_to_update.forEach(l => l.reset())
-      ComponentUpdater.updateComponenSaveInCache.current(false)
-
-    } else if (new_data.drawing_area.sankey.nodes_list.length > 1) {
-      set_pre_idTarget(changeEvent.target.value)
-    }
-    setForceUpdate.toggle()
-
-  }
-
+  // Links upper menu -------------------------------------------------------------------
   return (<Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
@@ -355,9 +187,13 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           variant='menuconfigpanel_add_button'
           onClick={
             () => {
-              // new_data.drawing_area.createNewLinkAndNewNodes()
-              add_new_link()
-              // link_function.DrawAllLinks(contextMenu, applicationData, uiElementsRef, applicationState, applicationContext, alt_key_pressed, (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute', link_function, ComponentUpdater, dict_hook_ref_setter_show_dialog_components)
+              // Create new link
+              const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
+              // Add link to selection
+              new_data.drawing_area.addLinkToSelection(new_link)
+              // Update UI
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+              setForceUpdate.toggle()
             }}>
           <FaPlus />
         </Button>
@@ -374,9 +210,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           variant='menuconfigpanel_del_button'
           onClick={
             () => {
-              multi_selected_links.current.forEach(l => DeleteLink(data, l))
-              multi_selected_links.current = []
-              set_data({ ...data })
+              // Delete all selected links
+              applicationData.new_data.drawing_area.deleteSelectedLinks()
+              // Update UI
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+              setForceUpdate.toggle()
             }}>
           <FaMinus />
         </Button>
@@ -388,6 +226,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           variant='menuconfigpanel_option_button'
           onClick={
             () => {
+              // Update UI with only visible links / all links
               data.displayed_link_selector = !data.displayed_link_selector
               setForceUpdate.toggle()
             }}>
@@ -418,9 +257,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={list_links_selected.length == 0}
-              onChange={source_change}
-              value={(list_links_selected.length > 0) ? list_links_selected[0].source.id : ''}>
+              disabled={selected_links.length == 0}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const new_source = new_data.drawing_area.sankey.getNode(event.target.value)
+                if (new_source !== null) {
+                  selected_links.forEach(link => link.source = new_source)
+                  ComponentUpdater.updateComponenSaveInCache.current(false)
+                  setForceUpdate.toggle()
+                }
+              }}
+              value={(selected_links.length > 0) ? selected_links[0].source.id : ''}>
               {addDropSource()}
             </Select>
           </InputGroup>
@@ -438,10 +284,17 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={list_links_selected.length == 0}
-              onChange={target_change}
-              value={(list_links_selected.length > 0) ? list_links_selected[0].target.id : ''}>
-              {addDropCible()}
+              disabled={selected_links.length == 0}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const new_target = new_data.drawing_area.sankey.getNode(event.target.value)
+                if (new_target !== null) {
+                  selected_links.forEach(link => link.target = new_target)
+                  ComponentUpdater.updateComponenSaveInCache.current(false)
+                  setForceUpdate.toggle()
+                }
+              }}
+              value={(selected_links.length > 0) ? selected_links[0].target.id : ''}>
+              {addDropTarget()}
             </Select>
           </InputGroup>
         </OSTooltip>
@@ -453,28 +306,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <Button
             height='100%'
             onClick={() => {
-              const nodes_to_reorganize: SankeyNode[] = []
-              multi_selected_links.current.forEach(l => {
-                const tmp = l.idSource
-                const previous_node_s = data.nodes[l.idSource]
-                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-                const source_node = data.nodes[l.idTarget]
-                l.idSource = source_node.idNode
-                source_node.outputLinksId.push(l.idLink)
-                nodes_to_reorganize.push(source_node)
-                const previous_node_t = data.nodes[l.idTarget]
-                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-                const target_node = data.nodes[tmp]
-                l.idTarget = target_node.idNode
-                target_node.inputLinksId.push(l.idLink)
-                nodes_to_reorganize.push(target_node)
-              })
-              nodes_to_reorganize.forEach(n => {
-                reorganize_inputLinksId(data, n, true, true, data.nodes, data.links)
-              })
-
-              node_function.RedrawNodes(nodes_to_reorganize)
-              link_function.RedrawLinks(multi_selected_links.current)
+              selected_links.forEach(link => link.inverse())
               ComponentUpdater.updateComponenSaveInCache.current(false)
               setForceUpdate.toggle()
             }}
@@ -486,7 +318,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     </Box>
 
     {
-      (list_links_selected.length !== 0) ?
+      (selected_links.length !== 0) ?
         <Tabs
           isLazy
         >

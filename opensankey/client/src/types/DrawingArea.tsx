@@ -18,16 +18,18 @@ import {
   Class_Sankey
 } from './Sankey'
 import {
-  Class_NodeElement
+  Class_NodeElement,
+  sortNodesElements
 } from './Node'
 import {
-  Class_LinkElement
+  Class_LinkElement,
+  sortLinksElements
 } from './Link'
 import {
   Class_ApplicationData
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-
+import { Class_Element, sortElements } from './Element'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -37,7 +39,8 @@ import { Class_Legend } from './Legend'
  * @class Class_DrawingArea
  */
 export class Class_DrawingArea {
-// PUBLIC ATTRIBUTES ==================================================================
+
+  // PUBLIC ATTRIBUTES ==================================================================
 
   /**
    * Application object which relates to this drawing area
@@ -125,10 +128,8 @@ export class Class_DrawingArea {
   private _sankey: Class_Sankey
   private _legend: Class_Legend
 
-  // private text_areas: { [id: string]: Class_Element } = {}
-
   // Elements that are selected in this area
-  private _sankey_selection: Class_Sankey
+  private _selection: {[id: string]: Class_Element} = {}
 
   // Color
   private _color: string = default_background_color
@@ -164,12 +165,12 @@ export class Class_DrawingArea {
     this._height = _height
     this._width = _width
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
-    this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend = new Class_Legend( this,this.application_data.menu_configuration)
     // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
 
   // IMPORTANT METHODS ==================================================================
+
   /**
    * Reset drawing area
    * @memberof Class_DrawingArea
@@ -231,12 +232,41 @@ export class Class_DrawingArea {
   public set legend(value: Class_Legend) {this._legend = value}
 
   // Selections
-  public get selected_nodes_list() { return this._sankey_selection.nodes_list }
-  public get selected_nodes_list_sorted() { return this._sankey_selection.nodes_list_sorted }
-  public get visible_and_selected_nodes_list() { return this._sankey_selection.visible_nodes_list }
-  public get visible_and_selected_nodes_list_sorted() { return this._sankey_selection.visible_nodes_list_sorted }
-  public get selected_links_list() { return this._sankey_selection.links_list }
-  public get selected_links_list_sorted() { return this._sankey_selection.links_list_sorted }
+  public get selected_nodes_list() : Class_NodeElement[] {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_NodeElement)
+      .map(element => element as Class_NodeElement)
+  }
+  public get selected_nodes_list_sorted() {
+    return this.selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+  public get visible_and_selected_nodes_list() {
+    return this.selected_nodes_list
+      .filter(node => node.is_visible)
+  }
+  public get visible_and_selected_nodes_list_sorted() {
+    return this.visible_and_selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  public get selected_links_list() {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_LinkElement)
+      .map(element => element as Class_LinkElement)
+  }
+  public get selected_links_list_sorted() {
+    return this.selected_links_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+  public get visible_and_selected_links_list() {
+    return this.selected_links_list
+      .filter(link => link.is_visible)
+  }
+  public get visible_and_selected_links_list_sorted() {
+    return this.visible_and_selected_links_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
 
   // Size
   public getWidth() { return this._width }
@@ -315,23 +345,35 @@ export class Class_DrawingArea {
   public getNodeFromSankey(id: string) { return this.sankey.getNode(id) }
 
   /**
+   * Add a new default link to drawing area sankey
+   * @return {Class_LinkElement}
+   * @memberof Class_DrawingArea
+   */
+  public addNewDefaultLinkToSankey() { return this.sankey.addNewDefaultLink() }
+
+  /**
+   * Retrieve node by id from sankey struct
+   * @param {string} id
+   * @return {Class_NodeElement | null}
+   * @memberof Class_DrawingArea
+   */
+  public getLinkFromSankey(id: string) { return this.sankey.getLink(id) }
+
+  /**
    * Clean selection set of sankey elements
    * @memberof Class_DrawingArea
    */
   public purgeSelection() {
-    // Unselect all nodes
-    Object.values(this._sankey_selection.nodes_list)
-      .forEach((node) => node.setUnSelected())
-    // Unselect all links
-    Object.values(this._sankey_selection.links_list)
-      .forEach((link) => link.setUnSelected())
+    // Unselect everything
+    Object.values(this._selection)
+      .forEach((element) => element.setUnSelected())
     // TODO Unselect other things
     // Reset selection
     // TODO reset config menu
     this.application_data.menu_configuration.updateMenuEditionNode()
     this.application_data.menu_configuration.updateMenuEditionLink()
-    // TODO do that properly
-    this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
+    // Clean selection dict
+    this._selection = {}
   }
 
   /**
@@ -340,7 +382,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public addNodeToSelection(node: Class_NodeElement) {
-    this._sankey_selection.addNode(node)
+    this._selection[node.id] = node as Class_Element
     node.setSelected()
   }
 
@@ -350,8 +392,10 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public removeNodeFromSelection(node: Class_NodeElement) {
-    this._sankey_selection.removeNode(node)
-    node.setUnSelected()
+    if (this._selection[node.id] !== undefined) {
+      delete this._selection[node.id]
+      node.setUnSelected()
+    }
   }
 
   /**
@@ -360,13 +404,18 @@ export class Class_DrawingArea {
    * @memberof Class_Sankey
    */
   public deleteNode(node: Class_NodeElement) {
-    // Remove refs from sankey and selection
+    // Remove from selection if necessary
+    this.removeNodeFromSelection(node)
+    // Remove node from sankey
     this.sankey.removeNode(node)
-    this._sankey_selection.removeNode(node)
     // Self delete node
     node.delete()
   }
 
+  /**
+   * Permanently delete selected nodes
+   * @memberof Class_DrawingArea
+   */
   public deleteSelectedNodes() {
     // Get copy of selected nodes
     const selected_nodes = this.selected_nodes_list
@@ -381,27 +430,48 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public addLinkToSelection(link: Class_LinkElement) {
-    this._sankey_selection.addLink(link)
+    this._selection[link.id] = link as Class_Element
     link.setSelected()
   }
 
+  /**
+   * Remove given link from selection set
+   * @param {Class_LinkElement} link
+   * @memberof Class_DrawingArea
+   */
   public removeLinkFromSelection(link: Class_LinkElement) {
-    this._sankey_selection.removeLink(link)
-    link.setUnSelected()
+    if (this._selection[link.id] !== undefined) {
+      delete this._selection[link.id]
+      link.setUnSelected()
+    }
   }
 
-  // TODO : simple func that create 2 nodes & a link between the 2
-  // public createNewLinkAndNewNodes(){
-  //   const new_node = this.sankey.drawing_area.addNewDefaultNodeToSankey()
-  //   const new_node2= this.sankey.drawing_area.addNewDefaultNodeToSankey()
-  //   new_node.name='Node new 1'
-  //   new_node2.name='Node new 2'
-  //     // Set position
-  //     new_node.setPosXY(50, 50)
-  //     new_node2.setPosXY(100, 100)
-  //     const new_link = new Class_LinkElement(new_node, new_node2, this, this.application_data.menu_configuration)
-  //     this.sankey.addLink(new_link)
-  // }
+  /**
+   * Delete a given link -> link will not exist anymore
+   * @param {Class_NodeElement} node
+   * @memberof Class_Sankey
+   */
+  public deleteLink(link: Class_LinkElement) {
+    // Remove link from selection if necessary
+    this.removeLinkFromSelection(link)
+    // Remove link from sankey
+    this.sankey.removeLink(link)
+    // Self delete node
+    link.delete()
+  }
+
+  /**
+   * Delete all selected links -> link will not exist anymore
+   *
+   * @memberof Class_DrawingArea
+   */
+  public deleteSelectedLinks() {
+    // Get copy of selected nodes
+    const selected_links = this.selected_links_list
+    // Delete each one of them
+    selected_links.forEach(link => {this.deleteLink(link)})
+    // Then let garbage collector do the rest...
+  }
 
   // PRIVATE METHODS ==================================================================
 
@@ -529,7 +599,7 @@ export class Class_DrawingArea {
         const new_node = this.addNewDefaultNodeToSankey()
         // Set position
         const mouse_position = d3.pointer(event)
-        new_node.initPosXY(mouse_position[0], mouse_position[1])
+        new_node.setPosXY(mouse_position[0], mouse_position[1])
         this.application_data.menu_configuration.updateMenuEditionNode()
 
         // TODO remove test
