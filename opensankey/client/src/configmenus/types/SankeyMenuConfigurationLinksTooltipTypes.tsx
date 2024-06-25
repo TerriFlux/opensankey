@@ -4,7 +4,7 @@ import { ComponentUpdaterType, SankeyLink, applicationDataType } from '../../typ
 export type MenuConfigurationLinksTooltipFType = {
   applicationData:applicationDataType,
   ComponentUpdater:ComponentUpdaterType,
-  multi_selected_links:{current:SankeyLink[]},
+  // multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   menu_for_modal:boolean
 }

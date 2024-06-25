@@ -95,6 +95,10 @@ export class Class_Sankey {
   private _nodesColorMap: string
   private _linksColorMap: string
 
+  // Variables to filter node & link multi selector to display only visible element in the selector
+  private _filter_displayed_link_selector: boolean = false
+  private _filter_displayed_node_selector: boolean = false
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -133,6 +137,12 @@ export class Class_Sankey {
 
   public get linksColorMap(): string {return this._linksColorMap}
   public set linksColorMap(value: string) {this._linksColorMap = value}
+  
+  public get filter_displayed_link_selector(): boolean {return this._filter_displayed_link_selector}
+  public set filter_displayed_link_selector(value: boolean) {this._filter_displayed_link_selector = value}
+
+  public get filter_displayed_node_selector(): boolean {return this._filter_displayed_node_selector}
+  public set filter_displayed_node_selector(value: boolean) {this._filter_displayed_node_selector = value}
 
   // Nodes related ----------------------------------------------------------------------
 

@@ -53,18 +53,14 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     node_function
   }
 ) => {
-  const { data, set_data, new_data } = applicationData
-  const { flux_taggs, data_taggs } = new_data.drawing_area.sankey
+  const {  new_data } = applicationData
+  const { flux_taggs, data_taggs, } = new_data.drawing_area.sankey
+  const {selected_links_list}=new_data.drawing_area
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigLink.current = setForceUpdate.toggle
   const { t } = applicationContext
-  const { multi_selected_links, multi_selected_nodes, displayedInputLinkValueSetterRef } = applicationState
-  // const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(flux_taggs).length > 0 ? Object.keys(flux_taggs)[0] : '')
-  const [pre_idSource, set_pre_idSource] = useState('none')
-  const [pre_idTarget, set_pre_idTarget] = useState('none')
-  applicationState.ref_pre_idSource.current = pre_idSource
-  applicationState.ref_pre_idTarget.current = pre_idTarget
+
 
   if ((tags_group_key == '' && Object.keys(flux_taggs).length > 0) || (!Object.keys(flux_taggs).includes(tags_group_key) && Object.keys(flux_taggs).length > 0)) {
     set_tags_group_key(Object.keys(flux_taggs)[0])
@@ -86,13 +82,12 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     'Flux.IS': <MenuConfigurationLinksTooltip
       applicationData={applicationData}
       ComponentUpdater={ComponentUpdater}
-      multi_selected_links={multi_selected_links}
       t={t}
       menu_for_modal={false}
     />
   }
 
-  if (Object.keys(flux_taggs).length > 0 && data.accordeonToShow.includes('EF')) {
+  if (Object.keys(flux_taggs).length > 0 ) {
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
       applicationContext={applicationContext}
       applicationData={applicationData}
@@ -205,7 +200,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     // nodes[ids].outputLinksId.push(link.idLink)
     // nodes[idt].inputLinksId.push(link.idLink)
 
-    // multi_selected_links.current = [link]
+    // selected_links_list = [link]
     // applicationState.ref_display_link_opacity.current.forEach(setter => setter(
     //   ReturnCorrectLinkAttributeValue(data, link, 'opacity', false) as string)
     // )
@@ -275,7 +270,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     } else if (list_nodes.length > 1) {
-      set_pre_idSource(changeEvent.target.value)
+      // set_pre_idSource(changeEvent.target.value)
     }
     setForceUpdate.toggle()
   }
@@ -337,10 +332,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     } else if (new_data.drawing_area.sankey.nodes_list.length > 1) {
-      set_pre_idTarget(changeEvent.target.value)
+      // set_pre_idTarget(changeEvent.target.value)
     }
     setForceUpdate.toggle()
-
   }
 
   return (<Box layerStyle='menuconfigpanel_grid'>
@@ -374,9 +368,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           variant='menuconfigpanel_del_button'
           onClick={
             () => {
-              multi_selected_links.current.forEach(l => DeleteLink(data, l))
-              multi_selected_links.current = []
-              set_data({ ...data })
+              selected_links_list.forEach(l => l.delete())
+              // set_data({ ...data })
             }}>
           <FaMinus />
         </Button>
@@ -388,10 +381,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           variant='menuconfigpanel_option_button'
           onClick={
             () => {
-              data.displayed_link_selector = !data.displayed_link_selector
+              new_data.drawing_area.sankey.filter_displayed_link_selector = !new_data.drawing_area.sankey.filter_displayed_link_selector
               setForceUpdate.toggle()
             }}>
-          {data.displayed_link_selector ? <FaEye /> : <FaEyeSlash />}
+          {new_data.drawing_area.sankey.filter_displayed_link_selector ? <FaEye /> : <FaEyeSlash />}
         </Button>
       </OSTooltip>
     </Box>
@@ -454,27 +447,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             height='100%'
             onClick={() => {
               const nodes_to_reorganize: SankeyNode[] = []
-              multi_selected_links.current.forEach(l => {
-                const tmp = l.idSource
-                const previous_node_s = data.nodes[l.idSource]
-                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-                const source_node = data.nodes[l.idTarget]
-                l.idSource = source_node.idNode
-                source_node.outputLinksId.push(l.idLink)
-                nodes_to_reorganize.push(source_node)
-                const previous_node_t = data.nodes[l.idTarget]
-                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-                const target_node = data.nodes[tmp]
-                l.idTarget = target_node.idNode
-                target_node.inputLinksId.push(l.idLink)
-                nodes_to_reorganize.push(target_node)
+              selected_links_list.forEach(l => {
+                l.invert()
               })
-              nodes_to_reorganize.forEach(n => {
-                reorganize_inputLinksId(data, n, true, true, data.nodes, data.links)
-              })
+              // nodes_to_reorganize.forEach(n => {
+              //   reorganize_inputLinksId(data, n, true, true, data.nodes, data.links)
+              // })
 
-              node_function.RedrawNodes(nodes_to_reorganize)
-              link_function.RedrawLinks(multi_selected_links.current)
+              // node_function.RedrawNodes(nodes_to_reorganize)
+              // link_function.RedrawLinks(selected_links_list)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               setForceUpdate.toggle()
             }}
