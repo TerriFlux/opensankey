@@ -1228,14 +1228,18 @@ export interface DataSuiteType{
  * @param tags_group_key
  * @param is_auto_from_add_grp_tag variable used to avoid redondancie when we add a new group data tag
  */
-export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag=false): void=>{
+export const AddTag:AddTagFuncType =(
+  data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',
+  tags_group_key:string,
+  is_auto_from_add_grp_tag=false
+): void=>{
   // Méthode pour incrementer idElement
   let idElement = Object.keys(data[type_tag_name][tags_group_key].tags).length
   while (data[type_tag_name][tags_group_key].tags['element' + idElement]) {
     idElement = idElement+1
   }
-  data[type_tag_name][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
-  const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length
+
+  const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length+1
   const colors = colormap({
     colormap: data[type_tag_name][tags_group_key].color_map,
     nshades: Math.max(11, nb_tags),
@@ -1246,9 +1250,14 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
   if (nb_tags < 11) {
     step = Math.round(11 / nb_tags)
   }
-  Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
-    (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
-  )
+  // Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
+  //   (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
+  // )
+  data[type_tag_name][tags_group_key].tags['element' + idElement] = { 
+    name: 'étiquette' + idElement, 
+    color: colors[(nb_tags-1) * step], 
+    selected: true 
+  }
   // If we create a data tags then we redesign link value object
   // Since dataTags is a tree structure adding a new tag can lead to 2 transformation:
   //  - If the group is a branch then we need to create it sub tree with the layout of all sub datatags
