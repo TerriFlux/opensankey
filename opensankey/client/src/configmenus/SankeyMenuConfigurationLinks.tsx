@@ -161,7 +161,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         {/* Position custom pour MultiSelect */}
         <Box
           height='2rem'
-          width='100%'
+          width='14.75rem'
         >
           <MultiSelect
             valueRenderer={ (selected :selected_type[]) => {
