@@ -331,6 +331,7 @@ export const OSPDefaultNode = (data: OSPData) => {
     iconName: '',
     iconColor: '',
     iconVisible: false,
+    iconColorSustainable:false,
 
     has_FO: false,
     is_FO_raw: false,

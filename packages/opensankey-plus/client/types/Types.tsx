@@ -50,6 +50,7 @@ export type OSPNodeVar={
   iconColor: string,
   iconVisible: boolean,
   iconViewBox?: string,
+  iconColorSustainable:boolean,
 
   has_FO: boolean,
   is_FO_raw: boolean,

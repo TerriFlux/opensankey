@@ -7,7 +7,9 @@ import {
 } from 'i18next'
 import {
   FaEyeSlash,
-  FaFileImport
+  FaFileImport,
+  FaLock,
+  FaLockOpen
 } from 'react-icons/fa'
 import {
   Box,
@@ -178,11 +180,10 @@ export const OSPNodeIcon : FunctionComponent<OSPNodeIconFType> = ({
             </Box>
           </OSTooltip>
 
-
           <OSTooltip label={!is_activated?t('Menu.sankeyOSPDisabled'):''} >
             <Box
               as='span'
-              layerStyle='menuconfigpanel_row_2cols'
+              layerStyle='menuconfigpanel_row_3cols'
             >
               <Box
                 as='span'
@@ -208,6 +209,21 @@ export const OSPNodeIcon : FunctionComponent<OSPNodeIconFType> = ({
                   setForceUpdate(!forceUpdate)
                 }}
               />
+              <Button
+                //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+                variant={
+                  (multi_selected_nodes.current.length === 1)?
+                    'menuconfigpanel_option_button_activated':
+                    'menuconfigpanel_option_button'}
+                onClick={() => {
+                  multi_selected_nodes.current.forEach(
+                    d => d.iconColorSustainable = !d.iconColorSustainable
+                  )
+                  setForceUpdate(!forceUpdate)
+                }}
+              >
+                {(multi_selected_nodes.current.length === 1 && multi_selected_nodes.current[0].iconColorSustainable)?<FaLock/>:<FaLockOpen/>}
+              </Button>
             </Box>
           </OSTooltip>
         </Box>:
@@ -718,7 +734,7 @@ export const node_icon_fill_color : node_icon_fill_colorFType = (
   if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
     const selected_tag = n.tags[n.colorTag][0]
     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-    if (tag && !ReturnValueNode(data,n,'shape_visible')) {
+    if (tag && !ReturnValueNode(data,n,'shape_visible') && !n.iconColorSustainable) {
       return tag.color as string
     }
   }
