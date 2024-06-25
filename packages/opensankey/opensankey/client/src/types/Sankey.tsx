@@ -15,20 +15,24 @@ import {
 } from './DrawingArea'
 import {
   Class_LinkElement,
-  Class_LinkStyle
+  Class_LinkStyle,
+  defaultLinkId,
+  sortLinksElements
 } from './Link'
 import {
   Class_NodeElement,
-  Class_NodeStyle
+  Class_NodeStyle,
+  sortNodesElements
 } from './Node'
 import {
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
+import { Class_Element, sortElements } from './Element'
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
+export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -53,12 +57,6 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public drawing_area: Class_DrawingArea
-
-  // Tags
-  public node_taggs: { [_: string]: Class_TagGroup } = {}
-  public flux_taggs: { [_: string]: Class_TagGroup } = {}
-  public data_taggs: { [_: string]: Class_TagGroup } = {}
-  public level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // TODO a implementer
   // left_shift: number,
@@ -91,6 +89,12 @@ export class Class_Sankey {
   private _link_styles: { [_: string]: Class_LinkStyle } = {default_style_name: default_link_style } // TODO create defaut style
   private _node_styles: { [_: string]: Class_NodeStyle } = {default_style_name: default_node_style }
 
+  // Tags
+  private _node_taggs: { [_: string]: Class_TagGroup } = {}
+  private _flux_taggs: { [_: string]: Class_TagGroup } = {}
+  private _data_taggs: { [_: string]: Class_TagGroup } = {}
+  private _level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
+
   // Variable determining if we apply tag color to elements
   private _colorMap: string
   private _nodesColorMap: string
@@ -113,15 +117,15 @@ export class Class_Sankey {
    * @param {Class_DrawingArea} drawing_area
    * @memberof Class_Sankey
    */
-  constructor(drawing_area: Class_DrawingArea,
+  constructor(
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
-
   ) {
     this.drawing_area = drawing_area
-    this.menu_config=menu_config
-    this._colorMap='no_colormap'
-    this._nodesColorMap='no_colormap'
-    this._linksColorMap='no_colormap'
+    this.menu_config = menu_config
+    this._colorMap = 'no_colormap'
+    this._nodesColorMap = 'no_colormap'
+    this._linksColorMap = 'no_colormap'
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -156,6 +160,16 @@ export class Class_Sankey {
   }
 
   /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get nodes_list_sorted() {
+    return this.nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  /**
    * Get all visible nodes as a list
    * @readonly
    * @memberof Class_Sankey
@@ -170,31 +184,9 @@ export class Class_Sankey {
    * @readonly
    * @memberof Class_Sankey
    */
-  public get nodes_list_sorted() {
-    return this.nodes_list
-      .sort((a, b) =>
-        (a.name > b.name) ?
-          1 :
-          ((b.name > a.name) ?
-            -1 :
-            0)
-      )
-  }
-
-  /**
-   * Get all nodes sorted by their names as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
   public get visible_nodes_list_sorted() {
     return this.visible_nodes_list
-      .sort((a, b) =>
-        (a.name > b.name) ?
-          1 :
-          ((b.name > a.name) ?
-            -1 :
-            0)
-      )
+      .sort((a, b) => sortNodesElements(a, b))
   }
 
   // Links related ----------------------------------------------------------------------
@@ -224,13 +216,27 @@ export class Class_Sankey {
    */
   public get links_list_sorted() {
     return this.links_list
-      .sort((a, b) =>
-        (a.id > b.id) ?
-          1 :
-          ((b.id > a.id) ?
-            -1 :
-            0)
-      )
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+
+  /**
+   * Get all visible links as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_links_list() {
+    return Object.values(this._links)
+      .filter(node => node.is_visible)
+  }
+
+  /**
+   * Get all links sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_links_list_sorted() {
+    return this.visible_links_list
+      .sort((a, b) => sortLinksElements(a, b))
   }
 
   /**
@@ -295,6 +301,96 @@ export class Class_Sankey {
     return this._link_styles[default_style_name]
   }
 
+  // Tags related -----------------------------------------------------------------------
+
+  public get node_taggs_dict() {
+    return this._node_taggs
+  }
+
+  public get node_taggs_list() {
+    return Object.values(this._node_taggs)
+  }
+
+  public get flux_taggs_dict() {
+    return this._flux_taggs
+  }
+
+  public get flux_taggs_list() {
+    return Object.values(this._flux_taggs)
+  }
+
+  public get data_taggs_dict() {
+    return this._data_taggs
+  }
+
+  public get data_taggs_list() {
+    return Object.values(this._data_taggs)
+  }
+
+  public get level_taggs_dict() {
+    return this._level_taggs
+  }
+
+  public get level_taggs_list() {
+    return Object.values(this._level_taggs)
+  }
+
+  // PRIVATE METHODS ====================================================================
+
+  // Nodes related ----------------------------------------------------------------------
+
+  /**
+   * Add a given node to Sankey
+   * @param {Class_Node} node
+   * @memberof Class_Sankey
+   */
+  private _addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
+
+  // Links related ----------------------------------------------------------------------
+
+  /**
+   * Add a given link to Sankey
+   * @param {Class_LinkElement} link
+   * @memberof Class_Sankey
+   */
+  private _addLink(link: Class_LinkElement) {
+    this._links[link.id] = link
+  }
+
+  /**
+   * Create a new link from source to target.
+   * Check that we always have unique id
+   *
+   * @private
+   * @param {string} id
+   * @param {Class_NodeElement} source
+   * @param {Class_NodeElement} target
+   * @return {*}  {Class_LinkElement}
+   * @memberof Class_Sankey
+   */
+  private _addNewLink(
+    id: string,
+    source: Class_NodeElement,
+    target: Class_NodeElement,
+  ) : Class_LinkElement {
+    if (!this._links[id]) {
+      const link = new Class_LinkElement(
+        id,
+        source,
+        target,
+        this.drawing_area,
+        this.menu_config)
+      this._addLink(link)
+      return link
+    }
+    else {
+      return this._addNewLink(
+        id+' (dup)',
+        source,
+        target)
+    }
+  }
+
   // PUBLIC METHODS =====================================================================
 
   // Nodes related ----------------------------------------------------------------------
@@ -306,10 +402,19 @@ export class Class_Sankey {
    * @return {Class_Node}
    * @memberof Class_Sankey
    */
-  public addNewNode(id: string, name: string) {
-    const node = new Class_NodeElement(id, name, this.drawing_area, this.menu_config)
-    this.addNode(node)
-    return node
+  public addNewNode(id: string, name: string) : Class_NodeElement {
+    if (!this._nodes[id]){
+      // Create node
+      const node = new Class_NodeElement(id, name, this.drawing_area, this.menu_config)
+      // Set node to default position
+      node.initDefaultPosXY()
+      // Update registry of nodes
+      this._addNode(node)
+      return node
+    }
+    else {
+      return this.addNewNode(id+'_0', name+'_0')
+    }
   }
 
   /**
@@ -338,13 +443,6 @@ export class Class_Sankey {
   }
 
   /**
-   * Add a given node to Sankey
-   * @param {Class_Node} node
-   * @memberof Class_Sankey
-   */
-  public addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
-
-  /**
    * Remove a given node from Sankey -> node may still exist somewhere
    * @param {Class_Node} node
    * @memberof Class_Sankey
@@ -358,12 +456,56 @@ export class Class_Sankey {
   // Links related ----------------------------------------------------------------------
 
   /**
-   * Add a given link to Sankey
-   * @param {Class_LinkElement} link
+   * Create a new link from source to target
+   *
+   * @param {Class_NodeElement} source
+   * @param {Class_NodeElement} target
+   * @return {*}  {Class_LinkElement}
    * @memberof Class_Sankey
    */
-  public addLink(link: Class_LinkElement) { this._links[link.id] = link }
+  public addNewLink(
+    source: Class_NodeElement,
+    target: Class_NodeElement,
+  ) {
+    return this._addNewLink(
+      defaultLinkId(source, target),
+      source,
+      target
+    )
+  }
 
+  /**
+   * Create a new default link : select a default source and default target
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public addNewDefaultLink() {
+    let source: Class_NodeElement
+    let target: Class_NodeElement
+    if (this.nodes_list.length > 2) {
+      source = this.nodes_list[0]
+      target = this.nodes_list[1]
+    }
+    else if (this.nodes_list.length == 1) {
+      source = this.nodes_list[0]
+      target = this.addNewDefaultNode()
+      target.setPosXY(source.position_x + 100, source.position_y + 100)
+    }
+    else {
+      source = this.addNewDefaultNode() // Set with default position
+      target = this.addNewDefaultNode()
+      target.setPosXY(source.position_x + 100, source.position_y + 100)
+    }
+    return this.addNewLink(source, target)
+  }
+
+  /**
+   * Get link object by its id
+   *
+   * @param {string} id
+   * @return {*}
+   * @memberof Class_Sankey
+   */
   public getLink(id: string) {
     if (id in this._links) {
       return this._links[id]
@@ -390,13 +532,19 @@ export class Class_Sankey {
    * @return {*}  {Class_TagGroup}
    * @memberof Class_Sankey
    */
-  public addTagGroup(id: string, name: string, type_group: Type_MacroTagGroup): Class_TagGroup {
-    if (!this[type_group][id]) {
+  public addTagGroup(
+    id: string,
+    name: string,
+    type_group: Type_MacroTagGroup
+  ): Class_TagGroup {
+    const macro_tag_group = this.getTagGroupsAsDict(type_group)
+    if (!macro_tag_group[id]) {
       const tag_group = new Class_TagGroup(id, name)
-      this[type_group][id] = tag_group
+      macro_tag_group[id] = tag_group
       return tag_group
     }
     else {
+      // Recursive to avoid id duplicates
       return this.addTagGroup(id+'_0', name+'_0', type_group)
     }
   }
@@ -408,7 +556,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public createTagGroup(type_group: Type_MacroTagGroup) {
-    const n = Object.values(this[type_group]).length
+    const n = Object.values(this.getTagGroupsAsDict(type_group)).length
     const id = type_group + n
     const name = 'Tag Group ' + n
     return this.addTagGroup(id, name, type_group)
@@ -421,15 +569,15 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
-    if (this[type_group][id] !== undefined) {
-      this[type_group][id].delete()
-      delete this[type_group][id]
+    const macro_tag_group = this.getTagGroupsAsDict(type_group)
+    if (macro_tag_group[id] !== undefined) {
+      macro_tag_group[id].delete()
+      delete macro_tag_group[id]
     }
   }
 
   /**
    * Properly remove tag group
-   *
    * @param {Type_MacroTagGroup} type_group
    * @param {Class_TagGroup} _
    * @memberof Class_Sankey
@@ -440,12 +588,33 @@ export class Class_Sankey {
 
   /**
    * Return list of group tag from specified group type
-   *
    * @param {Type_MacroTagGroup} type_group
    * @return {*}
    * @memberof Class_Sankey
    */
-  public getListGroupTagOf(type_group: Type_MacroTagGroup) {
-    return Object.values(this[type_group])
+  public getTagGroupsAsList(type_group: Type_MacroTagGroup) {
+    return Object.values(this.getTagGroupsAsDict(type_group))
+  }
+
+
+  /**
+   * Return dict of group tag from specified group type
+   * @param {Type_MacroTagGroup} type_group
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public getTagGroupsAsDict(type_group: Type_MacroTagGroup) {
+    if (type_group === 'node_taggs') {
+      return this._node_taggs
+    }
+    else if (type_group === 'flux_taggs') {
+      return this._flux_taggs
+    }
+    else if (type_group === 'data_taggs') {
+      return this._data_taggs
+    }
+    else {
+      return this._level_taggs
+    }
   }
 }

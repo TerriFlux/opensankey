@@ -65,6 +65,14 @@ export const default_value_label_vert = 'top'
 export const default_value_label_horiz  = 'middle'
 export const default_label_box_width = 150
 
+// SPECIFIC FUNCTIONS *******************************************************************
+
+export function sortNodesElements(a: Class_NodeElement, b: Class_NodeElement) {
+  if (a.id > b.id) return 1
+  else if (a.id < b.id) return -1
+  else return 0
+}
+
 // CLASS NODE_ELEMENT *******************************************************************
 
 /**
@@ -174,24 +182,19 @@ export class Class_NodeElement extends Class_Element {
     this._tags = {}
   }
 
-  protected element_displayed(){
-
-    return this.element_tag_displayed()
-  }
-
 
   /**
- * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
- * if that the case then we don't draw the node
- *
- * @private
- * @return {*}
- * @memberof Class_NodeElement
- */
+   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+   * if that the case then we don't draw the node
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_NodeElement
+  */
   private element_tag_displayed(){
-  // If node has tags :
-  //  - check if any of them is selected at false
-  // else if the node doesn't have tag it isn't filtered by them
+    // If node has tags :
+    //  - check if any of them is selected at false
+    // else if the node doesn't have tag it isn't filtered by them
     return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
   }
 
