@@ -1142,6 +1142,9 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
       if (n.tags[tagGroup] === undefined) {
         return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:defaultElementColor
       } else if (n.tags[tagGroup].length == 1 ) {
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           return data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color??''
         } else {
