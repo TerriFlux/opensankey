@@ -723,7 +723,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
 
               //Met le dernier dataTag en tant que couleur a suivre pour les flux
               if (evt.target.checked) {
-                sankey.linksColorMap = 'dataTags_' + Object.keys(new_data.drawing_area.sankey.data_taggs).slice(DT_length - 1, DT_length)[0]
+                sankey.linksColorMap = 'dataTags_' + Object.keys(new_data.drawing_area.sankey.data_taggs_dict).slice(DT_length - 1, DT_length)[0]
                 sankey.data_taggs_list.slice(DT_length - 1, DT_length)[0].show_legend = evt.target.checked
               }
               setForceUpdate.toggle()
@@ -776,14 +776,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
           onClick={() => {
             applicationData.new_data?.drawing_area.switchMode()
             setForceUpdate.toggle()
-            // if (applicationData.new_data?.drawing_area.isInEditionMode(){
-            //   // setSelectionMode('s') // TODO a supprimer
-            //   applicationData.new_data?.drawing_area.setSelectionMode()
-            // }
-            // else if (applicationData.new_data?.drawing_area.isInSelectionMode() {
-            //   applicationData.new_data?.drawing_area.setEditionMode()
-            //   // setSelectionMode('ln') // TODO a supprimer
-            // }
           }}
         >
           <Col>
@@ -797,7 +789,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
         </Button>
       </OSTooltip>
     </>
-
   }
 
   const btn_aggrega_level = (level_filter) ? <>
@@ -918,7 +909,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
     :
     <></>
 
-  const btn_show_data_filter = (Object.values(new_data.drawing_area.sankey.data_taggs).length > 0) ? <>
+  const btn_show_data_filter = (new_data.drawing_area.sankey.data_taggs_list.length > 0) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_data_tag_filter')}>
       <Button ref={ref_btn_data_tag_filter} size='sm' style={{ color: '#fff', background: '#B13F06', borderColor: '#B13F06' }}
         onClick={sShowDataTagFilter.toggle}
@@ -1005,7 +996,11 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
 ) => {
   const [, setForceUpdate] = useBoolean()
   const { new_data } = applicationData
-  const { node_taggs, level_taggs, linksColorMap, data_taggs, links_dict, flux_taggs } = new_data.drawing_area.sankey
+  const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
+  const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+  const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
+  const { linksColorMap, links_dict} = new_data.drawing_area.sankey
 
   const banner_grouptag = Object.values(flux_taggs).filter(tags_group => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(tags_group => {
@@ -1138,7 +1133,11 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
   ComponentUpdater }
 ) => {
   const { new_data } = applicationData
-  const { node_taggs, level_taggs, linksColorMap, data_taggs, nodes_dict, links_dict, flux_taggs } = new_data.drawing_area.sankey
+  const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
+  const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+  const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
+  const { linksColorMap, nodes_dict, links_dict } = new_data.drawing_area.sankey
 
   const [forceUpdate, setForceUpdate] = useBoolean()
   const banner_grouptag = Object.entries(data_taggs).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
