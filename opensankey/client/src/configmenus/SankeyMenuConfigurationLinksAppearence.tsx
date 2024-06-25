@@ -103,8 +103,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   }
 
 
-
-
   /**
    *
    * function that go throught all Class_NodeElement of an array & check if they're all equals
@@ -119,32 +117,32 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const is_indeterminatae = !list_links_selected.every(check_indeterminate)
 
 
-  const value_orientation = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].orientation : (list_links_selected[0]?.orientation ?? false)
-  const value_left_horiz_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].left_horiz_shift : (list_links_selected[0]?.left_horiz_shift ?? false)
-  const value_right_horiz_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].right_horiz_shift : (list_links_selected[0]?.right_horiz_shift ?? false)
-  const value_vert_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].vert_shift : (list_links_selected[0]?.vert_shift ?? false)
-  const value_curvature = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].curvature : (list_links_selected[0]?.curvature ?? false)
-  const value_curved = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].curved : (list_links_selected[0]?.curved ?? false)
-  const value_recycling = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].recycling : (list_links_selected[0]?.recycling ?? false)
-  const value_arrow_size = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].arrow_size : (list_links_selected[0]?.arrow_size ?? false)
-  const value_label_position = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_position : (list_links_selected[0]?.label_position ?? false)
-  const value_orthogonal_label_position = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].orthogonal_label_position : (list_links_selected[0]?.orthogonal_label_position ?? false)
-  const value_label_on_path = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_on_path : (list_links_selected[0]?.label_on_path ?? false)
-  const value_label_pos_auto = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_pos_auto : (list_links_selected[0]?.label_pos_auto ?? false)
-  const value_arrow = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].arrow : (list_links_selected[0]?.arrow ?? false)
-  const value_color = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].color : (list_links_selected[0]?.color ?? false)
-  const value_opacity = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].opacity : (list_links_selected[0]?.opacity ?? false)
-  const value_dashed = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].dashed : (list_links_selected[0]?.dashed ?? false)
-  const value_label_visible = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_visible : (list_links_selected[0]?.label_visible ?? false)
-  const value_label_font_size = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_font_size : (list_links_selected[0]?.label_font_size ?? false)
-  const value_text_color = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].text_color : (list_links_selected[0]?.text_color ?? false)
-  const value_to_precision = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].to_precision : (list_links_selected[0]?.to_precision ?? false)
-  const value_scientific_precision = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].scientific_precision : (list_links_selected[0]?.scientific_precision ?? false)
-  const value_font_family = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].font_family : (list_links_selected[0]?.font_family ?? false)
-  const value_label_unit_visible = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_unit_visible : (list_links_selected[0]?.label_unit_visible ?? false)
-  const value_label_unit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].label_unit : (list_links_selected[0]?.label_unit ?? false)
-  const value_custom_digit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].custom_digit : (list_links_selected[0]?.custom_digit ?? false)
-  const value_nb_digit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].nb_digit : (list_links_selected[0]?.nb_digit ?? false)
+  const shape_orientation = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_orientation : (list_links_selected[0]?.shape_orientation ?? false)
+  const shape_starting_curve = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_starting_curve : (list_links_selected[0]?.shape_starting_curve ?? false)
+  const shape_ending_curve = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_ending_curve : (list_links_selected[0]?.shape_ending_curve ?? false)
+  const shape_vert_shift = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_vert_shift : (list_links_selected[0]?.shape_vert_shift ?? false)
+  const shape_curvature = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_curvature : (list_links_selected[0]?.shape_curvature ?? false)
+  const shape_is_curved = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_is_curved : (list_links_selected[0]?.shape_is_curved ?? false)
+  const shape_is_recycling = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_is_recycling : (list_links_selected[0]?.shape_is_recycling ?? false)
+  const shape_arrow_size = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_arrow_size : (list_links_selected[0]?.shape_arrow_size ?? false)
+  const value_label_position = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_position : (list_links_selected[0]?.value_label_position ?? false)
+  const value_label_orthogonal_position = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_orthogonal_position : (list_links_selected[0]?.value_label_orthogonal_position ?? false)
+  const value_label_on_path = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_on_path : (list_links_selected[0]?.value_label_on_path ?? false)
+  const value_label_pos_auto = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_pos_auto : (list_links_selected[0]?.value_label_pos_auto ?? false)
+  const shape_is_arrow = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_is_arrow : (list_links_selected[0]?.shape_is_arrow ?? false)
+  const shape_color = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_color : (list_links_selected[0]?.shape_color ?? false)
+  const shape_opacity = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_opacity : (list_links_selected[0]?.shape_opacity ?? false)
+  const shape_is_dashed = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].shape_is_dashed : (list_links_selected[0]?.shape_is_dashed ?? false)
+  const value_label_is_visible = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_is_visible : (list_links_selected[0]?.value_label_is_visible ?? false)
+  const value_label_font_size = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_font_size : (list_links_selected[0]?.value_label_font_size ?? false)
+  const value_label_color = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_color : (list_links_selected[0]?.value_label_color ?? false)
+  const value_label_to_precision = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_to_precision : (list_links_selected[0]?.value_label_to_precision ?? false)
+  const value_label_scientific_precision = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_scientific_precision : (list_links_selected[0]?.value_label_scientific_precision ?? false)
+  const value_label_font_family = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_font_family : (list_links_selected[0]?.value_label_font_family ?? false)
+  const value_label_unit_visible = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_unit_visible : (list_links_selected[0]?.value_label_unit_visible ?? false)
+  const value_label_unit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_unit : (list_links_selected[0]?.value_label_unit ?? false)
+  const value_label_custom_digit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_custom_digit : (list_links_selected[0]?.value_label_custom_digit ?? false)
+  const value_label_nb_digit = (menu_for_style) ? new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].value_label_nb_digit : (list_links_selected[0]?.value_label_nb_digit ?? false)
 
 
   const deleteLinkRelativeLabelPos = (l: Class_LinkElement) => {
@@ -158,8 +156,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       return 0.5
     }
     // const current_link = list_style_or_links[0]
-    const left_shift = value_left_horiz_shift as number
-    const right_shift = value_right_horiz_shift as number
+    const left_shift = shape_starting_curve as number
+    const right_shift = shape_ending_curve as number
 
     return parseFloat(((left_shift + right_shift) / 2).toPrecision(2))
   }
@@ -169,8 +167,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       return 0.1
     }
     const current_link = list_style_or_links[0]
-    // const the_shift = ((ReturnCorrectLinkAttributeValue(data, current_link, 'right_horiz_shift', menu_for_style) as number) - (ReturnCorrectLinkAttributeValue(data, current_link, 'left_horiz_shift', menu_for_style) as number)) / 2
-    const the_shift = ( value_right_horiz_shift as number) - (value_left_horiz_shift as number) / 2
+    // const the_shift = ((ReturnCorrectLinkAttributeValue(data, current_link, 'shape_ending_curve', menu_for_style) as number) - (ReturnCorrectLinkAttributeValue(data, current_link, 'shape_starting_curve', menu_for_style) as number)) / 2
+    const the_shift = ( shape_ending_curve as number) - (shape_starting_curve as number) / 2
     return parseFloat(the_shift.toPrecision(2))
   }
 
@@ -217,13 +215,13 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       variant='menuconfigpanel_option_checkbox'
       iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
       isIndeterminate={is_indeterminatae}
-      isChecked={value_recycling}
+      isChecked={shape_is_recycling}
       onChange={
         (evt) => {
           list_style_or_links.forEach(l => {
-            l.recycling = evt.target.checked
-            l.left_horiz_shift = (evt.target.checked) ? 0 : 0.8
-            l.right_horiz_shift = (evt.target.checked) ? 0 : 0.8
+            l.shape_is_recycling = evt.target.checked
+            l.shape_starting_curve = (evt.target.checked) ? 0 : 0.8
+            l.shape_ending_curve = (evt.target.checked) ? 0 : 0.8
           })
 
           updateMenuConfigLink()
@@ -243,11 +241,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           <Button
             className='btn_menu_config'
             value='hh'
-            variant={(value_orientation === 'hh') ? 'menuconfigpanel_option_button_activated_left' :
+            variant={(shape_orientation === 'hh') ? 'menuconfigpanel_option_button_activated_left' :
               'menuconfigpanel_option_button_left'}
             onClick={
               () => {
-                list_style_or_links.forEach(l => l.orientation = 'hh')
+                list_style_or_links.forEach(l => l.shape_orientation = 'hh')
                 updateMenuConfigLink()
               }}>{logo_hh}</Button>
         </OSTooltip>
@@ -257,11 +255,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           <Button
             className='btn_menu_config'
             value='vv'
-            variant={(value_orientation === 'vv') ? 'menuconfigpanel_option_button_activated_center' :
+            variant={(shape_orientation === 'vv') ? 'menuconfigpanel_option_button_activated_center' :
               'menuconfigpanel_option_button_center'}
             onClick={
               () => {
-                list_style_or_links.forEach(l => l.orientation = 'vv')
+                list_style_or_links.forEach(l => l.shape_orientation = 'vv')
 
                 updateMenuConfigLink()
               }}>{logo_vv}</Button>
@@ -272,11 +270,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           <Button
             className='btn_menu_config'
             value='vh'
-            variant={(value_orientation === 'vh') ? 'menuconfigpanel_option_button_activated_center' :
+            variant={(shape_orientation === 'vh') ? 'menuconfigpanel_option_button_activated_center' :
               'menuconfigpanel_option_button_center'}
             onClick={
               () => {
-                list_style_or_links.forEach(l => l.orientation = 'vh')
+                list_style_or_links.forEach(l => l.shape_orientation = 'vh')
                 updateMenuConfigLink()
               }}>{logo_vh}</Button>
         </OSTooltip>
@@ -286,11 +284,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           <Button
             className='btn_menu_config'
             value='hv'
-            variant={(value_orientation === 'hv') ? 'menuconfigpanel_option_button_activated_right' :
+            variant={(shape_orientation === 'hv') ? 'menuconfigpanel_option_button_activated_right' :
               'menuconfigpanel_option_button_right'}
             onClick={
               () => {
-                list_style_or_links.forEach(l => l.orientation = 'hv')
+                list_style_or_links.forEach(l => l.shape_orientation = 'hv')
                 updateMenuConfigLink()
               }}>{logo_hv}</Button>
         </OSTooltip>
@@ -303,10 +301,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       variant='menuconfigpanel_option_checkbox'
       iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
       isIndeterminate={is_indeterminatae}
-      isChecked={value_arrow}
+      isChecked={value_shape_is_arrow}
       onChange={
         (evt) => {
-          list_style_or_links.forEach(l => l.arrow = evt.target.checked)
+          list_style_or_links.forEach(l => l.shape_is_arrow = evt.target.checked)
           updateMenuConfigLink()
         }
       }>
@@ -318,17 +316,16 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.arrow_size')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'arrow_size', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+        {t('Flux.apparence.shape_arrow_size')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'shape_arrow_size', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
       </Box>
       <InputGroup variant='menuconfigpanel_option_input' >
-        <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
-
+        <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_size')}>
           <ConfigLinkAttributeNumberInput
-            valueOfAttr={value_arrow_size}
+            valueOfAttr={shape_arrow_size}
             menu_for_style={menu_for_style}
             minimum_value={1}
             stepper={true}
-            function_onChange={(s:string,value:number)=> list_style_or_links.forEach(l =>l.arrow_size=value)}
+            function_onChange={(s:string,value:number)=> list_style_or_links.forEach(l =>l.shape_arrow_size=value)}
             function_onBlur={updateMenuConfigLink}
           />
         </OSTooltip>
@@ -341,10 +338,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       variant='menuconfigpanel_option_checkbox'
       iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
       isIndeterminate={is_indeterminatae}
-      isChecked={value_curved}
+      isChecked={shape_is_curved}
       onChange={
         (evt) => {
-          list_style_or_links.forEach(l => l.curved = evt.target.checked)
+          list_style_or_links.forEach(l => l.shape_is_curved = evt.target.checked)
           updateMenuConfigLink()
         }}>
       <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
@@ -357,19 +354,19 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {/* Modification du rayon de courbure du flux  */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.courbure')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'curvature', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+        {t('Flux.apparence.courbure')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'shape_curvature', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
       </Box>
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.courbure')}>
 
           <ConfigLinkAttributeNumberInput
-            valueOfAttr={value_curvature}
+            valueOfAttr={shape_curvature}
             menu_for_style={menu_for_style}
             minimum_value={0}
             maximum_value={1}
             step={0.01}
             stepper={true}
-            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.curvature = value)}
+            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.shape_curvature = value)}
             function_onBlur={updateMenuConfigLink}
           />
         </OSTooltip>
@@ -390,20 +387,20 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             max={100}
             step={1}
             value={Math.round(shiftCenter() * 100)}
-            isDisabled={['hv', 'vh'].includes(value_orientation as string)}
+            isDisabled={['hv', 'vh'].includes(shape_orientation as string)}
             onChange={
               (_, val) => {
                 const center = val / 100
                 list_style_or_links.forEach(l => {
-                  let shift_gap = ((l.right_horiz_shift as number) - (l.left_horiz_shift as number)) / 2
+                  let shift_gap = ((l.shape_ending_curve as number) - (l.shape_starting_curve as number)) / 2
                   if (center - shift_gap < 0) {
                     shift_gap = center
                   }
                   if (center + shift_gap > 1) {
                     shift_gap = 1 - center
                   }
-                  l.left_horiz_shift = (center - shift_gap)
-                  l.right_horiz_shift = (center + shift_gap)
+                  l.shape_starting_curve = (center - shift_gap)
+                  l.shape_ending_curve = (center + shift_gap)
                 })
                 updateMenuConfigLink()
               }}
@@ -425,7 +422,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {/* Distance des poignée */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.eep')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'left_horiz_shift', menu_for_style) && IsLinkDiplayingValueLocal(multi_selected_links, 'right_horiz_shift', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+        {t('Flux.apparence.eep')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'shape_starting_curve', menu_for_style) && IsLinkDiplayingValueLocal(multi_selected_links, 'shape_ending_curve', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
       </Box>
 
       <OSTooltip label={t('Flux.apparence.tooltips.eep')}>
@@ -436,7 +433,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             variant='menuconfigpanel_option_numberinput_with_right_addon'
             min={0} max={50}
             value={Math.round(shift() * 100)}
-            isDisabled={['hv', 'vh'].includes(value_orientation as string)}
+            isDisabled={['hv', 'vh'].includes(shape_orientation as string)}
             onChange={
               (_, val) => {
                 const shift_gap = val / 100
@@ -454,8 +451,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   }
 
 
-                  l.left_horiz_shift = (new_center_position - shift_gap)
-                  l.right_horiz_shift = (new_center_position + shift_gap)
+                  l.shape_starting_curve = (new_center_position - shift_gap)
+                  l.shape_ending_curve = (new_center_position + shift_gap)
                 })
                 updateMenuConfigLink()
               }}
@@ -476,15 +473,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {/* Choix de la couleur du flux */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.couleur')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+        {t('Flux.apparence.couleur')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'shape_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
       </Box>
       <Input
-        variant='menuconfigpanel_option_input_color'
-        type='color'
-        value={is_indeterminatae ? '#ffffff' : (value_color)}
+        variant='menuconfigpanel_option_input_shape_color'
+        type='shape_color'
+        value={is_indeterminatae ? '#ffffff' : (shape_color)}
         onChange={
           evt => {
-            list_style_or_links.forEach(l => l.color = evt.target.value)
+            list_style_or_links.forEach(l => l.shape_color = evt.target.value)
             updateMenuConfigLink()
           }}
       />
@@ -494,18 +491,18 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {/* Opacité */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.opacity')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'opacity', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+        {t('Flux.apparence.shape_opacity')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'shape_opacity', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
       </Box>
       <InputGroup variant='menuconfigpanel_option_input' >
-        <OSTooltip label={t('Flux.apparence.tooltips.opacity')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
           <ConfigLinkAttributeNumberInput
-            valueOfAttr={value_opacity}
+            valueOfAttr={shape_opacity}
             menu_for_style={menu_for_style}
             minimum_value={0}
             maximum_value={1}
             step={0.1}
             stepper={true}
-            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.opacity = value)}
+            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.shape_opacity = value)}
             function_onBlur={updateMenuConfigLink}
           />
         </OSTooltip>
@@ -519,15 +516,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       variant='menuconfigpanel_option_checkbox'
       iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
       isIndeterminate={is_indeterminatae}
-      isChecked={value_dashed}
+      isChecked={shape_is_dashed}
       onChange={(evt) => {
-        list_style_or_links.forEach(l => l.dashed = evt.target.checked)
+        list_style_or_links.forEach(l => l.shape_is_dashed = evt.target.checked)
         updateMenuConfigLink()
       }}>
       <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
         {t('Flux.apparence.hach') + ' '}
       </OSTooltip>
-      {IsLinkDiplayingValueLocal(multi_selected_links, 'dashed', menu_for_style) ? TooltipValueSurcharge('link_var_', t) : <></>}
+      {IsLinkDiplayingValueLocal(multi_selected_links, 'shape_is_dashed', menu_for_style) ? TooltipValueSurcharge('link_var_', t) : <></>}
     </Checkbox>
 
 
@@ -546,22 +543,22 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
 
-        icon={value_label_visible ? <FaEye /> : <FaEyeSlash />}
+        icon={value_label_is_visible ? <FaEye /> : <FaEyeSlash />}
         iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
         isIndeterminate={is_indeterminatae}
-        isChecked={value_label_visible}
+        isChecked={value_label_is_visible}
         onChange={(evt) => {
-          list_style_or_links.forEach(l => l.label_visible = evt.target.checked)
+          list_style_or_links.forEach(l => l.value_label_is_visible = evt.target.checked)
           updateMenuConfigLink()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb') + ' '}
         </OSTooltip>
-        {(IsLinkDiplayingValueLocal(multi_selected_links, 'label_visible', menu_for_style) ?
+        {(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_is_visible', menu_for_style) ?
           TooltipValueSurcharge('link_var_', t) : <></>)}
       </Checkbox>
     </Box>
-    {value_label_visible ? <>
+    {value_label_is_visible ? <>
 
       {/* Choose number of significant number */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -571,11 +568,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
 
           <ConfigLinkAttributeNumberInput
-            valueOfAttr={value_scientific_precision}
+            valueOfAttr={value_label_scientific_precision}
             menu_for_style={menu_for_style}
             minimum_value={0}
             stepper={true}
-            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.scientific_precision = value)}
+            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.value_label_scientific_precision = value)}
             function_onBlur={updateMenuConfigLink}
           />
         </OSTooltip>
@@ -588,25 +585,25 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         variant='menuconfigpanel_option_checkbox'
         iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
         isIndeterminate={is_indeterminatae}
-        isChecked={value_to_precision}
+        isChecked={value_label_to_precision}
         onChange={(evt) => {
 
           list_style_or_links.forEach(l => {
-            l.custom_digit = false
-            l.to_precision = evt.target.checked
+            l.value_label_custom_digit = false
+            l.value_label_to_precision = evt.target.checked
           })
           updateMenuConfigLink()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.toPrecision')}>
           {t('Flux.label.toPrecision') + ' '}
         </OSTooltip>
-        {(IsLinkDiplayingValueLocal(multi_selected_links, 'to_precision', menu_for_style) ?
+        {(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_to_precision', menu_for_style) ?
           TooltipValueSurcharge('link_var_', t) : <></>)}
 
       </Checkbox>
 
 
-      {value_to_precision ? <>
+      {value_label_to_precision ? <>
       </> : <></>}
 
       {/* Choix d'affichage du nombre de chiffre après la virgule  */}
@@ -616,23 +613,22 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         variant='menuconfigpanel_option_checkbox'
         iconColor={is_indeterminatae ? '#78C2AD' : 'white'}
         isIndeterminate={is_indeterminatae}
-        isChecked={value_custom_digit}
+        isChecked=_value_label_custom_digit}
         onChange={(evt) => {
           list_style_or_links.forEach(l => {
-            l.custom_digit = evt.target.checked
-            l.to_precision = false
+            l.value_label_custom_digit = evt.target.checked
+            l.value_label_to_precision = false
           })
           updateMenuConfigLink()
         }}>
-        <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
-          {t('Flux.label.custom_digit') + ' '}
+        <OSTooltip label={t('Flux.label.tooltips.value_label_custom_digit')}>
+          {t('Flux.label.value_label_custom_digit') + ' '}
         </OSTooltip>
-        {(IsLinkDiplayingValueLocal(multi_selected_links, 'custom_digit', menu_for_style) ?
+        {(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_custom_digit', menu_for_style) ?
           TooltipValueSurcharge('link_var_', t) : <></>)}
-
       </Checkbox>
 
-      {value_custom_digit ? <>
+      {value_label_custom_digit ? <>
         {/* Choose number of custom digit */}
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>
@@ -642,11 +638,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
 
             <ConfigLinkAttributeNumberInput
-              valueOfAttr={value_nb_digit}
+              valueOfAttr={value_label_nb_digit}
               menu_for_style={menu_for_style}
               minimum_value={0}
               stepper={true}
-              function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.nb_digit = value)}
+              function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.value_label_nb_digit = value)}
               function_onBlur={updateMenuConfigLink}
             />
           </OSTooltip>
@@ -660,13 +656,13 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         icon={value_label_unit_visible ? <FaEye /> : <FaEyeSlash />}
         isChecked={value_label_unit_visible}
         onChange={(evt) => {
-          list_style_or_links.forEach(l => l.label_unit_visible = evt.target.checked)
+          list_style_or_links.forEach(l => l.value_label_unit_visible = evt.target.checked)
           updateMenuConfigLink()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
           {t('Flux.label.l_u_v') + ' '}
         </OSTooltip>
-        {(IsLinkDiplayingValueLocal(multi_selected_links, 'label_unit_visible', menu_for_style) ?
+        {(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_unit_visible', menu_for_style) ?
           TooltipValueSurcharge('link_var_', t) : <></>)}
 
       </Checkbox>
@@ -676,14 +672,14 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       {value_label_unit_visible ? <>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>
-            {t('Flux.label.l_u')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'label_unit', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+            {t('Flux.label.l_u')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_unit', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
           </Box>
           <OSTooltip label={t('Flux.label.tooltips.l_u')}>
             <Input
               variant='menuconfigpanel_option_input'
               value={value_label_unit}
               onChange={evt => {
-                list_style_or_links.forEach(l => l.label_unit = evt.target.value)
+                list_style_or_links.forEach(l => l.value_label_unit = evt.target.value)
                 updateMenuConfigLink()
               }} />
           </OSTooltip>
@@ -702,35 +698,35 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           {/* Label en noir  */}
           <OSTooltip label={t('Flux.label.tooltips.len')}>
             <Button
-              variant={!is_indeterminatae && value_text_color === 'black' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+              variant={!is_indeterminatae && value_label_color === 'black' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
               onClick={
                 () => {
-                  list_style_or_links.forEach(l => l.text_color = 'black')
+                  list_style_or_links.forEach(l => l.value_label_color = 'black')
                   updateMenuConfigLink()
-                }}>{t('Flux.label.len')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'text_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}</Button>
+                }}>{t('Flux.label.len')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}</Button>
           </OSTooltip>
 
           {/* Label en blanc  */}
           <OSTooltip label={t('Flux.label.tooltips.lb')}>
             <Button
-              variant={!is_indeterminatae && value_text_color === 'white' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+              variant={!is_indeterminatae && value_label_color === 'white' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
               onClick={
                 () => {
-                  list_style_or_links.forEach(l => l.text_color = 'white')
+                  list_style_or_links.forEach(l => l.value_label_color = 'white')
                   updateMenuConfigLink()
-                }}>{t('Flux.label.lb')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'text_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}</Button>
+                }}>{t('Flux.label.lb')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}</Button>
           </OSTooltip>
 
           {/* Label en couleur  */}
           <OSTooltip label={t('Flux.label.tooltips.lec')}>
             <Button
-              variant={!is_indeterminatae && value_text_color === 'color' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+              variant={!is_indeterminatae && value_label_color === 'shape_color' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
               onClick={
                 () => {
-                  list_style_or_links.forEach(l => l.text_color = 'color')
+                  list_style_or_links.forEach(l => l.value_label_color = 'shape_color')
 
                   updateMenuConfigLink()
-                }}>{t('Flux.label.lec')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'text_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}</Button>
+                }}>{t('Flux.label.lec')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_color', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}</Button>
           </OSTooltip>
         </Box>
         <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
@@ -740,13 +736,13 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <Box layerStyle='options_2cols' >
           <Select
             variant='menuconfigpanel_option_select'
-            value={value_font_family}
+            value={value_label_font_family}
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                list_style_or_links.forEach(l => l.font_family = evt.target.value)
+                list_style_or_links.forEach(l => l.value_label_font_family = evt.target.value)
                 updateMenuConfigLink()
               }}>
-            {data.display_style.font_family.map((d) => {
+            {data.display_style.value_label_font_family.map((d) => {
               return <option
                 style={{ fontFamily: d }}
                 key={'ff-' + d}
@@ -761,7 +757,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             minimum_value={11}
             stepper={true}
             unitText='pixels'
-            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.label_font_size = value)}
+            function_onChange={(s: string, value: number) => list_style_or_links.forEach(l => l.value_label_font_size = value)}
             function_onBlur={updateMenuConfigLink}
           />
         </Box>
@@ -779,10 +775,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           onChange={
             (evt) => {
               list_style_or_links.forEach(l => {
-                const orth_pos = l.orthogonal_label_position
-                l.label_pos_auto = evt.target.checked
-                l.label_position = 'beginning'
-                l.orthogonal_label_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                const orth_pos = l.value_label_orthogonal_position
+                l.value_label_pos_auto = evt.target.checked
+                l.value_label_position = 'beginning'
+                l.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
               })
               list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
 
@@ -796,7 +792,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {/* Positionnement lateral des label */}
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>
-            {t('Flux.label.pos')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'label_position', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
+            {t('Flux.label.pos')}{(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_position', menu_for_style) ? <>{TooltipValueSurcharge('link_var_', t)}</> : <></>)}
           </Box>
           <Box
             layerStyle='options_2cols'
@@ -813,9 +809,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   onClick={
                     () => {
                       list_style_or_links.forEach(l => {
-                        const orth_pos = l.orthogonal_label_position
-                        l.label_position = 'beginning'
-                        l.orthogonal_label_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                        const orth_pos = l.value_label_orthogonal_position
+                        l.value_label_position = 'beginning'
+                        l.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
 
@@ -835,9 +831,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   onClick={
                     () => {
                       list_style_or_links.forEach(l => {
-                        const orth_pos = l.orthogonal_label_position
-                        l.label_position = 'middle'
-                        l.orthogonal_label_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                        const orth_pos = l.value_label_orthogonal_position
+                        l.value_label_position = 'middle'
+                        l.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
 
@@ -857,9 +853,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   onClick={
                     () => {
                       list_style_or_links.forEach(l => {
-                        const orth_pos = l.orthogonal_label_position
-                        l.label_position = 'end'
-                        l.orthogonal_label_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                        const orth_pos = l.value_label_orthogonal_position
+                        l.value_label_position = 'end'
+                        l.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
                       updateMenuConfigLink()
@@ -877,15 +873,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   paddingStart='0'
                   paddingEnd='0'
                   minWidth='0'
-                  variant={!value_label_pos_auto && !is_indeterminatae && value_orthogonal_label_position === 'below' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+                  variant={!value_label_pos_auto && !is_indeterminatae && value_label_orthogonal_position === 'below' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
                   onClick={
                     () => {
 
                       list_style_or_links.forEach(l => {
-                        l.label_pos_auto = false
-                        const lab_pos = l.label_position
-                        l.label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
-                        l.orthogonal_label_position = 'below'
+                        l.value_label_pos_auto = false
+                        const lab_pos = l.value_label_position
+                        l.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+                        l.value_label_orthogonal_position = 'below'
                       })
                       list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
                       updateMenuConfigLink()
@@ -900,14 +896,14 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   paddingStart='0'
                   paddingEnd='0'
                   minWidth='0'
-                  variant={!value_label_pos_auto && !is_indeterminatae && value_orthogonal_label_position === 'middle' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+                  variant={!value_label_pos_auto && !is_indeterminatae && value_label_orthogonal_position === 'middle' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
                   onClick={
                     () => {
                       list_style_or_links.forEach(l => {
-                        l.label_pos_auto = false
-                        const lab_pos = l.label_position
-                        l.label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
-                        l.orthogonal_label_position = 'middle'
+                        l.value_label_pos_auto = false
+                        const lab_pos = l.value_label_position
+                        l.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+                        l.value_label_orthogonal_position = 'middle'
                       })
                       list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
                       updateMenuConfigLink()
@@ -922,14 +918,14 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   paddingStart='0'
                   paddingEnd='0'
                   minWidth='0'
-                  variant={!value_label_pos_auto && !is_indeterminatae && value_orthogonal_label_position === 'above' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                  variant={!value_label_pos_auto && !is_indeterminatae && value_label_orthogonal_position === 'above' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
                   onClick={
                     () => {
                       list_style_or_links.forEach(l => {
-                        l.label_pos_auto = false
-                        const lab_pos = l.label_position
-                        l.label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
-                        l.orthogonal_label_position = 'above'
+                        l.value_label_pos_auto = false
+                        const lab_pos = l.value_label_position
+                        l.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+                        l.value_label_orthogonal_position = 'above'
                       })
                       list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
                       updateMenuConfigLink()
@@ -950,12 +946,12 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         isChecked={value_label_on_path}
         onChange={(evt) => {
           list_style_or_links.forEach(l => {
-            l.label_on_path = evt.target.checked
-            if (l.label_on_path) {
-              const lab_pos = l.label_position
-              const lab_orth_pos = l.orthogonal_label_position
-              l.label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
-              l.orthogonal_label_position = (lab_orth_pos == 'frozen' ? 'middle' : lab_orth_pos)
+            l.value_label_on_path = evt.target.checked
+            if (l.value_label_on_path) {
+              const lab_pos = l.value_label_position
+              const lab_orth_pos = l.value_label_orthogonal_position
+              l.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+              l.value_label_orthogonal_position = (lab_orth_pos == 'frozen' ? 'middle' : lab_orth_pos)
             }
           })
           list_links_to_reset.forEach(l => deleteLinkRelativeLabelPos(l))
@@ -965,16 +961,16 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.label.tooltips.acf')}>
           {t('Flux.label.acf') + ' '}
         </OSTooltip>
-        {(IsLinkDiplayingValueLocal(multi_selected_links, 'label_on_path', menu_for_style) ?
+        {(IsLinkDiplayingValueLocal(multi_selected_links, 'value_label_on_path', menu_for_style) ?
           TooltipValueSurcharge('link_var_', t) : <></>)}
       </Checkbox>
     </> : <></>}
   </Box>
 
-
   const content_style = (!menu_for_style) ? <Box
     layerStyle='menuconfigpanel_grid'
-  ><Box
+  >
+    <Box
       layerStyle='menuconfigpanel_row_stylechoice'
     >
       <Box
@@ -1021,7 +1017,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </Button>
       </OSTooltip>
     </Box>
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+    <hr style={{ borderStyle: 'none', margin: '10px', shape_color: 'grey', backgroundColor: 'grey', height: 2 }} />
   </Box> : <></>
 
 
@@ -1111,7 +1107,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </OSTooltip>
       </Box>
     </Box>
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+    <hr style={{ borderStyle: 'none', margin: '10px', shape_color: 'grey', backgroundColor: 'grey', height: 2 }} />
   </Box> : <></>
 
 
@@ -1123,7 +1119,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {content_zIndex_and_direction}
 
     {content_appearence}
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+    <hr style={{ borderStyle: 'none', margin: '10px', shape_color: 'grey', backgroundColor: 'grey', height: 2 }} />
     {content_label}
   </Box>
 
@@ -1145,7 +1141,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   //     </Box>
   //   </TabPanel>
   // ]
-
 }
 
 

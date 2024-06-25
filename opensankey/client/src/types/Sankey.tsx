@@ -28,7 +28,6 @@ import {
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
-import { Class_Element, sortElements } from './Element'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -57,25 +56,6 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public drawing_area: Class_DrawingArea
-
-  // TODO a implementer
-  // left_shift: number,
-  // right_shift: number,
-  // legend_position: number[],
-  // display_legend_scale:boolean,
-  // legend_police:number,
-  // mask_legend:boolean,
-  // legend_bg_color:string,
-  // legend_bg_opacity:number,
-  // legend_bg_border:boolean,
-  // legend_show_dataTags:boolean,
-  // display_style : display_styleType,
-  // linkZIndex:string[]
-  // colorMap: string,
-  // nodesColorMap: string,
-  // linksColorMap: string,
-  // legend_width:number,
-  // node_label_separator:string
 
   // PRIVATE ATTRIBUTES =================================================================
 
