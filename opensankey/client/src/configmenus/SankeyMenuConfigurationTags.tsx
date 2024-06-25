@@ -35,7 +35,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   /**
    * List of tag group of current family of tag group (node,links,data)
    */
-  const list_group_tag = new_data.drawing_area.sankey.getListGroupTagOf(elementTagNameProp)
+  const list_group_tag = new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
 
 
   const { updateComponenSaveInCache } = ComponentUpdater

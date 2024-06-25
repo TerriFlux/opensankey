@@ -118,7 +118,6 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
             }
             <AccordionButton
               ref={config_object.btn_accordion_config_node}
-
             >
               <Box
                 as='span'
@@ -132,7 +131,6 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
                 applicationContext={applicationContext}
                 applicationData={applicationData}
                 applicationState={applicationState}
-                multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}

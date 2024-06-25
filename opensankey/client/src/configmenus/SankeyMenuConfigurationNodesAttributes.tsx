@@ -131,7 +131,15 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current = setForceUpdate.toggle
   // Selected nodes
-  const selected_nodes = new_data.drawing_area.selected_nodes_list
+  let selected_nodes
+  if (data.displayed_node_selector) {
+    // All availables nodes
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  }
+  else {
+    // Only visible nodes
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+  }
 
   // VARIABLES ==========================================================================
 

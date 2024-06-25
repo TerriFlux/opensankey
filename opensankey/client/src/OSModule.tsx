@@ -648,9 +648,7 @@ export const moduleDialogs : module_dialogsType = (
     'ref_setter_show_menu_link_tooltip',
     <MenuConfigurationLinksTooltip
       applicationData={applicationData}
-      ComponentUpdater={ComponentUpdater}
-      multi_selected_links={applicationState.multi_selected_links}
-      t={applicationContext.t}
+      applicationContext={applicationContext}
       menu_for_modal={true}
     />,
     contextMenu.pointer_pos,

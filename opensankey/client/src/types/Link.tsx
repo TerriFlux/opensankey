@@ -68,6 +68,18 @@ const default_value_label_to_precision = false
 const default_value_label_unit = ''
 const default_value_label_unit_visible = false
 
+// SPECIFIC FUNCTIONS ********************************************************************
+
+export function defaultLinkId(source: Class_NodeElement, target: Class_NodeElement) {
+  return source.name + ' --> ' + target.name
+}
+
+export function sortLinksElements(a: Class_LinkElement, b: Class_LinkElement) {
+  if (a.id > b.id) return 1
+  else if (a.id < b.id) return -1
+  else return 0
+}
+
 // CLASS LINK ELEMENT ********************************************************************
 
 /**
@@ -113,13 +125,22 @@ export class Class_LinkElement extends Class_Element {
   private _values: Class_Data[] = []
 
   /**
+   * Value of tooltip text associated to link
+   * @private
+   * @type {string}
+   * @memberof Class_LinkElement
+   */
+  private _tooltip_text: string = ''
+
+  /**
    * Thinckness of the drawned link
    *
    * @protected
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private thickness: number = 20
+  private _thickness: number = 20
+
 
   /**
    * TODO
@@ -138,9 +159,10 @@ export class Class_LinkElement extends Class_Element {
   private _y_label?: number
 
   // PROTECTED ATTRIBUTES ===============================================================
+
   /**
    * Display attributes for link
-   * @private
+   * @protected
    * @type {{
    *     drawing_area: Class_DrawingArea,
   *     position: Type_ElementPosition,
@@ -165,15 +187,15 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   constructor(
+    id: string,
     source: Class_NodeElement,
     target: Class_NodeElement,
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
-
   ) {
     // Init parent class attributes
     super(
-      source.id + '-->' + target.id,
+      id,
       menu_config,
       'g_links')
     // Init other class attributes
@@ -190,6 +212,18 @@ export class Class_LinkElement extends Class_Element {
   }
 
   // PUBLIC METHODS =====================================================================
+
+  /**
+   * Reverse source with target
+   *
+   * @memberof Class_LinkElement
+   */
+  public inverse() {
+    const tmp_target = this._target
+    const tmp_source = this._source
+    this._source = tmp_source
+    this._target = tmp_target
+  }
 
   /**
    * Compute lenght of link
@@ -387,18 +421,18 @@ export class Class_LinkElement extends Class_Element {
     let x6, y6
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x0 = 0
-      y0 = 0 + this.thickness / 2
+      y0 = 0 + this._thickness / 2
     }
     else {
-      x0 = 0 + this.thickness / 2
+      x0 = 0 + this._thickness / 2
       y0 = 0
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
       x6 = this.getShapeWidth()
-      y6 = this.getShapeHeight() + this.thickness / 2
+      y6 = this.getShapeHeight() + this._thickness / 2
     }
     else {
-      x6 = this.getShapeWidth() - this.thickness / 2
+      x6 = this.getShapeWidth() - this._thickness / 2
       y6 = this.getShapeHeight()
     }
 
@@ -534,15 +568,6 @@ export class Class_LinkElement extends Class_Element {
 
   public setPosXY(_: number, __: number) { /* Does nothing */ }
 
-  public get link_stroke_width(){
-    const scale = d3.scaleLinear()
-      .domain([0, this.drawing_area.scale])
-      .range([0, 100])
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, this.drawing_area.scale])
-    return scale(this.thickness)
-  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -578,6 +603,45 @@ export class Class_LinkElement extends Class_Element {
   public set target(value: Class_NodeElement) {
     this._target = value
     this.reset()
+  }
+
+  /**
+   * Get name of link
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get name() {
+      return defaultLinkId(this._source, this._target)
+  }
+
+  /**
+   * Set tooltip text
+   * @memberof Class_LinkElement
+   */
+  public get tooltip_text() { return this._tooltip_text }
+
+  /**
+   * Get tooltip text
+   * @memberof Class_LinkElement
+   */
+  public set tooltip_text(_: string) {
+    this._tooltip_text = _
+    // TODO redraw ?
+  }
+
+  /**
+   * Get _thickness of stroke shape
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get link_stroke_width(){
+    const scale = d3.scaleLinear()
+      .domain([0, this.drawing_area.scale])
+      .range([0, 100])
+    const inv_scale = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, this.drawing_area.scale])
+    return scale(this._thickness)
   }
 
   /**

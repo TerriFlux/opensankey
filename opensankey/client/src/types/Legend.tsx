@@ -25,10 +25,10 @@ export class Class_Legend extends Class_Element {
     position: Type_ElementPosition,
   }
 
-  /**Attribute for legend content positionning 
+  /**Attribute for legend content positionning
        Souldn't have getter & setter public because the variable is only use & computed when we draw the legend  */
   private dx = 0
-  /**Attribute for legend content positionning 
+  /**Attribute for legend content positionning
        Souldn't have getter & setter public because the variable is only use & computed when we draw the legend  */
   private dy = 0
 
@@ -56,14 +56,14 @@ export class Class_Legend extends Class_Element {
     // Apply styles
     this.d3_selection?.style('display', this._masked ? 'none' : '')
 
-    // Draw Background 
+    // Draw Background
     this.drawLegendBg()
 
     // Reset content positionning
     this.dx = 0
     this.dy = 0
 
-    // Rebounds text wrapper with width of legend when drawed at this moment  
+    // Rebounds text wrapper with width of legend when drawed at this moment
     this.wrapper.bounds({ height: 100, width: this._width })
 
     // Draw tag color pallette applied to sankey
@@ -108,8 +108,8 @@ export class Class_Legend extends Class_Element {
       .attr('stroke-width', this._legend_bg_border ? 1 : 0)
       .attr('fill', this._legend_bg_color)
       .attr('fill-opacity', this._legend_bg_opacity / 100)
-      
-    //  Event below get triggered when dragging 
+
+    //  Event below get triggered when dragging
     // .on('mouseover', () => {
     //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
     //   this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
@@ -132,7 +132,9 @@ export class Class_Legend extends Class_Element {
      * @memberof Class_Legend
      */
   private drawTagDisplayed() {
-    const { node_taggs, flux_taggs, data_taggs, } = this.drawing_area.sankey
+    const node_taggs = this.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
+    const flux_taggs = this.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+    const data_taggs = this.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
     // Get all grp tag insind one variable
     const all_tags = Object.assign({}, node_taggs, flux_taggs, data_taggs)
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
@@ -156,7 +158,7 @@ export class Class_Legend extends Class_Element {
       Object.entries(tag_group[1].tags)
         .filter((d) => d[1].selected)
         // .filter(tag => {
-        //     // Filter tag that have elements associated to them displayed (nodes,links) 
+        //     // Filter tag that have elements associated to them displayed (nodes,links)
         //     if ( Object.keys(flux_taggs).includes(linksColorMap) && Object.keys(flux_taggs).includes(tag_group[0]) ) {
         //         const t = Object.values(links_dict).filter(l => {
         //             const tmp = GetLinkValue(data, l.idLink)
@@ -400,7 +402,7 @@ export class Class_Legend extends Class_Element {
       this._width = w
     }
   }
-  
+
 
 
   protected eventMouseOver(event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
@@ -431,10 +433,6 @@ export class Class_Legend extends Class_Element {
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     this.reset()
-  }
-
-  protected element_displayed(){
-    return true
   }
 
   // =========== Getter & Setter ===============

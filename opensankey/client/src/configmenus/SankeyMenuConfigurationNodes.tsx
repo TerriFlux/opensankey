@@ -3,7 +3,6 @@ import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 
-
 import {
   Box,
   Button,
@@ -29,14 +28,12 @@ import {
 
 /*************************************************************************************************/
 import {
-  deleteSelectedNodeFromData,
   OSTooltip
 } from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { DeselectVisualyNodes, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 
 
@@ -46,7 +43,6 @@ type SankeyEditionTypes = {
   applicationData: applicationDataType,
   applicationState: applicationStateType,
   menu_configuration_nodes_attributes:JSX.Element,
-  multi_selected_nodes: { current: SankeyNode[] },
   link_function: LinkFunctionTypes,
   ComponentUpdater: ComponentUpdaterType,
   node_function: NodeFunctionTypes,
@@ -54,14 +50,11 @@ type SankeyEditionTypes = {
 }
 
 /*************************************************************************************************/
-
-
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
     applicationContext,
     applicationData,
     applicationState,
-    multi_selected_nodes,
     menu_configuration_nodes_attributes,
     link_function,
     ComponentUpdater,
@@ -104,7 +97,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     />
   }
 
-  if (Object.keys(new_data.drawing_area.sankey.node_taggs).length > 0 ) {
+  if (new_data.drawing_area.sankey.node_taggs_list.length > 0 ) {
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
@@ -140,11 +133,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             options={entries_for_nodes}
             value={entries_for_selected_nodes}
             labelledBy={t('Noeud.TS')}
-            onChange={(entries_for_selected_nodes: [{ label: string, value: string }]) => {
+            onChange={(entries: Type_MenuSelectionEntry[]) => {
               // Update selection list
-              const selected_nodes = entries_for_selected_nodes.map(d => d.value)
+              const entries_values = entries.map(d => d.value)
               nodes.forEach(n => {
-                if (selected_nodes.includes(n.id)) {
+                if (entries_values.includes(n.id)) {
                   new_data.drawing_area.addNodeToSelection(n)
                 }
                 else {
@@ -282,13 +275,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={!applicationContext.has_free_account && Object.keys(nodes).length > 15}
+            isDisabled={!applicationContext.has_free_account && nodes.length > 15}
             onClick={() => {
-              Object.values(applicationData.display_nodes).forEach(n => DeselectVisualyNodes(n))
               // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
-              // Init to default position
-              new_node.initDefaultPosXY()
               // Add node to selection
               new_data.drawing_area.addNodeToSelection(new_node)
               // Update UI

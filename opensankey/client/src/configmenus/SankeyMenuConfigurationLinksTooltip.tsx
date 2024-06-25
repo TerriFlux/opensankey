@@ -1,38 +1,68 @@
+// External imports
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import {
+  Box,
+  Button,
+  TabPanel,
+  Textarea,
+  useBoolean
+} from '@chakra-ui/react'
+
+// Local types
 import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurationLinksTooltipTypes'
-import { Box, Button, TabPanel, Textarea, useBoolean } from '@chakra-ui/react'
+
+// Local functions
 import { OSTooltip } from './SankeyUtils'
+
+
+// MENU COMPONENT ***********************************************************************
 
 export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
   applicationData,
-  ComponentUpdater,
-  multi_selected_links,
-  t,
+  applicationContext,
   menu_for_modal
 })=>{
-  const [ , setForceUpdate ]=useBoolean()
-  const {new_data}=applicationData
+  // Get necessary infos
+  const { new_data, data } = applicationData
+  const { t } = applicationContext
 
-  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
+  // Set state & Ref for UI update
+  const [ , setForceUpdate ] = useBoolean()
   const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
+  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   let tmp_editor_content_tooltip = editor_content_tooltip
+
+  // Get selected links
+  let selected_links
+  if (data.displayed_link_selector) {
+    // All availables links
+    selected_links = new_data.drawing_area.selected_links_list
+  }
+  else {
+    // Only visible links
+    selected_links = new_data.drawing_area.visible_and_selected_links_list
+  }
+
+  // Check if there is difference between text in editor and link tooltips
   let s_tmp_editor_content_changed = false
-  if (multi_selected_links.current.length>0) {
-    if (multi_selected_links.current[0].tooltip_text !== editor_content_tooltip) {
+  if ( selected_links.length > 0 ) {
+    if (selected_links[0].tooltip_text !== editor_content_tooltip) {
       s_tmp_editor_content_changed = true
     }
   }
+
+  // TODO a checker
   const resetTextEditor=()=>{
-    if (multi_selected_links.current.length>0) {
-      if ( typeof multi_selected_links.current[0].tooltip_text !== 'undefined' ) {
+    if (selected_links.length>0) {
+      if ( typeof selected_links[0].tooltip_text !== 'undefined' ) {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
-            inputRef.current.value = multi_selected_links.current[0].tooltip_text
+            inputRef.current.value = selected_links[0].tooltip_text
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip(multi_selected_links.current[0].tooltip_text)
+        sEditorContentNodeTooltip(selected_links[0].tooltip_text)
       }else {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
@@ -45,7 +75,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
       }
     }
     else {
-    // Reset textaera
+      // Reset textaera
       if ( typeof inputRef.current !== 'undefined') {
         if (inputRef.current !== null) {
           inputRef.current.value = ''
@@ -55,18 +85,16 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
       sEditorContentNodeTooltip('')
     }
     setForceUpdate.toggle()
-
   }
+  new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.push(resetTextEditor)
 
-  new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.push(resetTextEditor)  
-
-  const content=    <>
+  const content = <>
     <Box
       as='span'
       layerStyle='menuconfigpanel_part_title_1'
     >
       {t('Noeud.IB')}
-    </Box>   
+    </Box>
     <OSTooltip label={t('Flux.tooltips.IB')}>
       <Textarea
         rows={5}
@@ -101,7 +129,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
         variant='menuconfigpanel_option_button_right'
         isDisabled={!s_tmp_editor_content_changed}
         onClick={() => {
-          multi_selected_links.current.map(link => link.tooltip_text = tmp_editor_content_tooltip)
+          selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
           sEditorContentNodeTooltip(tmp_editor_content_tooltip)
         }}
       >
@@ -111,16 +139,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
   </>
 
   return menu_for_modal?content:
-    // [ 
-    //   <Tab>
-    //     <Box
-    //       layerStyle='submenuconfig_tab'
-    //     >
-    //       {t('Flux.IS')}
-    //     </Box>
-    //   </Tab>,
     <TabPanel >
       {content}
     </TabPanel>
-
 }
