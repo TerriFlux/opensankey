@@ -419,6 +419,12 @@ export const opensankey_theme = extendTheme({
       gridColumnGap: '0.25rem',
       height: '2rem'
     },
+    menuconfigpanel_row_3cols: {
+      display: 'grid',
+      gridTemplateColumns: '2fr 1.5fr 1.5fr',
+      gridColumnGap: '0.25rem',
+      height: '2rem'
+    },
     menuconfigpanel_2row_3cols: {
       display: 'grid',
       gridTemplateColumns: '2fr 1.5fr 1.5fr',
