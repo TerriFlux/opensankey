@@ -143,6 +143,9 @@ export class Class_LinkElement extends Class_Element {
    */
   private _value: number
 
+  tooltip_text?: string
+
+
   // PROTECTED ATTRIBUTES ===============================================================
   /**
    * Display attributes for link
@@ -306,16 +309,67 @@ export class Class_LinkElement extends Class_Element {
     return true
   }
 
-  protected element_displayed(){
-    // TODO : functions that check if source & target are displayed (might be good to use a variable isVisible in nodes instead of calling node.element_displayed() )
+  private removeRefToSource(){
+    delete this._source.output_links[this.id]
+  }
 
-    return this.element_tag_displayed() // && this.checkSourceTargetDisplayed()
+  private removeRefToTarget(){
+    delete this._source.input_links[this.id]
+  }
+
+  public delete() {
+    // Delete on drawing area
+    this.unDraw()
+    this.removeRefToSource()
+    this.removeRefToTarget()
+    // Unref tag
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.removeReference(this)
+      })
+    this._tags = {}
+  }
+
+  public invert(){
+    // const tmp = this.source
+    // const previous_node_s = this.source
+    // previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(this.idLink), 1)
+    // const source_node = data.nodes[this.target]
+    // this.source = source_node.idNode
+    // source_node.outputLinksId.push(this.idLink)
+    // nodes_to_reorganize.push(source_node)
+    // const previous_node_t = data.nodes[this.target]
+    // previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(this.idLink), 1)
+    // const target_node = data.nodes[tmp]
+    // this.target = target_node.idNode
+    // target_node.inputLinksId.push(this.idLink)
+    // nodes_to_reorganize.push(target_node)
+    const tmp =this._source
+    this.source=this._target
+    this._target=tmp
+  }
+
+  protected element_displayed(){
+
+    return this.source_and_target_displayed() && this.element_tag_displayed() 
   }
   private element_tag_displayed(){
     // If link has tags :
     //  - check if any of them is selected at false
     // else if the link doesn't have tag it isn't filtered by them
     return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
+  }
+
+  /**
+   * Check if node source and node target are displayed,
+   * if one of them is not then we don't display the link
+   *
+   * @private
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  private source_and_target_displayed(){
+    return this._source.displayed && this._target.displayed
   }
 
   // GETTER / SETTER ====================================================================
@@ -947,7 +1001,6 @@ export class Class_LinkElement extends Class_Element {
 //   // TODO comment the rest
 //   private color_sustainable: boolean = false
 //   // Tooltips
-//   private tooltip_text?: string
 
 //   // CONSTRUCTOR ========================================================================
 

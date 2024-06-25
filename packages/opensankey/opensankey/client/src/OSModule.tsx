@@ -649,7 +649,6 @@ export const moduleDialogs : module_dialogsType = (
     <MenuConfigurationLinksTooltip
       applicationData={applicationData}
       ComponentUpdater={ComponentUpdater}
-      multi_selected_links={applicationState.multi_selected_links}
       t={applicationContext.t}
       menu_for_modal={true}
     />,

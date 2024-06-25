@@ -6,33 +6,32 @@ import { OSTooltip } from './SankeyUtils'
 export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
   applicationData,
   ComponentUpdater,
-  multi_selected_links,
   t,
   menu_for_modal
 })=>{
   const [ , setForceUpdate ]=useBoolean()
   const {new_data}=applicationData
-
+  const {selected_links_list}=new_data.drawing_area
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
   let tmp_editor_content_tooltip = editor_content_tooltip
   let s_tmp_editor_content_changed = false
-  if (multi_selected_links.current.length>0) {
-    if (multi_selected_links.current[0].tooltip_text !== editor_content_tooltip) {
+  if (selected_links_list.length>0) {
+    if (selected_links_list[0].tooltip_text !== editor_content_tooltip) {
       s_tmp_editor_content_changed = true
     }
   }
   const resetTextEditor=()=>{
-    if (multi_selected_links.current.length>0) {
-      if ( typeof multi_selected_links.current[0].tooltip_text !== 'undefined' ) {
+    if (selected_links_list.length>0) {
+      if ( typeof selected_links_list[0].tooltip_text !== 'undefined' ) {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
-            inputRef.current.value = multi_selected_links.current[0].tooltip_text
+            inputRef.current.value = selected_links_list[0].tooltip_text
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip(multi_selected_links.current[0].tooltip_text)
+        sEditorContentNodeTooltip(selected_links_list[0].tooltip_text)
       }else {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
@@ -101,7 +100,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
         variant='menuconfigpanel_option_button_right'
         isDisabled={!s_tmp_editor_content_changed}
         onClick={() => {
-          multi_selected_links.current.map(link => link.tooltip_text = tmp_editor_content_tooltip)
+          selected_links_list.map(link => link.tooltip_text = tmp_editor_content_tooltip)
           sEditorContentNodeTooltip(tmp_editor_content_tooltip)
         }}
       >
