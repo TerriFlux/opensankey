@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 
 
@@ -68,7 +68,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     node_function
   }
 ) => {
-  const { data, new_data } = applicationData
+  const {  new_data } = applicationData
 
   // Traduction
   const { t } = applicationContext
@@ -77,7 +77,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   new_data.menu_configuration.updateComponentMenuConfigNode.current = setForceUpdate.toggle
   // Data to display in this menu
   let nodes, selected_nodes
-  if (data.displayed_node_selector) {
+  if (new_data.drawing_area.sankey.filter_displayed_node_selector) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
@@ -89,7 +89,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
   const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
   const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
-
+  console.log(selected_nodes)
 
   const ui: { [s: string]: JSX.Element } = {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
@@ -263,7 +263,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {
-        (!applicationContext.has_free_account && Object.keys(data.nodes).length > 15) ?
+        (!applicationContext.has_free_account && new_data.drawing_area.sankey.nodes_list.length > 15) ?
           <Box
             as='span'
             layerStyle='menuconfigpanel_warn_msg'
@@ -316,7 +316,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 applicationData.new_data.drawing_area.deleteSelectedNodes()
                 // UPdate ui
                 ComponentUpdater.updateComponenSaveInCache.current(false)
-                new_data.menu_configuration.updateComponentMenuConfigNode.current()
                 new_data.menu_configuration.updateComponentMenuConfigLink.current()
                 setForceUpdate.toggle()
               }}>
@@ -331,10 +330,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onClick={
               () => {
                 // Update UI with only visible nodes / all nodes
-                data.displayed_node_selector = !data.displayed_node_selector
+                new_data.drawing_area.sankey.filter_displayed_node_selector = !new_data.drawing_area.sankey.filter_displayed_node_selector
                 setForceUpdate.toggle()
               }}>
-            <FaEye />
+          {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
           </Button>
         </OSTooltip>
       </Box>
