@@ -66,7 +66,8 @@ export const DragGNodeEvent: DragGNodeEventFType = (
             ComponentUpdater, link_function,node_function
           )
         }
-        if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse' || d3.select(event.subject.sourceEvent.target).node().tagName == 'path') {
+        const elt_dragged = d3.select(event.subject.sourceEvent.target).node().tagName
+        if (elt_dragged == 'rect' || elt_dragged == 'ellipse' || elt_dragged == 'path' || elt_dragged == 'image') {
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater, link_function,node_function
           )
