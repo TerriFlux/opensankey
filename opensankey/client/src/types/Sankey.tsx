@@ -122,15 +122,12 @@ export class Class_Sankey {
 
   public get linksColorMap(): string {return this._linksColorMap}
   public set linksColorMap(value: string) {this._linksColorMap = value}
-  
+
   public get filter_displayed_link_selector(): boolean {return this._filter_displayed_link_selector}
   public set filter_displayed_link_selector(value: boolean) {this._filter_displayed_link_selector = value}
 
   public get filter_displayed_node_selector(): boolean {return this._filter_displayed_node_selector}
   public set filter_displayed_node_selector(value: boolean) {this._filter_displayed_node_selector = value}
-
-  public get data_taggs_entries(){return Object.entries(this.data_taggs)}
-  public get data_taggs_list(){return Object.values(this.data_taggs)}
 
   /**
    * Return an object wherekey are data_taggs id ,
@@ -347,6 +344,10 @@ export class Class_Sankey {
 
   public get data_taggs_list() {
     return Object.values(this._data_taggs)
+  }
+
+  public get data_taggs_entries(){
+    return Object.entries(this._data_taggs)
   }
 
   public get level_taggs_dict() {
