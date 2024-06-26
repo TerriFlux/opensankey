@@ -1131,12 +1131,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const data_tags = Object.assign({}, applicationData.data.dataTags)
   const show_data = Object.values(data_tags).length > 0
 
-  const unit_rem = Object.keys(menus).includes('unité') ? '10rem' : '0rem'
-  const data_rem = show_data ? '10rem' : '0rem'
+  const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
+  const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = '10rem 10rem auto '+ data_rem + ' ' + unit_rem + ' 12rem'
+  let menutop_grid_template = '100px 100px auto '+ data_rem + ' ' + unit_rem + ' 12fr'
   if (window.SankeyToolsStatic) {
-    menutop_grid_template = '100px 30rem auto '+ data_rem + ' ' + unit_rem
+    menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem
   }
   if (show_data) {
     DDDT = <DataTagSelector
