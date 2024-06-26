@@ -489,6 +489,11 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
         node.is_FO_raw=layoutNode.is_FO_raw
         node.FO_content=layoutNode.FO_content
       }
+      // Add ForeignObject from imported layout if it has all the attribut
+      if(layoutNode.image_src!==undefined && layoutNode.is_image ){
+        node.image_src=layoutNode.image_src
+        node.is_image=layoutNode.is_image
+      }
 
     })
   }
