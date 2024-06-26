@@ -26,7 +26,8 @@ import {
   Class_NodeElement
 } from './Node'
 import {
-  Class_Tag
+  Class_Tag,
+  Class_TagGroup
 } from './Tag'
 import * as d3 from 'd3'
 
@@ -59,7 +60,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  protected thickness: number = 20
+  // protected thickness: number = 20
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -138,10 +139,10 @@ export class Class_LinkElement extends Class_Element {
   /**
    * Value of link
    * @private
-   * @type {number}
+   * @type {(Class_LinkValue | Class_LinkDict)}
    * @memberof Class_LinkElement
    */
-  private _value: number
+  private _value: Class_LinkValue
 
   tooltip_text?: string
 
@@ -159,11 +160,11 @@ export class Class_LinkElement extends Class_Element {
   * @memberof Class_LinkElement
   */
   protected _display: {
-   drawing_area: Class_DrawingArea,
-   position: Type_ElementPosition,
-   local: Class_LinkAttribute,
-   style: Class_LinkStyle
- }
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+    local: Class_LinkAttribute,
+    style: Class_LinkStyle
+  }
 
   // CONSTRUCTOR ========================================================================
 
@@ -192,11 +193,14 @@ export class Class_LinkElement extends Class_Element {
       local: new Class_LinkAttribute(),
       style: drawing_area.sankey.default_link_style
     }
-    this._value = 10
+    this._value = new Class_LinkValue(null, 'root', 'root')
+    this._value.createTreeDataLink(drawing_area.sankey.data_taggs_list, 0)
     this._source = source
     this._source.addOutputLink(this)
     this._target = target
     this._target.addInputLink(this)
+
+    console.log(this._value)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -309,11 +313,11 @@ export class Class_LinkElement extends Class_Element {
     return true
   }
 
-  private removeRefToSource(){
+  private removeRefToSource() {
     delete this._source.output_links[this.id]
   }
 
-  private removeRefToTarget(){
+  private removeRefToTarget() {
     delete this._source.input_links[this.id]
   }
 
@@ -330,7 +334,7 @@ export class Class_LinkElement extends Class_Element {
     this._tags = {}
   }
 
-  public invert(){
+  public invert() {
     // const tmp = this.source
     // const previous_node_s = this.source
     // previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(this.idLink), 1)
@@ -344,20 +348,48 @@ export class Class_LinkElement extends Class_Element {
     // this.target = target_node.idNode
     // target_node.inputLinksId.push(this.idLink)
     // nodes_to_reorganize.push(target_node)
-    const tmp =this._source
-    this.source=this._target
-    this._target=tmp
+    const tmp = this._source
+    this.source = this._target
+    this._target = tmp
+  }
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   *
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  public get_curr_value() {
+    const tmp = this.drawing_area.sankey.data_taggs_object_tag_selected
+    const path: string[] = []
+    Object.values(tmp).forEach(val => {
+      path.push(val[0])
+    })
+    return this._value.getValueFromLeaf(path)
   }
 
-  protected element_displayed(){
-
-    return this.source_and_target_displayed() && this.element_tag_displayed() 
+  /**
+   * Return value of link from get_curr_value casted as a number because sometime 
+   * we need a number from link value (even when it's value is null)
+   *
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  public get_curr_value_casted() {
+    const val = this.get_curr_value()
+    return (val !== null && val !== undefined) ? val : 0
   }
-  private element_tag_displayed(){
+
+
+  protected element_displayed() {
+
+    return this.source_and_target_displayed() && this.element_tag_displayed()
+  }
+  private element_tag_displayed() {
     // If link has tags :
     //  - check if any of them is selected at false
     // else if the link doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
   }
 
   /**
@@ -368,9 +400,10 @@ export class Class_LinkElement extends Class_Element {
    * @return {*} 
    * @memberof Class_LinkElement
    */
-  private source_and_target_displayed(){
+  private source_and_target_displayed() {
     return this._source.displayed && this._target.displayed
   }
+
 
   // GETTER / SETTER ====================================================================
 
@@ -404,6 +437,11 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
+  // Value Object 
+  public get value() {
+    return this._value
+  }
+
   /**
    *
    * Getter & Setter of class attributes
@@ -422,8 +460,8 @@ export class Class_LinkElement extends Class_Element {
     this._target = value
   }
 
-  public get tags(){return this._tags}
-  public removeTag(tag:Class_Tag){
+  public get tags() { return this._tags }
+  public removeTag(tag: Class_Tag) {
     if (this.tags[tag.id] !== undefined) {
       delete this.tags[tag.id]
       tag.removeReference(this)
@@ -466,28 +504,29 @@ export class Class_LinkElement extends Class_Element {
       .attr('stroke', this.getLinkColorToUse())
       .attr('stroke-opacity', this.opacity)
       .attr('stroke-width', this.link_stroke_width)
-      .attr('stroke-dasharray',this.dashed?'10,5':'')
+      .attr('stroke-dasharray', this.dashed ? '10,5' : '')
     // TODO apply opacity and other attributes
   }
 
   private getBezierPath() {
+    const strokeWidth = this.link_stroke_width
     // Get starting and ending position per type of shape
     let x0, y0
     let x6, y6
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x0 = 0
-      y0 = 0 + this.thickness / 2
+      y0 = 0 + strokeWidth / 2
     }
     else {
-      x0 = 0 + this.thickness / 2
+      x0 = 0 + strokeWidth / 2
       y0 = 0
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
       x6 = this.getShapeWidth()
-      y6 = this.getShapeHeight() + this.thickness / 2
+      y6 = this.getShapeHeight() + strokeWidth / 2
     }
     else {
-      x6 = this.getShapeWidth() - this.thickness / 2
+      x6 = this.getShapeWidth() - strokeWidth / 2
       y6 = this.getShapeHeight()
     }
 
@@ -621,14 +660,17 @@ export class Class_LinkElement extends Class_Element {
   public setPosY(_: number) { /* Does nothing */ }
   public setPosXY(_: number, __: number) { /* Does nothing */ }
 
-  public get link_stroke_width(){
+  public get link_stroke_width() {
     const scale = d3.scaleLinear()
       .domain([0, this.drawing_area.scale])
       .range([0, 100])
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
       .range([0, this.drawing_area.scale])
-    return scale(this.thickness)
+
+    const val = this.get_curr_value_casted()
+    return scale(val)
+
   }
 
 
@@ -663,18 +705,18 @@ export class Class_LinkElement extends Class_Element {
       else if (event.shiftKey) {
         // Add node to selection
         drawing_area.addLinkToSelection(this)
-  
+
         // Open related menu
         this.menu_config.OpenConfigMenu()
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsLinks()
         // Update components related to node edition
         this.menu_config.updateMenuEditionLink()
-  
+
       } else if (event.ctrlKey) {
         // Add node to selection
         drawing_area.addLinkToSelection(this)
-  
+
         // Update components related to node edition
         this.menu_config.updateMenuEditionNode()
       }
@@ -689,7 +731,7 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-  
+
   private getLinkColorToUse() {
     if (
       (this.drawing_area.sankey.linksColorMap !== 'no_colormap') &&
@@ -1240,4 +1282,119 @@ export const default_link_style: SankeyLinkAttrType = {
   custom_digit: false,
   nb_digit: 0,
   dashed: false
+}
+
+export class TreeNode implements TreeNodeInterface {
+  public parent: TreeNodeInterface | null
+  public children: { [x: string]: TreeNodeInterface } = {}
+
+  constructor(parent: TreeNodeInterface | null, id: string) {
+    this.parent = parent
+    if (this.parent) {
+      this.parent.children[id] = this
+    }
+  }
+}
+
+export interface TreeNodeInterface {
+  parent: TreeNodeInterface | null;
+  children: { [x: string]: TreeNodeInterface }
+}
+
+export class Class_LinkValue extends TreeNode {
+
+  private tag_id: string
+  private grp_id: string
+  private _value?: number
+  private _display_value?: string
+  private _tags?: { [_: string]: Class_Tag }
+  private _extension?: { [_: string]: string }
+  public parent: Class_LinkValue | null = null
+  public children: { [x: string]: Class_LinkValue } = {}
+
+  constructor(parent: Class_LinkValue | null, grp_id: string, tag_id: string) {
+    super(parent, tag_id)
+    this.grp_id = grp_id
+    this.tag_id = tag_id
+  }
+
+
+  /**
+   * Create a data tree structure for link value
+   *
+   * @param {[Class_TagGroup]} arr_grp_tag
+   * @param {number} indexGrp
+   * @memberof Class_LinkValue
+   */
+  public createTreeDataLink(arr_grp_tag: Class_TagGroup[], indexGrp: number) {
+
+    if (arr_grp_tag.length > 0) {
+      const curr_grp = arr_grp_tag[indexGrp]
+      const is_leaf = arr_grp_tag.length - 1 == indexGrp
+
+      curr_grp.tags_list.forEach(tag => {
+        const tmp = new Class_LinkValue(this, curr_grp.id, tag.id)
+        // If we are a not at the last group data tag then we add children with the rest of the data tags group  
+        if (!is_leaf) {
+          tmp.createTreeDataLink(arr_grp_tag, indexGrp + 1)
+        } else {
+          // If we are a leaf then we init link value
+          tmp.initLeafValues()
+        }
+      })
+    } else {
+      // If we are here it means we haven't any data_taggs so we init value at root
+      this.initLeafValues()
+    }
+  }
+
+  public getValueFromLeaf(path: string[]): number | undefined {
+    return this.goToLeaf(path)._value
+  }
+
+  public setValueForLeaf(path: string[], val: number | undefined) {
+    this.goToLeaf(path)._value = val
+  }
+
+  /**
+   * function that return the Class_LinkValue leaf in the link value tree structur
+   * 
+   * path is an array who have the same length that there is data_taggs ClassGroup where the first element of path is 
+   *
+   * @param {string[]} path
+   * @return {*}  {Class_LinkValue}
+   * @memberof Class_LinkValue
+   */
+  public goToLeaf(path: string[]): Class_LinkValue {
+    if (Object.values(this.children).length > 0 && path.length > 0) {
+      const next_key = path.shift() as string
+      return this.children[next_key].goToLeaf(path)
+    } else {
+      return this
+    }
+  }
+
+  public getTextForLeaf(path: string[]) {
+    return this.goToLeaf(path)._display_value
+  }
+  public setTextForLeaf(path: string[], val: string | undefined) {
+    this.goToLeaf(path)._display_value = val
+  }
+
+  public initLeafValues() {
+    this._value = GetRandomInt(100)
+    this._display_value = ''
+    this._tags = {}
+    this._extension = {}
+  }
+
+  // ==================Getter & Setter ======================
+
+
+
+}
+
+
+const GetRandomInt = (max: number) => {
+  return Math.floor(Math.random() * max)
 }

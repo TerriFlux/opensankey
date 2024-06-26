@@ -565,8 +565,6 @@ export const moduleDialogs : module_dialogsType = (
       applicationContext={applicationContext}
       additional_data_element={additional_menus.additional_data_element}
       ComponentUpdater={ComponentUpdater}
-      node_function={node_function}
-      link_function={link_function}
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
