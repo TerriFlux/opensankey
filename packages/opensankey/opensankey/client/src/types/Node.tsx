@@ -109,6 +109,7 @@ export class Class_NodeElement extends Class_Element {
   // Tooltips
   tooltip?: Class_Element
   tooltip_text?: string
+  private _displayed:boolean=true
 
   // PROTECTED ATTRIBUTE ================================================================
 
@@ -196,6 +197,20 @@ export class Class_NodeElement extends Class_Element {
 
 
   /**
+ * Function used to check some condition before allowing element to be drawn
+ *
+ * @protected
+ * @return {*}
+ * @memberof Class_NodeElement
+ */
+  protected element_displayed(){
+
+    this._displayed= this.element_tag_displayed() // && checkNodeLevel()
+    return this._displayed
+  }
+
+
+  /**
    * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
    * if that the case then we don't draw the node
    *
@@ -212,6 +227,7 @@ export class Class_NodeElement extends Class_Element {
 
 
   // GETTERS / SETTERS ==================================================================
+  public get displayed(){return this._displayed}
 
   /**
    * Get node name
@@ -268,6 +284,9 @@ export class Class_NodeElement extends Class_Element {
    */
   public get output_links_list() {
     return Object.values(this._output_links)
+  }
+  public get output_links() {
+    return this._output_links
   }
 
   /**
