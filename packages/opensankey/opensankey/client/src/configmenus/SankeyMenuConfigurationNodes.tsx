@@ -89,7 +89,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
   const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
   const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
-  console.log(selected_nodes)
 
   const ui: { [s: string]: JSX.Element } = {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
@@ -333,7 +332,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 new_data.drawing_area.sankey.filter_displayed_node_selector = !new_data.drawing_area.sankey.filter_displayed_node_selector
                 setForceUpdate.toggle()
               }}>
-          {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
+            {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
           </Button>
         </OSTooltip>
       </Box>

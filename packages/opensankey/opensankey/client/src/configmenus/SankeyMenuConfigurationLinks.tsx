@@ -66,7 +66,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_tags_group_key(Object.keys(flux_taggs)[0])
   }
 
-  console.log('here')
 
   const ui: { [s: string]: JSX.Element } = {
     'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
@@ -226,7 +225,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     const n_link = new Class_LinkElement(node_src, node_trgt, new_data.drawing_area, new_data.menu_configuration)
     new_data.drawing_area.sankey.addLink(n_link)
     new_data.drawing_area.addLinkToSelection(n_link)
-    console.log(n_link)
     n_link.reset()
     setForceUpdate.toggle()
     ComponentUpdater.updateComponenSaveInCache.current(false)

@@ -176,14 +176,14 @@ export class Class_NodeElement extends Class_Element {
   }
 
 
-/**
+  /**
  * Function used to check some condition before allowing element to be drawn
  *
  * @protected
  * @return {*} 
  * @memberof Class_NodeElement
  */
-protected element_displayed(){
+  protected element_displayed(){
   
     this._displayed= this.element_tag_displayed() // && checkNodeLevel()
     return this._displayed

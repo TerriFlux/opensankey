@@ -697,7 +697,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <FormGroup as={Row}>
         <Col xs={10}>
           <DataTagSelector
-
             applicationData={applicationData}
             GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
             node_function={node_function}
@@ -1147,45 +1146,46 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
       }
       return (
         <>
-          {/* <FormLabel>{tags_group.name}</FormLabel>
+          <FormLabel>{tags_group.name}</FormLabel>
           <FormGroup as={Row}>
             <Col xs={10}>
               {<Form.Select key={tags_group.name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                let had_suffix = false
-                const pl = Object.entries(links_dict).map(l => {
-                  const suffixeStart = l[0].indexOf('_')
-                  if (suffixeStart >= 0) {
-                    had_suffix = true
-                    l[0] = l[0].slice(0, suffixeStart)
-                    l[1].idLink = l[0]
-                    nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
-                    nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
+                // let had_suffix = false
+                // const pl = Object.entries(links_dict).map(l => {
+                //   const suffixeStart = l[0].indexOf('_')
+                //   // if (suffixeStart >= 0) {
+                //   //   had_suffix = true
+                //   //   l[0] = l[0].slice(0, suffixeStart)
+                //   //   l[1].idLink = l[0]
+                //   //   nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
+                //   //   nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
 
-                    //Ajoute dans les noeuds source/target les id de flux
-                    const ind_in_src = nodes_dict[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
-                    if (ind_in_src == -1) {
-                      nodes_dict[l[1].idSource].outputLinksId.push(l[0])
-                    }
-                    const ind_in_trgt = nodes_dict[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
-                    if (ind_in_trgt == -1) {
-                      nodes_dict[l[1].idTarget].inputLinksId.push(l[0])
-                    }
-                  }
-                  return l
-                })
+                //   //   //Ajoute dans les noeuds source/target les id de flux
+                //   //   const ind_in_src = nodes_dict[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+                //   //   if (ind_in_src == -1) {
+                //   //     nodes_dict[l[1].idSource].outputLinksId.push(l[0])
+                //   //   }
+                //   //   const ind_in_trgt = nodes_dict[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+                //   //   if (ind_in_trgt == -1) {
+                //   //     nodes_dict[l[1].idTarget].inputLinksId.push(l[0])
+                //   //   }
+                //   // }
+                //   return l
+                // })
                 // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                const pureLinks = Object.fromEntries(pl)
-                links_dict = pureLinks
-                if (had_suffix) {
-                  data.linkZIndex = Object.keys(pureLinks)
-                }
+                // const pureLinks = Object.fromEntries(pl)
+                // links_dict = pureLinks
+                // if (had_suffix) {
+                //   data.linkZIndex = Object.keys(pureLinks)
+                // }
                 handleSimpleDropdown(evt, tags_group)
-                redrawSankeyWithSelectedTag(
-                  applicationData,
-                  GetSankeyMinWidthAndHeight,
-                  node_function,
-                  link_function
-                )
+                // redrawSankeyWithSelectedTag(
+                //   applicationData,
+                //   GetSankeyMinWidthAndHeight,
+                //   node_function,
+                //   link_function
+                // )
+                new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
                 setForceUpdate.toggle()
                 new_data.menu_configuration.updateComponentMenu.current()
               }}>
@@ -1195,7 +1195,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
                   })}
               </Form.Select>}
             </Col>
-          </FormGroup> */}
+          </FormGroup>
         </>)
     }
     else if (tags_group.banner == 'multi') {
