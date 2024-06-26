@@ -37,6 +37,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 }) => {
   const [contextualised_node, set_contextualised_node] = useState<SankeyNode>()
   contextMenu.ref_setter_contextualised_node.current = set_contextualised_node
+  const { updateComponentMenuConfigLink } = ComponentUpdater
   const [forceUpdate, setForceUpdate] = useState(false)
   const { t } = applicationContext
   const { data, set_data } = applicationData
@@ -315,6 +316,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
             applicationState.ref_display_link_opacity.current.forEach(setter => setter(opacity))
           })
           multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
+          updateComponentMenuConfigLink.current()
           set_contextualised_node(undefined)
 
         }}>
