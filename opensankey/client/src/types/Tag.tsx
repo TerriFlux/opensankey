@@ -155,6 +155,22 @@ export class Class_TagGroup {
   public get show_legend(): boolean {return this._show_legend}
   public set show_legend(value: boolean) {this._show_legend = value}
 
+  /**
+ * Return list of selected tag from the current group
+ *
+ * @readonly
+ * @memberof Class_TagGroup
+ */
+  public get tags_selected_list(){return Object.values(this._tags).filter(t=>t.selected)}
+
+  /**
+ * Return list tag from the current group
+ *
+ * @readonly
+ * @memberof Class_TagGroup
+ */
+  public get tags_list(){return Object.values(this._tags)}
+
   // PUBLIC METHODS =====================================================================
 
   public addTag(id: string, name: string) {
