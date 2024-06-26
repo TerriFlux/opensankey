@@ -80,6 +80,10 @@ export class Class_Sankey {
   private _nodesColorMap: string
   private _linksColorMap: string
 
+  // Variables to filter node & link multi selector to display only visible element in the selector
+  private _filter_displayed_link_selector: boolean = false
+  private _filter_displayed_node_selector: boolean = false
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -118,6 +122,30 @@ export class Class_Sankey {
 
   public get linksColorMap(): string {return this._linksColorMap}
   public set linksColorMap(value: string) {this._linksColorMap = value}
+  
+  public get filter_displayed_link_selector(): boolean {return this._filter_displayed_link_selector}
+  public set filter_displayed_link_selector(value: boolean) {this._filter_displayed_link_selector = value}
+
+  public get filter_displayed_node_selector(): boolean {return this._filter_displayed_node_selector}
+  public set filter_displayed_node_selector(value: boolean) {this._filter_displayed_node_selector = value}
+
+  public get data_taggs_entries(){return Object.entries(this.data_taggs)}
+  public get data_taggs_list(){return Object.values(this.data_taggs)}
+
+  /**
+   * Return an object wherekey are data_taggs id ,
+   * and value an array of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get data_taggs_object_tag_selected(){
+    const tmp={} as {[_:string]:string[]}
+    this.data_taggs_entries.forEach(ent=>{
+      tmp[ent[0]]=ent[1].tags_selected_list.map(t=>t.id)
+    })
+    return tmp
+  }
 
   // Nodes related ----------------------------------------------------------------------
 

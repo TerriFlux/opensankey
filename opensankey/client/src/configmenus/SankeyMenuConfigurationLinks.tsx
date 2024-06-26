@@ -230,7 +230,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               data.displayed_link_selector = !data.displayed_link_selector
               setForceUpdate.toggle()
             }}>
-          {data.displayed_link_selector ? <FaEye /> : <FaEyeSlash />}
+          {new_data.drawing_area.sankey.filter_displayed_link_selector ? <FaEye /> : <FaEyeSlash />}
         </Button>
       </OSTooltip>
     </Box>

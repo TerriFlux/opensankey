@@ -6,7 +6,7 @@ import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfiguration
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
 import { OSTooltip } from './SankeyUtils'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, applicationDataType } from '../types/Types'
-import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
+import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, useBoolean } from '@chakra-ui/react'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
@@ -14,21 +14,21 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   applicationState,
   applicationContext,
   additional_data_element,
-  ComponentUpdater,
-  node_function,
-  link_function
+  ComponentUpdater
 }) => {
   const { t } = applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
-  const { data } = applicationData
-  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = applicationState
+  const { new_data } = applicationData
+  const entries_data_taggs=new_data.drawing_area.sankey.data_taggs_entries
+  const list_links_selected=new_data.drawing_area.selected_links_list
+
+  const { displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = applicationState
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
   
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
   displayedInputLinkValueRef.current=displayed_input_link_value
 
-
-  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+  const newEntries = new Map(entries_data_taggs.map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
@@ -39,19 +39,21 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
     set_tags_selected(dataTagsSelected)
   }
+  const path_to_link_value=Object.values(tags_selected)
+  const link_display_text=list_links_selected[0]?.value.getTextForLeaf(structuredClone(path_to_link_value))
 
   const content=<Box
     layerStyle='menuconfigpanel_grid'
   >
     {// Définition des valeurs selon les paramètre dataTags
-      Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+      entries_data_taggs.map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
           return (<>
             <Box
               as='span'
               layerStyle='menuconfigpanel_part_title_3'
             >
-              {dataTag.group_name}
+              {dataTag.name}
             </Box>
             <Select
               name={dataTagKey}
@@ -63,17 +65,12 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                 //Modifie les paramètres selectionnés
                 const { name, value } = evt.target
                 let tmp={}
-                // set_tags_selected( prevState => {
                 tmp= ({...tags_selected,[name]: value})
                 set_tags_selected(tmp)
-                //   return ({...prevState,[name]: value}) 
-                // } )
+                // Create new path to get link value
+                const path_to_link_value=Object.values(tmp) as string[]
                 displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  ValueSelectedParameter(
-                    applicationData,
-                    multi_selected_links,
-                    tmp
-                  ).value as string
+                  list_links_selected[0]?.value.getValueFromLeaf(path_to_link_value)?.toString() as string
                 ))
               }}
             >
@@ -100,13 +97,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           {t('Flux.data.vpp')}
         </Box>
         <ConfigLinkDataNumberInput
+          key={Object.values(tags_selected).join('&')}
           applicationData={applicationData}
-          multi_selected_links={multi_selected_links}
           tags_selected={tags_selected}
-          node_function={node_function}
-          link_function={link_function}
           ComponentUpdater={ComponentUpdater}
-        
         />
       </Box>
     </OSTooltip>
@@ -115,36 +109,21 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
     {/* Afficher ou non les donnée sur le Sankey  */}
 
     <OSTooltip label={t('Flux.data.tooltips.affichage')}>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-        >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
           {t('Flux.data.affichage')}
         </Box>
 
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
+        <InputGroup variant='menuconfigpanel_option_input' >
           <Input
             variant='menuconfigpanel_option_input'
-            value={ ValueSelectedParameter(applicationData,multi_selected_links,tags_selected).display_value}
+            value={link_display_text}
             onChange={evt => {
-              let val = Object(multi_selected_links.current[0].value)
-              multi_selected_links.current.map(d => {
-                val = d.value
-                Object.values(tags_selected).forEach(tag => {
-                  if (val[tag] === undefined) {
-                    val[tag] = {}
-                  }
-                  val = val[tag]
-                })
-                val.display_value = evt.target.value
+              list_links_selected.forEach(l=>{
+                l.value.setTextForLeaf(structuredClone(path_to_link_value),evt.target.value)
+                l.reset()
               })
               setForceUpdate(!forceUpdate)
-              link_function.RedrawLinks(multi_selected_links.current)
 
             }}
           />
@@ -161,10 +140,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
 
 type ConfigLinkDataNumberInputType={
   applicationData:applicationDataType
-  multi_selected_links:{current:SankeyLink[]}
   tags_selected: {[k: string]: string;}
-  node_function:NodeFunctionTypes
-  link_function:LinkFunctionTypes
   ComponentUpdater:ComponentUpdaterType
 }
 /**
@@ -182,38 +158,23 @@ type ConfigLinkDataNumberInputType={
  */
 export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInputType>=({
   applicationData,
-  multi_selected_links,
   tags_selected,
-  node_function,
-  link_function,
   ComponentUpdater,
 })=>{
-  const {data}=applicationData
+  const {new_data}=applicationData
+  const list_links_selected=new_data.drawing_area.selected_links_list
   const ref_input=useRef<HTMLInputElement>(null)
   const variantOfInput='menuconfigpanel_option_numberinput'
   const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
 
-  
-  // Initialise hook with first link selected value
-  const [displayed_value,setDisplayedValue]=useState(()=>{
-    const val_of_key=ValueSelectedParameter(
-      applicationData,
-      multi_selected_links,
-      tags_selected
-    )
-    
-    return val_of_key.value as string
-  })
+  const path_to_link_value=Object.values(tags_selected)
 
-  // Add stepper addon if specified
-  const stepperBtn=<NumberInputStepper>
-    <NumberIncrementStepper/>
-    <NumberDecrementStepper/>
-  </NumberInputStepper>
+  // Initialise hook with first link selected value
+  const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.value.getValueFromLeaf(path_to_link_value))
+
+
 
   const f_onBlur=()=>{
-    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-    link_function.RedrawLinks(Object.values(applicationData.display_links))
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
   return <InputGroup variant='menuconfigpanel_option_input' >
@@ -221,7 +182,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
       variant={variantOfInput} 
       step={1} 
       value={displayed_value}
-      onChange={(_)=>{
+      onChange={(_,val)=>{
         // Launch/reset timeout before the input auto blur (and update the value in data)
         if(isModifying.current){
           clearTimeout(isModifying.current)
@@ -232,53 +193,15 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
         },2000)
         
         // Update displayed value
-        setDisplayedValue(_)
+        setDisplayedValue(val)
       }}
 
       onBlur={()=>{
         clearTimeout(isModifying.current)
-
-        // const formatedValue=displayed_value.replace(',','.')
-        if(displayed_value!=='' && !isNaN(+displayed_value )){
-          let val = Object(multi_selected_links.current[0].value)
-          const node_to_update:SankeyNode[]=[]
-
-          multi_selected_links.current.map(d => {
-            node_to_update.push(data.nodes[d.idSource])
-            node_to_update.push(data.nodes[d.idTarget])
-            val = d.value
-            Object.values(tags_selected).forEach(tag => {
-              if (val[tag] === undefined) {
-                val[tag] = {}
-              }
-              val = val[tag]
-            })
-            val.value = +displayed_value
-          })
-          const scale = d3.scaleLinear()
-            .domain([0, data.user_scale])
-            .range([0, 100])
-          if (scale(+displayed_value) > 500) {
-            data.user_scale = +displayed_value
-          }
-        }
-        else if(displayed_value=='') {
-          let val = Object(multi_selected_links.current[0].value)
-          const node_to_update:SankeyNode[]=[]
-          multi_selected_links.current.map(d => {
-            node_to_update.push(data.nodes[d.idSource])
-            node_to_update.push(data.nodes[d.idTarget])
-            val = d.value
-            Object.values(tags_selected).forEach(tag => {
-              if (val[tag] === undefined) {
-                val[tag] = {}
-              }
-              val = val[tag]
-            })
-            val.value = ''
-          })
-          
-        }
+        list_links_selected.forEach(l=>{
+          l.value.setValueForLeaf(path_to_link_value,displayed_value)
+          l.reset()
+        })
         f_onBlur()
       }}
     >
@@ -287,3 +210,8 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
     </NumberInput>
   </InputGroup>
 }
+// Add stepper addon if specified
+const stepperBtn=<NumberInputStepper>
+  <NumberIncrementStepper/>
+  <NumberDecrementStepper/>
+</NumberInputStepper>
