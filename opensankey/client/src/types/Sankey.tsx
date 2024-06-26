@@ -219,15 +219,6 @@ export class Class_Sankey {
       .sort((a, b) => sortLinksElements(a, b))
   }
 
-  /**
-   * Return default style for nodes
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get default_node_style() {
-    return this._node_styles[default_style_name]
-  }
-
   // Styles related ---------------------------------------------------------------------
 
   /**
@@ -237,6 +228,15 @@ export class Class_Sankey {
    */
   public get node_styles_dict() {
     return this._node_styles
+  }
+
+  /**
+   * Return default style for nodes
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get default_node_style() {
+    return this._node_styles[default_style_name]
   }
 
   /**
@@ -255,12 +255,7 @@ export class Class_Sankey {
    */
   public get node_styles_list_sorted() {
     return this.node_styles_list
-      .sort((a, b) =>
-        (a.id > b.id) ?
-          1 :
-          ((b.id > a.id) ?
-            -1 :
-            0))
+      .sort((a, b) => sortNodesElements(a, b))
   }
 
   /**
@@ -279,6 +274,25 @@ export class Class_Sankey {
    */
   public get default_link_style() {
     return this._link_styles[default_style_name]
+  }
+
+  /**
+   * Return all the style as a list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_list() {
+    return Object.values(this._link_styles)
+  }
+
+  /**
+   * Return all the style as a sorted list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_list_sorted() {
+    return this.link_styles_list
+      .sort((a, b) => sortLinksElements(a, b))
   }
 
   // Tags related -----------------------------------------------------------------------

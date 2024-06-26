@@ -30,12 +30,12 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   const sankey_data=new_data.drawing_area.sankey
   const list_node_selected=new_data.drawing_area.selected_nodes_list
 
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(sankey_data.node_taggs).length > 0 ? Object.keys(sankey_data.node_taggs)[0] : '')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(sankey_data.node_taggs_dict).length > 0 ? Object.keys(sankey_data.node_taggs_dict)[0] : '')
   const [forceUpdate, setForceUpdate]=useState(false)
-  const tags_visible = Object.keys(sankey_data.node_taggs).length > 0
+  const tags_visible = Object.keys(sankey_data.node_taggs_dict).length > 0
 
-  if ((tags_group_key == '' && Object.keys(sankey_data.node_taggs).length > 0) || (!Object.keys(sankey_data.node_taggs).includes(tags_group_key) && Object.keys(sankey_data.node_taggs).length > 0)) {
-    set_tags_group_key(Object.keys(sankey_data.node_taggs)[0])
+  if ((tags_group_key == '' && Object.keys(sankey_data.node_taggs_dict).length > 0) || (!Object.keys(sankey_data.node_taggs_dict).includes(tags_group_key) && Object.keys(sankey_data.node_taggs_dict).length > 0)) {
+    set_tags_group_key(Object.keys(sankey_data.node_taggs_dict)[0])
   }
 
   const content= <Box
@@ -56,7 +56,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
     >
       {
         Object
-          .entries(sankey_data.node_taggs)
+          .entries(sankey_data.node_taggs_dict)
           .map((tags_group, i) =>
             <option
               key={i}
@@ -72,9 +72,9 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
       layerStyle='menuconfigpanel_grid'
     >
       {
-        tags_visible && tags_group_key != '' && Object.keys(sankey_data.node_taggs).includes(tags_group_key) ?
+        tags_visible && tags_group_key != '' && Object.keys(sankey_data.node_taggs_dict).includes(tags_group_key) ?
           Object
-            .entries(sankey_data.node_taggs[tags_group_key].tags)
+            .entries(sankey_data.node_taggs_dict[tags_group_key].tags)
             .map(tags => {
               const allChecked = IsAllNodeTagsSame(list_node_selected,tags[1],tags_group_key)
               return (

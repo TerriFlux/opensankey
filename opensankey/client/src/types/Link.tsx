@@ -39,34 +39,34 @@ type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-const default_shape_arrow_size = 10
-const default_shape_color = default_element_color
-const default_shape_curvature = 0.5
-const default_shape_is_arrow = true
-const default_shape_is_curved = true
-const default_shape_is_dashed = false
-const default_shape_is_recycling = false
-const default_shape_opacity = 0.85
-const default_shape_orientation = 'hh'
-const default_shape_starting_curve = 0.05
-const default_shape_ending_curve = 0.95
-const default_shape_starting_tangeant = 0.5
-const default_shape_ending_tangeant = 0.5
-const default_shape_vert_shift = 0
-const default_value_label_color = 'black'
-const default_value_label_custom_digit = false
-const default_value_label_font_family = 'Arialserif'
-const default_value_label_font_size = 20
-const default_value_label_is_visible = true
-const default_value_label_nb_digit = 0
-const default_value_label_on_path = true
-const default_value_label_orthogonal_position = 'middle'
-const default_value_label_pos_auto = false
-const default_value_label_position = 'middle'
-const default_value_label_scientific_precision = 5
-const default_value_label_to_precision = false
-const default_value_label_unit = ''
-const default_value_label_unit_visible = false
+export const default_shape_arrow_size = 10
+export const default_shape_color = default_element_color
+export const default_shape_curvature = 0.5
+export const default_shape_is_arrow = true
+export const default_shape_is_curved = true
+export const default_shape_is_dashed = false
+export const default_shape_is_recycling = false
+export const default_shape_opacity = 0.85
+export const default_shape_orientation = 'hh'
+export const default_shape_starting_curve = 0.05
+export const default_shape_ending_curve = 0.95
+export const default_shape_starting_tangeant = 0.5
+export const default_shape_ending_tangeant = 0.5
+export const default_shape_vert_shift = 0
+export const default_value_label_color = 'black'
+export const default_value_label_custom_digit = false
+export const default_value_label_font_family = 'Arialserif'
+export const default_value_label_font_size = 20
+export const default_value_label_is_visible = true
+export const default_value_label_nb_digit = 0
+export const default_value_label_on_path = true
+export const default_value_label_orthogonal_position = 'middle'
+export const default_value_label_pos_auto = false
+export const default_value_label_position = 'middle'
+export const default_value_label_scientific_precision = 5
+export const default_value_label_to_precision = false
+export const default_value_label_unit = ''
+export const default_value_label_unit_visible = false
 
 // SPECIFIC FUNCTIONS ********************************************************************
 
@@ -74,10 +74,22 @@ export function defaultLinkId(source: Class_NodeElement, target: Class_NodeEleme
   return source.name + ' --> ' + target.name
 }
 
-export function sortLinksElements(a: Class_LinkElement, b: Class_LinkElement) {
+export function sortLinksElements(
+  a: Class_LinkElement | Class_LinkStyle,
+  b: Class_LinkElement | Class_LinkStyle
+) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
   else return 0
+}
+
+export function isAttributeOverloaded(
+  links: Class_LinkElement[],
+  attr: keyof Class_LinkAttribute
+) {
+  let overloaded = false
+  links.forEach(link => overloaded = (overloaded || link.isAttributeOverloaded(attr)))
+  return overloaded
 }
 
 // CLASS LINK ELEMENT ********************************************************************
@@ -141,7 +153,6 @@ export class Class_LinkElement extends Class_Element {
    */
   private _thickness: number = 20
 
-
   /**
    * TODO
    * @private
@@ -172,11 +183,11 @@ export class Class_LinkElement extends Class_Element {
   * @memberof Class_LinkElement
   */
   protected _display: {
-   drawing_area: Class_DrawingArea,
-   position: Type_ElementPosition,
-   local: Class_LinkAttribute,
-   style: Class_LinkStyle
- }
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+    style: Class_LinkStyle,
+    attributes: Class_LinkAttribute
+  }
 
   // CONSTRUCTOR ========================================================================
 
@@ -202,8 +213,8 @@ export class Class_LinkElement extends Class_Element {
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
-      local: new Class_LinkAttribute(),
-      style: drawing_area.sankey.default_link_style
+      style: drawing_area.sankey.default_link_style,
+      attributes: new Class_LinkAttribute()
     }
     this._source = source
     this._source.addOutputLink(this)
@@ -353,6 +364,19 @@ export class Class_LinkElement extends Class_Element {
       delete this._tags[tag.id]
       tag.removeReference(this)
     }
+  }
+
+  public useDefaultStyle() {
+    this.style = this.drawing_area.sankey.default_link_style
+  }
+
+  public resetAttributes() {
+    this._display.attributes = new Class_LinkAttribute()
+    this.reset()
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
+    return this._display.attributes[attr] !== undefined
   }
 
   // PROTECTED METHODS ==================================================================
@@ -568,8 +592,16 @@ export class Class_LinkElement extends Class_Element {
 
   public setPosXY(_: number, __: number) { /* Does nothing */ }
 
-
   // GETTERS / SETTERS ==================================================================
+
+  /**
+   * Get name of link
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get name() {
+    return defaultLinkId(this._source, this._target)
+  }
 
   /**
    * Get source node
@@ -605,13 +637,9 @@ export class Class_LinkElement extends Class_Element {
     this.reset()
   }
 
-  /**
-   * Get name of link
-   * @readonly
-   * @memberof Class_LinkElement
-   */
-  public get name() {
-      return defaultLinkId(this._source, this._target)
+  public get tags() {
+    // TODO Faire autrement
+    return this._tags
   }
 
   /**
@@ -645,12 +673,32 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
+   * Get style key of node
+   * @return {string}
+   * @memberof Class_Node
+   */
+  public get style() {
+    return this._display.style
+  }
+
+  /**
+  * Set style key of node
+  * @memberof Class_Node
+  */
+  public set style(_: Class_LinkStyle) {
+    this._display.style.removeReference(this)
+    this._display.style = _
+    _.addReference(this)
+    this.reset()
+  }
+
+  /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_orientation() {
-    if (this._display.local.shape_orientation !== undefined) {
-      return this._display.local.shape_orientation
+    if (this._display.attributes.shape_orientation !== undefined) {
+      return this._display.attributes.shape_orientation
     } else if (this._display.style.shape_orientation !== undefined) {
       return this._display.style.shape_orientation
     }
@@ -661,15 +709,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_orientation(_: Type_Orientation) { this._display.local.shape_orientation = _; this.drawShape()}
+  public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape()}
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_starting_curve() {
-    if (this._display.local.shape_starting_curve !== undefined) {
-      return this._display.local.shape_starting_curve
+    if (this._display.attributes.shape_starting_curve !== undefined) {
+      return this._display.attributes.shape_starting_curve
     } else if (this._display.style.shape_starting_curve !== undefined) {
       return this._display.style.shape_starting_curve
     }
@@ -682,7 +730,7 @@ export class Class_LinkElement extends Class_Element {
    */
   public set shape_starting_curve(_: number) {
     if (_ >= 0 && _ < this.shape_ending_curve) {
-      this._display.local.shape_starting_curve = _
+      this._display.attributes.shape_starting_curve = _
       this.drawShape()
     }
   }
@@ -692,8 +740,8 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public get shape_ending_curve() {
-    if (this._display.local.shape_ending_curve !== undefined) {
-      return this._display.local.shape_ending_curve
+    if (this._display.attributes.shape_ending_curve !== undefined) {
+      return this._display.attributes.shape_ending_curve
     } else if (this._display.style.shape_ending_curve !== undefined) {
       return this._display.style.shape_ending_curve
     }
@@ -706,7 +754,7 @@ export class Class_LinkElement extends Class_Element {
    */
   public set shape_ending_curve(_: number) {
     if (_ < 1 && _ > this.shape_starting_curve){
-      this._display.local.shape_ending_curve = _
+      this._display.attributes.shape_ending_curve = _
       this.drawShape()
     }
   }
@@ -716,8 +764,8 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public get shape_starting_tangeant() {
-    if (this._display.local.shape_starting_tangeant !== undefined) {
-      return this._display.local.shape_starting_tangeant
+    if (this._display.attributes.shape_starting_tangeant !== undefined) {
+      return this._display.attributes.shape_starting_tangeant
     } else if (this._display.style.shape_starting_tangeant !== undefined) {
       return this._display.style.shape_starting_tangeant
     }
@@ -728,15 +776,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_starting_tangeant(_: number) { this._display.local.shape_starting_tangeant = _; this.drawShape() }
+  public set shape_starting_tangeant(_: number) { this._display.attributes.shape_starting_tangeant = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_ending_tangeant() {
-    if (this._display.local.shape_ending_tangeant !== undefined) {
-      return this._display.local.shape_ending_tangeant
+    if (this._display.attributes.shape_ending_tangeant !== undefined) {
+      return this._display.attributes.shape_ending_tangeant
     } else if (this._display.style.shape_ending_tangeant !== undefined) {
       return this._display.style.shape_ending_tangeant
     }
@@ -747,15 +795,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_ending_tangeant(_: number) { this._display.local.shape_ending_tangeant = _; this.drawShape() }
+  public set shape_ending_tangeant(_: number) { this._display.attributes.shape_ending_tangeant = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_vert_shift() {
-    if (this._display.local.shape_vert_shift !== undefined) {
-      return this._display.local.shape_vert_shift
+    if (this._display.attributes.shape_vert_shift !== undefined) {
+      return this._display.attributes.shape_vert_shift
     } else if (this._display.style.shape_vert_shift !== undefined) {
       return this._display.style.shape_vert_shift
     }
@@ -766,15 +814,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_vert_shift(_: number) { this._display.local.shape_vert_shift = _; this.drawShape() }
+  public set shape_vert_shift(_: number) { this._display.attributes.shape_vert_shift = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_curvature() {
-    if (this._display.local.shape_curvature !== undefined) {
-      return this._display.local.shape_curvature
+    if (this._display.attributes.shape_curvature !== undefined) {
+      return this._display.attributes.shape_curvature
     } else if (this._display.style.shape_curvature !== undefined) {
       return this._display.style.shape_curvature
     }
@@ -785,15 +833,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_curvature(_: number) { this._display.local.shape_curvature = _; this.drawShape() }
+  public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_is_curved() {
-    if (this._display.local.shape_is_curved !== undefined) {
-      return this._display.local.shape_is_curved
+    if (this._display.attributes.shape_is_curved !== undefined) {
+      return this._display.attributes.shape_is_curved
     } else if (this._display.style.shape_is_curved !== undefined) {
       return this._display.style.shape_is_curved
     }
@@ -804,15 +852,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_curved(_: boolean) { this._display.local.shape_is_curved = _; this.drawShape() }
+  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_is_recycling() {
-    if (this._display.local.shape_is_recycling !== undefined) {
-      return this._display.local.shape_is_recycling
+    if (this._display.attributes.shape_is_recycling !== undefined) {
+      return this._display.attributes.shape_is_recycling
     } else if (this._display.style.shape_is_recycling !== undefined) {
       return this._display.style.shape_is_recycling
     }
@@ -823,15 +871,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_recycling(_: boolean) { this._display.local.shape_is_recycling = _; this.drawShape() }
+  public set shape_is_recycling(_: boolean) { this._display.attributes.shape_is_recycling = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_arrow_size() {
-    if (this._display.local.shape_arrow_size !== undefined) {
-      return this._display.local.shape_arrow_size
+    if (this._display.attributes.shape_arrow_size !== undefined) {
+      return this._display.attributes.shape_arrow_size
     } else if (this._display.style.shape_arrow_size !== undefined) {
       return this._display.style.shape_arrow_size
     }
@@ -842,15 +890,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_arrow_size(_: number) { this._display.local.shape_arrow_size = _; this.drawShape() }
+  public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_position() {
-    if (this._display.local.value_label_position !== undefined) {
-      return this._display.local.value_label_position
+    if (this._display.attributes.value_label_position !== undefined) {
+      return this._display.attributes.value_label_position
     } else if (this._display.style.value_label_position !== undefined) {
       return this._display.style.value_label_position
     }
@@ -861,15 +909,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_position(_: string) { this._display.local.value_label_position = _; this.drawLabel() }
+  public set value_label_position(_: string) { this._display.attributes.value_label_position = _; this.drawLabel() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_orthogonal_position() {
-    if (this._display.local.value_label_orthogonal_position !== undefined) {
-      return this._display.local.value_label_orthogonal_position
+    if (this._display.attributes.value_label_orthogonal_position !== undefined) {
+      return this._display.attributes.value_label_orthogonal_position
     } else if (this._display.style.value_label_orthogonal_position !== undefined) {
       return this._display.style.value_label_orthogonal_position
     }
@@ -880,15 +928,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_orthogonal_position(_: string) { this._display.local.value_label_orthogonal_position = _; this.drawLabel()  }
+  public set value_label_orthogonal_position(_: string) { this._display.attributes.value_label_orthogonal_position = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_on_path() {
-    if (this._display.local.value_label_on_path !== undefined) {
-      return this._display.local.value_label_on_path
+    if (this._display.attributes.value_label_on_path !== undefined) {
+      return this._display.attributes.value_label_on_path
     } else if (this._display.style.value_label_on_path !== undefined) {
       return this._display.style.value_label_on_path
     }
@@ -899,15 +947,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_on_path(_: boolean) { this._display.local.value_label_on_path = _; this.drawLabel()  }
+  public set value_label_on_path(_: boolean) { this._display.attributes.value_label_on_path = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_pos_auto() {
-    if (this._display.local.value_label_pos_auto !== undefined) {
-      return this._display.local.value_label_pos_auto
+    if (this._display.attributes.value_label_pos_auto !== undefined) {
+      return this._display.attributes.value_label_pos_auto
     } else if (this._display.style.value_label_pos_auto !== undefined) {
       return this._display.style.value_label_pos_auto
     }
@@ -918,15 +966,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_pos_auto(_: boolean) { this._display.local.value_label_pos_auto = _; this.drawLabel()  }
+  public set value_label_pos_auto(_: boolean) { this._display.attributes.value_label_pos_auto = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_is_arrow() {
-    if (this._display.local.shape_is_arrow !== undefined) {
-      return this._display.local.shape_is_arrow
+    if (this._display.attributes.shape_is_arrow !== undefined) {
+      return this._display.attributes.shape_is_arrow
     } else if (this._display.style.shape_is_arrow !== undefined) {
       return this._display.style.shape_is_arrow
     }
@@ -937,15 +985,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_arrow(_: boolean) { this._display.local.shape_is_arrow = _; this.drawShape()  }
+  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawShape()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_color() {
-    if (this._display.local.shape_color !== undefined) {
-      return this._display.local.shape_color
+    if (this._display.attributes.shape_color !== undefined) {
+      return this._display.attributes.shape_color
     } else if (this._display.style.shape_color !== undefined) {
       return this._display.style.shape_color
     }
@@ -956,15 +1004,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_color(_: string) { this._display.local.shape_color = _; this.drawShape() }
+  public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_opacity() {
-    if (this._display.local.shape_opacity !== undefined) {
-      return this._display.local.shape_opacity
+    if (this._display.attributes.shape_opacity !== undefined) {
+      return this._display.attributes.shape_opacity
     } else if (this._display.style.shape_opacity !== undefined) {
       return this._display.style.shape_opacity
     }
@@ -975,15 +1023,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_opacity(_: number) { this._display.local.shape_opacity = _; this.drawShape()  }
+  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawShape()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get shape_is_dashed() {
-    if (this._display.local.shape_is_dashed !== undefined) {
-      return this._display.local.shape_is_dashed
+    if (this._display.attributes.shape_is_dashed !== undefined) {
+      return this._display.attributes.shape_is_dashed
     } else if (this._display.style.shape_is_dashed !== undefined) {
       return this._display.style.shape_is_dashed
     }
@@ -994,15 +1042,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_dashed(_: boolean) { this._display.local.shape_is_dashed = _; this.drawShape() }
+  public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawShape() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_is_visible() {
-    if (this._display.local.value_label_is_visible !== undefined) {
-      return this._display.local.value_label_is_visible
+    if (this._display.attributes.value_label_is_visible !== undefined) {
+      return this._display.attributes.value_label_is_visible
     } else if (this._display.style.value_label_is_visible !== undefined) {
       return this._display.style.value_label_is_visible
     }
@@ -1013,15 +1061,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_is_visible(_: boolean) { this._display.local.value_label_is_visible = _; this.drawLabel()  }
+  public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_font_size() {
-    if (this._display.local.value_label_font_size !== undefined) {
-      return this._display.local.value_label_font_size
+    if (this._display.attributes.value_label_font_size !== undefined) {
+      return this._display.attributes.value_label_font_size
     } else if (this._display.style.value_label_font_size !== undefined) {
       return this._display.style.value_label_font_size
     }
@@ -1032,15 +1080,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_font_size(_: number) { this._display.local.value_label_font_size = _; this.drawLabel()  }
+  public set value_label_font_size(_: number) { this._display.attributes.value_label_font_size = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_color() {
-    if (this._display.local.value_label_color !== undefined) {
-      return this._display.local.value_label_color
+    if (this._display.attributes.value_label_color !== undefined) {
+      return this._display.attributes.value_label_color
     } else if (this._display.style.value_label_color !== undefined) {
       return this._display.style.value_label_color
     }
@@ -1051,15 +1099,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_color(_: string) { this._display.local.value_label_color = _; this.drawLabel()  }
+  public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_to_precision() {
-    if (this._display.local.value_label_to_precision !== undefined) {
-      return this._display.local.value_label_to_precision
+    if (this._display.attributes.value_label_to_precision !== undefined) {
+      return this._display.attributes.value_label_to_precision
     } else if (this._display.style.value_label_to_precision !== undefined) {
       return this._display.style.value_label_to_precision
     }
@@ -1070,15 +1118,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_to_precision(_: boolean) { this._display.local.value_label_to_precision = _; this.drawLabel()  }
+  public set value_label_to_precision(_: boolean) { this._display.attributes.value_label_to_precision = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_scientific_precision() {
-    if (this._display.local.value_label_scientific_precision !== undefined) {
-      return this._display.local.value_label_scientific_precision
+    if (this._display.attributes.value_label_scientific_precision !== undefined) {
+      return this._display.attributes.value_label_scientific_precision
     } else if (this._display.style.value_label_scientific_precision !== undefined) {
       return this._display.style.value_label_scientific_precision
     }
@@ -1089,15 +1137,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_scientific_precision(_: number) { this._display.local.value_label_scientific_precision = _; this.drawLabel()  }
+  public set value_label_scientific_precision(_: number) { this._display.attributes.value_label_scientific_precision = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_font_family() {
-    if (this._display.local.value_label_font_family !== undefined) {
-      return this._display.local.value_label_font_family
+    if (this._display.attributes.value_label_font_family !== undefined) {
+      return this._display.attributes.value_label_font_family
     } else if (this._display.style.value_label_font_family !== undefined) {
       return this._display.style.value_label_font_family
     }
@@ -1108,15 +1156,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_font_family(_: string) { this._display.local.value_label_font_family = _; this.drawLabel()  }
+  public set value_label_font_family(_: string) { this._display.attributes.value_label_font_family = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_unit_visible() {
-    if (this._display.local.value_label_unit_visible !== undefined) {
-      return this._display.local.value_label_unit_visible
+    if (this._display.attributes.value_label_unit_visible !== undefined) {
+      return this._display.attributes.value_label_unit_visible
     } else if (this._display.style.value_label_unit_visible !== undefined) {
       return this._display.style.value_label_unit_visible
     }
@@ -1127,15 +1175,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_unit_visible(_: boolean) { this._display.local.value_label_unit_visible = _; this.drawLabel()  }
+  public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_unit() {
-    if (this._display.local.value_label_unit !== undefined) {
-      return this._display.local.value_label_unit
+    if (this._display.attributes.value_label_unit !== undefined) {
+      return this._display.attributes.value_label_unit
     } else if (this._display.style.value_label_unit !== undefined) {
       return this._display.style.value_label_unit
     }
@@ -1146,15 +1194,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_unit(_: string) { this._display.local.value_label_unit = _; this.drawLabel()  }
+  public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_custom_digit() {
-    if (this._display.local.value_label_custom_digit !== undefined) {
-      return this._display.local.value_label_custom_digit
+    if (this._display.attributes.value_label_custom_digit !== undefined) {
+      return this._display.attributes.value_label_custom_digit
     } else if (this._display.style.value_label_custom_digit !== undefined) {
       return this._display.style.value_label_custom_digit
     }
@@ -1165,15 +1213,15 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_custom_digit(_: boolean) { this._display.local.value_label_custom_digit = _; this.drawLabel()  }
+  public set value_label_custom_digit(_: boolean) { this._display.attributes.value_label_custom_digit = _; this.drawLabel()  }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
   public get value_label_nb_digit() {
-    if (this._display.local.value_label_nb_digit !== undefined) {
-      return this._display.local.value_label_nb_digit
+    if (this._display.attributes.value_label_nb_digit !== undefined) {
+      return this._display.attributes.value_label_nb_digit
     } else if (this._display.style.value_label_nb_digit !== undefined) {
       return this._display.style.value_label_nb_digit
     }
@@ -1184,7 +1232,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_nb_digit(_: number) { this._display.local.value_label_nb_digit = _; this.drawLabel()  }
+  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel()  }
 }
 
 
@@ -1341,7 +1389,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private _is_deletable: boolean
 
-  private _references: {[_: string]: Class_NodeElement} = {}
+  private _references: {[_: string]: Class_LinkElement} = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(
@@ -1465,13 +1513,13 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   // PUBLIC METHODS =======================================================================
 
-  public addReference(_: Class_NodeElement) {
+  public addReference(_: Class_LinkElement) {
     if (!this._references[_.id]) {
       this._references[_.id] = _
     }
   }
 
-  public removeReference(_: Class_NodeElement) {
+  public removeReference(_: Class_LinkElement) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
       _.useDefaultStyle()

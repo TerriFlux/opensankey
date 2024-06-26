@@ -67,10 +67,22 @@ export const default_label_box_width = 150
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
-export function sortNodesElements(a: Class_NodeElement, b: Class_NodeElement) {
+export function sortNodesElements(
+  a: Class_NodeElement | Class_NodeStyle,
+  b: Class_NodeElement | Class_NodeStyle
+) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
   else return 0
+}
+
+export function isAttributeOverloaded(
+  nodes: Class_NodeElement[],
+  attr: keyof Class_NodeAttribute
+) {
+  let overloaded = false
+  nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
+  return overloaded
 }
 
 // CLASS NODE_ELEMENT *******************************************************************
@@ -201,8 +213,6 @@ export class Class_NodeElement extends Class_Element {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get tags() { return this._tags }
-
   /**
    * Get node name
    * @memberof Class_NodeElement
@@ -233,6 +243,10 @@ export class Class_NodeElement extends Class_Element {
     return this._name
   }
 
+  public get tags() {
+    // TODO faire autrement
+    return this._tags
+  }
   public deRefTag(tag: Class_Tag) {
     delete this._tags[tag.id]
   }
@@ -263,6 +277,26 @@ export class Class_NodeElement extends Class_Element {
    */
   public get input_links_list() {
     return Object.values(this._input_links)
+  }
+
+  /**
+   * Get style key of node
+   * @return {string}
+   * @memberof Class_Node
+   */
+  public get style() {
+    return this._display.style
+  }
+
+  /**
+  * Set style key of node
+  * @memberof Class_Node
+  */
+  public set style(_: Class_NodeStyle) {
+    this._display.style.removeReference(this)
+    this._display.style = _
+    _.addReference(this)
+    this.reset()
   }
 
   /**
@@ -297,25 +331,6 @@ export class Class_NodeElement extends Class_Element {
     return this.shape_min_height
   }
 
-  /**
-   * Get style key of node
-   * @return {string}
-   * @memberof Class_Node
-   */
-  public get style() {
-    return this._display.style
-  }
-
-  /**
-  * Set style key of node
-  * @memberof Class_Node
-  */
-  public set style(_: Class_NodeStyle) {
-    this._display.style.removeReference(this)
-    this._display.style = _
-    _.addReference(this)
-    this.reset()
-  }
 
   /**
    * TODO Description
@@ -1195,9 +1210,17 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC METHODS =====================================================================
 
+  public useDefaultStyle() {
+    this.style = this.drawing_area.sankey.default_node_style
+  }
+
   public resetAttributes() {
     this._display.attributes = new Class_NodeAttribute()
     this.reset()
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
+    return this._display.attributes[attr] !== undefined
   }
 
   public removeTag(tag: Class_Tag) {
@@ -1205,10 +1228,6 @@ export class Class_NodeElement extends Class_Element {
       delete this._tags[tag.id]
       tag.removeReference(this)
     }
-  }
-
-  public useDefaultStyle() {
-    this.style = this.drawing_area.sankey.default_node_style
   }
 
   public isEqual(_: Class_NodeElement) {

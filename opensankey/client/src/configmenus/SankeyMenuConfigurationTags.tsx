@@ -24,18 +24,23 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const { sankey } = new_data.drawing_area
   const { t } = applicationContext
   const [, setForceUpdate] = useBoolean()
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey[elementTagNameProp]).length > 0 ? Object.keys(new_data.drawing_area.sankey[elementTagNameProp])[0] : '')
+  const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
+  const tags_group_list = new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
+  const [tags_group_key, set_tags_group_key] = useState(
+    Object.keys(tags_group_dict).length > 0 ?
+      Object.keys(tags_group_dict)[0] :
+      ''
+  )
   const [color_map, setColorMap] = useState('jet')
 
   /**
    * Current tag group modifying
    */
-  const group_tag = new_data.drawing_area.sankey[elementTagNameProp][tags_group_key]
+  const group_tag = tags_group_dict[tags_group_key]
 
   /**
    * List of tag group of current family of tag group (node,links,data)
    */
-  const list_group_tag = new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
 
 
   const { updateComponenSaveInCache } = ComponentUpdater
@@ -70,8 +75,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
 
   let element_tags: string[] = []
-  if (list_group_tag.length > 0 && tags_group_key !== '') {
-    const list_key_grp_tag = list_group_tag.map(grp => grp.id)
+  if (tags_group_list.length > 0 && tags_group_key !== '') {
+    const list_key_grp_tag = tags_group_list.map(grp => grp.id)
     if (list_key_grp_tag.includes(tags_group_key)) {
       element_tags = Object.keys(group_tag.tags)
     } else {
@@ -118,8 +123,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // delete group_tag
     new_data.drawing_area.sankey.removeTagGroupWithId(elementTagNameProp, tags_group_key)
 
-    if (list_group_tag.length > 0) {
-      const lastElmt = list_group_tag[list_group_tag.length - 1].id
+    if (tags_group_list.length > 0) {
+      const lastElmt = tags_group_list[tags_group_list.length - 1].id
       set_tags_group_key(lastElmt)
     }
 
@@ -176,13 +181,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             setForceUpdate.toggle()
           }}
         value={tags_group_key}>
-        {list_group_tag.map(
+        {tags_group_list.map(
           (key, i) =>
             <option
               key={i}
               value={key.id}
             >
-              {list_group_tag[i].name}
+              {tags_group_list[i].name}
             </option>
         )}
       </Select>
@@ -261,7 +266,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               redrawGenereal()
               setForceUpdate.toggle()
             }}
-          // value={(list_group_tag.length > 0 && group_tag && tags_group_key != '') ? group_tag.color_map : ''}
+          // value={(tags_group_list.length > 0 && group_tag && tags_group_key != '') ? group_tag.color_map : ''}
           value={color_map}
         >
           {colormaps.map(
@@ -437,7 +442,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           {/* Liste des groupes d'étiquettes  */}
           <Tbody>
             {
-              list_group_tag.map(
+              tags_group_list.map(
                 (tags_group_key, i) => {
                   return (
                     <Tr key={i.toString()}>
@@ -513,7 +518,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             }
           </Tbody>
         </Table></TableContainer>
-      {list_group_tag.length > 0 ? tagSetting : <></>}
+      {tags_group_list.length > 0 ? tagSetting : <></>}
     </Box>
   )
 }

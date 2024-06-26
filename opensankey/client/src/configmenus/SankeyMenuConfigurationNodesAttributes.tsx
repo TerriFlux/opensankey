@@ -70,7 +70,8 @@ import {
   default_shape_visible,
   default_value_label_horiz,
   default_value_label_vert,
-  default_value_label_visible
+  default_value_label_visible,
+  isAttributeOverloaded
 } from '../types/Node'
 import {
   OpenSankeyConfigurationNodesAttributesFType,
@@ -79,9 +80,7 @@ import {
 
 // Local functions
 import {
-  ApplyStyleToNodes,
   CutName,
-  IsNodeDisplayingValueLocal,
   OSTooltip,
   ReturnValueNode,
   TooltipValueSurcharge,
@@ -190,19 +189,18 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
    * @return {*}
    */
   const style_of_selected_nodes = () => {
-    let style_to_display = default_style_name
     if (selected_nodes.length !== 0) {
-      style_to_display = selected_nodes[0].style.id
+      const style = selected_nodes[0].style
       let inchangee = true
       selected_nodes.map(node => {
-        inchangee = (node.style.id == style_to_display) ? inchangee : false
+        inchangee = (node.style.id === style.id) ? inchangee : false
       })
       return (inchangee) ?
-        CutName(data.style_node[style_to_display].name, 20) :
+        CutName(style.id, 20) :
         t('Noeud.multi_style')
     }
     else {
-      return style_to_display
+      return default_style_name
     }
   }
 
@@ -272,7 +270,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           {t('Noeud.apparence.Visibilité')}
         </OSTooltip>
         {
-          IsNodeDisplayingValueLocal(multi_selected_nodes, 'shape_visible', menu_for_style) ?
+          (!menu_for_style) &&
+          isAttributeOverloaded(selected_nodes, 'shape_visible') ?
             TooltipValueSurcharge('node_var', t) :
             <></>
         }
@@ -291,7 +290,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Noeud.apparence.Couleur')}
         {
-          IsNodeDisplayingValueLocal(multi_selected_nodes, 'color', menu_for_style) ? (
+          (!menu_for_style) &&
+          isAttributeOverloaded(selected_nodes, 'shape_color') ? (
             <>{TooltipValueSurcharge('node_var_', t)}</>
           ) : (
             <></>
@@ -334,7 +334,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.Forme')}
-          {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'shape', menu_for_style) ?
+          {((!menu_for_style) &&
+          isAttributeOverloaded(selected_nodes, 'shape_type') ?
             <>{TooltipValueSurcharge('node_var_', t)}</> :
             <></>)}
         </Box>
@@ -423,7 +424,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Noeud.apparence.arrow_angle')}
-                {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'node_arrow_angle_factor', menu_for_style) ?
+                {((!menu_for_style) &&
+                isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor') ?
                   <>{TooltipValueSurcharge('node_var_', t)}</> :
                   <></>
                 )}
@@ -595,7 +597,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
           {t('Noeud.labels.vdb')}
         </OSTooltip>
-        {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'label_visible', menu_for_style) ?
+        {((!menu_for_style) &&
+        isAttributeOverloaded(selected_nodes, 'name_label_visible') ?
           TooltipValueSurcharge('node_var', t) :
           <></>
         )}
@@ -625,7 +628,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             <OSTooltip label={t('Noeud.labels.tooltips.lb')}>
               {t('Noeud.labels.lb')}
             </OSTooltip>
-            {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'label_color', menu_for_style) ? TooltipValueSurcharge('node_var', t) : <></>)}
+            {((!menu_for_style) &&
+            isAttributeOverloaded(selected_nodes, 'name_label_color') ? TooltipValueSurcharge('node_var', t) : <></>)}
           </Checkbox>
 
           <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
@@ -741,9 +745,12 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               {t('Noeud.labels.l_bg')}
             </OSTooltip>
 
-            {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'label_background', menu_for_style) ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>)}
+            {
+              (!menu_for_style) &&
+              isAttributeOverloaded(selected_nodes, 'name_label_background') ?
+                TooltipValueSurcharge('node_var', t) :
+                <></>
+            }
           </Checkbox>
 
           <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
@@ -755,9 +762,12 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Menu.larg')}
-                {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'label_box_width', menu_for_style) ?
-                  <>{TooltipValueSurcharge('node_var_', t)}</> :
-                  <></>)}
+                {
+                  (!menu_for_style) &&
+                  isAttributeOverloaded(selected_nodes, 'name_label_box_width') ?
+                    <>{TooltipValueSurcharge('node_var_', t)}</> :
+                    <></>
+                }
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -930,7 +940,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         <OSTooltip label={t('Noeud.labels.tooltips.vdv')}>
           {t('Noeud.labels.vdv')}
         </OSTooltip>
-        {/* {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'name_label_visible', menu_for_style) ?
+        {/* {((!menu_for_style) &&
+        isAttributeOverloaded(selected_nodes, 'name_label_visible') ?
           TooltipValueSurcharge('node_var', t) :
           <></>)} */}
       </Checkbox>
