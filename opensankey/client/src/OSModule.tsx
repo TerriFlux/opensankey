@@ -580,7 +580,6 @@ export const moduleDialogs : module_dialogsType = (
       applicationContext={applicationContext}
       additional_link_appearence_items={additional_menus.additional_link_appearence_items}
       menu_for_style={false}
-      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
     />,
     contextMenu.pointer_pos,

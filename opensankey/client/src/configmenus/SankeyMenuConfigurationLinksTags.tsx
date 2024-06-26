@@ -12,7 +12,8 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   link_function
 })=>{
   const {new_data}=applicationData
-  const { flux_taggs, data_taggs } = new_data.drawing_area.sankey
+  const flux_taggs = new_data.drawing_area.sankey.flux_taggs_dict
+  const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
   const selected_links=new_data.drawing_area.selected_links_list
   const flux_reference_for_displayed_value=selected_links[0]
 
@@ -122,13 +123,13 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
         }
       })}
 
-    
+
     <Box
       layerStyle='menuconfigpanel_grid'
     >
       {tags_visible && tags_group_key != '' && Object.keys(flux_taggs).includes(tags_group_key) && selected_links.length!=0 ? Object.entries(flux_taggs[tags_group_key].tags).map(
         ([tag_key,tag]) => {
-          const is_selected= flux_reference_for_displayed_value.tags[tags_group_key] && flux_reference_for_displayed_value.tags[tags_group_key]===(tag) 
+          const is_selected= flux_reference_for_displayed_value.tags[tags_group_key] && flux_reference_for_displayed_value.tags[tags_group_key]===(tag)
           return (
             <Checkbox variant='menuconfigpanel_option_checkbox'
               isChecked={is_selected}
@@ -141,14 +142,14 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                   if (visible) {
                     l.tags[tags_group_key]=tag
                   } else {
-                    // Remove deselected tag from links 
+                    // Remove deselected tag from links
                     delete l.tags[tags_group_key]
                   }
                 })
                 selected_links.forEach(l=>l.reset())
 
                 ComponentUpdater.updateComponenSaveInCache.current(false)
-                
+
                 setForceUpdate(!forceUpdate)
               }}>
               {tag.name}
@@ -157,11 +158,11 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
         }) : (<></>)}
     </Box>
   </Box>
-    
+
 
 
   return menu_for_modal?content:
-    // [ 
+    // [
     //   <Tab>
     //     <Box
     //       layerStyle='submenuconfig_tab'
