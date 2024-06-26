@@ -169,6 +169,25 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
   }
 
+  // If leveltags are present Primaire is desactivated
+  if ('Primaire' in applicationData.data.levelTags && applicationData.data.levelTags['Primaire'].activated === true) {
+    Object.values(applicationData.data.levelTags).forEach(tag_group=> {
+      if (tag_group.siblings && tag_group.siblings.length > 0) {
+        return
+      }
+      tag_group.activated = true
+    })
+    Object.values(applicationData.data.levelTags).forEach(tag_group=> {
+      if (tag_group.siblings && tag_group.siblings.length > 0 && tag_group.activated ) {
+        tag_group.siblings.forEach(sibling=>{
+          applicationData.data.levelTags[sibling].activated=false
+        })
+      }
+    })
+    if (Object.values(applicationData.data.levelTags).length > 1) {
+      applicationData.data.levelTags['Primaire'].activated = false
+    }
+  }
   /*************************************************************************************************/
   const agregation : agregationType = {
     showAgregationRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([]),
