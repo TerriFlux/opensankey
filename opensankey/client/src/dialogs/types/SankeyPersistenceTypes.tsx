@@ -2,7 +2,7 @@ import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTy
 
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, callbackFuncType, applicationDataType, applicationStateType } from '../../types/Types'
+import { SankeyData, postProcessLoadExcelFuncType, applicationDataType, applicationStateType } from '../../types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
@@ -11,27 +11,18 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export type CounterFType = (
-  {
-    url_prefix,
-    finishReconciliation,
-    value,
-    result,
-    setResult
-  }:{
-    url_prefix:string,
-    finishReconciliation:(x:boolean)=>void,
-    value:number[],
-    result:string,
-    setResult:(x:string)=>void
-  }
-) => unknown
-
+export type CounterType={
+  url_prefix:string,
+  finishReconciliation:(x:boolean)=>void,
+  value:number[],
+  result:string,
+  set_result:(_:string)=>void
+}
 export type ProcessExampleFuncType = (
   applicationData:applicationDataType,
     updateLayout: updateLayoutFuncType,
     convert_data: ConvertDataFuncType,
-    callback: (server_data: SankeyData) => void,
+    postProcessLoadExcel: (server_data: SankeyData) => void,
     DefaultSankeyData: DefaultSankeyDataFuncType
 ) => SankeyData
 
@@ -39,7 +30,7 @@ export type RetrieveExcelResultsFuncType = (
   applicationData : applicationDataType,
   text: string,
   updateLayout: updateLayoutFuncType,
-  callback: callbackFuncType,
+  postProcessLoadExcel: postProcessLoadExcelFuncType,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
   convert_data: ConvertDataFuncType,
   defaultData: () => SankeyData

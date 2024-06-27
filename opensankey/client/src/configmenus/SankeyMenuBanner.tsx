@@ -1,29 +1,43 @@
-import React, { FunctionComponent, useRef, useState } from 'react'
-import {
-  Row,
-  Col,
-  Form,
-  FormLabel,
-  Button,
-  FormGroup,
-  FormCheck,
-  Popover,
-  FormControl,
-  Overlay
-} from 'react-bootstrap'
-import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, applicationDataType } from '../types/Types'
-import { MultiSelect } from 'react-multi-select-component'
-import {
-  AdjustSankeyZone,
-  OSTooltip
-} from './SankeyUtils'
+
 import * as d3 from 'd3'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { FunctionComponent, useState } from 'react'
 import {
-  faShareNodes,
+  TFunction
+} from 'i18next'
+import {
+  MultiSelect
+} from 'react-multi-select-component'
+import {
+  FaEye,
+  FaEyeSlash
+} from 'react-icons/fa'
+
+import {
+  Checkbox,
+  Button,
+  Popover,
+  PopoverHeader,
+  PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverCloseButton,
+  Text,
+  Box,
+  NumberInput,
+  NumberInputField,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  Select,
+  Switch,
+  Input,
+  useBoolean
+} from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faShareNodes,
   faArrowPointer,
   faCodeBranch,
-  faFolderTree,
   faDiagramProject,
   faArrowsLeftRight,
   faArrowsUpDown,
@@ -32,23 +46,57 @@ import {
   faCompress,
   faDatabase
 } from '@fortawesome/free-solid-svg-icons'
-import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
-import { TFunction } from 'i18next'
-import { ConvertDataFuncType } from './types/SankeyConvertTypes'
+
+
 import {
-  addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType,
-  DataTagSelectorType,
-  setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType
-} from './types/SankeyMenuBannerTypes'
-import { GetSankeyMinWidthAndHeightFuncType } from './types/SankeyUtilsTypes'
-import { AddAllDropDownFluxFType } from '../topmenus/types/SankeyMenuTopTypes'
-import { Checkbox, useBoolean } from '@chakra-ui/react'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import { DeleteGNodes } from '../draw/SankeyDrawNodes'
-import { DeleteGLinks } from '../draw/SankeyDrawLinks'
-import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
+  ComponentUpdaterType,
+  LinkFunctionTypes,
+  NodeFunctionTypes,
+  SankeyData,
+  TagsCatalog,
+  TagsGroup,
+  applicationDataType,
+  applicationDrawType
+} from '../types/Types'
 import { Class_TagGroup, Class_TagGroupNodeLevel } from '../types/Tag'
 import { Class_Sankey } from '../types/Sankey'
+import {
+  ConvertDataFuncType
+} from './types/SankeyConvertTypes'
+import {
+  addAllDropDownNodeFType,
+  addSimpleLevelDropDownFType,
+  DataTagSelectorType,
+  setDiagramFuncType,
+  stretchButtonsFType,
+  ToolbarBuilderFType
+} from './types/SankeyMenuBannerTypes'
+import {
+  GetSankeyMinWidthAndHeightFuncType
+} from './types/SankeyUtilsTypes'
+
+
+import {
+  AdjustSankeyZone,
+  RecursionDataTag,
+  FindMaxLinkValue,
+  OSTooltip
+} from './SankeyUtils'
+import {
+  Type_MenuSelectionEntry
+} from '../topmenus/SankeyMenuTop'
+import {
+  AddAllDropDownFluxFType
+} from '../topmenus/types/SankeyMenuTopTypes'
+import {
+  DeleteGNodes
+} from '../draw/SankeyDrawNodes'
+import {
+  DeleteGLinks
+} from '../draw/SankeyDrawLinks'
+import {
+  actualizeDrawAreaFrame
+} from '../draw/SankeyDrawEventFunction'
 
 
 
@@ -87,7 +135,7 @@ const delete_local_aggregation = (data: SankeyData) => {
 
 export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
   applicationData,
-  GetSankeyMinWidthAndHeight,
+  applicationDraw,
   node_function,
   link_function,
 ) => {
@@ -103,48 +151,28 @@ export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
     const selected = tmp.length > 0 ? tmp[0][0] : ''
     return (
       <>
-        <tr>
-          <td >
-            {<Form.Select style={{ width: '200px', color: 'black' }} key={level_taggs['Primaire'].name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-
-              // delete_local_aggregation(data)
-              handleSimpleDropdown(evt, level_taggs['Primaire'])
-              redrawSankeyWithSelectedTag(
-                applicationData,
-                GetSankeyMinWidthAndHeight,
-                node_function,
-                link_function
-              )
-            }}>{
-                Object.entries(level_taggs['Primaire'].tags).map(([tag_key, tag], i) => {
-                  return (<option key={i} value={tag_key}>{tag.name}</option>)
-                })}
-            </Form.Select>}
-          </td>
-        </tr>
+        {<Select
+          key={level_taggs['Primaire'].name}
+          value={selected}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            // delete_local_aggregation(data)
+            handleSimpleDropdown(evt, level_taggs['Primaire'])
+            redrawSankeyWithSelectedTag(
+              applicationData,
+              applicationDraw,
+              node_function,
+              link_function
+            )
+          }}>{
+            Object.entries(level_taggs['Primaire'].tags).map(([tag_key, tag], i) => {
+              return (<option key={i} value={tag_key}>{tag.name}</option>)
+            })}
+        </Select>}
       </>)
   }
   else {
     return <></>
   }
-}
-
-export const col_title_level_filter: col_title_level_filterFType = (
-  t: TFunction,
-  data: SankeyData
-) => {
-  const { levelTags } = data
-  let banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.banner !== 'none')
-
-  const nb_level_tag = Object.values(levelTags).filter(tags_group => (Object.keys(tags_group.tags).length > 0)).length
-  if (nb_level_tag > 1) {
-    banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
-  } else {
-    banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
-  }
-
-  const levelTags_has_siblings = banner_grouptag.filter(([, tagGroup]) => tagGroup.siblings !== undefined && tagGroup.siblings.length > 0).length > 0
-  return <FormGroup as={Row}><Col xs={6}>{t('Menu.group')}</Col>{levelTags_has_siblings ? <Col xs={6}>{t('Banner.select_sibling')}</Col> : <></>}</FormGroup>
 
 }
 
@@ -157,17 +185,15 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
   link_function,
   applicationDraw }
 ) => {
-  const color = 'black'
   const { new_data } = applicationData
   const { t } = applicationContext
   const { GetSankeyMinWidthAndHeight } = applicationDraw
-  const [ forceUpdate, setForceUpdate ] = useBoolean()
+  const [, setForceUpdate] = useBoolean()
   const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
   const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
   const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
   const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
   const { nodesColorMap, nodes_dict } = new_data.drawing_area.sankey
-
   let banner_grouptag: [string, Class_TagGroup][] | [string, Class_TagGroupNodeLevel][] = Object.entries(node_taggs).filter(([, tags_group]) => tags_group.banner !== 'none')
   if (level) {
     const nb_level_tag = Object.values(level_taggs).filter(tags_group => (Object.keys(tags_group.tags).length > 0)).length
@@ -183,183 +209,146 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
     new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
     console.log(new_data.drawing_area.legend)
     new_data.drawing_area.legend.reset()
-
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
+
   const allDD = banner_grouptag.map(([, tags_group]) => {
     const tags_selected = Object.entries(node_taggs).filter((k) => { return k[1] == tags_group })[0]
 
-    if (tags_group.banner == 'one') {
-      return (
-        <FormGroup as={Row}>
-          <Row>
-            <Col xs={10}>
-              <FormLabel style={{ color: color }}>
-                {tags_group.name}
-              </FormLabel>
-            </Col>
-          </Row>
-          <Row>
-            <OSTooltip label={t('Banner.ndd_lst')}>
-              <Col xs={10}>
-                {<Form.Select
-                  style={{ width: '200px', color: 'black' }}
-                  key={tags_group.name}
-                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, tags_group)
-                    redrawSankeyWithSelectedTag(applicationData, GetSankeyMinWidthAndHeight, node_function, link_function)
-                    setForceUpdate.toggle()
+    // Create a btn that can either be a switch to activate tag color palette
+    // or in some case for level tag activating or deactivating antagonazing tags
+    let btn_switch = <></>
+    if (tags_group.banner !== 'level') {
+      btn_switch = <Switch
+        justifySelf='end'
+        alignSelf='center'
+        height='1rem'
+        isChecked={nodesColorMap == tags_selected[0]}
+        onChange={evt => {
+          Object.values(node_taggs).forEach(tags_group => tags_group.show_legend = false)
+          Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
 
-                  }}>{
-                    Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
-                    })}
-                </Form.Select>}
-              </Col>
-            </OSTooltip>
-            <Col xs={2}>
-              <OSTooltip label={t('Banner.ndd_chk')} >
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={nodesColorMap == tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(node_taggs).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
+          new_data.drawing_area.sankey.nodesColorMap = 'no_colormap'
+          if (evt.target.checked) {
 
-                    new_data.drawing_area.sankey.nodesColorMap = 'no_colormap'
-                    if (evt.target.checked) {
-
-                      new_data.drawing_area.sankey.nodesColorMap = tags_selected[0]
-                      node_taggs[tags_selected[0]].show_legend = true
-                    }
-                    redrawSankeyWithSelectedTag(applicationData, GetSankeyMinWidthAndHeight, node_function, link_function)
-                    setForceUpdate.toggle()
-                  }}
-                />
-              </OSTooltip>
-            </Col>
-          </Row>
-        </FormGroup>)
+            new_data.drawing_area.sankey.nodesColorMap = tags_selected[0]
+            node_taggs[tags_selected[0]].show_legend = true
+          }
+          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+          setForceUpdate.toggle()
+        }}
+      />
     }
     else if (level && Object.values(tags_group.tags).length > 0) {
       const tags_group_node_level = tags_group as Class_TagGroupNodeLevel
-      if (Object.keys(tags_group_node_level.tags).length < 1) {
+      btn_switch = ((tags_group_node_level.siblings !== undefined) && (tags_group_node_level.siblings.length > 0)) ?
+        <Checkbox
+          justifySelf='end'
+          alignSelf='center'
+          variant='activate_antagonist_checkbox'
+          isChecked={tags_group_node_level.activated}
+          icon={tags_group_node_level.activated ? <FaEye style={{ fill: 'rgb(120, 194, 173)' }} /> : <FaEyeSlash />}
+          onChange={evt => {
+            tags_group_node_level.activated = evt.target.checked
+            const first_antagonist_tag = level_taggs[tags_group_node_level.siblings[0]] as Class_TagGroupNodeLevel
+            // Respectively activate and desactivate in the two antagonist tags  group
+            // Same as of current tag group
+            first_antagonist_tag.siblings.forEach(sibling => (level_taggs[sibling] as Class_TagGroupNodeLevel).activated = tags_group_node_level.activated)
+            // Opposed to current tag group
+            tags_group_node_level.siblings.forEach(sibling => (level_taggs[sibling] as Class_TagGroupNodeLevel).activated = !tags_group_node_level.activated)
+            redrawSankeyWithSelectedTag(
+              applicationData, applicationDraw, node_function, link_function
+            )
+            setForceUpdate.toggle()
+          }}
+        /> :
+        <></>
+    }
+
+    // Create the tag selector
+    // It can either select one tag at the time or multiple at the time
+    let selector = <></>
+    if (tags_group.banner == 'one') {
+      selector = <Select
+        key={tags_group.name}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+          handleSimpleDropdown(evt, tags_group)
+          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+          setForceUpdate.toggle()
+        }}>{
+          Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
+            return (<option key={i} value={tag_key}>{tag.name}</option>)
+          })}
+      </Select>
+    }
+    else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
+      if (Object.keys(tags_group.tags).length < 1) {
         return <></>
       }
-      const tmp = Object.entries(tags_group_node_level.tags).filter(tag => tag[1].selected)
+      const tmp = Object.entries(tags_group.tags).filter(tag => tag[1].selected)
       const selected = tmp.length > 0 ? tmp[0][0] : ''
-      return (
-        <FormGroup as={Row}>
-          <Row>
-            {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group_node_level.name}</FormLabel> : <></>}
-          </Row>
-          <Row>
-            <Col xs={11}>
-              <Form.Select
-                style={{ color: 'black' }}
-                key={tags_group_node_level.name}
-                value={selected}
-                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  // delete_local_aggregation(data)
-                  handleSimpleDropdown(evt, tags_group_node_level)
-                  redrawSankeyWithSelectedTag(
-                    applicationData,
-                    GetSankeyMinWidthAndHeight,
-                    node_function,
-                    link_function
-                  )
-                  setForceUpdate.toggle()
-                }}>{
-                  Object.entries(tags_group_node_level.tags).map(([tag_key, tag], i) => {
-                    return (<option key={i} value={tag_key}>{tag.name}</option>)
-                  })}
-              </Form.Select>
-            </Col>
-            {tags_group_node_level.siblings !== undefined && tags_group_node_level.siblings.length > 0 ?
-              <Col xs={1} style={{ margin: 'auto' }}>
-                <Checkbox
-                  isChecked={tags_group_node_level.activated}
-                  icon={tags_group_node_level.activated ? <FaEye style={{ fill: 'rgb(120, 194, 173)' }} /> : <FaEyeSlash />}
-                  onChange={evt => {
-                    tags_group_node_level.activated = evt.target.checked
-                    const first_antagonist_tag = new_data.drawing_area.sankey.level_taggs_dict[tags_group_node_level.siblings[0]]
-                    // Respectively activate and desactivate in the two antagonist tags  group
-                    // Same as of current tag group
-                    first_antagonist_tag.siblings.forEach(sibling => new_data.drawing_area.sankey.level_taggs_dict[sibling].activated = tags_group_node_level.activated)
-                    // Opposed to current tag group
-                    tags_group_node_level.siblings.forEach(sibling => new_data.drawing_area.sankey.level_taggs_dict[sibling].activated = !tags_group_node_level.activated)
-                    redrawSankeyWithSelectedTag(
-                      applicationData, GetSankeyMinWidthAndHeight, node_function, link_function
-                    )
-                    setForceUpdate.toggle()
-                  }}
-                />
-              </Col> : <></>
-            }
-          </Row>
-        </FormGroup>)
+
+      selector = <Select
+        key={tags_group.name}
+        defaultValue={selected}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+          // delete_local_aggregation(data)
+          handleSimpleDropdown(evt, tags_group)
+          redrawSankeyWithSelectedTag(
+            applicationData,
+            applicationDraw,
+            node_function,
+            link_function
+          )
+          setForceUpdate.toggle()
+        }}>{
+          Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
+            return (<option key={i} value={tag_key}>{tag.name}</option>)
+          })}
+      </Select>
     }
     else if (tags_group.banner == 'multi') {
       const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
 
-      return (
-        <FormGroup as={Row}>
-          <Row>
-            <Col xs={10}>
-              <FormLabel style={{ color: color }}>{tags_group.name}
-              </FormLabel>
-            </Col>
-          </Row>
-          <Row>
-            <OSTooltip label={t('Banner.ndd_lst')}>
-              <Col xs={10}>
-                <MultiSelect
-                  className={'multidropdown_filter_node_link'}
-                  valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
-                    return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
-                  }}
-                  labelledBy={'dropdown_node_filter'}
-                  overrideStrings={{
-                    'selectAll': 'Tout sélectionner',
-                  }}
-                  value={selected}
-                  options={options}
-                  onChange={(selected: [{ label: string, value: string }]) => {
-                    HandleMultiDropdown(selected, tags_group, new_data.drawing_area.sankey)
-                    redrawSankeyWithSelectedTag(applicationData, GetSankeyMinWidthAndHeight, node_function, link_function)
-                    setForceUpdate.toggle()
-                  }}
-                />
-              </Col>
-            </OSTooltip>
-            <Col xs={2}>
-              <OSTooltip label={t('Banner.ndd_chk')}>
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={nodesColorMap == tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(node_taggs).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
-
-                    new_data.drawing_area.sankey.nodesColorMap = 'no_colormap'
-
-                    if (evt.target.checked) {
-                      new_data.drawing_area.sankey.nodesColorMap = tags_selected[0]
-                      node_taggs[tags_selected[0]].show_legend = true
-                    }
-                    setForceUpdate.toggle()
-                    redrawNodeLinkLegend()
-
-                  }}
-                />
-              </OSTooltip>
-            </Col>
-          </Row>
-        </FormGroup>)
+      selector = <MultiSelect
+        className={'multidropdown_filter_node_link'}
+        // style={{widthMax:'200px', color: 'black' }}
+        valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
+          return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
+        }}
+        labelledBy={'dropdown_node_filter'}
+        overrideStrings={{
+          'selectAll': 'Tout sélectionner',
+        }}
+        value={selected}
+        options={options}
+        onChange={(selected: [{ label: string, value: string }]) => {
+          HandleMultiDropdown(selected, tags_group, new_data.drawing_area.sankey)
+          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+          setForceUpdate.toggle()
+        }}
+      />
     }
+    return (
+      <Box layerStyle='menuconfig_grid'>
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {tags_group.name}
+        </Box>
+        <Box layerStyle='popover_sidebar_row_tag_filter'>
+          <OSTooltip label={t('Banner.ndd_lst')}>
+            {selector}
+          </OSTooltip>
+          <OSTooltip label={t('Banner.ndd_chk')} >
+            <Box
+              justifySelf='end'
+            >
+              {btn_switch}
+            </Box>
+          </OSTooltip>
+        </Box>
+      </Box>
+    )
   })
   return (<>{allDD}</>)
 }
@@ -433,6 +422,19 @@ export const setDiagram: setDiagramFuncType = (
   set_data({ ...new_data })
 }
 
+const redrawNodeLinkLegend = (
+  applicationData: applicationDataType,
+  node_function: NodeFunctionTypes,
+  link_function: LinkFunctionTypes,
+  ComponentUpdater: ComponentUpdaterType,
+  applicationDraw: applicationDrawType
+) => {
+  node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+  link_function.RedrawLinks(Object.values(applicationData.display_links))
+  applicationDraw.reDrawLegend()
+  ComponentUpdater.updateComponenSaveInCache.current(false)
+}
+
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
@@ -458,47 +460,31 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   const { sankey } = new_data.drawing_area
   const { t } = applicationContext
   // const { ref_getter_mode_selection, ref_setter_mode_selection } = applicationState
-  const { recomputeDisplayedElement } = node_function
-  const { GetSankeyMinWidthAndHeight, reDrawLegend } = applicationDraw
+  const { GetSankeyMinWidthAndHeight } = applicationDraw
 
   // ===================Create hooks used in this component========================
-
-  const ref_btn_target_link_threshold = useRef(null)
-  const ref_btn_target_detail_level = useRef(null)
-  const ref_btn_node_tag_filter = useRef(null)
-  const ref_btn_link_tag_filter = useRef(null)
-  const ref_btn_data_tag_filter = useRef(null)
-  const ref_btn_data_type = useRef(null)
-
-  const [s_show_node_tag_filter, sShowNodeTagFilter] = useBoolean()
-  const [s_show_link_tag_filter, sShowLinkTagFilter] = useBoolean()
-  const [s_show_data_tag_filter, sShowDataTagFilter] = useBoolean()
-  const [s_show_link_threshold, sShowLinkThreshold] = useBoolean()
-  const [s_show_detail_level, sShowDetailLevel] = useBoolean()
-  const [s_show_data_type, sShowDataType] = useBoolean()
 
   const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.show_structure))
   const [s_force_update, sforceUpdate] = useBoolean()
   const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.show_structure)
   const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
-  // const [mode_selection, sModeSelection] = useState('ln')
+  const [mode_selection, sModeSelection] = useState('ln')
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentToolbar.current = setForceUpdate.toggle
+  let btn_mouse_mode_edition = <></>
 
   // ref_getter_mode_selection.current = mode_selection
   // ref_setter_mode_selection.current = sModeSelection
 
-  const node_filter = Object.entries(new_data.drawing_area.sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
-  const flux_filter = Object.entries(new_data.drawing_area.sankey.flux_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
-  const level_filter = Object.entries(new_data.drawing_area.sankey.level_taggs_dict).length > 0
-  const DT_length = Object.keys(new_data.drawing_area.sankey.data_taggs_dict).length
-  const opacity_advanced = !window.SankeyToolsStatic ? '0.3' : '0'
+  const node_filter = Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
+  const flux_filter = Object.entries(sankey.flux_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
+  const level_filter = Object.entries(sankey.level_taggs_dict).length > 0
+  const logo_btn_fs = s_force_update ? faCompress : faExpand
 
   /**
    * Change the mouse behavior
    */
   // const setSelectionMode = (val: string) => {
-  //   // sModeSelection(val)
+  //   sModeSelection(val)
   //   //- trigger update
   //   const tutu = filter
   //   set_current_filter(filter + 1)
@@ -509,7 +495,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   //     first_selected_node.current = undefined
   //   }
   // }
-
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   let max_link_value = 0
@@ -525,23 +510,22 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   max_link_value += 1
 
   const redrawNodeLinkLegend = () => {
-    new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
-    new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
+    sankey.nodes_list.forEach(n => n.reset())
+    sankey.links_list.forEach(l => l.reset())
     new_data.drawing_area.legend.reset()
 
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
 
-  const legend_filter = <FormGroup as={Row}>
-    <Col xs={9}>
-      {t('Menu.group')}
-    </Col>
-    <Col xs={3}>
-      {t('Menu.color')}
-    </Col>
-  </FormGroup>
+  const legend_filter = <Box
+    as='span'
+    layerStyle='popover_sidebar_row_tag_filter'
+  >
+    <Box textStyle='h2'>{t('Menu.group')}</Box>
+    <Box textStyle='h2'>{t('Menu.color')}</Box>
+  </Box>
 
-  const logo_btn_fs = s_force_update ? faCompress : faExpand
+
 
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
@@ -549,70 +533,97 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   //Popover element to handle filter on links, it contians :
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
   // - filter on link label
-  const popover_link_visual_filter = <Popover id="popover-link-filter" style={{ maxWidth: '100%', maxHeight: '600px', zIndex: 1 }}>
-    <Popover.Header as="h3">{t('Banner.p_aff')}</Popover.Header>
-    <Popover.Body >
-      <Form>
-        <h5>{t('Banner.p_aff_filtre_links')}</h5>
+  const popover_link_visual_filter = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id="popover_link_value_filter"
+  >
+    <PopoverTrigger>
+      <Button
+        variant='toolbar_button_3'
+        id='btn_open_popover_link_value_filter'
+      >
+        <FontAwesomeIcon icon={faSliders} />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <PopoverCloseButton />
+      <PopoverHeader >{t('Banner.p_aff')}</PopoverHeader>
+      <PopoverBody >
+        <Box
+          layerStyle='menuconfigpanel_grid'
+          gridTemplateColumns='1fr'
+        >
+          <Text
+            fontSize='h3'
+          >
+            {t('Banner.p_aff_filtre_links')}
+          </Text>
 
-        <Form.Group as={Row} >
-          <Col>
-            <FormLabel >{t('Banner.filtre')}</FormLabel>
-          </Col>
-          <Col>
-            <Form.Range
-              min="0"
+          <Box
+            layerStyle='popover_sidebar_layout_filter'
+          >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Banner.filtre')}
+            </Box>
+            <Slider
+              min={0}
               max={max_link_value}
-              value={filter}
+              defaultValue={filter}
               onChange={evt => {
-                set_current_filter(Number(evt.target.value))
+                set_current_filter(Number(evt))
                 setForceUpdate.toggle()
               }
-              } />
-          </Col>
-          <Col>
-            <FormControl
-              size='sm'
-              type='number'
+              } >
+              <SliderTrack>
+                <SliderFilledTrack />
+              </SliderTrack>
+              <SliderThumb />
+            </Slider>
+
+            <NumberInput
               min={0}
               max={filter}
-              value={filter}
+              defaultValue={filter}
               onChange={(evt) => {
-                let tmp = +evt.target.value
+                let tmp = +evt
                 if (tmp > max_link_value) {
                   tmp = max_link_value
                 }
                 set_current_filter(tmp)
                 setForceUpdate.toggle()
-              }}
-            />
-          </Col>
-        </Form.Group>
-        <Form.Group as={Row} >
-          <Col>
-            <FormLabel>{t('Banner.fl')}</FormLabel>
-          </Col>
-          <Col >
-            <Form.Range
-              min="0"
-              max={max_link_value}
-              value={new_data.filter_label}
-              onChange={evt => {
-                applicationData.new_data.filter_label = +evt.target.value
-                setForceUpdate.toggle()
-                redrawNodeLinkLegend()
-              }}
-            />
-          </Col>
-          <Col>
-            <FormControl
-              size='sm'
-              type='number'
+              }}>
+              <NumberInputField />
+            </NumberInput>
+          </Box>
+
+          <Box
+            layerStyle='popover_sidebar_layout_filter'
+          >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Banner.fl')}
+            </Box>
+            <Slider
               min={0}
               max={max_link_value}
               value={new_data.filter_label}
               onChange={(evt) => {
-                let tmp = +evt.target.value
+                applicationData.new_data.filter_label = +evt
+                setForceUpdate.toggle()
+                redrawNodeLinkLegend()
+              }}>
+              <SliderTrack>
+                <SliderFilledTrack />
+              </SliderTrack>
+              <SliderThumb />
+            </Slider>
+
+            <NumberInput
+              min={0}
+              max={max_link_value}
+              value={new_data.filter_label}
+              onChange={(evt) => {
+                let tmp = +evt
                 if (tmp > max_link_value) {
                   tmp = max_link_value
                 }
@@ -620,55 +631,82 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
                 setForceUpdate.toggle()
                 redrawNodeLinkLegend()
               }}
-            />
-          </Col>
-        </Form.Group>
-        {additional_link_visual_filter_content}
-      </Form>
-    </Popover.Body>
+            >
+              <NumberInputField />
+            </NumberInput>
+          </Box>
+          {additional_link_visual_filter_content}
+        </Box>
+      </PopoverBody>
+    </PopoverContent>
   </Popover>
 
 
-  const struc_data_reconciled = <Popover id='popover-details-level' style={{ zIndex: 1 }}>
-    <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
-    <Popover.Body>
-      <FormGroup as={Row}>
-        <Form.Label>{t('Banner.type_value')}</Form.Label>
+  const struc_data_reconciled = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_data_type'
+  >
+    <PopoverTrigger>
+      <Button
+        variant='toolbar_button_5'
+        id='btn_open_popover_data_type'
+      >
+        <FontAwesomeIcon icon={faDiagramProject} />
+      </Button>
+    </PopoverTrigger>
 
-        <Form.Select
-          value={s_type_value}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            new_data.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
-            sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled')
-            if (evt.target.value === 'reconciled') {
-              sIsDataTypeReconcilied(true)
-            } else {
-              sIsDataTypeReconcilied(false)
-            }
-            setForceUpdate.toggle()
-            redrawNodeLinkLegend()
-          }}>
-          <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
-          <option key='data' value='data'      >{t('Banner.t_v_c')}</option>
-          <option key='reconciled' value='reconciled'>{t('Banner.t_v_r')}</option>
-        </Form.Select>
-      </FormGroup>
+    <PopoverContent>
+      <PopoverCloseButton />
+      <PopoverHeader >{t('Banner.sdr')}</PopoverHeader>
+      <PopoverBody>
+        <Box
+          layerStyle='menuconfig_grid'
+        >
+          <Box fontStyle='h3' >
+            {t('Banner.type_value')}
+          </Box>
 
-      <Form.Group style={{ display: s_is_data_type_reconcilied ? '' : 'none' }} as={Row}>
-        <Form.Label>{t('Banner.indetermined_value')}</Form.Label>
-        <Form.Select
-          value={new_data.show_structure}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            new_data.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
-            setForceUpdate.toggle()
-            redrawNodeLinkLegend()
-          }}>
-          <option key='none' value='reconciled' >{t('Banner.t_v_s')}</option>
-          <option key='free_interval' value='free_interval' >{t('Banner.t_v_i')}</option>
-          <option key='free_value' value='free_value' >{t('Banner.t_v_pv')}</option>
-        </Form.Select>
-      </Form.Group>
-    </Popover.Body>
+          <Select
+            value={s_type_value}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              new_data.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
+              sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled')
+              if (evt.target.value === 'reconciled') {
+                sIsDataTypeReconcilied(true)
+              } else {
+                sIsDataTypeReconcilied(false)
+              }
+              setForceUpdate.toggle()
+              redrawNodeLinkLegend()
+            }}>
+            <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
+            <option key='data' value='data' >{t('Banner.t_v_c')}</option>
+            <option key='reconciled' value='reconciled' >{t('Banner.t_v_r')}</option>
+          </Select>
+        </Box>
+
+        <Box
+          layerStyle='menuconfig_grid'
+          display={s_is_data_type_reconcilied ? '' : 'none' }
+        >
+          <Box fontStyle='h3' >
+            {t('Banner.indetermined_value')}
+          </Box>
+          <Select
+            value={new_data.show_structure}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              new_data.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+              setForceUpdate.toggle()
+              redrawNodeLinkLegend()
+            }}>
+            <option key='none' value='reconciled' >{t('Banner.t_v_s')}</option>
+            <option key='free_interval' value='free_interval' >{t('Banner.t_v_i')}</option>
+            <option key='free_value' value='free_value' >{t('Banner.t_v_pv')}</option>
+          </Select>
+        </Box>
+      </PopoverBody>
+    </PopoverContent>
   </Popover>
   const node_tag_filter_content = <AddAllDropDownNode
     applicationContext={applicationContext}
@@ -679,76 +717,105 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
     link_function={link_function}
     applicationDraw={applicationDraw}
   />
+
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
-  const filter_color_node = <Popover id='tooltip-link-color-filter' style={{ minWidth: '350px' }}>
-    <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
-    <Popover.Body style={{ marginLeft: '5px' }}>
-      {legend_filter}
-      <>{(Object.entries(new_data.drawing_area.sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-        {node_tag_filter_content}</>
-      ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-      }</>
-    </Popover.Body>
+  const filter_color_node = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_node_tag_filter'
+  >
+    <PopoverTrigger>
+      <Button
+        variant='toolbar_button_4'
+        id='btn_open_popover_node_tag_filter'
+      >
+        {logo_btn_node}
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent>
+      <PopoverCloseButton />
+      <PopoverHeader >{t('Banner.fdn')}</PopoverHeader>
+      <PopoverBody>
+        {legend_filter}
+        <>{(Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+          {node_tag_filter_content}</>
+        ) : (<>
+          <Input placeholder="Pas de filtrage" isDisabled /></>)
+        }</>
+      </PopoverBody>
+    </PopoverContent>
   </Popover>
 
   //Popover element to handle the display of data tags
-  const filter_data = <Popover id='tooltip-data-color-filter' style={{ minWidth: '350px', zIndex: 1 }}>
-    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
-    <Popover.Body>
-      {legend_filter}
-      <FormGroup as={Row}>
-        <Col xs={10}>
-          <DataTagSelector
-            applicationData={applicationData}
-            GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
-            node_function={node_function}
-            link_function={link_function}
-            ComponentUpdater={ComponentUpdater}
-          />
-        </Col>
-        <Col xs={2}>
-          <FormCheck
-            type='switch'
-            style={{ marginLeft: '-2em' }}
-            checked={(DT_length > 0) ? (sankey.data_taggs_list.slice(DT_length - 1, DT_length)[0].show_legend) : false}
-            onChange={evt => {
-              //Déselecitonne tous les type de tag
-              sankey.flux_taggs_list.forEach(tags_group => tags_group.show_legend = false)
-              sankey.data_taggs_list.forEach(tags_group => tags_group.show_legend = false)
+  const filter_data = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_data_tag_filter'
+  >
+    <PopoverTrigger>
+      <Button
+        variant='toolbar_button_4'
+        id='btn_open_popover_data_tag_filter'
+      >
+        <FontAwesomeIcon icon={faDatabase} />
+      </Button>
+    </PopoverTrigger>
 
-              sankey.linksColorMap = 'no_colormap'
-
-              //Met le dernier dataTag en tant que couleur a suivre pour les flux
-              if (evt.target.checked) {
-                sankey.linksColorMap = 'dataTags_' + Object.keys(new_data.drawing_area.sankey.data_taggs_dict).slice(DT_length - 1, DT_length)[0]
-                sankey.data_taggs_list.slice(DT_length - 1, DT_length)[0].show_legend = evt.target.checked
-              }
-              setForceUpdate.toggle()
-              redrawNodeLinkLegend()
-            }}
-          />
-        </Col>
-      </FormGroup>
-    </Popover.Body>
+    <PopoverContent>
+      <PopoverCloseButton />
+      <PopoverHeader >{t('Banner.sdd')}</PopoverHeader>
+      <PopoverBody>
+        {legend_filter}
+        <DataTagSelector
+          applicationData={applicationData}
+          applicationDraw={applicationDraw}
+          node_function={node_function}
+          link_function={link_function}
+          ComponentUpdater={ComponentUpdater}
+          in_popover={true}
+        />
+      </PopoverBody>
+    </PopoverContent>
   </Popover>
 
   //Popover element to handle the display of link tags
-  const filter_color_link = <Popover id='tooltip-node-color-filter' style={{ minWidth: '350px', zIndex: 1 }}>
-    <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
-    <Popover.Body style={{ marginLeft: '5px' }}>
-      {legend_filter}
-      {AddAllDropDownFlux(t, applicationData, redrawNodeLinkLegend, recomputeDisplayedElement, node_function, link_function, GetSankeyMinWidthAndHeight)}
-    </Popover.Body>
+  const filter_color_link = <Popover
+    variant='toolbar_popover_window'
+    placement='left'
+    id='popover_link_tag_filter'
+  >
+    <PopoverTrigger>
+      <Button
+        variant='toolbar_button_4'
+        id='btn_open_popover_link_tag_filter'
+      >
+        {logo_btn_filter_link}
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent>
+      <PopoverCloseButton />
+      <PopoverHeader >{t('Banner.fdf')}</PopoverHeader>
+      <PopoverBody>
+        {legend_filter}
+        {AddAllDropDownFlux(t, applicationData, node_function, link_function, ComponentUpdater, applicationDraw)}
+      </PopoverBody>
+    </PopoverContent>
   </Popover>
 
 
   // ===========Creation Button to show popover========================
 
   const button_fullscreen = <>
-    <OSTooltip placement='left' label={s_force_update ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}>
-      <Button variant='light' id='button-fullscreen'
+    <OSTooltip
+      placement='left'
+      label={s_force_update ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
+    >
+      <Button
+        variant='toolbar_button_6'
+        id='button_fullscreen'
         onClick={() => {
           if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen()
@@ -758,179 +825,89 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
           sforceUpdate.toggle()
         }}
       >
-        <Col><FontAwesomeIcon icon={logo_btn_fs} /></Col>
+        <FontAwesomeIcon icon={logo_btn_fs} />
       </Button>
     </OSTooltip>
   </>
 
-  let btn_mouse_mode_edition = <></>
 
   // Add button for the edition of the sankey
   if (!window.SankeyToolsStatic) {
     btn_mouse_mode_edition = <>
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
-      <OSTooltip placement='left' label={applicationData.new_data?.drawing_area.isInEditionMode() ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}>
+      <OSTooltip
+        placement='left'
+        label={(mode_selection == 's') ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
+      >
         <Button
-          variant={'secondary'}
+          variant='toolbar_button_1'
+          id='button_selection_edition'
           onClick={() => {
             applicationData.new_data?.drawing_area.switchMode()
             setForceUpdate.toggle()
-          }}
-        >
-          <Col>
-            <FontAwesomeIcon icon={(
-              applicationData.new_data?.drawing_area.isInEditionMode() ?
-                faShareNodes :
-                faArrowPointer
+          }} >
+          <FontAwesomeIcon icon={(
+            applicationData.new_data?.drawing_area.isInEditionMode() ?
+              faShareNodes :
+              faArrowPointer
             )}
-            />
-          </Col>
+          />
         </Button>
       </OSTooltip>
     </>
   }
 
   const btn_aggrega_level = (level_filter) ? <>
-    <OSTooltip placement='left' label={t('Banner.hlp_1_txt_2')}>
-      <Button ref={ref_btn_target_detail_level} variant='warning' id='button-details-level' onClick={sShowDetailLevel.toggle} >
-        <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
-      </Button>
-    </OSTooltip>
-    <Overlay
-      key={'popover-nodes-level'}
-      placement={'left'}
-      target={ref_btn_target_detail_level}
-      rootClose
-      show={s_show_detail_level}
-      onHide={sShowDetailLevel.off}
-    >
+    <OSTooltip
+      placement='left'
+      label={t('Banner.hlp_1_txt_2')}>
       {detail_level}
-    </Overlay></>
-    :
+    </OSTooltip>
+  </>:
     <></>
 
   const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
-    <Button ref={ref_btn_target_link_threshold} variant='danger' id='button-filter-link'
-      onClick={sShowLinkThreshold.toggle}
-    >
-      <Col><FontAwesomeIcon icon={faSliders} /></Col>
-    </Button>
+    {popover_link_visual_filter}
   </OSTooltip>
   {/* Popover to display the link-filter */}
-  <Overlay
-    key={'overlay-popover-link-filter'}
-    placement={'left'}
-    target={ref_btn_target_link_threshold}
-    rootClose
-    show={s_show_link_threshold}
-    onHide={sShowLinkThreshold.off}
-  >
-    {popover_link_visual_filter}
-  </Overlay></>
+  </>
 
 
-  const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
-    <Button variant='success'
-      ref={ref_btn_data_type}
-      onClick={() => {
-        sShowDataType.toggle()
-      }}
-    >
-      <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
+  const btn_show_data_type=url_prefix !== '' ?<><OSTooltip placement='left' label={t('Banner.sdr')}>
+    {struc_data_reconciled}
+  </OSTooltip>
+  </>:
+  <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
+    <Button variant={'success'} onClick={() => {
+      new_data.show_structure = new_data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+      setForceUpdate.toggle()
+      redrawNodeLinkLegend()
+
+    }} >
+      <FontAwesomeIcon icon={faCodeBranch} />
     </Button>
   </OSTooltip>
-  {/* Popover to display selector of datatype */}
-  <Overlay
-    key={'overlay-popover-data-type'}
-    placement={'left'}
-    target={ref_btn_data_type}
-    rootClose
-    show={s_show_data_type}
-    onHide={() => { sShowDataType.off() }}
-  >
-    {struc_data_reconciled}
-  </Overlay>
-  </>
-    :
-    <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
-      <Button variant={'success'} onClick={() => {
-        new_data.show_structure = new_data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-        setForceUpdate.toggle()
-        redrawNodeLinkLegend()
-
-      }} >
-        <Col><FontAwesomeIcon icon={faCodeBranch} /></Col>
-      </Button>
-    </OSTooltip>
 
   const btn_show_node_filter = (node_filter) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_node_tag_filter')}>
-      <Button ref={ref_btn_node_tag_filter} size='sm' variant='info'
-        onClick={sShowNodeTagFilter.toggle}
-      >
-        {logo_btn_node}
-      </Button>
-    </OSTooltip>
-    {/* Popover to display the node tag filter */}
-    <Overlay
-      key={'overlay-popover-node-tag-filter'}
-      placement={'left'}
-      target={ref_btn_node_tag_filter}
-      rootClose
-      show={s_show_node_tag_filter}
-      onHide={sShowNodeTagFilter.off}
-    >
       {filter_color_node}
-    </Overlay>
-  </>
-    :
-    <></>
+    </OSTooltip>
+  </>:
+  <></>
 
   const btn_show_link_filter = (flux_filter) ? <>
-
     <OSTooltip placement='left' label={t('Banner.hlp_link_tag_filter')}>
-      <Button ref={ref_btn_link_tag_filter} size='sm' variant='info'
-        onClick={sShowLinkTagFilter.toggle}
-      >{logo_btn_filter_link}</Button>
-
-    </OSTooltip>
-
-    <Overlay
-      key={'popover-link-tag-filter'}
-      placement={'left'}
-      target={ref_btn_link_tag_filter}
-      rootClose
-      show={s_show_link_tag_filter}
-      onHide={sShowLinkTagFilter.off}
-    >
       {filter_color_link}
-    </Overlay></>
-    :
-    <></>
+    </OSTooltip></> : <></>
 
   const btn_show_data_filter = (new_data.drawing_area.sankey.data_taggs_list.length > 0) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_data_tag_filter')}>
-      <Button ref={ref_btn_data_tag_filter} size='sm' style={{ color: '#fff', background: '#B13F06', borderColor: '#B13F06' }}
-        onClick={sShowDataTagFilter.toggle}
-      >
-        <FontAwesomeIcon icon={faDatabase} />
-      </Button>
-    </OSTooltip>
-    <Overlay
-      key={'popover-data-tag-filter'}
-      placement={'left'}
-      target={ref_btn_data_tag_filter}
-      rootClose
-      show={s_show_data_tag_filter}
-      onHide={sShowDataTagFilter.off}
-    >
       {filter_data}
-    </Overlay></>
-    :
-    <></>
+    </OSTooltip></> : <></>
+
   const btn_show_help_in_static = window.SankeyToolsStatic ? <OSTooltip placement='left' label={t('Banner.tooltipHelp')}>
     <Button variant='info' onClick={() => { never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
-      <Col> ? </Col>
+      ?
     </Button>
   </OSTooltip> : <></>
 
@@ -958,40 +935,52 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
 
     {button_fullscreen}
   </>
-
-
-
 }
-
-
-export const stretchButtons: stretchButtonsFType = (
+/**
+ *  Function that return stretch buttons for the sideBar
+ *
+ * @param {*} applicationData
+ * @param {GetSankeyMinWidthAndHeightFuncType} GetSankeyMinWidthAndHeight
+ * @param {TFunction} t
+ * @return {*}
+ */
+const stretchButtons: stretchButtonsFType = (
   applicationData,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
   t: TFunction
 ) => {
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-    <Button variant='dark' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight) }} >
-      <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
+    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight) }} >
+      <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
   <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='dark' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
-      <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
+    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
+      <FontAwesomeIcon icon={faArrowsUpDown} />
     </Button>
   </OSTooltip></>
 }
 
+
 /**
  * Function that generate dropdown for each groupTag of linkTags
+ *
+ * @param {TFunction} t
+ * @param {TagsCatalog} fluxTags
+ * @param {applicationDataType} applicationData
+ * @param {NodeFunctionTypes} node_function
+ * @param {LinkFunctionTypes} link_function
+ * @param {ComponentUpdaterType} ComponentUpdater
+ * @param {ComponentUpdaterType} applicationDraw
+ * @return {JSX.Element}
  */
-export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
+const AddAllDropDownFlux: AddAllDropDownFluxFType = (
   t: TFunction,
   applicationData,
-  redrawNodeLinkLegend,
-  recomputeDisplayedElement,
   node_function,
   link_function,
-  GetSankeyMinWidthAndHeight
+  ComponentUpdater,
+  applicationDraw
 ) => {
   const [, setForceUpdate] = useBoolean()
   const { new_data } = applicationData
@@ -1000,124 +989,91 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
   const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
   const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
   const { linksColorMap, links_dict} = new_data.drawing_area.sankey
-
-  const banner_grouptag = Object.values(flux_taggs).filter(tags_group => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  const banner_grouptag = Object.values(flux_taggs).filter(tags_group => { return ((tags_group.banner == 'one') || (tags_group.banner == 'multi')) })
   const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group
     const tags_selected = Object.entries(flux_taggs).filter((k) => { return k[1] == the_tags_group })[0]
 
+    // Create the tag selector
+    // It can either select one tag at the time or multiple at the time
+    let selector = <></>
     if (the_tags_group.banner == 'one') {
-      return (
-        <FormGroup as={Row}>
-          <Row>
-            <Col xs={10}>
-              <FormLabel>{the_tags_group.name}</FormLabel>
-            </Col>
-          </Row>
-          <Row>
-            <OSTooltip label={t('Banner.ndd_lst')}>
-              <Col xs={10}>
-                {<Form.Select
-                  key={the_tags_group.name}
-                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, the_tags_group)
-                    redrawSankeyWithSelectedTag(applicationData, GetSankeyMinWidthAndHeight, node_function, link_function)
-                    setForceUpdate.toggle()
-                  }}>{
-                    Object.entries(the_tags_group.tags).map(([tag_key, tag], i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
-                    })}
-                </Form.Select>}
-              </Col>
-            </OSTooltip>
-            <Col xs={2} >
-              <OSTooltip label={t('Banner.ndd_chk')} >
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={linksColorMap == tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(flux_taggs).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
-
-                    new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
-
-                    if (evt.target.checked) {
-
-                      new_data.drawing_area.sankey.linksColorMap = tags_selected[0]
-                      flux_taggs[tags_selected[0]].show_legend = true
-                    }
-                    redrawNodeLinkLegend()
-                  }}
-                />
-              </OSTooltip>
-            </Col>
-          </Row>
-        </FormGroup>)
-    }
-    else if (the_tags_group.banner == 'multi') {
+      selector = <Select
+        key={the_tags_group.name}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+          handleSimpleDropdown(evt, the_tags_group)
+          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+          setForceUpdate.toggle()
+        }}>{
+          Object.entries(the_tags_group.tags).map(([tag_key, tag], i) => {
+            return (<option key={i} value={tag_key}>{tag.name}</option>)
+          })}
+      </Select>
+    } else {
       const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      return (
-        <FormGroup as={Row}>
+      selector = <MultiSelect
+        className={'multidropdown_filter_node_link'}
+        // style={{ color: 'black',width:'200px' }}
+        valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
+          return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
+        }}
+        labelledBy={'dropdown_node_filter'}
+        overrideStrings={{
+          'selectAll': 'Tout sélectionner',
+        }}
+        value={selected}
+        options={options}
+        onChange={(selected: [{ label: string, value: string }]) => {
+          HandleMultiDropdown(selected, the_tags_group, new_data.drawing_area.sankey)
+          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+          setForceUpdate.toggle()
 
-          <Row>
-            <Col xs={10}>
-              <FormLabel>{the_tags_group.name}</FormLabel>
-            </Col>
-          </Row>
-
-          {/* Liste déroulante des groupe de filtre  */}
-          <Row>
-            <OSTooltip label={t('Banner.ndd_lst')}>
-              <Col xs={10}>
-                <MultiSelect
-                  className={'multidropdown_filter_node_link'}
-                  // style={{ color: 'black',width:'200px' }}
-                  valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
-                    return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
-                  }}
-                  labelledBy={'dropdown_node_filter'}
-                  overrideStrings={{
-                    'selectAll': 'Tout sélectionner',
-                  }}
-                  value={selected}
-                  options={options}
-                  onChange={(selected: [{ label: string, value: string }]) => {
-                    HandleMultiDropdown(selected, the_tags_group, new_data.drawing_area.sankey)
-                    redrawSankeyWithSelectedTag(applicationData, GetSankeyMinWidthAndHeight, node_function, link_function)
-                    setForceUpdate.toggle()
-
-                  }}
-                />
-              </Col>
-            </OSTooltip>
-
-            {/* Appliquer le filtrage  */}
-            <Col xs={2}>
-              <OSTooltip label={t('Banner.ndd_chk')}>
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={new_data.drawing_area.sankey.linksColorMap == tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(flux_taggs).forEach(tags_group => { tags_group.show_legend = false })
-                    Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
-
-                    new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
-                    if (evt.target.checked) {
-                      new_data.drawing_area.sankey.linksColorMap = tags_selected[0]
-                      flux_taggs[tags_selected[0]].show_legend = true
-                    }
-                    setForceUpdate.toggle()
-                    redrawNodeLinkLegend()
-                  }}
-                />
-              </OSTooltip>
-            </Col>
-          </Row>
-        </FormGroup>)
+        }}
+      />
     }
+
+    return (
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+        >
+          {the_tags_group.name}
+        </Box>
+        <Box
+          as='span'
+          layerStyle='popover_sidebar_row_tag_filter'
+        >
+          <OSTooltip label={t('Banner.ndd_lst')}>
+            {selector}
+          </OSTooltip>
+          <OSTooltip label={t('Banner.ndd_chk')} >
+            <Box
+              justifySelf='end'
+              alignSelf='center'
+              height='1rem'
+            >
+              <Switch
+                isChecked={new_data.drawing_area.sankey.linksColorMap == tags_selected[0]}
+                onChange={evt => {
+                  Object.values(flux_taggs).forEach(tags_group => { tags_group.show_legend = false })
+                  Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
+
+                  new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
+                  if (evt.target.checked) {
+                    new_data.drawing_area.sankey.linksColorMap = tags_selected[0]
+                    flux_taggs[tags_selected[0]].show_legend = true
+                  }
+                  setForceUpdate.toggle()
+                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+                }}
+              />
+            </Box>
+          </OSTooltip>
+        </Box>
+      </Box>)
   })
   return (<>{allDD.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}</>)
 }
@@ -1126,146 +1082,147 @@ export const AddAllDropDownFlux: AddAllDropDownFluxFType = (
  This allow us to choose wich grouptag to select and wich tag of these group to display*/
 export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
   applicationData,
-  GetSankeyMinWidthAndHeight,
+  applicationDraw,
   node_function,
   link_function,
-  ComponentUpdater }
-) => {
-  const { new_data } = applicationData
-  const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
-  const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+  ComponentUpdater,
+  in_popover
+}) => {
+  const { data, new_data } = applicationData
+  const [, setForceUpdate] = useBoolean()
   const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
-  const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
-  const { linksColorMap, nodes_dict, links_dict } = new_data.drawing_area.sankey
-
-  const [forceUpdate, setForceUpdate] = useBoolean()
   const banner_grouptag = Object.entries(data_taggs).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
+    let selector = <></>
     if (tags_group.banner == 'one') {
       let selected = ''
       if (Object.entries(tags_group.tags).filter(([, v]) => v.selected).length > 0) {
         selected = Object.entries(tags_group.tags).filter(([, v]) => v.selected)[0][0]
       }
-      return (
-        <>
-          <FormLabel>{tags_group.name}</FormLabel>
-          <FormGroup as={Row}>
-            <Col xs={10}>
-              {<Form.Select key={tags_group.name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                // let had_suffix = false
-                // const pl = Object.entries(links_dict).map(l => {
-                //   const suffixeStart = l[0].indexOf('_')
-                //   // if (suffixeStart >= 0) {
-                //   //   had_suffix = true
-                //   //   l[0] = l[0].slice(0, suffixeStart)
-                //   //   l[1].idLink = l[0]
-                //   //   nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
-                //   //   nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
+      selector = <Select
+        key={tags_group.name}
+        defaultValue={selected}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            // let had_suffix = false
+            // const pl = Object.entries(links_dict).map(l => {
+            //   const suffixeStart = l[0].indexOf('_')
+            //   // if (suffixeStart >= 0) {
+            //   //   had_suffix = true
+            //   //   l[0] = l[0].slice(0, suffixeStart)
+            //   //   l[1].idLink = l[0]
+            //   //   nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
+            //   //   nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
 
-                //   //   //Ajoute dans les noeuds source/target les id de flux
-                //   //   const ind_in_src = nodes_dict[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
-                //   //   if (ind_in_src == -1) {
-                //   //     nodes_dict[l[1].idSource].outputLinksId.push(l[0])
-                //   //   }
-                //   //   const ind_in_trgt = nodes_dict[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
-                //   //   if (ind_in_trgt == -1) {
-                //   //     nodes_dict[l[1].idTarget].inputLinksId.push(l[0])
-                //   //   }
-                //   // }
-                //   return l
-                // })
-                // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                // const pureLinks = Object.fromEntries(pl)
-                // links_dict = pureLinks
-                // if (had_suffix) {
-                //   data.linkZIndex = Object.keys(pureLinks)
-                // }
-                handleSimpleDropdown(evt, tags_group)
-                // redrawSankeyWithSelectedTag(
-                //   applicationData,
-                //   GetSankeyMinWidthAndHeight,
-                //   node_function,
-                //   link_function
-                // )
-                new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
-                setForceUpdate.toggle()
-                new_data.menu_configuration.updateComponentMenu.current()
-              }}>
-                {
-                  Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
-                    return (<option key={i} value={tag_key} >{tag.name}</option>)
-                  })}
-              </Form.Select>}
-            </Col>
-          </FormGroup>
-        </>)
+            //   //   //Ajoute dans les noeuds source/target les id de flux
+            //   //   const ind_in_src = nodes_dict[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+            //   //   if (ind_in_src == -1) {
+            //   //     nodes_dict[l[1].idSource].outputLinksId.push(l[0])
+            //   //   }
+            //   //   const ind_in_trgt = nodes_dict[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+            //   //   if (ind_in_trgt == -1) {
+            //   //     nodes_dict[l[1].idTarget].inputLinksId.push(l[0])
+            //   //   }
+            //   // }
+            //   return l
+            // })
+            // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+            // const pureLinks = Object.fromEntries(pl)
+            // links_dict = pureLinks
+            // if (had_suffix) {
+            //   data.linkZIndex = Object.keys(pureLinks)
+            // }
+            handleSimpleDropdown(evt, tags_group)
+            // redrawSankeyWithSelectedTag(
+            //   applicationData,
+            //   GetSankeyMinWidthAndHeight,
+            //   node_function,
+            //   link_function
+            // )
+            new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
+            setForceUpdate.toggle()
+            new_data.menu_configuration.updateComponentMenu.current()
+        }}>
+        {
+          Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
+            return (<option key={i} value={tag_key} >{tag.name}</option>)
+          })}
+      </Select>
     }
-    else if (tags_group.banner == 'multi') {
+    else {
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name, 'disabled': ((selected.length < 2 && tag[1].name == selected[0].label)) } })
-      return (
-        <>
-          <FormLabel>{tags_group.name}</FormLabel>
-          <MultiSelect
-            className={'multidropdown_filter_node_link'}
-            // style={{ color: 'black',width:'200px' }}
-            labelledBy={'dropdown_link_filter'}
-            overrideStrings={{
-              'selectAll': 'Tout sélectionner',
-            }}
-            value={selected}
-            options={options}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              HandleMultiDropdown(selected, tags_group, new_data.drawing_area.sankey)
-
-              //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
-              // if (Object.keys(data_taggs).length > 0) {
-
-              //   const pl = Object.entries(links_dict).map(l => {
-              //     const suffixeStart = l[0].indexOf('_')
-              //     if (suffixeStart >= 0) {
-              //       l[0] = l[0].slice(0, suffixeStart)
-              //       l[1].idLink = l[0]
-              //       nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
-              //       nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
-              //     }
-              //     return l
-              //   })
-              //   // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-              //   const pureLinks = Object.fromEntries(pl)
-
-              //   const new_links = {} as { [link_id: string]: SankeyLink }
-
-              //   Object.values(pureLinks).forEach(l => {
-              //     const suffix = ''
-              //     RecursionDataTag(data, data_taggs, 0, suffix, (l as SankeyLink), new_links)
-              //   })
-              //   links_dict = new_links
-              //   data.linkZIndex = Object.keys(new_links)
-
-              //   redrawSankeyWithSelectedTag(
-              //     applicationData,
-              //     GetSankeyMinWidthAndHeight,
-              //     node_function,
-              //     link_function
-              //   )
-              //   setForceUpdate.toggle()
-              //   new_data.menu_configuration.updateComponentMenu.current()
-              // }
-            }} />
-        </>)
+      selector = <MultiSelect
+        className={'multidropdown_filter_node_link'}
+        labelledBy={'dropdown_link_filter'}
+        overrideStrings={{
+          'selectAll': 'Tout sélectionner',
+        }}
+        value={selected}
+        options={options}
+        onChange={(selected: [{ label: string, value: string }]) => {
+          HandleMultiDropdown(selected, tags_group, new_data.drawing_area.sankey)
+        }}
+      />
     }
+
+    return (
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_option_name'
+        >
+          {tags_group.name}
+        </Box>
+        <Box
+          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
+        >
+          {selector}
+          {
+            in_popover ?
+              <Switch
+                justifySelf='end'
+                alignSelf='center'
+                height='1rem'
+                isChecked={(banner_grouptag.length > 0) ? (Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
+                onChange={evt => {
+                  //Déselecitonne tous les type de tag
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.links).forEach(el => {
+                    el.colorTag = 'no_colormap'
+                  })
+                  data.linksColorMap = 'no_colormap'
+                  //Met le dernier dataTag en tant que couleur a suivre pour les flux
+                  if (evt.target.checked) {
+                    Object.values(data.links).forEach(el => {
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
+                    Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
+                  }
+                  setForceUpdate.toggle()
+                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+                }}
+              /> :
+              <></>
+          }
+        </Box>
+      </Box>)
   })
-  return allDD
+
+  return <>{allDD}</>
 }
 
-export const redrawSankeyWithSelectedTag = (
+const redrawSankeyWithSelectedTag = (
   applicationData: applicationDataType,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw: applicationDrawType,
   node_function: NodeFunctionTypes,
   link_function: LinkFunctionTypes
 ) => {
   const { data, new_data } = applicationData
+  const { GetSankeyMinWidthAndHeight } = applicationDraw
   const old_displayed_nodes = Object.values(applicationData.display_nodes).map(n => n.idNode)
   const old_displayed_links = Object.values(applicationData.display_links).map(l => l.idLink)
 
@@ -1292,7 +1249,7 @@ export const redrawSankeyWithSelectedTag = (
   if (ll.length != 0) {
     link_function.CreateLinksOnSVG(ll.map(id => data.links[id]))
     // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
-    //redrawNodeLinkLegend()
+    //redrawNodeLinkLegend(applicationData,node_function,link_function,ComponentUpdater,applicationDraw)
     actualizeDrawAreaFrame(applicationData, GetSankeyMinWidthAndHeight)
   }
 }

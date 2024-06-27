@@ -8,7 +8,7 @@ import React, {
 } from 'react'
 import i18next from 'i18next'
 import LZString from 'lz-string'
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, useToast } from '@chakra-ui/react'
 /*************************************************************************************************/
 import {
   AdditionalMenusType,
@@ -48,7 +48,8 @@ import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, Menu, ToastWaitFunc
+  OpenSankeyMenus, Menu,
+  launchToastConstructor
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
@@ -92,6 +93,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
+  const toast=useToast()
   const updateMenus = useState(false)
 
   // Logo, names, licences
@@ -108,6 +110,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const applicationState = initializeElementSelected()
   applicationState.userScaleRef.current = applicationData.data.user_scale // TODO
   const dict_hook_ref_setter_show_dialog_components = initializeShowDialog()
+
+  dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current=(intake)=>{
+    launchToastConstructor(applicationData,toast,intake)
+  }
+
+
   const contextMenu = initializeContextMenu()
 
   const ComponentUpdater = initializeComponentUpdater()
@@ -141,6 +149,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     applicationData.display_links={}
     applicationData.data.linkZIndex=pre_link_key
     pre_link_key.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
+    //if (applicationData.data.linkZIndex.length == 0) {
+    // applicationData.data.linkZIndex = applicationData.data.linkZIndex.filter(lid=>pre_display_links[lid] !== undefined)
+    // pre_link_key.forEach(lid=>{
+    //   if (!applicationData.data.linkZIndex.includes(lid)) {
+    //     applicationData.data.linkZIndex.push(lid)
+    //   }
+    // })
+    // //}
+    // applicationData.data.linkZIndex.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
 
     // delete element no longer displayed
     const curr_displayed_nodes= Object.keys(applicationData.display_nodes)
@@ -153,6 +170,25 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
   }
 
+  // If leveltags are present Primaire is desactivated
+  if ('Primaire' in applicationData.data.levelTags && applicationData.data.levelTags['Primaire'].activated === true) {
+    Object.values(applicationData.data.levelTags).forEach(tag_group=> {
+      if (tag_group.siblings && tag_group.siblings.length > 0) {
+        return
+      }
+      tag_group.activated = true
+    })
+    Object.values(applicationData.data.levelTags).forEach(tag_group=> {
+      if (tag_group.siblings && tag_group.siblings.length > 0 && tag_group.activated ) {
+        tag_group.siblings.forEach(sibling=>{
+          applicationData.data.levelTags[sibling].activated=false
+        })
+      }
+    })
+    if (Object.values(applicationData.data.levelTags).length > 1) {
+      applicationData.data.levelTags['Primaire'].activated = false
+    }
+  }
   /*************************************************************************************************/
   const agregation : agregationType = {
     showAgregationRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([]),
@@ -209,9 +245,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     node_function,
     link_function,
     start_point,
-    resizeCanvas
+    resizeCanvas,
+    ref_alt_key_pressed
   )
-  // node_function.
 
   recomputeDisplayedElement()
 
@@ -459,6 +495,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     if( !windowSankey.SankeyToolsStatic ){
       installEventOnSVG(
         contextMenu,
+        applicationContext,
         applicationData,
         uiElementsRef,
         applicationState,
@@ -562,7 +599,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             convert_data={applicationData.convert_data}
             apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
             DiagramSelector={initializeDiagrammSelector(applicationData)}
-            callback={()=>null}
+            postProcessLoadExcel={node_function.postProcessLoadExcel}
             ref_alt_key_pressed={ref_alt_key_pressed}
             accept_simple_click={accept_simple_click}
             link_function={link_function}
@@ -580,6 +617,17 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
+
+      <SankeyDraw
+        contextMenu={contextMenu}
+        applicationData={applicationData}
+        animation={useRef(false)}
+        applicationState={applicationState}
+        agregation={agregation}
+        ref_alt_key_pressed={ref_alt_key_pressed}
+        GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
+      />
+
       <ContextMenuNode
         applicationContext = {applicationContext}
         applicationData = {applicationData}
@@ -612,7 +660,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         link_function={link_function}
         reDrawLegend={applicationDraw.reDrawLegend}
         ComponentUpdater={ComponentUpdater}
-
       />
       <ContextLegendTags
         applicationContext = {applicationContext}
@@ -622,21 +669,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         GetLinkValue = {GetLinkValue}
         ComponentUpdater={ComponentUpdater}
       />
-      <SankeyDraw
-        contextMenu={contextMenu}
-        applicationData={applicationData}
-        animation={useRef(false)}
-        applicationState={applicationState}
-        agregation={agregation}
-        ref_alt_key_pressed={ref_alt_key_pressed}
-        GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
-      />
     </div>
-    {<ToastWaitFunc
-      applicationData={applicationData}
-      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-      applicationContext={applicationContext}
-    />}
+
   </ChakraProvider>
 }
 

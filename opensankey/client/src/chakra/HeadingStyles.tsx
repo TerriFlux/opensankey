@@ -8,3 +8,9 @@ export const heading_welcome_style = defineStyle({
   fontSize:'2rem',
   color:'openSankey.400'
 })
+
+export const heading_template_dashboard = defineStyle({
+  textAlign:'center',
+  fontSize:'2rem',
+  textStyle:'h2',
+})
