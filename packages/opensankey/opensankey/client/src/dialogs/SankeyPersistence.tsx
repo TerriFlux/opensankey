@@ -325,7 +325,7 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
   // const str_data = JSON.stringify(data_to_save)
   // Crée une copie pour d'abord enregitrer avec les changements
   // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-  const cpy:SankeyData=JSON.parse(JSON.stringify(data))
+  const cpy:SankeyData=applicationData.new_data.drawing_area.toJSON() as SankeyData
   if(!options.mode_save){
     Object.values(cpy.links).forEach(d=>{
       (d as SankeyLink).value={}
@@ -351,6 +351,7 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
     (cpy as unknown as {view:[]}).view=[]
   }
+  
   const str_data = JSON.stringify(cpy)
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   const dataAsSuite = (cpy as DataSuiteType)

@@ -167,6 +167,7 @@ export class Class_DrawingArea {
     this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend= new Class_Legend( this,this.application_data.menu_configuration)
     // this.legend.display.shape._width = 180 TODO faire plus proprement
+    this.toJSON()
   }
 
   // IMPORTANT METHODS ==================================================================
@@ -271,6 +272,59 @@ export class Class_DrawingArea {
   // Grid size
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
+
+  public toJSON(){
+    let json_object={} as {[_:string]:any}
+    json_object['grid_visible']=this._grid_visible
+    json_object['grid_square_size']=this._grid_size
+    json_object['width']=this._width
+    json_object['height']=this._height
+    json_object['h_space']=this._horizontal_spacing
+    json_object['v_space']=this._vertical_spacing
+    json_object['user_scale']=this._scale
+    json_object['couleur_fond_sankey']=this._color
+    json_object['node_label_separator']='' // TODO get node label separator when implemented in class
+    json_object={...json_object,...this._legend.toJSON()}
+    
+    json_object['nodes']={}
+
+    Object.entries(this.sankey.nodes_dict).forEach(ent_node=>{
+      json_object['nodes'][ent_node[0]]=ent_node[1].toJSON()
+    })
+
+    json_object['links']={}
+    Object.entries(this.sankey.links_dict).forEach(ent_link=>{
+      json_object['links'][ent_link[0]]=ent_link[1].toJSON()
+    })
+
+    json_object['style_node']={}
+    Object.entries(this.sankey.node_styles_dict).forEach(ent_style_node=>{
+      json_object['style_node'][ent_style_node[0]]=ent_style_node[1].toJSON()
+    })
+
+    json_object['style_link']={}
+    Object.entries(this.sankey.link_styles_dict).forEach(ent_style_link=>{
+      json_object['style_link'][ent_style_link[0]]=ent_style_link[1].toJSON()
+    })
+
+    json_object['nodeTags']={}
+    Object.entries(this.sankey.node_taggs).forEach(ent_nt=>{
+      json_object['nodeTags'][ent_nt[0]]=ent_nt[1].toJSON()
+    })
+
+    json_object['linkTags']={}
+    Object.entries(this.sankey.flux_taggs).forEach(ent_ft=>{
+      json_object['linkTags'][ent_ft[0]]=ent_ft[1].toJSON()
+    })
+
+    json_object['dataTags']={}
+    Object.entries(this.sankey.data_taggs).forEach(ent_dt=>{
+      json_object['dataTags'][ent_dt[0]]=ent_dt[1].toJSON()
+    })
+
+
+    return json_object
+  }
 
   // PUBLIC METHODS =====================================================================
 
