@@ -87,6 +87,16 @@ export class Class_Tag {
       _.removeTag(this)
     }
   }
+
+  public toJSON(){
+    const json_object = {} as { [_: string]: any }
+    json_object['id']=this._id
+    json_object['name']=this._name
+    json_object['selected']=this._selected
+    json_object['color']=this._color
+    
+    return json_object
+  }
 }
 
 // CLASS TAGGROUP ***********************************************************************
@@ -195,6 +205,22 @@ export class Class_TagGroup {
       _.delete()
       delete this._tags[_.id]
     }
+  }
+
+  public toJSON(){
+    const json_object = {} as { [_: string]: any }
+
+    json_object['group_name']=this._name
+    json_object['show_legend']=this._show_legend
+    json_object['banner']=this._banner
+
+    json_object['tags']={}
+    Object.entries(this._tags).forEach(ent_tags=>{
+      json_object['tags'][ent_tags[0]]=ent_tags[1].toJSON()
+    })
+
+    return json_object
+
   }
 }
 
