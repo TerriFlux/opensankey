@@ -325,6 +325,7 @@ export const OSPNodeIcon : FunctionComponent<OSPNodeIconFType> = ({
           .forEach(d => AssignNodeValueToCorrectVar(d, 'shape_visible', evt.target.checked, false))
         node_function.RedrawNodes(multi_selected_nodes.current)
         ComponentUpdater.updateComponentMenuConfigNode.current()
+        ComponentUpdater.updateComponentMenuConfigNodeAppearence.current()
         ComponentUpdater.updateComponenSaveInCache.current(false)
         setForceUpdate(!forceUpdate)
       }}
