@@ -87,12 +87,30 @@ export const EventNodeClick: EventNodeClickFType = (
 
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
       button_ref.current.click()
+      setTimeout(() => {
+        // Open element accordion if not already openend
+        if (
+          accordion_ref &&
+          accordion_ref.current &&
+          d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          accordion_ref.current.click()
+        }
+        // Open node accordion if not already openend
+        if (
+          nodes_accordion_ref &&
+          nodes_accordion_ref.current &&
+          d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          nodes_accordion_ref.current.click()
+        }
+      }, 200)
     }
     // Open element accordion if not already openend
     if (
       accordion_ref &&
       accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded') === 'false'
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
     ) {
       accordion_ref.current.click()
     }
@@ -101,7 +119,7 @@ export const EventNodeClick: EventNodeClickFType = (
     if (
       nodes_accordion_ref &&
       nodes_accordion_ref.current &&
-      d3.select(nodes_accordion_ref.current).attr('aria-expanded') === 'false'
+      d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false'
     ) {
       nodes_accordion_ref.current.click()
     }
@@ -436,12 +454,31 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
       button_ref.current.click()
+      setTimeout(() => {
+        // Open element accordion if not already openend
+        if (
+          accordion_ref &&
+            accordion_ref.current &&
+            d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          accordion_ref.current.click()
+        }
+        // Open link accordion if not already openend
+        if (
+          links_accordion_ref &&
+            links_accordion_ref.current &&
+            d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          links_accordion_ref.current.click()
+        }
+      }, 200)
     }
+
     // Open element accordion if not already openend
     if (
       accordion_ref &&
       accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded') === 'false'
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
     ) {
       accordion_ref.current.click()
     }
@@ -450,7 +487,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     if (
       links_accordion_ref &&
       links_accordion_ref.current &&
-      d3.select(links_accordion_ref.current).attr('aria-expanded') === 'false'
+      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
     ) {
       links_accordion_ref.current.click()
     }
@@ -678,24 +715,27 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
 
       if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
         button_ref.current.click()
-      }
-      // Open element accordion if not already openend
-      if (
-        accordion_ref &&
-        accordion_ref.current &&
-        d3.select(accordion_ref.current).attr('aria-expanded') === 'false'
-      ) {
-        accordion_ref.current.click()
+        setTimeout(() => {
+          // Open element accordion if not already openend
+          if (
+            accordion_ref &&
+          accordion_ref.current &&
+          d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+          ) {
+            accordion_ref.current.click()
+          }
+
+          // Open link accordion if not already openend
+          if (
+            links_accordion_ref &&
+          links_accordion_ref.current &&
+          d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+          ) {
+            links_accordion_ref.current.click()
+          }
+        }, 200)
       }
 
-      // Open link accordion if not already openend
-      if (
-        links_accordion_ref &&
-        links_accordion_ref.current &&
-        d3.select(links_accordion_ref.current).attr('aria-expanded') === 'false'
-      ) {
-        links_accordion_ref.current.click()
-      }
       if (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
         tmp.name = 'node' + (Object.keys(data.nodes).length - 1)

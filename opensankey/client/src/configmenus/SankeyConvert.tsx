@@ -1,6 +1,6 @@
 import { SankeyData, SankeyLink, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyle,SankeyLinkAttrLocal, SankeyNodeAttrLocal} from '../types/Types'
 import colormap from 'colormap'
-import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
+import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle, AssignNodeLocalAttribute} from './SankeyUtils'
 
 import { ConvertDataFuncType, complete_sankey_dataFunctType, compute_flux_maxFType, compute_initial_colorsFType, convert_booleanFType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from './types/SankeyConvertTypes'
 import {
@@ -494,7 +494,7 @@ export const convert_tags:convert_tagsFuncType = (
 
   if (data.nodeTags.Dimensions) {
     Object.keys(data.nodeTags.Dimensions.tags).forEach(tag=>{
-      data.nodeTags[tag] = {
+      data.levelTags[tag] = {
         group_name : data.nodeTags.Dimensions.tags[tag].name,
         color_map: 'jet',
         show_legend: false,
@@ -529,7 +529,7 @@ export const convert_tags:convert_tagsFuncType = (
         }
       })
       for (let level = 1; level<=max_level;level++) {
-        data.nodeTags[tag]['tags'][String(level)] = {
+        data.levelTags[tag]['tags'][String(level)] = {
           name : String(level),
           selected : level == 1
         }
@@ -709,7 +709,8 @@ export const convert_tags:convert_tagsFuncType = (
   // Convertie les nodeTags avec pour bannière 'level' en levelTags
   if(has_not_converted_nodeTags_as_levelTags(data) || 'Primaire' in data.nodeTags){
     data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level' || nt[0] == 'Primaire')))
-    data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
+    Object.values(data.levelTags).forEach(tag=>tag.banner = 'level')
+    data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level' && nt[0] !== 'Primaire'))
   }
 
   // Assign colorMap to either fluxTags or nodesTags since now we can display color palette of both at the same time
@@ -745,10 +746,10 @@ export const convert_nodes:convert_nodesFuncType = (
       n.inputLinksId = []
       n.outputLinksId = [];
       (n_depreciated.input_links as number[]).forEach(link_idx => {
-        n.inputLinksId.push(data.links['link' + link_idx].idLink)
+        n.inputLinksId.push('link' + link_idx)
       });
       (n_depreciated.output_links as number[]).forEach(link_idx => {
-        n.outputLinksId.push(data.links['link' + link_idx].idLink)
+        n.outputLinksId.push('link' + link_idx)
       })
       delete n_depreciated.output_links
       delete n_depreciated.input_links
@@ -892,14 +893,26 @@ export const convert_nodes:convert_nodesFuncType = (
       }
     }
 
-    if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
+    if (n.name.includes('(I') && n.outputLinksId.length > 0 ) {
+      n.tags['Type de noeud'] = ['echange']
       if (data_to_convert.display_style.trade_close !== undefined) {
         n_depreciated.trade_close = data_to_convert.display_style.trade_close
       }
-    } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
+      n.position = 'relative'
+      n.x = data_to_convert.trade_close_hspace as number
+      n.y = data_to_convert.trade_close_vspace as number
+      AssignNodeLocalAttribute(n,'label_visible', false)
+      AssignNodeLocalAttribute(n,'shape_visible', false)
+    } else if (n.name.includes('(E') && !n.name.includes('(EA)') ) {
+      n.tags['Type de noeud'] = ['echange']
       if (data_to_convert.display_style.trade_close !== undefined) {
         n_depreciated.trade_close = data_to_convert.display_style.trade_close
       }
+      n.position = 'relative'
+      n.x = data_to_convert.trade_close_hspace as number
+      n.y = data_to_convert.trade_close_vspace as number
+      AssignNodeLocalAttribute(n,'label_visible', false)
+      AssignNodeLocalAttribute(n,'shape_visible', false)
     }
     if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
       n.position = 'relative'
@@ -966,9 +979,21 @@ export const convert_nodes:convert_nodesFuncType = (
         n.style='NodeSectorStyle'
       }
     }
+
+    //remove tags which are not in data.NodeTags
+    const tags_to_remove : string[] = []
+    for (const tag in n.tags) {
+      if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
+        tags_to_remove.push(tag)
+      }
+    }
+    tags_to_remove.forEach(tag=>{delete n.tags[tag]} )
+
     data.nodes[n.idNode]=n
   }
+
   )
+
 }
 
 export const convert_links:convert_linksFuncType = (
@@ -1165,9 +1190,10 @@ export const convert_links:convert_linksFuncType = (
         AssignLinkLocalAttribute(l,'orientation','hv')
       }
     }
-    if ('frozen' in l) {
-      delete l_convert.frozen
-    }
+    // if ('frozen' in l) {
+    //   l.
+    //   delete l_convert.frozen
+    // }
     if ('link_reverse' in l) {
       delete l_convert.link_reverse
     }
@@ -1392,7 +1418,7 @@ export const convert_links:convert_linksFuncType = (
           }
           (editable_link.value2 as SankeyLinkValue) = {
             value : the_value as number,
-            display_value : the_display_value as string,
+            display_value: the_display_value == 'default' ? '' : the_display_value,
             tags            : {},
             extension : {}
           }
@@ -1516,9 +1542,21 @@ export const convert_data:ConvertDataFuncType = (
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
   }
+
+
   convert_tags(data)
   convert_nodes(data)
   convert_links(data)
+
+  if (data_to_convert.node_width ) {
+   Object.values(data.nodes).forEach(n=>{
+    n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
+    n.local.node_width=(data_to_convert.node_width)
+   }) 
+  }
+  if (data.version === "0.3") {
+    data.style_node['default'].node_height = 3
+  }
 
   if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
     data.linkZIndex=Object.values(data.links).map(l=>l.idLink)
@@ -1622,7 +1660,7 @@ export const convert_data:ConvertDataFuncType = (
   }
 
   if(data.node_label_separator===undefined || data.node_label_separator===null){
-    data.node_label_separator=''
+    data.node_label_separator=' - '
   }
 
   clean_data_local(data)
@@ -1649,7 +1687,7 @@ const clean_data_local=(data:SankeyData)=>{
 
   // Clean links local
   Object.values(data.links).forEach(l=>{
-    if(l.local!==undefined && l.local!==null){
+    if(l.local!==undefined && l.local!==null && l.style !== undefined){
       Object.keys(l.local).forEach((k_l : string)=>{
         const k_l_c=k_l as keyof SankeyLinkAttrLocal
         const k_s_c=k_l as keyof SankeyLinkStyle
