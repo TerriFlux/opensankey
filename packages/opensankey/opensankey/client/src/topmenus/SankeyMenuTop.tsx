@@ -1134,7 +1134,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = '100px 100px auto '+ data_rem + ' ' + unit_rem + ' 12fr'
+  let menutop_grid_template = '150px 150px auto auto auto 13rem'
   if (window.SankeyToolsStatic) {
     menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem
   }
@@ -1282,6 +1282,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           <Box
             layerStyle="menubottom_item_style"
             justifySelf='end'
+            paddingRight='1.5rem'
           >
             9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)4 56 47 00 71
           </Box>
