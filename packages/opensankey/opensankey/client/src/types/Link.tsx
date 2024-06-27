@@ -139,7 +139,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {Class_Data}
    * @memberof Class_LinkElement
    */
-  private _values: Class_LinkValue | null = null // TODO finir
+  private _values?: Class_LinkValue
 
   /**
    * Value of tooltip text associated to link
@@ -634,6 +634,16 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
+   * Get value
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get value() {
+    // TODO Faire autrement
+    return this._values
+  }
+
+  /**
    * Set destination node
    * @memberof Class_LinkElement
    */
@@ -758,7 +768,7 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public set shape_ending_curve(_: number) {
-    if (_ < 1 && _ > this.shape_starting_curve){
+    if (_ <= 1 && _ > this.shape_starting_curve){
       this._display.attributes.shape_ending_curve = _
       this.drawShape()
     }
@@ -781,7 +791,10 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_starting_tangeant(_: number) { this._display.attributes.shape_starting_tangeant = _; this.drawShape() }
+  public set shape_starting_tangeant(_: number) {
+    this._display.attributes.shape_starting_tangeant = _
+    this.drawShape()
+  }
 
   /**
    * TODO Description

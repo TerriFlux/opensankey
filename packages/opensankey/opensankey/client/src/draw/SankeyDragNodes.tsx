@@ -52,7 +52,6 @@ export const DragGNodeEvent: DragGNodeEventFType = (
       d3.selectAll('.node_shape').nodes().forEach(element => {
         node_visible.push(d3.select(element).attr('id'))
       })
-      //hideLinkOnDragElement(applicationData)
     })
     .on('drag', function (event, node) {
       if (ref_getter_mode_selection.current == 's') {
@@ -67,22 +66,23 @@ export const DragGNodeEvent: DragGNodeEventFType = (
             ComponentUpdater, link_function,node_function
           )
         }
-        if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse' || d3.select(event.subject.sourceEvent.target).node().tagName == 'path') {
+        const elt_dragged = d3.select(event.subject.sourceEvent.target).node().tagName
+        if (elt_dragged == 'rect' || elt_dragged == 'ellipse' || elt_dragged == 'path' || elt_dragged == 'image') {
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater, link_function,node_function
           )
         }
       }
-    }).on('end', function () {
-      if (d3.select(document.activeElement).attr('class') !== 'input_label') {
+    }).on('end', function (event,node) {
+      setTimeout(() => {
+        if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // Update all links displayed
-        // Seems overkill but it possible that when we drag a node we trigger
-        // OpposingDragElements who shift all node not dragged, so we have to update position of all link too
-        // node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-        link_function.RedrawLinks(Object.values(applicationData.display_links))
-        ComponentUpdater.updateComponenSaveInCache.current(false)
-        resizeCanvas(applicationData)
-      }
+          node_function.RedrawNodes([node])
+          link_function.RedrawLinks(Object.values(applicationData.display_links))
+          ComponentUpdater.updateComponenSaveInCache.current(false)
+          resizeCanvas(applicationData)
+        }
+      }, 100)
     })
 }
 /**

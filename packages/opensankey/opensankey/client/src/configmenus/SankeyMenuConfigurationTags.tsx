@@ -323,7 +323,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                   {/* Supprimer une etiquette  */}
                   <Td >
                     <OSTooltip label={t('Tags.tooltips.rm')}>
-                      <Button size={'sm'}
+                      <Button
                         variant='menuconfigpanel_del_button_in_table'
                         value='-' onClick={() => { handleDelTag(tag_key) }}>
                         <FaMinus />
@@ -357,7 +357,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     <Td >
                       <OSTooltip label={t('Tags.tooltips.visible')}>
                         <Button
-                          variant='menuconfigpanel_option_btn_in_table'
+                          variant='menuconfigpanel_option_button_in_table'
                           name={'element_visible' + tag_key}
                           id={tag_key}
                           onClick={
@@ -495,7 +495,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                            Monter le groupe d'étiquette *
                           <OSTooltip label={t('Tags.tooltips.up')}>
                             <Button
-                              variant='menuconfigpanel_option_btn_in_table'
+                              variant='menuconfigpanel_option_button_in_table'
                               borderRadius='6px 0px 0px 6px'
                               onClick={() => handleUpGrpTag(tags_group_key)}>
                               <FaArrowAltCircleUp />
@@ -504,7 +504,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                            Descendre le groupe d'étiquettes
                           <OSTooltip label={t('Tags.tooltips.down')}>
                             <Button
-                              variant='menuconfigpanel_option_btn_in_table'
+                              variant='menuconfigpanel_option_button_in_table'
                               borderRadius='0px 6px 6px 0px'
                               onClick={() => handleDownGrpTag(tags_group_key)}>
                               <FaArrowAltCircleDown />

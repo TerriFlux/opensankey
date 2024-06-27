@@ -13,7 +13,7 @@ export type setDiagramFuncType = (
 
 export type addSimpleLevelDropDownFType = (
   applicationData:applicationDataType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
 ) => JSX.Element
@@ -65,8 +65,9 @@ export type stretchButtonsFType=(
 
 export type DataTagSelectorType={
   applicationData:applicationDataType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  in_popover:boolean
 }
