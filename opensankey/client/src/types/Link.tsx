@@ -200,7 +200,6 @@ export class Class_LinkElement extends Class_Element {
     this._target = target
     this._target.addInputLink(this)
 
-    console.log(this._value)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -402,6 +401,27 @@ export class Class_LinkElement extends Class_Element {
    */
   private source_and_target_displayed() {
     return this._source.displayed && this._target.displayed
+  }
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: unknown }
+
+    json_object['idLink'] = this.id
+    json_object['idSource'] = this._source.id
+    json_object['idTarget'] = this._target.id
+    json_object['position'] = this.position_type
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
+
+    json_object['style'] = Object.entries(this.drawing_area.sankey.link_styles_dict).filter(stl => stl[1] === (this._display.style))[0][0]
+
+    json_object['local'] = this._display.local.toJSON()
+    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
+
+    json_object['value'] = this._value //Todo create function to JSONize link value
+
+    return json_object
+
   }
 
 
@@ -1185,6 +1205,84 @@ export class Class_LinkAttribute {
   custom_digit?: boolean
   nb_digit?: number
 
+  constructor() { }
+
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: unknown }
+
+    // Geometry link
+    if (this.orientation !== undefined) json_object['orientation'] = this.orientation
+    if (this.left_horiz_shift !== undefined) json_object['left_horiz_shift'] = this.left_horiz_shift
+    if (this.right_horiz_shift !== undefined) json_object['right_horiz_shift'] = this.right_horiz_shift
+    if (this.vert_shift !== undefined) json_object['vert_shift'] = this.vert_shift
+    if (this.curvature !== undefined) json_object['curvature'] = this.curvature
+    if (this.curved !== undefined) json_object['curved'] = this.curved
+    if (this.recycling !== undefined) json_object['recycling'] = this.recycling
+    if (this.arrow_size !== undefined) json_object['arrow_size'] = this.arrow_size
+
+    // Geometry link labels
+    if (this.label_position !== undefined) json_object['label_position'] = this.label_position
+    if (this.orthogonal_label_position !== undefined) json_object['orthogonal_label_position'] = this.orthogonal_label_position
+    if (this.label_on_path !== undefined) json_object['label_on_path'] = this.label_on_path
+    if (this.label_pos_auto !== undefined) json_object['label_pos_auto'] = this.label_pos_auto
+
+    //Attributes link
+    if (this.arrow !== undefined) json_object['arrow'] = this.arrow
+    if (this.color !== undefined) json_object['color'] = this.color
+    if (this.opacity !== undefined) json_object['opacity'] = this.opacity
+    if (this.dashed !== undefined) json_object['dashed'] = this.dashed
+
+    //Attributes link labels
+    if (this.label_visible !== undefined) json_object['label_visible'] = this.label_visible
+    if (this.label_font_size !== undefined) json_object['label_font_size'] = this.label_font_size
+    if (this.text_color !== undefined) json_object['text_color'] = this.text_color
+    if (this.to_precision !== undefined) json_object['to_precision'] = this.to_precision
+    if (this.scientific_precision !== undefined) json_object['scientific_precision'] = this.scientific_precision
+    if (this.font_family !== undefined) json_object['font_family'] = this.font_family
+    if (this.label_unit_visible !== undefined) json_object['label_unit_visible'] = this.label_unit_visible
+    if (this.label_unit !== undefined) json_object['label_unit'] = this.label_unit
+    if (this.custom_digit !== undefined) json_object['custom_digit'] = this.custom_digit
+    if (this.nb_digit !== undefined) json_object['nb_digit'] = this.nb_digit
+
+    return json_object
+  }
+
+  // ============== Getter & Setter =====================
+
+  // // Geometry link
+  // public get orientation(){return  this._orientation}
+  // public get left_horiz_shift(){return  this._left_horiz_shift}
+  // public get right_horiz_shift(){return  this._right_horiz_shift}
+  // public get vert_shift(){return  this._vert_shift}
+  // public get curvature(){return  this._curvature}
+  // public get curved(){return  this._curved}
+  // public get recycling(){return  this._recycling}
+  // public get arrow_size(){return  this._arrow_size}
+
+  // // Geometry link labels
+  // public get label_position(){return  this._label_position}
+  // public get orthogonal_label_position(){return  this._orthogonal_label_position}
+  // public get label_on_path(){return  this._label_on_path}
+  // public get label_pos_auto(){return  this._label_pos_auto}
+
+  // //Attributes link
+  // public get arrow(){return  this._arrow}
+  // public get color(){return  this._color}
+  // public get opacity(){return  this._opacity}
+  // public get dashed(){return  this._dashed}
+
+  // //Attributes link labels
+  // public get label_visible(){return  this._label_visible}
+  // public get label_font_size(){return  this._label_font_size}
+  // public get text_color(){return  this._text_color}
+  // public get to_precision(){return  this._to_precision}
+  // public get scientific_precision(){return  this._scientific_precision}
+  // public get font_family(){return  this._font_family}
+  // public get label_unit_visible(){return  this._label_unit_visible}
+  // public get label_unit(){return  this._label_unit}
+  // public get custom_digit(){return  this._custom_digit}
+  // public get nb_digit(){return  this._nb_digit}
 }
 
 

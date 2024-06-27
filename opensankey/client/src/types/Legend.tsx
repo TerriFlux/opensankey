@@ -48,6 +48,7 @@ export class Class_Legend extends Class_Element {
   }
 
   // ============== Method ================
+  // =======Public
   public draw() {
     // Heritance of draw function
     super.draw()
@@ -86,6 +87,21 @@ export class Class_Legend extends Class_Element {
     this.updateLegendHeight()
 
   }
+  
+  public toJSON(){
+    const json_object={} as {[_:string]:unknown}
+    json_object['mask_legend']=this._masked
+    json_object['legend_width']=this.width
+    json_object['display_legend_scale']=this._display_legend_scale
+    json_object['legend_police']=this._legend_police
+    json_object['legend_bg_border']=this._legend_bg_border
+    json_object['legend_bg_color']=this._legend_bg_color
+    json_object['legend_bg_opacity']=this._legend_bg_opacity
+    json_object['legend_show_dataTags']=this._legend_show_dataTags
+    return json_object
+  }
+  // ========Private
+
 
   /**
      * Function that draw the background of the legend, it is also used as draggable element to move the legend

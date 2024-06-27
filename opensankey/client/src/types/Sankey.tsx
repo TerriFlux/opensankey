@@ -16,7 +16,7 @@ import {
 import {
   Class_LinkElement,
   Class_LinkStyle,
-  default_link_style,
+  // default_link_style,
 } from './Link'
 import {
   Class_NodeElement,
@@ -34,6 +34,7 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
 // SPECIFIC CONSTANTS *******************************************************************
 
 const default_node_style = new Class_NodeStyle(false)
+const default_link_style = new Class_LinkStyle()
 
 // CLASS SANKEY *************************************************************************
 /**
