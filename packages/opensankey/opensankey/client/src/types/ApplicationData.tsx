@@ -127,4 +127,38 @@ export class Class_ApplicationData {
 
   public get filter_label(): number {return this._filter_label}
   public set filter_label(value: number) {this._filter_label = value}
+
+/**
+ * Reset value of drawing_area and substructur with data from JSON 
+ * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
+ *
+ * @param {{ [_: string]: any }} json_object
+ * @memberof Class_ApplicationData
+ */
+public new_drawing_area_fromJSON(json_object: { [_: string]: any }) {
+    // TODO : define default value in case data is not in JSON
+
+    const w = json_object['width'] ?? 1000
+    const h = json_object['height'] ?? 1000
+    const draw_area = new Class_DrawingArea(h, w, this)
+
+    draw_area.grid_size = json_object['grid_square_size'] ?? 50
+    draw_area.grid_visible = json_object['grid_visible'] ?? false
+
+
+    draw_area._horizontal_spacing = json_object['h_space'] ?? 150
+    draw_area._vertical_spacing = json_object['v_space'] ?? 150
+
+    draw_area.scale = json_object['user_scale'] ?? 50
+    draw_area.color = json_object['couleur_fond_sankey'] ?? 'whitesmoke'
+
+    // draw_area.node_label_separator=json_object['node_label_separator']??''
+
+    draw_area.legend.fromJSON(json_object)
+
+    // Set values for nodes,links,node_style,flux_style,node_taggs,flux_taggs,data_taggs and all their substructur
+    draw_area.sankey.fromJSON(json_object)
+    
+    this.drawing_area= draw_area
+  }
 }
