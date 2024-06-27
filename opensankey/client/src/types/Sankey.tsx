@@ -88,8 +88,8 @@ export class Class_Sankey {
   private _links: { [_: string]: Class_LinkElement } = {}
 
   // Existing styles
-  private _link_styles: { [_: string]: Class_LinkStyle } = {'default': default_link_style } // TODO create defaut style
-  private _node_styles: { [_: string]: Class_NodeStyle } = {'default': default_node_style }
+  private _link_styles: { [_: string]: Class_LinkStyle } = { 'default': default_link_style } // TODO create defaut style
+  private _node_styles: { [_: string]: Class_NodeStyle } = { 'default': default_node_style }
 
   // Variable determining if we apply tag color to elements
   private _colorMap: string
@@ -122,31 +122,31 @@ export class Class_Sankey {
 
   ) {
     this.drawing_area = drawing_area
-    this.menu_config=menu_config
-    this._colorMap='no_colormap'
-    this._nodesColorMap='no_colormap'
-    this._linksColorMap='no_colormap'
+    this.menu_config = menu_config
+    this._colorMap = 'no_colormap'
+    this._nodesColorMap = 'no_colormap'
+    this._linksColorMap = 'no_colormap'
   }
 
   // GETTERS / SETTERS ==================================================================
 
-  public get colorMap(): string {return this._colorMap}
-  public set colorMap(value: string) {this._colorMap = value}
+  public get colorMap(): string { return this._colorMap }
+  public set colorMap(value: string) { this._colorMap = value }
 
-  public get nodesColorMap(): string {return this._nodesColorMap}
-  public set nodesColorMap(value: string) {this._nodesColorMap = value}
+  public get nodesColorMap(): string { return this._nodesColorMap }
+  public set nodesColorMap(value: string) { this._nodesColorMap = value }
 
-  public get linksColorMap(): string {return this._linksColorMap}
-  public set linksColorMap(value: string) {this._linksColorMap = value}
-  
-  public get filter_displayed_link_selector(): boolean {return this._filter_displayed_link_selector}
-  public set filter_displayed_link_selector(value: boolean) {this._filter_displayed_link_selector = value}
+  public get linksColorMap(): string { return this._linksColorMap }
+  public set linksColorMap(value: string) { this._linksColorMap = value }
 
-  public get filter_displayed_node_selector(): boolean {return this._filter_displayed_node_selector}
-  public set filter_displayed_node_selector(value: boolean) {this._filter_displayed_node_selector = value}
+  public get filter_displayed_link_selector(): boolean { return this._filter_displayed_link_selector }
+  public set filter_displayed_link_selector(value: boolean) { this._filter_displayed_link_selector = value }
 
-  public get data_taggs_entries(){return Object.entries(this.data_taggs)}
-  public get data_taggs_list(){return Object.values(this.data_taggs)}
+  public get filter_displayed_node_selector(): boolean { return this._filter_displayed_node_selector }
+  public set filter_displayed_node_selector(value: boolean) { this._filter_displayed_node_selector = value }
+
+  public get data_taggs_entries() { return Object.entries(this.data_taggs) }
+  public get data_taggs_list() { return Object.values(this.data_taggs) }
 
   /**
    * Return an object wherekey are data_taggs id ,
@@ -155,10 +155,10 @@ export class Class_Sankey {
    * @readonly
    * @memberof Class_Sankey
    */
-  public get data_taggs_object_tag_selected(){
-    const tmp={} as {[_:string]:string[]}
-    this.data_taggs_entries.forEach(ent=>{
-      tmp[ent[0]]=ent[1].tags_selected_list.map(t=>t.id)
+  public get data_taggs_object_tag_selected() {
+    const tmp = {} as { [_: string]: string[] }
+    this.data_taggs_entries.forEach(ent => {
+      tmp[ent[0]] = ent[1].tags_selected_list.map(t => t.id)
     })
     return tmp
   }
@@ -401,7 +401,7 @@ export class Class_Sankey {
       return tag_group
     }
     else {
-      return this.addTagGroup(id+'_0', name+'_0', type_group)
+      return this.addTagGroup(id + '_0', name + '_0', type_group)
     }
   }
 
@@ -451,5 +451,93 @@ export class Class_Sankey {
    */
   public getListGroupTagOf(type_group: Type_MacroTagGroup) {
     return Object.values(this[type_group])
+  }
+
+
+  /**
+   * Setting value of sankey and substructur from JSON
+   *
+   * @param {{[_:string]:any} json_object
+   * @memberof Class_Legend
+  */
+  public fromJSON(json_object: { [_: string]: any }) {
+    // TODO : define default value in case data is not in JSON
+
+    // Set node styles from json data
+    Object.entries(json_object['style_node']).forEach(ent_style_node => {
+      // Create a node style 
+      const new_style = new Class_NodeStyle(false)
+      // Set node style value to node from JSON
+      new_style.fromJSON(ent_style_node[1] as { [x: string]: any })
+      // Add node style to sankey
+      this._node_styles[ent_style_node[0]] = new_style
+    })
+
+    // Set link styles from json data
+    Object.entries(json_object['style_link']).forEach(ent_style_link => {
+      // Create a link style
+      const new_style = new Class_LinkStyle()
+      // Set link style value to link style from JSON
+      new_style.fromJSON(ent_style_link[1] as { [x: string]: any })
+      // Add link style to sankey
+      this._link_styles[ent_style_link[0]] = new_style
+    })
+
+
+    // Set node tag & tag group from json data
+    Object.entries(json_object['nodeTags']).forEach(ent_nt => {
+      // Create a node tag group
+      const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
+      // Set node tag group value from JSON
+      new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
+      // Add node tag group to sankey
+      this.node_taggs[ent_nt[0]] = new_grp
+    })
+
+    // Set flux tag & tag group from json data
+    Object.entries(json_object['fluxTags']).forEach(ent_ft => {
+      // Create a flux tag group
+      const new_grp = new Class_TagGroup(ent_ft[0], (ent_ft[1] as { group_name: string }).group_name)
+      // Set flux tag group value from JSON
+      new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
+      // Add flux tag group to sankey
+      this.flux_taggs[ent_ft[0]] = new_grp
+    })
+
+    // Set data tag & tag group from json data
+    Object.entries(json_object['dataTags']).forEach(ent_dt => {
+      // Create a flux tag group
+      const new_grp = new Class_TagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name)
+      // Set flux tag group value from JSON
+      new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
+      // Add flux tag group to sankey
+      this.data_taggs[ent_dt[0]] = new_grp
+    })
+
+    Object.entries(json_object['nodes']).forEach(ent_node => {
+      // Create a node 
+      const node = new Class_NodeElement(ent_node[0], (ent_node[1] as { name: string }).name, this.drawing_area, this.menu_config)
+      // Set node value to node from JSON
+      node.fromJSON(ent_node[1] as { [x: string]: any })
+      // Add node to sankey
+      this.addNode(node)
+    })
+
+    Object.entries(json_object['links']).forEach(ent_link => {
+      const obj=ent_link[1] as {[x:string]:any}
+      const source =this.nodes_dict[obj['idSource']]
+      const target =this.nodes_dict[obj['idTarget']]
+            // Create a link
+            const link = new Class_LinkElement(source,target,this.drawing_area,this.menu_config)
+            // Set link value to link from JSON
+            link.fromJSON(obj)
+            // Add link to sankey
+            this.addLink(link)
+    })
+
+
+
+
+
   }
 }

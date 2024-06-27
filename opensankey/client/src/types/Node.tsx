@@ -1342,6 +1342,33 @@ export class Class_NodeElement extends Class_Element {
 
     return json_object
   }
+
+  public fromJSON(json_node_object: { [x: string]: any }) {
+
+    this.position_type = json_node_object['position'] ?? ''
+    this.position_x = json_node_object['x'] ?? 10
+    this.position_y = json_node_object['y'] ?? 10
+    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
+
+    //  Input & output link should be automatically added when we create link from json
+
+    this.style=this.drawing_area.sankey.node_styles_dict[json_node_object['style']??'default'] // if json_node_object['style'] is undefined assign default style
+
+    if(json_node_object['local']){
+      this._display.attributes.fromJSON(json_node_object['local'])
+    }
+    // In JSON here are how supposed tags var is :
+    // tags:{key_grp_tag:key_tag_selected } 
+    // where 'key_grp_tag' represent the id of a node_taggs group 
+    // &  'key_tag_selected' represent the id of the tag selected for that node_taggs group  
+    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[1] && !(ent[1] instanceof Array)).forEach(ent_nodetag=>{
+      if(ent_nodetag[1] instanceof Array && ent_nodetag.length>0){
+        this._tags[ent_nodetag[0]]=this.drawing_area.sankey.node_taggs[ent_nodetag[0]].tags[ent_nodetag[1][0] as string]
+      }else if(!(ent_nodetag[1] instanceof Array)){
+      this._tags[ent_nodetag[0]]=this.drawing_area.sankey.node_taggs[ent_nodetag[0]].tags[ent_nodetag[1] as string]
+      }
+
+    })  }
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
@@ -1533,10 +1560,45 @@ export class Class_NodeAttribute {
     if (this._value_label_horiz !== undefined) json_object['label_horiz_valeur'] = this._value_label_horiz
     if (this._value_label_background !== undefined) json_object['value_label_background'] = this._value_label_background
 
-
-
     return json_object
+  }
 
+  public fromJSON(json_local_object: { [x: string]: any }) {
+    // if attribute object has these variable then add it to local
+    // this function is also called when creating style from json and should trigger all if, because in style all attribute are defined 
+
+    if (json_local_object['shape_visible'] !== undefined) this._shape_visible = json_local_object['shape_visible']
+    if (json_local_object['shape'] !== undefined) this._shape_type = json_local_object['shape']
+    if (json_local_object['node_width'] !== undefined) this._shape_min_width = json_local_object['node_width']
+    if (json_local_object['node_height'] !== undefined) this._shape_min_height = json_local_object['node_height']
+    if (json_local_object['color'] !== undefined) this._shape_color = json_local_object['color']
+    if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = json_local_object['colorSustainable']
+    if (json_local_object['node_arrow_angle_factor'] !== undefined) this._shape_arrow_angle_factor = json_local_object['node_arrow_angle_factor']
+    if (json_local_object['node_arrow_angle_direction'] !== undefined) this._shape_arrow_angle_direction = json_local_object['node_arrow_angle_direction']
+
+    if (json_local_object['label_visible'] !== undefined) this._name_label_visible = json_local_object['label_visible']
+    if (json_local_object['font_family'] !== undefined) this._name_label_font_family = json_local_object['font_family']
+    if (json_local_object['font_size'] !== undefined) this._name_label_font_size = json_local_object['font_size']
+    if (json_local_object['uppercase'] !== undefined) this._name_label_uppercase = json_local_object['uppercase']
+    if (json_local_object['bold'] !== undefined) this._name_label_bold = json_local_object['bold']
+    if (json_local_object['italic'] !== undefined) this._name_label_italic = json_local_object['italic']
+    if (json_local_object['label_box_width'] !== undefined) this._name_label_box_width = json_local_object['label_box_width']
+    if (json_local_object['label_color'] !== undefined) this._name_label_color = json_local_object['label_color']
+    if (json_local_object['label_vert'] !== undefined) this._name_label_vert = json_local_object['label_vert']
+    if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = json_local_object['label_horiz']
+    if (json_local_object['label_background'] !== undefined) this._name_label_background = json_local_object['label_background']
+
+    if (json_local_object['show_value'] !== undefined) this._value_label_visible = json_local_object['show_value']
+    if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = json_local_object['value_label_font_family']
+    if (json_local_object['value_font_size'] !== undefined) this._value_label_font_size = json_local_object['value_font_size']
+    if (json_local_object['value_label_uppercase'] !== undefined) this._value_label_uppercase = json_local_object['value_label_uppercase']
+    if (json_local_object['value_label_bold'] !== undefined) this._value_label_bold = json_local_object['value_label_bold']
+    if (json_local_object['value_label_italic'] !== undefined) this._value_label_italic = json_local_object['value_label_italic']
+    if (json_local_object['value_label_box_width'] !== undefined) this._value_label_box_width = json_local_object['value_label_box_width']
+    if (json_local_object['value_label_color'] !== undefined) this._value_label_color = json_local_object['value_label_color']
+    if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = json_local_object['label_vert_valeur']
+    if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = json_local_object['label_horiz_valeur']
+    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = json_local_object['value_label_background']
   }
 }
 

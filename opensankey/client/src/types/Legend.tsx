@@ -100,6 +100,26 @@ export class Class_Legend extends Class_Element {
     json_object['legend_show_dataTags']=this._legend_show_dataTags
     return json_object
   }
+
+/**
+ * Setting value of legend from JSON
+ *
+ * @param {{[_:string]:any} json_object
+ * @memberof Class_Legend
+ */
+public fromJSON(json_object:{[_:string]:any}){
+  // TODO : define default value in case data is not in JSON
+
+  this._masked=json_object['mask_legend']??true
+  this.width=json_object['legend_width']??180
+  this._display_legend_scale=json_object['display_legend_scale']??false
+  this._legend_police=json_object['legend_police']?? 12
+  this._legend_bg_border=json_object['legend_bg_border']?? false
+  this._legend_bg_color=json_object['legend_bg_color']?? 'grey'
+  this._legend_bg_opacity=json_object['legend_bg_opacity']?? 0
+  this._legend_show_dataTags=json_object['legend_show_dataTags']?? false
+
+}
   // ========Private
 
 

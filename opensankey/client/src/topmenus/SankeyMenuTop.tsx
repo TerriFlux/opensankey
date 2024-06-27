@@ -146,8 +146,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   get_default_data,
   dict_hook_ref_setter_show_dialog_components,
   never_see_again,
-  data,
-  set_data,
+  applicationData,
   external_edition_item,
   external_file_item,
   external_file_export_item,
@@ -155,6 +154,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   externale_navbar_item,
   convert_data
 ) => {
+  const {data,set_data,new_data}=applicationData
   const _load_json = useRef<HTMLInputElement>(null)
 
   const {ref_setter_show_style_node,ref_setter_show_style_link} = dict_hook_ref_setter_show_dialog_components
@@ -286,24 +286,27 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
                 const reader = new FileReader()
                 reader.onload = (() => {
                   return (e: ProgressEvent<FileReader>) => {
-                    Reinitialization()
+                    // Reinitialization()
                     const result = String((e.target as FileReader).result)
-                    const new_data = get_default_data()
+                    const default_data = get_default_data()
                     const result_data = JSON.parse(result)
-                    Object.assign(new_data, result_data)
-                    if (result_data.version === undefined) {
-                      (new_data.version as unknown as undefined) = undefined
-                    }
-                    convert_data(new_data,get_default_data)
-                    complete_sankey_data(new_data,get_default_data,DefaultNode,DefaultLink)
+                    Object.assign(default_data, result_data)
+                    // if (result_data.version === undefined) {
+                    //   (new_data.version as unknown as undefined) = undefined
+                    // }
+                    // convert_data(default_data,get_default_data)
+                    // complete_sankey_data(default_data,get_default_data,DefaultNode,DefaultLink)
 
-                    set_data(new_data)
-                    const test = document.getElementsByClassName('navbar')
-                    let margin_top = 0
-                    if (test && test.length > 0) {
-                      margin_top = test[0].getBoundingClientRect().height
-                      d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-                    }
+                    // set_data(new_data)
+                    // const test = document.getElementsByClassName('navbar')
+                    // let margin_top = 0
+                    // if (test && test.length > 0) {
+                    //   margin_top = test[0].getBoundingClientRect().height
+                    //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+                    // }
+                    console.log(default_data)
+                    new_data.new_drawing_area_fromJSON(default_data)
+                    new_data.drawing_area.reset()
                   }
                 })()
                 reader.readAsText(files[0])
