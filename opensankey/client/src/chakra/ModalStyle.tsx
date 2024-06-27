@@ -12,6 +12,7 @@ const screenHeight = window.innerHeight
 export const modal_welcome = definePartsStyle({
   dialog:{
     width:'75%',
+    top:'5%',
     maxWidth:'inherit'
   },
   body: {

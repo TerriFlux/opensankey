@@ -74,7 +74,7 @@ export const tabs_navbar = definePartsStyle({
   },
   tablist: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(7, 7rem)',
+    gridTemplateColumns: 'repeat(7, auto)',
     gridColumnGap: '1px',
     border: '0 !important',
     margin: '0 !important',
