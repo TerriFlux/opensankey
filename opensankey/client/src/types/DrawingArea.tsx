@@ -29,7 +29,7 @@ import {
   Class_ApplicationData
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_Element, sortElements } from './Element'
+import { Class_Element } from './Element'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -194,7 +194,6 @@ export class Class_DrawingArea {
     // TODO ajouter groupes pour autres élements
     // Draw Everything
     this.drawElements()
-    this.legend.reset()
 
     // Added events listeners
     this.setEventsListeners()
@@ -210,6 +209,13 @@ export class Class_DrawingArea {
     this.drawBackground()
     // Draw grid
     this.drawGrid()
+    // Draw all nodes
+    this._sankey.nodes_list.forEach(n=>n.reset())
+    // Draw all links
+    // this._sankey.links_list.forEach(l=>l.reset())
+    // Draw legend
+    this.legend.reset()
+
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -228,8 +234,8 @@ export class Class_DrawingArea {
   public get sankey() { return this._sankey }
 
   // Legend
-  public get legend(): Class_Legend {return this._legend}
-  public set legend(value: Class_Legend) {this._legend = value}
+  public get legend(): Class_Legend { return this._legend }
+  public set legend(value: Class_Legend) { this._legend = value }
 
   // Selections
   public get selected_nodes_list() : Class_NodeElement[] {
@@ -283,7 +289,7 @@ export class Class_DrawingArea {
     return this._scale
   }
   public set scale(value: number) {
-    if(value>0){
+    if (value > 0) {
       this._scale = value
     }
   }
@@ -294,13 +300,73 @@ export class Class_DrawingArea {
 
   // Grid visibility
   public get grid_visible() { return this._grid_visible }
-  public set grid_visible(_:boolean){this._grid_visible=_;this.drawGrid()}
+  public set grid_visible(_: boolean) { this._grid_visible = _; this.drawGrid() }
   public setGridVisible() { this.grid_visible = true; this.drawGrid() }
   public setGridInvisible() { this.grid_visible = false; this.drawGrid() }
 
   // Grid size
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
+
+/**
+ * Convert current drawing area & all substructure as JSON data
+ *
+ * @return {*}
+ * @memberof Class_DrawingArea
+ */
+public toJSON() {
+    let json_object = {} as { [_: string]: any }
+    json_object['grid_visible'] = this._grid_visible
+    json_object['grid_square_size'] = this._grid_size
+    json_object['width'] = this._width
+    json_object['height'] = this._height
+    json_object['h_space'] = this._horizontal_spacing
+    json_object['v_space'] = this._vertical_spacing
+    json_object['user_scale'] = this._scale
+    json_object['couleur_fond_sankey'] = this._color
+    json_object['node_label_separator'] = '' // TODO get node label separator when implemented in class
+    json_object = { ...json_object, ...this._legend.toJSON() }
+
+    json_object['nodes'] = {}
+
+    Object.entries(this.sankey.nodes_dict).forEach(ent_node => {
+      json_object['nodes'][ent_node[0]] = ent_node[1].toJSON()
+    })
+
+    json_object['links'] = {}
+    Object.entries(this.sankey.links_dict).forEach(ent_link => {
+      json_object['links'][ent_link[0]] = ent_link[1].toJSON()
+    })
+
+    json_object['style_node'] = {}
+    Object.entries(this.sankey.node_styles_dict).forEach(ent_style_node => {
+      json_object['style_node'][ent_style_node[0]] = ent_style_node[1].toJSON()
+    })
+
+    json_object['style_link'] = {}
+    Object.entries(this.sankey.link_styles_dict).forEach(ent_style_link => {
+      json_object['style_link'][ent_style_link[0]] = ent_style_link[1].toJSON()
+    })
+
+    json_object['nodeTags'] = {}
+    Object.entries(this.sankey.node_taggs).forEach(ent_nt => {
+      json_object['nodeTags'][ent_nt[0]] = ent_nt[1].toJSON()
+    })
+
+    json_object['fluxTags'] = {}
+    Object.entries(this.sankey.flux_taggs).forEach(ent_ft => {
+      json_object['fluxTags'][ent_ft[0]] = ent_ft[1].toJSON()
+    })
+
+    json_object['dataTags'] = {}
+    Object.entries(this.sankey.data_taggs).forEach(ent_dt => {
+      json_object['dataTags'][ent_dt[0]] = ent_dt[1].toJSON()
+    })
+
+    return json_object
+  }
+
+
 
   // PUBLIC METHODS =====================================================================
 
@@ -322,7 +388,7 @@ export class Class_DrawingArea {
         return false
     }
 
-    if(this._legend.isMouseOver()){
+    if (this._legend.isMouseOver()) {
       return false
     }
     // Ok event

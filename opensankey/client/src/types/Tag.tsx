@@ -33,7 +33,7 @@ export class Class_Tag {
   private _group: Class_TagGroup
 
   // List of elements that relates to this tag
-  private _references: {[_: string]: Type_TagReference} = {}
+  private _references: { [_: string]: Type_TagReference } = {}
 
   // Color of tag
   private _color: string = default_grey_color
@@ -56,7 +56,7 @@ export class Class_Tag {
   public delete() {
     // Unref this tag from all references
     Object.values(this._references)
-      .forEach(element=>{
+      .forEach(element => {
         element.removeTag(this)
       })
     this._references = {}
@@ -65,16 +65,16 @@ export class Class_Tag {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get id() {return this._id}
+  public get id() { return this._id }
 
-  public get name() {return this._name}
-  public set name(value: string) {this._name = value}
+  public get name() { return this._name }
+  public set name(value: string) { this._name = value }
 
-  public get color() {return this._color}
-  public set color(value: string) {this._color = value}
+  public get color() { return this._color }
+  public set color(value: string) { this._color = value }
 
-  public get selected() {return this._selected}
-  public set selected(value: boolean) {this._selected = value}
+  public get selected() { return this._selected }
+  public set selected(value: boolean) { this._selected = value }
 
   // PUBLIC METHODS =====================================================================
   public addReference(_: Type_TagReference) {
@@ -86,6 +86,27 @@ export class Class_Tag {
       delete this._references[_.id]
       _.removeTag(this)
     }
+  }
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: any }
+    json_object['id'] = this._id
+    json_object['name'] = this._name
+    json_object['selected'] = this._selected
+    json_object['color'] = this._color
+
+    return json_object
+  }
+
+  /**
+   *Set Tag value from JSON
+   *
+   * @param {{[_:string]:any}} json_object
+   * @memberof Class_Tag
+   */
+  public fromJSON(json_object: { [_: string]: any }) {
+    this._selected = json_object['selected'] ?? false
+    this._color = json_object['color'] ?? 'grey'
   }
 }
 
@@ -103,7 +124,7 @@ export class Class_TagGroup {
   private _name: string
 
   // List of tags
-  private _tags: {[_: string]: Class_Tag} = {}
+  private _tags: { [_: string]: Class_Tag } = {}
 
   // Display attributes
   private _show_legend: boolean = false
@@ -131,7 +152,7 @@ export class Class_TagGroup {
   public delete() {
     // Unref this tag from all references
     Object.values(this._tags)
-      .forEach(element=>{
+      .forEach(element => {
         element.delete()
       })
     this._tags = {}
@@ -140,20 +161,20 @@ export class Class_TagGroup {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get id(): string {return this._id}
-  public set id(value: string) {this._id = value}
+  public get id(): string { return this._id }
+  public set id(value: string) { this._id = value }
 
-  public get name(): string {return this._name}
-  public set name(value: string) {this._name = value}
+  public get name(): string { return this._name }
+  public set name(value: string) { this._name = value }
 
-  public get tags(): { [_: string]: Class_Tag}  {return this._tags}
-  public set tags(value: { [_: string]: Class_Tag} ) {this._tags = value}
+  public get tags(): { [_: string]: Class_Tag } { return this._tags }
+  public set tags(value: { [_: string]: Class_Tag }) { this._tags = value }
 
-  public get banner(): tag_banner_type {return this._banner}
-  public set banner(value: tag_banner_type) {this._banner = value}
+  public get banner(): tag_banner_type { return this._banner }
+  public set banner(value: tag_banner_type) { this._banner = value }
 
-  public get show_legend(): boolean {return this._show_legend}
-  public set show_legend(value: boolean) {this._show_legend = value}
+  public get show_legend(): boolean { return this._show_legend }
+  public set show_legend(value: boolean) { this._show_legend = value }
 
   /**
  * Return list of selected tag from the current group
@@ -161,7 +182,7 @@ export class Class_TagGroup {
  * @readonly
  * @memberof Class_TagGroup
  */
-  public get tags_selected_list(){return Object.values(this._tags).filter(t=>t.selected)}
+  public get tags_selected_list() { return Object.values(this._tags).filter(t => t.selected) }
 
   /**
  * Return list tag from the current group
@@ -169,7 +190,7 @@ export class Class_TagGroup {
  * @readonly
  * @memberof Class_TagGroup
  */
-  public get tags_list(){return Object.values(this._tags)}
+  public get tags_list() { return Object.values(this._tags) }
 
   // PUBLIC METHODS =====================================================================
 
@@ -179,7 +200,7 @@ export class Class_TagGroup {
       this._tags[id] = tag
     }
     else {
-      this.addTag(id+'_0', name+'_0')
+      this.addTag(id + '_0', name + '_0')
     }
   }
 
@@ -196,11 +217,43 @@ export class Class_TagGroup {
       delete this._tags[_.id]
     }
   }
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: any }
+
+    json_object['group_name'] = this._name
+    json_object['show_legend'] = this._show_legend
+    json_object['banner'] = this._banner
+
+    json_object['tags'] = {}
+    Object.entries(this._tags).forEach(ent_tags => {
+      json_object['tags'][ent_tags[0]] = ent_tags[1].toJSON()
+    })
+
+    return json_object
+
+  }
+  /**
+   *Set Tag_group value & substructur from JSON
+   *
+   * @param {{[_:string]:any}} json_object
+   * @memberof Class_TagGroup
+   */
+  public fromJSON(json_object: { [_: string]: any }) {
+    this._show_legend = json_object['show_legend'] ?? false
+    this._banner = json_object['banner'] ?? 'one'
+
+    Object.entries(json_object['tags']).forEach(ent_tags => {
+      const new_tag = new Class_Tag(ent_tags[0], (ent_tags[1] as { name: string }).name, this)
+      new_tag.fromJSON((ent_tags[1] as { [x: string]: any }))
+      this._tags[ent_tags[0]]=new_tag
+    })
+  }
 }
 
 // CLASS TAGGROUP FOR NODES LEVELS ******************************************************
 
-export class Class_TagGroupNodeLevel extends Class_TagGroup{
+export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   // PRIVATE ATTRIBUTES==================================================================
   private _siblings: string[] = []
@@ -208,9 +261,9 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup{
 
   // GETTERS / SETTERS ==================================================================
 
-  public get siblings(): string[] {return this._siblings}
-  public set siblings(value: string[]) {this._siblings = value}
+  public get siblings(): string[] { return this._siblings }
+  public set siblings(value: string[]) { this._siblings = value }
 
-  public get activated(): boolean {return this._activated}
-  public set activated(value: boolean) {this._activated = value}
+  public get activated(): boolean { return this._activated }
+  public set activated(value: boolean) { this._activated = value }
 }

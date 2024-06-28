@@ -28,11 +28,6 @@ const const_default_position_y = 50
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
-export function sortElements(a: Class_Element, b: Class_Element) {
-  if (a.id > b.id) return 1
-  else if (a.id < b.id) return -1
-  else return 0
-}
 
 // CLASS ELEMENT ************************************************************************
 
