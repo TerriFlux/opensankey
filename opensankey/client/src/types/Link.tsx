@@ -213,12 +213,39 @@ export class Class_LinkElement extends Class_Element {
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
     }
-    this._values = new Class_LinkValue(null, 'root', 'root')
-    this._values.createTreeDataLink(drawing_area.sankey.data_taggs_list, 0)
+    // Source
     this._source = source
     this._source.addOutputLink(this)
+    // Target
     this._target = target
     this._target.addInputLink(this)
+    // Values
+    this._values = new Class_LinkValue(null, 'root', 'root')
+    this._values.createTreeDataLink(drawing_area.sankey.data_taggs_list, 0)
+  }
+
+
+  // CLEANING ===========================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_LinkElement
+   */
+  public deleteReferences() {
+    // Unref self from source node
+    this._source.deleteOutputLink(this)
+    // Unref self from target node
+    this._target.deleteInputLink(this)
+    // Unref self from all tags
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.removeReference(this)
+      })
+    this._tags = {}
+    // Unref self from styles
+    this.style.removeReference(this)
+    // Delete related values
+    this._values.delete()
   }
 
   // PUBLIC METHODS =====================================================================
@@ -339,27 +366,6 @@ export class Class_LinkElement extends Class_Element {
       return false
     }
     return true
-  }
-
-  private removeRefToSource() {
-    delete this._source.output_links[this.id]
-  }
-
-  private removeRefToTarget() {
-    delete this._source.input_links[this.id]
-  }
-
-  public delete() {
-    // Delete on drawing area
-    this.unDraw()
-    this.removeRefToSource()
-    this.removeRefToTarget()
-    // Unref tag
-    Object.values(this._tags)
-      .forEach(tag => {
-        tag.removeReference(this)
-      })
-    this._tags = {}
   }
 
   /**
@@ -1762,11 +1768,11 @@ export interface TreeNodeInterface {
 /**
  * Define a node for value
  * @export
- * @class TreeNode
+ * @class Class_TreeNode
  * @implements {TreeNodeInterface}
  */
-export class TreeNode implements TreeNodeInterface {
-  public parent: TreeNodeInterface | null
+export class Class_TreeNode implements TreeNodeInterface {
+  public parent: TreeNodeInterface
   public children: { [x: string]: TreeNodeInterface } = {}
 
   constructor(parent: TreeNodeInterface | null, id: string) {
@@ -1782,7 +1788,7 @@ export interface TreeNodeInterface {
   children: { [x: string]: TreeNodeInterface }
 }
 
-export class Class_LinkValue extends TreeNode {
+export class Class_LinkValue extends Class_TreeNode {
 
   private tag_id: string
   private grp_id: string
