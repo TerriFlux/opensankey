@@ -411,27 +411,17 @@ def download_examples():
 
 
 def parse_folder(current_dir, menus, key=None):
+    if os.path.isfile(current_dir):
+        return
     folder_content = os.listdir(current_dir)
     folder_content.sort()
     exemple_found = False
-    #  artefact_found = False
     for file_or_folder in folder_content:
         if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder\
             or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder\
-                or 'Archive' in file_or_folder or 'new' in file_or_folder or 'prev' in file_or_folder:
-            continue
-        if 'artefacts' in file_or_folder:
-            file_names = os.listdir(os.path.join(current_dir, file_or_folder))
-            file_names.sort()
-            for file_name in file_names:
-                if '.gitkeep' in file_name or '.opensankey' in file_name:
-                    continue
-                if key not in menus:
-                    menus[key] = {}
-                if 'artefacts' not in menus[key]:
-                    menus[key]['artefacts'] = []
-                menus[key]['artefacts'].append(file_name)
-                #  artefact_found = True
+                or 'Archive' in file_or_folder or 'new' in file_or_folder or 'prev' in file_or_folder\
+                or 'artefacts' in file_or_folder or 'Old' in file_or_folder or 'old' in file_or_folder\
+                or 'Matériaux' in file_or_folder:
             continue
         if '.xlsx' in file_or_folder and 'old.' not in file_or_folder:
             if key not in menus:
@@ -446,37 +436,38 @@ def parse_folder(current_dir, menus, key=None):
             menus[key]['Files'].sort()
             exemple_found = True
             continue
+        if 'layout.json' in file_or_folder:
+            if key not in menus:
+                menus[key] = {}
+            if 'Files' not in menus[key]:
+                menus[key]['Files'] = []
+            menus[key]['Files'].append(file_or_folder)
+            menus[key]['Files'].sort()
+            exemple_found = True
+            continue
         if os.path.isfile(os.path.join(current_dir, file_or_folder)):
             continue
-        if file_or_folder != 'sankey':
-            child_key = file_or_folder
-            if key is not None:
-                if key not in menus:
-                    menus[key] = {}
-                #  if key not in artefacts:
-                #      artefacts[key] = {}
-                folder_found = parse_folder(os.path.join(current_dir, file_or_folder), menus[key], child_key)
-                if folder_found:
-                    exemple_found = True
-            else:
-                folder_found = parse_folder(os.path.join(current_dir, file_or_folder), menus, child_key)
-                if folder_found:
-                    exemple_found = True
-        else:
-            file_names = os.listdir(os.path.join(current_dir, file_or_folder))
-            file_names.sort()
-            for file_name in file_names:
-                if 'auto_layout' in file_name:
-                    continue
-                if 'layout.json' not in file_name:
-                    continue
-                if key not in menus:
-                    menus[key] = {}
-                if 'Files' not in menus[key]:
-                    menus[key]['Files'] = []
-                menus[key]['Files'].append(file_name)
-                menus[key]['Files'].sort()
+        child_key = file_or_folder
+        # if 'Etude' == child_key:
+        #     if 'Etude' not in menus:
+        #         menus['Etude'] = {}
+        #     file_names = os.listdir(os.path.join(current_dir, file_or_folder))
+        #     file_names.sort()
+        #     folder_found = parse_folder(os.path.join(current_dir, 'Etude'), menus, child_key)
+        #     if folder_found:
+        #         exemple_found = True
+        #     continue
+        if key is not None:
+            if key not in menus:
+                menus[key] = {}
+            folder_found = parse_folder(os.path.join(current_dir, file_or_folder), menus[key], child_key)
+            if folder_found:
                 exemple_found = True
+        else:
+            folder_found = parse_folder(os.path.join(current_dir, file_or_folder), menus, child_key)
+            if folder_found:
+                exemple_found = True
+
     if not exemple_found and key in menus:
         del menus[key]
     #  if not artefact_found and key in artefacts:
@@ -488,23 +479,23 @@ def parse_folder(current_dir, menus, key=None):
 def menus_examples():
     data_folder = os.environ.get('MFAData')
     menus = {}
-    try:
-        parse_folder(data_folder, menus)
-        context = {
-                'exemples_menu': menus
-        }
-        json_data = json.dumps(context)
-        response = Response(
-            response=json_data,
-            status=200,
-            mimetype='application/json'
-        )
-    except Exception as expt:
-        response = Response(
-            response=str(expt),
-            status=500,
-            mimetype='application/json'
-        )
+    # try:
+    parse_folder(data_folder, menus)
+    context = {
+            'exemples_menu': menus
+    }
+    json_data = json.dumps(context)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
+    # except Exception as expt:
+    #     response = Response(
+    #         response=str(expt),
+    #         status=500,
+    #         mimetype='application/json'
+    #     )
     # Try to import images from MFAData/OpenSankey/image_preview to static/media
     try:
         current_folder = os.environ.get('MFAData')

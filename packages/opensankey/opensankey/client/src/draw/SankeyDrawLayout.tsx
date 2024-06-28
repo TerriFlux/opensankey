@@ -6,11 +6,11 @@ import {
   diff as getDiff,
   applyChange
 } from 'deep-diff'
-import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
 import {
   SankeyData,
   SankeyLink,
+  SankeyLinkValue,
   SankeyNode,
   SankeyNodeAttrLocal,
   agregationType,
@@ -55,6 +55,7 @@ import {
   DeleteNode,
   DeleteLink
 } from '../configmenus/SankeyUtils'
+import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
 
 export const reorganize_inputLinksId : reorganize_inputLinksIdFType = (
@@ -940,48 +941,49 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
     }
     return (
       <Modal
-        show={show_agregation}
-        onHide={ () => {
+        isOpen={show_agregation}
+        onClose={ () => {
           set_show_agregation(false)
           set_dim_name('')
         } } >
-        <Modal.Header closeButton>
-          <Modal.Title>Dimension difference'agrégation</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Row>
-                <Col>
-                  <Form.Select
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
-                    value={dim_name}
-                  >
-                    {dim_names.map(
-                      (cur_dir_name, i) => <option key={i} value={cur_dir_name}>{cur_dir_name}</option>
-                    )}
-                  </Form.Select>
-                  <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Form.Label>
-                </Col>
-              </Row>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={()=> {
-              agregation(data,n.idNode,dim_name)
-              set_data({...data})
+        <ModalOverlay/>
+
+        <ModalContent>
+
+          <ModalHeader >
+        Dimension difference'agrégation
+          </ModalHeader>
+          <ModalCloseButton/>
+          <ModalBody>
+            <Box>
+              <Select
+                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
+                value={dim_name}
+              >
+                {dim_names.map(
+                  (cur_dir_name, i) => <option key={i} value={cur_dir_name}>{cur_dir_name}</option>
+                )}
+              </Select>
+              <Text>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Text>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="menuconfigpanel_option_button_secondary"
+              onClick={()=> {
+                agregation(data,n.idNode,dim_name)
+                set_data({...data})
+                set_show_agregation(false)
+                set_dim_name('')
+              }}
+            >Agrégation</Button>
+            <Button variant="menuconfigpanel_del_button" onClick={() => {
               set_show_agregation(false)
               set_dim_name('')
-            }}
-          >Agrégation</Button>
-          <Button variant="secondary" onClick={() => {
-            set_show_agregation(false)
-            set_dim_name('')
-          }}>Annuler</Button>
-        </Modal.Footer>
+            }}>Annuler</Button>
+          </ModalFooter>
+        </ModalContent>
+
       </Modal>
     )
   } else {
@@ -1011,59 +1013,57 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
     }
     return (
       <Modal
-        show={show_agregation}
-        onHide={ () => {
+        isOpen={show_agregation}
+        onClose={ () => {
           set_show_agregation(false)
           agregationRef.agregationNode.current = undefined
           set_dim_name('')
         }} >
-        <Modal.Header closeButton>
-          <Modal.Title>Dimension desagrégation</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Row>
-                <Col>
-                  <Form.Select
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
-                      set_dim_name(evt.target.value)
-                      const the_child_names: string[] = []
-                      Object.values(data.nodes).forEach(n2 => {
-                        if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
-                          the_child_names.push(n2.name)
-                        }
-                      }
-                      )
-                      set_child_names(the_child_names)
-                    }}
-                    value={dim_name}
-                  >
-                    {dim_names.map(
-                      (cur_dim_name, i) => <option key={i} value={cur_dim_name} >{cur_dim_name}</option>
-                    )}
-                  </Form.Select>
-                  {child_names.map(child_name=><Form.Label>{child_name}</Form.Label>)}
-                </Col>
-              </Row>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={()=> {
-              desagregation(applicationData,n.idNode,dim_name,false)
-              set_data({...data})
+        <ModalOverlay/>
+        <ModalContent>
+          <ModalHeader>
+          Dimension desagrégation
+          </ModalHeader>
+          <ModalCloseButton/>
+          <ModalBody>
+            <Box>
+              <Select
+                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
+                  set_dim_name(evt.target.value)
+                  const the_child_names: string[] = []
+                  Object.values(data.nodes).forEach(n2 => {
+                    if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
+                      the_child_names.push(n2.name)
+                    }
+                  }
+                  )
+                  set_child_names(the_child_names)
+                }}
+                value={dim_name}
+              >
+                {dim_names.map(
+                  (cur_dim_name, i) => <option key={i} value={cur_dim_name} >{cur_dim_name}</option>
+                )}
+              </Select>
+              {child_names.map(child_name=><Text>{child_name}</Text>)}
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="menuconfigpanel_option_button_secondary"
+              onClick={()=> {
+                desagregation(applicationData,n.idNode,dim_name,false)
+                set_data({...data})
+                set_show_agregation(false)
+                set_dim_name('')
+              }}
+            >Désagrégation</Button>
+            <Button variant="menuconfigpanel_del_button" onClick={() => {
               set_show_agregation(false)
               set_dim_name('')
-            }}
-          >Désagrégation</Button>
-          <Button variant="secondary" onClick={() => {
-            set_show_agregation(false)
-            set_dim_name('')
-          }}>Annuler</Button>
-        </Modal.Footer>
+            }}>Annuler</Button>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     )
   }
@@ -1340,14 +1340,21 @@ export const updateLayout: updateLayoutFuncType = (
   if (mode.includes('attrGeneral')) {
     let differences = getDiff(data, new_layout)
     if (differences) {
+      const legend_pos = differences.filter( difference=>difference.path![0] == 'legend_position')
+      legend_pos.forEach((difference) => applyChange(data, {}, difference))  
       differences = differences.filter(
         (difference) =>
           (difference.kind === 'E') &&
-          (difference.path!.length === 1) &&
+          (difference.path!.length === 1 ) &&
           (difference.path![0]!=='current_view'))
       differences.forEach(
         (difference) => applyChange(data, {}, difference))
     }
+    const display_style_diff = getDiff(data.display_style, new_layout.display_style)
+    if (display_style_diff) {
+      display_style_diff.forEach((difference) => applyChange(data.display_style, {}, difference))
+    }
+
     const node_style_differences = getDiff(data.style_node, new_layout.style_node)
     if (node_style_differences) {
       node_style_differences.forEach((difference) => applyChange(data.style_node, {}, difference))
@@ -1404,6 +1411,8 @@ export const updateLayout: updateLayoutFuncType = (
         (difference) =>
           (difference.kind === 'N') &&
           (difference.path!.length === 1))
+      // added flux have no values
+      differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {"value":"","display_value":"","tags":{},"extension":{}})
       differences.forEach((difference) => linksId.push(difference.path![0]))
       differences.forEach((difference) => applyChange(data.links, {}, difference))
       linksId.forEach(linkId => {
@@ -1536,20 +1545,25 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('Values')) {
-    Object.entries(data.links).forEach(([key, link]) => {
-      const layoutLink = new_layout.links[key]
-      if (!layoutLink) {
-        return
-      }
-      const differences = getDiff(link.value, layoutLink.value)
+    const dataTagsNames = Object.values(data.dataTags).map(tagGroup=>tagGroup.group_name)
+    const layoutTagsNames = Object.values(new_layout.dataTags).map(tagGroup=>tagGroup.group_name)
+
+    if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
+      Object.entries(data.links).forEach(([key, link]) => {
+        const layoutLink = new_layout.links[key]
+        if (!layoutLink) {
+          return
+        }
+        const differences = getDiff(link.value, layoutLink.value)
+        if (differences) {
+          differences.forEach((difference) => applyChange(link.value, {}, difference))
+        }
+      })
+      // If values are applied dataTags must be applied also
+      const differences = getDiff(data.dataTags, new_layout.dataTags)
       if (differences) {
-        differences.forEach((difference) => applyChange(link.value, {}, difference))
+        differences.forEach((difference) => applyChange(data.dataTags, {}, difference))
       }
-    })
-    // If values are applied dataTags must be applied also
-    const differences = getDiff(data.dataTags, new_layout.dataTags)
-    if (differences) {
-      differences.forEach((difference) => applyChange(data.dataTags, {}, difference))
     }
   }
 
@@ -1570,6 +1584,7 @@ export const updateLayout: updateLayoutFuncType = (
         Object.values(nodeTag.tags).forEach(tag=>
           Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
             tag.selected = ltag.selected
+            tag.color = ltag.color
           })
         )
       })
@@ -1581,10 +1596,25 @@ export const updateLayout: updateLayoutFuncType = (
       if (layout_groups.length>0) {
         data.nodesColorMap = layout_groups[0].group_name
         Object.values(data.nodes).forEach(el => {
+          el.colorParameter = 'groupTag'
           el.colorTag = data.nodesColorMap
         })
       }
     }
+    Object.keys(new_layout.nodeTags).forEach(tagGroup=>{
+      if (!(tagGroup in data.nodeTags)) {
+        data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
+      }
+      Object.values(data.nodes).forEach(n=>{
+        if (!n.tags[tagGroup]) {
+          n.tags[tagGroup] = []
+        }
+        if (new_layout.nodes[n.idNode].tags[tagGroup] != undefined) {
+          n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
+        }
+      })
+    })
+
   }
 
   if (mode.includes('tagFlux')) {
@@ -1612,32 +1642,53 @@ export const updateLayout: updateLayoutFuncType = (
         })
       }
     }
+    Object.keys(new_layout.fluxTags).forEach(tagGroup=>{
+      if (!(tagGroup in data.fluxTags)) {
+        data.fluxTags[tagGroup] = {...new_layout.fluxTags[tagGroup]}
+      }
+      if (Object.keys(new_layout.dataTags).length == 0) {
+        Object.values(data.links).forEach(l=>(l.value as SankeyLinkValue).tags[tagGroup] = (new_layout.links[l.idLink].value as SankeyLinkValue).tags[tagGroup])
+      }
+    })
   }
 
   if (mode.includes('tagData')) {
+    const dataTagsNames = Object.values(data.dataTags).map(tagGroup=>tagGroup.group_name)
+    const layoutTagsNames = Object.values(new_layout.dataTags).map(tagGroup=>tagGroup.group_name)
+
+    if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
     // Finds the corresponding tag group by name and apply the "dynamic" attributes
     // activate, show_legend and selected.
-    Object
-      .values(data.dataTags)
-      .forEach(dataTag => {
-        Object
-          .values(new_layout.dataTags)
-          .filter(_ => _.group_name === dataTag.group_name)
-          .forEach(_ => {
-            dataTag.activated=_.activated
-            dataTag.show_legend = _.show_legend
-            Object
-              .values(dataTag.tags)
-              .forEach(tag => {
-                Object
-                  .values(_.tags)
-                  .filter(ltag => ltag.name === tag.name)
-                  .forEach(ltag => {
-                    tag.selected = ltag.selected
-                  })
-              })
-          })
+      Object
+        .values(data.dataTags)
+        .forEach(dataTag => {
+          Object
+            .values(new_layout.dataTags)
+            .filter(_ => _.group_name === dataTag.group_name)
+            .forEach(_ => {
+              dataTag.activated=_.activated
+              dataTag.show_legend = _.show_legend
+              Object
+                .values(dataTag.tags)
+                .forEach(tag => {
+                  Object
+                    .values(_.tags)
+                    .filter(ltag => ltag.name === tag.name)
+                    .forEach(ltag => {
+                      tag.selected = ltag.selected
+                    })
+                })
+            })
+        })
+    } else {
+      data.dataTags = JSON.parse(JSON.stringify(new_layout.dataTags))
+      Object.values(data.links).forEach(l=>{
+        if (new_layout.links[l.idLink] == undefined ) {
+          return
+        }
+        l.value = JSON.parse(JSON.stringify(new_layout.links[l.idLink].value))
       })
+    }
   }
 
   //- Sanity check
@@ -1663,6 +1714,13 @@ export const updateLayout: updateLayoutFuncType = (
       }
     })
     n.outputLinksId = newOutputLinksId
+    const tags_to_remove : string[] = []
+    for (const tag in n.tags) {
+      if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
+        tags_to_remove.push(tag)
+      }
+    }
+    tags_to_remove.forEach(tag=>{delete n.tags[tag]} )
   })
 }
 

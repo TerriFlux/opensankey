@@ -22,7 +22,7 @@ export type EventNodeContextMenuFType = (
   ev: React.MouseEvent<HTMLButtonElement>,
   n: SankeyNode,
   contextMenu: contextMenuType,
-  multi_selected_nodes: { current: SankeyNode[]} 
+  multi_selected_nodes: { current: SankeyNode[]}
 ) => void
 
 export type EventLinkContextMenuFType = (
@@ -69,7 +69,7 @@ export type EventOnZoneMouseMoveFuncType = (
   applicationData: applicationDataType,
   applicationState: applicationStateType,
   evt: MouseEvent,
-  start_point: { current: number[]} 
+  start_point: { current: number[]}
 ) => void
 
 export type EventOnZoneMouseUpFuncType = (

@@ -12,7 +12,7 @@ import { default_grey_color } from './Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type tag_banner_type = 'none' | 'one' | 'multi'
+export type tag_banner_type= 'none' | 'one' | 'multi' | 'level'
 
 type Type_TagReference = Class_NodeElement | Class_LinkElement
 

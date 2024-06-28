@@ -343,6 +343,11 @@ export interface treeFolderType{
   checked?:1|0.5|0
 }
 
+export type textForToastPromiseType={
+  success?:string,
+  loading?:string
+}
+
 export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_menu_node_apparence : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_node_io : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -365,7 +370,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_waiting : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_lauchToast : MutableRefObject<(intake?:textForToastPromiseType)=>void>,
   ref_setter_show_resolution_save_png : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_png_res_h : MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
   ref_setter_png_res_v : MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
@@ -448,7 +453,7 @@ export type MenuTypes = {
   apply_transformation_additional_elements: JSX.Element[],
   additional_nav_item:JSX.Element[],
   formations_menu: object,
-  callback:callbackFuncType,
+  postProcessLoadExcel:postProcessLoadExcelFuncType,
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
@@ -459,7 +464,7 @@ export type MenuTypes = {
 
 }
 
-export type callbackFuncType = (server_data: SankeyData) => void
+export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
 /*****************************************************************************/
 // Application
 // Logo, names, licences
@@ -484,6 +489,9 @@ export type applicationStateType = {
   ref_selected_style_node : MutableRefObject<string>
   ref_selected_style_link : MutableRefObject<string>
   first_selected_node :  {current:SankeyNode|undefined}
+
+  link_io : MutableRefObject<string>,
+  link_pos : MutableRefObject<string>,
 
   ref_pre_idSource : MutableRefObject<string>
   ref_pre_idTarget : MutableRefObject<string>
@@ -541,7 +549,8 @@ export type initializeApplicationDrawType = (
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   start_point:{current:number[]},
-  resizeCanvas:()=>void
+  resizeCanvas:()=>void,
+  ref_alt_key_pressed:MutableRefObject<boolean>
 )=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
@@ -580,8 +589,10 @@ export type NodeFunctionTypes = {
   drawAddNodes : drawNodeShapeFType,
   CreateNodesOnSVG:drawNodesFType,
   RedrawNodes:RedrawNodesFType,
+  RedrawNodesLabels:RedrawNodesFType,
   recomputeDisplayedElement:()=>void,
   OpposingDragElements:opposing_DragElementsFuncType
+  postProcessLoadExcel:()=>void
 }
 export type initializeNodeFunctionsType = (
   applicationData: applicationDataType,
@@ -617,6 +628,7 @@ export type DrawAllType = (
 
 export type InstallEventsOnSVGType = (
   contextMenu:contextMenuType,
+  applicationContext:applicationContextType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   applicationState:applicationStateType,
@@ -630,7 +642,10 @@ export type InstallEventsOnSVGType = (
 export type ComponentUpdaterType={
   updateComponentMenuConfig: MutableRefObject<()=>void>
   updateComponenSaveInCache: MutableRefObject<(b:boolean)=>void>
-  updateComponentBtnUpdateLayout: MutableRefObject<()=>void>
+  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<()=>void>
+  updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
+  updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>
+  updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>
 }
 export type initializeComponentUpdaterType = ()=>ComponentUpdaterType
 
