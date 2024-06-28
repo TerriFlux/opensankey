@@ -18,10 +18,12 @@ import {
   Class_Sankey
 } from './Sankey'
 import {
-  Class_NodeElement
+  Class_NodeElement,
+  sortNodesElements
 } from './Node'
 import {
-  Class_LinkElement
+  Class_LinkElement,
+  sortLinksElements
 } from './Link'
 import {
   Class_ApplicationData
@@ -128,7 +130,7 @@ export class Class_DrawingArea {
   // private text_areas: { [id: string]: Class_Element } = {}
 
   // Elements that are selected in this area
-  private _sankey_selection: Class_Sankey
+  private _selection: Class_Sankey
 
   // Color
   private _color: string = default_background_color
@@ -164,7 +166,7 @@ export class Class_DrawingArea {
     this._width = _width
     this.application_data = application_data
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
-    this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
+    this._selection = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend = new Class_Legend(this, this.application_data.menu_configuration)
     // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
@@ -234,12 +236,41 @@ export class Class_DrawingArea {
   public set legend(value: Class_Legend) { this._legend = value }
 
   // Selections
-  public get selected_nodes_list() { return this._sankey_selection.nodes_list }
-  public get selected_nodes_list_sorted() { return this._sankey_selection.nodes_list_sorted }
-  public get visible_and_selected_nodes_list() { return this._sankey_selection.visible_nodes_list }
-  public get visible_and_selected_nodes_list_sorted() { return this._sankey_selection.visible_nodes_list_sorted }
-  public get selected_links_list() { return this._sankey_selection.links_list }
-  public get selected_links_list_sorted() { return this._sankey_selection.links_list_sorted }
+  public get selected_nodes_list() : Class_NodeElement[] {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_NodeElement)
+      .map(element => element as Class_NodeElement)
+  }
+  public get selected_nodes_list_sorted() {
+    return this.selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+  public get visible_and_selected_nodes_list() {
+    return this.selected_nodes_list
+      .filter(node => node.is_visible)
+  }
+  public get visible_and_selected_nodes_list_sorted() {
+    return this.visible_and_selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  public get selected_links_list() {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_LinkElement)
+      .map(element => element as Class_LinkElement)
+  }
+  public get selected_links_list_sorted() {
+    return this.selected_links_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+  public get visible_and_selected_links_list() {
+    return this.selected_links_list
+      .filter(link => link.is_visible)
+  }
+  public get visible_and_selected_links_list_sorted() {
+    return this.visible_and_selected_links_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
 
   // Size
   public getWidth() { return this._width }
@@ -294,6 +325,10 @@ public toJSON() {
     json_object['node_label_separator'] = '' // TODO get node label separator when implemented in class
     json_object = { ...json_object, ...this._legend.toJSON() }
 
+    const data_taggs=this.sankey.getTagGroupsAsDict('data_taggs')
+    const flux_taggs=this.sankey.getTagGroupsAsDict('flux_taggs')
+    const node_taggs=this.sankey.getTagGroupsAsDict('node_taggs')
+
     json_object['nodes'] = {}
 
     Object.entries(this.sankey.nodes_dict).forEach(ent_node => {
@@ -316,17 +351,17 @@ public toJSON() {
     })
 
     json_object['nodeTags'] = {}
-    Object.entries(this.sankey.node_taggs).forEach(ent_nt => {
+    Object.entries(node_taggs).forEach(ent_nt => {
       json_object['nodeTags'][ent_nt[0]] = ent_nt[1].toJSON()
     })
 
     json_object['fluxTags'] = {}
-    Object.entries(this.sankey.flux_taggs).forEach(ent_ft => {
+    Object.entries(flux_taggs).forEach(ent_ft => {
       json_object['fluxTags'][ent_ft[0]] = ent_ft[1].toJSON()
     })
 
     json_object['dataTags'] = {}
-    Object.entries(this.sankey.data_taggs).forEach(ent_dt => {
+    Object.entries(data_taggs).forEach(ent_dt => {
       json_object['dataTags'][ent_dt[0]] = ent_dt[1].toJSON()
     })
 
@@ -384,10 +419,10 @@ public toJSON() {
    */
   public purgeSelection() {
     // Unselect all nodes
-    Object.values(this._sankey_selection.nodes_list)
+    Object.values(this._selection.nodes_list)
       .forEach((node) => node.setUnSelected())
     // Unselect all links
-    Object.values(this._sankey_selection.links_list)
+    Object.values(this._selection.links_list)
       .forEach((link) => link.setUnSelected())
     // TODO Unselect other things
     // Reset selection
@@ -395,7 +430,7 @@ public toJSON() {
     this.application_data.menu_configuration.updateMenuEditionNode()
     this.application_data.menu_configuration.updateMenuEditionLink()
     // TODO do that properly
-    this._sankey_selection = new Class_Sankey(this, this.application_data.menu_configuration)
+    this._selection = new Class_Sankey(this, this.application_data.menu_configuration)
   }
 
   /**
@@ -404,7 +439,7 @@ public toJSON() {
    * @memberof Class_DrawingArea
    */
   public addNodeToSelection(node: Class_NodeElement) {
-    this._sankey_selection.addNode(node)
+    this._selection.addNode(node)
     node.setSelected()
   }
 
@@ -414,7 +449,7 @@ public toJSON() {
    * @memberof Class_DrawingArea
    */
   public removeNodeFromSelection(node: Class_NodeElement) {
-    this._sankey_selection.removeNode(node)
+    this._selection.removeNode(node)
     node.setUnSelected()
   }
 
@@ -426,7 +461,7 @@ public toJSON() {
   public deleteNode(node: Class_NodeElement) {
     // Remove refs from sankey and selection
     this.sankey.removeNode(node)
-    this._sankey_selection.removeNode(node)
+    this._selection.removeNode(node)
     // Self delete node
     node.delete()
   }
@@ -445,12 +480,12 @@ public toJSON() {
    * @memberof Class_DrawingArea
    */
   public addLinkToSelection(link: Class_LinkElement) {
-    this._sankey_selection.addLink(link)
+    this._selection.addLink(link)
     link.setSelected()
   }
 
   public removeLinkFromSelection(link: Class_LinkElement) {
-    this._sankey_selection.removeLink(link)
+    this._selection.removeLink(link)
     link.setUnSelected()
   }
 

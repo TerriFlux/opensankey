@@ -103,7 +103,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     />
   }
 
-  if (Object.keys(new_data.drawing_area.sankey.node_taggs).length > 0 ) {
+  if (Object.keys(new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')).length > 0 ) {
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
