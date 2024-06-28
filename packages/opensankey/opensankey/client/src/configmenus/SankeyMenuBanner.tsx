@@ -224,7 +224,6 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
 
                     new_data.drawing_area.sankey.nodesColorMap = 'no_colormap'
                     if (evt.target.checked) {
-
                       new_data.drawing_area.sankey.nodesColorMap = tags_selected[0]
                       node_taggs[tags_selected[0]].show_legend = true
                     }

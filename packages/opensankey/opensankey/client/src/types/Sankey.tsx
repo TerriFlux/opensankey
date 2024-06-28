@@ -488,6 +488,7 @@ export class Class_Sankey {
     Object.entries(json_object['nodeTags']).forEach(ent_nt => {
       // Create a node tag group
       const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
+      new_grp.removeTag(Object.values(new_grp.tags)[0])
       // Set node tag group value from JSON
       new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
       // Add node tag group to sankey
@@ -498,6 +499,7 @@ export class Class_Sankey {
     Object.entries(json_object['fluxTags']).forEach(ent_ft => {
       // Create a flux tag group
       const new_grp = new Class_TagGroup(ent_ft[0], (ent_ft[1] as { group_name: string }).group_name)
+      new_grp.removeTag(Object.values(new_grp.tags)[0])
       // Set flux tag group value from JSON
       new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
       // Add flux tag group to sankey
@@ -508,6 +510,7 @@ export class Class_Sankey {
     Object.entries(json_object['dataTags']).forEach(ent_dt => {
       // Create a flux tag group
       const new_grp = new Class_TagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name)
+      new_grp.removeTag(Object.values(new_grp.tags)[0])
       // Set flux tag group value from JSON
       new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
       // Add flux tag group to sankey
