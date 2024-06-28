@@ -12,7 +12,8 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   link_function
 })=>{
   const {new_data}=applicationData
-  const { flux_taggs, data_taggs } = new_data.drawing_area.sankey
+  const data_taggs=new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const flux_taggs=new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
   const selected_links=new_data.drawing_area.selected_links_list
   const flux_reference_for_displayed_value=selected_links[0]
 

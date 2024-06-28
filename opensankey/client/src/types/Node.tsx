@@ -42,28 +42,49 @@ type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-const default_shape_type: Type_Shape = 'rect'
-const default_shape_arrow_angle_factor = 30
-const default_shape_arrow_angle_direction = 'right'
-const default_shape_visible = true
-const default_shape_min_width = 40
-const default_shape_min_height = 40
-const default_shape_color = default_element_color
-const default_shape_color_sustainable = false
-const default_label_font_family = default_font
-const default_label_font_size = 14
-const default_label_color = false
-const default_label_uppercase = false
-const default_label_bold = false
-const default_label_italic = false
-const default_label_background = false
-const default_name_label_visible = true
-const default_name_label_vert = 'bottom'
-const default_name_label_horiz = 'middle'
-const default_value_label_visible = false
-const default_value_label_vert = 'top'
-const default_value_label_horiz = 'middle'
-const default_label_box_width = 150
+export const default_shape_type: Type_Shape = 'rect'
+export const default_shape_arrow_angle_factor = 30
+export const default_shape_arrow_angle_direction = 'right'
+export const default_shape_visible = true
+export const default_shape_min_width = 40
+export const default_shape_min_height = 40
+export const default_shape_color = default_element_color
+export const default_shape_color_sustainable = false
+export const default_label_font_family = default_font
+export const default_label_font_size = 14
+export const default_label_color = false
+export const default_label_uppercase = false
+export const default_label_bold = false
+export const default_label_italic = false
+export const default_label_background = false
+export const default_name_label_visible = true
+export const default_name_label_vert = 'bottom'
+export const default_name_label_horiz = 'middle'
+export const default_value_label_visible = false
+export const default_value_label_vert = 'top'
+export const default_value_label_horiz = 'middle'
+export const default_label_box_width = 150
+
+
+// SPECIFIC FUNCTIONS *******************************************************************
+
+export function sortNodesElements(
+  a: Class_NodeElement | Class_NodeStyle,
+  b: Class_NodeElement | Class_NodeStyle
+) {
+  if (a.id > b.id) return 1
+  else if (a.id < b.id) return -1
+  else return 0
+}
+
+export function isAttributeOverloaded(
+  nodes: Class_NodeElement[],
+  attr: keyof Class_NodeAttribute
+) {
+  let overloaded = false
+  nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
+  return overloaded
+}
 
 // CLASS NODE_ELEMENT *******************************************************************
 
@@ -1220,6 +1241,15 @@ export class Class_NodeElement extends Class_Element {
     this.style = this.drawing_area.sankey.default_node_style
   }
 
+  public resetAttributes() {
+    this._display.attributes = new Class_NodeAttribute()
+    this.reset()
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
+    return this._display.attributes[attr] !== undefined
+  }
+
   public isEqual(_: Class_NodeElement) {
 
     if (this.shape_visible !== _.shape_visible) {
@@ -1361,11 +1391,12 @@ export class Class_NodeElement extends Class_Element {
     // tags:{key_grp_tag:key_tag_selected } 
     // where 'key_grp_tag' represent the id of a node_taggs group 
     // &  'key_tag_selected' represent the id of the tag selected for that node_taggs group  
-    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.node_taggs).forEach(ent_nodetag=>{
+    const macro_tag_group = this.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
+    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[0] in macro_tag_group).forEach(ent_nodetag=>{
       if(ent_nodetag[1] instanceof Array && ent_nodetag.length>0){
-        this._tags[ent_nodetag[0]]=this.drawing_area.sankey.node_taggs[ent_nodetag[0]].tags[ent_nodetag[1][0] as string]
+        this._tags[ent_nodetag[0]]=macro_tag_group[ent_nodetag[0]].tags[ent_nodetag[1][0] as string]
       }else if(!(ent_nodetag[1] instanceof Array)){
-      this._tags[ent_nodetag[0]]=this.drawing_area.sankey.node_taggs[ent_nodetag[0]].tags[ent_nodetag[1] as string]
+      this._tags[ent_nodetag[0]]=macro_tag_group[ent_nodetag[0]].tags[ent_nodetag[1] as string]
       }
 
     })  }
@@ -1614,6 +1645,7 @@ export class Class_NodeAttribute {
 export class Class_NodeStyle extends Class_NodeAttribute {
 
   // PRIVATE ATTRIBUTES =================================================================
+  private _id: string
 
   private _is_deletable: boolean
 
@@ -1621,9 +1653,12 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   // CONSTRUCTOR ========================================================================
   constructor(
+    id: string,
     is_deletable: boolean = true
   ) {
     super()
+
+    this._id = id
     // Set as deletable or not
     this._is_deletable = is_deletable
 
@@ -1724,6 +1759,16 @@ export class Class_NodeStyle extends Class_NodeAttribute {
       _.useDefaultStyle()
     }
   }
+
+  // GETTERS ============================================================================
+
+  /**
+   * get id of style
+   *
+   * @readonly
+   * @memberof Class_NodeStyle
+   */
+  public get id() {return this._id}
 
   // PRIVATE METHODS ======================================================================
 

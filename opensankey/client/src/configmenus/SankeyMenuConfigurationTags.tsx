@@ -24,13 +24,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const { sankey } = new_data.drawing_area
   const { t } = applicationContext
   const [, setForceUpdate] = useBoolean()
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey[elementTagNameProp]).length > 0 ? Object.keys(new_data.drawing_area.sankey[elementTagNameProp])[0] : '')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)).length > 0 ? Object.keys(new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp))[0] : '')
   const [color_map, setColorMap] = useState('jet')
 
   /**
    * Current tag group modifying
    */
-  const group_tag = new_data.drawing_area.sankey[elementTagNameProp][tags_group_key]
+  const group_tag = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)[tags_group_key]
 
   /**
    * List of tag group of current family of tag group (node,links,data)

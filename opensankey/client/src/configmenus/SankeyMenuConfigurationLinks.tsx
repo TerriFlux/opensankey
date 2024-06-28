@@ -20,7 +20,9 @@ import {
 import { SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
 import {
   DeleteLink,
-  OSTooltip
+  GetRandomInt,
+  OSTooltip,
+  makeid
 } from './SankeyUtils'
 
 import { MultiSelect } from 'react-multi-select-component'
@@ -54,7 +56,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 ) => {
   const {  new_data } = applicationData
-  const { flux_taggs, data_taggs, } = new_data.drawing_area.sankey
+  const data_taggs=new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const flux_taggs=new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+  
   const {selected_links_list}=new_data.drawing_area
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.updateComponentMenuConfigLink.current = setForceUpdate.toggle
@@ -222,7 +226,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     node_trgt.reset()
 
 
-    const n_link = new Class_LinkElement(node_src, node_trgt, new_data.drawing_area, new_data.menu_configuration)
+    const n_link = new Class_LinkElement('link_'+makeid(10),node_src, node_trgt, new_data.drawing_area, new_data.menu_configuration)
     new_data.drawing_area.sankey.addLink(n_link)
     new_data.drawing_area.addLinkToSelection(n_link)
     n_link.reset()
@@ -446,7 +450,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             onClick={() => {
               const nodes_to_reorganize: SankeyNode[] = []
               selected_links_list.forEach(l => {
-                l.invert()
+                l.inverse()
               })
               // nodes_to_reorganize.forEach(n => {
               //   reorganize_inputLinksId(data, n, true, true, data.nodes, data.links)
