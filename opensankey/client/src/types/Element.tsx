@@ -57,6 +57,14 @@ export abstract class Class_Element {
    */
   private _id: string
 
+  /**
+   * True if element is currently on a deletion process
+   * Avoid cross calls of delete() method
+   * @protected
+   * @memberof Class_Element
+   */
+  private _is_currently_deleted = false
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -72,6 +80,15 @@ export abstract class Class_Element {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
   }
+
+  /**
+   * Config menu ref to html element & function to update it
+   * @protected
+   * @type {string}
+   * @memberof Class_Element
+   */
+  private _menu_config: Class_MenuConfig
+
 
   /**
    * Parent svg group : where element belong
@@ -113,15 +130,6 @@ export abstract class Class_Element {
    */
   protected _is_mouse_grabbed: boolean = false
 
-  /**
- * Config menu ref to html element & function to update it
- * @protected
- * @type {string}
- * @memberof Class_Element
- */
-  private _menu_config: Class_MenuConfig
-
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -146,7 +154,18 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   public delete() {
-    this.unDraw()
+    if (this._is_currently_deleted === false) {
+      // Set deletion boolean to true
+      this._is_currently_deleted = true
+      // Remove from drawing area
+      this.unDraw()
+      // Abstract method for removing
+      this.deleteReferences()
+    }
+  }
+
+  protected deleteReferences() {
+    // Does nothing here
   }
 
   // PUBLIC METHODS =====================================================================

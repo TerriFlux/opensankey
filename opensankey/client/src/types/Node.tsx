@@ -169,14 +169,14 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  // CLEANING ===========================================================================
+
   /**
    * Define deletion behavior
    * @memberof Class_Node
    */
-  public delete() {
-    // Delete on drawing area
-    this.unDraw()
-    // Delete related links
+  public deleteReferences() {
+    // Delete all related links
     Object.values(this._input_links)
       .forEach(link => {
         link.delete()
@@ -187,7 +187,7 @@ export class Class_NodeElement extends Class_Element {
         link.delete()
       })
     this._output_links = {}
-    // Unref tag
+    // Remove reference of self in related tags
     Object.values(this._tags)
       .forEach(tag => {
         tag.removeReference(this)
@@ -195,38 +195,32 @@ export class Class_NodeElement extends Class_Element {
     this._tags = {}
   }
 
-
   /**
- * Function used to check some condition before allowing element to be drawn
- *
- * @protected
- * @return {*}
- * @memberof Class_NodeElement
- */
-  protected element_displayed(){
-
-    this._displayed= this.element_tag_displayed() // && checkNodeLevel()
-    return this._displayed
+   * TODO
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public deleteInputLink(link: Class_LinkElement) {
+    if (this._input_links[link.id] !== undefined) {
+      delete this._input_links[link.id]
+      link.delete()
+    }
   }
 
-
   /**
- * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
- * if that the case then we don't draw the node
- *
- * @private
- * @return {*}
- * @memberof Class_NodeElement
- */
-  private element_tag_displayed() {
-    // If node has tags :
-    //  - check if any of them is selected at false
-    // else if the node doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+   * TODO
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public deleteOutputLink(link: Class_LinkElement) {
+    if (this._output_links[link.id] !== undefined) {
+      delete this._output_links[link.id]
+      link.delete()
+    }
   }
-
 
   // GETTERS / SETTERS ==================================================================
+
   public get displayed(){ return this._displayed }
 
   /**
@@ -278,15 +272,13 @@ export class Class_NodeElement extends Class_Element {
   }
 
   /**
-   * Get list of all output link
+   * Get dict of input links
+   *
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get output_links_list() {
-    return Object.values(this._output_links)
-  }
-  public get output_links() {
-    return this._output_links
+  public get input_links_dict() {
+    return this._input_links
   }
 
   /**
@@ -297,8 +289,23 @@ export class Class_NodeElement extends Class_Element {
   public get input_links_list() {
     return Object.values(this._input_links)
   }
-  public get input_links() {
-    return this._input_links
+
+  /**
+   * Get dict of output links
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get output_links_dict() {
+    return this._output_links
+  }
+
+  /**
+   * Get list of all output link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get output_links_list() {
+    return Object.values(this._output_links)
   }
 
   /**
@@ -1079,7 +1086,6 @@ export class Class_NodeElement extends Class_Element {
       .attr('fill', node_color)
       .style('stroke', 'black')
       .style('stroke-width', this.is_selected ? 3 : 0)
-
   }
 
   /**
@@ -1228,6 +1234,34 @@ export class Class_NodeElement extends Class_Element {
     else {
       return this.shape_color
     }
+  }
+
+  /**
+   * Function used to check some condition before allowing element to be drawn
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_NodeElement
+  */
+  private element_displayed(){
+    this._displayed= this.element_tag_displayed() // && checkNodeLevel()
+    return this._displayed
+  }
+
+
+  /**
+ * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+ * if that the case then we don't draw the node
+ *
+ * @private
+ * @return {*}
+ * @memberof Class_NodeElement
+ */
+  private element_tag_displayed() {
+    // If node has tags :
+    //  - check if any of them is selected at false
+    // else if the node doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1401,7 +1435,8 @@ export class Class_NodeElement extends Class_Element {
         this._tags[ent_nodetag[0]] = this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[ent_nodetag[1] as string]
       }
 
-    })  }
+    })
+  }
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
