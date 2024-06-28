@@ -433,15 +433,15 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                     // if (result_data.version === undefined) {
                     //   (new_data.version as unknown as undefined) = undefined
                     // }
-                    // convert_data(default_data,get_default_data)
-                    // complete_sankey_data(default_data,get_default_data,DefaultNode,DefaultLink)
+                    // convert_data(default_data, get_default_data)
+                    // complete_sankey_data(default_data, get_default_data, DefaultNode, DefaultLink)
 
                     // set_data(new_data)
                     // const test = document.getElementsByClassName('navbar')
                     // let margin_top = 0
                     // if (test && test.length > 0) {
                     //   margin_top = test[0].getBoundingClientRect().height
-                    //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+                    //   d3.select(' .opensankey #svg-container').style('margin-top', margin_top + 'px')
                     // }
                     console.log(default_data)
                     new_data.new_drawing_area_fromJSON(default_data)
