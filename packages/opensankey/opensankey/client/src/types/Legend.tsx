@@ -48,6 +48,7 @@ export class Class_Legend extends Class_Element {
   }
 
   // ============== Method ================
+  // =======Public
   public draw() {
     // Heritance of draw function
     super.draw()
@@ -86,6 +87,41 @@ export class Class_Legend extends Class_Element {
     this.updateLegendHeight()
 
   }
+
+  public toJSON(){
+    const json_object={} as {[_:string]:unknown}
+    json_object['mask_legend']=this._masked
+    json_object['legend_width']=this.width
+    json_object['display_legend_scale']=this._display_legend_scale
+    json_object['legend_police']=this._legend_police
+    json_object['legend_bg_border']=this._legend_bg_border
+    json_object['legend_bg_color']=this._legend_bg_color
+    json_object['legend_bg_opacity']=this._legend_bg_opacity
+    json_object['legend_show_dataTags']=this._legend_show_dataTags
+    return json_object
+  }
+
+/**
+ * Setting value of legend from JSON
+ *
+ * @param {{[_:string]:any} json_object
+ * @memberof Class_Legend
+ */
+public fromJSON(json_object:{[_:string]:any}){
+  // TODO : define default value in case data is not in JSON
+
+  this._masked=json_object['mask_legend']??true
+  this.width=json_object['legend_width']??180
+  this._display_legend_scale=json_object['display_legend_scale']??false
+  this._legend_police=json_object['legend_police']?? 12
+  this._legend_bg_border=json_object['legend_bg_border']?? false
+  this._legend_bg_color=json_object['legend_bg_color']?? 'grey'
+  this._legend_bg_opacity=json_object['legend_bg_opacity']?? 0
+  this._legend_show_dataTags=json_object['legend_show_dataTags']?? false
+
+}
+  // ========Private
+
 
   /**
      * Function that draw the background of the legend, it is also used as draggable element to move the legend
@@ -402,8 +438,6 @@ export class Class_Legend extends Class_Element {
       this._width = w
     }
   }
-
-
 
   protected eventMouseOver(event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
     this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')

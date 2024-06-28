@@ -139,7 +139,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {Class_Data}
    * @memberof Class_LinkElement
    */
-  private _values?: Class_LinkValue
+  private _values: Class_LinkValue
 
   /**
    * Value of tooltip text associated to link
@@ -149,14 +149,6 @@ export class Class_LinkElement extends Class_Element {
    */
   private _tooltip_text: string = ''
 
-  /**
-   * Thinckness of the drawned link
-   *
-   * @protected
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-  private _thickness: number = 20
 
   /**
    * TODO
@@ -221,6 +213,8 @@ export class Class_LinkElement extends Class_Element {
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
     }
+    this._values = new Class_LinkValue(null, 'root', 'root')
+    this._values.createTreeDataLink(drawing_area.sankey.data_taggs_list, 0)
     this._source = source
     this._source.addOutputLink(this)
     this._target = target
@@ -347,6 +341,129 @@ export class Class_LinkElement extends Class_Element {
     return true
   }
 
+  private removeRefToSource() {
+    delete this._source.output_links[this.id]
+  }
+
+  private removeRefToTarget() {
+    delete this._source.input_links[this.id]
+  }
+
+  public delete() {
+    // Delete on drawing area
+    this.unDraw()
+    this.removeRefToSource()
+    this.removeRefToTarget()
+    // Unref tag
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.removeReference(this)
+      })
+    this._tags = {}
+  }
+
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   *
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  public get_curr_value() {
+    const tmp = this.drawing_area.sankey.data_taggs_object_tag_selected
+    const path: string[] = []
+    Object.values(tmp).forEach(val => {
+      path.push(val[0])
+    })
+    return this._values.getValueFromLeaf(path)
+  }
+
+  /**
+   * Return value of link from get_curr_value casted as a number because sometime
+   * we need a number from link value (even when it's value is null)
+   *
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  public get_curr_value_casted() {
+    const val = this.get_curr_value()
+    return (val !== null && val !== undefined) ? val : 0
+  }
+
+
+  protected element_displayed() {
+
+    return this.source_and_target_displayed() && this.element_tag_displayed()
+  }
+  private element_tag_displayed() {
+    // If link has tags :
+    //  - check if any of them is selected at false
+    // else if the link doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+  }
+
+  /**
+   * Check if node source and node target are displayed,
+   * if one of them is not then we don't display the link
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  private source_and_target_displayed() {
+    return this._source.displayed && this._target.displayed
+  }
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: unknown }
+
+    json_object['idLink'] = this.id
+    json_object['idSource'] = this._source.id
+    json_object['idTarget'] = this._target.id
+    json_object['position'] = this.position_type
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
+
+    json_object['style'] = Object.entries(this.drawing_area.sankey.link_styles_dict).filter(stl => stl[1] === (this._display.style))[0][0]
+
+    json_object['local'] = this._display.attributes.toJSON()
+    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
+
+    json_object['value'] = this._values //Todo create function to JSONize link value
+
+    return json_object
+
+  }
+
+  public fromJSON(json_object:{[x:string]:any}){
+
+    this.position_type=json_object['position'] ??'absolute'
+    this.position_x=json_object['x'] ??0
+    this.position_y=json_object['y'] ??0
+
+    this._display.style=this.drawing_area.sankey.link_styles_dict[json_object['style']??'default'] // if json_node_object['style'] is undefined assign default style
+
+
+    if(json_object['local']){
+      this._display.attributes.fromJSON(json_object['local'])
+    }
+
+    // In JSON here are how supposed tags var is :
+    // tags:{key_grp_tag:key_tag_selected }
+    // where 'key_grp_tag' represent the id of a flux_taggs group
+    // &  'key_tag_selected' represent the id of the tag selected for that flux_taggs group
+    Object.entries(json_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.flux_taggs_dict).forEach(ent_fluxtag=>{
+      this._tags[ent_fluxtag[0]]=this.drawing_area.sankey.flux_taggs_dict[ent_fluxtag[0]].tags[ent_fluxtag[1] as string]
+    })
+
+    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
+
+    this._values = json_object['value']  //Todo create function to read link value from JSON
+  }
+
+
+  // GETTER / SETTER ====================================================================
+
   // Orientation
   public isHorizontal() { return this.shape_orientation === 'hh' }
   public isVertical() { return this.shape_orientation === 'vv' }
@@ -445,23 +562,24 @@ export class Class_LinkElement extends Class_Element {
   }
 
   private getBezierPath() {
+    const strokeWidth = this.link_stroke_width
     // Get starting and ending position per type of shape
     let x0, y0
     let x6, y6
     if (this.isHorizontal() || this.isHorizontalVertical()) {
       x0 = 0
-      y0 = 0 + this._thickness / 2
+      y0 = 0 + strokeWidth / 2
     }
     else {
-      x0 = 0 + this._thickness / 2
+      x0 = 0 + strokeWidth / 2
       y0 = 0
     }
     if (this.isHorizontal() || this.isVerticalHorizontal()) {
       x6 = this.getShapeWidth()
-      y6 = this.getShapeHeight() + this._thickness / 2
+      y6 = this.getShapeHeight() + strokeWidth / 2
     }
     else {
-      x6 = this.getShapeWidth() - this._thickness / 2
+      x6 = this.getShapeWidth() - strokeWidth / 2
       y6 = this.getShapeHeight()
     }
 
@@ -684,8 +802,12 @@ export class Class_LinkElement extends Class_Element {
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
       .range([0, this.drawing_area.scale])
-    return scale(this._thickness)
+
+    const val = this.get_curr_value_casted()
+    return scale(val)
+
   }
+
 
   /**
    * Get style key of node
@@ -1387,6 +1509,84 @@ export class Class_LinkAttribute {
   public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _ }
   public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _ }
   public set value_label_unit(_: string | undefined) { this._value_label_unit = _ }
+
+  // PUBLIC METHODES ====================================================================
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: unknown }
+
+    // Geometry link
+    if (this.shape_orientation !== undefined) json_object['orientation'] = this.shape_orientation
+    if (this.shape_starting_curve !== undefined) json_object['left_horiz_shift'] = this.shape_starting_curve
+    if (this.shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this.shape_ending_curve
+    if (this.shape_vert_shift !== undefined) json_object['vert_shift'] = this.shape_vert_shift
+    if (this.shape_curvature !== undefined) json_object['curvature'] = this.shape_curvature
+    if (this.shape_is_curved !== undefined) json_object['curved'] = this.shape_is_curved
+    if (this.shape_is_recycling !== undefined) json_object['recycling'] = this.shape_is_recycling
+    if (this.shape_arrow_size !== undefined) json_object['arrow_size'] = this.shape_arrow_size
+
+    // Geometry link labels
+    if (this.value_label_position !== undefined) json_object['label_position'] = this.value_label_position
+    if (this.value_label_orthogonal_position !== undefined) json_object['orthogonal_label_position'] = this.value_label_orthogonal_position
+    if (this.value_label_on_path !== undefined) json_object['label_on_path'] = this.value_label_on_path
+    if (this.value_label_pos_auto !== undefined) json_object['label_pos_auto'] = this.value_label_pos_auto
+
+    //Attributes link
+    if (this.shape_is_arrow !== undefined) json_object['arrow'] = this.shape_is_arrow
+    if (this.shape_color !== undefined) json_object['color'] = this.shape_color
+    if (this.shape_opacity !== undefined) json_object['opacity'] = this.shape_opacity
+    if (this.shape_is_dashed !== undefined) json_object['dashed'] = this.shape_is_dashed
+
+    //Attributes link labels
+    if (this.value_label_is_visible !== undefined) json_object['label_visible'] = this.value_label_is_visible
+    if (this.value_label_font_size !== undefined) json_object['label_font_size'] = this.value_label_font_size
+    if (this.value_label_color !== undefined) json_object['text_color'] = this.value_label_color
+    if (this.value_label_to_precision !== undefined) json_object['to_precision'] = this.value_label_to_precision
+    if (this.value_label_scientific_precision !== undefined) json_object['scientific_precision'] = this.value_label_scientific_precision
+    if (this.value_label_font_family !== undefined) json_object['font_family'] = this.value_label_font_family
+    if (this.value_label_unit_visible !== undefined) json_object['label_unit_visible'] = this.value_label_unit_visible
+    if (this.value_label_unit !== undefined) json_object['label_unit'] = this.value_label_unit
+    if (this.value_label_custom_digit !== undefined) json_object['custom_digit'] = this.value_label_custom_digit
+    if (this.value_label_nb_digit !== undefined) json_object['nb_digit'] = this.value_label_nb_digit
+
+    return json_object
+  }
+
+  public fromJSON(json_local_object: { [x: string]: any }) {
+    // Geometry link
+    if (json_local_object['orientation'] !== undefined) this.shape_orientation = json_local_object['orientation']
+    if (json_local_object['left_horiz_shift'] !== undefined) this.shape_starting_curve = json_local_object['left_horiz_shift']
+    if (json_local_object['right_horiz_shift'] !== undefined) this.shape_ending_curve = json_local_object['right_horiz_shift']
+    if (json_local_object['vert_shift'] !== undefined) this.shape_vert_shift = json_local_object['vert_shift']
+    if (json_local_object['curvature'] !== undefined) this.shape_curvature = json_local_object['curvature']
+    if (json_local_object['curved'] !== undefined) this.shape_is_curved = json_local_object['curved']
+    if (json_local_object['recycling'] !== undefined) this.shape_is_recycling = json_local_object['recycling']
+    if (json_local_object['arrow_size'] !== undefined) this.shape_arrow_size = json_local_object['arrow_size']
+
+    // Geometry link labels
+    if (json_local_object['label_position'] !== undefined) this.value_label_position = json_local_object['label_position']
+    if (json_local_object['orthogonal_label_position'] !== undefined) this.value_label_orthogonal_position = json_local_object['orthogonal_label_position']
+    if (json_local_object['label_on_path'] !== undefined) this.value_label_on_path = json_local_object['label_on_path']
+    if (json_local_object['label_pos_auto'] !== undefined) this.value_label_pos_auto = json_local_object['label_pos_auto']
+
+    //Attributes link
+    if (json_local_object['arrow'] !== undefined) this.shape_is_arrow = json_local_object['arrow']
+    if (json_local_object['color'] !== undefined) this.shape_color = json_local_object['color']
+    if (json_local_object['opacity'] !== undefined) this.shape_opacity = json_local_object['opacity']
+    if (json_local_object['dashed'] !== undefined) this.shape_is_dashed = json_local_object['dashed']
+
+    //Attributes link labels
+    if (json_local_object['label_visible'] !== undefined) this.value_label_is_visible = json_local_object['label_visible']
+    if (json_local_object['label_font_size'] !== undefined) this.value_label_font_size = json_local_object['label_font_size']
+    if (json_local_object['text_color'] !== undefined) this.value_label_color = json_local_object['text_color']
+    if (json_local_object['to_precision'] !== undefined) this.value_label_to_precision = json_local_object['to_precision']
+    if (json_local_object['scientific_precision'] !== undefined) this.value_label_scientific_precision = json_local_object['scientific_precision']
+    if (json_local_object['font_family'] !== undefined) this.value_label_font_family = json_local_object['font_family']
+    if (json_local_object['label_unit_visible'] !== undefined) this.value_label_unit_visible = json_local_object['label_unit_visible']
+    if (json_local_object['label_unit'] !== undefined) this.value_label_unit = json_local_object['label_unit']
+    if (json_local_object['custom_digit'] !== undefined) this.value_label_custom_digit = json_local_object['custom_digit']
+    if (json_local_object['nb_digit'] !== undefined) this.value_label_nb_digit = json_local_object['nb_digit']
+  }
 }
 
 
@@ -1566,13 +1766,8 @@ export interface TreeNodeInterface {
  * @implements {TreeNodeInterface}
  */
 export class TreeNode implements TreeNodeInterface {
-
-  // PUBLIC ATTRIBUTES ==================================================================
-
   public parent: TreeNodeInterface | null
   public children: { [x: string]: TreeNodeInterface } = {}
-
-  // CONSTRUCTOR ========================================================================
 
   constructor(parent: TreeNodeInterface | null, id: string) {
     this.parent = parent
@@ -1582,16 +1777,12 @@ export class TreeNode implements TreeNodeInterface {
   }
 }
 
-// CLASS VALUE **************************************************************************
+export interface TreeNodeInterface {
+  parent: TreeNodeInterface | null;
+  children: { [x: string]: TreeNodeInterface }
+}
 
 export class Class_LinkValue extends TreeNode {
-
-  // PUBLIC ATTRIBUTES ==================================================================
-
-  public parent: Class_LinkValue | null = null
-  public children: { [x: string]: Class_LinkValue } = {}
-
-  // PRIVATE ATTRIBUTES =================================================================
 
   private tag_id: string
   private grp_id: string
@@ -1599,8 +1790,8 @@ export class Class_LinkValue extends TreeNode {
   private _display_value?: string
   private _tags?: { [_: string]: Class_Tag }
   private _extension?: { [_: string]: string }
-
-  // CONSTRUCTOR ========================================================================
+  public parent: Class_LinkValue | null = null
+  public children: { [x: string]: Class_LinkValue } = {}
 
   constructor(parent: Class_LinkValue | null, grp_id: string, tag_id: string) {
     super(parent, tag_id)
@@ -1608,8 +1799,6 @@ export class Class_LinkValue extends TreeNode {
     this.tag_id = tag_id
   }
 
-
-  // PUBLIC METHODS =====================================================================
 
   /**
    * Create a data tree structure for link value
@@ -1680,5 +1869,6 @@ export class Class_LinkValue extends TreeNode {
     this._extension = {}
   }
 
-  // GETTERS / SETTERS ==================================================================
+  // ==================Getter & Setter ======================
+
 }
