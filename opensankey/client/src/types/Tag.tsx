@@ -245,8 +245,8 @@ export class Class_TagGroup {
 
     Object.entries(json_object['tags']).forEach(ent_tags => {
       const new_tag = new Class_Tag(ent_tags[0], (ent_tags[1] as { name: string }).name, this)
-      // json_object['tags'][ent_tags[0]]=ent_tags[1].toJSON()
       new_tag.fromJSON((ent_tags[1] as { [x: string]: any }))
+      this._tags[ent_tags[0]]=new_tag
     })
   }
 }

@@ -441,7 +441,7 @@ export class Class_LinkElement extends Class_Element {
     // tags:{key_grp_tag:key_tag_selected } 
     // where 'key_grp_tag' represent the id of a flux_taggs group 
     // &  'key_tag_selected' represent the id of the tag selected for that flux_taggs group  
-    Object.entries(json_object['tags']??{}).forEach(ent_fluxtag=>{
+    Object.entries(json_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.flux_taggs).forEach(ent_fluxtag=>{
       this._tags[ent_fluxtag[0]]=this.drawing_area.sankey.flux_taggs[ent_fluxtag[0]].tags[ent_fluxtag[1] as string]
     })
 

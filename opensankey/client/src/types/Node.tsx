@@ -1361,7 +1361,7 @@ export class Class_NodeElement extends Class_Element {
     // tags:{key_grp_tag:key_tag_selected } 
     // where 'key_grp_tag' represent the id of a node_taggs group 
     // &  'key_tag_selected' represent the id of the tag selected for that node_taggs group  
-    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[1] && !(ent[1] instanceof Array)).forEach(ent_nodetag=>{
+    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.node_taggs).forEach(ent_nodetag=>{
       if(ent_nodetag[1] instanceof Array && ent_nodetag.length>0){
         this._tags[ent_nodetag[0]]=this.drawing_area.sankey.node_taggs[ent_nodetag[0]].tags[ent_nodetag[1][0] as string]
       }else if(!(ent_nodetag[1] instanceof Array)){
