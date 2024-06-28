@@ -893,27 +893,27 @@ export const convert_nodes:convert_nodesFuncType = (
       }
     }
 
-    if (n.name.includes('(I') && n.outputLinksId.length > 0 ) {
-      n.tags['Type de noeud'] = ['echange']
-      if (data_to_convert.display_style.trade_close !== undefined) {
-        n_depreciated.trade_close = data_to_convert.display_style.trade_close
-      }
-      n.position = 'relative'
-      n.x = data_to_convert.trade_close_hspace as number
-      n.y = data_to_convert.trade_close_vspace as number
-      AssignNodeLocalAttribute(n,'label_visible', false)
-      AssignNodeLocalAttribute(n,'shape_visible', false)
-    } else if (n.name.includes('(E') && !n.name.includes('(EA)') ) {
-      n.tags['Type de noeud'] = ['echange']
-      if (data_to_convert.display_style.trade_close !== undefined) {
-        n_depreciated.trade_close = data_to_convert.display_style.trade_close
-      }
-      n.position = 'relative'
-      n.x = data_to_convert.trade_close_hspace as number
-      n.y = data_to_convert.trade_close_vspace as number
-      AssignNodeLocalAttribute(n,'label_visible', false)
-      AssignNodeLocalAttribute(n,'shape_visible', false)
-    }
+    // if (n.name.includes('(I') && n.outputLinksId.length > 0 ) {
+    //   n.tags['Type de noeud'] = ['echange']
+    //   if (data_to_convert.display_style.trade_close !== undefined) {
+    //     n_depreciated.trade_close = data_to_convert.display_style.trade_close
+    //   }
+    //   n.position = 'relative'
+    //   n.x = data_to_convert.trade_close_hspace as number
+    //   n.y = data_to_convert.trade_close_vspace as number
+    //   AssignNodeLocalAttribute(n,'label_visible', false)
+    //   AssignNodeLocalAttribute(n,'shape_visible', false)
+    // } else if (n.name.includes('(E') && !n.name.includes('(EA)') ) {
+    //   n.tags['Type de noeud'] = ['echange']
+    //   if (data_to_convert.display_style.trade_close !== undefined) {
+    //     n_depreciated.trade_close = data_to_convert.display_style.trade_close
+    //   }
+    //   n.position = 'relative'
+    //   n.x = data_to_convert.trade_close_hspace as number
+    //   n.y = data_to_convert.trade_close_vspace as number
+    //   AssignNodeLocalAttribute(n,'label_visible', false)
+    //   AssignNodeLocalAttribute(n,'shape_visible', false)
+    // }
     if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
       n.position = 'relative'
       n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
