@@ -1548,16 +1548,6 @@ export const convert_data:ConvertDataFuncType = (
   convert_nodes(data)
   convert_links(data)
 
-  if (data_to_convert.node_width ) {
-   Object.values(data.nodes).forEach(n=>{
-    n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
-    n.local.node_width=(data_to_convert.node_width)
-   }) 
-  }
-  if (data.version === "0.3") {
-    data.style_node['default'].node_height = 3
-  }
-
   if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
     data.linkZIndex=Object.values(data.links).map(l=>l.idLink)
     // if((data as SankeyData & layout_type).layout){
