@@ -109,7 +109,7 @@ export class Class_NodeElement extends Class_Element {
   // Tooltips
   tooltip?: Class_Element
   tooltip_text?: string
-  private _displayed:boolean=true
+  private _displayed: boolean = true
 
   // PROTECTED ATTRIBUTE ================================================================
 
@@ -211,23 +211,23 @@ export class Class_NodeElement extends Class_Element {
 
 
   /**
-   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
-   * if that the case then we don't draw the node
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_NodeElement
-  */
-  private element_tag_displayed(){
+ * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+ * if that the case then we don't draw the node
+ *
+ * @private
+ * @return {*}
+ * @memberof Class_NodeElement
+ */
+  private element_tag_displayed() {
     // If node has tags :
     //  - check if any of them is selected at false
     // else if the node doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t=>!t[1].selected).length===0
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
   }
 
 
   // GETTERS / SETTERS ==================================================================
-  public get displayed(){return this._displayed}
+  public get displayed(){ return this._displayed }
 
   /**
    * Get node name
@@ -296,6 +296,9 @@ export class Class_NodeElement extends Class_Element {
    */
   public get input_links_list() {
     return Object.values(this._input_links)
+  }
+  public get input_links() {
+    return this._input_links
   }
 
   /**
@@ -1013,7 +1016,7 @@ export class Class_NodeElement extends Class_Element {
         // Update node position
         nodes_selected
           .forEach(n => {
-            n.setPosXY(n.position_x+event.dx,n.position_y+event.dy)
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
       }
     }
@@ -1345,6 +1348,60 @@ export class Class_NodeElement extends Class_Element {
     if (this.hasOutputLinks()) return this.output_links_list[0] // TODO pas bon
     else return undefined
   }
+
+  /**
+   * Convert node to JSON
+   *
+   *
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public toJSON() {
+    const json_object = {} as { [_: string]: unknown }
+
+    json_object['idNode'] = this.id
+    json_object['name'] = this.name
+    json_object['position'] = this.position_type
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
+    json_object['tooltip_text'] = this.tooltip_text
+    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+    json_object['style'] = Object.entries(this.drawing_area.sankey.node_styles_dict).filter(stl => stl[1] === (this.style))[0][0]
+
+    json_object['local'] = this._display.attributes.toJSON()
+    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
+
+    return json_object
+  }
+
+  public fromJSON(json_node_object: { [x: string]: any }) {
+
+    this.position_type = json_node_object['position'] ?? ''
+    this.position_x = json_node_object['x'] ?? 10
+    this.position_y = json_node_object['y'] ?? 10
+    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
+
+    //  Input & output link should be automatically added when we create link from json
+
+    this.style=this.drawing_area.sankey.node_styles_dict[json_node_object['style']??'default'] // if json_node_object['style'] is undefined assign default style
+
+    if(json_node_object['local']){
+      this._display.attributes.fromJSON(json_node_object['local'])
+    }
+    // In JSON here are how supposed tags var is :
+    // tags:{key_grp_tag:key_tag_selected }
+    // where 'key_grp_tag' represent the id of a node_taggs group
+    // &  'key_tag_selected' represent the id of the tag selected for that node_taggs group
+    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.node_taggs_dict).forEach(ent_nodetag=>{
+      if(ent_nodetag[1] instanceof Array && ent_nodetag.length>0){
+        this._tags[ent_nodetag[0]] = this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[ent_nodetag[1][0] as string]
+      }
+      else if(!(ent_nodetag[1] instanceof Array)) {
+        this._tags[ent_nodetag[0]] = this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[ent_nodetag[1] as string]
+      }
+
+    })  }
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
@@ -1470,6 +1527,112 @@ export class Class_NodeAttribute {
   public set value_label_vert(_: string | undefined) { this._value_label_vert = _ }
   public set value_label_horiz(_: string | undefined) { this._value_label_horiz = _ }
   public set value_label_background(_: boolean | undefined) { this._value_label_background = _ }
+
+  public toJSON() {
+    const json_object = {} as { [_: string]: any }
+
+    // One line 'if' to add local attribute to json object if they're not undefined
+
+    // TODO delete code as comment when saved variable name will be defined (old vs new)
+
+    // Parameters for shape
+    if (this._shape_visible !== undefined) json_object['shape_visible'] = this._shape_visible
+    // if (this._shape_type !== undefined) json_object['shape_type'] = this._shape_type
+    if (this._shape_type !== undefined) json_object['shape'] = this._shape_type
+    // if (this._shape_min_width !== undefined) json_object['shape_min_width'] = this._shape_min_width
+    if (this._shape_min_width !== undefined) json_object['node_width'] = this._shape_min_width
+    // if (this._shape_min_height !== undefined) json_object['shape_min_height'] = this._shape_min_height
+    if (this._shape_min_height !== undefined) json_object['node_height'] = this._shape_min_height
+    // if (this._shape_color !== undefined) json_object['shape_color'] = this._shape_color
+    if (this._shape_color !== undefined) json_object['color'] = this._shape_color
+    // if (this._shape_color_sustainable !== undefined) json_object['shape_color_sustainable'] = this._shape_color_sustainable
+    if (this._shape_color_sustainable !== undefined) json_object['colorSustainable'] = this._shape_color_sustainable
+    // if (this._shape_arrow_angle_factor !== undefined) json_object['shape_arrow_angle_factor'] = this._shape_arrow_angle_factor
+    if (this._shape_arrow_angle_factor !== undefined) json_object['node_arrow_angle_factor'] = this._shape_arrow_angle_factor
+    // if (this._shape_arrow_angle_direction !== undefined) json_object['shape_arrow_angle_direction'] = this._shape_arrow_angle_direction
+    if (this._shape_arrow_angle_direction !== undefined) json_object['node_arrow_angle_direction'] = this._shape_arrow_angle_direction
+
+    // Parameter of node label
+    // if (this._name_label_visible !== undefined) json_object['name_label_visible'] = this._name_label_visible
+    if (this._name_label_visible !== undefined) json_object['label_visible'] = this._name_label_visible
+    // if (this._name_label_font_family !== undefined) json_object['name_label_font_family'] = this._name_label_font_family
+    if (this._name_label_font_family !== undefined) json_object['font_family'] = this._name_label_font_family
+    // if (this._name_label_font_size !== undefined) json_object['name_label_font_size'] = this._name_label_font_size
+    if (this._name_label_font_size !== undefined) json_object['font_size'] = this._name_label_font_size
+    // if (this._name_label_uppercase !== undefined) json_object['name_label_uppercase'] = this._name_label_uppercase
+    if (this._name_label_uppercase !== undefined) json_object['uppercase'] = this._name_label_uppercase
+    // if (this._name_label_bold !== undefined) json_object['name_label_bold'] = this._name_label_bold
+    if (this._name_label_bold !== undefined) json_object['bold'] = this._name_label_bold
+    // if (this._name_label_italic !== undefined) json_object['name_label_italic'] = this._name_label_italic
+    if (this._name_label_italic !== undefined) json_object['italic'] = this._name_label_italic
+    // if (this._name_label_box_width !== undefined) json_object['name_label_box_width'] = this._name_label_box_width
+    if (this._name_label_box_width !== undefined) json_object['label_box_width'] = this._name_label_box_width
+    // if (this._name_label_color !== undefined) json_object['name_label_color'] = this._name_label_color
+    if (this._name_label_color !== undefined) json_object['label_color'] = this._name_label_color
+    // if (this._name_label_vert !== undefined) json_object['name_label_vert'] = this._name_label_vert
+    if (this._name_label_vert !== undefined) json_object['label_vert'] = this._name_label_vert
+    // if (this._name_label_horiz !== undefined) json_object['name_label_horiz'] = this._name_label_horiz
+    if (this._name_label_horiz !== undefined) json_object['label_horiz'] = this._name_label_horiz
+    // if (this._name_label_background !== undefined) json_object['name_label_background'] = this._name_label_background
+    if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
+
+    // Parameter of node value label
+    // if (this._value_label_visible !== undefined) json_object['value_label_visible'] = this._value_label_visible
+    if (this._value_label_visible !== undefined) json_object['show_value'] = this._value_label_visible
+    if (this._value_label_font_family !== undefined) json_object['value_label_font_family'] = this._value_label_font_family
+    // if (this._value_label_font_size !== undefined) json_object['value_label_font_size'] = this._value_label_font_size
+    if (this._value_label_font_size !== undefined) json_object['value_font_size'] = this._value_label_font_size
+    if (this._value_label_uppercase !== undefined) json_object['value_label_uppercase'] = this._value_label_uppercase
+    if (this._value_label_bold !== undefined) json_object['value_label_bold'] = this._value_label_bold
+    if (this._value_label_italic !== undefined) json_object['value_label_italic'] = this._value_label_italic
+    if (this._value_label_box_width !== undefined) json_object['value_label_box_width'] = this._value_label_box_width
+    if (this._value_label_color !== undefined) json_object['value_label_color'] = this._value_label_color
+    // if (this._value_label_vert !== undefined) json_object['value_label_vert'] = this._value_label_vert
+    if (this._value_label_vert !== undefined) json_object['label_vert_valeur'] = this._value_label_vert
+    // if (this._value_label_horiz !== undefined) json_object['value_label_horiz'] = this._value_label_horiz
+    if (this._value_label_horiz !== undefined) json_object['label_horiz_valeur'] = this._value_label_horiz
+    if (this._value_label_background !== undefined) json_object['value_label_background'] = this._value_label_background
+
+    return json_object
+  }
+
+  public fromJSON(json_local_object: { [x: string]: any }) {
+    // if attribute object has these variable then add it to local
+    // this function is also called when creating style from json and should trigger all if, because in style all attribute are defined
+
+    if (json_local_object['shape_visible'] !== undefined) this._shape_visible = json_local_object['shape_visible']
+    if (json_local_object['shape'] !== undefined) this._shape_type = json_local_object['shape']
+    if (json_local_object['node_width'] !== undefined) this._shape_min_width = json_local_object['node_width']
+    if (json_local_object['node_height'] !== undefined) this._shape_min_height = json_local_object['node_height']
+    if (json_local_object['color'] !== undefined) this._shape_color = json_local_object['color']
+    if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = json_local_object['colorSustainable']
+    if (json_local_object['node_arrow_angle_factor'] !== undefined) this._shape_arrow_angle_factor = json_local_object['node_arrow_angle_factor']
+    if (json_local_object['node_arrow_angle_direction'] !== undefined) this._shape_arrow_angle_direction = json_local_object['node_arrow_angle_direction']
+
+    if (json_local_object['label_visible'] !== undefined) this._name_label_visible = json_local_object['label_visible']
+    if (json_local_object['font_family'] !== undefined) this._name_label_font_family = json_local_object['font_family']
+    if (json_local_object['font_size'] !== undefined) this._name_label_font_size = json_local_object['font_size']
+    if (json_local_object['uppercase'] !== undefined) this._name_label_uppercase = json_local_object['uppercase']
+    if (json_local_object['bold'] !== undefined) this._name_label_bold = json_local_object['bold']
+    if (json_local_object['italic'] !== undefined) this._name_label_italic = json_local_object['italic']
+    if (json_local_object['label_box_width'] !== undefined) this._name_label_box_width = json_local_object['label_box_width']
+    if (json_local_object['label_color'] !== undefined) this._name_label_color = json_local_object['label_color']
+    if (json_local_object['label_vert'] !== undefined) this._name_label_vert = json_local_object['label_vert']
+    if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = json_local_object['label_horiz']
+    if (json_local_object['label_background'] !== undefined) this._name_label_background = json_local_object['label_background']
+
+    if (json_local_object['show_value'] !== undefined) this._value_label_visible = json_local_object['show_value']
+    if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = json_local_object['value_label_font_family']
+    if (json_local_object['value_font_size'] !== undefined) this._value_label_font_size = json_local_object['value_font_size']
+    if (json_local_object['value_label_uppercase'] !== undefined) this._value_label_uppercase = json_local_object['value_label_uppercase']
+    if (json_local_object['value_label_bold'] !== undefined) this._value_label_bold = json_local_object['value_label_bold']
+    if (json_local_object['value_label_italic'] !== undefined) this._value_label_italic = json_local_object['value_label_italic']
+    if (json_local_object['value_label_box_width'] !== undefined) this._value_label_box_width = json_local_object['value_label_box_width']
+    if (json_local_object['value_label_color'] !== undefined) this._value_label_color = json_local_object['value_label_color']
+    if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = json_local_object['label_vert_valeur']
+    if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = json_local_object['label_horiz_valeur']
+    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = json_local_object['value_label_background']
+  }
 }
 
 // CLASS NODE STYLE *********************************************************************
