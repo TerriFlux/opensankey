@@ -76,6 +76,8 @@ export class Class_Tag {
   public get selected() { return this._selected }
   public set selected(value: boolean) { this._selected = value }
 
+  public get group() { return this._group }
+
   // PUBLIC METHODS =====================================================================
   public addReference(_: Type_TagReference) {
     if (!this._references[_.id]) this._references[_.id] = _
@@ -176,13 +178,6 @@ export class Class_TagGroup {
   public get show_legend(): boolean { return this._show_legend }
   public set show_legend(value: boolean) { this._show_legend = value }
 
-  /**
- * Return list of selected tag from the current group
- *
- * @readonly
- * @memberof Class_TagGroup
- */
-  public get tags_selected_list() { return Object.values(this._tags).filter(t => t.selected) }
 
   /**
  * Return list tag from the current group
@@ -191,6 +186,14 @@ export class Class_TagGroup {
  * @memberof Class_TagGroup
  */
   public get tags_list() { return Object.values(this._tags) }
+
+  /**
+   * Return list of selected tag from the current group
+   *
+   * @readonly
+   * @memberof Class_TagGroup
+   */
+  public get selected_tags_list() { return Object.values(this._tags).filter(t => t.selected) }
 
   // PUBLIC METHODS =====================================================================
 

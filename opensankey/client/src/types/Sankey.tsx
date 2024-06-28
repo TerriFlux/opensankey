@@ -25,6 +25,7 @@ import {
   sortNodesElements
 } from './Node'
 import {
+  Class_Tag,
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
@@ -343,12 +344,12 @@ export class Class_Sankey {
    * @readonly
    * @memberof Class_Sankey
    */
-  public get data_taggs_object_tag_selected() {
-    const tmp = {} as { [_: string]: string[] }
-    this.data_taggs_entries.forEach(ent => {
-      tmp[ent[0]] = ent[1].tags_selected_list.map(t => t.id)
+  public get selected_data_tags_list() {
+    const data_tags: Class_Tag[] = []
+    this.data_taggs_list.forEach(data_tagg => {
+      data_tags.push(...data_tagg.selected_tags_list)
     })
-    return tmp
+    return data_tags
   }
 
   public get level_taggs_dict() {

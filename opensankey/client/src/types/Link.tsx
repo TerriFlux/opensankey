@@ -139,7 +139,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {Class_Data}
    * @memberof Class_LinkElement
    */
-  private _values: Class_LinkValue
+  private _values: Class_TreeNode | Class_LinkValue
 
   /**
    * Value of tooltip text associated to link
@@ -220,8 +220,11 @@ export class Class_LinkElement extends Class_Element {
     this._target = target
     this._target.addInputLink(this)
     // Values
-    this._values = new Class_LinkValue(null, 'root', 'root')
-    this._values.createTreeDataLink(drawing_area.sankey.data_taggs_list, 0)
+    this._values = new Class_LinkValue(this)
+    drawing_area.sankey.data_taggs_list
+      .forEach(data_tagg => {
+        this._values = this._values.addNewTagGroup(data_tagg)
+      })
   }
 
 
@@ -246,6 +249,33 @@ export class Class_LinkElement extends Class_Element {
     this.style.removeReference(this)
     // Delete related values
     this._values.delete()
+  }
+
+  // PROTECTED METHODS =====================================================================
+
+  protected element_displayed() {
+    return this.source_and_target_displayed() && this.element_tag_displayed()
+  }
+
+  // PRIVATE METHODS =======================================================================
+
+  private element_tag_displayed() {
+    // If link has tags :
+    //  - check if any of them is selected at false
+    // else if the link doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+  }
+
+  /**
+   * Check if node source and node target are displayed,
+   * if one of them is not then we don't display the link
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  private source_and_target_displayed() {
+    return this._source.displayed && this._target.displayed
   }
 
   // PUBLIC METHODS =====================================================================
@@ -376,12 +406,8 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public get_curr_value() {
-    const tmp = this.drawing_area.sankey.data_taggs_object_tag_selected
-    const path: string[] = []
-    Object.values(tmp).forEach(val => {
-      path.push(val[0])
-    })
-    return this._values.getValueFromLeaf(path)
+    if (this._values instanceof Class_LinkValue) return this._values.value
+    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
   }
 
   /**
@@ -396,29 +422,6 @@ export class Class_LinkElement extends Class_Element {
     return (val !== null && val !== undefined) ? val : 0
   }
 
-
-  protected element_displayed() {
-
-    return this.source_and_target_displayed() && this.element_tag_displayed()
-  }
-  private element_tag_displayed() {
-    // If link has tags :
-    //  - check if any of them is selected at false
-    // else if the link doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
-  }
-
-  /**
-   * Check if node source and node target are displayed,
-   * if one of them is not then we don't display the link
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  private source_and_target_displayed() {
-    return this._source.displayed && this._target.displayed
-  }
 
   public toJSON() {
     const json_object = {} as { [_: string]: unknown }
@@ -1758,12 +1761,8 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   }
 }
 
-// CLASS TREE NODE **********************************************************************
 
-export interface TreeNodeInterface {
-  parent: TreeNodeInterface | null;
-  children: { [x: string]: TreeNodeInterface }
-}
+// CLASS TREE NODE **********************************************************************
 
 /**
  * Define a node for value
@@ -1771,110 +1770,153 @@ export interface TreeNodeInterface {
  * @class Class_TreeNode
  * @implements {TreeNodeInterface}
  */
-export class Class_TreeNode implements TreeNodeInterface {
-  public parent: TreeNodeInterface
-  public children: { [x: string]: TreeNodeInterface } = {}
+export class Class_TreeNode {
 
-  constructor(parent: TreeNodeInterface | null, id: string) {
+  // PUBLIC ATTRIBUTES ==================================================================
+
+  public tag_group: Class_TagGroup | null
+  public parent: Class_TreeNode | Class_LinkElement  | null
+  public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_TreeNode }
+
+  // CONSTRUCTOR ========================================================================
+
+  constructor(
+    parent: Class_TreeNode | Class_LinkElement | null,
+    tag_group: Class_TagGroup
+  ) {
+    // Instanciate parent
     this.parent = parent
-    if (this.parent) {
-      this.parent.children[id] = this
-    }
-  }
-}
-
-export interface TreeNodeInterface {
-  parent: TreeNodeInterface | null;
-  children: { [x: string]: TreeNodeInterface }
-}
-
-export class Class_LinkValue extends Class_TreeNode {
-
-  private tag_id: string
-  private grp_id: string
-  private _value?: number
-  private _display_value?: string
-  private _tags?: { [_: string]: Class_Tag }
-  private _extension?: { [_: string]: string }
-  public parent: Class_LinkValue | null = null
-  public children: { [x: string]: Class_LinkValue } = {}
-
-  constructor(parent: Class_LinkValue | null, grp_id: string, tag_id: string) {
-    super(parent, tag_id)
-    this.grp_id = grp_id
-    this.tag_id = tag_id
+    // Instanciate taggroup
+    this.tag_group = tag_group
+    // Instanciate children
+    this.children = {}
+    tag_group.tags_list.forEach(tag => {
+      this.children[tag.id] = new Class_LinkValue(this)
+    })
   }
 
+  delete() {
+    // Delete children
+    Object.keys(this.children)
+      .forEach(id => {
+        this.children[id].delete()
+      }
+    )
+    this.children = {}
+    // Unref parent
+    this.parent = null
+    // Unref taggroup
+    this.tag_group = null
+  }
 
-  /**
-   * Create a data tree structure for link value
-   *
-   * @param {[Class_TagGroup]} arr_grp_tag
-   * @param {number} indexGrp
-   * @memberof Class_LinkValue
-   */
-  public createTreeDataLink(arr_grp_tag: Class_TagGroup[], indexGrp: number) {
-
-    if (arr_grp_tag.length > 0) {
-      const curr_grp = arr_grp_tag[indexGrp]
-      const is_leaf = arr_grp_tag.length - 1 == indexGrp
-
-      curr_grp.tags_list.forEach(tag => {
-        const tmp = new Class_LinkValue(this, curr_grp.id, tag.id)
-        // If we are a not at the last group data tag then we add children with the rest of the data tags group
-        if (!is_leaf) {
-          tmp.createTreeDataLink(arr_grp_tag, indexGrp + 1)
-        } else {
-          // If we are a leaf then we init link value
-          tmp.initLeafValues()
+  // PUBLIC METHODS =====================================================================
+  public addNewTagGroup(tag_group: Class_TagGroup) {
+    Object.entries(this.children)
+      .forEach(entry => {
+        const id = entry[0]
+        const child = entry[1]
+        // Recursive call until we arrive to the bottom of the tree
+        if (child instanceof Class_LinkValue) {
+          // Create new node tree
+          const new_child = new Class_TreeNode(this, tag_group)
+          // Copy values from child in grandchildren
+          tag_group.tags_list.forEach(tag => {
+            const _ = new_child.children[tag.id]
+            if (_ instanceof Class_LinkValue)
+              _.copyFrom(child)
+          })
+          // Replace child
+          this.children[id] = new_child
+          child.delete()
+        }
+        else {
+          // Recursive call
+          child.addNewTagGroup(tag_group)
         }
       })
-    } else {
-      // If we are here it means we haven't any data_taggs so we init value at root
-      this.initLeafValues()
+    return this
+  }
+
+  public addChild(tag: Class_Tag, children: Class_TreeNode | Class_LinkValue) {
+    if (!this.children[tag.id])
+      this.children[tag.id] = children
+  }
+
+  public createNewChildAsValue(tag: Class_Tag) {
+    if (!this.children[tag.id]) {
+      const _ = new Class_LinkValue(this)
+      this.children[tag.id] = _
+      return _
     }
+    return undefined
   }
 
-  public getValueFromLeaf(path: string[]): number | undefined {
-    return this.goToLeaf(path)._value
+  public getValue(tags: Class_Tag[]) : number | null {
+    // Failsafe
+    if (tags.length === 0) return null
+    // Get value recursively
+    const matching_tags = tags.filter(tag => (tag.group === this.tag_group))
+    const remaining_tags = tags.filter(tag => (tag.group !== this.tag_group))
+    // Failsafe
+    if (matching_tags.length !== 1) return null
+    // Recursive
+    const child = this.children[matching_tags[0].id]
+    if (child instanceof Class_LinkValue) return child.value
+    else return child.getValue(remaining_tags)
   }
 
-  public setValueForLeaf(path: string[], val: number | undefined) {
-    this.goToLeaf(path)._value = val
+  // GETTERS / SETTERS ==================================================================
+  public get link() : Class_LinkElement | null {
+    if (this.parent instanceof Class_TreeNode) return this.parent.link
+    else return this.parent
+  }
+}
+
+/**
+ * Define a link value object
+ *
+ * @export
+ * @class Class_LinkValue
+ * @extends {Class_TreeNode}
+ */
+export class Class_LinkValue {
+
+  // PRIVATE ATTRIBUTES ==================================================================
+
+  public parent: Class_TreeNode | Class_LinkElement | null
+  public value: number | null = null
+  public display_value: string | null = null
+
+  private _extension?: { [_: string]: string }
+
+  // CONSTRUCTOR ========================================================================
+
+  constructor(parent: Class_TreeNode | Class_LinkElement) {
+    // Parents / Children relations
+    this.parent = parent
   }
 
-  /**
-   * function that return the Class_LinkValue leaf in the link value tree structur
-   *
-   * path is an array who have the same length that there is data_taggs ClassGroup where the first element of path is
-   *
-   * @param {string[]} path
-   * @return {*}  {Class_LinkValue}
-   * @memberof Class_LinkValue
-   */
-  public goToLeaf(path: string[]): Class_LinkValue {
-    if (Object.values(this.children).length > 0 && path.length > 0) {
-      const next_key = path.shift() as string
-      return this.children[next_key].goToLeaf(path)
-    } else {
-      return this
-    }
+  delete() {
+    this.parent = null
   }
 
-  public getTextForLeaf(path: string[]) {
-    return this.goToLeaf(path)._display_value
-  }
-  public setTextForLeaf(path: string[], val: string | undefined) {
-    this.goToLeaf(path)._display_value = val
-  }
-
-  public initLeafValues() {
-    this._value = getRandomInt(100)
-    this._display_value = ''
-    this._tags = {}
-    this._extension = {}
+  // PUBLIC METHODS =====================================================================
+  public copyFrom(element: Class_LinkValue) {
+    this.value = element.value
+    this.display_value = element.display_value
   }
 
-  // ==================Getter & Setter ======================
+  public addNewTagGroup(tag_group: Class_TagGroup) {
+    const new_parent = new Class_TreeNode(this.parent, tag_group)
+    // Copy values from child in grandchildren
+    tag_group.tags_list.forEach(tag => {
+      const _ = new_parent.createNewChildAsValue(tag)
+      _?.copyFrom(this)
+    })
+    // Clean self
+    this.delete()
+    // Return new parent
+    return new_parent
+  }
 
 }
