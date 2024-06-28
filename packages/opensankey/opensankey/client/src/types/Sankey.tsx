@@ -16,6 +16,7 @@ import {
 import {
   Class_LinkElement,
   Class_LinkStyle,
+  sortLinksElements,
   // default_link_style,
 } from './Link'
 import {
@@ -29,12 +30,13 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs'
+export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-const default_node_style = new Class_NodeStyle(false)
-const default_link_style = new Class_LinkStyle()
+export const default_style_name = 'Style par defaut'
+const default_node_style = new Class_NodeStyle(default_style_name, false)
+const default_link_style = new Class_LinkStyle(default_style_name, false)
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -55,10 +57,10 @@ export class Class_Sankey {
   public drawing_area: Class_DrawingArea
 
   // Tags
-  public node_taggs: { [_: string]: Class_TagGroup } = {}
-  public flux_taggs: { [_: string]: Class_TagGroup } = {}
-  public data_taggs: { [_: string]: Class_TagGroup } = {}
-  public level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
+  private _node_taggs: { [_: string]: Class_TagGroup } = {}
+  private _flux_taggs: { [_: string]: Class_TagGroup } = {}
+  private _data_taggs: { [_: string]: Class_TagGroup } = {}
+  private _level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // TODO a implementer
   // left_shift: number,
@@ -145,8 +147,8 @@ export class Class_Sankey {
   public get filter_displayed_node_selector(): boolean { return this._filter_displayed_node_selector }
   public set filter_displayed_node_selector(value: boolean) { this._filter_displayed_node_selector = value }
 
-  public get data_taggs_entries() { return Object.entries(this.data_taggs) }
-  public get data_taggs_list() { return Object.values(this.data_taggs) }
+  public get data_taggs_entries() { return Object.entries(this._data_taggs) }
+  public get data_taggs_list() { return Object.values(this._data_taggs) }
 
   /**
    * Return an object wherekey are data_taggs id ,
@@ -268,6 +270,55 @@ export class Class_Sankey {
    */
   public get default_node_style() {
     return this._node_styles['default']
+  }
+
+   /**
+   * Return all the style as a list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+   public get link_styles_list() {
+    return Object.values(this._link_styles)
+  }
+
+  /**
+   * Return all the style as a sorted list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_list_sorted() {
+    return this.link_styles_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+
+  // Tags related -----------------------------------------------------------------------
+
+  public get node_taggs_dict() {
+    return this._node_taggs
+  }
+
+  public get node_taggs_list() {
+    return Object.values(this._node_taggs)
+  }
+
+  public get flux_taggs_dict() {
+    return this._flux_taggs
+  }
+
+  public get flux_taggs_list() {
+    return Object.values(this._flux_taggs)
+  }
+
+  public get data_taggs_dict() {
+    return this._data_taggs
+  }
+
+  public get level_taggs_dict() {
+    return this._level_taggs
+  }
+
+  public get level_taggs_list() {
+    return Object.values(this._level_taggs)
   }
 
   // Styles related ---------------------------------------------------------------------
@@ -395,9 +446,10 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public addTagGroup(id: string, name: string, type_group: Type_MacroTagGroup): Class_TagGroup {
-    if (!this[type_group][id]) {
+    const macro_tag_group = this.getTagGroupsAsDict(type_group)
+    if (!macro_tag_group[id]) {
       const tag_group = new Class_TagGroup(id, name)
-      this[type_group][id] = tag_group
+      macro_tag_group[id] = tag_group
       return tag_group
     }
     else {
@@ -412,7 +464,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public createTagGroup(type_group: Type_MacroTagGroup) {
-    const n = Object.values(this[type_group]).length
+    const n = Object.values(this.getTagGroupsAsDict(type_group)).length
     const id = type_group + n
     const name = 'Tag Group ' + n
     return this.addTagGroup(id, name, type_group)
@@ -425,9 +477,10 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
-    if (this[type_group][id] !== undefined) {
-      this[type_group][id].delete()
-      delete this[type_group][id]
+    const macro_tag_group = this.getTagGroupsAsDict(type_group)
+    if (macro_tag_group[id] !== undefined) {
+      macro_tag_group[id].delete()
+      delete macro_tag_group[id]
     }
   }
 
@@ -450,7 +503,22 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public getListGroupTagOf(type_group: Type_MacroTagGroup) {
-    return Object.values(this[type_group])
+    return Object.values(this.getTagGroupsAsDict(type_group))
+  }
+
+  public getTagGroupsAsDict(type_group: Type_MacroTagGroup) {
+    if (type_group === 'node_taggs') {
+      return this._node_taggs
+    }
+    else if (type_group === 'flux_taggs') {
+      return this._flux_taggs
+    }
+    else if (type_group === 'data_taggs') {
+      return this._data_taggs
+    }
+    else {
+      return this._level_taggs
+    }
   }
 
 
@@ -466,7 +534,7 @@ export class Class_Sankey {
     // Set node styles from json data
     Object.entries(json_object['style_node']).forEach(ent_style_node => {
       // Create a node style 
-      const new_style = new Class_NodeStyle(false)
+      const new_style = new Class_NodeStyle(ent_style_node[0],false)
       // Set node style value to node from JSON
       new_style.fromJSON(ent_style_node[1] as { [x: string]: any })
       // Add node style to sankey
@@ -476,7 +544,7 @@ export class Class_Sankey {
     // Set link styles from json data
     Object.entries(json_object['style_link']).forEach(ent_style_link => {
       // Create a link style
-      const new_style = new Class_LinkStyle()
+      const new_style = new Class_LinkStyle(ent_style_link[0],false)
       // Set link style value to link style from JSON
       new_style.fromJSON(ent_style_link[1] as { [x: string]: any })
       // Add link style to sankey
@@ -492,7 +560,7 @@ export class Class_Sankey {
       // Set node tag group value from JSON
       new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
       // Add node tag group to sankey
-      this.node_taggs[ent_nt[0]] = new_grp
+      this._node_taggs[ent_nt[0]] = new_grp
     })
 
     // Set flux tag & tag group from json data
@@ -503,7 +571,7 @@ export class Class_Sankey {
       // Set flux tag group value from JSON
       new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
       // Add flux tag group to sankey
-      this.flux_taggs[ent_ft[0]] = new_grp
+      this._flux_taggs[ent_ft[0]] = new_grp
     })
 
     // Set data tag & tag group from json data
@@ -514,7 +582,7 @@ export class Class_Sankey {
       // Set flux tag group value from JSON
       new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
       // Add flux tag group to sankey
-      this.data_taggs[ent_dt[0]] = new_grp
+      this._data_taggs[ent_dt[0]] = new_grp
     })
 
     Object.entries(json_object['nodes']).forEach(ent_node => {
@@ -531,7 +599,7 @@ export class Class_Sankey {
       const source =this.nodes_dict[obj['idSource']]
       const target =this.nodes_dict[obj['idTarget']]
             // Create a link
-            const link = new Class_LinkElement(source,target,this.drawing_area,this.menu_config)
+            const link = new Class_LinkElement(ent_link[0],source,target,this.drawing_area,this.menu_config)
             // Set link value to link from JSON
             link.fromJSON(obj)
             // Add link to sankey

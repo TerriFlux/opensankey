@@ -140,7 +140,8 @@ export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
   link_function,
 ) => {
   const { new_data } = applicationData
-  const { level_taggs } = new_data.drawing_area.sankey
+
+  const level_taggs= new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
 
   if (Object.keys(level_taggs).includes('Primaire')) {
 
@@ -385,7 +386,7 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
   })
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
   // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
-  if (tab_sel.length == 0 && Object.values(sankey_data.data_taggs).map(dt => dt.name).includes(tags_group.name)) {
+  if (tab_sel.length == 0 && Object.values(sankey_data.getTagGroupsAsDict('data_taggs')).map(dt => dt.name).includes(tags_group.name)) {
     Object.entries(tags_group.tags)[0][1].selected = true
   }
 }
@@ -475,9 +476,9 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   // ref_getter_mode_selection.current = mode_selection
   // ref_setter_mode_selection.current = sModeSelection
 
-  const node_filter = Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
-  const flux_filter = Object.entries(sankey.flux_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
-  const level_filter = Object.entries(sankey.level_taggs_dict).length > 0
+  const node_filter = Object.entries(sankey.getTagGroupsAsDict('node_taggs')).filter(([, v]) => v.banner !== 'none').length > 0
+  const flux_filter = Object.entries(sankey.getTagGroupsAsDict('flux_taggs')).filter(([, v]) => v.banner !== 'none').length > 0
+  const level_filter = Object.entries(sankey.getTagGroupsAsDict('level_taggs')).length > 0
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
   /**
@@ -739,7 +740,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       <PopoverHeader >{t('Banner.fdn')}</PopoverHeader>
       <PopoverBody>
         {legend_filter}
-        <>{(Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+        <>{(Object.entries(sankey.getTagGroupsAsDict('node_taggs')).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
           {node_tag_filter_content}</>
         ) : (<>
           <Input placeholder="Pas de filtrage" isDisabled /></>)
@@ -901,7 +902,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
       {filter_color_link}
     </OSTooltip></> : <></>
 
-  const btn_show_data_filter = (Object.values(new_data.drawing_area.sankey.data_taggs).length > 0) ? <>
+  const btn_show_data_filter = (Object.values(new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')).length > 0) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_data_tag_filter')}>
       {filter_data}
     </OSTooltip></> : <></>

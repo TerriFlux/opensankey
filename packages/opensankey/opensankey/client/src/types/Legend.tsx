@@ -168,7 +168,10 @@ public fromJSON(json_object:{[_:string]:any}){
      * @memberof Class_Legend
      */
   private drawTagDisplayed() {
-    const { node_taggs, flux_taggs, data_taggs, } = this.drawing_area.sankey
+    // const { node_taggs, flux_taggs, data_taggs, } = this.drawing_area.sankey
+    const data_taggs=this.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+    const flux_taggs=this.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+    const node_taggs=this.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
     // Get all grp tag insind one variable
     const all_tags = Object.assign({}, node_taggs, flux_taggs, data_taggs)
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
