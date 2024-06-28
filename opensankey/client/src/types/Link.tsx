@@ -86,7 +86,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private ending_curve_point: number = 1.0
+  private _values?: Class_LinkValue
 
   /**
    * TODO
@@ -707,7 +707,87 @@ export class Class_LinkElement extends Class_Element {
   public setPosY(_: number) { /* Does nothing */ }
   public setPosXY(_: number, __: number) { /* Does nothing */ }
 
-  public get link_stroke_width() {
+  // GETTERS / SETTERS ==================================================================
+
+  /**
+   * Get name of link
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get name() {
+    return defaultLinkId(this._source, this._target)
+  }
+
+  /**
+   * Get source node
+   * @memberof Class_LinkElement
+   */
+  public get source(): Class_NodeElement {
+    return this._source
+  }
+
+  /**
+   * set source node
+   * @memberof Class_LinkElement
+   */
+  public set source(value: Class_NodeElement) {
+    this._source = value
+    this.reset()
+  }
+
+  /**
+   * get destination node
+   * @memberof Class_LinkElement
+   */
+  public get target(): Class_NodeElement {
+    return this._target
+  }
+
+  /**
+   * Get value
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get value() {
+    // TODO Faire autrement
+    return this._values
+  }
+
+  /**
+   * Set destination node
+   * @memberof Class_LinkElement
+   */
+  public set target(value: Class_NodeElement) {
+    this._target = value
+    this.reset()
+  }
+
+  public get tags() {
+    // TODO Faire autrement
+    return this._tags
+  }
+
+  /**
+   * Set tooltip text
+   * @memberof Class_LinkElement
+   */
+  public get tooltip_text() { return this._tooltip_text }
+
+  /**
+   * Get tooltip text
+   * @memberof Class_LinkElement
+   */
+  public set tooltip_text(_: string) {
+    this._tooltip_text = _
+    // TODO redraw ?
+  }
+
+  /**
+   * Get _thickness of stroke shape
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get link_stroke_width(){
     const scale = d3.scaleLinear()
       .domain([0, this.drawing_area.scale])
       .range([0, 100])
@@ -800,19 +880,41 @@ export class Class_LinkElement extends Class_Element {
     } else if (this._display.style.orientation !== undefined) {
       return this._display.style.orientation
     }
-    return ''
+    return default_shape_ending_curve
   }
-  public set orientation(_: string) { this._display.local.orientation = _ }
 
-  public get left_horiz_shift() {
-    if (this._display.local.left_horiz_shift !== undefined) {
-      return this._display.local.left_horiz_shift
-    } else if (this._display.style.left_horiz_shift !== undefined) {
-      return this._display.style.left_horiz_shift
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_ending_curve(_: number) {
+    if (_ <= 1 && _ > this.shape_starting_curve){
+      this._display.attributes.shape_ending_curve = _
+      this.drawShape()
+    }
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_starting_tangeant() {
+    if (this._display.attributes.shape_starting_tangeant !== undefined) {
+      return this._display.attributes.shape_starting_tangeant
+    } else if (this._display.style.shape_starting_tangeant !== undefined) {
+      return this._display.style.shape_starting_tangeant
     }
     return 0
   }
-  public set left_horiz_shift(_: number) { this._display.local.left_horiz_shift = _ }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_starting_tangeant(_: number) {
+    this._display.attributes.shape_starting_tangeant = _
+    this.drawShape()
+  }
 
   public get right_horiz_shift() {
     if (this._display.local.right_horiz_shift !== undefined) {

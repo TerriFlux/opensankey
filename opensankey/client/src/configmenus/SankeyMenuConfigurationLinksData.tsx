@@ -1,11 +1,9 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import * as d3 from 'd3'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
-import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
 import { OSTooltip } from './SankeyUtils'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, applicationDataType } from '../types/Types'
+import { ComponentUpdaterType,  applicationDataType } from '../types/Types'
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, useBoolean } from '@chakra-ui/react'
 /*************************************************************************************************/
 
@@ -17,14 +15,14 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   ComponentUpdater
 }) => {
   const { t } = applicationContext
-  const [forceUpdate,setForceUpdate]=useState(false)
+  const [,setForceUpdate]=useBoolean()
   const { new_data } = applicationData
   const entries_data_taggs=new_data.drawing_area.sankey.data_taggs_entries
   const list_links_selected=new_data.drawing_area.selected_links_list
 
   const { displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = applicationState
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
-  
+
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
   displayedInputLinkValueRef.current=displayed_input_link_value
 
@@ -40,7 +38,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
     set_tags_selected(dataTagsSelected)
   }
   const path_to_link_value=Object.values(tags_selected)
-  const link_display_text=list_links_selected[0]?.value.getTextForLeaf(structuredClone(path_to_link_value))
+  const link_display_text=list_links_selected[0]?.value?.getTextForLeaf(structuredClone(path_to_link_value))
 
   const content=<Box
     layerStyle='menuconfigpanel_grid'
@@ -70,7 +68,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                 // Create new path to get link value
                 const path_to_link_value=Object.values(tmp) as string[]
                 displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  list_links_selected[0]?.value.getValueFromLeaf(path_to_link_value)?.toString() as string
+                  list_links_selected[0]?.value?.getValueFromLeaf(path_to_link_value)?.toString() as string
                 ))
               }}
             >
@@ -120,11 +118,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
             value={link_display_text}
             onChange={evt => {
               list_links_selected.forEach(l=>{
-                l.value.setTextForLeaf(structuredClone(path_to_link_value),evt.target.value)
+                l.value?.setTextForLeaf(structuredClone(path_to_link_value),evt.target.value)
                 l.reset()
               })
-              setForceUpdate(!forceUpdate)
-
+              setForceUpdate.toggle()
             }}
           />
         </InputGroup>
@@ -145,7 +142,7 @@ type ConfigLinkDataNumberInputType={
 }
 /**
  * Component developped for number input of the layout config menu
- * 
+ *
  * @param {SankeyData} data
  * @param {keyof SankeyData} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
  * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
@@ -153,7 +150,7 @@ type ConfigLinkDataNumberInputType={
  * @param {boolean} hasUnit (default:false) add an addon after the input
  * @param {string} unitText (default:'') text of the addon
  * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
- * 
+ *
  * @return {JSX.Elmement}
  */
 export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInputType>=({
@@ -170,7 +167,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   const path_to_link_value=Object.values(tags_selected)
 
   // Initialise hook with first link selected value
-  const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.value.getValueFromLeaf(path_to_link_value))
+  const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.value?.getValueFromLeaf(path_to_link_value))
 
 
 
@@ -178,9 +175,9 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
   return <InputGroup variant='menuconfigpanel_option_input' >
-    <NumberInput allowMouseWheel 
-      variant={variantOfInput} 
-      step={1} 
+    <NumberInput allowMouseWheel
+      variant={variantOfInput}
+      step={1}
       value={displayed_value}
       onChange={(_,val)=>{
         // Launch/reset timeout before the input auto blur (and update the value in data)
@@ -191,7 +188,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
           f_onBlur()
           ref_input.current?.blur()
         },2000)
-        
+
         // Update displayed value
         setDisplayedValue(val)
       }}
@@ -199,7 +196,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
       onBlur={()=>{
         clearTimeout(isModifying.current)
         list_links_selected.forEach(l=>{
-          l.value.setValueForLeaf(path_to_link_value,displayed_value)
+          l.value?.setValueForLeaf(path_to_link_value,displayed_value)
           l.reset()
         })
         f_onBlur()

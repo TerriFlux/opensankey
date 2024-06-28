@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
-import { TFunction } from 'i18next'
 
 import {
   Box,
@@ -19,7 +18,7 @@ import {
 import { LinkVisible, LinkColor, ReturnValueLink, OSTooltip } from './SankeyUtils'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
-import { LinkFunctionTypes, SankeyData, SankeyNode } from '../types/Types'
+import { LinkFunctionTypes, SankeyData, SankeyLink, SankeyNode } from '../types/Types'
 import { reorganize_node_outputLinksId, reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SelectVisualyLinks } from '../draw/SankeyDrawFunction'
 
@@ -392,101 +391,54 @@ const has_link_come_from=(
   return link_io.length!==0
 }
 
-
 /**
-   * Create a html table displaying links attached to the selected node and filtered by where they're coming/going from
+   * Computes the default selection between input and output and left/right or top/bottom
+   * depending of the existing links.
    *
-   * @param {string} pos
-   * @param {string} io
+   * @param {SankeyData} data
+   * @param {{ [node_id: string]: SankeyNode }} display_nodes
+   * @param {{ [link_id: string]: SankeyLink }} display_links
+   * @param {current:SankeyNode[]}: multi_selected_nodes
    * @returns {*}
    */
-const tab_pos_link=(
-  t:TFunction,
+export const updateDefaultNodeIO=(
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   multi_selected_nodes:{current:SankeyNode[]},
-  pos:string,io:string,tab_colored:boolean,
-  GetLinkValue:GetLinkValueFuncType,
-  link_function:LinkFunctionTypes,
-  setForceUpdate:{ on: () => void; off: () => void; toggle: () => void; },
 )=>{
-  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
-  return (
-    <>
-      <Table
-        variant='striped'
-        // bordered
-        // hover
-        // className='node_group_tags_definition'
-      >
-        <Thead>
-          <Tr>
-            <Th>{t('Menu.flux')}</Th>
-            <Th>{t('Tags.Position')}</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {
-            link_io.map((k, i) => {
-              const color=LinkColor(data.links[k],data,GetLinkValue) as string
-              const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
-              const n_s=data.nodes[data.links[k].idSource]
-              const n_t=data.nodes[data.links[k].idTarget]
+  let link_io = 'right'
+  let link_pos = 'output'
+  if (multi_selected_nodes.current.length===1) {
+    const k_display_link=Object.values(display_links).map(l=>l.idLink)
+    if (multi_selected_nodes.current[0].inputLinksId.filter(lid=>k_display_link.includes(lid)).length>multi_selected_nodes.current[0].outputLinksId.filter(lid=>k_display_link.includes(lid)).length){
+      const obj_list_link={
+        left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input').length,
+        right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input').length,
+        top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input').length,
+        bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input').length,
+      }
+      const side_with_most_link=Object.entries(obj_list_link)
+        .sort(([,a],[,b]) => b-a)[0][0]
+      link_io = 'input'
+      link_pos = side_with_most_link
+    } else {
+      const obj_list_link={
+        left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output').length,
+        right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output').length,
+        top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output').length,
+        bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output').length,
+      }
+      const side_with_most_link=Object.entries(obj_list_link)
+        .sort(([,a],[,b]) => b-a)[0][0]
 
-              return (
-                <Tr key={i.toString()}>
-                  <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
-                  <td style={{ 'width': '10%' }}>
-                    <Box layerStyle="options_2cols">
-                      <Button
-                        variant='menuconfigpanel_option_button'
-                        minWidth='0'
-                        onClick={() =>
-                          handleUpLinkIOPos(
-                            data,
-                            display_nodes,
-                            multi_selected_nodes,
-                            k,
-                            pos,
-                            io,
-                            GetLinkValue,
-                            link_function,
-                            setForceUpdate,
-                          )
-                        }
-                      >
-                        <FaArrowAltCircleUp />
-                      </Button>
-                      <Button
-                        variant='menuconfigpanel_option_button'
-                        minWidth='0'
-                        onClick={() =>
-                          handleDownLinkIOPos(
-                            data,
-                            display_nodes,
-                            multi_selected_nodes,
-                            k,
-                            pos,
-                            io,
-                            GetLinkValue,
-                            link_function,
-                            setForceUpdate,
-                          )
-                        }
-                      >
-                        <FaArrowAltCircleDown />
-                      </Button>
-                    </Box>
-                  </td>
-                </Tr>
-              )
-            })
-          }
-        </Tbody>
-      </Table>
-    </>
-  )
+      link_io = 'output'
+      link_pos = side_with_most_link
+    }
+  }
+  return [link_pos,link_io]
 }
+
 
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
@@ -500,12 +452,17 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   const { t } = applicationContext
   const { data, display_nodes, display_links,new_data } = applicationData
   const { multi_selected_nodes, multi_selected_links } = applicationState
+  const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const {GetLinkValue}=link_function
   const [ link_io, set_link_io ] = useState('output')
   const [ link_pos, set_link_pos ] = useState('right')
   const [ tab_colored, set_tab_colored ] = useState(false)
   const [ , setForceUpdate ] = useBoolean()
 
+  let IOLink=[] as string[]
+  if (multi_selected_nodes.current.length===1) {
+    IOLink = getIOLink(data,display_nodes,multi_selected_nodes,applicationState.link_pos.current,applicationState.link_io.current)
+  }
 
   let has_input_links = false
   let has_output_links = false
@@ -524,46 +481,12 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     )
   }
 
-  const updateDefaultNodeIO=()=>{
-    if (multi_selected_nodes.current.length===1) {
-      const k_display_link=Object.values(display_links).map(l=>l.idLink)
-      if (multi_selected_nodes.current[0].inputLinksId.filter(lid=>k_display_link.includes(lid)).length>multi_selected_nodes.current[0].outputLinksId.filter(lid=>k_display_link.includes(lid)).length){
-        const obj_list_link={
-          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input').length,
-          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input').length,
-          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input').length,
-          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input').length,
-        }
-        const side_with_most_link=Object.entries(obj_list_link)
-          .sort(([,a],[,b]) => b-a)[0][0]
-
-        if (link_io!=='input') {
-          set_link_io('input')
-        }
-        if (link_pos!==side_with_most_link) {
-          set_link_pos(side_with_most_link)
-        }
-      } else {
-        const obj_list_link={
-          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output').length,
-          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output').length,
-          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output').length,
-          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output').length,
-        }
-        const side_with_most_link=Object.entries(obj_list_link)
-          .sort(([,a],[,b]) => b-a)[0][0]
-
-        if (link_io!=='output') {
-          set_link_io('output')
-        }
-        if (link_pos!==side_with_most_link) {
-          set_link_pos(side_with_most_link)
-        }
-      }
-    }
+  updateComponentMenuNodeIOSelectSideNode.current = ()=>{
+    const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
+    applicationState.link_io.current = io
+    applicationState.link_pos.current = pos
+    setForceUpdate.toggle()
   }
-  new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.push(setForceUpdate.toggle)
-
 
   const content_reorg=<Box
     layerStyle='menuconfigpanel_grid'
@@ -618,19 +541,20 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         <Select
           variant='menuconfigpanel_option_select'
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            set_link_io(evt.target.value)
+            applicationState.link_io.current = evt.target.value
             if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'left')) {
-              set_link_pos('left')
+              applicationState.link_pos.current = 'left'
             }
             else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'right')) {
-              set_link_pos('right')
+              applicationState.link_pos.current = 'right'
             }
             else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'top')) {
-              set_link_pos('top')
+              applicationState.link_pos.current = 'top'
             }
             else {
-              set_link_pos('bottom')
+              applicationState.link_pos.current = 'bottom'
             }
+            setForceUpdate.toggle()
           }}
         >
           {
@@ -661,26 +585,29 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         </OSTooltip>
         <Select
           variant='menuconfigpanel_option_select'
-          value={link_pos}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_link_pos(evt.target.value)}
+          value={applicationState.link_pos.current}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            applicationState.link_pos.current = evt.target.value
+            setForceUpdate.toggle()
+          }}
         >
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'left')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'left')?
               <option value='left'>{t('Noeud.PF.gauche')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'right')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'right')?
               <option value='right'>{t('Noeud.PF.droite')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'top')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'top')?
               <option value='top'>{t('Noeud.PF.ades')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'bottom')?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, applicationState.link_io.current, 'bottom')?
               <option value='bottom'>{t('Noeud.PF.edes')}</option>:
               <></>
           }
@@ -703,18 +630,79 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
 
       {/* Table montrant les noeuds selectionnés  */}
       {
-        tab_pos_link(
-          t,
-          data,
-          display_nodes,
-          multi_selected_nodes,
-          link_pos,
-          link_io,
-          tab_colored,
-          GetLinkValue,
-          link_function,
-          setForceUpdate,
-        )
+        <>
+          <Table
+            variant='striped'
+            // bordered
+            // hover
+            // className='node_group_tags_definition'
+          >
+            <Thead>
+              <Tr>
+                <Th>{t('Menu.flux')}</Th>
+                <Th>{t('Tags.Position')}</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {
+                IOLink.map((k, i) => {
+                  const color=LinkColor(data.links[k],data,GetLinkValue) as string
+                  const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
+                  const n_s=data.nodes[data.links[k].idSource]
+                  const n_t=data.nodes[data.links[k].idTarget]
+
+                  return (
+                    <Tr key={i.toString()}>
+                      <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
+                      <td style={{ 'width': '10%' }}>
+                        <Box layerStyle="options_2cols">
+                          <Button
+                            variant='menuconfigpanel_option_button'
+                            minWidth='0'
+                            onClick={() =>
+                              handleUpLinkIOPos(
+                                data,
+                                display_nodes,
+                                multi_selected_nodes,
+                                k,
+                                applicationState.link_pos.current,
+                                applicationState.link_io.current,
+                                GetLinkValue,
+                                link_function,
+                                setForceUpdate
+                              )
+                            }
+                          >
+                            <FaArrowAltCircleUp />
+                          </Button>
+                          <Button
+                            variant='menuconfigpanel_option_button'
+                            minWidth='0'
+                            onClick={() =>
+                              handleDownLinkIOPos(
+                                data,
+                                display_nodes,
+                                multi_selected_nodes,
+                                k,
+                                applicationState.link_pos.current,
+                                applicationState.link_io.current,
+                                GetLinkValue,
+                                link_function,
+                                setForceUpdate
+                              )
+                            }
+                          >
+                            <FaArrowAltCircleDown />
+                          </Button>
+                        </Box>
+                      </td>
+                    </Tr>
+                  )
+                })
+              }
+            </Tbody>
+          </Table>
+        </>
       }
     </Box>:
     <></>
@@ -787,19 +775,11 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   </Box>
 
   return menu_for_modal ?
-    content:
-    
-  // <Tab>
-  //   <Box
-  //     layerStyle='submenuconfig_tab'
-  //   >
-  //     {t('Noeud.tabs.io')}
-  //   </Box>
-  // </Tab>,
+    content :
     <TabPanel>
       {content}
     </TabPanel>
-    
+
 }
 
 

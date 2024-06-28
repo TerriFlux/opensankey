@@ -12,7 +12,7 @@ import { SankeyData, SankeyNode, SankeyLink, applicationDataType } from '../../t
  * @param {boolean} revert
  * @returns {string}
  */
-export type draw_arrowFType = (
+export type draw_arrow_partFType = (
   node_face_size: number,
   position_node_face: number[],
   link_size: number,
@@ -20,7 +20,9 @@ export type draw_arrowFType = (
   horizontal: boolean,
   revert: boolean,
   arrow_length:number,
-  node_arrow_shift:number
+  node_arrow_shift:number,
+  node_arrow_shift2:number,
+  node_is_arrow:boolean
 ) => string
 
 
@@ -31,7 +33,8 @@ export type DrawLinkSabotFType = (
   cumulative_link_size: number,
   horizontal: boolean,
   revert: boolean,
-  node_arrow_shift:number
+  node_arrow_shift:number,
+  node_arrow_shift2:number
 ) => string
 
 

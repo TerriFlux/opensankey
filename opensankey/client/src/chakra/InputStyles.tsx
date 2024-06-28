@@ -8,26 +8,26 @@ export const input_base_style = definePartsStyle({
     height: '2rem',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'grey.50',
+    borderColor: 'gray.50',
     textStyle: 'h4',
-    bg: 'grey.50',
-    bgColor: 'grey.50',
+    bg: 'gray.50',
+    bgColor: 'gray.50',
   },
   field: {
     height: '2rem',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'grey.50',
+    borderColor: 'gray.50',
     textStyle: 'h4',
     bg: 'white',
     bgColor: 'white',
     _disabled: {
-      bg: 'grey.300',
-      bgColor: 'grey.300'
+      bg: 'gray.300',
+      bgColor: 'gray.300'
     },
     _focus: {
       border: 'solid 2px ',
-      borderColor: 'openSankey.100',
+      borderColor: 'primaire.2',
     }
   }
 })
@@ -36,8 +36,8 @@ export const menuconfigpanel_option_input = definePartsStyle({
   addon: {
     minWidth: '4.5rem',
     fontSize: '12px',
-    bg: 'grey.100',
-    bgColor: 'grey.100',
+    bg: 'gray.100',
+    bgColor: 'gray.100',
   },
   field: {
     fontSize: '12px',
@@ -48,8 +48,8 @@ export const menuconfigpanel_option_input = definePartsStyle({
 
 export const menuconfigpanel_option_input_table = definePartsStyle({
   addon: {
-    bg: 'grey.100',
-    bgColor: 'grey.100',
+    bg: 'gray.100',
+    bgColor: 'gray.100',
   },
   field: {
     paddingLeft: '0.25rem',
