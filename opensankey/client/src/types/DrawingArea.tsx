@@ -349,17 +349,17 @@ public toJSON() {
     })
 
     json_object['nodeTags'] = {}
-    Object.entries(this.sankey.node_taggs).forEach(ent_nt => {
+    Object.entries(this.sankey.node_taggs_dict).forEach(ent_nt => {
       json_object['nodeTags'][ent_nt[0]] = ent_nt[1].toJSON()
     })
 
     json_object['fluxTags'] = {}
-    Object.entries(this.sankey.flux_taggs).forEach(ent_ft => {
+    Object.entries(this.sankey.flux_taggs_dict).forEach(ent_ft => {
       json_object['fluxTags'][ent_ft[0]] = ent_ft[1].toJSON()
     })
 
     json_object['dataTags'] = {}
-    Object.entries(this.sankey.data_taggs).forEach(ent_dt => {
+    Object.entries(this.sankey.data_taggs_dict).forEach(ent_dt => {
       json_object['dataTags'][ent_dt[0]] = ent_dt[1].toJSON()
     })
 
