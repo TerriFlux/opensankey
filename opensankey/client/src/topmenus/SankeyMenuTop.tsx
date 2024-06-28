@@ -1081,7 +1081,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     position='absolute'
                     zIndex='1'
                     top='0'
-                    right='0.5rem'
+                    right='0'
                   >
                     <Badge>
                       Dev
@@ -1134,7 +1134,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = '150px 150px auto auto auto 13rem'
+  let menutop_grid_template = 'minmax(7vw, 150px) minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
   if (window.SankeyToolsStatic) {
     menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem
   }
@@ -1190,37 +1190,60 @@ export const Menu: FunctionComponent<MenuTypes> = (
             )
           }} >
 
-          {!window.SankeyToolsStatic ? <Box
-            margin='0.25rem'
-            alignSelf='center'
-            justifySelf='center'
-          >
-            <Image
-              src={applicationContext.logo_terriflux}
-              onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-            />
-          </Box> : <></>
-          }
-          { applicationContext.logo != '' ?
+          {
+            !window.SankeyToolsStatic ?
             <Box
               margin='0.25rem'
               alignSelf='center'
               justifySelf='center'
             >
               <Image
-                src={applicationContext.logo}
+                src={applicationContext.logo_terriflux}
+                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
               />
-            </Box> : <Box></Box>}
-          {window.SankeyToolsStatic && window.sankey.header ?           <Box
-            margin='0.25rem'
-            alignSelf='center'
-            justifySelf='center'
-          ><Text
-              fontStyle='h1'>
-              {window.sankey.header}</Text>          </Box>:
-          <></>}
-          {!window.SankeyToolsStatic ? menu_nav :<></>}
-          {window.SankeyToolsStatic ? <ButtonGroup> {Object.keys(ordered_menu).map(k => ordered_menu[k])}</ButtonGroup> :<></>}
+            </Box> :
+            <></>
+          }
+          {
+            applicationContext.logo != '' ?
+              <Box
+                margin='0.25rem'
+                alignSelf='center'
+                justifySelf='center'
+              >
+                <Image
+                  src={applicationContext.logo}
+                />
+              </Box> :
+              <></>
+            }
+          {
+            window.SankeyToolsStatic && window.sankey.header ?
+              <Box
+                margin='0.25rem'
+                alignSelf='center'
+                justifySelf='center'
+              >
+                <Text
+                  fontStyle='h1'
+                >
+                  {window.sankey.header}
+                </Text>
+              </Box>:
+              <></>
+          }
+          {
+            !window.SankeyToolsStatic ?
+              menu_nav :
+              <></>
+          }
+          {
+            window.SankeyToolsStatic ?
+              <ButtonGroup>
+                {Object.keys(ordered_menu).map(k => ordered_menu[k])}
+              </ButtonGroup> :
+              <></>
+          }
           <Box
             margin='0.25rem'
             alignSelf='center'
@@ -1241,7 +1264,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           <Box
             margin='0.25rem'
             alignSelf='center'
-            justifySelf='center'
+            justifySelf='end'
             display='grid'
             gridTemplateColumns='1fr 1fr'
             gridColumnGap='0.25rem'
@@ -1260,7 +1283,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       >
         <Box
           display="grid"
-          gridTemplateColumns="1fr 1fr 1fr 1fr 1.1fr"
+          gridTemplateColumns="1fr 1fr 1fr 1fr 30rem"
         >
           <Box
             layerStyle="menubottom_item_style"
@@ -1630,9 +1653,9 @@ export const launchToastConstructor = (
 ) => {
   intake?.success
   const defaultToastText = {
-    success: { title: (intake?.success) ? intake?.success : 'Action finished', description: 'Looks great' },
-    error: { title: 'Action denied', description: 'Something wrong' },
-    loading: { title: (intake?.loading) ? intake?.loading : 'Please wait', description: 'Please wait' },
+    success: { title: (intake?.success) ? intake?.success : 'Terminé', description: '' },
+    error: { title: 'Echec de la sauvegarde', description: '' },
+    loading: { title: (intake?.loading) ? intake?.loading : 'Sauvegarde', description: 'Veuillez patienter' },
   }
   const tmp = new Promise((resole) => {
     setTimeout(() => {

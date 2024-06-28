@@ -448,8 +448,8 @@ export const opensankey_theme = extendTheme({
       textStyle: 'h3',
       textAlign: 'start',
       flex: '1',
-      paddingStart: '0.5rem',
-      paddingEnd: '0'
+      paddingStart: '0.25rem',
+      paddingEnd: '1.25rem'
     },
     menutop_button_style: {
       display: 'grid',
