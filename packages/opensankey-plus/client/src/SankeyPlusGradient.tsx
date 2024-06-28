@@ -121,6 +121,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
     .attr('stop-color', () => {
       if (nodes[l.idSource].x <= nodes[l.idTarget].x) {
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -131,6 +134,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
         return n_source_color
       } else {
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -149,6 +155,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
     .attr('stop-color', () => {
       if (nodes[l.idSource].x <= nodes[l.idTarget].x) {
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -159,6 +168,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
         return n_target_color
       } else {
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -179,6 +191,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
           .attr('x2', nodes[l.idTarget].x)
           .attr('y2', 0)
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -194,6 +209,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
           .attr('x2', nodes[l.idSource].x)
           .attr('y2', 0)
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -208,6 +226,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if ( (!l_recy && nodes[l.idSource].x > nodes[l.idTarget].x) || (l_recy && nodes[l.idSource].x <= nodes[l.idTarget].x)) {
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -239,6 +260,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
           .attr('x2', 0)
           .attr('y2', nodes[l.idTarget].y)
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -254,6 +278,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
           .attr('x2', 0)
           .attr('y2', nodes[l.idSource].y)
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -268,6 +295,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].y > nodes[l.idTarget].y) {
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -278,6 +308,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
         return n_source_color
       } else {
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -298,6 +331,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
           .attr('x2', nodes[l.idTarget].x)
           .attr('y2', 0)
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -313,6 +349,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
           .attr('x2', nodes[l.idSource].x)
           .attr('y2', 0)
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -327,6 +366,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].x > nodes[l.idTarget].x) {
         const n = n_source
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -337,6 +379,9 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
         return n_source_color
       } else {
         const n = n_target
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -382,6 +427,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
           .attr('x2', nodes[link.idTarget].x)
           .attr('y2', 0)
         const n = nodes[link.idSource]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -397,6 +445,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
           .attr('x2', nodes[link.idSource].x)
           .attr('y2', 0)
         const n = nodes[link.idTarget]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -412,6 +463,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
     d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[link.idSource].x > nodes[link.idTarget].x) {
         const n = nodes[link.idSource]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -422,6 +476,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
         return n_source_color
       } else {
         const n = nodes[link.idTarget]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -474,6 +531,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
           .attr('x2', nodes[link.idTarget].x)
           .attr('y2', 0)
         const n = nodes[link.idSource]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -489,6 +549,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
           .attr('x2', nodes[link.idSource].x)
           .attr('y2', 0)
         const n = nodes[link.idTarget]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -504,6 +567,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
     d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[link.idSource].x > nodes[link.idTarget].x) {
         const n = nodes[link.idSource]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -514,6 +580,9 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
         return n_source_color
       } else {
         const n = nodes[link.idTarget]
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
