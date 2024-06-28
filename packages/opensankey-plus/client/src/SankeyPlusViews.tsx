@@ -985,15 +985,15 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
       </Button>
     </Box>
   </OSTooltip>:<></>
-
+  const is_master=applicationData.view==='none'
   const create_data_catalog=<OSTooltip
     placement='bottom'
-    label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.catalog_data')}
+    label={(!has_open_sankey_plus || !is_master)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.catalog_data')}
   >
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!has_open_sankey_plus}
+        isDisabled={!has_open_sankey_plus || !is_master}
         onClick={
           () => {
             if (_load_json_catalog.current) {
