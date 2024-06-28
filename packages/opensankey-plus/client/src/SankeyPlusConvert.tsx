@@ -152,6 +152,9 @@ export const plus_convert_data : plus_convert_dataFType = (
   if (!data.view) {
     return
   }
+  if(!data.accordeonToShow.includes('Vis')){
+    data.accordeonToShow.push('Vis')
+  }
   const key_view=Object.values(data.view).map(v=>v.id)
   if(data.current_view &&data.current_view!=='none' && !key_view.includes(data.current_view)){
     data.current_view='none'
@@ -172,11 +175,17 @@ export const plus_convert_data : plus_convert_dataFType = (
       convert_links(v.view_data as unknown as OSPData)
       convert_data(v.view_data as unknown as OSPData, DefaultSankeyData)
       plus_convert_data((v.view_data as unknown as OSPData ),DefaultSankeyData)
+      if(!(v.view_data as unknown as OSPData ).accordeonToShow.includes('Vis')){
+        (v.view_data as unknown as OSPData ).accordeonToShow.push('Vis')
+      }
     }
     else if ((v.view_data as unknown as DiffType).diff!==undefined) {
       const d_view = GetDataFromView(data, v.id) as OSPData
       convert_data(d_view, DefaultSankeyData)
       plus_convert_data(d_view, DefaultSankeyData)
+      if(!d_view.accordeonToShow.includes('Vis')){
+        d_view.accordeonToShow.push('Vis')
+      }
       const copy_data = {...data}
       copy_data.view = []
       const converted_master = JSON.parse(JSON.stringify(copy_data))
