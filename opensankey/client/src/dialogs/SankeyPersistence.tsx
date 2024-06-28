@@ -1,10 +1,8 @@
 import React,{ FunctionComponent, useEffect, useState, } from 'react'
-import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
-import Spinner  from 'react-bootstrap/Spinner'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, postProcessLoadExcelFuncType, SankeyLink } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
-import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
+import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, CounterType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink, DefaultNode, DefaultSankeyData, GetRandomInt, SetNodeStyleToTypeNode, layout_type, list_palette_color } from '../configmenus/SankeyUtils'
 import FileSaver from 'file-saver'
@@ -12,6 +10,7 @@ import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeAutoSankey, compute_default_input_outputLinksId } from '../draw/SankeyDrawLayout'
 import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
+import { Box, Button, ButtonGroup, Modal, ModalBody, ModalContent, ModalHeader, ModalOverlay, Spinner } from '@chakra-ui/react'
 
 
 interface SankeyLoadProdTypes {
@@ -22,7 +21,7 @@ interface SankeyLoadProdTypes {
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType,
   convert_data:ConvertDataFuncType,
-  callback:callbackFuncType
+  postProcessLoadExcel:postProcessLoadExcelFuncType
 }
 
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
@@ -33,7 +32,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
   convert_data,
-  callback
+  postProcessLoadExcel
 }) => {
   const { t,url_prefix } = applicationContext
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
@@ -67,7 +66,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   const infos = result !== undefined ? result.split('\n') : []
   const success_status = t('Menu.loaded_file')
   const failure_status = t('Menu.failure_file')
-  const spinner=(processing || is_computing)? <Spinner animation="border" />:<></>
+  const spinner=(processing || is_computing)? <Spinner thickness='2px' color='openSankey.200' />:<></>
 
   if (!not_started.current && !processing) {
     const path = window.location.href
@@ -84,7 +83,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
             applicationData,
             text,
             applicationDraw.updateLayout,
-            callback,
+            postProcessLoadExcel,
             applicationDraw.GetSankeyMinWidthAndHeight,
             convert_data,
             applicationData.get_default_data
@@ -104,58 +103,58 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
 
   return (
     <Modal
-      bsSize="large"
-      show={show_load_dialog}
-      onHide={ () => set_show_load_dialog(false) }
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-      <Modal.Header closeButton>
-        <Modal.Title>Chargement du fichier {spinner}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form >
-          <FormGroup>
-            <Row>
-              <Col sm={5}/>
-              <Col sm={2}>
-                {
-                  processing ? (
-                    <Button variant="warning">
-                      <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
-                      {t('Menu.load_file')}
-                    </Button>):(
-                    failure.current ? (
-                      <Button variant="danger" onClick={reset}>{failure_status}</Button>) : <>
-                      {
-                        is_computing ? (
-                          <Button
-                            variant='info'>
-                            {t('Menu.compute_file')}
-                          </Button>):(
-                          <Button
-                            variant="success"
-                            onClick={()=>{
-                              successAction()
-                              set_show_load_dialog(false)
-                            }}>{success_status}</Button>)
-                      }</>
-                  )
-                }
-              </Col><Col sm={5}/></Row>
-            <br/>
-            <br/>
-            <br/>
-            <Row>
-              <Col sm={12}>
-                <ButtonGroup>
-                  <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'info' : 'light'} >Infos</Button>
-                  <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'danger' : 'light'} >Erreurs</Button>
-                  <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'warning' : 'light'} >Debug</Button>
-                </ButtonGroup></Col>
-            </Row>
+      size="large"
+      isOpen={show_load_dialog}
+      onClose={ () => set_show_load_dialog(false) }
+      // style={{
+      //   display: 'flex',
+      //   justifyContent: 'center',
+      //   alignItems: 'center'
+      // }}
+    >
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader >
+        Chargement du fichier {spinner}
+        </ModalHeader>
+        <ModalBody>
+          <Box layerStyle='menuconfigpanel_grid'>
+            <Box layerStyle='options_3cols'>
+              <Box></Box>
+              {
+                processing ? (
+                  <Button variant="menuconfigpanel_option_button_tertiary">
+                    <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
+                    {t('Menu.load_file')}
+                  </Button>):(
+                  failure.current ? (
+                    <Button variant="menuconfigpanel_del_button" onClick={reset}>{failure_status}</Button>) : <>
+                    {
+                      is_computing ? (
+                        <Button
+                          variant='menuconfigpanel_option_button_secondary'>
+                          {t('Menu.compute_file')}
+                        </Button>):(
+                        <Button
+                          variant="success"
+                          onClick={()=>{
+                            successAction()
+                            set_show_load_dialog(false)
+                          }}>{success_status}</Button>)
+                    }</>
+                )
+              }
+              <></>
+
+            </Box>
+
+            <Box>
+              <ButtonGroup isAttached>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button_'} >Infos</Button>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
+              </ButtonGroup>
+            </Box>
             {processing ? (
               <Counter
                 url_prefix={url_prefix}
@@ -170,26 +169,24 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                 set_result={set_result}
               />
             ) : (<>
-              <Row >
-                <Col sm={12} >
-                  {infos.map(
-                    (info) => (
-                      value.includes(2) && info.includes('ERROR') ?
-                        (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
-                        : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                          (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
-                          : value.includes(3) && (info.includes('DEBUG') ) ?
-                            (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
-                    )
+              <Box >
+                {infos.map(
+                  (info) => (
+                    value.includes(2) && info.includes('ERROR') ?
+                      (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
+                      : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
+                        (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
+                        : value.includes(3) && (info.includes('DEBUG') ) ?
+                          (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
                   )
-                  }
-                </Col>
-              </Row>
+                )
+                }
+              </Box>
             </>
             )}
-          </FormGroup>
-        </Form>
-      </Modal.Body>
+          </Box>
+        </ModalBody>
+      </ModalContent>
     </Modal>
   )
 }
@@ -201,18 +198,13 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export const Counter = ({
+
+export const Counter:FunctionComponent<CounterType> = ({
   url_prefix,
   finishReconciliation,
   value,
   result,
   set_result
-}:{
-  url_prefix:string,
-  finishReconciliation:(x:boolean)=>void,
-  value:number[],
-  result:string,
-  set_result:(_:string)=>void
 }) => {
   useEffect(() =>{
     const interval = setInterval(() => {
@@ -244,21 +236,19 @@ export const Counter = ({
     }
   }
   return (
-    <Row >
-      <Col sm={12} >
-        {infos.map(
-          info => (
-            value.includes(2) && info.includes('ERROR') ?
-              (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
-              : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
-                : value.includes(3) && (info.includes('DEBUG') ) ?
-                  (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
-          )
+    <Box >
+      {infos.map(
+        info => (
+          value.includes(2) && info.includes('ERROR') ?
+            (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
+            : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
+              (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
+              : value.includes(3) && (info.includes('DEBUG') ) ?
+                (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
         )
-        }
-      </Col>
-    </Row>
+      )
+      }
+    </Box>
   )
 }
 export default SankeyLoad
@@ -267,7 +257,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
   updateLayout: updateLayoutFuncType,
-  callback: (server_data: SankeyData) => void,
+  postProcessLoadExcel: (server_data: SankeyData) => void,
   GetSankeyMinWidthAndHeight,
   convert_data: ConvertDataFuncType,
   defaultData: () => SankeyData
@@ -287,7 +277,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }
   const new_data = Object.assign(default_data, server_data) as SankeyData
   applicationData.data=new_data
-  ProcessExample(applicationData, updateLayout, convert_data, callback, DefaultSankeyData)
+  ProcessExample(applicationData, updateLayout, convert_data, postProcessLoadExcel, DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   delete (new_data as SankeyData & { layout?: SankeyData} ).layout
@@ -368,7 +358,7 @@ export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
   updateLayout: updateLayoutFuncType,
   convert_data: ConvertDataFuncType,
-  callback: (server_data: SankeyData) => void,
+  postProcessLoadExcel: (server_data: SankeyData) => void,
   DefaultSankeyData: () => SankeyData
 
 ): SankeyData => {
@@ -408,7 +398,7 @@ export const ProcessExample: ProcessExampleFuncType = (
       ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
 
     }
-    callback(data)
+    postProcessLoadExcel(data)
     compute_default_input_outputLinksId(data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout
     SetNodeStyleToTypeNode(data)
@@ -419,7 +409,7 @@ export const ProcessExample: ProcessExampleFuncType = (
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
     updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
-    callback(data)
+    postProcessLoadExcel(data)
   }
   d3.select('.loading_auto_compute').remove()
 

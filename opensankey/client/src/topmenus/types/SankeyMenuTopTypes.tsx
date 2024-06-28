@@ -1,8 +1,7 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationDrawType, processFunctionsType } from '../../types/Types'
 import {MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
-import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -15,11 +14,10 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 export type AddAllDropDownFluxFType = (
   t:TFunction,
   applicationData:applicationDataType,
-  redrawNodeLinkLegend:()=>void,
-  recomputeDisplayedElement:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  ComponenentUpdater:ComponentUpdaterType,
+  applicationDraw:applicationDrawType
 
 ) => JSX.Element
 
@@ -47,7 +45,7 @@ export type SankeyModalWelcomeFType = {
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again : MutableRefObject<boolean>,
   additional_shortcut_item:JSX.Element[],
-  external_pagination:JSX.Element[],
+  external_pagination:{[x:string]:JSX.Element},
   external_content:{
     read_me: string | JSX.Element | JSX.Element[];
     intro: JSX.Element;
@@ -93,3 +91,14 @@ export type Modale_resolution_pngFType=(
 
 
   )=> JSX.Element
+
+export type ModalTutoType={
+    applicationData:applicationDataType,
+    applicationContext:applicationContextType,
+    processFunctions:processFunctionsType,
+    formations_menu: object,
+    show_tuto:boolean,
+    set_show_tuto:(b:boolean)=>void,
+    Reinitialization:()=>void
+  
+  }

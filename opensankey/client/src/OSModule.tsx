@@ -31,7 +31,8 @@ import {
   processFunctionsType,
   SankeyData,
   SankeyLink,
-  SankeyNode
+  SankeyNode,
+  NodeFunctionTypes
 } from './types/Types'
 /*************************************************************************************************/
 import {
@@ -72,10 +73,27 @@ import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfigura
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
 import { keyHandler } from './draw/SankeyDraw'
 import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
-import { Form, Popover } from 'react-bootstrap'
-import { windowSankey } from './configmenus/SankeyUtils'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
+import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
+
 import { Class_ApplicationData } from './types/ApplicationData'
+
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+    sankey: {
+      filiere?: string,
+      header?: string,
+      has_header?: boolean,
+      footer?: boolean,
+      logo_width?: number,
+      excel?: string,
+      publish?: boolean
+      logo?: string
+    }
+  }
 
 let logo = ''
 try {
@@ -129,6 +147,9 @@ export const initializeElementSelected : initializeElementSelectedType = ()=> {
     first_selected_node : useRef<SankeyNode>(),
     ref_pre_idSource : useRef('none'),
     ref_pre_idTarget : useRef('none'),
+
+    link_io:useRef('output'),
+    link_pos:useRef('right'),
 
     ref_display_link_opacity : useRef<Dispatch<SetStateAction<string>>[]>([]),
     displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
@@ -204,7 +225,8 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   node_function,
   link_function,
   start_point,
-  resizeCanvas
+  resizeCanvas,
+  _
 )=> {
   const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
@@ -345,14 +367,19 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
     DrawAllNodes,
     drawAddNodes,
     RedrawNodes: (()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
+    RedrawNodesLabels: (()=>null),
     recomputeDisplayedElement,
     CreateNodesOnSVG:(()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
-    OpposingDragElements:OpposingDragElements
-  }
+    OpposingDragElements:OpposingDragElements,
+    postProcessLoadExcel: (()=>null)
+  } as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)
     RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
     return null
+  }
+  _.RedrawNodesLabels=(nodes_to_update:SankeyNode[])=>{
+    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
   }
   _.CreateNodesOnSVG=(nodes_to_update:SankeyNode[])=>{
     drawAddNodes(
@@ -430,6 +457,7 @@ export const DrawAll : DrawAllType = (
 
 export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   contextMenu,
+  applicationContext,
   applicationData,
   uiElementsRef,
   applicationState,
@@ -484,9 +512,11 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
 export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
   const _ = {
     updateComponentMenuConfig:useRef(()=>null),
-    updateComponenSaveInCache:useRef(()=>null),
+    updateComponenSaveInCache:useRef((b:boolean)=>null),
+    updateComponentMenuNodeIOSelectSideNode : useRef(()=>null),
+    updateMenuConfigTextNodeTooltip : useRef([()=>null]),
+    updateMenuConfigTextLinkTooltip : useRef([()=>null]),
     updateComponentBtnUpdateLayout : useRef(()=>null),
-    updatePreference:useRef(()=>null)
   }
   return _
 }
@@ -510,12 +540,14 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   applicationDraw,
   ComponentUpdater
 ) => {
-  additional_menus.additional_nav_item.push(
-    <OpenSankeySaveButton
-      ComponentUpdater={ComponentUpdater}
-      applicationContext={applicationContext}
-    />
-  )
+  if (!window.SankeyToolsStatic) {
+    additional_menus.additional_nav_item.push(
+      <OpenSankeySaveButton
+        ComponentUpdater={ComponentUpdater}
+        applicationContext={applicationContext}
+      />
+    )
+  }
 }
 
 // Modal Dialogs
@@ -679,7 +711,7 @@ export const initializeShowDialog : initializeShowDialogType = () => {return {
   ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+  ref_lauchToast : useRef<()=>void>(()=>null),
   ref_setter_show_resolution_save_png : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_png_res_h:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
   ref_setter_png_res_v:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null)
@@ -884,19 +916,40 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
 
-  return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-      <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
-        {addSimpleLevelDropDown(
-          applicationData,
-          applicationDraw.GetSankeyMinWidthAndHeight,
-          node_function,
-          link_function,
-        )}</>
-      ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
-    </Popover.Body>
+  return <Popover placement='left' id='popover_details_level'>
+    <PopoverTrigger>
+      <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
+        <FontAwesomeIcon icon={faFolderTree} />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverCloseButton />
+      <PopoverHeader>{applicationContext.t('Banner.ndd')}</PopoverHeader>
+      <PopoverBody>
+        <>
+          {
+            (Object.entries(applicationData.data.levelTags).length > 0) ?
+              (<>
+                {
+                  addSimpleLevelDropDown(
+                    applicationData,
+                    applicationDraw,
+                    node_function,
+                    link_function)
+                }
+              </>) :
+              (<>
+                <Input
+                  placeholder="Pas de filtrage"
+                  isDisabled
+                />
+              </>)
+          }
+        </>
+      </PopoverBody>
+    </PopoverContent>
+
   </Popover>
 }
 

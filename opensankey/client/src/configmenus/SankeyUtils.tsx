@@ -671,7 +671,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_color:default_element_color,
     legend_bg_opacity:0,
     legend_show_dataTags:false,
-    node_label_separator:''
+    node_label_separator:' - '
 
   }
   const node_style_sect=DefaultNodeSectorStyle()
@@ -1142,6 +1142,9 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
       if (n.tags[tagGroup] === undefined) {
         return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:default_element_color
       } else if (n.tags[tagGroup].length == 1 ) {
+        if ( (ReturnValueNode(data,n,'colorSustainable'))) {
+          return ReturnValueNode(data,n,'color') as string
+        }
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           return data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color??''
         } else {
@@ -1228,14 +1231,18 @@ export interface DataSuiteType{
  * @param tags_group_key
  * @param is_auto_from_add_grp_tag variable used to avoid redondancie when we add a new group data tag
  */
-export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag=false): void=>{
+export const AddTag:AddTagFuncType =(
+  data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',
+  tags_group_key:string,
+  is_auto_from_add_grp_tag=false
+): void=>{
   // Méthode pour incrementer idElement
   let idElement = Object.keys(data[type_tag_name][tags_group_key].tags).length
   while (data[type_tag_name][tags_group_key].tags['element' + idElement]) {
     idElement = idElement+1
   }
-  data[type_tag_name][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
-  const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length
+
+  const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length+1
   const colors = colormap({
     colormap: data[type_tag_name][tags_group_key].color_map,
     nshades: Math.max(11, nb_tags),
@@ -1246,9 +1253,14 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
   if (nb_tags < 11) {
     step = Math.round(11 / nb_tags)
   }
-  Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
-    (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
-  )
+  // Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
+  //   (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
+  // )
+  data[type_tag_name][tags_group_key].tags['element' + idElement] = { 
+    name: 'étiquette' + idElement, 
+    color: colors[(nb_tags-1) * step], 
+    selected: true 
+  }
   // If we create a data tags then we redesign link value object
   // Since dataTags is a tree structure adding a new tag can lead to 2 transformation:
   //  - If the group is a branch then we need to create it sub tree with the layout of all sub datatags
@@ -1277,7 +1289,11 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
  *  - if we add a new tag to a group leaf (in that case grp2) we just add a new value possible :
  *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}, tag2_grp2:{value:'',display_value:'',...}}}
  */
-const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>{
+const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(
+  link_value:SankeyLinkValueDict,
+  index_of_grp_tag:number,
+  current_index:number
+)=>{
   if(current_index<index_of_grp_tag){
     const next_link_value_depth=Object.values(link_value)[0] as SankeyLinkValueDict
     return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1)
@@ -1293,7 +1309,9 @@ const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagTyp
  */
 const addNewSubTreeValueToLink=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number,new_value:[string, SankeyLinkValueDict | SankeyLinkValue])=>{
   if(current_index<index_of_grp_tag){
-    Object.values(link_value).forEach(lv=>addNewSubTreeValueToLink(lv as SankeyLinkValueDict,index_of_grp_tag,current_index+1,new_value))
+    Object.values(link_value).forEach(lv=>
+      addNewSubTreeValueToLink(lv as SankeyLinkValueDict,index_of_grp_tag,current_index+1,new_value)
+    )
   }else{
     link_value[new_value[0]]=JSON.parse(JSON.stringify(new_value[1]))
   }
@@ -1500,7 +1518,7 @@ const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]
 
-    if(node_tags_attr.length!=0){
+    if(node_tags_attr!= undefined && node_tags_attr.length!=0){
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
       if (!nt[1].tags) {
@@ -1533,7 +1551,7 @@ const NodeHasDisplayedLevel=(data:SankeyData,n:SankeyNode)=>{
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]
-    if(node_tags_attr.length!=0){
+    if(node_tags_attr != undefined && node_tags_attr.length!=0){
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
       const tags_from_grp_to_display=Object.values(nt[1].tags).filter(t=>t.selected).map(t=>t.name)
@@ -1804,62 +1822,6 @@ export const GetRandomInt=(max:number) =>{
   return Math.floor(Math.random() * max)
 }
 
-// Function that return style for checkbox
-export const SmoothClasses = ({
-  bgChecked = '#C1E5DB',
-  bgHovered = '#C1E5DB',
-  controlColor = '#25B48C',
-  focusColor = '#78C2AD',
-  text_as_title=false
-
-}) => {
-  return {
-    h: '24px',
-    px: '12px',
-    w: '100%',
-    borderRadius: '6px',
-    border:'solid 1px '+bgHovered,
-    marginBottom:0,
-    transition: 'all 150ms',
-    _checked: {
-      bg: bgChecked
-    },
-    'span[class*=\'checkbox__control\']:not([data-disabled])': {
-      borderColor: controlColor,
-      borderRadius: '2px',
-      border:'solid 2px '+controlColor,
-      width:'1rem',
-      height:'1rem',
-      marginLeft:text_as_title?'auto':'',
-      marginRight:text_as_title?'2px':'',
-      _checked: {
-        bg: controlColor,
-        borderColor: controlColor
-      },
-      _focus: {
-        boxShadow: `0 0 0 2px ${focusColor}`,
-        _checked: {
-          boxShadow: `0 0 0 2px ${focusColor}`
-        }
-      }
-    },
-    _hover: {
-      bg: bgHovered,
-      transition: 'all 250ms',
-      _checked: {
-        bg: bgChecked
-      }
-    },
-    'span[class*=\'chakra-checkbox__label\']:not([data-disabled])': {
-      width:'100%',
-      marginLeft:text_as_title?'0':'',
-      marginRight:text_as_title?'auto':'',
-      fontSize:text_as_title?'14px':'',
-      fontWeight:text_as_title?'bold':'',
-    }
-  }
-}
-
 /**
  * Function that return a style for title of subsection in menu configuration
  * Attributes modified :
@@ -2050,6 +2012,7 @@ export const OSTooltip:FunctionComponent<OSTooltpFuncType>=(
     openDelay={delay}
     placement={placement}
     label={label}
+    closeDelay={100}
   >
     {children}
   </Tooltip>
