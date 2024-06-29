@@ -240,7 +240,7 @@ export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,G
       } else {
         const n = n_target
         if ((ReturnValueNode(data, n, 'colorSustainable'))) {
-          return ReturnValueNode(data, n, 'color');
+          return ReturnValueNode(data, n, 'color')
         }
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
