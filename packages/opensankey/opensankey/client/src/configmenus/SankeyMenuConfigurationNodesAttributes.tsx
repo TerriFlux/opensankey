@@ -1132,7 +1132,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         <></>
     }
   </Box>
-
+  const has_product_or_sector = Object.values(data.nodes).filter(n=> 'Type de noeud' in n.tags).length > 0
   const style_node=!menu_for_style? <Box layerStyle='menuconfigpanel_row_stylechoice' >
     <Box layerStyle='menuconfigpanel_option_name' textStyle='h3' >
       {t('Noeud.Style')}
@@ -1145,7 +1145,9 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         {style_of_selected_nodes()}
       </MenuButton>
       <MenuList>
-        {Object.keys(data.style_node).map((d,i) => {
+        {Object.keys(data.style_node)
+          .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' )
+          .map((d,i)=> {
           return (
             <MenuItem
               key={i}
