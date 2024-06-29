@@ -194,6 +194,14 @@ export const eventLabelClick : eventLabelClickFType =(
 
     // Open side panel
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
+      if (multi_selected_label.current.includes(d)) {
+        // if label is selected the accordion is not open and the label is deselected
+        multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
+        multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',false))
+        multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',false))
+        applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+        return
+      }
       button_ref.current.click()
       setTimeout(() => {
         // Open element accordion if not already openend
@@ -215,6 +223,11 @@ export const eventLabelClick : eventLabelClickFType =(
             zdt_accordion_ref.current.click()
           }
         }
+        multi_selected_label.current.push(d)
+        multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',true))
+        multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',true))
+        applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
+        ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       }, 200)
     }
     // Open node accordion if not already openend
