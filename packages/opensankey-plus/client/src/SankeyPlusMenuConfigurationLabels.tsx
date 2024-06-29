@@ -259,38 +259,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
   ]
 
   const disable_options = has_open_sankey_plus? (multi_selected_label.current.length === 0):true
-  const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==s_editor_content_fo_zdt:false
 
-  //Create 2 editor :
-  // - one in an editor when we can apply layout width buttons
-  // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo = <Box as='span'><ReactQuill
-    className='quill_editor'
-    value={s_editor_content_fo_zdt}
-    ref={r_editor_ZDT}
-    onChange={(evt) => {
-      sEditorContentFOZdt(evt)
-      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-        d.content = evt
-      })
-      reDrawOSPLabels(multi_selected_label.current)
-    }}
-    theme="snow"
-    modules={modules}
-    formats={formats}
-    readOnly={disable_options}
-    style={{
-      color:(disable_options)?'#666666':'',
-      backgroundColor:(disable_options)?'#cccccc':''}}
-  /></Box>
-
-  const content_wysiwyg = <Box className='FO_zdt_editeur'>
-    <FormControl isInvalid={isQuill_invalid}>
-      {editor_fo}
-      <Input type='text'  style={{display:'none'}}/>
-      <FormErrorMessage>{t('MEP.onBlurNoEnter')}</FormErrorMessage>
-    </FormControl>
-  </Box>
 
   const content_image = <>
     {/* Import image */}
@@ -473,7 +442,26 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           }}>Image</Button></Box>
     </Box>
 
-    {button_icon_or_image==='zdt'?content_wysiwyg:content_image}
+    {button_icon_or_image==='zdt'?<Box style={{'height':'300px'}}><ReactQuill
+      className='quill_editor'
+      value={s_editor_content_fo_zdt}
+      ref={r_editor_ZDT}
+      onChange={(evt) => {
+        sEditorContentFOZdt(evt)
+        Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
+          d.content = evt
+        })
+        reDrawOSPLabels(multi_selected_label.current)
+      }}
+      theme="snow"
+      modules={modules}
+      formats={formats}
+      readOnly={disable_options}
+      style={{
+        'height':'300px',
+        color:(disable_options)?'#666666':'',
+        backgroundColor:(disable_options)?'#cccccc':''}}
+    /></Box>:content_image}
 
     <Box
       as='span'

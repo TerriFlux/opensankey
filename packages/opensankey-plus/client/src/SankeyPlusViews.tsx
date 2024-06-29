@@ -1068,7 +1068,7 @@ export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
               // If master is a catalog and the catalog is not empty then we got to the first view
               set_view(master_data!.view[0].id)
               const tmp=GetDataFromView(master_data,master_data!.view[0].id) as OSPData
-              if (!tmp.accordeonToShow.includes("Vis")) {
+              if (!tmp.accordeonToShow.includes('Vis')) {
                 tmp.accordeonToShow.push('Vis')
               }
               set_data(JSON.parse(JSON.stringify(tmp)))
