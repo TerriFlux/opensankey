@@ -54,6 +54,9 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('x',n => NodeLabelPosX(data,n as SankeyNode))
     .attr('y', n => NodeLabelPosY(data,n as SankeyNode))
     .attr('text-anchor', n => {
+      if (n.x_label) {
+        return 'start'
+      }
       if (ReturnValueNode(data,n,'label_horiz') == 'middle') {
         return 'middle'
       } else if (ReturnValueNode(data,n,'label_horiz') == 'left') {
@@ -131,7 +134,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       .attr('y',n=>{
         const font_size=ReturnValueNode(data,n,'font_size') as number
         if(n.y_label){
-          return n.y_label-font_size
+          return n.y_label
         }else{
           const pos_y=ReturnValueNode(data,n,'label_vert')
           const org_text_pos= NodeLabelPosY(data,n as SankeyNode)
