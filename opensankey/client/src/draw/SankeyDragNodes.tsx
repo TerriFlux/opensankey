@@ -186,12 +186,21 @@ export const drag_node_text: drag_node_textFuncType = (
   node: SankeyNode,
   event: d3.D3DragEvent<Element, unknown, unknown>
 ) => {
-  const old_x = +d3.select(' .opensankey #text_' + node.idNode).attr('x'), old_y = +d3.select(' .opensankey #text_' + node.idNode).attr('y'), new_x = old_x + event.dx, new_y = old_y + event.dy
+  const old_x = +d3.select(' .opensankey #text_' + node.idNode).attr('x')
+  const old_y = +d3.select(' .opensankey #text_' + node.idNode).attr('y')
+  const new_x = old_x + event.dx
+  const new_y = old_y + event.dy
+  d3.select(' .opensankey #text_' + node.idNode).attr('text-anchor', 'start')
   d3.select(' .opensankey #text_' + node.idNode).attr('x', new_x)
   d3.select(' .opensankey #text_' + node.idNode).attr('y', new_y)
   node.x_label = new_x
   node.y_label = new_y
   d3.select(' .opensankey #text_' + node.idNode).selectAll('tspan').attr('x', new_x)
+
+  if (!d3.select(' .opensankey #label_bg_for_'+node.idNode).empty()){
+    d3.select(' .opensankey #label_bg_for_'+node.idNode).attr('x', new_x).attr('y', new_y)
+  }
+
 }
 
 export const ReturnOutOfBoundElement: ReturnOutOfBoundElementFuncType = (
