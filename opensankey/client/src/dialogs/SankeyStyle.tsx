@@ -48,6 +48,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
   if (data.style_node && !Object.keys(data.style_node).includes(selected_style_node)) {
     set_selected_style_node('default')
   }
+  const has_product_or_sector = Object.values(data.nodes).filter(n=> 'Type de noeud' in n.tags).length > 0
   const ref_input_name= useRef<HTMLInputElement>(null)
   const content = <Box layerStyle='menuconfigpanel_grid'>
     <Box
@@ -89,6 +90,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
           {
             Object
               .keys(data.style_node)
+              .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' )
               .map((d,i) => {
                 return (
                   <MenuItem
