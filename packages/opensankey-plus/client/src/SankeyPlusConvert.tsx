@@ -353,7 +353,7 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
   const {data,master_data,dataVarToUpdate}=applicationData
   const data_to_use=master_data?master_data:data
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
-  const is_current_data_master=data_to_use.current_view==='none'
+  const is_master=applicationData.view==='none'
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentBtnUpdateLayout}=ComponentUpdater
   updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
@@ -379,13 +379,13 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
       </Box>
     </Box>
 
-    <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
+    <OSTooltip label={!is_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.Views')}</Box>
         <Box layerStyle='options_4cols' >
           <Button
-            disabled={!is_current_data_master}
-            variant={dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            isDisabled={!is_master}
+            variant={is_master && dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
             onClick={() => {
               if(!dataVarToUpdate.current.includes('Views')){
                 dataVarToUpdate.current.push('Views')
@@ -395,7 +395,7 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
                 setForceUpdate(!forceUpdate)
               }}
             }
-          >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          >{is_master && dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         </Box>
       </Box>
     </OSTooltip>
@@ -405,7 +405,6 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
         <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.list_icon')}</Box>
         <Box layerStyle='options_4cols' >
           <Button
-            disabled={!is_current_data_master}
             variant={dataVarToUpdate.current.includes('icon_catalog')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
             onClick={() => {
               if(!dataVarToUpdate.current.includes('icon_catalog')){
