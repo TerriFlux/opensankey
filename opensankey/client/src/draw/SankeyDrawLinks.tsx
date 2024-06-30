@@ -315,9 +315,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       .subject(Object)
       .on('start',(event,link)=>{
         if (alt_key_pressed.current) {
-          // AssignLinkLocalAttribute(link,'label_on_path',false)
           AssignLinkLocalAttribute(link,'label_position','frozen')
-          AssignLinkLocalAttribute(link,'orthogonal_label_position','frozen')
           if(!(link.x_label && link.y_label)){
             const link_value = TestLinkValue(applicationData, link,GetLinkValue)
             const source_node=data.nodes[link.idSource]

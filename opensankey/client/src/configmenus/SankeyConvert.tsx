@@ -1190,10 +1190,6 @@ export const convert_links:convert_linksFuncType = (
         AssignLinkLocalAttribute(l,'orientation','hv')
       }
     }
-    // if ('frozen' in l) {
-    //   l.
-    //   delete l_convert.frozen
-    // }
     if ('link_reverse' in l) {
       delete l_convert.link_reverse
     }
