@@ -349,7 +349,7 @@ export const DrawArrows : DrawArrowsType = (
   let cum_v_right = 0
   let cum_h_bottom = 0
   let is_v = true
-  const is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
+  let is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
   const node_shape=ReturnValueNode(data,n,'shape')
 
   let node_angle_direction='right'
@@ -408,7 +408,11 @@ export const DrawArrows : DrawArrowsType = (
       if (extension.display_thin) {
         link_value = inv_scale(applicationData.min_link_thickness)
       }
+      if (data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'  && extension.free_mini !== undefined  && is_exportation_node) {
+        is_exportation_node = false
+      }
     }
+    
 
     const source_node = data.nodes[l.idSource]
     if (ori === 'hh' || ori === 'vh') {
