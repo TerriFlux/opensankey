@@ -778,13 +778,11 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
           onChange={
             (evt) => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                 AssignLinkValueToCorrectVar(d,'label_pos_auto',evt.target.checked,menu_for_style)
                 AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
-                AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 delete d.x_label
                 delete d.y_label
-                delete d.drag_label_offset
+                //delete d.drag_label_offset
               })
               updateMenuConfigLink()
             }}>        
@@ -813,12 +811,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   onClick={
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                        const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                         AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
-                        AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                         delete d.x_label
                         delete d.y_label
-                        delete d.drag_label_offset
+                        //delete d.drag_label_offset
                       })
                       updateMenuConfigLink()
                     }}>
@@ -836,12 +832,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   onClick={
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                        const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                         AssignLinkValueToCorrectVar(d,'label_position','middle',menu_for_style)
-                        AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                         delete d.x_label
                         delete d.y_label
-                        delete d.drag_label_offset
+                        //delete d.drag_label_offset
                       })
                       updateMenuConfigLink()
                     }}>
@@ -859,12 +853,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   onClick={
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                        const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                         AssignLinkValueToCorrectVar(d,'label_position','end',menu_for_style)
-                        AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                         delete d.x_label
                         delete d.y_label
-                        delete d.drag_label_offset
+                        //delete d.drag_label_offset
                       })
                       updateMenuConfigLink()
                     }}>
@@ -886,12 +878,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_pos_auto=false
-                        const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                         AssignLinkValueToCorrectVar(d,'orthogonal_label_position','below',menu_for_style)
-                        AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                         delete d.x_label
                         delete d.y_label
-                        delete d.drag_label_offset
+                        //delete d.drag_label_offset
                       })
                       updateMenuConfigLink()
                     }}>
@@ -910,12 +900,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_pos_auto=false
-                        const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                         AssignLinkValueToCorrectVar(d,'orthogonal_label_position','middle',menu_for_style)
-                        AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                         delete d.x_label
                         delete d.y_label
-                        delete d.drag_label_offset
+                        //delete d.drag_label_offset
                       })
                       updateMenuConfigLink()
                     }}>
@@ -934,12 +922,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_pos_auto=false
-                        const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                         AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
-                        AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                         delete d.x_label
                         delete d.y_label
-                        delete d.drag_label_offset
+                        //delete d.drag_label_offset
                       })
                       updateMenuConfigLink()
                     }}>
@@ -963,12 +949,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
             AssignLinkValueToCorrectVar(d,'label_on_path',evt.target.checked,menu_for_style)
             if(evt.target.checked){
               const l_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
-              const l_orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
               AssignLinkValueToCorrectVar(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
-              AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
               delete d.x_label
               delete d.y_label
-              delete d.drag_label_offset
+              //delete d.drag_label_offset
             }
           })
           updateMenuConfigLink()
