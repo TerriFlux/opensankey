@@ -480,11 +480,12 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     )
   }
 
-  updateComponentMenuNodeIOSelectSideNode.current = ()=>{
+  updateComponentMenuNodeIOSelectSideNode.current[menu_for_modal ? 0:1] = ()=>{
     const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
     applicationState.link_io.current = io
     applicationState.link_pos.current = pos
     setForceUpdate(!forceUpdate)
+    return null
   }
 
   const content_reorg=<Box
@@ -539,6 +540,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         </OSTooltip>
         <Select
           variant='menuconfigpanel_option_select'
+          value={applicationState.link_io.current}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             applicationState.link_io.current = evt.target.value
             if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'left')) {
