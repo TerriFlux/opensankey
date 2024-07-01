@@ -30,13 +30,11 @@ import {
   Class_Tag,
   Class_TagGroup
 } from './Tag'
-import {
-  Class_Data
-} from './Data'
 
 // SPECIFIC TYPES ***********************************************************************
 
-type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -173,15 +171,17 @@ export class Class_LinkElement extends Class_Element {
    * @protected
    * @type {{
    *     drawing_area: Class_DrawingArea,
-  *     position: Type_ElementPosition,
-  *     local: Class_LinkAttribute,
-  *     style: Class_LinkStyle
-  *   }}
-  * @memberof Class_LinkElement
-  */
+   *     position: Type_ElementPosition,
+   *     local: Class_LinkAttribute,
+   *     style: Class_LinkStyle
+   *   }}
+   * @memberof Class_LinkElement
+   */
   protected _display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
+    position_on_source: Type_ElementPosition,
+    position_on_target: Type_ElementPosition,
     style: Class_LinkStyle,
     attributes: Class_LinkAttribute
   }
@@ -206,13 +206,6 @@ export class Class_LinkElement extends Class_Element {
       id,
       menu_config,
       'g_links')
-    // Init other class attributes
-    this._display = {
-      drawing_area: drawing_area,
-      position: structuredClone(default_element_position),
-      style: drawing_area.sankey.default_link_style,
-      attributes: new Class_LinkAttribute()
-    }
     // Source
     this._source = source
     this._source.addOutputLink(this)
@@ -225,6 +218,28 @@ export class Class_LinkElement extends Class_Element {
       .forEach(data_tagg => {
         this._values = this._values.addNewTagGroup(data_tagg)
       })
+    // Display
+    this._display = {
+      drawing_area: drawing_area,
+      position: {
+        type: 'absolute',
+        x: 0,
+        y: 0
+      },
+      position_on_source: {
+        type: 'relative',
+        x: 0,
+        y: 0
+      },
+      position_on_target: {
+        type: 'relative',
+        x: 0,
+        y: 0
+      },
+      style: drawing_area.sankey.default_link_style,
+      attributes: new Class_LinkAttribute()
+    }
+    this.resetPositions()
   }
 
   // CLEANING ===========================================================================
@@ -251,6 +266,16 @@ export class Class_LinkElement extends Class_Element {
   }
 
   // PUBLIC METHODS =====================================================================
+  /**
+   * Reset how link is displayed + interactions
+   * @memberof Class_LinkElement
+   */
+  public reset() {
+    // Add position resetting
+    this.resetPositions()
+    // Reset everything else
+    super.reset()
+  }
 
   /**
    * Reverse source with target
@@ -262,93 +287,22 @@ export class Class_LinkElement extends Class_Element {
     const tmp_source = this._source
     this._source = tmp_source
     this._target = tmp_target
+    this.reset()
   }
-
-  /**
-   * Compute lenght of link
-   * @memberof Class_LinkElement
-   */
-  public getLenght() {
-    if (this.is_vertical) {
-      return Math.abs(this.getStartingPointY() - this.getEndingPointY())
-    }
-    else if (this.is_horizontal) {
-      return Math.abs(this.getStartingPointX() - this.getEndingPointX())
-    }
-    else {
-      return (
-        Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
-        Math.abs(this.getStartingPointY() - this.getEndingPointY())
-      )
-    }
-  }
-
-  public getShapeWidth() {
-    const source_x = this.source.position_x
-    const target_x = this.target.position_x
-    if (source_x <= target_x) {
-      return target_x - this.position_x
-    }
-    else {
-      return this.position_x - target_x - this.target.width
-    }
-  }
-  public setShapeWidth(_: number) { /* Does nothing */ }
-
-  public getShapeHeight() {
-    const source_y = this.source.position_y
-    const target_y = this.target.position_y
-    if (source_y <= target_y) {
-      return target_y - this.position_y
-    }
-    else {
-      return this.position_y - target_y - this.target.height
-    }
-  }
-  public setShapeHeight(_: number) { /* Does nothing */ }
-
-  // Coordinates
-  public getStartingPointX() { return this.position_x }
-  public getStartingPointY() { return this.position_y }
-  public getEndingPointX() { return this.position_x }
-  public getEndingPointY() { return this.position_y }
-
-  public getPosX() {
-    const source_x = this.source.position_x
-    const target_x = this.target.position_x
-    if (source_x <= target_x) {
-      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.is_horizontal || this.is_horizontal_vertical) {
-        dx = this.source.width
-      }
-      return source_x + dx
-    }
-    else {
-      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_x + dx
-    }
-  }
-  public setPosX(_: number) { /* Does nothing */ }
-
-  public getPosY() {
-    const source_y = this.source.position_y
-    const target_y = this.target.position_y
-    if (source_y <= target_y) {
-      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.is_vertical || this.is_vertical_horizontal) {
-        dy = this.source.height
-
-      }
-      return source_y + dy
-    }
-    else {
-      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_y + dy
-    }
-  }
-  public setPosY(_: number) { /* Does nothing */ }
 
   public setPosXY(_: number, __: number) { /* Does nothing */ }
+
+  public setPosXYOnSource(x: number, y: number) {
+    this._display.position_on_source.x = x
+    this._display.position_on_source.y = y
+    this.draw()
+  }
+
+  public setPosXYOnTarget(x: number, y: number) {
+    this._display.position_on_target.x = x
+    this._display.position_on_target.y = y
+    this.draw()
+  }
 
   public deleteRelativeLabelPos() {
     delete this._x_label
@@ -485,12 +439,11 @@ export class Class_LinkElement extends Class_Element {
 
   public fromJSON(json_object:{[x:string]:any}){
 
-    this.position_type=json_object['position'] ??'absolute'
-    this.position_x=json_object['x'] ??0
-    this.position_y=json_object['y'] ??0
+    this.position_type = json_object['position'] ?? 'absolute'
+    this.position_x = json_object['x'] ?? 0
+    this.position_y = json_object['y'] ?? 0
 
     this._display.style=this.drawing_area.sankey.link_styles_dict[json_object['style']??'default'] // if json_node_object['style'] is undefined assign default style
-
 
     if(json_object['local']){
       this._display.attributes.fromJSON(json_object['local'])
@@ -532,10 +485,24 @@ export class Class_LinkElement extends Class_Element {
   }
 
   protected element_displayed() {
-    return this.source_and_target_displayed() && this.element_tag_displayed()
+    return this.are_source_and_target_displayed && this.are_related_tags_selected
   }
 
   // PRIVATE METHODS ====================================================================
+
+  private resetPositions() {
+    // Reference position
+    this.position_x = this.source.position_x
+    this.position_y = this.source.position_x
+    // Compute position on source
+    const position_on_source = this.source.getLinkRelativePosition(this)
+    if (position_on_source !== null)
+      this._display.position_on_source = position_on_source
+    // Compute position on target
+    const position_on_target = this.target.getLinkRelativePosition(this)
+    if (position_on_target !== null)
+      this._display.position_on_target = position_on_target
+  }
 
   /**
    * Draw link shape on d3 svg
@@ -553,7 +520,7 @@ export class Class_LinkElement extends Class_Element {
       .attr('fill', 'none')
       .attr('stroke', this.getLinkColorToUse)
       .attr('stroke-opacity', this.shape_opacity)
-      .attr('stroke-width', this.link_stroke_width)
+      .attr('stroke-width', this.thickness)
       .attr('stroke-dasharray',this.shape_is_dashed?'10,5':'')
     // TODO apply opacity and other attributes
   }
@@ -579,30 +546,15 @@ export class Class_LinkElement extends Class_Element {
   }
 
   private getBezierPath() {
-    const strokeWidth = this.link_stroke_width
     // Get starting and ending position per type of shape
-    let x0, y0
-    let x6, y6
-    if (this.is_horizontal || this.is_horizontal_vertical) {
-      x0 = 0
-      y0 = 0 + strokeWidth / 2
-    }
-    else {
-      x0 = 0 + strokeWidth / 2
-      y0 = 0
-    }
-    if (this.is_horizontal || this.is_vertical_horizontal) {
-      x6 = this.getShapeWidth()
-      y6 = this.getShapeHeight() + strokeWidth / 2
-    }
-    else {
-      x6 = this.getShapeWidth() - strokeWidth / 2
-      y6 = this.getShapeHeight()
-    }
+    const x0 = this.position_x_start  // Shorter to write
+    const y0 = this.position_y_start  // ...
+    const x6 = this.position_x_end
+    const y6 = this.position_y_end
 
     // Shifts
-    const starting_shift = this.getLenght() * this.shape_starting_curve
-    const ending_shift = this.getLenght() * (1 - this.shape_ending_curve)
+    const starting_shift = this.lenght * this.shape_starting_curve
+    const ending_shift = this.lenght * (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -671,25 +623,6 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-  private element_tag_displayed() {
-    // If link has tags :
-    //  - check if any of them is selected at false
-    // else if the link doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
-  }
-
-  /**
-   * Check if node source and node target are displayed,
-   * if one of them is not then we don't display the link
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  private source_and_target_displayed() {
-    return this._source.displayed && this._target.displayed
-  }
-
   // GETTERS / SETTERS ==================================================================
 
   /**
@@ -719,6 +652,32 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
+   * Get starting node side for link
+   * @readonly
+   * @type {Type_Side}
+   * @memberof Class_LinkElement
+   */
+  public get source_side(): Type_Side {
+    // Failsafe : because of constructor
+    if (this.source === undefined || this.target === undefined) {
+      return 'right'
+    }
+    // Normal behavior
+    if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (this.source.position_x <= this.target.position_x)
+        return 'right'
+      else
+        return 'left'
+    }
+    else {
+      if (this.source.position_y <= this.target.position_y)
+        return 'bottom'
+      else
+        return 'top'
+    }
+  }
+
+  /**
    * get destination node
    * @memberof Class_LinkElement
    */
@@ -727,15 +686,38 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
-   * Get value object.
-   * Either search correct current value with data_taggs,
-   * or return directly the value when there is no data_taggs
-   * @readonly
+   * Set destination node
    * @memberof Class_LinkElement
    */
-  private get value() {
-    if (this._values instanceof Class_LinkValue) return this._values
-    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
+  public set target(value: Class_NodeElement) {
+    this._target = value
+    this.reset()
+  }
+
+  /**
+   * Get starting node side for link
+   * @readonly
+   * @type {Type_Side}
+   * @memberof Class_LinkElement
+   */
+  public get target_side(): Type_Side {
+    // Failsafe : because of constructor
+    if (this.source === undefined || this.target === undefined) {
+      return 'left'
+    }
+    // Normal behavior
+    if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (this.source.position_x <= this.target.position_x)
+        return 'left'
+      else
+        return 'right'
+    }
+    else {
+      if (this.source.position_y <= this.target.position_y)
+        return 'top'
+      else
+        return 'bottom'
+    }
   }
 
   /**
@@ -791,15 +773,6 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-  /**
-   * Set destination node
-   * @memberof Class_LinkElement
-   */
-  public set target(value: Class_NodeElement) {
-    this._target = value
-    this.reset()
-  }
-
   public get tags() {
     // TODO Faire autrement
     return this._tags
@@ -821,22 +794,6 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
-   * Get _thickness of stroke shape
-   * @readonly
-   * @memberof Class_LinkElement
-   */
-  public get link_stroke_width(){
-    const scale = d3.scaleLinear()
-      .domain([0, this.drawing_area.scale])
-      .range([0, 100])
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, this.drawing_area.scale])
-    return scale(this.data_value)
-  }
-
-
-  /**
    * Get style key of node
    * @return {string}
    * @memberof Class_Node
@@ -854,6 +811,37 @@ export class Class_LinkElement extends Class_Element {
     this._display.style = _
     _.addReference(this)
     this.reset()
+  }
+
+  /**
+   * Get thickness of stroke shape
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get thickness(){
+    const scale = d3.scaleLinear()
+      .domain([0, this.drawing_area.scale])
+      .range([0, 100])
+    // const inv_scale = d3.scaleLinear()
+    //   .domain([0, 100])
+    //   .range([0, this.drawing_area.scale])
+    return scale(this.data_value)
+  }
+
+  public get position_x_start() {
+    return this._display.position_on_source.x + this.source.position_x - this.position_x
+  }
+
+  public get position_y_start() {
+    return this._display.position_on_source.y  + this.source.position_y - this.position_y
+  }
+
+  public get position_x_end() {
+    return this._display.position_on_target.x + this.target.position_x - this.position_x
+  }
+
+  public get position_y_end() {
+    return this._display.position_on_target.y + this.target.position_y - this.position_y
   }
 
   /**
@@ -1406,8 +1394,64 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel()  }
-}
 
+  // PRIVATE GETTER / SETTER ============================================================
+
+  /**
+   * Get value object.
+   * Either search correct current value with data_taggs,
+   * or return directly the value when there is no data_taggs
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  private get value() {
+    if (this._values instanceof Class_LinkValue) return this._values
+    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
+  }
+
+  /**
+   * Compute lenght of link
+   * @memberof Class_LinkElement
+   */
+  private get lenght() {
+    if (this.is_vertical) {
+      return Math.abs(this.position_y_start - this.position_y_end)
+    }
+    else if (this.is_horizontal) {
+      return Math.abs(this.position_x_start - this.position_x_end)
+    }
+    else {
+      return (
+        Math.abs(this.position_x_start - this.position_x_end) +
+        Math.abs(this.position_y_start - this.position_y_end)
+      )
+    }
+  }
+
+  /**
+   * If link has tags :
+   * - check if any of them is selected at false
+   * else if the link doesn't have tag it isn't filtered by them
+   * @readonly
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private get are_related_tags_selected() {
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+  }
+
+  /**
+   * Check if node source and node target are displayed,
+   * if one of them is not then we don't display the link
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  private get are_source_and_target_displayed() {
+    return (this._source.displayed && this._target.displayed)
+  }
+}
 
 // CLASS LINK ATTRIBUTES ****************************************************************
 

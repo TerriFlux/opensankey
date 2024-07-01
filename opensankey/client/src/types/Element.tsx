@@ -333,7 +333,6 @@ export abstract class Class_Element {
             (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
               this.eventMouseDragEnd(event))
       )
-
     }
   }
 
