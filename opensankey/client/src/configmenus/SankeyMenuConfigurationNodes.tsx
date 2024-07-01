@@ -188,7 +188,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               )
               setForceUpdate(!forceUpdate)
               multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
-              updateComponentMenuNodeIOSelectSideNode.current()
+              updateComponentMenuNodeIOSelectSideNode.current.forEach(_=>_())
               updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
 
             }}
