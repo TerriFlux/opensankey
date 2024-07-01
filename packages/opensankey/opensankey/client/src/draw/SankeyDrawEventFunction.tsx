@@ -146,7 +146,7 @@ export const EventNodeClick : EventNodeClickFType =(
     multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
   }
   updateComponentMenuConfigNode.current() 
-  updateComponentMenuNodeIOSelectSideNode.current()
+  updateComponentMenuNodeIOSelectSideNode.current.forEach(_=>_())
   updateComponentMenuConfigNodeAppearence.current()
   updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
 }
@@ -536,7 +536,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     updateComponentMenuConfigNode.current()
     updateComponentMenuConfigNodeAppearence.current()
     updateComponentMenuConfigLink.current()
-    updateComponentMenuNodeIOSelectSideNode.current()
+    updateComponentMenuNodeIOSelectSideNode.current.forEach(_=>_())
     updateComponenSaveInCache.current(true)
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
@@ -909,7 +909,7 @@ export const selectOpenSankeyElementsInSelectionZone:selectOpenSankeyElementsInS
   updateComponentMenuConfigNode.current()
   updateComponentMenuConfigNodeAppearence.current()
   updateComponentMenuConfigLink.current()
-  updateComponentMenuNodeIOSelectSideNode.current()
+  updateComponentMenuNodeIOSelectSideNode.current.forEach(_=>_())
   updateComponenSaveInCache.current(true)
 }
 
