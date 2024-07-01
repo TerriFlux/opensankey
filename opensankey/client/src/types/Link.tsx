@@ -227,14 +227,13 @@ export class Class_LinkElement extends Class_Element {
       })
   }
 
-
   // CLEANING ===========================================================================
 
   /**
    * Define deletion behavior
    * @memberof Class_LinkElement
    */
-  public deleteReferences() {
+  protected cleanForDeletion() {
     // Unref self from source node
     this._source.deleteOutputLink(this)
     // Unref self from target node
@@ -249,33 +248,6 @@ export class Class_LinkElement extends Class_Element {
     this.style.removeReference(this)
     // Delete related values
     this._values.delete()
-  }
-
-  // PROTECTED METHODS =====================================================================
-
-  protected element_displayed() {
-    return this.source_and_target_displayed() && this.element_tag_displayed()
-  }
-
-  // PRIVATE METHODS =======================================================================
-
-  private element_tag_displayed() {
-    // If link has tags :
-    //  - check if any of them is selected at false
-    // else if the link doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
-  }
-
-  /**
-   * Check if node source and node target are displayed,
-   * if one of them is not then we don't display the link
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  private source_and_target_displayed() {
-    return this._source.displayed && this._target.displayed
   }
 
   // PUBLIC METHODS =====================================================================
@@ -297,10 +269,10 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public getLenght() {
-    if (this.isVertical()) {
+    if (this.is_vertical) {
       return Math.abs(this.getStartingPointY() - this.getEndingPointY())
     }
-    else if (this.isHorizontal()) {
+    else if (this.is_horizontal) {
       return Math.abs(this.getStartingPointX() - this.getEndingPointX())
     }
     else {
@@ -311,9 +283,101 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
+  public getShapeWidth() {
+    const source_x = this.source.position_x
+    const target_x = this.target.position_x
+    if (source_x <= target_x) {
+      return target_x - this.position_x
+    }
+    else {
+      return this.position_x - target_x - this.target.width
+    }
+  }
+  public setShapeWidth(_: number) { /* Does nothing */ }
+
+  public getShapeHeight() {
+    const source_y = this.source.position_y
+    const target_y = this.target.position_y
+    if (source_y <= target_y) {
+      return target_y - this.position_y
+    }
+    else {
+      return this.position_y - target_y - this.target.height
+    }
+  }
+  public setShapeHeight(_: number) { /* Does nothing */ }
+
+  // Coordinates
+  public getStartingPointX() { return this.position_x }
+  public getStartingPointY() { return this.position_y }
+  public getEndingPointX() { return this.position_x }
+  public getEndingPointY() { return this.position_y }
+
+  public getPosX() {
+    const source_x = this.source.position_x
+    const target_x = this.target.position_x
+    if (source_x <= target_x) {
+      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        dx = this.source.width
+      }
+      return source_x + dx
+    }
+    else {
+      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      return source_x + dx
+    }
+  }
+  public setPosX(_: number) { /* Does nothing */ }
+
+  public getPosY() {
+    const source_y = this.source.position_y
+    const target_y = this.target.position_y
+    if (source_y <= target_y) {
+      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
+      if (this.is_vertical || this.is_vertical_horizontal) {
+        dy = this.source.height
+
+      }
+      return source_y + dy
+    }
+    else {
+      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
+      return source_y + dy
+    }
+  }
+  public setPosY(_: number) { /* Does nothing */ }
+
+  public setPosXY(_: number, __: number) { /* Does nothing */ }
+
   public deleteRelativeLabelPos() {
     delete this._x_label
     delete this._y_label
+  }
+
+  /**
+   * Remove given tag from link
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
+   */
+  public removeTag(tag:Class_Tag){
+    if (this._tags[tag.id] !== undefined) {
+      delete this._tags[tag.id]
+      tag.removeReference(this)
+    }
+  }
+
+  public useDefaultStyle() {
+    this.style = this.drawing_area.sankey.default_link_style
+  }
+
+  public resetAttributes() {
+    this._display.attributes = new Class_LinkAttribute()
+    this.reset()
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
+    return this._display.attributes[attr] !== undefined
   }
 
   public isEqual(_: Class_LinkElement) {
@@ -398,31 +462,6 @@ export class Class_LinkElement extends Class_Element {
     return true
   }
 
-  /**
-   * Either search correct current value with data_taggs,
-   *  or return directly the value when there is no data_taggs
-   *
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  public get_curr_value() {
-    if (this._values instanceof Class_LinkValue) return this._values.value
-    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
-  }
-
-  /**
-   * Return value of link from get_curr_value casted as a number because sometime
-   * we need a number from link value (even when it's value is null)
-   *
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  public get_curr_value_casted() {
-    const val = this.get_curr_value()
-    return (val !== null && val !== undefined) ? val : 0
-  }
-
-
   public toJSON() {
     const json_object = {} as { [_: string]: unknown }
 
@@ -470,46 +509,6 @@ export class Class_LinkElement extends Class_Element {
     this._values = json_object['value']  //Todo create function to read link value from JSON
   }
 
-
-  // GETTER / SETTER ====================================================================
-
-  // Orientation
-  public isHorizontal() { return this.shape_orientation === 'hh' }
-  public isVertical() { return this.shape_orientation === 'vv' }
-  public isHorizontalVertical() { return this.shape_orientation === 'hv' }
-  public isVerticalHorizontal() { return this.shape_orientation === 'hv' }
-
-  // Coordinates
-  public getStartingPointX() { return this.position_x }
-  public getStartingPointY() { return this.position_y }
-  public getEndingPointX() { return this.position_x }
-  public getEndingPointY() { return this.position_y }
-
-  /**
-   * Remove given tag from link
-   * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
-   */
-  public removeTag(tag:Class_Tag){
-    if (this._tags[tag.id] !== undefined) {
-      delete this._tags[tag.id]
-      tag.removeReference(this)
-    }
-  }
-
-  public useDefaultStyle() {
-    this.style = this.drawing_area.sankey.default_link_style
-  }
-
-  public resetAttributes() {
-    this._display.attributes = new Class_LinkAttribute()
-    this.reset()
-  }
-
-  public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
-    return this._display.attributes[attr] !== undefined
-  }
-
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -532,6 +531,10 @@ export class Class_LinkElement extends Class_Element {
     this.drawLabel()
   }
 
+  protected element_displayed() {
+    return this.source_and_target_displayed() && this.element_tag_displayed()
+  }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -540,6 +543,9 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_NodeElementElement
    */
   private drawShape() {
+    // Clean previous shape
+    this.d3_selection?.selectAll(' .link_shape').remove()
+    // Add new path shape
     this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
@@ -553,6 +559,8 @@ export class Class_LinkElement extends Class_Element {
   }
 
   private drawLabel() {
+    // Clean previous label
+    this.d3_selection?.selectAll('.label').remove()
     // TODO a faire
   }
 
@@ -575,7 +583,7 @@ export class Class_LinkElement extends Class_Element {
     // Get starting and ending position per type of shape
     let x0, y0
     let x6, y6
-    if (this.isHorizontal() || this.isHorizontalVertical()) {
+    if (this.is_horizontal || this.is_horizontal_vertical) {
       x0 = 0
       y0 = 0 + strokeWidth / 2
     }
@@ -583,7 +591,7 @@ export class Class_LinkElement extends Class_Element {
       x0 = 0 + strokeWidth / 2
       y0 = 0
     }
-    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+    if (this.is_horizontal || this.is_vertical_horizontal) {
       x6 = this.getShapeWidth()
       y6 = this.getShapeHeight() + strokeWidth / 2
     }
@@ -600,7 +608,7 @@ export class Class_LinkElement extends Class_Element {
 
     // Starting curve point
     let x1, y1
-    if (this.isHorizontal() || this.isHorizontalVertical()) {
+    if (this.is_horizontal || this.is_horizontal_vertical) {
       x1 = x0 + horizontal_direction * starting_shift
       y1 = y0
     }
@@ -611,7 +619,7 @@ export class Class_LinkElement extends Class_Element {
 
     // Ending curve point
     let x5, y5
-    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+    if (this.is_horizontal || this.is_vertical_horizontal) {
       x5 = x6 - horizontal_direction * ending_shift
       y5 = y6
     }
@@ -630,7 +638,7 @@ export class Class_LinkElement extends Class_Element {
     // Line ((x4, y4); (x5, y5)) is second tangeant
     let x2, y2
     let x4, y4
-    if (this.isHorizontal() || this.isHorizontalVertical()) {
+    if (this.is_horizontal || this.is_horizontal_vertical) {
       x2 = x1 + (x5 - x1) * this.shape_starting_tangeant
       y2 = y1
     }
@@ -638,7 +646,7 @@ export class Class_LinkElement extends Class_Element {
       x2 = x1
       y2 = y1 + (y5 - y1) * this.shape_starting_tangeant
     }
-    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+    if (this.is_horizontal || this.is_vertical_horizontal) {
       x4 = x5 + (x1 - x5) * this.shape_ending_tangeant
       y4 = y5
     }
@@ -663,66 +671,24 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-  public getShapeWidth() {
-    const source_x = this.source.position_x
-    const target_x = this.target.position_x
-    if (source_x <= target_x) {
-      return target_x - this.position_x
-    }
-    else {
-      return this.position_x - target_x - this.target.width
-    }
+  private element_tag_displayed() {
+    // If link has tags :
+    //  - check if any of them is selected at false
+    // else if the link doesn't have tag it isn't filtered by them
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
   }
-  public setShapeWidth(_: number) { /* Does nothing */ }
 
-  public getShapeHeight() {
-    const source_y = this.source.position_y
-    const target_y = this.target.position_y
-    if (source_y <= target_y) {
-      return target_y - this.position_y
-    }
-    else {
-      return this.position_y - target_y - this.target.height
-    }
+  /**
+   * Check if node source and node target are displayed,
+   * if one of them is not then we don't display the link
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  private source_and_target_displayed() {
+    return this._source.displayed && this._target.displayed
   }
-  public setShapeHeight(_: number) { /* Does nothing */ }
-
-  public getPosX() {
-    const source_x = this.source.position_x
-    const target_x = this.target.position_x
-    if (source_x <= target_x) {
-      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.isHorizontal() || this.isHorizontalVertical()) {
-        dx = this.source.width
-      }
-      return source_x + dx
-    }
-    else {
-      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_x + dx
-    }
-  }
-  public setPosX(_: number) { /* Does nothing */ }
-
-  public getPosY() {
-    const source_y = this.source.position_y
-    const target_y = this.target.position_y
-    if (source_y <= target_y) {
-      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.isVertical() || this.isVerticalHorizontal()) {
-        dy = this.source.height
-
-      }
-      return source_y + dy
-    }
-    else {
-      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_y + dy
-    }
-  }
-  public setPosY(_: number) { /* Does nothing */ }
-
-  public setPosXY(_: number, __: number) { /* Does nothing */ }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -761,13 +727,68 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
-   * Get value
+   * Get value object.
+   * Either search correct current value with data_taggs,
+   * or return directly the value when there is no data_taggs
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get value() {
-    // TODO Faire autrement
-    return this._values
+  private get value() {
+    if (this._values instanceof Class_LinkValue) return this._values
+    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
+  }
+
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   * @memberof Class_LinkElement
+   */
+  public get data_value() {
+    const value = this.value
+    // Cast as number
+    if (value !== null && value.data_value !== null) return value.data_value
+    else return 0
+  }
+
+  /**
+   * Either set correct current value with data_taggs,
+   *  or set directly the value when there is no data_taggs
+   * @memberof Class_LinkElement
+   */
+  public set data_value(_: number) {
+    const value = this.value
+    // Cast as number
+    if (value !== null) {
+      value.data_value = _
+      this.draw()
+    }
+  }
+
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   * @return string
+   * @memberof Class_LinkElement
+   */
+  public get text_value() {
+    const value = this.value
+    // Cast as string
+    if (value !== null && value.text_value !== null) return value.text_value
+    else return ''
+  }
+
+  /**
+   * Either set correct current value with data_taggs,
+   *  or set directly the value when there is no data_taggs
+   * @memberof Class_LinkElement
+   */
+  public set text_value(_: string) {
+    const value = this.value
+    // Cast as number
+    if (value !== null) {
+      value.text_value = _
+      this.drawLabel()
+    }
   }
 
   /**
@@ -811,10 +832,7 @@ export class Class_LinkElement extends Class_Element {
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
       .range([0, this.drawing_area.scale])
-
-    const val = this.get_curr_value_casted()
-    return scale(val)
-
+    return scale(this.data_value)
   }
 
 
@@ -856,6 +874,12 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape()}
+
+  // Orientation
+  public get is_horizontal() { return this.shape_orientation === 'hh' }
+  public get is_vertical() { return this.shape_orientation === 'vv' }
+  public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
+  public get is_vertical_horizontal() { return this.shape_orientation === 'hv' }
 
   /**
    * TODO Description
@@ -1811,28 +1835,9 @@ export class Class_TreeNode {
 
   // PUBLIC METHODS =====================================================================
   public addNewTagGroup(tag_group: Class_TagGroup) {
-    Object.entries(this.children)
-      .forEach(entry => {
-        const id = entry[0]
-        const child = entry[1]
-        // Recursive call until we arrive to the bottom of the tree
-        if (child instanceof Class_LinkValue) {
-          // Create new node tree
-          const new_child = new Class_TreeNode(this, tag_group)
-          // Copy values from child in grandchildren
-          tag_group.tags_list.forEach(tag => {
-            const _ = new_child.children[tag.id]
-            if (_ instanceof Class_LinkValue)
-              _.copyFrom(child)
-          })
-          // Replace child
-          this.children[id] = new_child
-          child.delete()
-        }
-        else {
-          // Recursive call
-          child.addNewTagGroup(tag_group)
-        }
+    Object.keys(this.children)
+      .forEach(id => {
+        this.children[id] = this.children[id].addNewTagGroup(tag_group)
       })
     return this
   }
@@ -1851,7 +1856,7 @@ export class Class_TreeNode {
     return undefined
   }
 
-  public getValue(tags: Class_Tag[]) : number | null {
+  public getValue(tags: Class_Tag[]) : Class_LinkValue | null {
     // Failsafe
     if (tags.length === 0) return null
     // Get value recursively
@@ -1861,8 +1866,29 @@ export class Class_TreeNode {
     if (matching_tags.length !== 1) return null
     // Recursive
     const child = this.children[matching_tags[0].id]
-    if (child instanceof Class_LinkValue) return child.value
+    if (child instanceof Class_LinkValue) return child
     else return child.getValue(remaining_tags)
+  }
+
+
+  public getDataValue(tags: Class_Tag[]) : number | null {
+    const value = this.getValue(tags)
+    if (value !== null) {
+      return value.data_value
+    }
+    else {
+      return null
+    }
+  }
+
+  public getTextValue(tags: Class_Tag[]) : string | null {
+    const value = this.getValue(tags)
+    if (value !== null) {
+      return value.text_value
+    }
+    else {
+      return null
+    }
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -1884,8 +1910,8 @@ export class Class_LinkValue {
   // PRIVATE ATTRIBUTES ==================================================================
 
   public parent: Class_TreeNode | Class_LinkElement | null
-  public value: number | null = null
-  public display_value: string | null = null
+  public data_value: number | null = null
+  public text_value: string | null = null
 
   private _extension?: { [_: string]: string }
 
@@ -1902,8 +1928,8 @@ export class Class_LinkValue {
 
   // PUBLIC METHODS =====================================================================
   public copyFrom(element: Class_LinkValue) {
-    this.value = element.value
-    this.display_value = element.display_value
+    this.data_value = element.data_value
+    this.text_value = element.text_value
   }
 
   public addNewTagGroup(tag_group: Class_TagGroup) {

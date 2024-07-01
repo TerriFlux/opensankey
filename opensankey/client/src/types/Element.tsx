@@ -159,12 +159,12 @@ export abstract class Class_Element {
       this._is_currently_deleted = true
       // Remove from drawing area
       this.unDraw()
-      // Abstract method for removing
-      this.deleteReferences()
+      // Abstract method for cleaning relations between elements
+      this.cleanForDeletion()
     }
   }
 
-  protected deleteReferences() {
+  protected cleanForDeletion() {
     // Does nothing here
   }
 

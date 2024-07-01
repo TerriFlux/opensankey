@@ -26,6 +26,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
   displayedInputLinkValueRef.current=displayed_input_link_value
 
+  // Data tags selections
   const newEntries = new Map(entries_data_taggs.map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -37,8 +38,9 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
     set_tags_selected(dataTagsSelected)
   }
-  const path_to_link_value=Object.values(tags_selected)
-  const link_display_text=list_links_selected[0]?.value?.getTextForLeaf(structuredClone(path_to_link_value))
+
+  // Value text for links
+  const link_display_text=list_links_selected[0]?.text_value
 
   const content=<Box
     layerStyle='menuconfigpanel_grid'
@@ -66,9 +68,8 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                 tmp= ({...tags_selected,[name]: value})
                 set_tags_selected(tmp)
                 // Create new path to get link value
-                const path_to_link_value=Object.values(tmp) as string[]
                 displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  list_links_selected[0]?.value?.getValueFromLeaf(path_to_link_value)?.toString() as string
+                  list_links_selected[0]?.text_value
                 ))
               }}
             >
@@ -118,8 +119,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
             value={link_display_text}
             onChange={evt => {
               list_links_selected.forEach(l=>{
-                l.value?.setTextForLeaf(structuredClone(path_to_link_value),evt.target.value)
-                l.reset()
+                l.text_value = evt.target.value
               })
               setForceUpdate.toggle()
             }}
@@ -167,7 +167,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   const path_to_link_value=Object.values(tags_selected)
 
   // Initialise hook with first link selected value
-  const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.value?.getValueFromLeaf(path_to_link_value))
+  const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.data_value)
 
 
 
@@ -196,8 +196,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
       onBlur={()=>{
         clearTimeout(isModifying.current)
         list_links_selected.forEach(l=>{
-          l.value?.setValueForLeaf(path_to_link_value,displayed_value)
-          l.reset()
+          l.data_value = displayed_value
         })
         f_onBlur()
       }}
