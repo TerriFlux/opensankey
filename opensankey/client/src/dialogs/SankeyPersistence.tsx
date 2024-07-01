@@ -10,7 +10,7 @@ import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeAutoSankey, compute_default_input_outputLinksId } from '../draw/SankeyDrawLayout'
 import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
-import { Box, Button, ButtonGroup, Modal, ModalBody, ModalContent, ModalHeader, ModalOverlay, Spinner } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Spinner } from '@chakra-ui/react'
 
 
 interface SankeyLoadProdTypes {
@@ -103,7 +103,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
 
   return (
     <Modal
-      size="large"
+      size="xl"
       isOpen={show_load_dialog}
       onClose={ () => set_show_load_dialog(false) }
       // style={{
@@ -117,6 +117,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
         <ModalHeader >
         Chargement du fichier {spinner}
         </ModalHeader>
+        <ModalCloseButton/>
         <ModalBody>
           <Box layerStyle='menuconfigpanel_grid'>
             <Box layerStyle='options_3cols'>
@@ -144,16 +145,14 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                     }</>
                 )
               }
-              <></>
+               <Box></Box>
 
             </Box>
 
-            <Box>
-              <ButtonGroup isAttached>
+            <Box layerStyle='options_3cols'>
                 <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button_'} >Infos</Button>
                 <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
                 <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
-              </ButtonGroup>
             </Box>
             {processing ? (
               <Counter
