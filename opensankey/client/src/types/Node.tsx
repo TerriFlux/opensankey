@@ -175,7 +175,7 @@ export class Class_NodeElement extends Class_Element {
    * Define deletion behavior
    * @memberof Class_Node
    */
-  public deleteReferences() {
+  protected cleanForDeletion() {
     // Delete all related links
     Object.values(this._input_links)
       .forEach(link => {
