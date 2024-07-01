@@ -139,7 +139,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {Class_Data}
    * @memberof Class_LinkElement
    */
-  private _values: Class_TreeNode | Class_LinkValue
+  private _values: Class_LinkValueTree | Class_LinkValue
 
   /**
    * Value of tooltip text associated to link
@@ -1786,26 +1786,26 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 }
 
 
-// CLASS TREE NODE **********************************************************************
+// CLASS LINK TREE VALUE **********************************************************************
 
 /**
  * Define a node for value
  * @export
- * @class Class_TreeNode
+ * @class Class_LinkValueTree
  * @implements {TreeNodeInterface}
  */
-export class Class_TreeNode {
+export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   public tag_group: Class_TagGroup | null
-  public parent: Class_TreeNode | Class_LinkElement  | null
-  public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_TreeNode }
+  public parent: Class_LinkValueTree | Class_LinkElement  | null
+  public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
   // CONSTRUCTOR ========================================================================
 
   constructor(
-    parent: Class_TreeNode | Class_LinkElement | null,
+    parent: Class_LinkValueTree | Class_LinkElement | null,
     tag_group: Class_TagGroup
   ) {
     // Instanciate parent
@@ -1842,7 +1842,7 @@ export class Class_TreeNode {
     return this
   }
 
-  public addChild(tag: Class_Tag, children: Class_TreeNode | Class_LinkValue) {
+  public addChild(tag: Class_Tag, children: Class_LinkValueTree | Class_LinkValue) {
     if (!this.children[tag.id])
       this.children[tag.id] = children
   }
@@ -1893,7 +1893,7 @@ export class Class_TreeNode {
 
   // GETTERS / SETTERS ==================================================================
   public get link() : Class_LinkElement | null {
-    if (this.parent instanceof Class_TreeNode) return this.parent.link
+    if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
 }
@@ -1903,13 +1903,13 @@ export class Class_TreeNode {
  *
  * @export
  * @class Class_LinkValue
- * @extends {Class_TreeNode}
+ * @extends {Class_LinkValueTree}
  */
 export class Class_LinkValue {
 
   // PRIVATE ATTRIBUTES ==================================================================
 
-  public parent: Class_TreeNode | Class_LinkElement | null
+  public parent: Class_LinkValueTree | Class_LinkElement | null
   public data_value: number | null = null
   public text_value: string | null = null
 
@@ -1917,7 +1917,7 @@ export class Class_LinkValue {
 
   // CONSTRUCTOR ========================================================================
 
-  constructor(parent: Class_TreeNode | Class_LinkElement) {
+  constructor(parent: Class_LinkValueTree | Class_LinkElement) {
     // Parents / Children relations
     this.parent = parent
   }
@@ -1933,7 +1933,7 @@ export class Class_LinkValue {
   }
 
   public addNewTagGroup(tag_group: Class_TagGroup) {
-    const new_parent = new Class_TreeNode(this.parent, tag_group)
+    const new_parent = new Class_LinkValueTree(this.parent, tag_group)
     // Copy values from child in grandchildren
     tag_group.tags_list.forEach(tag => {
       const _ = new_parent.createNewChildAsValue(tag)
