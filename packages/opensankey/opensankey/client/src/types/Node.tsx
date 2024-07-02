@@ -98,8 +98,6 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-
-
   // Tooltips
   tooltip?: Class_Element
   tooltip_text?: string
@@ -223,64 +221,6 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  public getLinksOrdered(_: Type_Side) {
-    return this._links_order.filter(link => {
-      (link.target === this && link.target_side === _) ||
-      (link.source === this && link.source_side === _)
-    })
-  }
-
-  public getLinkRelativePosition(link: Class_LinkElement) {
-    let side = null
-    // Given link is part of input links
-    if (this._input_links[link.id]) {
-      side = link.target_side
-    }
-    // Given link is part of output links
-    if (this._output_links[link.id]) {
-      side = link.source_side
-    }
-    // Compute relative position
-    if (side !== null) {
-      if (side === 'left' || side === 'right') {
-        let x = (side === 'left') ? 0 : this.width
-        let y = 0
-        for (let tmp_link of this.getLinksOrdered(side)) {
-          if (tmp_link !== link) {
-            y = y + tmp_link.thickness
-          }
-          else {
-            y = y + tmp_link.thickness/2
-            return {
-              type: 'relative',
-              x: x,
-              y: y,
-            } as Type_ElementPosition
-          }
-        }
-      }
-      else {
-        let x = 0
-        let y = (side === 'top') ? 0 : this.height
-        for (let tmp_link of this.getLinksOrdered(side)) {
-          if (tmp_link !== link) {
-            x = x + tmp_link.thickness
-          }
-          else {
-            x = x + tmp_link.thickness/2
-            return {
-              type: 'relative',
-              x: x,
-              y: y,
-            } as Type_ElementPosition
-          }
-        }
-      }
-    }
-    // Failsafe
-    return null
-  }
-
   // GETTERS / SETTERS ==================================================================
 
   public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } { return this._dimensions }
@@ -315,6 +255,10 @@ export class Class_NodeElement extends Class_Element {
     }
     return this._name
   }
+
+  // Selection
+  public setSelected() { this._is_selected = true; this.drawShape()}
+  public setUnSelected() { this._is_selected = false; this.drawShape()}
 
   public get tags() {
     // TODO faire autrement
@@ -397,14 +341,11 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public get width() {
-    /*
-    TODO : the width depend of the sum of input/output links from top or bottom of the node
-    if the sum is superior to node width the use the max of input/output
-
-    (to see exemple, look function SetNodeHeight )
-
-    */
-    return this.shape_min_width
+    // Compute sum of thickness on each sides
+    let sum_of_top_thickness = this.getSumOfLinksThickness('top')
+    let sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
+    // Return max thickness
+    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
   }
 
   /**
@@ -413,16 +354,12 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public get height() {
-    /*
-    TODO : the height depend of the sum of input/output links from left or right of the node
-    if the sum is superior to node height the use the max of input/output
-
-    (to see exemple, look function SetNodeHeight )
-
-    */
-    return this.shape_min_height
+    // Compute sum of thickness on each sides
+    let sum_of_left_thickness = this.getSumOfLinksThickness('left')
+    let sum_of_right_thickness = this.getSumOfLinksThickness('right')
+    // Return max thickness
+    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
-
 
   /**
    * TODO Description
@@ -1003,6 +940,8 @@ export class Class_NodeElement extends Class_Element {
       }
       this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
     }
+    // Update also position for links
+    this.drawLinks()
   }
 
   /**
@@ -1094,6 +1033,18 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  /**
+   * Function used to check some condition before allowing element to be drawn
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_NodeElement
+  */
+  protected update_visibility() {
+    if (this.element_tag_displayed() && this.checkNodeLevel())this.setVisible(false)
+      else this.setInvisble(false)
+  }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -1112,7 +1063,7 @@ export class Class_NodeElement extends Class_Element {
       .range([0, 100])
       .domain([0, this.drawing_area.scale])
     // Clean previous shape
-    this.d3_selection?.selectAll(' .node_shape').remove()
+    this.d3_selection?.selectAll('.node_shape').remove()
     // Apply shape value
     if (node_shape === 'rect') {
       this.d3_selection?.append('rect')
@@ -1252,13 +1203,21 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  /**
+   * Draw all related links
+   * @private
+   * @memberof Class_NodeElement
+   */
   private drawLinks() {
-    let y_right: number = 0
-    let y_left: number = 0
-    let x_top: number = 0
-    let x_bottom: number = 0
-    const width = this.width // avoid recomputing
-    const height = this.height // avoid recomputing
+    // Compute width & Height (base on links thicknesses)
+    const width = this.width
+    const height = this.height
+    // Staring positions
+    let y_right = this.getLinkRelativePositionOffSet('right')
+    let y_left = this.getLinkRelativePositionOffSet('left')
+    let x_top = this.getLinkRelativePositionOffSet('top')
+    let x_bottom = this.getLinkRelativePositionOffSet('bottom')
+    // Loop on all links
     this._links_order.forEach(link => {
       const thickness = link.thickness
       // Current node is link's source
@@ -1350,18 +1309,6 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  /**
-   * Function used to check some condition before allowing element to be drawn
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_NodeElement
-  */
-  protected update_visibility() {
-    if (this.element_tag_displayed() && this.checkNodeLevel())this.setVisible(false)
-      else this.setInvisble(false)
-  }
-
 
   /**
  * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
@@ -1421,6 +1368,24 @@ export class Class_NodeElement extends Class_Element {
       }
     })
     return to_display
+  }
+
+  private getSumOfLinksThickness(side: Type_Side){
+    let sum = 0
+    this.getLinksOrdered(side).forEach(link => {
+      sum = sum + link.thickness
+    })
+    return sum
+  }
+
+
+  private getLinkRelativePositionOffSet(side: Type_Side) {
+    if (side === 'left' || side === 'right') {
+      return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side))/2)
+    }
+    else {
+      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side)/2))
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1549,6 +1514,70 @@ export class Class_NodeElement extends Class_Element {
   }
 
 
+  public getLinksOrdered(_: Type_Side) {
+    return this._links_order.filter(link => {
+      return (
+        (link.target === this && link.target_side === _) ||
+        (link.source === this && link.source_side === _))
+    })
+  }
+
+  public getLinkRelativePosition(link: Class_LinkElement) {
+    let side = null
+    // Given link is part of input links
+    if (this._input_links[link.id]) {
+      side = link.target_side
+    }
+    // Given link is part of output links
+    if (this._output_links[link.id]) {
+      side = link.source_side
+    }
+    // Compute relative position
+    if (side !== null) {
+      // Vertical positionning
+      if (side === 'left' || side === 'right') {
+        // Starting point
+        let x = (side === 'left') ? 0 : this.width
+        let y = this.getLinkRelativePositionOffSet(side)
+        // Loop on all links
+        for (let tmp_link of this.getLinksOrdered(side)) {
+          if (tmp_link !== link) {
+            y = y + tmp_link.thickness
+          }
+          else {
+            y = y + tmp_link.thickness/2
+            return {
+              type: 'relative',
+              x: x,
+              y: y,
+            } as Type_ElementPosition
+          }
+        }
+      }
+      // Horizontal positionning
+      else {
+        // Starting point
+        let x = this.getLinkRelativePositionOffSet(side)
+        let y = (side === 'top') ? 0 : this.height
+        // Loop on all links
+        for (let tmp_link of this.getLinksOrdered(side)) {
+          if (tmp_link !== link) {
+            x = x + tmp_link.thickness
+          }
+          else {
+            x = x + tmp_link.thickness/2
+            return {
+              type: 'relative',
+              x: x,
+              y: y,
+            } as Type_ElementPosition
+          }
+        }
+      }
+    }
+    // Failsafe
+    return null
+  }
 
   /**
    * Convert node to JSON
@@ -1576,10 +1605,11 @@ export class Class_NodeElement extends Class_Element {
 
     return json_object
   }
+
   /**
    * Assign to node implementation values from json,
    * json_node_object is a json of 1 node
-   * 
+   *
    *
    * @param {{ [x: string]: any }} json_node_object
    * @memberof Class_NodeElement
@@ -1627,8 +1657,6 @@ export class Class_NodeElement extends Class_Element {
 
       })
   }
-
-
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
