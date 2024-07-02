@@ -122,7 +122,7 @@ import {
 import {
   breadcrumb_base_style,
   pagination_welecome
-} from '../dialogs/BreadcrumbStyle'
+} from './BreadcrumbStyle'
 import {
   tag_base_style,
   tag_dev_navbar
@@ -498,14 +498,6 @@ export const opensankey_theme = extendTheme({
         padding:'0.25rem'
       }
     },
-    MenuNavTopUserNavigation:{
-      background:'gray.50',
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr 0.5fr',
-      gridColumnGap: '0.25rem',
-      marginLeft:'auto'
-
-    },
     account_row:{
       display: 'grid',
       gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr',
@@ -572,17 +564,19 @@ export const opensankey_theme = extendTheme({
       alignItems: 'center'
     },
     menucontext_layout: {
+      padding: '0.25rem',
       display: 'grid',
       gridRowGap: '0.5rem',
+      gridColGap: '0.5rem',
+      alignItems: 'center',
+      width: 'fit-content',
+      maxWidth: '40vw',
       color: 'gray.600',
       bg: 'white',
       bgColor: 'white',
-      width: 'fit-content',
       border: 'solid 1px',
       borderColor: 'primaire.2',
       borderRadius: '6px',
-      alignItems: 'center',
-      maxWidth: '40vw'
     },
     menucontext_title_layout: {
       display: 'grid',
