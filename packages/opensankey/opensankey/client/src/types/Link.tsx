@@ -30,13 +30,11 @@ import {
   Class_Tag,
   Class_TagGroup
 } from './Tag'
-import {
-  Class_Data
-} from './Data'
 
 // SPECIFIC TYPES ***********************************************************************
 
-type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -139,7 +137,7 @@ export class Class_LinkElement extends Class_Element {
    * @type {Class_Data}
    * @memberof Class_LinkElement
    */
-  private _values: Class_TreeNode | Class_LinkValue
+  private _values: Class_LinkValueTree | Class_LinkValue
 
   /**
    * Value of tooltip text associated to link
@@ -173,15 +171,17 @@ export class Class_LinkElement extends Class_Element {
    * @protected
    * @type {{
    *     drawing_area: Class_DrawingArea,
-  *     position: Type_ElementPosition,
-  *     local: Class_LinkAttribute,
-  *     style: Class_LinkStyle
-  *   }}
-  * @memberof Class_LinkElement
-  */
+   *     position: Type_ElementPosition,
+   *     local: Class_LinkAttribute,
+   *     style: Class_LinkStyle
+   *   }}
+   * @memberof Class_LinkElement
+   */
   protected _display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
+    position_on_source: Type_ElementPosition,
+    position_on_target: Type_ElementPosition,
     style: Class_LinkStyle,
     attributes: Class_LinkAttribute
   }
@@ -206,13 +206,6 @@ export class Class_LinkElement extends Class_Element {
       id,
       menu_config,
       'g_links')
-    // Init other class attributes
-    this._display = {
-      drawing_area: drawing_area,
-      position: structuredClone(default_element_position),
-      style: drawing_area.sankey.default_link_style,
-      attributes: new Class_LinkAttribute()
-    }
     // Source
     this._source = source
     this._source.addOutputLink(this)
@@ -225,8 +218,29 @@ export class Class_LinkElement extends Class_Element {
       .forEach(data_tagg => {
         this._values = this._values.addNewTagGroup(data_tagg)
       })
+    // Display
+    this._display = {
+      drawing_area: drawing_area,
+      position: {
+        type: 'absolute',
+        x: 0,
+        y: 0
+      },
+      position_on_source: {
+        type: 'relative',
+        x: 0,
+        y: 0
+      },
+      position_on_target: {
+        type: 'relative',
+        x: 0,
+        y: 0
+      },
+      style: drawing_area.sankey.default_link_style,
+      attributes: new Class_LinkAttribute()
+    }
+    this.resetPositions()
   }
-
 
   // CLEANING ===========================================================================
 
@@ -234,7 +248,7 @@ export class Class_LinkElement extends Class_Element {
    * Define deletion behavior
    * @memberof Class_LinkElement
    */
-  public deleteReferences() {
+  protected cleanForDeletion() {
     // Unref self from source node
     this._source.deleteOutputLink(this)
     // Unref self from target node
@@ -253,8 +267,8 @@ export class Class_LinkElement extends Class_Element {
 
   // PROTECTED METHODS =====================================================================
 
-  protected update_visibility() {
-    if(this.source_and_target_displayed() && this.element_tag_displayed())this.setVisible(false)
+    protected update_visibility() {
+    if(this.are_source_and_target_displayed && this.are_related_tags_selected)this.setVisible(false)
       else this.setInvisble(false)
   }
 
@@ -275,11 +289,12 @@ export class Class_LinkElement extends Class_Element {
    * @return {*}
    * @memberof Class_LinkElement
    */
-  private source_and_target_displayed() {
-    return this._source.is_visible && this._target.is_visible
+  public reset() {
+    // Add position resetting
+    this.resetPositions()
+    // Reset everything else
+    super.reset()
   }
-
-  // PUBLIC METHODS =====================================================================
 
   /**
    * Reverse source with target
@@ -291,30 +306,51 @@ export class Class_LinkElement extends Class_Element {
     const tmp_source = this._source
     this._source = tmp_source
     this._target = tmp_target
+    this.reset()
   }
 
-  /**
-   * Compute lenght of link
-   * @memberof Class_LinkElement
-   */
-  public getLenght() {
-    if (this.isVertical()) {
-      return Math.abs(this.getStartingPointY() - this.getEndingPointY())
-    }
-    else if (this.isHorizontal()) {
-      return Math.abs(this.getStartingPointX() - this.getEndingPointX())
-    }
-    else {
-      return (
-        Math.abs(this.getStartingPointX() - this.getEndingPointX()) +
-        Math.abs(this.getStartingPointY() - this.getEndingPointY())
-      )
-    }
+  public setPosXY(_: number, __: number) { /* Does nothing */ }
+
+  public setPosXYOnSource(x: number, y: number) {
+    this._display.position_on_source.x = x
+    this._display.position_on_source.y = y
+    this.draw()
+  }
+
+  public setPosXYOnTarget(x: number, y: number) {
+    this._display.position_on_target.x = x
+    this._display.position_on_target.y = y
+    this.draw()
   }
 
   public deleteRelativeLabelPos() {
     delete this._x_label
     delete this._y_label
+  }
+
+  /**
+   * Remove given tag from link
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
+   */
+  public removeTag(tag:Class_Tag){
+    if (this._tags[tag.id] !== undefined) {
+      delete this._tags[tag.id]
+      tag.removeReference(this)
+    }
+  }
+
+  public useDefaultStyle() {
+    this.style = this.drawing_area.sankey.default_link_style
+  }
+
+  public resetAttributes() {
+    this._display.attributes = new Class_LinkAttribute()
+    this.reset()
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
+    return this._display.attributes[attr] !== undefined
   }
 
   public isEqual(_: Class_LinkElement) {
@@ -406,10 +442,10 @@ export class Class_LinkElement extends Class_Element {
    * @return {*}
    * @memberof Class_LinkElement
    */
-  public get_curr_value() {
-    if (this._values instanceof Class_LinkValue) return this._values.value
-    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
-  }
+  // public get_curr_value() {
+  //   if (this._values instanceof Class_LinkValue) return this._values.value
+  //   else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
+  // }
 
   /**
    * Return value of link from get_curr_value casted as a number because sometime
@@ -418,20 +454,20 @@ export class Class_LinkElement extends Class_Element {
    * @return {*}
    * @memberof Class_LinkElement
    */
-  public get_curr_value_casted() {
-    const val = this.get_curr_value()
-    return (val !== null && val !== undefined) ? val : 0
-  }
+  // public get_curr_value_casted() {
+  //   const val = this.get_curr_value()
+  //   return (val !== null && val !== undefined) ? val : 0
+  // }
 
-  public getLinkValue(list_tag: Class_Tag[]) {
-    if (this._values instanceof Class_LinkValue) return this._values.value
-    else return this._values.getValue(list_tag)
-  }
+  // public getLinkValue(list_tag: Class_Tag[]) {
+  //   if (this._values instanceof Class_LinkValue) return this._values.value
+  //   else return this._values.getValue(list_tag)
+  // }
 
-  public getLinkValueCasted(list_tag: Class_Tag[]) {
-    const val = this.getLinkValue(list_tag)
-    return (val !== null && val !== undefined) ? val : 0
-  }
+  // public getLinkValueCasted(list_tag: Class_Tag[]) {
+  //   const val = this.getLinkValue(list_tag)
+  //   return (val !== null && val !== undefined) ? val : 0
+  // }
 
   /**
    * Set link value for given datatag
@@ -440,10 +476,10 @@ export class Class_LinkElement extends Class_Element {
    * @param {(number | null)} val
    * @memberof Class_LinkElement
    */
-  public setLinkValue(list_tag: Class_Tag[], val: number | null) {
-    if (this._values instanceof Class_LinkValue) this._values.value = val
-    else this._values.setValue(list_tag, val)
-  }
+  // public setLinkValue(list_tag: Class_Tag[], val: number | null) {
+  //   if (this._values instanceof Class_LinkValue) this._values.value = val
+  //   else this._values.setValue(list_tag, val)
+  // }
 
   public toJSON() {
     const json_object = {} as { [_: string]: unknown }
@@ -503,7 +539,7 @@ export class Class_LinkElement extends Class_Element {
    */
   private setValueFromJSON(obj: { [x: string]: any }) {
     if ('value' in obj) { // sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
-      this.setLinkValue([], obj['value'])
+      (this._values as Class_LinkValue).data_value= obj['value'].value
     } else { // if sankey has data_taggs
       // Get all possible path with actual data_taggs
       const allPath = allPossibleCases(this.drawing_area.sankey.list_combinatorial_data_taggs_path)
@@ -514,53 +550,13 @@ export class Class_LinkElement extends Class_Element {
         const list_tag = cpy_path.map((tag_id, idx) => {
           return list_data_taggs[idx].tags[tag_id]
         })
-        const valForPath = recursiveCallLinkValueJSON(cpy_path, obj)
-        this.setLinkValue(list_tag, valForPath)
+        const valForPath = recursiveCallLinkValueJSON(cpy_path, obj);
+        (this._values as Class_LinkValueTree).setDataValue(list_tag, valForPath)
       })
     }
   }
 
 
-
-
-  // GETTER / SETTER ====================================================================
-
-  // Orientation
-  public isHorizontal() { return this.shape_orientation === 'hh' }
-  public isVertical() { return this.shape_orientation === 'vv' }
-  public isHorizontalVertical() { return this.shape_orientation === 'hv' }
-  public isVerticalHorizontal() { return this.shape_orientation === 'hv' }
-
-  // Coordinates
-  public getStartingPointX() { return this.position_x }
-  public getStartingPointY() { return this.position_y }
-  public getEndingPointX() { return this.position_x }
-  public getEndingPointY() { return this.position_y }
-
-  /**
-   * Remove given tag from link
-   * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
-   */
-  public removeTag(tag: Class_Tag) {
-    if (this._tags[tag.id] !== undefined) {
-      delete this._tags[tag.id]
-      tag.removeReference(this)
-    }
-  }
-
-  public useDefaultStyle() {
-    this.style = this.drawing_area.sankey.default_link_style
-  }
-
-  public resetAttributes() {
-    this._display.attributes = new Class_LinkAttribute()
-    this.reset()
-  }
-
-  public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
-    return this._display.attributes[attr] !== undefined
-  }
 
   // PROTECTED METHODS ==================================================================
 
@@ -642,7 +638,24 @@ export class Class_LinkElement extends Class_Element {
   }
 
 
+  protected element_displayed() {
+  }
+
   // PRIVATE METHODS ====================================================================
+
+  private resetPositions() {
+    // Reference position
+    this.position_x = this.source.position_x
+    this.position_y = this.source.position_x
+    // Compute position on source
+    const position_on_source = this.source.getLinkRelativePosition(this)
+    if (position_on_source !== null)
+      this._display.position_on_source = position_on_source
+    // Compute position on target
+    const position_on_target = this.target.getLinkRelativePosition(this)
+    if (position_on_target !== null)
+      this._display.position_on_target = position_on_target
+  }
 
   /**
    * Draw link shape on d3 svg
@@ -650,6 +663,9 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_NodeElementElement
    */
   private drawShape() {
+    // Clean previous shape
+    this.d3_selection?.selectAll(' .link_shape').remove()
+    // Add new path shape
     this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
@@ -657,12 +673,14 @@ export class Class_LinkElement extends Class_Element {
       .attr('fill', 'none')
       .attr('stroke', () => this.getLinkColorToUse())
       .attr('stroke-opacity', this.shape_opacity)
-      .attr('stroke-width', this.link_stroke_width)
+      .attr('stroke-width', this.thickness)
       .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
     // TODO apply opacity and other attributes
   }
 
   private drawLabel() {
+    // Clean previous label
+    this.d3_selection?.selectAll('.label').remove()
     // TODO a faire
   }
 
@@ -681,36 +699,21 @@ export class Class_LinkElement extends Class_Element {
   }
 
   private getBezierPath() {
-    const strokeWidth = this.link_stroke_width
     // Get starting and ending position per type of shape
-    let x0, y0
-    let x6, y6
-    if (this.isHorizontal() || this.isHorizontalVertical()) {
-      x0 = 0
-      y0 = 0 + strokeWidth / 2
-    }
-    else {
-      x0 = 0 + strokeWidth / 2
-      y0 = 0
-    }
-    if (this.isHorizontal() || this.isVerticalHorizontal()) {
-      x6 = this.getShapeWidth()
-      y6 = this.getShapeHeight() + strokeWidth / 2
-    }
-    else {
-      x6 = this.getShapeWidth() - strokeWidth / 2
-      y6 = this.getShapeHeight()
-    }
+    const x0 = this.position_x_start  // Shorter to write
+    const y0 = this.position_y_start  // ...
+    const x6 = this.position_x_end
+    const y6 = this.position_y_end
 
     // Shifts
-    const starting_shift = this.getLenght() * this.shape_starting_curve
-    const ending_shift = this.getLenght() * (1 - this.shape_ending_curve)
+    const starting_shift = this.lenght * this.shape_starting_curve
+    const ending_shift = this.lenght * (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
     // Starting curve point
     let x1, y1
-    if (this.isHorizontal() || this.isHorizontalVertical()) {
+    if (this.is_horizontal || this.is_horizontal_vertical) {
       x1 = x0 + horizontal_direction * starting_shift
       y1 = y0
     }
@@ -721,7 +724,7 @@ export class Class_LinkElement extends Class_Element {
 
     // Ending curve point
     let x5, y5
-    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+    if (this.is_horizontal || this.is_vertical_horizontal) {
       x5 = x6 - horizontal_direction * ending_shift
       y5 = y6
     }
@@ -740,7 +743,7 @@ export class Class_LinkElement extends Class_Element {
     // Line ((x4, y4); (x5, y5)) is second tangeant
     let x2, y2
     let x4, y4
-    if (this.isHorizontal() || this.isHorizontalVertical()) {
+    if (this.is_horizontal || this.is_horizontal_vertical) {
       x2 = x1 + (x5 - x1) * this.shape_starting_tangeant
       y2 = y1
     }
@@ -748,7 +751,7 @@ export class Class_LinkElement extends Class_Element {
       x2 = x1
       y2 = y1 + (y5 - y1) * this.shape_starting_tangeant
     }
-    if (this.isHorizontal() || this.isVerticalHorizontal()) {
+    if (this.is_horizontal || this.is_vertical_horizontal) {
       x4 = x5 + (x1 - x5) * this.shape_ending_tangeant
       y4 = y5
     }
@@ -772,67 +775,6 @@ export class Class_LinkElement extends Class_Element {
         + ' L ' + x6 + ',' + y6
     }
   }
-
-  public getShapeWidth() {
-    const source_x = this.source.position_x
-    const target_x = this.target.position_x
-    if (source_x <= target_x) {
-      return target_x - this.position_x
-    }
-    else {
-      return this.position_x - target_x - this.target.width
-    }
-  }
-  public setShapeWidth(_: number) { /* Does nothing */ }
-
-  public getShapeHeight() {
-    const source_y = this.source.position_y
-    const target_y = this.target.position_y
-    if (source_y <= target_y) {
-      return target_y - this.position_y
-    }
-    else {
-      return this.position_y - target_y - this.target.height
-    }
-  }
-  public setShapeHeight(_: number) { /* Does nothing */ }
-
-  public getPosX() {
-    const source_x = this.source.position_x
-    const target_x = this.target.position_x
-    if (source_x <= target_x) {
-      let dx = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.isHorizontal() || this.isHorizontalVertical()) {
-        dx = this.source.width
-      }
-      return source_x + dx
-    }
-    else {
-      const dx = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_x + dx
-    }
-  }
-  public setPosX(_: number) { /* Does nothing */ }
-
-  public getPosY() {
-    const source_y = this.source.position_y
-    const target_y = this.target.position_y
-    if (source_y <= target_y) {
-      let dy = 0 // TODO calculer en fonction des autres liens sur le noeud source
-      if (this.isVertical() || this.isVerticalHorizontal()) {
-        dy = this.source.height
-
-      }
-      return source_y + dy
-    }
-    else {
-      const dy = 0 // TODO calculer en fonction des autres liens sur le noeud source + epaisseur flux
-      return source_y + dy
-    }
-  }
-  public setPosY(_: number) { /* Does nothing */ }
-
-  public setPosXY(_: number, __: number) { /* Does nothing */ }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -863,21 +805,37 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
+   * Get starting node side for link
+   * @readonly
+   * @type {Type_Side}
+   * @memberof Class_LinkElement
+   */
+  public get source_side(): Type_Side {
+    // Failsafe : because of constructor
+    if (this.source === undefined || this.target === undefined) {
+      return 'right'
+    }
+    // Normal behavior
+    if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (this.source.position_x <= this.target.position_x)
+        return 'right'
+      else
+        return 'left'
+    }
+    else {
+      if (this.source.position_y <= this.target.position_y)
+        return 'bottom'
+      else
+        return 'top'
+    }
+  }
+
+  /**
    * get destination node
    * @memberof Class_LinkElement
    */
   public get target(): Class_NodeElement {
     return this._target
-  }
-
-  /**
-   * Get value
-   * @readonly
-   * @memberof Class_LinkElement
-   */
-  public get value() {
-    // TODO Faire autrement
-    return this._values
   }
 
   /**
@@ -887,6 +845,85 @@ export class Class_LinkElement extends Class_Element {
   public set target(value: Class_NodeElement) {
     this._target = value
     this.reset()
+  }
+
+  /**
+   * Get starting node side for link
+   * @readonly
+   * @type {Type_Side}
+   * @memberof Class_LinkElement
+   */
+  public get target_side(): Type_Side {
+    // Failsafe : because of constructor
+    if (this.source === undefined || this.target === undefined) {
+      return 'left'
+    }
+    // Normal behavior
+    if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (this.source.position_x <= this.target.position_x)
+        return 'left'
+      else
+        return 'right'
+    }
+    else {
+      if (this.source.position_y <= this.target.position_y)
+        return 'top'
+      else
+        return 'bottom'
+    }
+  }
+
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   * @memberof Class_LinkElement
+   */
+  public get data_value() {
+    const value = this.value
+    // Cast as number
+    if (value !== null && value.data_value !== null) return value.data_value
+    else return 0
+  }
+
+  /**
+   * Either set correct current value with data_taggs,
+   *  or set directly the value when there is no data_taggs
+   * @memberof Class_LinkElement
+   */
+  public set data_value(_: number) {
+    const value = this.value
+    // Cast as number
+    if (value !== null) {
+      value.data_value = _
+      this.draw()
+    }
+  }
+
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   * @return string
+   * @memberof Class_LinkElement
+   */
+  public get text_value() {
+    const value = this.value
+    // Cast as string
+    if (value !== null && value.text_value !== null) return value.text_value
+    else return ''
+  }
+
+  /**
+   * Either set correct current value with data_taggs,
+   *  or set directly the value when there is no data_taggs
+   * @memberof Class_LinkElement
+   */
+  public set text_value(_: string) {
+    const value = this.value
+    // Cast as number
+    if (value !== null) {
+      value.text_value = _
+      this.drawLabel()
+    }
   }
 
   public get tags() {
@@ -907,24 +944,6 @@ export class Class_LinkElement extends Class_Element {
   public set tooltip_text(_: string) {
     this._tooltip_text = _
     // TODO redraw ?
-  }
-
-  /**
-   * Get _thickness of stroke shape
-   * @readonly
-   * @memberof Class_LinkElement
-   */
-  public get link_stroke_width() {
-    const scale = d3.scaleLinear()
-      .domain([0, this.drawing_area.scale])
-      .range([0, 100])
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, this.drawing_area.scale])
-
-    const val = this.get_curr_value_casted()
-    return scale(val)
-
   }
 
 
@@ -949,6 +968,37 @@ export class Class_LinkElement extends Class_Element {
   }
 
   /**
+   * Get thickness of stroke shape
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get thickness(){
+    const scale = d3.scaleLinear()
+      .domain([0, this.drawing_area.scale])
+      .range([0, 100])
+    // const inv_scale = d3.scaleLinear()
+    //   .domain([0, 100])
+    //   .range([0, this.drawing_area.scale])
+    return scale(this.data_value)
+  }
+
+  public get position_x_start() {
+    return this._display.position_on_source.x + this.source.position_x - this.position_x
+  }
+
+  public get position_y_start() {
+    return this._display.position_on_source.y  + this.source.position_y - this.position_y
+  }
+
+  public get position_x_end() {
+    return this._display.position_on_target.x + this.target.position_x - this.position_x
+  }
+
+  public get position_y_end() {
+    return this._display.position_on_target.y + this.target.position_y - this.position_y
+  }
+
+  /**
    * TODO Description
    * @memberof Class_LinkElement
    */
@@ -965,7 +1015,13 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape() }
+  public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape()}
+
+  // Orientation
+  public get is_horizontal() { return this.shape_orientation === 'hh' }
+  public get is_vertical() { return this.shape_orientation === 'vv' }
+  public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
+  public get is_vertical_horizontal() { return this.shape_orientation === 'hv' }
 
   /**
    * TODO Description
@@ -1491,9 +1547,65 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel() }
-}
+  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel()  }
 
+  // PRIVATE GETTER / SETTER ============================================================
+
+  /**
+   * Get value object.
+   * Either search correct current value with data_taggs,
+   * or return directly the value when there is no data_taggs
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  private get value() {
+    if (this._values instanceof Class_LinkValue) return this._values
+    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
+  }
+
+  /**
+   * Compute lenght of link
+   * @memberof Class_LinkElement
+   */
+  private get lenght() {
+    if (this.is_vertical) {
+      return Math.abs(this.position_y_start - this.position_y_end)
+    }
+    else if (this.is_horizontal) {
+      return Math.abs(this.position_x_start - this.position_x_end)
+    }
+    else {
+      return (
+        Math.abs(this.position_x_start - this.position_x_end) +
+        Math.abs(this.position_y_start - this.position_y_end)
+      )
+    }
+  }
+
+  /**
+   * If link has tags :
+   * - check if any of them is selected at false
+   * else if the link doesn't have tag it isn't filtered by them
+   * @readonly
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private get are_related_tags_selected() {
+    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+  }
+
+  /**
+   * Check if node source and node target are displayed,
+   * if one of them is not then we don't display the link
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  private get are_source_and_target_displayed() {
+    return (this._source.is_visible && this._target.is_visible)
+  }
+}
 
 // CLASS LINK ATTRIBUTES ****************************************************************
 
@@ -1872,26 +1984,26 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 }
 
 
-// CLASS TREE NODE **********************************************************************
+// CLASS LINK TREE VALUE **********************************************************************
 
 /**
  * Define a node for value
  * @export
- * @class Class_TreeNode
+ * @class Class_LinkValueTree
  * @implements {TreeNodeInterface}
  */
-export class Class_TreeNode {
+export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   public tag_group: Class_TagGroup | null
-  public parent: Class_TreeNode | Class_LinkElement | null
-  public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_TreeNode }
+  public parent: Class_LinkValueTree | Class_LinkElement  | null
+  public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
   // CONSTRUCTOR ========================================================================
 
   constructor(
-    parent: Class_TreeNode | Class_LinkElement | null,
+    parent: Class_LinkValueTree | Class_LinkElement | null,
     tag_group: Class_TagGroup
   ) {
     // Instanciate parent
@@ -1921,33 +2033,14 @@ export class Class_TreeNode {
 
   // PUBLIC METHODS =====================================================================
   public addNewTagGroup(tag_group: Class_TagGroup) {
-    Object.entries(this.children)
-      .forEach(entry => {
-        const id = entry[0]
-        const child = entry[1]
-        // Recursive call until we arrive to the bottom of the tree
-        if (child instanceof Class_LinkValue) {
-          // Create new node tree
-          const new_child = new Class_TreeNode(this, tag_group)
-          // Copy values from child in grandchildren
-          tag_group.tags_list.forEach(tag => {
-            const _ = new_child.children[tag.id]
-            if (_ instanceof Class_LinkValue)
-              _.copyFrom(child)
-          })
-          // Replace child
-          this.children[id] = new_child
-          child.delete()
-        }
-        else {
-          // Recursive call
-          child.addNewTagGroup(tag_group)
-        }
+    Object.keys(this.children)
+      .forEach(id => {
+        this.children[id] = this.children[id].addNewTagGroup(tag_group)
       })
     return this
   }
 
-  public addChild(tag: Class_Tag, children: Class_TreeNode | Class_LinkValue) {
+  public addChild(tag: Class_Tag, children: Class_LinkValueTree | Class_LinkValue) {
     if (!this.children[tag.id])
       this.children[tag.id] = children
   }
@@ -1961,7 +2054,7 @@ export class Class_TreeNode {
     return undefined
   }
 
-  public getValue(tags: Class_Tag[]): number | null {
+  public getValue(tags: Class_Tag[]) : Class_LinkValue | null {
     // Failsafe
     if (tags.length === 0) return null
     // Get value recursively
@@ -1971,27 +2064,41 @@ export class Class_TreeNode {
     if (matching_tags.length !== 1) return null
     // Recursive
     const child = this.children[matching_tags[0].id]
-    if (child instanceof Class_LinkValue) return child.value
+    if (child instanceof Class_LinkValue) return child
     else return child.getValue(remaining_tags)
   }
 
-  public setValue(tags: Class_Tag[], val: number | null) {
-    // Failsafe
-    if (tags.length === 0) return null
-    // Get value recursively
-    const matching_tags = tags.filter(tag => (tag.group === this.tag_group))
-    const remaining_tags = tags.filter(tag => (tag.group !== this.tag_group))
-    // Failsafe
-    if (matching_tags.length !== 1) return null
-    // Recursive
-    const child = this.children[matching_tags[0].id]
-    if (child instanceof Class_LinkValue) child.value = val
-    else child.setValue(remaining_tags, val)
+  public setDataValue(tags: Class_Tag[], val: number | null) {
+    const value = this.getValue(tags)
+    if (value !== null) {
+      value.data_value=val
+    }
+  }
+
+
+  public getDataValue(tags: Class_Tag[]) : number | null {
+    const value = this.getValue(tags)
+    if (value !== null) {
+      return value.data_value
+    }
+    else {
+      return null
+    }
+  }
+
+  public getTextValue(tags: Class_Tag[]) : string | null {
+    const value = this.getValue(tags)
+    if (value !== null) {
+      return value.text_value
+    }
+    else {
+      return null
+    }
   }
 
   // GETTERS / SETTERS ==================================================================
-  public get link(): Class_LinkElement | null {
-    if (this.parent instanceof Class_TreeNode) return this.parent.link
+  public get link() : Class_LinkElement | null {
+    if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
 }
@@ -2001,21 +2108,21 @@ export class Class_TreeNode {
  *
  * @export
  * @class Class_LinkValue
- * @extends {Class_TreeNode}
+ * @extends {Class_LinkValueTree}
  */
 export class Class_LinkValue {
 
   // PRIVATE ATTRIBUTES ==================================================================
 
-  public parent: Class_TreeNode | Class_LinkElement | null
-  public value: number | null = null
-  public display_value: string | null = null
+  public parent: Class_LinkValueTree | Class_LinkElement | null
+  public data_value: number | null = null
+  public text_value: string | null = null
 
   private _extension?: { [_: string]: string }
 
   // CONSTRUCTOR ========================================================================
 
-  constructor(parent: Class_TreeNode | Class_LinkElement) {
+  constructor(parent: Class_LinkValueTree | Class_LinkElement) {
     // Parents / Children relations
     this.parent = parent
   }
@@ -2026,12 +2133,12 @@ export class Class_LinkValue {
 
   // PUBLIC METHODS =====================================================================
   public copyFrom(element: Class_LinkValue) {
-    this.value = element.value
-    this.display_value = element.display_value
+    this.data_value = element.data_value
+    this.text_value = element.text_value
   }
 
   public addNewTagGroup(tag_group: Class_TagGroup) {
-    const new_parent = new Class_TreeNode(this.parent, tag_group)
+    const new_parent = new Class_LinkValueTree(this.parent, tag_group)
     // Copy values from child in grandchildren
     tag_group.tags_list.forEach(tag => {
       const _ = new_parent.createNewChildAsValue(tag)
