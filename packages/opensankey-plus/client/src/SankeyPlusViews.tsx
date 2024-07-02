@@ -581,6 +581,7 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
             set_data(JSON.parse(JSON.stringify(master_data)))
           }
         }
+        sValueEditorNameView(master_data!.view.filter(v=>v.id===view)[0].nom)
       }
     }
     value={view}
