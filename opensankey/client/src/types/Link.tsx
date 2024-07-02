@@ -202,18 +202,6 @@ export class Class_LinkElement extends Class_Element {
       id,
       menu_config,
       'g_links')
-    // Source
-    this._source = source
-    this._source.addOutputLink(this)
-    // Target
-    this._target = target
-    this._target.addInputLink(this)
-    // Values
-    this._values = new Class_LinkValue(this)
-    drawing_area.sankey.data_taggs_list
-      .forEach(data_tagg => {
-        this._values = this._values.addNewTagGroup(data_tagg)
-      })
     // Display
     this._display = {
       drawing_area: drawing_area,
@@ -235,8 +223,20 @@ export class Class_LinkElement extends Class_Element {
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
     }
-    // Set with good position
-    this.reset()
+    // Source
+    this._source = source
+    this._source.addOutputLink(this)
+    // Target
+    this._target = target
+    this._target.addInputLink(this)
+    // Values
+    this._values = new Class_LinkValue(this)
+    drawing_area.sankey.data_taggs_list
+      .forEach(data_tagg => {
+        this._values = this._values.addNewTagGroup(data_tagg)
+      })
+    // Reset references
+    this.resetReferences()
   }
 
   // CLEANING ===========================================================================
@@ -262,14 +262,7 @@ export class Class_LinkElement extends Class_Element {
     this._values.delete()
   }
 
-  // PROTECTED METHODS =====================================================================
-
-    protected update_visibility() {
-    if(this.are_source_and_target_displayed && this.are_related_tags_selected)this.setVisible(false)
-      else this.setInvisble(false)
-  }
-
-  // PRIVATE METHODS =======================================================================
+  // PUBLIC METHODS =====================================================================
 
   /**
    * Check if node source and node target are displayed,
@@ -284,6 +277,11 @@ export class Class_LinkElement extends Class_Element {
     this.resetPositions()
     // Reset everything else
     super.reset()
+  }
+
+  public resetAttributes() {
+    this._display.attributes = new Class_LinkAttribute()
+    this.reset()
   }
 
   /**
@@ -334,10 +332,6 @@ export class Class_LinkElement extends Class_Element {
     this.style = this.drawing_area.sankey.default_link_style
   }
 
-  public resetAttributes() {
-    this._display.attributes = new Class_LinkAttribute()
-    this.reset()
-  }
 
   public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
     return this._display.attributes[attr] !== undefined
@@ -575,11 +569,21 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
+  protected update_visibility() {
+    if(this.are_source_and_target_displayed && this.are_related_tags_selected)this.setVisible(false)
+      else this.setInvisble(false)
+  }
 
   protected element_displayed() {
   }
 
   // PRIVATE METHODS ====================================================================
+
+  private resetReferences() {
+    // Reset related nodes
+    this.source.reset()
+    this.target.reset()
+  }
 
   private resetPositions() {
     // Reference position
@@ -739,9 +743,11 @@ export class Class_LinkElement extends Class_Element {
    * set source node
    * @memberof Class_LinkElement
    */
-  public set source(value: Class_NodeElement) {
-    this._source = value
-    this.reset()
+  public set source(_: Class_NodeElement) {
+    // Clean old source
+    this._source.swapOutputLink(this, _)
+    // Set new source
+    this._source = _
   }
 
   /**
@@ -782,9 +788,11 @@ export class Class_LinkElement extends Class_Element {
    * Set destination node
    * @memberof Class_LinkElement
    */
-  public set target(value: Class_NodeElement) {
-    this._target = value
-    this.reset()
+  public set target(_: Class_NodeElement) {
+    // Clean old source
+    this._target.swapInputLink(this, _)
+    // Set new source
+    this._target = _
   }
 
   /**
@@ -835,7 +843,8 @@ export class Class_LinkElement extends Class_Element {
     // Cast as number
     if (value !== null) {
       value.data_value = _
-      this.reset()
+      // Reset related
+      this.resetReferences()
     }
   }
 
@@ -885,7 +894,6 @@ export class Class_LinkElement extends Class_Element {
     this._tooltip_text = _
     // TODO redraw ?
   }
-
 
   /**
    * Get style key of node
