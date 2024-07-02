@@ -131,8 +131,7 @@ import {
   DrawerContent
 } from '@chakra-ui/react'
 import {
-  DataTagSelector,
-  setDiagram
+  DataTagSelector
 } from '../configmenus/SankeyMenuBanner'
 
 
@@ -234,7 +233,8 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   external_file_export_item,
   externale_save_item,
   externale_navbar_item,
-  convert_data
+  convert_data,
+  setDiagram
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
 
@@ -273,6 +273,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
     }
   }
   const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [s_diagram_2, sDiagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui: { [s: string]: JSX.Element[] } = {}
@@ -281,15 +282,48 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
     alignSelf='center'
     justifySelf='center'
   ><FormControl key={'1'} >
-    <Select style={{ width: '200px', color:'black' }}
-      onChange={evt=> {
-        sDiagram(evt.target.value)
-        setDiagram(evt.target.value, set_data, convert_data,get_default_data)
-      }}
-      value={s_diagram}>
-      {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-    </Select>
-  </FormControl></Box> : <React.Fragment key={'1'} />
+      <Select style={{ width: '200px', color:'black' }}
+        onChange={evt=> {
+          sDiagram(evt.target.value)
+          setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+        }}
+        value={s_diagram}>
+        {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+      </Select>
+    </FormControl></Box> : <React.Fragment key={'1'} />
+
+  if (window.SankeyToolsStatic && sous_filieres && is_split) {
+    diagrams_element =<Box
+        margin='0.25rem'
+        alignSelf='center'
+        justifySelf='center'
+      >
+        <FormControl key={'1'} >
+          <Select style={{ width: '200px', color:'black' }}
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+              sDiagram(evt.target.value)
+              const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+              setDiagram(diagram_path, set_data,convert_data,get_default_data)
+            }}
+            value={s_diagram}>
+            {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+          </Select>
+        </FormControl>
+        {is_split ?
+          (  <FormControl key={'2'} >
+            <Select style={{ width: '200px', color:'black' }}
+              onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+                sDiagram2(evt.target.value)
+                const diagram_path = s_diagram+'/'+evt.target.value
+                setDiagram(diagram_path, set_data,convert_data,get_default_data)
+              }}
+              value={s_diagram_2}>
+              {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+            </Select></FormControl>) :(<React.Fragment />)
+        }
+      </Box>
+  }
+  
   if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
   const excel_element = window.sankey && window.sankey.excel ? (
     <Box
@@ -301,7 +335,6 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       // href={window.sankey.excel}
       >{t('Banner.tl')}</Button>
     </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
-
 
   if (window.sankey && window.sankey.excel) ui['excel'] = [(excel_element)]
 
@@ -1192,17 +1225,17 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
           {
             !window.SankeyToolsStatic ?
-            <Box
-              margin='0.25rem'
-              alignSelf='center'
-              justifySelf='center'
-            >
-              <Image
-                src={applicationContext.logo_terriflux}
-                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-              />
-            </Box> :
-            <></>
+              <Box
+                margin='0.25rem'
+                alignSelf='center'
+                justifySelf='center'
+              >
+                <Image
+                  src={applicationContext.logo_terriflux}
+                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                />
+              </Box> :
+              <></>
           }
           {
             applicationContext.logo != '' ?
@@ -1216,7 +1249,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                 />
               </Box> :
               <></>
-            }
+          }
           {
             window.SankeyToolsStatic && window.sankey.header ?
               <Box
