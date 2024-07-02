@@ -1412,7 +1412,7 @@ export const updateLayout: updateLayoutFuncType = (
           (difference.kind === 'N') &&
           (difference.path!.length === 1))
       // added flux have no values
-      differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {"value":"","display_value":"","tags":{},"extension":{}})
+      differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {'value':'','display_value':'','tags':{},'extension':{}})
       differences.forEach((difference) => linksId.push(difference.path![0]))
       differences.forEach((difference) => applyChange(data.links, {}, difference))
       linksId.forEach(linkId => {
