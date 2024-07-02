@@ -159,12 +159,12 @@ export abstract class Class_Element {
       this._is_currently_deleted = true
       // Remove from drawing area
       this.unDraw()
-      // Abstract method for removing
-      this.deleteReferences()
+      // Abstract method for cleaning relations between elements
+      this.cleanForDeletion()
     }
   }
 
-  protected deleteReferences() {
+  protected cleanForDeletion() {
     // Does nothing here
   }
 
@@ -337,7 +337,6 @@ export abstract class Class_Element {
             (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
               this.eventMouseDragEnd(event))
       )
-
     }
   }
 
