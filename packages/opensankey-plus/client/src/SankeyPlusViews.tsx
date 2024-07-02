@@ -532,12 +532,20 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
     }
   }
   const [s_value_editor_name_view,sValueEditorNameView]=useState(vname)
+  if ( s_value_editor_name_view == '' && vname != '') {
+    sValueEditorNameView(vname)
+  }
   const [s_select_or_edit,sSelectOrEdit]=useState('select')
   applicationState.r_setter_value_editor_name_view.current=sValueEditorNameView
 
   const selecteur=<Select
     variant='menuconfigpanel_option_select'
-    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
+    onDoubleClick={()=>{
+      if (connected && master_data && master_data.current_view && master_data.current_view!=='none' ) {
+        sSelectOrEdit('edit')
+        sValueEditorNameView(master_data!.view.filter(v=>v.id===master_data.current_view)[0].nom)
+      }
+    }}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
