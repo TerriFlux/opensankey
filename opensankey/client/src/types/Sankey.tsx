@@ -36,7 +36,7 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-export const default_style_name = 'Style par defaut'
+export const default_style_name = 'default'
 const default_node_style = new Class_NodeStyle(default_style_name, false)
 const default_link_style = new Class_LinkStyle(default_style_name, false)
 
@@ -67,8 +67,8 @@ export class Class_Sankey {
   private _links: { [_: string]: Class_LinkElement } = {}
 
   // Existing styles
-  private _link_styles: { [_: string]: Class_LinkStyle } = {default_style_name: default_link_style } // TODO create defaut style
-  private _node_styles: { [_: string]: Class_NodeStyle } = {default_style_name: default_node_style }
+  private _link_styles: { [_: string]: Class_LinkStyle } = {}
+  private _node_styles: { [_: string]: Class_NodeStyle } ={}
 
   // Tags
   private _node_taggs: { [_: string]: Class_TagGroup } = {}
@@ -108,6 +108,8 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config = menu_config
+    this._link_styles[default_style_name]=default_link_style
+    this._node_styles[default_style_name]=default_node_style  
     this._colorMap = 'no_colormap'
     this._nodesColorMap = 'no_colormap'
     this._linksColorMap = 'no_colormap'
@@ -338,8 +340,7 @@ export class Class_Sankey {
   }
 
   /**
-   * Return an object wherekey are data_taggs id ,
-   * and value an array of id of tag selected of that data_taggs
+   * Return an array  of id of tag selected of that data_taggs
    *
    * @readonly
    * @memberof Class_Sankey
@@ -350,6 +351,51 @@ export class Class_Sankey {
       data_tags.push(...data_tagg.selected_tags_list)
     })
     return data_tags
+  }
+
+
+    /**
+   * Return an object wherekey are data_taggs id ,
+   * and value an array of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get selected_data_tags_entries() {
+    const obj_data_tags_selected: {[x:string]:Class_Tag} ={} 
+    this.data_taggs_list.forEach(data_tagg => {
+      obj_data_tags_selected[data_tagg.id]=data_tagg.selected_tags_list[0]
+    })
+    return obj_data_tags_selected
+  }
+
+   /**
+   * Return an array of possible path to link value,
+   * it use the combinitation of all tags from different data_taggs 
+   * 
+   * Exemple :
+   * [
+   * 
+   * [grp1_key1,grp2_key1],
+   * 
+   * [grp1_key1,grp2_key2],
+   * 
+   * [grp1_key2,grp2_key1],
+   * 
+   * [grp1_key2,grp2_key2],
+   * ...
+   * ]  
+   * *
+   * @readonly
+   * @memberof Class_Sankey
+   */
+   public get list_combinatorial_data_taggs_path() {
+    const list_tag_by_grp:string[][]=[]
+    const tmp=this.data_taggs_entries
+    tmp.forEach(grp_tag=>{
+      list_tag_by_grp.push(grp_tag[1].tags_list.map(tag=>tag.id))
+    })
+    return list_tag_by_grp
   }
 
   public get level_taggs_dict() {
@@ -672,7 +718,7 @@ export class Class_Sankey {
     })
 
     // Set node tag & tag group from json data
-    Object.entries(json_object['nodeTags']).forEach(ent_nt => {
+    Object.entries(json_object['nodeTags']).filter(ent_nt=>ent_nt[1]).forEach(ent_nt => {
       // Create a node tag group
       const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
       new_grp.removeTag(Object.values(new_grp.tags)[0])
@@ -692,6 +738,16 @@ export class Class_Sankey {
       // Add flux tag group to sankey
       this._flux_taggs[ent_ft[0]] = new_grp
     })
+        // Set level tag & tag group from json data
+        Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
+          // Create a flux tag group
+          const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
+          new_grp.removeTag(Object.values(new_grp.tags)[0])
+          // Set flux tag group value from JSON
+          new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
+          // Add flux tag group to sankey
+          this._level_taggs[ent_lvl_tag[0]] = new_grp
+        })
 
     // Set data tag & tag group from json data
     Object.entries(json_object['dataTags']).forEach(ent_dt => {
@@ -712,6 +768,24 @@ export class Class_Sankey {
       // Add node to sankey
       this._addNode(node)
     })
+
+    // Redo a go throught, but this time create nodes dimension 
+    this.nodes_list.forEach(n=>{
+      // get dimensions in json
+      const dim =json_object['nodes'][n.id].dimensions
+
+      /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like : 
+      dimensions :{...,
+          keyGrpLevelTag:{}  // dimensions have an object but it doesn't have parent
+        }
+      )*/
+      if(dim ){
+        Object.entries(dim)
+        .filter(ent_dim=>((ent_dim)[1] as {parent_name?:string}).parent_name!==undefined)
+        .forEach(ent_dim=>n.dimensions[ent_dim[0]]={ parent_name:this.nodes_dict[((ent_dim)[1] as {parent_name:string}).parent_name]})
+      }
+    })
+
 
     Object.entries(json_object['links']).forEach(ent_link => {
       const obj=ent_link[1] as {[x:string]:any}

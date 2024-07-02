@@ -55,7 +55,7 @@ export class Class_Legend extends Class_Element {
     // Update class attributes
     this.d3_selection?.attr('class', 'ggrp_legend')
     // Apply styles
-    this.d3_selection?.style('display', this._masked ? 'none' : '')
+    // this.d3_selection?.style('display', this._masked ? 'none' : '')
 
     // Draw Background
     this.drawLegendBg()
@@ -120,6 +120,12 @@ public fromJSON(json_object:{[_:string]:any}){
   this._legend_show_dataTags=json_object['legend_show_dataTags']?? false
 
 }
+ // Protected ==================================
+ protected update_visibility(): void {
+  if(this._masked)this.setInvisble(false)
+    else this.setVisible(false)  
+ }
+
   // ========Private
 
 

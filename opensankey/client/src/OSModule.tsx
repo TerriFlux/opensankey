@@ -72,9 +72,9 @@ import * as SankeyConvert from './configmenus/SankeyConvert'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
 import { keyHandler } from './draw/SankeyDraw'
-import { addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
+import { AddSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
-import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input } from '@chakra-ui/react'
+import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input, useBoolean } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
@@ -913,7 +913,6 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   link_function)=>{
   // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
-
   return <Popover placement='left' id='popover_details_level'>
     <PopoverTrigger>
       <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
@@ -927,14 +926,15 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
       <PopoverBody>
         <>
           {
-            (Object.entries(applicationData.data.levelTags).length > 0) ?
+            (applicationData.new_data.drawing_area.sankey.level_taggs_list.length > 0) ?
               (<>
                 {
-                  addSimpleLevelDropDown(
-                    applicationData,
-                    applicationDraw,
-                    node_function,
-                    link_function)
+                  <AddSimpleLevelDropDown
+                    applicationData={applicationData}
+                    applicationDraw={applicationDraw}
+                    node_function={node_function}
+                    link_function={link_function}
+                    />
                 }
               </>) :
               (<>

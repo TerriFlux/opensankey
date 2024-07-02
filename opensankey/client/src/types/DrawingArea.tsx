@@ -212,7 +212,7 @@ export class Class_DrawingArea {
     // Draw all nodes
     this._sankey.nodes_list.forEach(n=>n.reset())
     // Draw all links
-    // this._sankey.links_list.forEach(l=>l.reset())
+    this._sankey.links_list.forEach(l=>l.reset())
     // Draw legend
     this.legend.reset()
 

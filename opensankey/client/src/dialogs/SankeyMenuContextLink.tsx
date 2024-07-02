@@ -13,6 +13,10 @@ import { ConfigLinkDataNumberInput } from '../configmenus/SankeyMenuConfiguratio
 import { Placement } from 'react-bootstrap/esm/types'
 import { useBoolean } from '@chakra-ui/react'
 
+
+
+// TODO re implement file with class
+
 const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
@@ -53,7 +57,8 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
   }))
-  const tags_selected = Object.fromEntries(newEntries)
+  // const tags_selected = Object.fromEntries(newEntries)
+  const tags_selected = new_data.drawing_area.sankey.selected_data_tags_entries
 
   let style_c_l = '0px 0px auto auto'
   let is_top = true
@@ -99,68 +104,69 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
     redraw_selected_links()
   }
 
-  const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
-    if (contextualised_link === undefined) {
-      return ({} as SankeyLinkValue)
-    }
-    else {
-      if (Object.keys(data.links).length === 0 || !(((contextualised_link?.idLink ?? '') in data.links))) {
-        let val = JSON.parse(JSON.stringify(Object(contextualised_link?.value ?? ({} as SankeyLinkValue))))
-        Object.values(tags_selected).map(tag_selected => {
-          if (val[tag_selected] === undefined) {
-            val[tag_selected] = {}
-          }
-          val = val[tag_selected]
-        })
-        return val
-      }
-      let val = JSON.parse(JSON.stringify(Object(data.links[(contextualised_link?.idLink ?? '')]?.value ?? {} as SankeyLinkValue)))
-      Object.values(tags_selected).map(tag_selected => {
-        if (val[tag_selected] === undefined) {
-          val[tag_selected] = { 'display_value': '', tags: {}, value: 0 }
-        }
-        val = val[tag_selected]
-      })
-      return val
-    }
-  }
+  // const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
+  //   if (contextualised_link === undefined) {
+  //     return ({} as SankeyLinkValue)
+  //   }
+  //   else {
+  //     if (Object.keys(data.links).length === 0 || !(((contextualised_link?.idLink ?? '') in data.links))) {
+  //       let val = JSON.parse(JSON.stringify(Object(contextualised_link?.value ?? ({} as SankeyLinkValue))))
+  //       Object.values(tags_selected).map(tag_selected => {
+  //         if (val[tag_selected] === undefined) {
+  //           val[tag_selected] = {}
+  //         }
+  //         val = val[tag_selected]
+  //       })
+  //       return val
+  //     }
+  //     let val = JSON.parse(JSON.stringify(Object(data.links[(contextualised_link?.idLink ?? '')]?.value ?? {} as SankeyLinkValue)))
+  //     Object.values(tags_selected).map(tag_selected => {
+  //       if (val[tag_selected] === undefined) {
+  //         val[tag_selected] = { 'display_value': '', tags: {}, value: 0 }
+  //       }
+  //       val = val[tag_selected]
+  //     })
+  //     return val
+  //   }
+  // }
   const context_link_label_visible = contextualised_link !== undefined ? ReturnValueLink(data, contextualised_link, 'label_visible') as boolean : false
 
   const has_flux_tags = Object.values(data.fluxTags).length > 0
   // Menu to change some pararmeter concerning the appearence of the node
-  const dropdown_c_l_tag = (contextualised_link !== undefined && has_flux_tags) && has_flux_tags ? <Menu placement='end'>
-    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
-      {t('Menu.Transformation.tagFlux_assign')}
-    </MenuButton>
+  // const dropdown_c_l_tag = (contextualised_link !== undefined && has_flux_tags) && has_flux_tags ? <Menu placement='end'>
+  //   <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+  //     {t('Menu.Transformation.tagFlux_assign')}
+  //   </MenuButton>
 
-    <MenuList  >
-      {Object.entries(data.fluxTags).filter(nt => Object.keys(nt[1].tags).length > 0).map(nt => {
-        return <Menu placement='end'>
-          <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
-            {nt[1].group_name}
-          </MenuButton>
-          <MenuList>
-            {Object.keys(nt[1].tags).map(t => {
-              const has_tag = value_selected_parameter_contextualised_link().tags[nt[0]] !== undefined
-              const is_selected = value_selected_parameter_contextualised_link().tags[nt[0]] && value_selected_parameter_contextualised_link().tags[nt[0]].includes(t)
+  //   <MenuList  >
+  //     {Object.entries(data.fluxTags).filter(nt => Object.keys(nt[1].tags).length > 0).map(nt => {
+  //       return <Menu placement='end'>
+  //         <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+  //           {nt[1].group_name}
+  //         </MenuButton>
+  //         <MenuList>
+  //           {Object.keys(nt[1].tags).map(t => {
+  //             // TODO reimplement file with class
+  //             // const has_tag = value_selected_parameter_contextualised_link().tags[nt[0]] !== undefined
+  //             // const is_selected = value_selected_parameter_contextualised_link().tags[nt[0]] && value_selected_parameter_contextualised_link().tags[nt[0]].includes(t)
 
-              return <MenuItem onClick={() => {
-                // Assign tag to selected links
-                multi_selected_links.current.filter(l => l !== contextualised_link).forEach(l => {
-                  updateLinkTagValue(l, tags_selected, nt[0], t, !is_selected)
-                })
-                updateLinkTagValue(contextualised_link, tags_selected, nt[0], t, !is_selected)
-                redraw_selected_links()
-              }}>
-                {nt[1].tags[t].name}{has_tag ? checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t)) : <></>}
-              </MenuItem>
-            })}
-          </MenuList>
-        </Menu>
-      })}
+  //             return <MenuItem onClick={() => {
+  //               // Assign tag to selected links
+  //               multi_selected_links.current.filter(l => l !== contextualised_link).forEach(l => {
+  //                 updateLinkTagValue(l, tags_selected, nt[0], t, !is_selected)
+  //               })
+  //               updateLinkTagValue(contextualised_link, tags_selected, nt[0], t, !is_selected)
+  //               redraw_selected_links()
+  //             }}>
+  //               {nt[1].tags[t].name}{has_tag ? checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t)) : <></>}
+  //             </MenuItem>
+  //           })}
+  //         </MenuList>
+  //       </Menu>
+  //     })}
 
-    </MenuList>
-  </Menu> : <></>
+  //   </MenuList>
+  // </Menu> : <></>
 
 
   const button_open_link_appearence = contextualised_link !== undefined ? <Button onClick={() => {
@@ -338,7 +344,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
       {button_mask_link_label}
       {btn_edit_value}
       {has_flux_tags && sep}
-      {dropdown_c_l_tag}
+      {/* {dropdown_c_l_tag} */}
       {sep}
       {button_open_link_data}
       {button_open_link_appearence}

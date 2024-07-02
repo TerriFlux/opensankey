@@ -172,12 +172,15 @@ export abstract class Class_Element {
   public reset() {
     // Clear D3
     this.unDraw()
-    // Draw element on D3
-    this.draw()
-    // Position element on D3
-    this.applyPosition()
-    // Add events listeners
-    this.setEventsListeners()
+    this.update_visibility()
+    if (this.is_visible) {
+      // Draw element on D3
+      this.draw()
+      // Position element on D3
+      this.applyPosition()
+      // Add events listeners
+      this.setEventsListeners()
+    }
   }
 
   // Positioning
@@ -209,9 +212,10 @@ export abstract class Class_Element {
   public get is_selected() { return this._is_selected }
 
   // Visible
-  public setVisible() { this._is_visible = true; this.reset() }
-  public setInvisble() { this._is_visible = false; this.reset() }
+  public setVisible(reset=true) { this._is_visible = true; if(reset)this.reset() }
+  public setInvisble(reset=true) { this._is_visible = false; if(reset)this.reset() }
   public get is_visible() { return this._is_visible }
+  protected abstract update_visibility():void
 
   // Mouse is over element
   public isMouseOver() { return this._is_mouse_over }
@@ -241,8 +245,8 @@ export abstract class Class_Element {
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this._id)
-        // .style('stroke-width', this.is_selected ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
-        // .style('stroke', 'black') Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
+      // .style('stroke-width', this.is_selected ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
+      // .style('stroke', 'black') Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
     }
   }
 

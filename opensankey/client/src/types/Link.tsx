@@ -253,8 +253,9 @@ export class Class_LinkElement extends Class_Element {
 
   // PROTECTED METHODS =====================================================================
 
-  protected element_displayed() {
-    return this.source_and_target_displayed() && this.element_tag_displayed()
+  protected update_visibility() {
+    if(this.source_and_target_displayed() && this.element_tag_displayed())this.setVisible(false)
+      else this.setInvisble(false)
   }
 
   // PRIVATE METHODS =======================================================================
@@ -275,7 +276,7 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   private source_and_target_displayed() {
-    return this._source.displayed && this._target.displayed
+    return this._source.is_visible && this._target.is_visible
   }
 
   // PUBLIC METHODS =====================================================================
@@ -422,6 +423,27 @@ export class Class_LinkElement extends Class_Element {
     return (val !== null && val !== undefined) ? val : 0
   }
 
+  public getLinkValue(list_tag: Class_Tag[]) {
+    if (this._values instanceof Class_LinkValue) return this._values.value
+    else return this._values.getValue(list_tag)
+  }
+
+  public getLinkValueCasted(list_tag: Class_Tag[]) {
+    const val = this.getLinkValue(list_tag)
+    return (val !== null && val !== undefined) ? val : 0
+  }
+
+  /**
+   * Set link value for given datatag
+   *
+   * @param {Class_Tag[]} list_tag
+   * @param {(number | null)} val
+   * @memberof Class_LinkElement
+   */
+  public setLinkValue(list_tag: Class_Tag[], val: number | null) {
+    if (this._values instanceof Class_LinkValue) this._values.value = val
+    else this._values.setValue(list_tag, val)
+  }
 
   public toJSON() {
     const json_object = {} as { [_: string]: unknown }
@@ -438,22 +460,23 @@ export class Class_LinkElement extends Class_Element {
     json_object['local'] = this._display.attributes.toJSON()
     json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
 
-    json_object['value'] = this._values //Todo create function to JSONize link value
+    // json_object['value'] = this._values //Todo create function to JSONize link value
+    json_object['value'] = {}//Todo create function to JSONize link value
 
     return json_object
 
   }
 
-  public fromJSON(json_object:{[x:string]:any}){
+  public fromJSON(json_object: { [x: string]: any }) {
 
-    this.position_type=json_object['position'] ??'absolute'
-    this.position_x=json_object['x'] ??0
-    this.position_y=json_object['y'] ??0
+    this.position_type = json_object['position'] ?? 'absolute'
+    this.position_x = json_object['x'] ?? 0
+    this.position_y = json_object['y'] ?? 0
 
-    this._display.style=this.drawing_area.sankey.link_styles_dict[json_object['style']??'default'] // if json_node_object['style'] is undefined assign default style
+    this._display.style = this.drawing_area.sankey.link_styles_dict[json_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
 
 
-    if(json_object['local']){
+    if (json_object['local']) {
       this._display.attributes.fromJSON(json_object['local'])
     }
 
@@ -461,14 +484,43 @@ export class Class_LinkElement extends Class_Element {
     // tags:{key_grp_tag:key_tag_selected }
     // where 'key_grp_tag' represent the id of a flux_taggs group
     // &  'key_tag_selected' represent the id of the tag selected for that flux_taggs group
-    Object.entries(json_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.flux_taggs_dict).forEach(ent_fluxtag=>{
-      this._tags[ent_fluxtag[0]]=this.drawing_area.sankey.flux_taggs_dict[ent_fluxtag[0]].tags[ent_fluxtag[1] as string]
+    Object.entries(json_object['tags'] ?? {}).filter(ent => ent[0] in this.drawing_area.sankey.flux_taggs_dict).forEach(ent_fluxtag => {
+      this._tags[ent_fluxtag[0]] = this.drawing_area.sankey.flux_taggs_dict[ent_fluxtag[0]].tags[ent_fluxtag[1] as string]
     })
 
     json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
 
-    this._values = json_object['value']  //Todo create function to read link value from JSON
+    this.setValueFromJSON(json_object['value'])
+    // this._values = json_object['value']  //Todo create function to read link value from JSON
   }
+
+  /**
+   * Function that assign link value to correct path from JSON file
+   *
+   * @private
+   * @param {{[x:string]:any}} obj
+   * @memberof Class_LinkElement
+   */
+  private setValueFromJSON(obj: { [x: string]: any }) {
+    if ('value' in obj) { // sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
+      this.setLinkValue([], obj['value'])
+    } else { // if sankey has data_taggs
+      // Get all possible path with actual data_taggs
+      const allPath = allPossibleCases(this.drawing_area.sankey.list_combinatorial_data_taggs_path)
+      const list_data_taggs = this.drawing_area.sankey.data_taggs_list
+      // Get each value (if present, otherwise return null) of each path for this link
+      allPath.forEach(path => {
+        const cpy_path = structuredClone(path)
+        const list_tag = cpy_path.map((tag_id, idx) => {
+          return list_data_taggs[idx].tags[tag_id]
+        })
+        const valForPath = recursiveCallLinkValueJSON(cpy_path, obj)
+        this.setLinkValue(list_tag, valForPath)
+      })
+    }
+  }
+
+
 
 
   // GETTER / SETTER ====================================================================
@@ -490,7 +542,7 @@ export class Class_LinkElement extends Class_Element {
    * @param {Class_Tag} tag
    * @memberof Class_LinkElement
    */
-  public removeTag(tag:Class_Tag){
+  public removeTag(tag: Class_Tag) {
     if (this._tags[tag.id] !== undefined) {
       delete this._tags[tag.id]
       tag.removeReference(this)
@@ -532,6 +584,64 @@ export class Class_LinkElement extends Class_Element {
     this.drawLabel()
   }
 
+  /**
+   * Deal with simple left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Link
+   */
+  protected eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      // Purge selection list
+      drawing_area.purgeSelection()
+      // Close all menus
+      drawing_area.application_data.closeAllMenus()
+    }
+    // SELECTION MODE =========================================================
+    else if (drawing_area.isInSelectionMode()) {
+      // ALT
+      if (event.altKey) {
+        // Purge selection list
+        drawing_area.purgeSelection()
+        // Show tooltip
+        // this.showTooltip()
+      }
+      // SHIFT
+      else if (event.shiftKey) {
+        // Add link to selection
+        drawing_area.addLinkToSelection(this)
+
+        // Open related menu
+        this.menu_config.OpenConfigMenu()
+        this.menu_config.OpenConfigMenuElements()
+        this.menu_config.OpenConfigMenuElementsLinks()
+        // Update components related to link edition
+        this.menu_config.updateMenuEditionLink()
+
+      } else if (event.ctrlKey) {
+        // Add link to selection
+        drawing_area.addLinkToSelection(this)
+
+        // Update components related to link edition
+        this.menu_config.updateMenuEditionLink()
+      }
+      // OTHERS
+      else {
+        // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
+        // Purge selection list
+        drawing_area.purgeSelection()
+        // Add link to selection
+        drawing_area.addLinkToSelection(this)
+      }
+    }
+  }
+
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -543,12 +653,12 @@ export class Class_LinkElement extends Class_Element {
     this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
-      .attr('d', this.getBezierPath())
+      .attr('d', () => this.getBezierPath())
       .attr('fill', 'none')
-      .attr('stroke', this.getLinkColorToUse)
+      .attr('stroke', () => this.getLinkColorToUse())
       .attr('stroke-opacity', this.shape_opacity)
       .attr('stroke-width', this.link_stroke_width)
-      .attr('stroke-dasharray',this.shape_is_dashed?'10,5':'')
+      .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
     // TODO apply opacity and other attributes
   }
 
@@ -804,7 +914,7 @@ export class Class_LinkElement extends Class_Element {
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get link_stroke_width(){
+  public get link_stroke_width() {
     const scale = d3.scaleLinear()
       .domain([0, this.drawing_area.scale])
       .range([0, 100])
@@ -855,7 +965,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape()}
+  public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape() }
 
   /**
    * TODO Description
@@ -899,7 +1009,7 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   public set shape_ending_curve(_: number) {
-    if (_ <= 1 && _ > this.shape_starting_curve){
+    if (_ <= 1 && _ > this.shape_starting_curve) {
       this._display.attributes.shape_ending_curve = _
       this.drawShape()
     }
@@ -1077,7 +1187,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_orthogonal_position(_: string) { this._display.attributes.value_label_orthogonal_position = _; this.drawLabel()  }
+  public set value_label_orthogonal_position(_: string) { this._display.attributes.value_label_orthogonal_position = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1096,7 +1206,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_on_path(_: boolean) { this._display.attributes.value_label_on_path = _; this.drawLabel()  }
+  public set value_label_on_path(_: boolean) { this._display.attributes.value_label_on_path = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1115,7 +1225,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_pos_auto(_: boolean) { this._display.attributes.value_label_pos_auto = _; this.drawLabel()  }
+  public set value_label_pos_auto(_: boolean) { this._display.attributes.value_label_pos_auto = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1134,7 +1244,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawShape()  }
+  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawShape() }
 
   /**
    * TODO Description
@@ -1172,7 +1282,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawShape()  }
+  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawShape() }
 
   /**
    * TODO Description
@@ -1210,7 +1320,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawLabel()  }
+  public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1229,7 +1339,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_font_size(_: number) { this._display.attributes.value_label_font_size = _; this.drawLabel()  }
+  public set value_label_font_size(_: number) { this._display.attributes.value_label_font_size = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1248,7 +1358,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawLabel()  }
+  public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1267,7 +1377,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_to_precision(_: boolean) { this._display.attributes.value_label_to_precision = _; this.drawLabel()  }
+  public set value_label_to_precision(_: boolean) { this._display.attributes.value_label_to_precision = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1286,7 +1396,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_scientific_precision(_: number) { this._display.attributes.value_label_scientific_precision = _; this.drawLabel()  }
+  public set value_label_scientific_precision(_: number) { this._display.attributes.value_label_scientific_precision = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1305,7 +1415,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_font_family(_: string) { this._display.attributes.value_label_font_family = _; this.drawLabel()  }
+  public set value_label_font_family(_: string) { this._display.attributes.value_label_font_family = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1324,7 +1434,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawLabel()  }
+  public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1343,7 +1453,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawLabel()  }
+  public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1362,7 +1472,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_custom_digit(_: boolean) { this._display.attributes.value_label_custom_digit = _; this.drawLabel()  }
+  public set value_label_custom_digit(_: boolean) { this._display.attributes.value_label_custom_digit = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -1381,7 +1491,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel()  }
+  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel() }
 }
 
 
@@ -1437,9 +1547,9 @@ export class Class_LinkAttribute {
   // GETTERS ============================================================================
 
   // Shape type
-  public get shape_is_curved() {return this._shape_is_curved }
+  public get shape_is_curved() { return this._shape_is_curved }
   public get shape_curvature() { return this._shape_curvature }
-  public get shape_is_recycling() {return this._shape_is_recycling }
+  public get shape_is_recycling() { return this._shape_is_recycling }
 
   // Shape orientation
   public get shape_orientation() { return this._shape_orientation }
@@ -1450,30 +1560,30 @@ export class Class_LinkAttribute {
   public get shape_vert_shift() { return this._shape_vert_shift }
 
   // Shape's arrow attributes
-  public get shape_is_arrow() {return this._shape_is_arrow }
+  public get shape_is_arrow() { return this._shape_is_arrow }
   public get shape_arrow_size() { return this._shape_arrow_size }
 
   // Shape's Filling attributes
-  public get shape_is_dashed() {return this._shape_is_dashed }
+  public get shape_is_dashed() { return this._shape_is_dashed }
   public get shape_color() { return this._shape_color }
   public get shape_opacity() { return this._shape_opacity }
 
   // Geometry link labels
   public get value_label_position() { return this._value_label_position }
   public get value_label_orthogonal_position() { return this._value_label_orthogonal_position }
-  public get value_label_on_path() {return this._value_label_on_path }
-  public get value_label_pos_auto() {return this._value_label_pos_auto }
+  public get value_label_on_path() { return this._value_label_on_path }
+  public get value_label_pos_auto() { return this._value_label_pos_auto }
 
   // Value label display
-  public get value_label_is_visible() {return this._value_label_is_visible }
+  public get value_label_is_visible() { return this._value_label_is_visible }
   public get value_label_font_family() { return this._value_label_font_family }
   public get value_label_font_size() { return this._value_label_font_size }
   public get value_label_color() { return this._value_label_color }
-  public get value_label_to_precision() {return this._value_label_to_precision }
+  public get value_label_to_precision() { return this._value_label_to_precision }
   public get value_label_scientific_precision() { return this._value_label_scientific_precision }
-  public get value_label_custom_digit() {return this._value_label_custom_digit }
+  public get value_label_custom_digit() { return this._value_label_custom_digit }
   public get value_label_nb_digit() { return this._value_label_nb_digit }
-  public get value_label_unit_visible() {return this._value_label_unit_visible }
+  public get value_label_unit_visible() { return this._value_label_unit_visible }
   public get value_label_unit() { return this._value_label_unit }
 
 
@@ -1616,7 +1726,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private _is_deletable: boolean
 
-  private _references: {[_: string]: Class_LinkElement} = {}
+  private _references: { [_: string]: Class_LinkElement } = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(
@@ -1684,7 +1794,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
    * @readonly
    * @memberof Class_NodeStyle
    */
-  public get id() {return this._id}
+  public get id() { return this._id }
 
   // SETTERS ============================================================================
 
@@ -1775,7 +1885,7 @@ export class Class_TreeNode {
   // PUBLIC ATTRIBUTES ==================================================================
 
   public tag_group: Class_TagGroup | null
-  public parent: Class_TreeNode | Class_LinkElement  | null
+  public parent: Class_TreeNode | Class_LinkElement | null
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_TreeNode }
 
   // CONSTRUCTOR ========================================================================
@@ -1801,7 +1911,7 @@ export class Class_TreeNode {
       .forEach(id => {
         this.children[id].delete()
       }
-    )
+      )
     this.children = {}
     // Unref parent
     this.parent = null
@@ -1851,7 +1961,7 @@ export class Class_TreeNode {
     return undefined
   }
 
-  public getValue(tags: Class_Tag[]) : number | null {
+  public getValue(tags: Class_Tag[]): number | null {
     // Failsafe
     if (tags.length === 0) return null
     // Get value recursively
@@ -1865,8 +1975,22 @@ export class Class_TreeNode {
     else return child.getValue(remaining_tags)
   }
 
+  public setValue(tags: Class_Tag[], val: number | null) {
+    // Failsafe
+    if (tags.length === 0) return null
+    // Get value recursively
+    const matching_tags = tags.filter(tag => (tag.group === this.tag_group))
+    const remaining_tags = tags.filter(tag => (tag.group !== this.tag_group))
+    // Failsafe
+    if (matching_tags.length !== 1) return null
+    // Recursive
+    const child = this.children[matching_tags[0].id]
+    if (child instanceof Class_LinkValue) child.value = val
+    else child.setValue(remaining_tags, val)
+  }
+
   // GETTERS / SETTERS ==================================================================
-  public get link() : Class_LinkElement | null {
+  public get link(): Class_LinkElement | null {
     if (this.parent instanceof Class_TreeNode) return this.parent.link
     else return this.parent
   }
@@ -1919,4 +2043,43 @@ export class Class_LinkValue {
     return new_parent
   }
 
+}
+
+
+type recusiveLinkValue = { [x: string]: recusiveLinkValue | {} }
+
+
+function allPossibleCases(arr: string[][]): string[][] {
+  if (arr.length == 1) {
+    return arr[0] as any;
+  } else {
+    var result = [];
+    var allCasesOfRest = allPossibleCases(arr.slice(1)); // recur with the rest of array
+    for (var i = 0; i < allCasesOfRest.length; i++) {
+      for (var j = 0; j < arr[0].length; j++) {
+        const tmp = [arr[0][j], allCasesOfRest[i]]
+        result.push(tmp.flat());
+      }
+    }
+    return result as any;
+  }
+
+}
+/**
+ * function that get value for link from JSON with a given path
+ *
+ * @param {string[]} path
+ * @param {{ [x: string]: any }} JSONValue
+ * @return {*}  {(number | null)}
+ */
+function recursiveCallLinkValueJSON(path: string[], JSONValue: { [x: string]: any }): number | null {
+  if (path.length > 0) {
+    const next_tag = path.shift() as string
+
+    if(next_tag in JSONValue)return recursiveCallLinkValueJSON(path, JSONValue[next_tag]) // if JSON has next tag_id
+      else return null // if JSON doesn't have next tag_id that would mean an error in JSON file or it is not defined in JSON
+  } else {
+    if (JSONValue.value) return JSONValue.value
+    else return null // in case of error
+  }
 }

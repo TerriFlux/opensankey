@@ -277,20 +277,20 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui: { [s: string]: JSX.Element[] } = {}
-  let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Box
+  const diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Box
     margin='0.25rem'
     alignSelf='center'
     justifySelf='center'
   ><FormControl key={'1'} >
-    <Select style={{ width: '200px', color:'black' }}
-      onChange={evt=> {
-        sDiagram(evt.target.value)
-        setDiagram(evt.target.value, set_data, convert_data,get_default_data)
-      }}
-      value={s_diagram}>
-      {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-    </Select>
-  </FormControl></Box> : <React.Fragment key={'1'} />
+      <Select style={{ width: '200px', color:'black' }}
+        onChange={evt=> {
+          sDiagram(evt.target.value)
+          setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+        }}
+        value={s_diagram}>
+        {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+      </Select>
+    </FormControl></Box> : <React.Fragment key={'1'} />
   if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
   const excel_element = window.sankey && window.sankey.excel ? (
     <Box
@@ -443,7 +443,6 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                     //   margin_top = test[0].getBoundingClientRect().height
                     //   d3.select(' .opensankey #svg-container').style('margin-top', margin_top + 'px')
                     // }
-                    console.log(default_data)
                     new_data.new_drawing_area_fromJSON(default_data)
                     new_data.drawing_area.reset()
                   }
@@ -1222,7 +1221,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           ><Text
               fontStyle='h1'>
               {window.sankey.header}</Text>          </Box>:
-          <></>}
+            <></>}
           {!window.SankeyToolsStatic ? menu_nav :<></>}
           {window.SankeyToolsStatic ? <ButtonGroup> {Object.keys(ordered_menu).map(k => ordered_menu[k])}</ButtonGroup> :<></>}
           <Box
@@ -1335,7 +1334,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <Button
-            ref={uiElementsRef.button_ref as Ref<HTMLButtonElement>}
+            ref={new_data.menu_configuration.btn_toogle_menu}
             id="toggle-check"
             className='openMenu'
             variant="toolbar_main_button"

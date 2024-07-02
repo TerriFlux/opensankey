@@ -10,7 +10,7 @@ export class Class_MenuConfig {
    Ref to button on the configuration menu in the app
    ========================================*/
   // Button that open the configuration menu
-  private _btn_toogle_menu: RefObject<HTMLLabelElement>
+  private _btn_toogle_menu: RefObject<HTMLButtonElement>
 
   // Button that open the menu elements
   private _btn_accordion_config_elements: RefObject<HTMLButtonElement>
@@ -64,7 +64,7 @@ export class Class_MenuConfig {
 
   constructor() {
     // Init button ref
-    this._btn_toogle_menu = useRef<HTMLLabelElement>(null)
+    this._btn_toogle_menu = useRef<HTMLButtonElement>(null)
     this._btn_accordion_config_elements = useRef<HTMLButtonElement>(null)
     this._btn_accordion_config_node = useRef<HTMLButtonElement>(null)
     this._btn_accordion_config_link = useRef<HTMLButtonElement>(null)
@@ -155,7 +155,7 @@ export class Class_MenuConfig {
   /* ========================================
   Define setter & getter of class attributes
   ========================================*/
-  public get btn_toogle_menu(): RefObject<HTMLLabelElement> {
+  public get btn_toogle_menu(): RefObject<HTMLButtonElement> {
     return this._btn_toogle_menu
   }
 
