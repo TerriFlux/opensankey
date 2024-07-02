@@ -185,8 +185,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
               if(multi_selected_links.current.length>0){
                 let new_tags_selected=tags_selected
-
-                if(multi_selected_links.current[0].idLink.includes('_')){
+                // Temporary fix for https://gitlab.com/su-model/opensankey/-/issues/901
+                // Mutli selection of dataTags must be reviewed
+                if( Object.values(dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0 && multi_selected_links.current[0].idLink.includes('_')){
                   const index_grp_tag=multi_selected_links.current[0].idLink.split('_')
                   // Supprime le première élément du tableau qui ne contient que l'id du flux
                   index_grp_tag.shift()
