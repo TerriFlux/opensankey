@@ -269,4 +269,17 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   public get activated(): boolean { return this._activated }
   public set activated(value: boolean) { this._activated = value }
+
+  // Method ==========================================
+
+  public fromJSON(json_object: { [_: string]: any }) {
+    // Call fromJSON of  Class_TagGroup
+    super.fromJSON(json_object)
+
+    // Set level_taggs value from json
+    this._activated=json_object['activated']
+    this._activated = json_object['activated'] ?? false
+    this._siblings = json_object['sibling'] ?? []
+
+  }
 }

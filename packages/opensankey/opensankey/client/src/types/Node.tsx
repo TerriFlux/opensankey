@@ -62,7 +62,7 @@ export const default_name_label_vert = 'bottom'
 export const default_name_label_horiz = 'middle'
 export const default_value_label_visible = false
 export const default_value_label_vert = 'top'
-export const default_value_label_horiz  = 'middle'
+export const default_value_label_horiz = 'middle'
 export const default_label_box_width = 150
 
 // SPECIFIC FUNCTIONS *******************************************************************
@@ -97,19 +97,11 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  // Level & Parent
-  // TODO link with other nodes directly
-  dimensions: {
-    [_: string]: {
-      parent_name?: string,
-      level?: number,
-    }
-  } = {}
+
 
   // Tooltips
   tooltip?: Class_Element
   tooltip_text?: string
-  private _displayed: boolean = true
 
   // PROTECTED ATTRIBUTE ================================================================
 
@@ -134,13 +126,20 @@ export class Class_NodeElement extends Class_Element {
   private _output_links: { [_: string]: Class_LinkElement } = {}
 
   // Node tags
-  private _tags: { [_: string]: Class_Tag } = {}
+  private _tags: { [_: string]: Class_Tag[] } = {}
 
   // Arrows
   // TODO deplacer dans shape
   private arrow_angle_factor: number = 10
   private arrow_angle_direction: string = 'hh'
 
+  // Level & Parent
+  // Dimensions
+  private _dimensions: {
+    [_: string]: {
+      parent_name: Class_NodeElement
+    }
+  } = {}
 
   // CONSTRUCTOR ========================================================================
 
@@ -190,7 +189,7 @@ export class Class_NodeElement extends Class_Element {
     // Remove reference of self in related tags
     Object.values(this._tags)
       .forEach(tag => {
-        tag.removeReference(this)
+        tag.forEach(t => t.removeReference(this))
       })
     this._tags = {}
   }
@@ -221,7 +220,8 @@ export class Class_NodeElement extends Class_Element {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get displayed(){ return this._displayed }
+  public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } { return this._dimensions }
+
 
   /**
    * Get node name
@@ -1226,10 +1226,10 @@ export class Class_NodeElement extends Class_Element {
       (!this.shape_color_sustainable) &&
       (this.drawing_area.sankey.nodesColorMap !== 'no_colormap') &&
       (this.drawing_area.sankey.nodesColorMap in this._tags) &&
-      (this._tags[this.drawing_area.sankey.nodesColorMap])
+      (this._tags[this.drawing_area.sankey.nodesColorMap].length > 0)
     ) {
       const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.nodesColorMap]
-      return list_tag_from_grp_to_use_color.color
+      return list_tag_from_grp_to_use_color[0].color
     }
     else {
       return this.shape_color
@@ -1243,9 +1243,9 @@ export class Class_NodeElement extends Class_Element {
    * @return {*}
    * @memberof Class_NodeElement
   */
-  private element_displayed(){
-    this._displayed= this.element_tag_displayed() // && checkNodeLevel()
-    return this._displayed
+  protected update_visibility() {
+    if (this.element_tag_displayed() && this.checkNodeLevel())this.setVisible(false)
+      else this.setInvisble(false)
   }
 
 
@@ -1258,10 +1258,55 @@ export class Class_NodeElement extends Class_Element {
  * @memberof Class_NodeElement
  */
   private element_tag_displayed() {
-    // If node has tags :
-    //  - check if any of them is selected at false
-    // else if the node doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+    let to_display = true
+
+    Object.entries(this.drawing_area.sankey.node_taggs_dict).filter(nt => nt[0] !== 'Type de noeud' && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
+      // Check tags from the group attribued to the node
+      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+      const node_tags_attr = this._tags[nt[0]]
+
+      if (node_tags_attr != undefined && node_tags_attr.length != 0) {
+        // If the node has at least 1 tag from the selected tag of the group then we display it
+        // If the node has tag from the group attribued to it but are not selected then we don't display it
+        if (!nt[1].tags) {
+          return
+        }
+        const tags_from_grp_to_display = Object.entries(nt[1].tags).filter(t => t[1].selected).map(t => t[1])
+        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+      }
+    })
+    return to_display
+  }
+
+  private checkNodeLevel() {
+    let to_display = true
+    const lvl_ent = Object.entries(this.drawing_area.sankey.level_taggs_dict)
+    // Check if there is other aggregation tags than 'Primaire',
+    const multi_level = lvl_ent.filter(nt => nt[0] !== 'Primaire').map(nt => nt[0]).length > 0
+
+    const only_one_activated = lvl_ent.filter(nt => nt[1].activated).length == 1
+    const only_primaire_activated = lvl_ent.filter(nt => nt[1].activated).map(nt => nt[0])[0] == 'Primaire'
+
+    const multy_but_only_primaire = multi_level && only_one_activated && only_primaire_activated
+
+    // To display a node according to level tag we search if:
+    // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
+    // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
+    // - The node has the grp tag name in his tags
+    lvl_ent.filter(nt => ((multi_level && !multy_but_only_primaire) ? nt[0] !== 'Primaire' : true) && nt[1].activated && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
+      // Check tags from the group attribued to the node
+      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+      const node_tags_attr = this._tags[nt[0]]
+      if (node_tags_attr != undefined) {
+        // If the node has at least 1 tag from the selected tag of the group then we display it
+        // If the node has tag from the group attribued to it but are not selected then we don't display it
+        const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t)
+        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+        // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
+
+      }
+    })
+    return to_display
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1402,41 +1447,66 @@ export class Class_NodeElement extends Class_Element {
     json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
     json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
     json_object['style'] = Object.entries(this.drawing_area.sankey.node_styles_dict).filter(stl => stl[1] === (this.style))[0][0]
+    json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
 
     json_object['local'] = this._display.attributes.toJSON()
-    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
+    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].map(nt => nt.id)]))
 
     return json_object
   }
-
+  /**
+   * Assign to node implementation values from json,
+   * json_node_object is a json of 1 node
+   * 
+   *
+   * @param {{ [x: string]: any }} json_node_object
+   * @memberof Class_NodeElement
+   */
   public fromJSON(json_node_object: { [x: string]: any }) {
 
-    this.position_type = json_node_object['position'] ?? ''
-    this.position_x = json_node_object['x'] ?? 10
-    this.position_y = json_node_object['y'] ?? 10
+    this._display.position.type = json_node_object['position'] ?? ''
+    this._display.position.x = json_node_object['x'] ?? 10
+    this._display.position.y = json_node_object['y'] ?? 10
     this.tooltip_text = json_node_object['tooltip_text'] ?? ''
 
     //  Input & output link should be automatically added when we create link from json
 
-    this.style=this.drawing_area.sankey.node_styles_dict[json_node_object['style']??'default'] // if json_node_object['style'] is undefined assign default style
+    this._display.style = this.drawing_area.sankey.node_styles_dict[json_node_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
 
-    if(json_node_object['local']){
+    if (json_node_object['local']) {
       this._display.attributes.fromJSON(json_node_object['local'])
     }
     // In JSON here are how supposed tags var is :
-    // tags:{key_grp_tag:key_tag_selected }
+    // tags:{key_grp_tag:string[] (key_tag_selected) }
     // where 'key_grp_tag' represent the id of a node_taggs group
-    // &  'key_tag_selected' represent the id of the tag selected for that node_taggs group
-    Object.entries(json_node_object['tags']??{}).filter(ent=>ent[0] in this.drawing_area.sankey.node_taggs_dict).forEach(ent_nodetag=>{
-      if(ent_nodetag[1] instanceof Array && ent_nodetag.length>0){
-        this._tags[ent_nodetag[0]] = this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[ent_nodetag[1][0] as string]
-      }
-      else if(!(ent_nodetag[1] instanceof Array)) {
-        this._tags[ent_nodetag[0]] = this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[ent_nodetag[1] as string]
-      }
+    // &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
+    Object.entries(json_node_object['tags'] ?? {})
+      .filter(ent => (ent[0] in this.drawing_area.sankey.node_taggs_dict) && (ent[1] as string[]).length > 0)
+      .forEach(ent_nodetag => {
+        if (ent_nodetag.length > 0) {
+          const list_id_tag = ent_nodetag[1] as string[]
+          this._tags[ent_nodetag[0]] = list_id_tag.map(key_tag => {
+            return this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[key_tag]
+          })
+        }
 
-    })
+      })
+
+    // Same thing but for level tag
+    Object.entries(json_node_object['tags'] ?? {})
+      .filter(ent => (ent[0] in this.drawing_area.sankey.level_taggs_dict) && (ent[1] as string[]).length > 0)
+      .forEach(ent_lvltag => {
+        if (ent_lvltag.length > 0) {
+          const list_id_tag = ent_lvltag[1] as string[]
+          this._tags[ent_lvltag[0]] = list_id_tag.map(key_tag => {
+            return this.drawing_area.sankey.level_taggs_dict[ent_lvltag[0]].tags[key_tag]
+          })
+        }
+
+      })
   }
+
+
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
@@ -1758,7 +1828,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    * @readonly
    * @memberof Class_NodeStyle
    */
-  public get id() {return this._id}
+  public get id() { return this._id }
 
   // SETTERS ============================================================================
 

@@ -97,6 +97,7 @@ import {
 import {
   actualizeDrawAreaFrame
 } from '../draw/SankeyDrawEventFunction'
+import { InitalizeSelectorDetailNodes } from '../OSModule'
 
 
 
@@ -133,14 +134,16 @@ const delete_local_aggregation = (data: SankeyData) => {
   })
 }
 
-export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
+export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFType> = ({
   applicationData,
   applicationDraw,
   node_function,
-  link_function,
+  link_function
+}
 ) => {
   const { new_data } = applicationData
   const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
+  const [,setUpdate]=useBoolean()
 
   if (Object.keys(level_taggs).includes('Primaire')) {
 
@@ -163,6 +166,7 @@ export const addSimpleLevelDropDown: addSimpleLevelDropDownFType = (
               node_function,
               link_function
             )
+            setUpdate.toggle()
           }}>{
             Object.entries(level_taggs['Primaire'].tags).map(([tag_key, tag], i) => {
               return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -203,11 +207,11 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
       banner_grouptag = Object.entries(level_taggs).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
     }
   }
+  
 
   const redrawNodeLinkLegend = () => {
     new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
     new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
-    console.log(new_data.drawing_area.legend)
     new_data.drawing_area.legend.reset()
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
@@ -850,7 +854,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
             applicationData.new_data?.drawing_area.isInEditionMode() ?
               faShareNodes :
               faArrowPointer
-            )}
+          )}
           />
         </Button>
       </OSTooltip>
@@ -861,7 +865,11 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
     <OSTooltip
       placement='left'
       label={t('Banner.hlp_1_txt_2')}>
-      {detail_level}
+      {InitalizeSelectorDetailNodes(applicationContext,
+        applicationData,
+        applicationDraw,
+        node_function,
+        link_function,ComponentUpdater)}
     </OSTooltip>
   </>:
     <></>
@@ -877,23 +885,23 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
     {struc_data_reconciled}
   </OSTooltip>
   </>:
-  <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
-    <Button variant={'success'} onClick={() => {
-      new_data.show_structure = new_data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-      setForceUpdate.toggle()
-      redrawNodeLinkLegend()
+    <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
+      <Button variant={'success'} onClick={() => {
+        new_data.show_structure = new_data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+        setForceUpdate.toggle()
+        redrawNodeLinkLegend()
 
-    }} >
-      <FontAwesomeIcon icon={faCodeBranch} />
-    </Button>
-  </OSTooltip>
+      }} >
+        <FontAwesomeIcon icon={faCodeBranch} />
+      </Button>
+    </OSTooltip>
 
   const btn_show_node_filter = (node_filter) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_node_tag_filter')}>
       {filter_color_node}
     </OSTooltip>
   </>:
-  <></>
+    <></>
 
   const btn_show_link_filter = (flux_filter) ? <>
     <OSTooltip placement='left' label={t('Banner.hlp_link_tag_filter')}>
@@ -1088,9 +1096,11 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
   ComponentUpdater,
   in_popover
 }) => {
-  const { data, new_data } = applicationData
+  const { new_data } = applicationData
   const [, setForceUpdate] = useBoolean()
   const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
+  const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
   const banner_grouptag = Object.entries(data_taggs).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     let selector = <></>
@@ -1103,44 +1113,39 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
         key={tags_group.name}
         defaultValue={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            // let had_suffix = false
-            // const pl = Object.entries(links_dict).map(l => {
-            //   const suffixeStart = l[0].indexOf('_')
-            //   // if (suffixeStart >= 0) {
-            //   //   had_suffix = true
-            //   //   l[0] = l[0].slice(0, suffixeStart)
-            //   //   l[1].idLink = l[0]
-            //   //   nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
-            //   //   nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
+          // let had_suffix = false
+          // const pl = Object.entries(links_dict).map(l => {
+          //   const suffixeStart = l[0].indexOf('_')
+          //   // if (suffixeStart >= 0) {
+          //   //   had_suffix = true
+          //   //   l[0] = l[0].slice(0, suffixeStart)
+          //   //   l[1].idLink = l[0]
+          //   //   nodes_dict[l[1].idSource].outputLinksId = nodes_dict[l[1].idSource].outputLinksId.filter(nl => nl.indexOf('_') == -1)
+          //   //   nodes_dict[l[1].idTarget].inputLinksId = nodes_dict[l[1].idTarget].inputLinksId.filter(nl => nl.indexOf('_') == -1)
 
-            //   //   //Ajoute dans les noeuds source/target les id de flux
-            //   //   const ind_in_src = nodes_dict[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
-            //   //   if (ind_in_src == -1) {
-            //   //     nodes_dict[l[1].idSource].outputLinksId.push(l[0])
-            //   //   }
-            //   //   const ind_in_trgt = nodes_dict[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
-            //   //   if (ind_in_trgt == -1) {
-            //   //     nodes_dict[l[1].idTarget].inputLinksId.push(l[0])
-            //   //   }
-            //   // }
-            //   return l
-            // })
-            // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-            // const pureLinks = Object.fromEntries(pl)
-            // links_dict = pureLinks
-            // if (had_suffix) {
-            //   data.linkZIndex = Object.keys(pureLinks)
-            // }
-            handleSimpleDropdown(evt, tags_group)
-            // redrawSankeyWithSelectedTag(
-            //   applicationData,
-            //   GetSankeyMinWidthAndHeight,
-            //   node_function,
-            //   link_function
-            // )
-            new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
-            setForceUpdate.toggle()
-            new_data.menu_configuration.updateComponentMenu.current()
+          //   //   //Ajoute dans les noeuds source/target les id de flux
+          //   //   const ind_in_src = nodes_dict[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+          //   //   if (ind_in_src == -1) {
+          //   //     nodes_dict[l[1].idSource].outputLinksId.push(l[0])
+          //   //   }
+          //   //   const ind_in_trgt = nodes_dict[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+          //   //   if (ind_in_trgt == -1) {
+          //   //     nodes_dict[l[1].idTarget].inputLinksId.push(l[0])
+          //   //   }
+          //   // }
+          //   return l
+          // })
+          // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+          // const pureLinks = Object.fromEntries(pl)
+          // links_dict = pureLinks
+          // if (had_suffix) {
+          //   data.linkZIndex = Object.keys(pureLinks)
+          // }
+          handleSimpleDropdown(evt, tags_group)
+          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+          new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
+          setForceUpdate.toggle()
+          new_data.menu_configuration.updateComponentMenu.current()
         }}>
         {
           Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
@@ -1185,22 +1190,23 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
                 justifySelf='end'
                 alignSelf='center'
                 height='1rem'
-                isChecked={(banner_grouptag.length > 0) ? (Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
+                isChecked={(banner_grouptag.length > 0) ? (Object.values(data_taggs).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
                 onChange={evt => {
                   //Déselecitonne tous les type de tag
-                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-                  Object.values(data.links).forEach(el => {
-                    el.colorTag = 'no_colormap'
-                  })
-                  data.linksColorMap = 'no_colormap'
+                  Object.values(flux_taggs).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
+                  // Object.values(new_data.drawing_area.sankey.links_dict).forEach(el => {
+                  //   el.colorTag = 'no_colormap'
+                  // })
+                  new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
                   //Met le dernier dataTag en tant que couleur a suivre pour les flux
                   if (evt.target.checked) {
-                    Object.values(data.links).forEach(el => {
-                      el.colorTag = 'no_colormap'
-                    })
-                    data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
-                    Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
+                    // Object.values(new_data.drawing_area.sankey.links_dict).forEach(el => {
+                    //   el.colorTag = 'no_colormap'
+                    // })
+                    new_data.drawing_area.sankey.linksColorMap = 'dataTags_' + Object.keys(data_taggs).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
+
+                    Object.values(data_taggs).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
                   }
                   setForceUpdate.toggle()
                   redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
