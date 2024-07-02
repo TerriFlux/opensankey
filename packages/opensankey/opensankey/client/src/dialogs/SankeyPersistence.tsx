@@ -103,25 +103,26 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
 
   return (
     <Modal
-      size="xl"
       isOpen={show_load_dialog}
       onClose={ () => set_show_load_dialog(false) }
-      // style={{
-      //   display: 'flex',
-      //   justifyContent: 'center',
-      //   alignItems: 'center'
-      // }}
     >
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        maxWidth='inherit'
+      >
         <ModalHeader >
         Chargement du fichier {spinner}
         </ModalHeader>
         <ModalCloseButton/>
         <ModalBody>
-          <Box layerStyle='menuconfigpanel_grid'>
-            <Box layerStyle='options_3cols'>
-              <Box></Box>
+          <Box
+            layerStyle='menucontext_layout'
+            width='60rem'
+          >
+            <Box>
               {
                 processing ? (
                   <Button variant="menuconfigpanel_option_button_tertiary">
@@ -129,7 +130,8 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                     {t('Menu.load_file')}
                   </Button>):(
                   failure.current ? (
-                    <Button variant="menuconfigpanel_del_button" onClick={reset}>{failure_status}</Button>) : <>
+                    <Button
+                      variant="menuconfigpanel_del_button" onClick={reset}>{failure_status}</Button>) : <>
                     {
                       is_computing ? (
                         <Button
@@ -137,20 +139,20 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                           {t('Menu.compute_file')}
                         </Button>):(
                         <Button
-                          variant="success"
+                          variant="menuconfigpanel_option_button"
                           onClick={()=>{
                             successAction()
                             set_show_load_dialog(false)
-                          }}>{success_status}</Button>)
+                          }}>
+                            {success_status}
+                        </Button>)
                     }</>
                 )
               }
-               <Box></Box>
-
             </Box>
 
             <Box layerStyle='options_3cols'>
-                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button_'} >Infos</Button>
+                <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} >Infos</Button>
                 <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
                 <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
             </Box>
@@ -168,7 +170,8 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                 set_result={set_result}
               />
             ) : (<>
-              <Box >
+              <Box
+              >
                 {infos.map(
                   (info) => (
                     value.includes(2) && info.includes('ERROR') ?
