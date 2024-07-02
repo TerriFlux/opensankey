@@ -404,6 +404,7 @@ export const setDiagram: setDiagramFuncType = (
   convert_data: ConvertDataFuncType,
   DefaultSankeyData: () => SankeyData,
 ) => {
+  console.log('setDiagram')
   const sous_filieres = window.sankey.sous_filieres
 
   const new_data = JSON.parse(

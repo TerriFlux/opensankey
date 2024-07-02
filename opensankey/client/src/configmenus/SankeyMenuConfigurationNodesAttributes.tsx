@@ -1148,23 +1148,23 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         {Object.keys(data.style_node)
           .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' )
           .map((d,i)=> {
-          return (
-            <MenuItem
-              key={i}
-              onClick={() => {
-                ref_selected_style_node.current = d
-                multi_selected_nodes.current.map(n => {
-                  n.style = d
-                })
-                ApplyStyleToNodes(multi_selected_nodes,node_function)
-                setForceUpdate(!forceUpdate)
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-              }}
-            >
-              {data.style_node[d].name}
-            </MenuItem>
-          )
-        })}
+            return (
+              <MenuItem
+                key={i}
+                onClick={() => {
+                  ref_selected_style_node.current = d
+                  multi_selected_nodes.current.map(n => {
+                    n.style = d
+                  })
+                  ApplyStyleToNodes(multi_selected_nodes,node_function)
+                  setForceUpdate(!forceUpdate)
+                  ComponentUpdater.updateComponenSaveInCache.current(false)
+                }}
+              >
+                {data.style_node[d].name}
+              </MenuItem>
+            )
+          })}
       </MenuList>
     </Menu>
     <OSTooltip label={t('Noeud.tooltips.AS')}>
