@@ -219,7 +219,9 @@ export const TextNodeWrap : TextNodeWrapFType = (
   //Nombre de tspan dans la balise text
   const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
   const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
-  if (ReturnValueNode(data,d,'label_vert')  == 'middle') {
+  if (d.x_label) {
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((ReturnValueNode(data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
+  } else if (ReturnValueNode(data,d,'label_vert')  == 'middle') {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> {
       const size_text=(ReturnValueNode(data,(n as SankeyNode),'font_size') as number)
       const shift=(0.25 *(size_text))

@@ -60,6 +60,9 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         // (the position of the label is not by label_vert & label_horiz, but by coordinate relative to the node )
         // Else if we don't press 'alt' we drag the node (with the label)
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
+          const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + node.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
+          d3.select(' .opensankey #ggg_' + node.idNode + ' .node_text')
+            .attr('transform',n=> 'translate(0,'+((ReturnValueNode(applicationData.data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
