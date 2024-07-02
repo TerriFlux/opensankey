@@ -232,7 +232,7 @@ const eventLinkClick=(
       // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
       // alors on cherche quel étiquette de quel groupe il represente
       // On prend pour référence pour la valeur le premier flux sélectionné
-      if(link_data_ref.includes('_')){
+      if(Object.values(data.dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0 && link_data_ref.includes('_')){
         const index_grp_tag=link_data_ref.split('_')
         // Supprime le première élément du tableau qui ne contient que l'id du flux
         index_grp_tag.shift()

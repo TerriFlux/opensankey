@@ -208,7 +208,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
     new_tags_selected
   )
 
-  if (link_data_ref.includes('_')) {
+  if ( Object.values(data.dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0 && link_data_ref.includes('_')) {
     const index_grp_tag = link_data_ref.split('_')
     // Supprime le première élément du tableau qui ne contient que l'id du flux
     index_grp_tag.shift()
