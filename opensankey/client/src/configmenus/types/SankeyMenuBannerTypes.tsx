@@ -11,12 +11,12 @@ export type setDiagramFuncType = (
   DefaultSankeyData:DefaultSankeyDataFuncType
 ) => void
 
-export type addSimpleLevelDropDownFType = (
+export type addSimpleLevelDropDownFType = {
   applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-) => JSX.Element
+}
  
 export type col_title_level_filterFType=(
   t:TFunction,
