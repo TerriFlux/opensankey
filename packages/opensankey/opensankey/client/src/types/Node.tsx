@@ -223,8 +223,9 @@ export class Class_NodeElement extends Class_Element {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } { return this._dimensions }
-
+  public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } {
+    return this._dimensions
+  }
 
   /**
    * Get node name
@@ -264,6 +265,7 @@ export class Class_NodeElement extends Class_Element {
     // TODO faire autrement
     return this._tags
   }
+
   public deRefTag(tag: Class_Tag) {
     delete this._tags[tag.id]
   }
@@ -969,7 +971,7 @@ export class Class_NodeElement extends Class_Element {
         // Purge selection list
         drawing_area.purgeSelection()
         // Show tooltip
-        this.showTooltip()
+        this.drawTooltip()
       }
       // SHIFT
       else if (event.shiftKey) {
@@ -1262,7 +1264,7 @@ export class Class_NodeElement extends Class_Element {
   }
 
   // Display tooltip
-  private showTooltip() {
+  private drawTooltip() {
     const sankeyTooltip = d3.select('.sankey-tooltip')
     const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
     const pos_tooltip_y = this.position_y
@@ -1370,6 +1372,14 @@ export class Class_NodeElement extends Class_Element {
     return to_display
   }
 
+  /**
+   * For a given side, compute sum of all links thickness.
+   * Helps to compute min height & width for node
+   * @private
+   * @param {Type_Side} side
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
   private getSumOfLinksThickness(side: Type_Side){
     let sum = 0
     this.getLinksOrdered(side).forEach(link => {
@@ -1378,7 +1388,14 @@ export class Class_NodeElement extends Class_Element {
     return sum
   }
 
-
+  /**
+   * For a given side, compute the offset to apply when positionning links
+   * Helps to correctly draw links.
+   * @private
+   * @param {Type_Side} side
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
   private getLinkRelativePositionOffSet(side: Type_Side) {
     if (side === 'left' || side === 'right') {
       return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side))/2)
@@ -1493,12 +1510,31 @@ export class Class_NodeElement extends Class_Element {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
+      this.reset()
     }
   }
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
+      this.reset()
+    }
+  }
+
+  // Swap links
+  public swapInputLink(link: Class_LinkElement, node: Class_NodeElement) {
+    if (this._input_links[link.id] !== undefined) {
+      delete this._input_links[link.id]
+      node.addInputLink(link)
+      this.reset()
+    }
+  }
+
+  public swapOutputLink(link: Class_LinkElement, node: Class_NodeElement) {
+    if (this._output_links[link.id] !== undefined) {
+      delete this._output_links[link.id]
+      node.addOutputLink(link)
+      this.reset()
     }
   }
 
@@ -1512,7 +1548,6 @@ export class Class_NodeElement extends Class_Element {
     if (this.hasOutputLinks()) return this.output_links_list[0] // TODO pas bon
     else return undefined
   }
-
 
   public getLinksOrdered(_: Type_Side) {
     return this._links_order.filter(link => {
