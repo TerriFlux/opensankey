@@ -91,10 +91,6 @@ export function isAttributeOverloaded(
   return overloaded
 }
 
-function getRandomInt(max: number) {
-  return Math.floor(Math.random() * max)
-}
-
 // CLASS LINK ELEMENT ********************************************************************
 
 /**
@@ -239,7 +235,8 @@ export class Class_LinkElement extends Class_Element {
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
     }
-    this.resetPositions()
+    // Set with good position
+    this.reset()
   }
 
   // CLEANING ===========================================================================
@@ -273,13 +270,6 @@ export class Class_LinkElement extends Class_Element {
   }
 
   // PRIVATE METHODS =======================================================================
-
-  private element_tag_displayed() {
-    // If link has tags :
-    //  - check if any of them is selected at false
-    // else if the link doesn't have tag it isn't filtered by them
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
-  }
 
   /**
    * Check if node source and node target are displayed,
@@ -435,52 +425,6 @@ export class Class_LinkElement extends Class_Element {
     return true
   }
 
-  /**
-   * Either search correct current value with data_taggs,
-   *  or return directly the value when there is no data_taggs
-   *
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  // public get_curr_value() {
-  //   if (this._values instanceof Class_LinkValue) return this._values.value
-  //   else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
-  // }
-
-  /**
-   * Return value of link from get_curr_value casted as a number because sometime
-   * we need a number from link value (even when it's value is null)
-   *
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
-  // public get_curr_value_casted() {
-  //   const val = this.get_curr_value()
-  //   return (val !== null && val !== undefined) ? val : 0
-  // }
-
-  // public getLinkValue(list_tag: Class_Tag[]) {
-  //   if (this._values instanceof Class_LinkValue) return this._values.value
-  //   else return this._values.getValue(list_tag)
-  // }
-
-  // public getLinkValueCasted(list_tag: Class_Tag[]) {
-  //   const val = this.getLinkValue(list_tag)
-  //   return (val !== null && val !== undefined) ? val : 0
-  // }
-
-  /**
-   * Set link value for given datatag
-   *
-   * @param {Class_Tag[]} list_tag
-   * @param {(number | null)} val
-   * @memberof Class_LinkElement
-   */
-  // public setLinkValue(list_tag: Class_Tag[], val: number | null) {
-  //   if (this._values instanceof Class_LinkValue) this._values.value = val
-  //   else this._values.setValue(list_tag, val)
-  // }
-
   public toJSON() {
     const json_object = {} as { [_: string]: unknown }
 
@@ -556,8 +500,6 @@ export class Class_LinkElement extends Class_Element {
     }
   }
 
-
-
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -566,14 +508,10 @@ export class Class_LinkElement extends Class_Element {
    * @memberof Class_LinkElement
    */
   protected draw() {
-    // Create group
-    const d3_drawing_area = this.drawing_area.d3_selection
-    if (d3_drawing_area !== null) {
-      this.d3_selection = d3_drawing_area.selectAll(' #' + this.svg_group)
-        .datum(this)
-        .append('g')
-        .attr('id', 'gg_' + this.id)
-    }
+    // Heritance
+    super.draw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_links')
     // Draw shape
     this.drawShape()
     // Draw label
@@ -645,8 +583,8 @@ export class Class_LinkElement extends Class_Element {
 
   private resetPositions() {
     // Reference position
-    this.position_x = this.source.position_x
-    this.position_y = this.source.position_x
+    this._display.position.x = this.source.position_x
+    this._display.position.y = this.source.position_y
     // Compute position on source
     const position_on_source = this.source.getLinkRelativePosition(this)
     if (position_on_source !== null)
@@ -664,18 +602,20 @@ export class Class_LinkElement extends Class_Element {
    */
   private drawShape() {
     // Clean previous shape
-    this.d3_selection?.selectAll(' .link_shape').remove()
+    this.d3_selection?.selectAll('.link_shape').remove()
     // Add new path shape
     this.d3_selection?.append('path')
       .classed('link', true)
       .classed('link_shape', true)
       .attr('d', () => this.getBezierPath())
+    // Apply properties
+    this.d3_selection?.selectAll('.link_shape')
+      .attr('id', this.id)
       .attr('fill', 'none')
       .attr('stroke', () => this.getLinkColorToUse())
       .attr('stroke-opacity', this.shape_opacity)
-      .attr('stroke-width', this.thickness)
+      .attr('stroke-width', Math.max(1, this.thickness))
       .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
-    // TODO apply opacity and other attributes
   }
 
   private drawLabel() {
@@ -895,7 +835,7 @@ export class Class_LinkElement extends Class_Element {
     // Cast as number
     if (value !== null) {
       value.data_value = _
-      this.draw()
+      this.reset()
     }
   }
 
