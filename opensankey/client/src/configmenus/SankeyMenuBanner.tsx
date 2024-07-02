@@ -1265,4 +1265,5 @@ const redrawSankeyWithSelectedTag = (
     //redrawNodeLinkLegend(applicationData,node_function,link_function,ComponentUpdater,applicationDraw)
     actualizeDrawAreaFrame(applicationData, GetSankeyMinWidthAndHeight)
   }
+  applicationDraw.reDrawLegend()
 }
