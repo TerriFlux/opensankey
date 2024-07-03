@@ -61,7 +61,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
     }).sort(([a,], [b,]) => (t(ki+'.'+a) > t(ki+'.'+b)) ? 1 : ((t(ki+'.'+b) > t(ki+'.'+a)) ? -1 : 0)).map(icon=>{
       // icon[0]:Name of the icon
       // icon[1]:Path of the icon
-      return <Card 
+      return <Card
         variant={allSelectedNodeHasSameicon===ki+'_'+icon[0]?'card_icon_selected':'card_icon_not_selected'}
         onClick={()=>{
           data.icon_catalog[ki+'_'+icon[0]]=icon[1]
@@ -154,7 +154,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
   // List of all imported svg icon
   // WARNING : Those icon disappear whe nwe reload the application (but the icon are still present in the catalog), so
   const card_imported=Object.keys(import_svg.current).sort(([a,], [b,]) => (a > b) ? 1 : ((b > a) ? -1 : 0)).map((ki)=>{
-    return <Card 
+    return <Card
       variant={allSelectedNodeHasSameicon==='icon_imported_'+ki?'card_icon_selected':'card_icon_not_selected'}
       onClick={()=>{
         data.icon_catalog['icon_imported_'+ki]=import_svg.current[ki].path
@@ -182,13 +182,15 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
   </>
 
 
-  return <><Modal isOpen={s_show_modal} onClose={()=>sShowModal(false)} size='full'>
-    <ModalContent style={{overflowY:'auto'}}>
+  return <><Modal isOpen={s_show_modal} onClose={()=>sShowModal(false)}>
+    <ModalContent
+      maxWidth='inherit'
+    >
       <ModalHeader>{t(('Menu.import_icon'))}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
         {/* {modale_sub_icon!=='import'?<InputGroup><InputGroup.Text>{t('Menu.filter_by_name')}</InputGroup.Text><Form.Control type='text' value={filter_name} onChange={(evt)=>set_filter_name(evt.target.value)}></Form.Control></InputGroup>:<></>} */}
-        
+
         <Tabs variant='tabs_variant_lib_cion'>
           <TabList>
             {
@@ -199,7 +201,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
           </TabList>
           <TabPanels>
             {Object.keys(tuto_sub_nav).map(modale_sub_icon=>{
-              
+
               return <TabPanel>
                 {modale_sub_icon!=='import'?<Box
                   as='span'
@@ -217,12 +219,14 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
                     onChange={evt => set_filter_name(evt.target.value)}
                   />
                 </Box>:<></>}
-                <Box layerStyle='options_4cols' >
+                <Box
+                  layerStyle='options_cards'
+                >
                   {tuto_sub_nav[modale_sub_icon]}
                 </Box>
               </TabPanel>
             })}
-          
+
           </TabPanels>
         </Tabs>
 

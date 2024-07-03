@@ -37,7 +37,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalContent,
-  Tag
+  Tag,
+  ModalCloseButton
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
@@ -1428,14 +1429,16 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
   const {data,set_data,view,master_data,set_master_data}=applicationData
   return (
     <Modal
-      size="lg"
       isOpen={view_not_saved !== ''}
       onClose={()=>null}
     >
-      <ModalContent>
+      <ModalContent
+        maxWidth='inherit'
+      >
         <ModalHeader>
           {t('view.ns')}
         </ModalHeader>
+        <ModalCloseButton />
         <ModalBody>
           {t('view.warn_ns')}
         </ModalBody>
@@ -1496,11 +1499,14 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   ref_setter_show_modal_transparent_view_attr.current=set_show_modal
   if(master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && applicationData.data!==undefined){
 
-    return  <Modal size='2xl' isOpen={show_modal} onClose={()=>{
+    return  <Modal isOpen={show_modal} onClose={()=>{
       RecomputeViews(data,data,set_data as (d: OSPData | undefined) => void)
       set_show_modal(false)}}>
-      <ModalContent>
+      <ModalContent
+        maxWidth='inherit'
+      >
         <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
+        <ModalCloseButton />
         <ModalBody>
           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
             <Box layerStyle='menuconfigpanel_option_name'>
