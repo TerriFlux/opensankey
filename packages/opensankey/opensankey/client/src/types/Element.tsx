@@ -170,16 +170,15 @@ export abstract class Class_Element {
 
   // PUBLIC METHODS =====================================================================
   public reset() {
-    // Clear D3
-    this.unDraw()
+    // Draw only if visible
     this.update_visibility()
     if (this.is_visible) {
       // Draw element on D3
       this.draw()
-      // Position element on D3
-      this.applyPosition()
-      // Add events listeners
-      this.setEventsListeners()
+    }
+    else {
+      // Clear D3
+      this.unDraw()
     }
   }
 
@@ -207,13 +206,13 @@ export abstract class Class_Element {
   public set position_type(_: Type_Position) { this._display.position.type = _; this.reset() }
 
   // Selection
-  public setSelected() { this._is_selected = true; this.reset() }
-  public setUnSelected() { this._is_selected = false; this.reset() }
+  public setSelected() { this._is_selected = true}
+  public setUnSelected() { this._is_selected = false}
   public get is_selected() { return this._is_selected }
 
   // Visible
-  public setVisible(reset=true) { this._is_visible = true; if(reset)this.reset() }
-  public setInvisble(reset=true) { this._is_visible = false; if(reset)this.reset() }
+  public setVisible(reset=true) { this._is_visible = true; if(reset) this.reset() }
+  public setInvisble(reset=true) { this._is_visible = false; if(reset) this.reset() }
   public get is_visible() { return this._is_visible }
   protected abstract update_visibility():void
 
@@ -240,13 +239,17 @@ export abstract class Class_Element {
   protected draw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
+      // Undraw all
+      this.unDraw()
       // Set d3 selection
       this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
         .datum(this)
         .append('g')
         .attr('id', 'gg_' + this._id)
-      // .style('stroke-width', this.is_selected ? 3 : 0) Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
-      // .style('stroke', 'black') Useless because it <g> element doesn't have 'shape' so we can't add stroke & stroke-width
+      // Add events listeners
+      this.setEventsListeners()
+      // Apply the position
+      this.applyPosition()
     }
   }
 
