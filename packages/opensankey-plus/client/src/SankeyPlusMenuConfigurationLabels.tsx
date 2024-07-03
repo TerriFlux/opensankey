@@ -460,7 +460,9 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
       style={{
         'height':'300px',
         color:(disable_options)?'#666666':'',
-        backgroundColor:(disable_options)?'#cccccc':''}}
+        backgroundColor:(disable_options)?'#cccccc':'',
+        overflowY: 'scroll'
+      }}
     /></Box>:content_image}
 
     <Box
