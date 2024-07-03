@@ -323,7 +323,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         }
       </Box>
   }
-  
+
   if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
   const excel_element = window.sankey && window.sankey.excel ? (
     <Box
@@ -1443,14 +1443,22 @@ export const Menu: FunctionComponent<MenuTypes> = (
       />
 
       {
-        <Modal size='full' isOpen={show_template} onClose={() => set_show_template(false)} scrollBehavior='inside'>
-          <ModalContent>
+        <Modal
+          isOpen={show_template}
+          onClose={() => set_show_template(false)}
+          scrollBehavior='inside'
+        >
+          <ModalContent
+            maxWidth='inherit'
+          >
             <ModalHeader>{applicationContext.t('Banner.sdr')}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <SimpleGrid spacing={2} templateColumns='1fr 1fr 1fr'>
+              <Box
+                layerStyle='options_cards'
+              >
                 {cardsTemplate}
-              </SimpleGrid>
+              </Box>
             </ModalBody>
           </ModalContent>
         </Modal>
@@ -1799,7 +1807,9 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
   })
 
   return <Modal size='full' id='modal_tutoriel' isOpen={show_tuto} onClose={() => set_show_tuto(false)}>
-    <ModalContent>
+    <ModalContent
+      maxWidth='inherit'
+    >
       <ModalHeader>{applicationContext.t('Menu.formation')}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>

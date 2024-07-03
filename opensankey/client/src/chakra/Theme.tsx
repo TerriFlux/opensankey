@@ -531,6 +531,13 @@ export const opensankey_theme = extendTheme({
       gridColumnGap: '0.12rem',
       height: '2rem'
     },
+    options_cards: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr 1fr',
+      gridColumnGap: '0.25rem',
+      gridTemplateRows: 'repeat(auto, 1fr)',
+      gridRowGap: '0.25rem'
+    },
     licence_row:{
       display: 'grid',
       gridTemplateColumns: '1fr 3fr',
