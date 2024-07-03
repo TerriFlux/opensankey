@@ -96,6 +96,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       }
       <AccordionButton
         ref={accordion_ref as Ref<HTMLButtonElement>}
+        onClick={()=>{
+          const scroll_x = window.scrollX
+          const scroll_y = window.scrollY
+          setTimeout(() => {
+            document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+         },50)
+        }
+        }
       >
         <Box
           as='span'
@@ -115,6 +123,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             }
             <AccordionButton
               ref={nodes_accordion_ref as Ref<HTMLButtonElement>}
+              onClick={()=>{
+                const scroll_x = window.scrollX
+                const scroll_y = window.scrollY
+                setTimeout(() => {
+                  document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+               },50)
+              }}
             >
               <Box
                 as='span'
@@ -143,6 +158,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             }
             <AccordionButton
               ref={links_accordion_ref as Ref<HTMLButtonElement>}
+              onClick={()=>{
+                const scroll_x = window.scrollX
+                const scroll_y = window.scrollY
+                setTimeout(() => {
+                  document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+               },50)
+              }}
             >
               <Box
                 as='span'
@@ -177,7 +199,15 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         {
           //MENU ETIQUETTES
         }
-        <AccordionButton>
+        <AccordionButton
+          onClick={()=>{
+            const scroll_x = window.scrollX
+            const scroll_y = window.scrollY
+            setTimeout(() => {
+              document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+            },50)
+          }}        
+        >
           <Box
             as='span'
             layerStyle='menuconfig_entry'>
@@ -196,7 +226,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               {
                 //MENU ETIQUETTES DE NOEUDS
               }
-              <AccordionButton>
+              <AccordionButton
+                onClick={()=>{
+                  const scroll_x = window.scrollX
+                  const scroll_y = window.scrollY
+                  setTimeout(() => {
+                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+                },50)
+                }}>
                 <Box
                   as='span'
                   layerStyle='submenuconfig_entry'>
@@ -215,7 +252,15 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               {
                 //MENU ETIQUETTES DE FLUX
               }
-              <AccordionButton>
+              <AccordionButton
+              onClick={()=>{
+                const scroll_x = window.scrollX
+                const scroll_y = window.scrollY
+                setTimeout(() => {
+                  document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+               },50)
+              }}
+              >
                 <Box
                   as='span'
                   layerStyle='submenuconfig_entry'>
@@ -234,7 +279,15 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               {
                 //MENU ETIQUETTES DE DONNÉES
               }
-              <AccordionButton>
+              <AccordionButton
+              onClick={()=>{
+                const scroll_x = window.scrollX
+                const scroll_y = window.scrollY
+                setTimeout(() => {
+                  document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+               },50)
+              }}
+              >
                 <Box
                   as='span'
                   layerStyle='submenuconfig_entry'>
