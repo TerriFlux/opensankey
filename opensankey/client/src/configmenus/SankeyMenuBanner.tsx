@@ -283,7 +283,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
 
       selector = <Select
         key={tags_group.group_name}
-        defaultValue={selected}
+        value={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           delete_local_aggregation(data)
           handleSimpleDropdown(evt, tags_group)
@@ -1076,7 +1076,6 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 }) => {
   const { data } = applicationData
   const [forceUpdate, setForceUpdate] = useState(false)
-  const { updateComponentMenu } = ComponentUpdater
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     let selecteor = <></>
@@ -1087,7 +1086,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
       }
       selecteor = <Select
         key={tags_group.group_name}
-        defaultValue={selected}
+        value={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           let had_suffix = false
           const pl = Object.entries(data.links).map(l => {
@@ -1118,14 +1117,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             data.linkZIndex = Object.keys(pureLinks)
           }
           handleSimpleDropdown(evt, tags_group)
-          redrawSankeyWithSelectedTag(
-            applicationData,
-            applicationDraw,
-            node_function,
-            link_function
-          )
-          setForceUpdate(!forceUpdate)
-          updateComponentMenu.current()
+          applicationData.set_data({...JSON.parse(JSON.stringify(applicationData.data))})
         }}>
         {
           Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
@@ -1172,14 +1164,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             data.links = new_links
             data.linkZIndex = Object.keys(new_links)
 
-            redrawSankeyWithSelectedTag(
-              applicationData,
-              applicationDraw,
-              node_function,
-              link_function
-            )
-            setForceUpdate(!forceUpdate)
-            updateComponentMenu.current()
+            applicationData.set_data({...JSON.parse(JSON.stringify(applicationData.data))})
           }
         }} />
     }
