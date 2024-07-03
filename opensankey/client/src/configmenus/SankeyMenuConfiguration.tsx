@@ -74,7 +74,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         {
           //MENU PARAMETRE GENERAUX
         }
-        <AccordionButton>
+        <AccordionButton
+      onClick={()=>{
+        const scroll_x = window.scrollX
+        const scroll_y = window.scrollY
+        setTimeout(() => {
+          document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+        },50)}}
+        >
           <Box
             as='span'
             layerStyle='menuconfig_entry'>
