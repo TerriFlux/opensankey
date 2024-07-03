@@ -166,7 +166,7 @@ export class Class_ApplicationData {
 
     // Set values for nodes,links,node_style,flux_style,node_taggs,flux_taggs,data_taggs and all their substructur
     draw_area.sankey.fromJSON(json_object)
-
+    this.drawing_area.removeDrawingArea()
     this.drawing_area = draw_area
   }
 
@@ -218,6 +218,7 @@ export class Class_ApplicationData {
         link_to_update = [...new Set(link_to_update)]
         link_to_update.forEach(link => link.reset())
 
+        this.drawing_area.checkAndUpdateAreaSize()
       }
       else if (evt.key == 'Escape') {
         // Set app in selection mode
@@ -228,12 +229,6 @@ export class Class_ApplicationData {
 
         // Close all menus 
         app_ref.closeAllMenus()
-
-        // Update components affected by it
-        this.menu_configuration.updateComponentToolbar.current()
-        this.menu_configuration.updateComponentMenuConfigNode.current()
-        this.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
-        this.menu_configuration.updateComponentMenuConfigLink.current()
 
       } else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
         // Event to delete all selected elements
@@ -266,8 +261,7 @@ export class Class_ApplicationData {
         // Update component
         app_ref.menu_configuration.updateComponentMenuConfigNode.current()
         app_ref.menu_configuration.updateComponentMenuConfigLink.current()
-      }
-      else if (evt.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
+      } else if (evt.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
         // Event to blur the input we are currently focused on
         // (It's in adequation with event on input that update drawing area when we blur input)
         (document.activeElement as HTMLInputElement).blur()
@@ -285,14 +279,14 @@ export class Class_ApplicationData {
         // Update logo save in cache
         app_ref.menu_configuration.updateComponenSaveInCache.current(true)
 
-      }else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
+      } else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
         // event to download current sankey in JSON
 
         // Prevent default event on ctrl + shift + s
         evt.preventDefault()
 
-        ClickSaveDiagram(app_ref,{ mode_save: true, mode_visible_element: false })
-        
+        ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
+
       } else if ((evt.key === 'f') && !evt.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
         if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
           evt.preventDefault()
@@ -303,6 +297,8 @@ export class Class_ApplicationData {
           }
         }
 
+      } else if (evt.key == 'Tab') {
+        app_ref.menu_configuration.btn_toogle_menu.current?.click()
       }
     }
 
