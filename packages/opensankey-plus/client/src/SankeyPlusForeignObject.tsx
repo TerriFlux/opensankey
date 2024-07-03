@@ -97,7 +97,8 @@ export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
       readOnly={!is_activated}
       style={{
         color:(!is_activated || !value_of_key['has_FO'][0] )?'#666666':'',
-        backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''
+        backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':'',
+        overflowY: 'scroll'
       }}
     />
   </Box>
@@ -310,7 +311,7 @@ export const OSPDrawNodesFO : OSPDrawNodesFOFType = (
         sankeyTooltip.style('opacity', 0)
       })
       .append('xhtml:div')
-      .attr('class','ql-editor_ZDD')
+      .attr('class','ql-editor')
       .html((d)=>d.FO_content)
   }
   add_nodes_fo()

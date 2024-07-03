@@ -128,7 +128,7 @@ export const OSPDrawLabels : OSPDrawLabelsFType = (
           .style('height',d.label_height)
           .attr('id', d.idLabel + '_text')
           .append('xhtml:div')
-          .attr('class','ql-editor_ZDD')
+          .attr('class','ql-editor')
           .html(d.content)
 
         gg_label
