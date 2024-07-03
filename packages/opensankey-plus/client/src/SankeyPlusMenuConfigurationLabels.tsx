@@ -742,6 +742,12 @@ export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType
   >
     <AccordionButton
       ref={uiElementsRef.zdt_accordion_ref as Ref<HTMLButtonElement>}
+      onClick={()=>{
+        const scroll_x = window.scrollX
+        const scroll_y = window.scrollY
+        setTimeout(() => {
+          document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+        },50)}}
     >
       <Box
         as='span'
