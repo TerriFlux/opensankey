@@ -624,7 +624,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
           }
         }
 
-        // If we launched the function from process example 
+        // If we launched the function from process example
         // then we assume we need to place node label according to some parameters
         if(launched_from_process){
         // Place labels accordingly
@@ -948,10 +948,11 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
         } } >
         <ModalOverlay/>
 
-        <ModalContent>
-
+        <ModalContent
+          maxWidth='inherit'
+        >
           <ModalHeader >
-        Dimension difference'agrégation
+            Dimension difference'agrégation
           </ModalHeader>
           <ModalCloseButton/>
           <ModalBody>
@@ -1020,7 +1021,9 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           set_dim_name('')
         }} >
         <ModalOverlay/>
-        <ModalContent>
+        <ModalContent
+          maxWidth='inherit'
+        >
           <ModalHeader>
           Dimension desagrégation
           </ModalHeader>
@@ -1341,7 +1344,7 @@ export const updateLayout: updateLayoutFuncType = (
     let differences = getDiff(data, new_layout)
     if (differences) {
       const legend_pos = differences.filter( difference=>difference.path![0] == 'legend_position')
-      legend_pos.forEach((difference) => applyChange(data, {}, difference))  
+      legend_pos.forEach((difference) => applyChange(data, {}, difference))
       differences = differences.filter(
         (difference) =>
           (difference.kind === 'E') &&

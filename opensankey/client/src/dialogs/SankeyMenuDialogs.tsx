@@ -584,7 +584,9 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
     isOpen={show_save_json_modal}
     onClose={() => set_show_save_json_modal(false)}
   >
-    <ModalContent>
+    <ModalContent
+      maxWidth='inherit'
+    >
       <ModalHeader>
         {t('Menu.SaveJSON')}
       </ModalHeader>
