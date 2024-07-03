@@ -71,7 +71,7 @@ import { EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp } from '
 import * as SankeyConvert from './configmenus/SankeyConvert'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
-import { keyHandler } from './draw/SankeyDraw'
+// import { keyHandler } from './draw/SankeyDraw'
 import { AddSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
 import { OpposingDragElements } from './draw/SankeyDragNodes'
 import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input, useBoolean } from '@chakra-ui/react'
@@ -869,41 +869,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   )
 }
 
-export const initializeKeyHandler:initializeKeyHandlerType=(
-  applicationData,
-  uiElementsRef,
-  contextMenu,
-  e,
-  applicationState,
-  closeAllMenu,
-  ref_alt_key_pressed,
-  accept_simple_click,
-  link_function,
-  NodeTooltipsContent,
-  ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
-  applicationContext,
-  node_function,
-  applicationDraw,
-)=>{
-  keyHandler(
-    applicationData,
-    uiElementsRef,
-    contextMenu,
-    e,
-    applicationState,
-    closeAllMenu,
-    ref_alt_key_pressed,
-    accept_simple_click,
-    link_function,
-    NodeTooltipsContent,
-    ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components,
-    applicationContext,
-    node_function,
-    applicationDraw
-  )
-}
 
 export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   applicationContext,

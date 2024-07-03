@@ -4,12 +4,18 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
+// Import
+import * as d3 from 'd3'
+import LZString from 'lz-string'
+
 // Local types
 import { openRemoteUIElement } from '../functions/application/Menus'
 import { Class_DrawingArea } from './DrawingArea'
 import { Type_Structure } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { uiElementsRefType } from './Types'
+import { Class_LinkElement } from './Link'
+import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 
 
 /**
@@ -33,6 +39,8 @@ export class Class_ApplicationData {
       window.innerHeight - 50,
       window.innerWidth - 50,
       this)
+
+    document.onkeydown = this.keyboardEventListener(this)
 
     // For published mode only
     this.drawing_area.static = published_mode
@@ -108,34 +116,34 @@ export class Class_ApplicationData {
   // GETTERS / SETTERS ==================================================================
   // TODO getter / setters for application data
 
-  public get maximum_flux(): number | undefined {return this._maximum_flux}
+  public get maximum_flux(): number | undefined { return this._maximum_flux }
   public set maximum_flux(value: number | undefined) {
     if (value === undefined || value > 0) {
       this._maximum_flux = value
     }
   }
 
-  public get minimum_flux(): number | undefined {return this._minimum_flux}
+  public get minimum_flux(): number | undefined { return this._minimum_flux }
   public set minimum_flux(value: number | undefined) {
     if (value === undefined || value > 0) {
       this._minimum_flux = value
     }
   }
 
-  public get show_structure(): Type_Structure {return this._show_structure}
-  public set show_structure(value: Type_Structure) {this._show_structure = value}
+  public get show_structure(): Type_Structure { return this._show_structure }
+  public set show_structure(value: Type_Structure) { this._show_structure = value }
 
-  public get filter_label(): number {return this._filter_label}
-  public set filter_label(value: number) {this._filter_label = value}
+  public get filter_label(): number { return this._filter_label }
+  public set filter_label(value: number) { this._filter_label = value }
 
-/**
- * Reset value of drawing_area and substructur with data from JSON 
- * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
- *
- * @param {{ [_: string]: any }} json_object
- * @memberof Class_ApplicationData
- */
-public new_drawing_area_fromJSON(json_object: { [_: string]: any }) {
+  /**
+   * Reset value of drawing_area and substructur with data from JSON 
+   * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
+   *
+   * @param {{ [_: string]: any }} json_object
+   * @memberof Class_ApplicationData
+   */
+  public new_drawing_area_fromJSON(json_object: { [_: string]: any }) {
     // TODO : define default value in case data is not in JSON
 
     const w = json_object['width'] ?? 1000
@@ -158,7 +166,145 @@ public new_drawing_area_fromJSON(json_object: { [_: string]: any }) {
 
     // Set values for nodes,links,node_style,flux_style,node_taggs,flux_taggs,data_taggs and all their substructur
     draw_area.sankey.fromJSON(json_object)
-    
-    this.drawing_area= draw_area
+
+    this.drawing_area = draw_area
+  }
+
+  /**
+   * Function to create custom application behavior when we press a key,
+   * 
+   * even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
+   *
+   * @private
+   * @param {Class_ApplicationData} app_ref
+   * @return {*} 
+   * @memberof Class_ApplicationData
+   */
+  private keyboardEventListener(app_ref: Class_ApplicationData) {
+    return (evt: KeyboardEvent) => {
+      if (
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
+        (((document.activeElement?.tagName === 'INPUT') ?
+          d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
+          true) &&
+          (!document.activeElement?.className.includes('ql-editor')))
+      ) {
+        // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
+        // (exemples : le input de la largeur minimal d'un noeud)
+        if (evt.key == 'ArrowUp') {
+          app_ref.drawing_area.selected_nodes_list.forEach(node => {
+            node.position_y -= app_ref.drawing_area.grid_size
+          })
+        } else if (evt.key == 'ArrowDown') {
+          app_ref.drawing_area.selected_nodes_list.forEach(node => {
+            node.position_y += app_ref.drawing_area.grid_size
+          })
+        } else if (evt.key == 'ArrowLeft') {
+          app_ref.drawing_area.selected_nodes_list.forEach(node => {
+            node.position_x -= app_ref.drawing_area.grid_size
+          })
+        } else if (evt.key == 'ArrowRight') {
+          app_ref.drawing_area.selected_nodes_list.forEach(node => {
+            node.position_x += app_ref.drawing_area.grid_size
+          })
+        }
+
+        let link_to_update: Class_LinkElement[] = []
+        app_ref.drawing_area.selected_nodes_list.forEach(n => {
+          link_to_update = link_to_update.concat(n.output_links_list)
+          link_to_update = link_to_update.concat(n.input_links_list)
+          n.reset()
+        })
+        link_to_update = [...new Set(link_to_update)]
+        link_to_update.forEach(link => link.reset())
+
+      }
+      else if (evt.key == 'Escape') {
+        // Set app in selection mode
+        this.drawing_area.setSelectionMode()
+
+        // Deselect all element
+        app_ref.drawing_area.purgeSelection()
+
+        // Close all menus 
+        app_ref.closeAllMenus()
+
+        // Update components affected by it
+        this.menu_configuration.updateComponentToolbar.current()
+        this.menu_configuration.updateComponentMenuConfigNode.current()
+        this.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+        this.menu_configuration.updateComponentMenuConfigLink.current()
+
+      } else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
+        // Event to delete all selected elements
+
+        // Check if we are not in an input so we don't modify the value of it
+        if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
+
+          // Delete selected elements
+          app_ref.drawing_area.selected_nodes_list.forEach(node => app_ref.drawing_area.deleteNode(node))
+          app_ref.drawing_area.selected_links_list.forEach(link => app_ref.drawing_area.deleteLink(link))
+
+          // Redraw remaining elements since their presence shape their appearence one another
+          app_ref.drawing_area.sankey.nodes_list.forEach(node => node.reset())
+          app_ref.drawing_area.sankey.links_list.forEach(link => link.reset())
+
+          // Update component
+          app_ref.menu_configuration.updateComponentMenuConfigNode.current()
+          app_ref.menu_configuration.updateComponentMenuConfigLink.current()
+        }
+      } else if (evt.key == 'a' && evt.ctrlKey) {
+        // Event to select all elements
+
+        // Prevent default event on ctrl + a
+        evt.preventDefault()
+
+        // Select all node & links
+        app_ref.drawing_area.sankey.nodes_list.forEach(n => app_ref.drawing_area.addNodeToSelection(n))
+        app_ref.drawing_area.sankey.links_list.forEach(l => app_ref.drawing_area.addLinkToSelection(l))
+
+        // Update component
+        app_ref.menu_configuration.updateComponentMenuConfigNode.current()
+        app_ref.menu_configuration.updateComponentMenuConfigLink.current()
+      }
+      else if (evt.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
+        // Event to blur the input we are currently focused on
+        // (It's in adequation with event on input that update drawing area when we blur input)
+        (document.activeElement as HTMLInputElement).blur()
+
+      } else if (evt.key == 's' && evt.ctrlKey && !evt.shiftKey) {
+        // Event to save current diagram in cache
+
+        // Prevent default event on ctrl + s
+        evt.preventDefault()
+
+        // Save in cache
+        localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.drawing_area.toJSON())))
+        localStorage.setItem('last_save', 'true')
+
+        // Update logo save in cache
+        app_ref.menu_configuration.updateComponenSaveInCache.current(true)
+
+      }else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
+        // event to download current sankey in JSON
+
+        // Prevent default event on ctrl + shift + s
+        evt.preventDefault()
+
+        ClickSaveDiagram(app_ref,{ mode_save: true, mode_visible_element: false })
+        
+      } else if ((evt.key === 'f') && !evt.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+        if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
+          evt.preventDefault()
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen()
+          } else if (document.exitFullscreen) {
+            document.exitFullscreen()
+          }
+        }
+
+      }
+    }
+
   }
 }

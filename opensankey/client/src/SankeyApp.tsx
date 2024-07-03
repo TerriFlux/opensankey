@@ -83,7 +83,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initializeLinkFunctions,
   initializeNodeFunctions,
   initializeAdditionalMenus,
-  initializeKeyHandler,
   initializeDiagrammSelector,
   moduleDialogs,
   DrawAll,
@@ -434,26 +433,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_alt_key_pressed
   )
 
-
-  const formatKeyHandler=(e:KeyboardEvent)=>{
-    initializeKeyHandler(applicationData,
-      uiElementsRef,
-      contextMenu,
-      e,
-      applicationState,
-      closeAllMenu(dict_hook_ref_setter_show_dialog_components,contextMenu),
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      applicationContext,
-      node_function,
-      applicationDraw
-    )
-  }
-  document.onkeydown = formatKeyHandler
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
 
   useEffect(() => {

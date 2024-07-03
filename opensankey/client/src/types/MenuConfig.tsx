@@ -60,6 +60,9 @@ export class Class_MenuConfig {
   // Update component OSPTransformationElements
   private _updateComponentBtnUpdateLayout: MutableRefObject<(() => void)>
 
+  // Update component ToolbarBuilder
+  private _updateToolbar: MutableRefObject<(() => void)>
+
 
 
   constructor() {
@@ -81,6 +84,7 @@ export class Class_MenuConfig {
     this._updateMenuConfigTextNodeTooltip = useRef([] as (() => void)[])
     this._updateMenuConfigTextLinkTooltip = useRef([] as (() => void)[])
     this._updateComponentBtnUpdateLayout = useRef(() => null)
+    this._updateToolbar = useRef(() => null)
   }
 
   /**
@@ -214,5 +218,9 @@ export class Class_MenuConfig {
 
   public get btn_accordion_config_link(): RefObject<HTMLButtonElement> {
     return this._btn_accordion_config_link
+  }
+
+  public get updateToolbar(): MutableRefObject<(() => void)> {
+    return this._updateToolbar
   }
 }

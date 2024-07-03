@@ -306,16 +306,14 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }, 100)
 }
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
-  applicationData,
-  data,
-  dict_hook_ref_setter_show_dialog_components,
+  ApplicationClass,
   options
 ): void => {
   // const data_to_save = { ...applicationData.data }
   // const str_data = JSON.stringify(data_to_save)
   // Crée une copie pour d'abord enregitrer avec les changements
   // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-  const cpy:SankeyData=applicationData.new_data.drawing_area.toJSON() as SankeyData
+  const cpy:SankeyData=ApplicationClass.drawing_area.toJSON() as SankeyData
   if(!options.mode_save){
     Object.values(cpy.links).forEach(d=>{
       (d as SankeyLink).value={}

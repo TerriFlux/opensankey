@@ -27,7 +27,6 @@ import {
   DrawAll,
   InstallEventsOnSVG,
   initializeMenuConfiguration,
-  initializeKeyHandler,
   InitalizeSelectorDetailNodes
 } from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
@@ -42,12 +41,13 @@ const data = DefaultSankeyData()
 // Search if a data is stored in localStorage of the navigator
 const json_data = LZString.decompress(localStorage.getItem('data') as string)
 // If there is, store the data in the sankey_data
-if (json_data !== null && json_data != '' && json_data!='null') {
-  const new_data = JSON.parse(json_data)
-  Object.assign(data, new_data)
-  convert_data(data,DefaultSankeyData)
-  complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
-}
+// if (json_data !== null && json_data != '' && json_data!='null') {
+//   const new_data = JSON.parse(json_data)
+//   Object.assign(data, new_data)
+//   convert_data(data,DefaultSankeyData)
+//   complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
+// }
+
 const container=document.getElementById('react-container') as Element | DocumentFragment
 const root=createRoot(container)
 root.render(
@@ -86,9 +86,6 @@ root.render(
     initializeContextMenu={initializeContextMenu}
     // Menu opening on RMB
     closeAllMenu={closeAllMenu}
-
-    // - Key handler
-    initializeKeyHandler={initializeKeyHandler}
 
     // Input data used for updateLayout
     // (OS only use data from imported file 
