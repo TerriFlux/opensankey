@@ -12,7 +12,6 @@ import {
   Type_ElementPosition,
   Type_Label,
   default_element_color,
-  default_element_position,
 } from './Utils'
 import {
   Class_MenuConfig
@@ -22,6 +21,7 @@ import {
 } from './DrawingArea'
 import {
   Class_Element,
+  Class_ProtoElement,
 } from './Element'
 import {
   Class_NodeElement
@@ -98,18 +98,9 @@ export function isAttributeOverloaded(
  *
  * @class Class_LinkElement
  */
-export class Class_LinkElement extends Class_Element {
-
-  // PUBLIC ATTRIBUTES ==================================================================
-
-  // Labels
-  // TODO set as private and add getter & setter
-  public label?: Type_Label
+export class Class_LinkElement extends Class_ProtoElement {
 
   // PRIVATE ATTRIBUTES =================================================================
-
-  // Links Tags
-  private _tags: { [_: string]: Class_Tag } = {}
 
   /**
   * Node from which link starts
@@ -136,13 +127,20 @@ export class Class_LinkElement extends Class_Element {
   private _values: Class_LinkValueTree | Class_LinkValue
 
   /**
+   * FluxTags
+   * @private
+   * @type {{ [_: string]: Class_Tag }}
+   * @memberof Class_LinkElement
+   */
+  private _tags: { [_: string]: Class_Tag } = {}
+
+  /**
    * Value of tooltip text associated to link
    * @private
    * @type {string}
    * @memberof Class_LinkElement
    */
   private _tooltip_text: string = ''
-
 
   /**
    * TODO
@@ -175,9 +173,8 @@ export class Class_LinkElement extends Class_Element {
    */
   protected _display: {
     drawing_area: Class_DrawingArea,
-    position: Type_ElementPosition,
-    position_on_source: Type_ElementPosition,
-    position_on_target: Type_ElementPosition,
+    position_starting: Type_ElementPosition,
+    position_ending: Type_ElementPosition,
     style: Class_LinkStyle,
     attributes: Class_LinkAttribute
   }
@@ -198,24 +195,16 @@ export class Class_LinkElement extends Class_Element {
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(
-      id,
-      menu_config,
-      'g_links')
+    super(id, menu_config, 'g_links')
     // Display
     this._display = {
       drawing_area: drawing_area,
-      position: {
-        type: 'absolute',
-        x: 0,
-        y: 0
-      },
-      position_on_source: {
+      position_starting: {
         type: 'relative',
         x: 0,
         y: 0
       },
-      position_on_target: {
+      position_ending: {
         type: 'relative',
         x: 0,
         y: 0
@@ -223,20 +212,20 @@ export class Class_LinkElement extends Class_Element {
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
     }
-    // Source
-    this._source = source
-    this._source.addOutputLink(this)
-    // Target
-    this._target = target
-    this._target.addInputLink(this)
     // Values
     this._values = new Class_LinkValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
         this._values = this._values.addNewTagGroup(data_tagg)
       })
-    // Reset references
-    this.resetReferences()
+    // Source
+    this._source = source
+    // Target
+    this._target = target
+    // Set on draw
+    this.draw()
+    this._source.addOutputLink(this)
+    this._target.addInputLink(this)
   }
 
   // CLEANING ===========================================================================
@@ -265,28 +254,33 @@ export class Class_LinkElement extends Class_Element {
   // PUBLIC METHODS =====================================================================
 
   /**
-   * Check if node source and node target are displayed,
-   * if one of them is not then we don't display the link
-   *
+   * Set up element on d3 svg area
    * @private
-   * @return {*}
    * @memberof Class_LinkElement
    */
-  public reset() {
-    // Add position resetting
-    this.resetPositions()
-    // Reset everything else
-    super.reset()
+  public draw() {
+    // Heritance
+    super.draw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_links')
   }
 
+  public drawElements() {
+    this.drawPath()
+    this.drawLabel()
+  }
+
+  /**
+   * Reset all attributes as defined by style
+   * @memberof Class_LinkElement
+   */
   public resetAttributes() {
     this._display.attributes = new Class_LinkAttribute()
-    this.reset()
+    this.drawElements()
   }
 
   /**
    * Reverse source with target
-   *
    * @memberof Class_LinkElement
    */
   public inverse() {
@@ -294,26 +288,25 @@ export class Class_LinkElement extends Class_Element {
     const tmp_source = this._source
     this._source = tmp_source
     this._target = tmp_target
-    this.reset()
+    this.drawPath()
   }
 
-  public setPosXY(_: number, __: number) { /* Does nothing */ }
-
-  public setPosXYOnSource(x: number, y: number) {
-    this._display.position_on_source.x = x
-    this._display.position_on_source.y = y
-    this.draw()
+  public setPosXYStartingPoint(x: number, y: number) {
+    this._display.position_starting.x = x
+    this._display.position_starting.y = y
+    this.drawPath()
   }
 
-  public setPosXYOnTarget(x: number, y: number) {
-    this._display.position_on_target.x = x
-    this._display.position_on_target.y = y
-    this.draw()
+  public setPosXYEndingPoint(x: number, y: number) {
+    this._display.position_ending.x = x
+    this._display.position_ending.y = y
+    this.drawPath()
   }
 
   public deleteRelativeLabelPos() {
     delete this._x_label
     delete this._y_label
+    this.drawLabel()
   }
 
   /**
@@ -330,8 +323,8 @@ export class Class_LinkElement extends Class_Element {
 
   public useDefaultStyle() {
     this.style = this.drawing_area.sankey.default_link_style
+    this.drawElements()
   }
-
 
   public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
     return this._display.attributes[attr] !== undefined
@@ -425,9 +418,6 @@ export class Class_LinkElement extends Class_Element {
     json_object['idLink'] = this.id
     json_object['idSource'] = this._source.id
     json_object['idTarget'] = this._target.id
-    json_object['position'] = this.position_type
-    json_object['x'] = this.position_x
-    json_object['y'] = this.position_y
 
     json_object['style'] = Object.entries(this.drawing_area.sankey.link_styles_dict).filter(stl => stl[1] === (this._display.style))[0][0]
 
@@ -438,17 +428,11 @@ export class Class_LinkElement extends Class_Element {
     json_object['value'] = {}//Todo create function to JSONize link value
 
     return json_object
-
   }
 
   public fromJSON(json_object: { [x: string]: any }) {
 
-    this.position_type = json_object['position'] ?? 'absolute'
-    this.position_x = json_object['x'] ?? 0
-    this.position_y = json_object['y'] ?? 0
-
     this._display.style = this.drawing_area.sankey.link_styles_dict[json_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
-
 
     if (json_object['local']) {
       this._display.attributes.fromJSON(json_object['local'])
@@ -495,22 +479,6 @@ export class Class_LinkElement extends Class_Element {
   }
 
   // PROTECTED METHODS ==================================================================
-
-  /**
-   * Set up element on d3 svg area
-   * @private
-   * @memberof Class_LinkElement
-   */
-  protected draw() {
-    // Heritance
-    super.draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_links')
-    // Draw shape
-    this.drawShape()
-    // Draw label
-    this.drawLabel()
-  }
 
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
@@ -570,8 +538,7 @@ export class Class_LinkElement extends Class_Element {
   }
 
   protected update_visibility() {
-    if(this.are_source_and_target_displayed && this.are_related_tags_selected)this.setVisible(false)
-      else this.setInvisble(false)
+
   }
 
   protected element_displayed() {
@@ -579,44 +546,24 @@ export class Class_LinkElement extends Class_Element {
 
   // PRIVATE METHODS ====================================================================
 
-  private resetReferences() {
-    // Reset related nodes
-    this.source.reset()
-    this.target.reset()
-  }
-
-  private resetPositions() {
-    // Reference position
-    this._display.position.x = this.source.position_x
-    this._display.position.y = this.source.position_y
-    // Compute position on source
-    const position_on_source = this.source.getLinkRelativePosition(this)
-    if (position_on_source !== null)
-      this._display.position_on_source = position_on_source
-    // Compute position on target
-    const position_on_target = this.target.getLinkRelativePosition(this)
-    if (position_on_target !== null)
-      this._display.position_on_target = position_on_target
-  }
-
   /**
    * Draw link shape on d3 svg
    * @private
-   * @memberof Class_NodeElementElement
+   * @memberof Class_LinkElement
    */
-  private drawShape() {
+  private drawPath() {
     // Clean previous shape
-    this.d3_selection?.selectAll('.link_shape').remove()
+    this.d3_selection?.selectAll('.link_path').remove()
     // Add new path shape
     this.d3_selection?.append('path')
       .classed('link', true)
-      .classed('link_shape', true)
+      .classed('link_path', true)
       .attr('d', () => this.getBezierPath())
     // Apply properties
-    this.d3_selection?.selectAll('.link_shape')
+    this.d3_selection?.selectAll('.link_path')
       .attr('id', this.id)
       .attr('fill', 'none')
-      .attr('stroke', () => this.getLinkColorToUse())
+      .attr('stroke', () => this.getPathColorToUse())
       .attr('stroke-opacity', this.shape_opacity)
       .attr('stroke-width', Math.max(1, this.thickness))
       .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
@@ -628,7 +575,7 @@ export class Class_LinkElement extends Class_Element {
     // TODO a faire
   }
 
-  private getLinkColorToUse() {
+  private getPathColorToUse() {
     if (
       (this.drawing_area.sankey.linksColorMap !== 'no_colormap') &&
       (this.drawing_area.sankey.linksColorMap in this._tags) &&
@@ -729,6 +676,14 @@ export class Class_LinkElement extends Class_Element {
    */
   public get name() {
     return defaultLinkId(this._source, this._target)
+  }
+
+  public get is_visible() {
+    return (
+      this.are_source_and_target_displayed &&
+      this.are_related_tags_selected &&
+      this._is_visible
+    )
   }
 
   /**
@@ -843,8 +798,8 @@ export class Class_LinkElement extends Class_Element {
     // Cast as number
     if (value !== null) {
       value.data_value = _
-      // Reset related
-      this.resetReferences()
+      this.source.updateOutputValue()
+      this.target.updateInputValue()
     }
   }
 
@@ -912,7 +867,7 @@ export class Class_LinkElement extends Class_Element {
     this._display.style.removeReference(this)
     this._display.style = _
     _.addReference(this)
-    this.reset()
+    this.drawElements()
   }
 
   /**
@@ -924,26 +879,23 @@ export class Class_LinkElement extends Class_Element {
     const scale = d3.scaleLinear()
       .domain([0, this.drawing_area.scale])
       .range([0, 100])
-    // const inv_scale = d3.scaleLinear()
-    //   .domain([0, 100])
-    //   .range([0, this.drawing_area.scale])
     return scale(this.data_value)
   }
 
   public get position_x_start() {
-    return this._display.position_on_source.x + this.source.position_x - this.position_x
+    return this._display.position_starting.x
   }
 
   public get position_y_start() {
-    return this._display.position_on_source.y  + this.source.position_y - this.position_y
+    return this._display.position_starting.y
   }
 
   public get position_x_end() {
-    return this._display.position_on_target.x + this.target.position_x - this.position_x
+    return this._display.position_ending.x
   }
 
   public get position_y_end() {
-    return this._display.position_on_target.y + this.target.position_y - this.position_y
+    return this._display.position_ending.y
   }
 
   /**
@@ -963,7 +915,10 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_orientation(_: Type_Orientation) { this._display.attributes.shape_orientation = _; this.drawShape()}
+  public set shape_orientation(_: Type_Orientation) {
+    this._display.attributes.shape_orientation = _
+    this.drawPath()
+  }
 
   // Orientation
   public get is_horizontal() { return this.shape_orientation === 'hh' }
@@ -991,7 +946,7 @@ export class Class_LinkElement extends Class_Element {
   public set shape_starting_curve(_: number) {
     if (_ >= 0 && _ < this.shape_ending_curve) {
       this._display.attributes.shape_starting_curve = _
-      this.drawShape()
+      this.drawPath()
     }
   }
 
@@ -1015,7 +970,7 @@ export class Class_LinkElement extends Class_Element {
   public set shape_ending_curve(_: number) {
     if (_ <= 1 && _ > this.shape_starting_curve) {
       this._display.attributes.shape_ending_curve = _
-      this.drawShape()
+      this.drawPath()
     }
   }
 
@@ -1038,7 +993,7 @@ export class Class_LinkElement extends Class_Element {
    */
   public set shape_starting_tangeant(_: number) {
     this._display.attributes.shape_starting_tangeant = _
-    this.drawShape()
+    this.drawPath()
   }
 
   /**
@@ -1058,7 +1013,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_ending_tangeant(_: number) { this._display.attributes.shape_ending_tangeant = _; this.drawShape() }
+  public set shape_ending_tangeant(_: number) { this._display.attributes.shape_ending_tangeant = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1077,7 +1032,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_vert_shift(_: number) { this._display.attributes.shape_vert_shift = _; this.drawShape() }
+  public set shape_vert_shift(_: number) { this._display.attributes.shape_vert_shift = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1096,7 +1051,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawShape() }
+  public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1115,7 +1070,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawShape() }
+  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1134,7 +1089,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_recycling(_: boolean) { this._display.attributes.shape_is_recycling = _; this.drawShape() }
+  public set shape_is_recycling(_: boolean) { this._display.attributes.shape_is_recycling = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1153,7 +1108,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawShape() }
+  public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1248,7 +1203,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawShape() }
+  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1267,7 +1222,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawShape() }
+  public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1286,7 +1241,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawShape() }
+  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1305,7 +1260,7 @@ export class Class_LinkElement extends Class_Element {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawShape() }
+  public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -1768,7 +1723,6 @@ export class Class_LinkAttribute {
   }
 }
 
-
 // CLASS LINK STYLE *********************************************************************
 
 /**
@@ -1927,7 +1881,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private updateReferencesDraw() {
     Object.values(this._references)
-      .forEach(ref => ref.reset())
+      .forEach(ref => ref.drawElements())
   }
 }
 
@@ -2099,9 +2053,6 @@ export class Class_LinkValue {
   }
 
 }
-
-
-type recusiveLinkValue = { [x: string]: recusiveLinkValue | {} }
 
 
 function allPossibleCases(arr: string[][]): string[][] {

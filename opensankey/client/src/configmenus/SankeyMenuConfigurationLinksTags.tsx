@@ -123,39 +123,48 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
         }
       })}
 
-
     <Box
       layerStyle='menuconfigpanel_grid'
     >
-      {tags_visible && tags_group_key != '' && Object.keys(flux_taggs).includes(tags_group_key) && selected_links.length!=0 ? Object.entries(flux_taggs[tags_group_key].tags).map(
-        ([tag_key,tag]) => {
-          const is_selected= flux_reference_for_displayed_value.tags[tags_group_key] && flux_reference_for_displayed_value.tags[tags_group_key]===(tag)
-          return (
-            <Checkbox variant='menuconfigpanel_option_checkbox'
-              isChecked={is_selected}
-              onChange={(evt) => {
-                const visible = evt.target.checked
-                // Object.values(data.links).filter(f => selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
-                //   updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
-                // })
-                selected_links.forEach(l=>{
-                  if (visible) {
-                    l.tags[tags_group_key]=tag
-                  } else {
-                    // Remove deselected tag from links
-                    delete l.tags[tags_group_key]
-                  }
-                })
-                selected_links.forEach(l=>l.reset())
-
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-
-                setForceUpdate(!forceUpdate)
-              }}>
-              {tag.name}
-            </Checkbox>
-          )
-        }) : (<></>)}
+      {
+        (
+          tags_visible &&
+          tags_group_key != '' &&
+          Object.keys(flux_taggs).includes(tags_group_key) &&
+          selected_links.length!=0
+        )
+        ?
+          Object.entries(flux_taggs[tags_group_key].tags)
+            .map(([tag_key,tag]) => {
+              const is_selected = (
+                flux_reference_for_displayed_value.tags[tags_group_key] &&
+                flux_reference_for_displayed_value.tags[tags_group_key] === (tag))
+              return (
+                <Checkbox
+                  variant='menuconfigpanel_option_checkbox'
+                  isChecked={is_selected}
+                  onChange={(evt) => {
+                    const visible = evt.target.checked
+                    selected_links.forEach(l=>{
+                      if (visible) {
+                        l.tags[tags_group_key]=tag
+                      }
+                      else {
+                        // Remove deselected tag from links
+                        delete l.tags[tags_group_key]
+                      }
+                    })
+                    selected_links.forEach(l=>l.draw())
+                    ComponentUpdater.updateComponenSaveInCache.current(false)
+                    setForceUpdate(!forceUpdate)
+                  }}>
+                  {tag.name}
+                </Checkbox>
+              )
+            })
+        :
+          <></>
+      }
     </Box>
   </Box>
 
