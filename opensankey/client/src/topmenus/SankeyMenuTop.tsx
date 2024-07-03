@@ -1025,11 +1025,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
-    if (!show_nav) {
-      actualizeDrawAreaFrame(applicationData, applicationDraw.GetSankeyMinWidthAndHeight)
-    } else {
-      d3.select('.scroll_zone').style('width', null)
-    }
     setUpdate(!update)
   }
 
