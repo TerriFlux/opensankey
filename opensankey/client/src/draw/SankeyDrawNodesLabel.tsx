@@ -5,6 +5,7 @@ import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelVa
 import { ReturnValueNode, defaultElementColor } from '../configmenus/SankeyUtils'
 import { DrawAddNodesFtype, DrawAllNodesLabelFType } from './types/SankeyDrawNodesLabelTypes'
 import { windowSankey } from '../configmenus/SankeyUtils'
+import { dragNodeTextEventWidthBoxEvent } from './SankeyDragNodes'
 
 
 
@@ -24,7 +25,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
   GetLinkValue,t,
   node_function
 ) => {
-  const { data,display_nodes,display_links } = applicationData
+  const { data,set_data,display_nodes,display_links } = applicationData
   //------------------LABEL------------------------
   // Add node label and apply parameter
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
@@ -238,5 +239,5 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     //.attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
     .attr('visibility','hidden')
   // .filter(()=>windowSankey.SankeyToolsStatic!==true)
-  // .call(dragNodeTextEventWidthBoxEvent(data,set_data))
+  .call(dragNodeTextEventWidthBoxEvent(data))
 }
