@@ -207,12 +207,11 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
       banner_grouptag = Object.entries(level_taggs).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
     }
   }
-  
+
 
   const redrawNodeLinkLegend = () => {
-    new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
-    new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
-    new_data.drawing_area.legend.reset()
+    new_data.drawing_area.sankey.draw()
+    new_data.drawing_area.legend.draw()
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
 
@@ -514,10 +513,8 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   max_link_value += 1
 
   const redrawNodeLinkLegend = () => {
-    sankey.nodes_list.forEach(n => n.reset())
-    sankey.links_list.forEach(l => l.reset())
-    new_data.drawing_area.legend.reset()
-
+    sankey.draw()
+    new_data.drawing_area.legend.draw()
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
 
@@ -1143,7 +1140,6 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
           // }
           handleSimpleDropdown(evt, tags_group)
           redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
-          new_data.drawing_area.sankey.links_list.forEach(l=>l.reset())
           setForceUpdate.toggle()
           new_data.menu_configuration.updateComponentMenu.current()
         }}>
@@ -1248,9 +1244,8 @@ const redrawSankeyWithSelectedTag = (
   node_function.RedrawNodes(Object.values(applicationData.display_nodes))
   link_function.RedrawLinks(Object.values(applicationData.display_links))
 
-  new_data.drawing_area.sankey.nodes_list.forEach(n => n.reset())
-  new_data.drawing_area.sankey.links_list.forEach(l => l.reset())
-  new_data.drawing_area.legend.reset()
+  new_data.drawing_area.sankey.draw()
+  new_data.drawing_area.legend.draw()
 
   if (ll.length != 0) {
     link_function.CreateLinksOnSVG(ll.map(id => data.links[id]))

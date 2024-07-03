@@ -29,7 +29,7 @@ import {
   Class_ApplicationData
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_Element } from './Element'
+import { Class_Element, Class_ProtoElement } from './Element'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -129,7 +129,7 @@ export class Class_DrawingArea {
   private _legend: Class_Legend
 
   // Elements that are selected in this area
-  private _selection: {[id: string]: Class_Element} = {}
+  private _selection: {[id: string]: Class_ProtoElement} = {}
 
   // Color
   private _color: string = default_background_color
@@ -169,7 +169,7 @@ export class Class_DrawingArea {
     // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
 
-  // IMPORTANT METHODS ==================================================================
+  // PUBLIC METHODS ====================================================================
 
   /**
    * Reset drawing area
@@ -184,6 +184,7 @@ export class Class_DrawingArea {
     this.d3_selection = d3.select(' .opensankey #svg')
       .append('g')
       .attr('id', 'g_drawing')
+
     // Add specific groups for nodes, link and others
     this.d3_selection_bg = this.d3_selection.append('g').attr('id', 'g_background')
     this.d3_selection_grid = this.d3_selection.append('g').attr('id', 'g_grid')
@@ -191,7 +192,9 @@ export class Class_DrawingArea {
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
 
-    // TODO ajouter groupes pour autres élements
+    // Draw background
+    this.drawBackground()
+
     // Draw Everything
     this.drawElements()
 
@@ -204,18 +207,20 @@ export class Class_DrawingArea {
    * @private
    * @memberof Class_DrawingArea
    */
-  private drawElements() {
-    // Draw background
-    this.drawBackground()
+  public drawElements() {
     // Draw grid
     this.drawGrid()
     // Draw all nodes
-    this._sankey.nodes_list.forEach(n=>n.reset())
-    // Draw all links
-    this._sankey.links_list.forEach(l=>l.reset())
+    this._sankey.draw()
     // Draw legend
-    this.legend.reset()
+    this.legend.draw()
+  }
 
+  public drawSelected() {
+    // Draw links selected
+    this.selected_links_list.forEach(link => link.draw())
+    // Draw nodes selected
+    this.selected_nodes_list.forEach(node => node.draw())
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -276,9 +281,9 @@ export class Class_DrawingArea {
 
   // Size
   public getWidth() { return this._width }
-  public setWidth(_: number) { this._width = _; this.drawElements() }
+  public setWidth(_: number) { this._width = _; this.drawBackground() }
   public getHeight() { return this._height }
-  public setHeight(_: number) { this._height = _; this.drawElements() }
+  public setHeight(_: number) { this._height = _; this.drawBackground() }
 
   // Color
   public get color() { return this._color }
@@ -448,7 +453,7 @@ public toJSON() {
    * @memberof Class_DrawingArea
    */
   public addNodeToSelection(node: Class_NodeElement) {
-    this._selection[node.id] = node as Class_Element
+    this._selection[node.id] = node as Class_ProtoElement
     node.setSelected()
   }
 
@@ -496,7 +501,7 @@ public toJSON() {
    * @memberof Class_DrawingArea
    */
   public addLinkToSelection(link: Class_LinkElement) {
-    this._selection[link.id] = link as Class_Element
+    this._selection[link.id] = link as Class_ProtoElement
     link.setSelected()
   }
 
