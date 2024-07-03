@@ -762,7 +762,6 @@ export type SankeyAppTypes = {
   initializeLinkFunctions : initializeLinkFunctionsType,
   initializeNodeFunctions:initializeNodeFunctionsType,
   initializeAdditionalMenus: initializeAdditionalMenusType,
-  initializeKeyHandler:initializeKeyHandlerType,
   initializeDiagrammSelector:initializeDiagrammSelectorFType,
   moduleDialogs:module_dialogsType,
   DrawAll:DrawAllType,
