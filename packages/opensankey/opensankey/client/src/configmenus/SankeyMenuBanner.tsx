@@ -959,12 +959,12 @@ const stretchButtons: stretchButtonsFType = (
   t: TFunction
 ) => {
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight) }} >
+    <Button variant='toolbar_button_6' onClick={() => applicationData.new_data.drawing_area.areaFitHorizontally()} >
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
   <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
+    <Button variant='toolbar_button_6' onClick={() => { applicationData.new_data.drawing_area.areaFitVertically() }} >
       <FontAwesomeIcon icon={faArrowsUpDown} />
     </Button>
   </OSTooltip></>
