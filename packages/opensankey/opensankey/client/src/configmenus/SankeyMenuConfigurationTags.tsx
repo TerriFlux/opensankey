@@ -56,13 +56,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   ]
 
   const redrawGenereal = () => {
-    // node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-    // link_function.RedrawLinks(Object.values(applicationData.display_links))
-    sankey.nodes_list.forEach(n => n.reset())
-    sankey.links_list.forEach(l => l.reset())
-    new_data.drawing_area.legend.reset()
+    new_data.drawing_area.drawElements();
     new_data.menu_configuration.updateComponentToolbar.current()
-
     updateComponenSaveInCache.current(false)
   }
 
