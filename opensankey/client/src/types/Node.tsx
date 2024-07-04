@@ -6,6 +6,7 @@
 
 // External imports
 import * as d3 from 'd3'
+import { textwrap } from 'd3-textwrap'
 
 // Local types
 import {
@@ -36,6 +37,8 @@ import {
 // SPECIFIC TYPES ***********************************************************************
 
 type Type_Shape = 'ellipse' | 'rect' | 'arrow'
+type Type_TextHPos = 'left' | 'middle' | 'right'
+type Type_TextVPos = 'top' | 'middle' | 'bottom'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -55,12 +58,14 @@ export const default_label_bold = false
 export const default_label_italic = false
 export const default_label_background = false
 export const default_name_label_visible = true
-export const default_name_label_vert = 'bottom'
-export const default_name_label_horiz = 'middle'
+export const default_name_label_vert: Type_TextVPos = 'bottom'
+export const default_name_label_horiz: Type_TextHPos = 'middle'
 export const default_value_label_visible = false
-export const default_value_label_vert = 'top'
-export const default_value_label_horiz = 'middle'
+export const default_value_label_vert: Type_TextVPos = 'top'
+export const default_value_label_horiz: Type_TextHPos = 'middle'
 export const default_label_box_width = 150
+
+const default_selected_stroke_width = 3
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
@@ -235,7 +240,8 @@ export class Class_NodeElement extends Class_Element {
     // Draw shape
     this.drawShape()
     // Draw label
-    this.drawLabel()
+    this.drawNameLabel()
+    this.drawValueLabel()
   }
 
   public useDefaultStyle() {
@@ -361,14 +367,18 @@ export class Class_NodeElement extends Class_Element {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
+      this.updateInputValue()
       this.drawLinks()
+      this.drawValueLabel()
     }
   }
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
+      this.updateOutputValue()
       this.drawLinks()
+      this.drawValueLabel()
     }
   }
 
@@ -382,7 +392,9 @@ export class Class_NodeElement extends Class_Element {
     if (this._input_links[link.id] !== undefined) {
       delete this._input_links[link.id]
       node.addInputLink(link)
+      this.updateInputValue()
       this.drawLinks()
+      this.drawValueLabel()
     }
   }
 
@@ -396,7 +408,9 @@ export class Class_NodeElement extends Class_Element {
     if (this._output_links[link.id] !== undefined) {
       delete this._output_links[link.id]
       node.addOutputLink(link)
+      this.updateOutputValue()
       this.drawLinks()
+      this.drawValueLabel()
     }
   }
 
@@ -682,7 +696,7 @@ export class Class_NodeElement extends Class_Element {
         .attr('fill-opacity', this.shape_visible ? '1' : '0')
         .attr('fill', color)
         .style('stroke', 'black')
-        .style('stroke-width', this.is_selected ? 3 : 0)
+        .style('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
     }
   }
 
@@ -691,71 +705,81 @@ export class Class_NodeElement extends Class_Element {
    * @private
    * @memberof Class_NodeElement
    */
-  private drawLabel() {
+  private drawNameLabel() {
     // Clean previous label
-    this.d3_selection?.selectAll('.label').remove()
+    this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
     if (this.name_label_visible) {
       // Get variable property for node label
-      const width = this.getShapeWidthToUse()
-      const height = this.getShapeHeightToUse()
-
-      // ================================================================
-      // Create some variable that depend on the value of some of the above
-      // ================================================================
-
-      // Init pos_x_label as if it was at the right of the node
-      let pos_x_label = width
+      const shape_width = this.getShapeWidthToUse()
+      const shape_height = this.getShapeHeightToUse()
+      // Label X position is set by text relative position / shape + text anchor
+      let label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
+      let label_pos_x = shape_width + label_pos_dx
+      let label_anchor = 'start'
+      let label_align = 'start'
       if (this.name_label_horiz === 'left') {
-        pos_x_label = 0
+        label_pos_x = -label_pos_dx
+        label_anchor = 'end'
+        label_align = 'end'
       }
       else if (this.name_label_horiz === 'middle') {
-        pos_x_label = width / 2
+        label_pos_x = shape_width / 2
+        label_anchor = 'middle'
+        label_align = 'center'
       }
-
-      // Init text_anchor_label as if it was at the rights of the node
-      let text_anchor_label = 'start'
-      if (this.name_label_horiz == 'left') {
-        text_anchor_label = 'end'
-      }
-      else if (this.name_label_horiz == 'middle') {
-        text_anchor_label = 'middle'
-      }
-
-      // Init pos_y_label as if it was at the bottom of the node
-      let pos_y_label = height + this.name_label_font_size
+      // Label Y position is only set by text relative position / shape
+      let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+      let label_pos_y = label_pos_dy + shape_height + this.name_label_font_size
       if (this.name_label_vert === 'top') {
-        pos_y_label = 0
-      } else if (this.name_label_vert === 'middle') {
-        pos_y_label = height / 2
+        label_pos_y = -label_pos_dy
       }
-
+      else if (this.name_label_vert === 'middle') {
+        label_pos_y = shape_height/2
+      }
+      // Box position is set by label position. For text / shape ref point is not the same
+      // - Text : ref point is bottom of text + right/middle/left depending on anchor
+      // - Shape : ref point if top-left corner
+      const box_width = Math.min(
+        this.name_label.length * this.name_label_font_size,
+        this.name_label_box_width)
+      const box_height = this.name_label_font_size
+      const box_pos_y = label_pos_y - this.name_label_font_size
+      let box_pos_x = label_pos_x
+      if (label_anchor === 'end') {
+        box_pos_x = box_pos_x - box_width
+      }
+      else if (label_anchor === 'middle') {
+        box_pos_x = box_pos_x - box_width/2
+      }
       // Add name label background
       if (this.name_label_background) {
         this.d3_selection?.append('rect')
-          .classed('label', true)
-          .classed('label_background', true)
-          .attr('id', 'label_background_' + this.id)
-          .attr('x', pos_x_label)
-          .attr('y', pos_y_label)
-          .attr('width', this.name_label.length * (this.name_label_font_size as number))
-          .attr('height', (this.name_label_font_size as number))
+          .classed('name_label', true)
+          .classed('name_label_background', true)
+          .attr('id', 'name_label_background_' + this.id)
+          .attr('x', box_pos_x)
+          .attr('y', box_pos_y)
+          .attr('width', box_width)
+          .attr('height', box_height)
           .attr('fill', 'white')
           .attr('fill-opacity', 0.55)
           .attr('rx', 4)
           .style('stroke', 'none')
       }
-
       // Add name label text
+      const wrapper = textwrap()
+        .bounds({ height: 100, width: this.name_label_box_width })
+        .method('tspans')
       this.d3_selection?.append('text')
-        .classed('label', true)
-        .classed('label_text', true)
+        .classed('name_label', true)
+        .classed('name_label_text', true)
         .attr('fill', this.name_label_color ? 'white' : 'black')
-        .attr('id', 'label_text_' + this.id)
-        .attr('x', pos_x_label)
-        .attr('y', pos_y_label)
-        .attr('text-anchor', text_anchor_label)
-        .style('text-align', 'center')
+        .attr('id', 'name_label_text_' + this.id)
+        .attr('x', label_pos_x)
+        .attr('y', label_pos_y)
+        .attr('text-anchor', label_anchor)
+        .style('text-align', label_align)
         .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
         .style('font-style', this.name_label_italic ? 'italic' : 'normal')
         .style('font-size', String(this.name_label_font_size) + 'px')
@@ -763,28 +787,113 @@ export class Class_NodeElement extends Class_Element {
         .style('stroke', 'none')
         .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(this.name_label)
+        .call(wrapper)
 
       // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
       // Add an input to change the name of the node
       // The input appear when we double click on the label
       if (!this.drawing_area.static) {
         this.d3_selection?.append('foreignObject')
-          .classed('label', true)
-          .classed('label_fo_input', true)
-          .attr('x', width)
-          .attr('y', height)
-          .style('width', String(this._name.length) + 'rem')
-          .attr('height', Number(this.name_label_font_size) + 2)
+          .classed('name_label', true)
+          .classed('name_label_fo_input', true)
+          .attr('x', box_pos_x)
+          .attr('y', box_pos_y)
+          .attr('width', box_width)
+          .attr('height', box_height)
           .style('display', 'none')
           .append('xhtml:div')
           .append('input')
-          .classed('label', true)
-          .classed('label_input', true)
-          .attr('id', 'input_label_' + this.id)
+          .classed('name_label', true)
+          .classed('name_label_input', true)
+          .attr('id', 'name_label_input_' + this.id)
           .attr('type', 'text')
           .attr('value', this._name)
           .style('font-size', String(this.name_label_font_size) + 'px')
       }
+    }
+  }
+
+  /**
+   * Draw node label on D3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
+  private drawValueLabel() {
+    // Clean previous label
+    this.d3_selection?.selectAll('.value_label').remove()
+    // Add name label
+    if (this.value_label_visible) {
+      // Get variable property for node label
+      const shape_width = this.getShapeWidthToUse()
+      const shape_height = this.getShapeHeightToUse()
+      // Label X position is set by text relative position / shape + text anchor
+      let label_pos_x = shape_width
+      let label_anchor = 'start'
+      let label_align = 'start'
+      if (this.value_label_horiz === 'left') {
+        label_pos_x = 0
+        label_anchor = 'end'
+        label_align = 'end'
+      }
+      else if (this.value_label_horiz === 'middle') {
+        label_pos_x = shape_width / 2
+        label_anchor = 'middle'
+        label_align = 'center'
+      }
+      // Label Y position is only set by text relative position / shape
+      let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+      let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size
+      if (this.value_label_vert === 'top') {
+        label_pos_y = -label_pos_dy
+      }
+      else if (this.value_label_vert === 'middle') {
+        label_pos_y = (shape_height/2) + (this.value_label_font_size/2)
+      }
+      // Box position is set by label position. For text / shape ref point is not the same
+      // - Text : ref point is bottom of text + right/middle/left depending on anchor
+      // - Shape : ref point if top-left corner
+      const box_width = this.value_label.length * this.value_label_font_size
+      const box_height = this.value_label_font_size
+      const box_pos_y = label_pos_y - this.value_label_font_size
+      let box_pos_x = label_pos_x
+      if (label_anchor === 'end') {
+        box_pos_x = box_pos_x - box_width
+      }
+      else if (label_anchor === 'middle') {
+        box_pos_x = box_pos_x - box_width/2
+      }
+      // Add name label background
+      if (this.value_label_background) {
+        this.d3_selection?.append('rect')
+          .classed('value_label', true)
+          .classed('value_label_background', true)
+          .attr('id', 'value_label_background_' + this.id)
+          .attr('x', box_pos_x)
+          .attr('y', box_pos_y)
+          .attr('width', box_width)
+          .attr('height', box_height)
+          .attr('fill', 'white')
+          .attr('fill-opacity', 0.55)
+          .attr('rx', 4)
+          .style('stroke', 'none')
+      }
+      // Add name label text
+      this.d3_selection?.append('text')
+        .classed('value_label', true)
+        .classed('value_label_text', true)
+        .attr('fill', this.value_label_color ? 'white' : 'black')
+        .attr('id', 'value_label_text_' + this.id)
+        .attr('x', label_pos_x)
+        .attr('y', label_pos_y)
+        .attr('text-anchor', label_anchor)
+        .style('text-align', label_align)
+        .style('font-weight', this.value_label_bold ? 'bold' : 'normal')
+        .style('font-style', this.value_label_italic ? 'italic' : 'normal')
+        .style('font-size', String(this.value_label_font_size) + 'px')
+        .style('font-family', this.value_label_font_family)
+        .style('stroke', 'none')
+        .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
+        .text(this.value_label)
     }
   }
 
@@ -1062,7 +1171,7 @@ export class Class_NodeElement extends Class_Element {
   public set name(_: string) {
     // TODO update id
     this._name = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1076,10 +1185,6 @@ export class Class_NodeElement extends Class_Element {
     }
     return this._name
   }
-
-  // Selection
-  public setSelected() { this._is_selected = true; this.drawShape()}
-  public setUnSelected() { this._is_selected = false; this.drawShape()}
 
   public get tags() {
     // TODO faire autrement
@@ -1096,8 +1201,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public get value_label() {
-    // TODO compute value
-    return 'NO VALUE'
+    return String(Math.max(this._input_data_value, this._output_data_value))
   }
 
   /**
@@ -1199,7 +1303,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set shape_min_width(_: number) {
     this._display.attributes.shape_min_width = _
-    this.drawShape()
+    this.draw() // Redraw all because it can impact everything
   }
 
   /**
@@ -1221,7 +1325,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set shape_min_height(_: number) {
     this._display.attributes.shape_min_height = _
-    this.drawShape()
+    this.draw() // Redraw all because it can impact everything
   }
 
   /**
@@ -1353,7 +1457,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_visible(_: boolean) {
     this._display.attributes.name_label_visible = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1375,7 +1479,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_font_family(_: string) {
     this._display.attributes.name_label_font_family = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1397,7 +1501,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_font_size(_: number) {
     this._display.attributes.name_label_font_size = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1419,7 +1523,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_uppercase(_: boolean) {
     this._display.attributes.name_label_uppercase = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1441,7 +1545,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_bold(_: boolean) {
     this._display.attributes.name_label_bold = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1463,7 +1567,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_italic(_: boolean) {
     this._display.attributes.name_label_italic = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1485,7 +1589,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_box_width(_: number) {
     this._display.attributes.name_label_box_width = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1507,7 +1611,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_color(_: boolean) {
     this._display.attributes.name_label_color = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1527,9 +1631,9 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set name_label_vert(_: string) {
+  public set name_label_vert(_: Type_TextVPos) {
     this._display.attributes.name_label_vert = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1549,9 +1653,9 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set name_label_horiz(_: string) {
+  public set name_label_horiz(_: Type_TextHPos) {
     this._display.attributes.name_label_horiz = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1573,7 +1677,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set name_label_background(_: boolean) {
     this._display.attributes.name_label_background = _
-    this.drawLabel()
+    this.drawNameLabel()
   }
 
   /**
@@ -1595,7 +1699,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public set value_label_visible(_: boolean) {
     this._display.attributes.value_label_visible = _
-    this.drawLabel()
+    this.drawValueLabel()
   }
 
   /**
@@ -1615,9 +1719,9 @@ export class Class_NodeElement extends Class_Element {
    *
    TODO Description * @memberof Class_NodeElement
    */
-  public set value_label_vert(_: string) {
+  public set value_label_vert(_: Type_TextVPos) {
     this._display.attributes.value_label_vert = _
-    this.drawLabel()
+    this.drawValueLabel()
   }
 
   /**
@@ -1637,9 +1741,9 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set value_label_horiz(_: string) {
+  public set value_label_horiz(_: Type_TextHPos) {
     this._display.attributes.value_label_horiz = _
-    this.drawLabel()
+    this.drawValueLabel()
   }
 
   /**
@@ -1661,7 +1765,139 @@ export class Class_NodeElement extends Class_Element {
    */
   public set value_label_font_size(_: number) {
     this._display.attributes.value_label_font_size = _
-    this.drawLabel()
+    this.drawValueLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_background() {
+    if (this._display.attributes.value_label_background !== undefined) {
+      return this._display.attributes.value_label_background
+    } else if (this._display.style.value_label_background !== undefined) {
+      return this._display.style.value_label_background
+    }
+    return default_label_background
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_background(_: boolean) {
+    this._display.attributes.value_label_background = _
+    this.drawValueLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_color() {
+    if (this._display.attributes.value_label_color !== undefined) {
+      return this._display.attributes.value_label_color
+    } else if (this._display.style.value_label_color !== undefined) {
+      return this._display.style.value_label_color
+    }
+    return default_label_color
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_color(_: boolean) {
+    this._display.attributes.value_label_color = _
+    this.drawValueLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_uppercase() {
+    if (this._display.attributes.value_label_uppercase !== undefined) {
+      return this._display.attributes.value_label_uppercase
+    } else if (this._display.style.value_label_uppercase !== undefined) {
+      return this._display.style.value_label_uppercase
+    }
+    return default_label_uppercase
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_uppercase(_: boolean) {
+    this._display.attributes.value_label_uppercase = _
+    this.drawValueLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_bold() {
+    if (this._display.attributes.value_label_bold !== undefined) {
+      return this._display.attributes.value_label_bold
+    } else if (this._display.style.value_label_bold !== undefined) {
+      return this._display.style.value_label_bold
+    }
+    return default_label_bold
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_bold(_: boolean) {
+    this._display.attributes.value_label_bold = _
+    this.drawValueLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_italic() {
+    if (this._display.attributes.value_label_italic !== undefined) {
+      return this._display.attributes.value_label_italic
+    } else if (this._display.style.value_label_italic !== undefined) {
+      return this._display.style.value_label_italic
+    }
+    return default_label_italic
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_italic(_: boolean) {
+    this._display.attributes.value_label_italic = _
+    this.drawValueLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_font_family() {
+    if (this._display.attributes.value_label_font_family !== undefined) {
+      return this._display.attributes.value_label_font_family
+    } else if (this._display.style.value_label_font_family !== undefined) {
+      return this._display.style.value_label_font_family
+    }
+    return default_label_font_family
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_font_family(_: string) {
+    this._display.attributes.value_label_font_family = _
+    this.drawValueLabel()
   }
 
   // PRIVATE GETTER / SETTER ============================================================
@@ -1758,8 +1994,8 @@ export class Class_NodeAttribute {
   protected _name_label_italic?: boolean
   protected _name_label_box_width?: number
   protected _name_label_color?: boolean
-  protected _name_label_vert?: string
-  protected _name_label_horiz?: string
+  protected _name_label_vert?: Type_TextVPos
+  protected _name_label_horiz?: Type_TextHPos
   protected _name_label_background?: boolean
 
   // Parameter of node value label
@@ -1771,8 +2007,8 @@ export class Class_NodeAttribute {
   protected _value_label_italic?: boolean
   protected _value_label_box_width?: number
   protected _value_label_color?: boolean
-  protected _value_label_vert?: string
-  protected _value_label_horiz?: string
+  protected _value_label_vert?: Type_TextVPos
+  protected _value_label_horiz?: Type_TextHPos
   protected _value_label_background?: boolean
 
   // PUBLIC METHODS =====================================================================
@@ -1941,8 +2177,8 @@ export class Class_NodeAttribute {
   public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _ }
   public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _ }
   public set name_label_color(_: boolean | undefined) { this._name_label_color = _ }
-  public set name_label_vert(_: string | undefined) { this._name_label_vert = _ }
-  public set name_label_horiz(_: string | undefined) { this._name_label_horiz = _ }
+  public set name_label_vert(_: Type_TextVPos | undefined) { this._name_label_vert = _ }
+  public set name_label_horiz(_: Type_TextHPos | undefined) { this._name_label_horiz = _ }
   public set name_label_background(_: boolean | undefined) { this._name_label_background = _ }
 
   // Parameter of node value label
@@ -1954,8 +2190,8 @@ export class Class_NodeAttribute {
   public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _ }
   public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _ }
   public set value_label_color(_: boolean | undefined) { this._value_label_color = _ }
-  public set value_label_vert(_: string | undefined) { this._value_label_vert = _ }
-  public set value_label_horiz(_: string | undefined) { this._value_label_horiz = _ }
+  public set value_label_vert(_: Type_TextVPos | undefined) { this._value_label_vert = _ }
+  public set value_label_horiz(_: Type_TextHPos | undefined) { this._value_label_horiz = _ }
   public set value_label_background(_: boolean | undefined) { this._value_label_background = _ }
 
 }
@@ -2095,8 +2331,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public set name_label_italic(_: boolean) { this._name_label_italic = _; this.updateReferencesDraw() }
   public set name_label_box_width(_: number) { this._name_label_box_width = _; this.updateReferencesDraw() }
   public set name_label_color(_: boolean) { this._name_label_color = _; this.updateReferencesDraw() }
-  public set name_label_vert(_: string) { this._name_label_vert = _; this.updateReferencesDraw() }
-  public set name_label_horiz(_: string) { this._name_label_horiz = _; this.updateReferencesDraw() }
+  public set name_label_vert(_: Type_TextVPos) { this._name_label_vert = _; this.updateReferencesDraw() }
+  public set name_label_horiz(_: Type_TextHPos) { this._name_label_horiz = _; this.updateReferencesDraw() }
   public set name_label_background(_: boolean) { this._name_label_background = _; this.updateReferencesDraw() }
 
   // Parameter of node value label
@@ -2108,8 +2344,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public set value_label_italic(_: boolean) { this._value_label_italic = _; this.updateReferencesDraw() }
   public set value_label_box_width(_: number) { this._value_label_box_width = _; this.updateReferencesDraw() }
   public set value_label_color(_: boolean) { this._value_label_color = _; this.updateReferencesDraw() }
-  public set value_label_vert(_: string) { this._value_label_vert = _; this.updateReferencesDraw() }
-  public set value_label_horiz(_: string) { this._value_label_horiz = _; this.updateReferencesDraw() }
+  public set value_label_vert(_: Type_TextVPos) { this._value_label_vert = _; this.updateReferencesDraw() }
+  public set value_label_horiz(_: Type_TextHPos) { this._value_label_horiz = _; this.updateReferencesDraw() }
   public set value_label_background(_: boolean) { this._value_label_background = _; this.updateReferencesDraw() }
 
 }

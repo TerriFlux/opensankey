@@ -744,7 +744,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
               {t('Noeud.labels.l_bg')}
             </OSTooltip>
-
             {
               (!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'name_label_background') ?
@@ -933,7 +932,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         isIndeterminate={is_indeterminated}
         isChecked={value_label_visible}
         onChange={(evt) => {
-          elements.forEach(element => element.name_label_visible = evt.target.checked)
+          elements.forEach(element => element.value_label_visible = evt.target.checked)
           updateMenuConfigurationNodeAttributes()
         }}
       >
