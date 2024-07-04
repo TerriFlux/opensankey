@@ -473,6 +473,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [mode_selection, sModeSelection] = useState('ln')
   const [, setForceUpdate] = useBoolean()
+  new_data.menu_configuration.updateComponentToolbar.current=setForceUpdate.toggle
   let btn_mouse_mode_edition = <></>
 
   // ref_getter_mode_selection.current = mode_selection
@@ -955,12 +956,12 @@ const stretchButtons: stretchButtonsFType = (
   t: TFunction
 ) => {
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight) }} >
+    <Button variant='toolbar_button_6' onClick={() => applicationData.new_data.drawing_area.areaFitHorizontally()} >
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
   <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight, false, true) }} >
+    <Button variant='toolbar_button_6' onClick={() => { applicationData.new_data.drawing_area.areaFitVertically() }} >
       <FontAwesomeIcon icon={faArrowsUpDown} />
     </Button>
   </OSTooltip></>

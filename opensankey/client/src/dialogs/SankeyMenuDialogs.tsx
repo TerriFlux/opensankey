@@ -617,9 +617,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
               onClick={
                 () => {
                   ClickSaveDiagram(
-                    applicationData,
-                    applicationData.data,
-                    applicationState,
+                    applicationData.new_data,
                     {
                       mode_save,
                       mode_visible_element

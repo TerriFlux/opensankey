@@ -83,7 +83,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initializeLinkFunctions,
   initializeNodeFunctions,
   initializeAdditionalMenus,
-  initializeKeyHandler,
   initializeDiagrammSelector,
   moduleDialogs,
   DrawAll,
@@ -434,26 +433,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_alt_key_pressed
   )
 
-
-  const formatKeyHandler=(e:KeyboardEvent)=>{
-    initializeKeyHandler(applicationData,
-      uiElementsRef,
-      contextMenu,
-      e,
-      applicationState,
-      closeAllMenu(dict_hook_ref_setter_show_dialog_components,contextMenu),
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      applicationContext,
-      node_function,
-      applicationDraw
-    )
-  }
-  document.onkeydown = formatKeyHandler
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
 
   useEffect(() => {
@@ -467,52 +446,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*************************************************************************************************/
   useEffect(() => {
-    // Generic function which draws all graphical elements (nodes, links, label, legend...)
-    DrawAll(
-      contextMenu,
-      applicationData,
-      uiElementsRef,
-      applicationState,
-      applicationContext,
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      node_function,
-      applicationDraw.GetSankeyMinWidthAndHeight,
-      applicationDraw
-    )
-
-    // Zoom Behavior
-    applyZoomEvent(
-      applicationData,
-      applicationDraw.GetSankeyMinWidthAndHeight
-    )
-
-    if( !windowSankey.SankeyToolsStatic ){
-      installEventOnSVG(
-        contextMenu,
-        applicationContext,
-        applicationData,
-        uiElementsRef,
-        applicationState,
-        link_function,
-        ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components,
-        node_function,
-        applicationDraw
-      )
-    }
-    setTimeout(() => {
-      applicationDraw.reAdjustSankey()
-    }, 100)
-  },[data])
+     // Test
+        applicationData.new_data?.drawing_area?.reset();
+  })
   /*************************************************************************************************/
 
   return <ChakraProvider theme={opensankey_theme}>
-    <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
+    <div id='sankey_app' style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
         {moduleDialogs(
           applicationContext,
@@ -616,16 +556,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
-
-      <SankeyDraw
-        contextMenu={contextMenu}
-        applicationData={applicationData}
-        animation={useRef(false)}
-        applicationState={applicationState}
-        agregation={agregation}
-        ref_alt_key_pressed={ref_alt_key_pressed}
-        GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
-      />
 
       <ContextMenuNode
         applicationContext = {applicationContext}

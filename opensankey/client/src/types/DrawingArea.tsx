@@ -26,7 +26,9 @@ import {
   sortLinksElements
 } from './Link'
 import {
-  Class_ApplicationData
+  Class_ApplicationData,
+  initial_window_height,
+  initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
 import { Class_Element, Class_ProtoElement } from './Element'
@@ -48,6 +50,14 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public application_data: Class_ApplicationData
+
+  /**
+ * d3 svg element containing all sub svg elements, it is also wher we can zoom with scroll wheel
+ * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+ * @memberof Class_DrawingArea
+ */
+  public d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null
+
 
   /**
    * d3 svg groups for drawing area
@@ -129,7 +139,7 @@ export class Class_DrawingArea {
   private _legend: Class_Legend
 
   // Elements that are selected in this area
-  private _selection: {[id: string]: Class_ProtoElement} = {}
+  private _selection: { [id: string]: Class_ProtoElement } = {}
 
   // Color
   private _color: string = default_background_color
@@ -145,6 +155,14 @@ export class Class_DrawingArea {
   // Positionning
   public _horizontal_spacing: number = 200
   public _vertical_spacing: number = 50
+
+  // Zoom & positioning of drawing_area
+  // if we want to move manually the drawing_area, we should use this variable (see areaFitHorizontally && areaFitVertically)
+  private zoomListener = d3.zoom<SVGSVGElement, unknown>()
+    .filter(evt => (evt.which == 2 || evt.which == 0))//only trigger zoom event when we scroll (which == 0) && and drag mouse middle button (which == 2)
+    .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))// change cursor to 'move' to show we can shift drawing area
+    .on('zoom', this.eventZoom)
+    .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))// reset cursor
 
   // CONSTRUCTOR ========================================================================
 
@@ -165,7 +183,7 @@ export class Class_DrawingArea {
     this._height = _height
     this._width = _width
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
-    this._legend = new Class_Legend( this,this.application_data.menu_configuration)
+    this._legend = new Class_Legend(this, this.application_data.menu_configuration)
     // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
 
@@ -177,13 +195,20 @@ export class Class_DrawingArea {
    */
   public reset() {
     // Clean drawing area
-    if (this.d3_selection !== null) {
-      this.d3_selection.remove()
-    }
+    this.removeDrawingArea()
+
+    // Add zoom zone where we can scroll to zoom or drag with mouse middle button
+    this.d3_selection_zoom_area = d3.select('#sankey_app')
+      .append('svg')
+      .attr('id', 'draw_zoom')
+      .attr('width', window.innerWidth)
+      .attr('height', window.innerHeight)
+
     // Init drawing area
-    this.d3_selection = d3.select(' .opensankey #svg')
+    this.d3_selection = this.d3_selection_zoom_area
       .append('g')
       .attr('id', 'g_drawing')
+      .attr('transform', 'translate(0,' + this.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
 
     // Add specific groups for nodes, link and others
     this.d3_selection_bg = this.d3_selection.append('g').attr('id', 'g_background')
@@ -200,6 +225,15 @@ export class Class_DrawingArea {
 
     // Added events listeners
     this.setEventsListeners()
+  }
+
+  /**
+   * Delete html element SVG containing drawing area
+   *
+   * @memberof Class_DrawingArea
+   */
+  public removeDrawingArea() {
+    this.d3_selection_zoom_area?.remove()
   }
 
   /**
@@ -243,7 +277,7 @@ export class Class_DrawingArea {
   public set legend(value: Class_Legend) { this._legend = value }
 
   // Selections
-  public get selected_nodes_list() : Class_NodeElement[] {
+  public get selected_nodes_list(): Class_NodeElement[] {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_NodeElement)
       .map(element => element as Class_NodeElement)
@@ -285,6 +319,19 @@ export class Class_DrawingArea {
   public getHeight() { return this._height }
   public setHeight(_: number) { this._height = _; this.drawBackground() }
 
+
+  /**
+   * Return height of the top nav bar
+   *
+   * @return {*} 
+   * @memberof Class_DrawingArea
+   */
+  public getNavBarHeight() {
+    return (document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height) ?? 0
+  }
+
+
+
   // Color
   public get color() { return this._color }
   public set color(_: string) { this._color = _; this.drawBackground() } // TODO add regular expression check here
@@ -313,13 +360,18 @@ export class Class_DrawingArea {
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
 
-/**
- * Convert current drawing area & all substructure as JSON data
- *
- * @return {*}
- * @memberof Class_DrawingArea
- */
-public toJSON() {
+
+
+
+  // PUBLIC METHODS =====================================================================
+
+  /**
+   * Convert current drawing area & all substructure as JSON data
+   *
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public toJSON() {
     let json_object = {} as { [_: string]: any }
     json_object['grid_visible'] = this._grid_visible
     json_object['grid_square_size'] = this._grid_size
@@ -370,10 +422,6 @@ public toJSON() {
 
     return json_object
   }
-
-
-
-  // PUBLIC METHODS =====================================================================
 
   /**
    * Checks if it is possible to directly deal with events
@@ -491,7 +539,7 @@ public toJSON() {
     // Get copy of selected nodes
     const selected_nodes = this.selected_nodes_list
     // Delete each one of them
-    selected_nodes.forEach(node => {this.deleteNode(node)})
+    selected_nodes.forEach(node => { this.deleteNode(node) })
     // Then let garbage collector do the rest...
   }
 
@@ -540,9 +588,75 @@ public toJSON() {
     // Get copy of selected nodes
     const selected_links = this.selected_links_list
     // Delete each one of them
-    selected_links.forEach(link => {this.deleteLink(link)})
+    selected_links.forEach(link => { this.deleteLink(link) })
     // Then let garbage collector do the rest...
   }
+
+  /**
+   * Function to check if element are near drawing area border & update it size in consequence
+   *
+   * @memberof Class_DrawingArea
+   */
+  public checkAndUpdateAreaSize() {
+
+    let max_node_pos_x = 0
+    let max_node_pos_y = 0
+    this.sankey.visible_nodes_list.filter(node => node.position_type === 'absolute').map(node => {
+      const node_rightest_pos = node.position_x + node.getShapeWidthToUse()
+      const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()
+      max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
+      max_node_pos_y = Math.max(max_node_pos_y, node_bottomest_pos)
+    })
+
+    // If righest node is too close to right drawing area border then enlarege DA
+    // else reduce DA until window init witdh
+    // (init DA size is computed with a sankey at scale 1 )
+    if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
+      this.setWidth(max_node_pos_x + this._grid_size)
+      this.drawGrid()
+    } 
+
+// If bottomiest node is too close to the bottom of drawing area border then enlarege DA
+    // else reduce DA until window init height
+    // (init DA size is computed with a sankey at scale 1 )
+    if (max_node_pos_y > this._height - this.grid_size ||( (max_node_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
+      this.setHeight(max_node_pos_y + this._grid_size)
+      this.drawGrid()
+    }
+  }
+
+  /**
+   * Recenter drawing area & make it fit the screen horizontally,
+   * 
+   * (not recommended for vertical sankey)
+   *
+   * @memberof Class_DrawingArea
+   */
+  public areaFitHorizontally() {
+    if (this.d3_selection_zoom_area) {
+      const navbar_height = this.getNavBarHeight()
+      // window.innerWidth-50 correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerWidth - 50) / this.getWidth())
+      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [0, navbar_height])
+    }
+  }
+
+  /**
+ * Recenter drawing area & make it fit the screen vertically,
+ * 
+ * (not recommended for horizontal sankey)
+ *
+ * @memberof Class_DrawingArea
+ */
+  public areaFitVertically() {
+    if (this.d3_selection_zoom_area) {
+      const navbar_height = this.getNavBarHeight()
+      // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerHeight - 50 - navbar_height) / this.getHeight())
+      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [0, navbar_height])
+    }
+  }
+
 
   // PRIVATE METHODS ==================================================================
 
@@ -650,7 +764,13 @@ public toJSON() {
       this.d3_selection?.on(
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event))
+          this.eventSimpleRMBCLick(event));
+
+      // Zoom behavior(but can also drag drawing area in scroll zone)
+      this.d3_selection_zoom_area?.call(
+        this.zoomListener
+      )
+        .on('dblclick.zoom', null) // deactivate dbl click zoom
     }
   }
 
@@ -771,5 +891,19 @@ public toJSON() {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir  */
+  }
+
+  /**
+   * Define behavior when we scroll in drawing area (or scroll zone around)
+   * && when we drag mouse middle button in drawing area (or scroll zone around)
+   *
+   * @private
+   * @param {*} e
+   * @memberof Class_DrawingArea
+   */
+  private eventZoom(e: any) {
+    d3.select('#g_drawing')
+      .transition()
+      .attr('transform', e.transform)
   }
 }
