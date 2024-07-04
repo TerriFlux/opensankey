@@ -18,6 +18,9 @@ import { Class_LinkElement } from './Link'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 
 
+export const initial_window_width=window.innerWidth -50 //TODO : replace 50 by width of toolbar
+export const initial_window_height=window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
+
 /**
  * Class that contains all elements to make the application work
  *
@@ -36,8 +39,8 @@ export class Class_ApplicationData {
     this.menu_configuration = new Class_MenuConfig
 
     this.drawing_area = new Class_DrawingArea(
-      window.innerHeight - 50,
-      window.innerWidth - 50,
+      initial_window_height,
+      initial_window_width,
       this)
 
     document.onkeydown = this.keyboardEventListener(this)
