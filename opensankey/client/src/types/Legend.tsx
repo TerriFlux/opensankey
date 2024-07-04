@@ -1,3 +1,9 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Date : 29/05/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
@@ -122,8 +128,8 @@ public fromJSON(json_object:{[_:string]:any}){
 }
  // Protected ==================================
  protected update_visibility(): void {
-  if(this._masked)this.setInvisble(false)
-    else this.setVisible(false)  
+  if(this._masked)this.setInvisible()
+    else this.setVisible()
  }
 
   // ========Private
@@ -472,36 +478,36 @@ public fromJSON(json_object:{[_:string]:any}){
   protected eventMouseDragEnd(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
-    this.reset()
+    this.draw()
   }
 
   // =========== Getter & Setter ===============
 
   public get masked(): boolean { return this._masked }
-  public set masked(value: boolean) { this._masked = value; this.reset() }
+  public set masked(value: boolean) { this._masked = value; this.draw() }
 
   public get display_legend_scale(): boolean { return this._display_legend_scale }
-  public set display_legend_scale(value: boolean) { this._display_legend_scale = value; this.reset() }
+  public set display_legend_scale(value: boolean) { this._display_legend_scale = value; this.draw() }
 
   public get legend_police(): number { return this._legend_police }
-  public set legend_police(value: number) { this._legend_police = value; this.reset() }
+  public set legend_police(value: number) { this._legend_police = value; this.draw() }
 
   public get legend_bg_border(): boolean { return this._legend_bg_border }
-  public set legend_bg_border(value: boolean) { this._legend_bg_border = value; this.reset() }
+  public set legend_bg_border(value: boolean) { this._legend_bg_border = value; this.draw() }
 
   public get legend_bg_color(): string { return this._legend_bg_color }
-  public set legend_bg_color(value: string) { this._legend_bg_color = value; this.reset() }
+  public set legend_bg_color(value: string) { this._legend_bg_color = value; this.draw() }
 
   public get legend_bg_opacity(): number { return this._legend_bg_opacity }
-  public set legend_bg_opacity(value: number) { this._legend_bg_opacity = value; this.reset() }
+  public set legend_bg_opacity(value: number) { this._legend_bg_opacity = value; this.draw() }
 
   public get legend_show_dataTags(): boolean { return this._legend_show_dataTags }
-  public set legend_show_dataTags(value: boolean) { this._legend_show_dataTags = value; this.reset() }
+  public set legend_show_dataTags(value: boolean) { this._legend_show_dataTags = value; this.draw() }
 
   public get node_label_separator(): string { return this._node_label_separator }
-  public set node_label_separator(value: string) { this._node_label_separator = value; this.reset() }
+  public set node_label_separator(value: string) { this._node_label_separator = value; this.draw() }
 
   public get width(): number { return this._width }
-  public set width(value: number) { this._width = value; this.reset() }
+  public set width(value: number) { this._width = value; this.draw() }
 
 }

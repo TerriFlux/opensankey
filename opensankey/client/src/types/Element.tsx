@@ -34,9 +34,9 @@ const const_default_position_y = 50
 /**
  * Class that define a meta element to display on drawing area
  *
- * @class Class_Element
+ * @class Class_ProtoElement
  */
-export abstract class Class_Element {
+export abstract class Class_ProtoElement {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -78,7 +78,6 @@ export abstract class Class_Element {
    */
   protected abstract _display: {
     drawing_area: Class_DrawingArea,
-    position: Type_ElementPosition,
   }
 
   /**
@@ -88,7 +87,6 @@ export abstract class Class_Element {
    * @memberof Class_Element
    */
   private _menu_config: Class_MenuConfig
-
 
   /**
    * Parent svg group : where element belong
@@ -168,25 +166,6 @@ export abstract class Class_Element {
     // Does nothing here
   }
 
-  // PUBLIC METHODS =====================================================================
-  public reset() {
-    // Draw only if visible
-    this.update_visibility()
-    if (this.is_visible) {
-      // Draw element on D3
-      this.draw()
-    }
-    else {
-      // Clear D3
-      this.unDraw()
-    }
-  }
-
-  // Positioning
-  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
-  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.reset() }
-  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
-
   // GETTERS / SETTERS ==================================================================
   // Name
   public get id() { return this._id }
@@ -197,24 +176,15 @@ export abstract class Class_Element {
   // Svg Group
   public get svg_group() { return this._svg_group }
 
-  // Position
-  public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
-  public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
-  public get position_type() { return this._display.position.type }
-  public set position_type(_: Type_Position) { this._display.position.type = _; this.reset() }
-
   // Selection
-  public setSelected() { this._is_selected = true}
-  public setUnSelected() { this._is_selected = false}
+  public setSelected() { this._is_selected = true; this.draw() }
+  public setUnSelected() { this._is_selected = false; this.draw() }
   public get is_selected() { return this._is_selected }
 
   // Visible
-  public setVisible(reset=true) { this._is_visible = true; if(reset) this.reset() }
-  public setInvisble(reset=true) { this._is_visible = false; if(reset) this.reset() }
+  public setVisible() { this._is_visible = true; this.draw() }
+  public setInvisible() { this._is_visible = false; this.draw() }
   public get is_visible() { return this._is_visible }
-  protected abstract update_visibility():void
 
   // Mouse is over element
   public isMouseOver() { return this._is_mouse_over }
@@ -222,12 +192,7 @@ export abstract class Class_Element {
   public unsetMouseOver() { this._is_mouse_over = false }
 
   // Get application config menu
-  protected get menu_config(): Class_MenuConfig {
-    return this._menu_config
-  }
-  protected set menu_config(value: Class_MenuConfig) {
-    this._menu_config = value
-  }
+  protected get menu_config(): Class_MenuConfig {return this._menu_config}
 
   // PROTECTED METHODES =================================================================
 
@@ -236,20 +201,21 @@ export abstract class Class_Element {
    * @protected
    * @memberof Class_Element
    */
-  protected draw() {
+  public draw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
       // Undraw all
       this.unDraw()
-      // Set d3 selection
-      this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-        .datum(this)
-        .append('g')
-        .attr('id', 'gg_' + this._id)
-      // Add events listeners
-      this.setEventsListeners()
-      // Apply the position
-      this.applyPosition()
+      // Draw only if visible
+      if (this._is_visible) {
+        // Set d3 selection
+        this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+          .datum(this)
+          .append('g')
+          .attr('id', 'gg_' + this._id)
+        // Add events listeners
+        this.setEventsListeners()
+      }
     }
   }
 
@@ -262,20 +228,6 @@ export abstract class Class_Element {
     if (this.d3_selection !== null) {
       this.d3_selection.remove()
       this.d3_selection = null
-    }
-  }
-
-  /**
-   * Apply node position to it shape in d3
-   * @protected
-   * @return {*}
-   * @memberof Class_Node
-   */
-  protected applyPosition() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.attr(
-        'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')')
     }
   }
 
@@ -479,3 +431,105 @@ export abstract class Class_Element {
     /* TODO définir  */
   }
 }
+
+
+/**
+ * Class that define a meta element to display on drawing area
+ * Difference with Class_ProtoElement, Class_Element set its position
+ *
+ * @class Class_Element
+ */
+export abstract class Class_Element extends Class_ProtoElement {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  /**
+   * Display attributes for element
+   * @protected
+   * @type {{
+   *     drawing_area: Class_DrawingArea,
+   *     position: Type_ElementPosition,
+   *   }}
+   * @memberof Class_Element
+   */
+  protected abstract _display: {
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+  }
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_Element.
+   * @param {string} id
+   * @param {Class_DrawingArea} drawing_area
+   * @param {string} svg_group
+   * @memberof Class_Element
+   */
+  constructor(
+    id: string,
+    menu_config: Class_MenuConfig,
+    svg_group: string,
+  ) {
+    super(id, menu_config, svg_group)
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  /**
+   * Set up element on d3 svg area
+   * @protected
+   * @memberof Class_Element
+   */
+  public draw() {
+    // Draw element on D3
+    super.draw()
+    // Add apply position
+    this.applyPosition()
+  }
+
+  // Positioning
+  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
+  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.draw() }
+  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
+
+  // GETTERS / SETTERS ==================================================================
+
+  // Position
+  public get position_x() { return this._display.position.x }
+  public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
+  public get position_y() { return this._display.position.y }
+  public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
+  public get position_type() { return this._display.position.type }
+  public set position_type(_: Type_Position) { this._display.position.type = _; this.applyPosition() }
+
+  // PROTECTED METHODS ==================================================================
+
+  /**
+   * Unset element from d3 svg area
+   * @protected
+   * @memberof Class_Element
+   */
+  protected unDraw() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.remove()
+      this.d3_selection = null
+    }
+  }
+
+  /**
+   * Apply node position to it shape in d3
+   * @protected
+   * @return {*}
+   * @memberof Class_Node
+   */
+  protected applyPosition() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.attr(
+        'transform',
+        'translate(' + this.position_x + ', ' + this.position_y + ')')
+    }
+  }
+
+}
+

@@ -86,41 +86,15 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                     const visible = evt.target.checked
                     list_node_selected.forEach(d => {
                       if (visible) {
-
                         d.tags[tags_group_key].push(tags[1])
-                        // If the groue tage is 'Type de noeud' then we change the style
-                        // to style of product or sector
-                        // if(tags_group_key==='Type de noeud'){
-                        //   if(tags[0]==='secteur'){
-                        //     d.style='NodeSectorStyle'
-                        //   }else  if(tags[0]==='produit'){
-                        //     d.style='NodeProductStyle'
-                        //   }
-                        // }
                       } else {
                         // Remove deselected tag from array of selected for the groupe tag tags_group_key of selected nodes
                         d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[1]),1)
-
-                        // If the groue tage is 'Type de noeud' then we change the style
-                        // to style of product or sector according to tag still affected
-                        // if neither 'produit' or 'secteur' are affected the change style to default
-                        // if(tags_group_key==='Type de noeud' && d.tags[tags_group_key].length==0){
-                        //   d.style='default'
-                        // } else if (
-                        //   (tags_group_key==='Type de noeud') &&
-                        //   (d.tags[tags_group_key].includes('secteur') || d.tags[tags_group_key].includes('produit'))
-                        // ){
-                        //   if (tags[0]==='secteur') {
-                        //     d.style='NodeProductStyle'
-                        //   } else if (tags[0]==='produit'){
-                        //     d.style='NodeSectorStyle'
-                        //   }
-                        // }
                       }
                     })
                     setForceUpdate(!forceUpdate)
                     // node_function.RedrawNodes(multi_selected_nodes.current)
-                    list_node_selected.forEach(n=>n.reset())
+                    list_node_selected.forEach(n=>n.draw())
                     ComponentUpdater.updateComponenSaveInCache.current(false)
                   }}
                 >

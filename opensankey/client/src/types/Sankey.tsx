@@ -109,7 +109,7 @@ export class Class_Sankey {
     this.drawing_area = drawing_area
     this.menu_config = menu_config
     this._link_styles[default_style_name]=default_link_style
-    this._node_styles[default_style_name]=default_node_style  
+    this._node_styles[default_style_name]=default_node_style
     this._colorMap = 'no_colormap'
     this._nodesColorMap = 'no_colormap'
     this._linksColorMap = 'no_colormap'
@@ -362,7 +362,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get selected_data_tags_entries() {
-    const obj_data_tags_selected: {[x:string]:Class_Tag} ={} 
+    const obj_data_tags_selected: {[x:string]:Class_Tag} ={}
     this.data_taggs_list.forEach(data_tagg => {
       obj_data_tags_selected[data_tagg.id]=data_tagg.selected_tags_list[0]
     })
@@ -371,20 +371,20 @@ export class Class_Sankey {
 
    /**
    * Return an array of possible path to link value,
-   * it use the combinitation of all tags from different data_taggs 
-   * 
+   * it use the combinitation of all tags from different data_taggs
+   *
    * Exemple :
    * [
-   * 
+   *
    * [grp1_key1,grp2_key1],
-   * 
+   *
    * [grp1_key1,grp2_key2],
-   * 
+   *
    * [grp1_key2,grp2_key1],
-   * 
+   *
    * [grp1_key2,grp2_key2],
    * ...
-   * ]  
+   * ]
    * *
    * @readonly
    * @memberof Class_Sankey
@@ -463,6 +463,15 @@ export class Class_Sankey {
   }
 
   // PUBLIC METHODS =====================================================================
+
+  // All --------------------------------------------------------------------------------
+
+  public draw() {
+    // Draw links
+    this.links_list.forEach(link => link.draw())
+    // Draw nodes
+    this.nodes_list.forEach(node => node.draw())
+  }
 
   // Nodes related ----------------------------------------------------------------------
 
@@ -769,12 +778,12 @@ export class Class_Sankey {
       this._addNode(node)
     })
 
-    // Redo a go throught, but this time create nodes dimension 
+    // Redo a go throught, but this time create nodes dimension
     this.nodes_list.forEach(n=>{
       // get dimensions in json
       const dim =json_object['nodes'][n.id].dimensions
 
-      /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like : 
+      /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like :
       dimensions :{...,
           keyGrpLevelTag:{}  // dimensions have an object but it doesn't have parent
         }
