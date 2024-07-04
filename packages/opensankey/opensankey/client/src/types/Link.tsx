@@ -220,12 +220,12 @@ export class Class_LinkElement extends Class_ProtoElement {
       })
     // Source
     this._source = source
+    this._source.addOutputLink(this)
     // Target
     this._target = target
-    // Set on draw
-    this.draw()
-    this._source.addOutputLink(this)
     this._target.addInputLink(this)
+    // Instanciate display on svg
+    this.draw()
   }
 
   // CLEANING ===========================================================================
@@ -263,6 +263,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     super.draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links')
+    // Draw elements
+    this.drawElements()
   }
 
   public drawElements() {
@@ -288,19 +290,19 @@ export class Class_LinkElement extends Class_ProtoElement {
     const tmp_source = this._source
     this._source = tmp_source
     this._target = tmp_target
-    this.drawPath()
+    this.drawElements()
   }
 
   public setPosXYStartingPoint(x: number, y: number) {
     this._display.position_starting.x = x
     this._display.position_starting.y = y
-    this.drawPath()
+    this.drawElements()
   }
 
   public setPosXYEndingPoint(x: number, y: number) {
     this._display.position_ending.x = x
     this._display.position_ending.y = y
-    this.drawPath()
+    this.drawElements()
   }
 
   public deleteRelativeLabelPos() {
@@ -554,25 +556,31 @@ export class Class_LinkElement extends Class_ProtoElement {
   private drawPath() {
     // Clean previous shape
     this.d3_selection?.selectAll('.link_path').remove()
-    // Add new path shape
-    this.d3_selection?.append('path')
-      .classed('link', true)
-      .classed('link_path', true)
-      .attr('d', () => this.getBezierPath())
-    // Apply properties
-    this.d3_selection?.selectAll('.link_path')
-      .attr('id', this.id)
-      .attr('fill', 'none')
-      .attr('stroke', () => this.getPathColorToUse())
-      .attr('stroke-opacity', this.shape_opacity)
-      .attr('stroke-width', Math.max(1, this.thickness))
-      .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
+    // Failsafe
+    if (this._source && this._target) {
+      // Add new path shape
+      this.d3_selection?.append('path')
+        .classed('link', true)
+        .classed('link_path', true)
+        .attr('d', () => this.getBezierPath())
+      // Apply properties
+      this.d3_selection?.selectAll('.link_path')
+        .attr('id', this.id)
+        .attr('fill', 'none')
+        .attr('stroke', () => this.getPathColorToUse())
+        .attr('stroke-opacity', this.shape_opacity)
+        .attr('stroke-width', this.thickness)
+        .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
+    }
   }
 
   private drawLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.label').remove()
-    // TODO a faire
+    // Failsafe
+    if (this._source && this._target) {
+      // TODO a faire
+    }
   }
 
   private getPathColorToUse() {
@@ -1939,6 +1947,7 @@ export class Class_LinkValueTree {
   }
 
   // PUBLIC METHODS =====================================================================
+
   public addNewTagGroup(tag_group: Class_TagGroup) {
     Object.keys(this.children)
       .forEach(id => {
@@ -1981,7 +1990,6 @@ export class Class_LinkValueTree {
       value.data_value = val
     }
   }
-
 
   public getDataValue(tags: Class_Tag[]) : number | null {
     const value = this.getValue(tags)
@@ -2059,7 +2067,6 @@ export class Class_LinkValue {
 
 }
 
-
 function allPossibleCases(arr: string[][]): string[][] {
   if (arr.length == 1) {
     return arr[0] as any;
@@ -2074,8 +2081,8 @@ function allPossibleCases(arr: string[][]): string[][] {
     }
     return result as any;
   }
-
 }
+
 /**
  * function that get value for link from JSON with a given path
  *
