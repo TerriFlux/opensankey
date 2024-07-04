@@ -1064,52 +1064,56 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawShape() {
-    const width = this.getShapeWidthToUse()
-    const height = this.getShapeHeightToUse()
-    const color = this.getShapeColorToUse()
-    // Get drawing scale
-    const scale = d3.scaleLinear()
-      .range([0, 100])
-      .domain([0, this.drawing_area.scale])
     // Clean previous shape
     this.d3_selection?.selectAll('.node_shape').remove()
-    // Apply shape value
-    if (this.shape_type === 'rect') {
-      this.d3_selection?.append('rect')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('width', width)
-        .attr('height', height)
+    // Do the rest only if shape is visible
+    if (this.shape_visible) {
+      // Compute shape attributes
+      const width = this.getShapeWidthToUse()
+      const height = this.getShapeHeightToUse()
+      const color = this.getShapeColorToUse()
+      // Get drawing scale
+      const scale = d3.scaleLinear()
+        .range([0, 100])
+        .domain([0, this.drawing_area.scale])
+      // Apply shape value
+      if (this.shape_type === 'rect') {
+        this.d3_selection?.append('rect')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('width', width)
+          .attr('height', height)
+      }
+      else if (this.shape_type === 'ellipse') {
+        this.d3_selection?.append('ellipse')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('cx', width / 2)
+          .attr('cy', height / 2)
+          .attr('rx', width / 2)
+          .attr('ry', height / 2)
+      }
+      else if (this.shape_type === 'arrow') {
+        this.d3_selection?.append('path')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('d', () => {
+            const n_w = width
+            const n_h = height
+            const k_angle = this.shape_arrow_angle_factor
+            const angle_direction = this.shape_arrow_angle_direction
+            const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction, scale)
+            return path
+          })
+      }
+      // Apply common properties
+      this.d3_selection?.selectAll('.node_shape')
+        .attr('id', this.id)
+        .attr('fill-opacity', this.shape_visible ? '1' : '0')
+        .attr('fill', color)
+        .style('stroke', 'black')
+        .style('stroke-width', this.is_selected ? 3 : 0)
     }
-    else if (this.shape_type === 'ellipse') {
-      this.d3_selection?.append('ellipse')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('cx', width / 2)
-        .attr('cy', height / 2)
-        .attr('rx', width / 2)
-        .attr('ry', height / 2)
-    }
-    else if (this.shape_type === 'arrow') {
-      this.d3_selection?.append('path')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('d', () => {
-          const n_w = width
-          const n_h = height
-          const k_angle = this.shape_arrow_angle_factor
-          const angle_direction = this.shape_arrow_angle_direction
-          const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction, scale)
-          return path
-        })
-    }
-    // Apply common properties
-    this.d3_selection?.selectAll('.node_shape')
-      .attr('id', this.id)
-      .attr('fill-opacity', this.shape_visible ? '1' : '0')
-      .attr('fill', color)
-      .style('stroke', 'black')
-      .style('stroke-width', this.is_selected ? 3 : 0)
   }
 
   /**
@@ -1118,13 +1122,13 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawLabel() {
-    // Get variable property for node label
     // Clean previous label
     this.d3_selection?.selectAll('.label').remove()
     // Add name label
     if (this.name_label_visible) {
-      const width = this.getShapeWidthToUse() as number
-      const height = this.getShapeHeightToUse() as number
+      // Get variable property for node label
+      const width = this.getShapeWidthToUse()
+      const height = this.getShapeHeightToUse()
 
       // ================================================================
       // Create some variable that depend on the value of some of the above
@@ -1171,6 +1175,7 @@ export class Class_NodeElement extends Class_Element {
           .attr('rx', 4)
           .style('stroke', 'none')
       }
+
       // Add name label text
       this.d3_selection?.append('text')
         .classed('label', true)
@@ -1188,6 +1193,7 @@ export class Class_NodeElement extends Class_Element {
         .style('stroke', 'none')
         .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(this.name_label)
+
       // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
       // Add an input to change the name of the node
       // The input appear when we double click on the label
@@ -1218,8 +1224,8 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawLinks() {
-    this.drawShape()
-    this.applyPositionOnLinks()
+    this.drawShape()  // Node shape can be modified by link's changes
+    this.applyPositionOnLinks()  // Links positions can be modified by link's changes
   }
 
   /**
@@ -1235,10 +1241,10 @@ export class Class_NodeElement extends Class_Element {
     const width = this.getShapeWidthToUse()
     const height = this.getShapeHeightToUse()
     // Offsets positions : based on others links + node's heigth / width
-    let dy_right = this.getLinkRelativePositionOffSet('right')
-    let dy_left = this.getLinkRelativePositionOffSet('left')
-    let dx_top = this.getLinkRelativePositionOffSet('top')
-    let dx_bottom = this.getLinkRelativePositionOffSet('bottom')
+    let dy_right = this.getLinksStartingPositionOffSet('right')
+    let dy_left = this.getLinksStartingPositionOffSet('left')
+    let dx_top = this.getLinksStartingPositionOffSet('top')
+    let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
     // Loop on all links
     this._links_order.forEach(link => {
       const thickness = link.thickness
@@ -1395,7 +1401,7 @@ export class Class_NodeElement extends Class_Element {
    * @return {*}
    * @memberof Class_NodeElement
    */
-  private getLinkRelativePositionOffSet(side: Type_Side) {
+  private getLinksStartingPositionOffSet(side: Type_Side) {
     if (side === 'left' || side === 'right') {
       return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side))/2)
     }
