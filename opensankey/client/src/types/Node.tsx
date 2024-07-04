@@ -1246,38 +1246,38 @@ export class Class_NodeElement extends Class_Element {
       // Current node is link's source
       if (link.source === this) {
         if (link.source_side === 'right') {
-          link.setPosXYStartingPoint(x0 + width, y0 + dy_right)
+          link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness/2)
           dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
-          link.setPosXYStartingPoint(x0, y0 + dy_left)
+          link.setPosXYStartingPoint(x0, y0 + dy_left + thickness/2)
           dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
-          link.setPosXYStartingPoint(x0 + dx_top, y0)
+          link.setPosXYStartingPoint(x0 + dx_top + thickness/2, y0)
           dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
-          link.setPosXYStartingPoint(x0 + dx_bottom, y0 + height)
+          link.setPosXYStartingPoint(x0 + dx_bottom + thickness/2, y0 + height)
           dy_left = dy_left + thickness
         }
       }
       // Or current node is link's target
       else if (link.target === this) {
         if (link.target_side === 'right') {
-          link.setPosXYEndingPoint(x0 + width, y0 + dy_right)
+          link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness/2)
           dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
-          link.setPosXYEndingPoint(x0, y0 + dy_left)
+          link.setPosXYEndingPoint(x0, y0 + dy_left + thickness/2)
           dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
-          link.setPosXYEndingPoint(x0 + dx_top, y0)
+          link.setPosXYEndingPoint(x0 + dx_top + thickness/2, y0)
           dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
-          link.setPosXYEndingPoint(x0 + dx_bottom, y0 + height)
+          link.setPosXYEndingPoint(x0 + dx_bottom + thickness/2, y0 + height)
           dy_left = dy_left + thickness
         }
       }
@@ -1434,17 +1434,21 @@ export class Class_NodeElement extends Class_Element {
 
   public updateInputValue() {
     this._input_data_value = 0
-    this.input_links_list.forEach(link =>
-      this._input_data_value = this._input_data_value + link.data_value
-    )
+    this.input_links_list.forEach(link => {
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._input_data_value = this._input_data_value + data_value
+    })
     this.draw()
   }
 
   public updateOutputValue() {
     this._output_data_value = 0
-    this.output_links_list.forEach(link =>
-      this._output_data_value = this._output_data_value + link.data_value
-    )
+    this.output_links_list.forEach(link =>{
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._output_data_value = this._output_data_value + data_value
+    })
     this.draw()
   }
 

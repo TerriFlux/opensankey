@@ -784,8 +784,8 @@ export class Class_LinkElement extends Class_ProtoElement {
   public get data_value() {
     const value = this.value
     // Cast as number
-    if (value !== null && value.data_value !== null) return value.data_value
-    else return 0
+    if (value !== null) return value.data_value
+    else return null
   }
 
   /**
@@ -793,7 +793,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    *  or set directly the value when there is no data_taggs
    * @memberof Class_LinkElement
    */
-  public set data_value(_: number) {
+  public set data_value(_: number | null) {
     const value = this.value
     // Cast as number
     if (value !== null) {
@@ -879,7 +879,12 @@ export class Class_LinkElement extends Class_ProtoElement {
     const scale = d3.scaleLinear()
       .domain([0, this.drawing_area.scale])
       .range([0, 100])
-    return scale(this.data_value)
+    const data_value = this.data_value
+    return scale(
+      (data_value !== null) ?
+        Math.max(1, data_value) :
+        1
+    )
   }
 
   public get position_x_start() {
@@ -1973,7 +1978,7 @@ export class Class_LinkValueTree {
   public setDataValue(tags: Class_Tag[], val: number | null) {
     const value = this.getValue(tags)
     if (value !== null) {
-      value.data_value=val
+      value.data_value = val
     }
   }
 
