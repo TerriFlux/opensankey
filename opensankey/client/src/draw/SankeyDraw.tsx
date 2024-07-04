@@ -191,214 +191,214 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // Escape key open and close configuration sankey menu
 // ctrl + s save a view of the data
 // Delete key allow us to delete selected elments (nodes,links, free label)
-export const keyHandler: keyHandlerFType = (
-  applicationData,
-  uiElementsRef,
-  contextMenu,
-  e: KeyboardEvent,
-  applicationState,
-  closeAllMenu: () => void,
-  ref_alt_key_pressed,
-  accept_simple_click,
-  link_function,
-  NodeTooltipsContent,
-  ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
-  applicationContext,
-  node_function,
-  applicationDraw
-) => {
-  const { data, new_data } = applicationData
-  const { multi_selected_nodes, multi_selected_links, ref_setter_mode_selection } = applicationState
-  if (
-    ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
-    (((document.activeElement?.tagName === 'INPUT') ?
-      d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
-      true) &&
-      (!document.activeElement?.className.includes('ql-editor')))
-  ) {
-    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
-    // (exemples : le input de la largeur minimal d'un noeud)
-    if (e.key == 'ArrowUp') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.idNode
-        }
-      }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+// export const keyHandler: keyHandlerFType = (
+//   applicationData,
+//   uiElementsRef,
+//   contextMenu,
+//   e: KeyboardEvent,
+//   applicationState,
+//   closeAllMenu: () => void,
+//   ref_alt_key_pressed,
+//   accept_simple_click,
+//   link_function,
+//   NodeTooltipsContent,
+//   ComponentUpdater,
+//   dict_hook_ref_setter_show_dialog_components,
+//   applicationContext,
+//   node_function,
+//   applicationDraw
+// ) => {
+//   const { data, new_data } = applicationData
+//   const { multi_selected_nodes, multi_selected_links, ref_setter_mode_selection } = applicationState
+//   if (
+//     ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
+//     (((document.activeElement?.tagName === 'INPUT') ?
+//       d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
+//       true) &&
+//       (!document.activeElement?.className.includes('ql-editor')))
+//   ) {
+//     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
+//     // (exemples : le input de la largeur minimal d'un noeud)
+//     if (e.key == 'ArrowUp') {
+//       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
+//         if (d != undefined) {
+//           return d.idNode
+//         }
+//       }).includes(f.idNode)).map(d => {
+//         if (d.position === 'relative') {
+//           return
+//         }
 
-        d.y = d.y - data.grid_square_size
+//         d.y = d.y - data.grid_square_size
 
-        let y_max = 0
-        Object.values(data.nodes).map(d => {
-          y_max = (d.y > y_max) ? d.y : y_max
-        })
-        //Diminue hauteur svg si le noeud est près du bord
-        if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
-          data.height -= 90
-        }
-      })
-    } else if (e.key == 'ArrowDown') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.idNode
-        }
-      }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+//         let y_max = 0
+//         Object.values(data.nodes).map(d => {
+//           y_max = (d.y > y_max) ? d.y : y_max
+//         })
+//         //Diminue hauteur svg si le noeud est près du bord
+//         if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
+//           data.height -= 90
+//         }
+//       })
+//     } else if (e.key == 'ArrowDown') {
+//       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
+//         if (d != undefined) {
+//           return d.idNode
+//         }
+//       }).includes(f.idNode)).map(d => {
+//         if (d.position === 'relative') {
+//           return
+//         }
 
-        d.y = d.y + data.grid_square_size
+//         d.y = d.y + data.grid_square_size
 
-        //Augumente hauteur svg si le noeud est près du bord
-        if (d.y > data.height - 100) {
-          data.height += 100
-        }
-      })
-    } else if (e.key == 'ArrowLeft') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.idNode
-        }
-      }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+//         //Augumente hauteur svg si le noeud est près du bord
+//         if (d.y > data.height - 100) {
+//           data.height += 100
+//         }
+//       })
+//     } else if (e.key == 'ArrowLeft') {
+//       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
+//         if (d != undefined) {
+//           return d.idNode
+//         }
+//       }).includes(f.idNode)).map(d => {
+//         if (d.position === 'relative') {
+//           return
+//         }
 
-        d.x = d.x - data.grid_square_size
+//         d.x = d.x - data.grid_square_size
 
-        //Diminue largeur svg si le noeud est près du bord
-        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 50) {
-          data.width -= 50
-        }
-      })
-    } else if (e.key == 'ArrowRight') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.idNode
-        }
-      }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+//         //Diminue largeur svg si le noeud est près du bord
+//         if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 50) {
+//           data.width -= 50
+//         }
+//       })
+//     } else if (e.key == 'ArrowRight') {
+//       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
+//         if (d != undefined) {
+//           return d.idNode
+//         }
+//       }).includes(f.idNode)).map(d => {
+//         if (d.position === 'relative') {
+//           return
+//         }
 
-        d.x = d.x + data.grid_square_size
+//         d.x = d.x + data.grid_square_size
 
-        //Augumente largeur svg si le noeud est près du bord
-        if (d.x > data.width - 100) {
-          data.width += 100
-        }
-      })
-    }
-    let link_to_update: string[] = []
-    multi_selected_nodes.current.forEach(n => {
-      link_to_update = link_to_update.concat(n.outputLinksId)
-      link_to_update = link_to_update.concat(n.inputLinksId)
-      d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
-    })
-    link_to_update = [...new Set(link_to_update)]
-    link_function.RedrawLinks(Object.values(applicationData.display_links))
+//         //Augumente largeur svg si le noeud est près du bord
+//         if (d.x > data.width - 100) {
+//           data.width += 100
+//         }
+//       })
+//     }
+//     let link_to_update: string[] = []
+//     multi_selected_nodes.current.forEach(n => {
+//       link_to_update = link_to_update.concat(n.outputLinksId)
+//       link_to_update = link_to_update.concat(n.inputLinksId)
+//       d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
+//     })
+//     link_to_update = [...new Set(link_to_update)]
+//     link_function.RedrawLinks(Object.values(applicationData.display_links))
 
-  } else if (e.key == 'Escape') {
-    ref_setter_mode_selection.current('s')
-    applicationState.ref_getter_mode_selection.current = 's'
-    d3.select(' .opensankey #svg').attr('class', 'mode_selection')
+//   } else if (e.key == 'Escape') {
+//     ref_setter_mode_selection.current('s')
+//     applicationState.ref_getter_mode_selection.current = 's'
+//     d3.select(' .opensankey #svg').attr('class', 'mode_selection')
 
-    // Visualy deselect nodes then deselect in the app data
-    multi_selected_nodes.current.forEach(d => {
-      DeselectVisualyNodes(d)
-    })
-    multi_selected_nodes.current = []
-
-
-    multi_selected_links.current.forEach(l => {
-      DeselectVisualyLinks(l)
-    })
-    multi_selected_links.current = []
-
-    closeAllMenu()
-    // AddDrawNodesEvent(
-    //   contextMenu,
-    //   applicationData,
-    //   uiElementsRef,
-    //   applicationState,
-    //   applicationContext,
-    //   ref_alt_key_pressed,
-    //   accept_simple_click,
-    //   link_function,
-    //   NodeTooltipsContent,
-    //   ComponentUpdater,
-    //   dict_hook_ref_setter_show_dialog_components,
-    //   node_function,
-    //   applicationDraw.GetSankeyMinWidthAndHeight,
-    //   applicationDraw.resizeCanvas)
-
-    new_data.menu_configuration.updateComponentMenuConfigNode.current
-    new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
-    new_data.menu_configuration.updateComponentMenuConfigLink.current()
-  } else if (e.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
-
-    if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
-      DeleteGLinks(multi_selected_links.current.map(l => l.idLink))
-      multi_selected_links.current.forEach(el => {
-        DeleteLink(data, el)
-      })
-
-      deleteSelectedNodeFromData(applicationData, applicationState)
-      multi_selected_nodes.current = []
-      multi_selected_links.current = []
-
-      node_function.recomputeDisplayedElement()
-      node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-      link_function.RedrawLinks(Object.values(applicationData.display_links))
-      new_data.menu_configuration.updateComponentMenuConfigNode.current
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+//     // Visualy deselect nodes then deselect in the app data
+//     multi_selected_nodes.current.forEach(d => {
+//       DeselectVisualyNodes(d)
+//     })
+//     multi_selected_nodes.current = []
 
 
-    }
-  } else if (e.key == 'a' && e.ctrlKey) {
-    e.preventDefault()
-    multi_selected_nodes.current = Object.values(data.nodes)
-    multi_selected_nodes.current.forEach(n => {
-      SelectVisualyNodes(n)
-    })
-    multi_selected_links.current = Object.values(data.links)
-    multi_selected_links.current.forEach(l => {
-      SelectVisualyLinks(l)
-    })
+//     multi_selected_links.current.forEach(l => {
+//       DeselectVisualyLinks(l)
+//     })
+//     multi_selected_links.current = []
 
-  } else if (e.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
-    (document.activeElement as HTMLInputElement).blur()
-  } else if (e.key == 's' && e.ctrlKey && !e.shiftKey) {
-    e.preventDefault()
-    applicationData.function_on_wait.current = () => {
-      localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-      localStorage.setItem('last_save', 'true')
-      ComponentUpdater.updateComponenSaveInCache.current(true)
-    }
-    dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
+//     closeAllMenu()
+//     // AddDrawNodesEvent(
+//     //   contextMenu,
+//     //   applicationData,
+//     //   uiElementsRef,
+//     //   applicationState,
+//     //   applicationContext,
+//     //   ref_alt_key_pressed,
+//     //   accept_simple_click,
+//     //   link_function,
+//     //   NodeTooltipsContent,
+//     //   ComponentUpdater,
+//     //   dict_hook_ref_setter_show_dialog_components,
+//     //   node_function,
+//     //   applicationDraw.GetSankeyMinWidthAndHeight,
+//     //   applicationDraw.resizeCanvas)
 
-  } else if ((e.key == 's' && e.ctrlKey && e.shiftKey) || (e.key == 'S' && e.ctrlKey && e.shiftKey)) {
-    e.preventDefault()
-    ClickSaveDiagram(
-      applicationData,
-      applicationData.data,
-      applicationState,
-      { mode_save: true, mode_visible_element: false }
-    )
-  } else if ((e.key === 'f') && !e.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
-    if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
-      e.preventDefault()
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-      } else if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
-    }
+//     new_data.menu_configuration.updateComponentMenuConfigNode.current
+//     new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+//     new_data.menu_configuration.updateComponentMenuConfigLink.current()
+//   } else if (e.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
 
-  }
-}
+//     if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
+//       DeleteGLinks(multi_selected_links.current.map(l => l.idLink))
+//       multi_selected_links.current.forEach(el => {
+//         DeleteLink(data, el)
+//       })
+
+//       deleteSelectedNodeFromData(applicationData, applicationState)
+//       multi_selected_nodes.current = []
+//       multi_selected_links.current = []
+
+//       node_function.recomputeDisplayedElement()
+//       node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+//       link_function.RedrawLinks(Object.values(applicationData.display_links))
+//       new_data.menu_configuration.updateComponentMenuConfigNode.current
+//       new_data.menu_configuration.updateComponentMenuConfigLink.current()
+
+
+//     }
+//   } else if (e.key == 'a' && e.ctrlKey) {
+//     e.preventDefault()
+//     multi_selected_nodes.current = Object.values(data.nodes)
+//     multi_selected_nodes.current.forEach(n => {
+//       SelectVisualyNodes(n)
+//     })
+//     multi_selected_links.current = Object.values(data.links)
+//     multi_selected_links.current.forEach(l => {
+//       SelectVisualyLinks(l)
+//     })
+
+//   } else if (e.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
+//     (document.activeElement as HTMLInputElement).blur()
+//   } else if (e.key == 's' && e.ctrlKey && !e.shiftKey) {
+//     e.preventDefault()
+//     applicationData.function_on_wait.current = () => {
+//       localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+//       localStorage.setItem('last_save', 'true')
+//       ComponentUpdater.updateComponenSaveInCache.current(true)
+//     }
+//     dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
+
+//   } else if ((e.key == 's' && e.ctrlKey && e.shiftKey) || (e.key == 'S' && e.ctrlKey && e.shiftKey)) {
+//     e.preventDefault()
+//     ClickSaveDiagram(
+//       applicationData,
+//       applicationData.data,
+//       applicationState,
+//       { mode_save: true, mode_visible_element: false }
+//     )
+//   } else if ((e.key === 'f') && !e.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+//     if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
+//       e.preventDefault()
+//       if (!document.fullscreenElement) {
+//         document.documentElement.requestFullscreen()
+//       } else if (document.exitFullscreen) {
+//         document.exitFullscreen()
+//       }
+//     }
+
+//   }
+// }
 
 export default SankeyDraw
