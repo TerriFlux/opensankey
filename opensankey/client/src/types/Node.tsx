@@ -1052,6 +1052,7 @@ export class Class_NodeElement extends Class_Element {
           .forEach(n => {
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
+          this.drawing_area.checkAndUpdateAreaSize()
       }
     }
   }

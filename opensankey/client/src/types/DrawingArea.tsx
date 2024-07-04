@@ -26,7 +26,9 @@ import {
   sortLinksElements
 } from './Link'
 import {
-  Class_ApplicationData
+  Class_ApplicationData,
+  initial_window_height,
+  initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
 import { Class_Element, Class_ProtoElement } from './Element'
@@ -137,7 +139,7 @@ export class Class_DrawingArea {
   private _legend: Class_Legend
 
   // Elements that are selected in this area
-  private _selection: {[id: string]: Class_ProtoElement} = {}
+  private _selection: { [id: string]: Class_ProtoElement } = {}
 
   // Color
   private _color: string = default_background_color
@@ -606,12 +608,20 @@ export class Class_DrawingArea {
       max_node_pos_y = Math.max(max_node_pos_y, node_bottomest_pos)
     })
 
-    if (max_node_pos_x > this._width - this.grid_size) {
+    // If righest node is too close to right drawing area border then enlarege DA
+    // else reduce DA until window init witdh
+    // (init DA size is computed with a sankey at scale 1 )
+    if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
       this.setWidth(max_node_pos_x + this._grid_size)
-    }
+      this.drawGrid()
+    } 
 
-    if (max_node_pos_y > this._height - this.grid_size) {
+// If bottomiest node is too close to the bottom of drawing area border then enlarege DA
+    // else reduce DA until window init height
+    // (init DA size is computed with a sankey at scale 1 )
+    if (max_node_pos_y > this._height - this.grid_size ||( (max_node_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
       this.setHeight(max_node_pos_y + this._grid_size)
+      this.drawGrid()
     }
   }
 
