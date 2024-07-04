@@ -127,13 +127,12 @@ export class Class_NodeElement extends Class_Element {
   // Links orderings
   private _links_order: Class_LinkElement[] = []
 
+  // Value of node
+  private _input_data_value: number = 0
+  private _output_data_value: number = 0
+
   // Node tags
   private _tags: { [_: string]: Class_Tag[] } = {}
-
-  // Arrows
-  // TODO deplacer dans shape
-  private arrow_angle_factor: number = 10
-  private arrow_angle_direction: string = 'hh'
 
   // Level & Parent
   // Dimensions
@@ -222,6 +221,14 @@ export class Class_NodeElement extends Class_Element {
   }
 
   // GETTERS / SETTERS ==================================================================
+
+  public get is_visible() {
+    return(
+      this.are_related_tags_selected &&
+      this.is_related_level_selected &&
+      this._is_visible
+    )
+  }
 
   public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } {
     return this._dimensions
@@ -334,33 +341,7 @@ export class Class_NodeElement extends Class_Element {
     this._display.style.removeReference(this)
     this._display.style = _
     _.addReference(this)
-    this.reset()
-  }
-
-  /**
-   * TODO Description
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get width() {
-    // Compute sum of thickness on each sides
-    let sum_of_top_thickness = this.getSumOfLinksThickness('top')
-    let sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
-    // Return max thickness
-    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
-  }
-
-  /**
-   * TODO Description
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get height() {
-    // Compute sum of thickness on each sides
-    let sum_of_left_thickness = this.getSumOfLinksThickness('left')
-    let sum_of_right_thickness = this.getSumOfLinksThickness('right')
-    // Return max thickness
-    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
+    this.draw()
   }
 
   /**
@@ -871,29 +852,69 @@ export class Class_NodeElement extends Class_Element {
     this.drawLabel()
   }
 
-  // PROTECTED METHODS ==================================================================
+  // PRIVATE GETTER / SETTER ============================================================
 
   /**
-   * Draw given node on drawing area
+   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+   * if that the case then we don't draw the node
    *
-   * @protected
+   * @private
+   * @return {*}
    * @memberof Class_NodeElement
    */
-  protected draw() {
-    // Heritance of draw function
-    super.draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_nodes')
-    // Apply styles
-    this.d3_selection?.style('display', this.getDisplayValue())
-    this.d3_selection?.style('font-family', this.name_label_font_family)
-    // Draw shape
-    this.drawShape()
-    // Draw label
-    this.drawLabel()
-    // Draw related links
-    this.drawLinks()
+  private get are_related_tags_selected() {
+    let to_display = true
+
+    Object.entries(this.drawing_area.sankey.node_taggs_dict).filter(nt => nt[0] !== 'Type de noeud' && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
+      // Check tags from the group attribued to the node
+      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+      const node_tags_attr = this._tags[nt[0]]
+
+      if (node_tags_attr != undefined && node_tags_attr.length != 0) {
+        // If the node has at least 1 tag from the selected tag of the group then we display it
+        // If the node has tag from the group attribued to it but are not selected then we don't display it
+        if (!nt[1].tags) {
+          return
+        }
+        const tags_from_grp_to_display = Object.entries(nt[1].tags).filter(t => t[1].selected).map(t => t[1])
+        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+      }
+    })
+    return to_display
   }
+
+  private get is_related_level_selected() {
+    let to_display = true
+    const lvl_ent = Object.entries(this.drawing_area.sankey.level_taggs_dict)
+    // Check if there is other aggregation tags than 'Primaire',
+    const multi_level = lvl_ent.filter(nt => nt[0] !== 'Primaire').map(nt => nt[0]).length > 0
+
+    const only_one_activated = lvl_ent.filter(nt => nt[1].activated).length == 1
+    const only_primaire_activated = lvl_ent.filter(nt => nt[1].activated).map(nt => nt[0])[0] == 'Primaire'
+
+    const multy_but_only_primaire = multi_level && only_one_activated && only_primaire_activated
+
+    // To display a node according to level tag we search if:
+    // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
+    // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
+    // - The node has the grp tag name in his tags
+    lvl_ent.filter(nt => ((multi_level && !multy_but_only_primaire) ? nt[0] !== 'Primaire' : true) && nt[1].activated && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
+      // Check tags from the group attribued to the node
+      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+      const node_tags_attr = this._tags[nt[0]]
+      if (node_tags_attr != undefined) {
+        // If the node has at least 1 tag from the selected tag of the group then we display it
+        // If the node has tag from the group attribued to it but are not selected then we don't display it
+        const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t)
+        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+        // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
+
+      }
+    })
+    return to_display
+  }
+
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Apply node position to it shape in d3
@@ -943,7 +964,7 @@ export class Class_NodeElement extends Class_Element {
       this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
     }
     // Update also position for links
-    this.drawLinks()
+    this.applyPositionOnLinks()
   }
 
   /**
@@ -1035,18 +1056,6 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  /**
-   * Function used to check some condition before allowing element to be drawn
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_NodeElement
-  */
-  protected update_visibility() {
-    if (this.element_tag_displayed() && this.checkNodeLevel())this.setVisible(false)
-      else this.setInvisble(false)
-  }
-
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -1055,11 +1064,9 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawShape() {
-    const node_shape = this.shape_type
-    const min_width = this.width
-    const min_height = this.height
-    const node_visible = this.shape_visible
-    const node_color = this.getShapeColorToUse()
+    const width = this.getShapeWidthToUse()
+    const height = this.getShapeHeightToUse()
+    const color = this.getShapeColorToUse()
     // Get drawing scale
     const scale = d3.scaleLinear()
       .range([0, 100])
@@ -1067,31 +1074,31 @@ export class Class_NodeElement extends Class_Element {
     // Clean previous shape
     this.d3_selection?.selectAll('.node_shape').remove()
     // Apply shape value
-    if (node_shape === 'rect') {
+    if (this.shape_type === 'rect') {
       this.d3_selection?.append('rect')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('width', min_width)
-        .attr('height', min_height)
+        .attr('width', width)
+        .attr('height', height)
     }
-    else if (node_shape === 'ellipse') {
+    else if (this.shape_type === 'ellipse') {
       this.d3_selection?.append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('cx', min_width / 2)
-        .attr('cy', min_height / 2)
-        .attr('rx', min_width / 2)
-        .attr('ry', min_height / 2)
+        .attr('cx', width / 2)
+        .attr('cy', height / 2)
+        .attr('rx', width / 2)
+        .attr('ry', height / 2)
     }
-    else if (node_shape === 'arrow') {
+    else if (this.shape_type === 'arrow') {
       this.d3_selection?.append('path')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('d', () => {
-          const n_w = min_width
-          const n_h = min_height
-          const k_angle = this.arrow_angle_factor
-          const angle_direction = this.arrow_angle_direction
+          const n_w = width
+          const n_h = height
+          const k_angle = this.shape_arrow_angle_factor
+          const angle_direction = this.shape_arrow_angle_direction
           const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction, scale)
           return path
         })
@@ -1099,8 +1106,8 @@ export class Class_NodeElement extends Class_Element {
     // Apply common properties
     this.d3_selection?.selectAll('.node_shape')
       .attr('id', this.id)
-      .attr('fill-opacity', node_visible ? '1' : '0')
-      .attr('fill', node_color)
+      .attr('fill-opacity', this.shape_visible ? '1' : '0')
+      .attr('fill', color)
       .style('stroke', 'black')
       .style('stroke-width', this.is_selected ? 3 : 0)
   }
@@ -1116,8 +1123,8 @@ export class Class_NodeElement extends Class_Element {
     this.d3_selection?.selectAll('.label').remove()
     // Add name label
     if (this.name_label_visible) {
-      const width = this.width as number
-      const height = this.height as number
+      const width = this.getShapeWidthToUse() as number
+      const height = this.getShapeHeightToUse() as number
 
       // ================================================================
       // Create some variable that depend on the value of some of the above
@@ -1206,58 +1213,71 @@ export class Class_NodeElement extends Class_Element {
   }
 
   /**
-   * Draw all related links
+   * Call what is necessary each time a link is modified
    * @private
    * @memberof Class_NodeElement
    */
   private drawLinks() {
-    // Compute width & Height (base on links thicknesses)
-    const width = this.width
-    const height = this.height
-    // Staring positions
-    let y_right = this.getLinkRelativePositionOffSet('right')
-    let y_left = this.getLinkRelativePositionOffSet('left')
-    let x_top = this.getLinkRelativePositionOffSet('top')
-    let x_bottom = this.getLinkRelativePositionOffSet('bottom')
+    this.drawShape()
+    this.applyPositionOnLinks()
+  }
+
+  /**
+   * Draw all related links
+   * @private
+   * @memberof Class_NodeElement
+   */
+  private applyPositionOnLinks() {
+    // Reference position
+    const x0 = this.position_x
+    const y0 = this.position_y
+    // Compute width & Height (based on links values)
+    const width = this.getShapeWidthToUse()
+    const height = this.getShapeHeightToUse()
+    // Offsets positions : based on others links + node's heigth / width
+    let dy_right = this.getLinkRelativePositionOffSet('right')
+    let dy_left = this.getLinkRelativePositionOffSet('left')
+    let dx_top = this.getLinkRelativePositionOffSet('top')
+    let dx_bottom = this.getLinkRelativePositionOffSet('bottom')
     // Loop on all links
     this._links_order.forEach(link => {
       const thickness = link.thickness
       // Current node is link's source
       if (link.source === this) {
         if (link.source_side === 'right') {
-          link.setPosXYOnSource(width, y_right)
-          y_right = y_right + thickness
+          link.setPosXYStartingPoint(x0 + width, y0 + dy_right)
+          dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
-          link.setPosXYOnSource(0, y_left)
-          y_left = y_left + thickness
+          link.setPosXYStartingPoint(x0, y0 + dy_left)
+          dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
-          link.setPosXYOnSource(x_top, 0)
-          x_top = x_top + thickness
+          link.setPosXYStartingPoint(x0 + dx_top, y0)
+          dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
-          link.setPosXYOnSource(x_bottom, height)
-          y_left = y_left + thickness
+          link.setPosXYStartingPoint(x0 + dx_bottom, y0 + height)
+          dy_left = dy_left + thickness
         }
       }
       // Or current node is link's target
       else if (link.target === this) {
         if (link.target_side === 'right') {
-          link.setPosXYOnTarget(width, y_right)
-          y_right = y_right + thickness
+          link.setPosXYEndingPoint(x0 + width, y0 + dy_right)
+          dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
-          link.setPosXYOnTarget(0, y_left)
-          y_left = y_left + thickness
+          link.setPosXYEndingPoint(x0, y0 + dy_left)
+          dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
-          link.setPosXYOnTarget(x_top, 0)
-          x_top = x_top + thickness
+          link.setPosXYEndingPoint(x0 + dx_top, y0)
+          dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
-          link.setPosXYOnTarget(x_bottom, height)
-          y_left = y_left + thickness
+          link.setPosXYEndingPoint(x0 + dx_bottom, y0 + height)
+          dy_left = dy_left + thickness
         }
       }
     })
@@ -1283,17 +1303,30 @@ export class Class_NodeElement extends Class_Element {
       .html(this?.tooltip_text ?? '')
   }
 
-  // Get display value
-  private getDisplayValue() {
-    // On gere la visibilité directement sur gg_nodes avec un display <inline />
-    // Cela permettra de mieux gérer des zooms sur les éléments visibles
-    // if (HasLinksZero(data,node_element_d3)) {
-    //   return 'none'
-    // }
-    if (this.position_type === 'relative') {
-      return 'none'
-    }
-    return 'inline'
+  /**
+   * Get the width to apply on shape
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public getShapeWidthToUse() {
+    // Compute sum of thickness on each sides
+    let sum_of_top_thickness = this.getSumOfLinksThickness('top')
+    let sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
+    // Return max thickness
+    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
+  }
+
+  /**
+   * Get the height to apply on shape
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public getShapeHeightToUse() {
+    // Compute sum of thickness on each sides
+    let sum_of_left_thickness = this.getSumOfLinksThickness('left')
+    let sum_of_right_thickness = this.getSumOfLinksThickness('right')
+    // Return max thickness
+    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
 
   private getShapeColorToUse() {
@@ -1311,65 +1344,31 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-
-  /**
- * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
- * if that the case then we don't draw the node
- *
- * @private
- * @return {*}
- * @memberof Class_NodeElement
- */
-  private element_tag_displayed() {
-    let to_display = true
-
-    Object.entries(this.drawing_area.sankey.node_taggs_dict).filter(nt => nt[0] !== 'Type de noeud' && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
-      // Check tags from the group attribued to the node
-      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-      const node_tags_attr = this._tags[nt[0]]
-
-      if (node_tags_attr != undefined && node_tags_attr.length != 0) {
-        // If the node has at least 1 tag from the selected tag of the group then we display it
-        // If the node has tag from the group attribued to it but are not selected then we don't display it
-        if (!nt[1].tags) {
-          return
-        }
-        const tags_from_grp_to_display = Object.entries(nt[1].tags).filter(t => t[1].selected).map(t => t[1])
-        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
-      }
-    })
-    return to_display
+  // Get display value
+  private getDisplayValue() {
+    // On gere la visibilité directement sur gg_nodes avec un display <inline />
+    // Cela permettra de mieux gérer des zooms sur les éléments visibles
+    // if (HasLinksZero(data,node_element_d3)) {
+    //   return 'none'
+    // }
+    if (this.position_type === 'relative') {
+      return 'none'
+    }
+    return 'inline'
   }
 
-  private checkNodeLevel() {
-    let to_display = true
-    const lvl_ent = Object.entries(this.drawing_area.sankey.level_taggs_dict)
-    // Check if there is other aggregation tags than 'Primaire',
-    const multi_level = lvl_ent.filter(nt => nt[0] !== 'Primaire').map(nt => nt[0]).length > 0
-
-    const only_one_activated = lvl_ent.filter(nt => nt[1].activated).length == 1
-    const only_primaire_activated = lvl_ent.filter(nt => nt[1].activated).map(nt => nt[0])[0] == 'Primaire'
-
-    const multy_but_only_primaire = multi_level && only_one_activated && only_primaire_activated
-
-    // To display a node according to level tag we search if:
-    // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
-    // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
-    // - The node has the grp tag name in his tags
-    lvl_ent.filter(nt => ((multi_level && !multy_but_only_primaire) ? nt[0] !== 'Primaire' : true) && nt[1].activated && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
-      // Check tags from the group attribued to the node
-      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-      const node_tags_attr = this._tags[nt[0]]
-      if (node_tags_attr != undefined) {
-        // If the node has at least 1 tag from the selected tag of the group then we display it
-        // If the node has tag from the group attribued to it but are not selected then we don't display it
-        const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t)
-        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
-        // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
-
-      }
+  /**
+   * Get list of link in order for a given side
+   * @param {Type_Side} _
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public getLinksOrdered(_: Type_Side) {
+    return this._links_order.filter(link => {
+      return (
+        (link.target === this && link.target_side === _) ||
+        (link.source === this && link.source_side === _))
     })
-    return to_display
   }
 
   /**
@@ -1405,15 +1404,52 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+
   // PUBLIC METHODS =====================================================================
+
+  /**
+   * Draw given node on drawing area
+   *
+   * @protected
+   * @memberof Class_NodeElement
+   */
+  public draw() {
+    // Heritance of draw function
+    super.draw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_nodes')
+    // Apply styles
+    this.d3_selection?.style('display', this.getDisplayValue())
+    this.d3_selection?.style('font-family', this.name_label_font_family)
+    // Draw shape
+    this.drawShape()
+    // Draw label
+    this.drawLabel()
+  }
 
   public useDefaultStyle() {
     this.style = this.drawing_area.sankey.default_node_style
   }
 
+  public updateInputValue() {
+    this._input_data_value = 0
+    this.input_links_list.forEach(link =>
+      this._input_data_value = this._input_data_value + link.data_value
+    )
+    this.draw()
+  }
+
+  public updateOutputValue() {
+    this._output_data_value = 0
+    this.output_links_list.forEach(link =>
+      this._output_data_value = this._output_data_value + link.data_value
+    )
+    this.draw()
+  }
+
   public resetAttributes() {
     this._display.attributes = new Class_NodeAttribute()
-    this.reset()
+    this.draw()
   }
 
   public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
@@ -1510,31 +1546,42 @@ export class Class_NodeElement extends Class_Element {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
-      this.reset()
+      this.drawLinks()
     }
   }
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
-      this.reset()
+      this.drawLinks()
     }
   }
 
-  // Swap links
+  /**
+   * Move given input link to a given node
+   * @param {Class_LinkElement} link
+   * @param {Class_NodeElement} node
+   * @memberof Class_NodeElement
+   */
   public swapInputLink(link: Class_LinkElement, node: Class_NodeElement) {
     if (this._input_links[link.id] !== undefined) {
       delete this._input_links[link.id]
       node.addInputLink(link)
-      this.reset()
+      this.drawLinks()
     }
   }
 
+  /**
+   * Move given output link to a given node
+   * @param {Class_LinkElement} link
+   * @param {Class_NodeElement} node
+   * @memberof Class_NodeElement
+   */
   public swapOutputLink(link: Class_LinkElement, node: Class_NodeElement) {
     if (this._output_links[link.id] !== undefined) {
       delete this._output_links[link.id]
       node.addOutputLink(link)
-      this.reset()
+      this.drawLinks()
     }
   }
 
@@ -1547,71 +1594,6 @@ export class Class_NodeElement extends Class_Element {
   public getFirstOutputLink() {
     if (this.hasOutputLinks()) return this.output_links_list[0] // TODO pas bon
     else return undefined
-  }
-
-  public getLinksOrdered(_: Type_Side) {
-    return this._links_order.filter(link => {
-      return (
-        (link.target === this && link.target_side === _) ||
-        (link.source === this && link.source_side === _))
-    })
-  }
-
-  public getLinkRelativePosition(link: Class_LinkElement) {
-    let side = null
-    // Given link is part of input links
-    if (this._input_links[link.id]) {
-      side = link.target_side
-    }
-    // Given link is part of output links
-    if (this._output_links[link.id]) {
-      side = link.source_side
-    }
-    // Compute relative position
-    if (side !== null) {
-      // Vertical positionning
-      if (side === 'left' || side === 'right') {
-        // Starting point
-        let x = (side === 'left') ? 0 : this.width
-        let y = this.getLinkRelativePositionOffSet(side)
-        // Loop on all links
-        for (let tmp_link of this.getLinksOrdered(side)) {
-          if (tmp_link !== link) {
-            y = y + tmp_link.thickness
-          }
-          else {
-            y = y + tmp_link.thickness/2
-            return {
-              type: 'relative',
-              x: x,
-              y: y,
-            } as Type_ElementPosition
-          }
-        }
-      }
-      // Horizontal positionning
-      else {
-        // Starting point
-        let x = this.getLinkRelativePositionOffSet(side)
-        let y = (side === 'top') ? 0 : this.height
-        // Loop on all links
-        for (let tmp_link of this.getLinksOrdered(side)) {
-          if (tmp_link !== link) {
-            x = x + tmp_link.thickness
-          }
-          else {
-            x = x + tmp_link.thickness/2
-            return {
-              type: 'relative',
-              x: x,
-              y: y,
-            } as Type_ElementPosition
-          }
-        }
-      }
-    }
-    // Failsafe
-    return null
   }
 
   /**
@@ -2072,6 +2054,6 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private updateReferencesDraw() {
     Object.values(this._references)
-      .forEach(ref => ref.reset())
+      .forEach(ref => ref.draw())
   }
 }
