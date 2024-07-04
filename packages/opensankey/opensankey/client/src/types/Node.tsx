@@ -31,10 +31,6 @@ import {
   Type_Side
 } from './Link'
 
-// Local functions
-import {
-  PathNodeArrowShape
-} from '../draw/SankeyDrawFunction'
 
 
 // SPECIFIC TYPES ***********************************************************************
@@ -45,7 +41,7 @@ type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 
 export const default_shape_type: Type_Shape = 'rect'
 export const default_shape_arrow_angle_factor = 30
-export const default_shape_arrow_angle_direction = 'right'
+export const default_shape_arrow_angle_direction: Type_Side = 'right'
 export const default_shape_visible = true
 export const default_shape_min_width = 40
 export const default_shape_min_height = 40
@@ -678,14 +674,7 @@ export class Class_NodeElement extends Class_Element {
         this.d3_selection?.append('path')
           .classed('node', true)
           .classed('node_shape', true)
-          .attr('d', () => {
-            const n_w = width
-            const n_h = height
-            const k_angle = this.shape_arrow_angle_factor
-            const angle_direction = this.shape_arrow_angle_direction
-            const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction, scale)
-            return path
-          })
+          .attr('d', this.getArrowPath())
       }
       // Apply common properties
       this.d3_selection?.selectAll('.node_shape')
@@ -807,6 +796,59 @@ export class Class_NodeElement extends Class_Element {
   private drawLinks() {
     this.drawShape()  // Node shape can be modified by link's changes
     this.applyPositionOnLinks()  // Links positions can be modified by link's changes
+  }
+
+  private getArrowPath() {
+    // Compute height & width
+    const width = this.getShapeWidthToUse()
+    const height = this.getShapeHeightToUse()
+    // Svg path to construct
+    let path = ''
+    // Arrow toward the right side
+    if(this.shape_arrow_angle_direction  ===  'right') {
+      const opp = Math.tan(this.shape_arrow_angle_factor*Math.PI/180)*(height/2)
+      const p0: string = '0,0'
+      const p1: string = (width-opp) + ',0'
+      const p2: string = width + ',' + (height/2)
+      const p3: string = (width-opp) + ',' + height
+      const p4: string = '0,' + height
+      const p5: string = opp + ',' + (height/2)
+      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
+    }
+    // Arrow toward the left side
+    else if(this.shape_arrow_angle_direction  ===  'left') {
+      const opp = Math.tan((this.shape_arrow_angle_factor*Math.PI/180))*(height/2)
+      const p0: string = opp + ',0'
+      const p1: string = width + ',0'
+      const p2: string = width-opp + ',' + (height/2)
+      const p3: string = width + ',' + height
+      const p4: string = opp + ',' + height
+      const p5: string = '0,' + (height/2)
+      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
+    }
+    // Arrow toward the top
+    else if(this.shape_arrow_angle_direction  ===  'top') {
+      const opp = Math.tan((this.shape_arrow_angle_factor*Math.PI/180))*(width/2)
+      const p0: string = '0,' + opp
+      const p1: string = width/2 + ',0'
+      const p2: string = width + ',' + opp
+      const p3: string = width + ',' + height
+      const p4: string = width/2 + ',' + (height-opp)
+      const p5: string = '0,' + height
+      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
+    }
+    // Arrow toward the bottom
+    else {
+      const opp = Math.tan((this.shape_arrow_angle_factor*Math.PI/180))*(width/2)
+      const p0: string = '0,0'
+      const p1: string = (width/2) + ',' + opp
+      const p2: string = width + ',0'
+      const p3: string = width + ',' + (height-opp)
+      const p4: string = (width/2) + ',' + height
+      const p5: string = '0,' + (height-opp)
+      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
+    }
+    return path
   }
 
   /**
@@ -1265,7 +1307,7 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set shape_arrow_angle_direction(_: string) {
+  public set shape_arrow_angle_direction(_: Type_Side) {
     this._display.attributes.shape_arrow_angle_direction = _
     this.drawShape()
   }
@@ -1705,7 +1747,7 @@ export class Class_NodeAttribute {
   protected _shape_color?: string
   protected _shape_color_sustainable?: boolean
   protected _shape_arrow_angle_factor?: number
-  protected _shape_arrow_angle_direction?: string
+  protected _shape_arrow_angle_direction?: Type_Side
 
   // Parameter of node label
   protected _name_label_visible?: boolean
@@ -1888,7 +1930,7 @@ export class Class_NodeAttribute {
   public set shape_color(_: string | undefined) { this._shape_color = _ }
   public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _ }
   public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _ }
-  public set shape_arrow_angle_direction(_: string | undefined) { this._shape_arrow_angle_direction = _ }
+  public set shape_arrow_angle_direction(_: Type_Side | undefined) { this._shape_arrow_angle_direction = _ }
 
   // Parameter of node label
   public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _ }
@@ -2042,7 +2084,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public set shape_color(_: string) { this._shape_color = _; this.updateReferencesDraw() }
   public set shape_color_sustainable(_: boolean) { this._shape_color_sustainable = _; this.updateReferencesDraw() }
   public set shape_arrow_angle_factor(_: number) { this._shape_arrow_angle_factor = _; this.updateReferencesDraw() }
-  public set shape_arrow_angle_direction(_: string) { this._shape_arrow_angle_direction = _; this.updateReferencesDraw() }
+  public set shape_arrow_angle_direction(_: Type_Side) { this._shape_arrow_angle_direction = _; this.updateReferencesDraw() }
 
   // Parameter of node label
   public set name_label_visible(_: boolean) { this._name_label_visible = _; this.updateReferencesDraw() }
