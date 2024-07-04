@@ -207,7 +207,7 @@ export abstract class Class_ProtoElement {
       // Undraw all
       this.unDraw()
       // Draw only if visible
-      if (this._is_visible) {
+      if (this.is_visible) {
         // Set d3 selection
         this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
           .datum(this)
