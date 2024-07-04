@@ -1433,17 +1433,21 @@ export class Class_NodeElement extends Class_Element {
 
   public updateInputValue() {
     this._input_data_value = 0
-    this.input_links_list.forEach(link =>
-      this._input_data_value = this._input_data_value + link.data_value
-    )
+    this.input_links_list.forEach(link => {
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._input_data_value = this._input_data_value + data_value
+    })
     this.draw()
   }
 
   public updateOutputValue() {
     this._output_data_value = 0
-    this.output_links_list.forEach(link =>
-      this._output_data_value = this._output_data_value + link.data_value
-    )
+    this.output_links_list.forEach(link =>{
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._output_data_value = this._output_data_value + data_value
+    })
     this.draw()
   }
 
