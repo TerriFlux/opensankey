@@ -144,8 +144,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
           value_attr={new_data.drawing_area.scale}
           function_onChange={(_, value) => new_data.drawing_area.scale = value}
           function_onBlur={() => {
-            new_data.drawing_area.selected_nodes_list.forEach(n => n.reset())
-            new_data.drawing_area.selected_links_list.forEach(l => l.reset())
+            new_data.drawing_area.drawSelected()
             ComponentUpdater.updateComponenSaveInCache.current(false)
           }}
           minimum_value={1}
