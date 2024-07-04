@@ -329,15 +329,6 @@ export class Class_DrawingArea {
   }
 
 
-  /**
-   * Return height of the top nav bar
-   *
-   * @return {*} 
-   * @memberof Class_DrawingArea
-   */
-  public getNavBarHeight() {
-    return (document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height) ?? 0
-  }
 
   // Color
   public get color() { return this._color }
@@ -609,8 +600,8 @@ export class Class_DrawingArea {
     let max_node_pos_x = 0
     let max_node_pos_y = 0
     this.sankey.visible_nodes_list.filter(node => node.position_type === 'absolute').map(node => {
-      const node_rightest_pos = node.position_x + node.width
-      const node_bottomest_pos = node.position_y + node.height
+      const node_rightest_pos = node.position_x + node.getShapeWidthToUse()
+      const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()
       max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
       max_node_pos_y = Math.max(max_node_pos_y, node_bottomest_pos)
     })
