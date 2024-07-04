@@ -220,698 +220,278 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  // GETTERS / SETTERS ==================================================================
-
-  public get is_visible() {
-    return(
-      this.are_related_tags_selected &&
-      this.is_related_level_selected &&
-      this._is_visible
-    )
-  }
-
-  public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } {
-    return this._dimensions
-  }
+  // PUBLIC METHODS =====================================================================
 
   /**
-   * Get node name
+   * Draw given node on drawing area
+   *
+   * @protected
    * @memberof Class_NodeElement
    */
-  public get name() {
-    return this._name
-  }
-
-  /**
-   * Set node name
-   * @memberof Class_NodeElement
-   */
-  public set name(_: string) {
-    // TODO update id
-    this._name = _
+  public draw() {
+    // Heritance of draw function
+    super.draw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_nodes')
+    // Apply styles
+    this.d3_selection?.style('display', this.getDisplayValue())
+    this.d3_selection?.style('font-family', this.name_label_font_family)
+    // Draw shape
+    this.drawShape()
+    // Draw label
     this.drawLabel()
   }
 
-  /**
-   * Get node name formated as label
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get name_label() {
-    if (this._name_label_separator !== '') {
-      return this._name.split(this._name_label_separator)[0]
-    }
-    return this._name
+  public useDefaultStyle() {
+    this.style = this.drawing_area.sankey.default_node_style
   }
 
-  // Selection
-  public setSelected() { this._is_selected = true; this.drawShape()}
-  public setUnSelected() { this._is_selected = false; this.drawShape()}
-
-  public get tags() {
-    // TODO faire autrement
-    return this._tags
-  }
-
-  public deRefTag(tag: Class_Tag) {
-    delete this._tags[tag.id]
-  }
-
-  /**
-   * Get node value formatted as label
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get value_label() {
-    // TODO compute value
-    return 'NO VALUE'
-  }
-
-  /**
-   * Get dict of input links
-   *
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get input_links_dict() {
-    return this._input_links
-  }
-
-  /**
-   * Get list of all input link
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get input_links_list() {
-    return Object.values(this._input_links)
-  }
-
-  /**
-   * Get dict of output links
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get output_links_dict() {
-    return this._output_links
-  }
-
-  /**
-   * Get list of all output link
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get output_links_list() {
-    return Object.values(this._output_links)
-  }
-
-  /**
-   * Get style key of node
-   * @return {string}
-   * @memberof Class_Node
-   */
-  public get style() {
-    return this._display.style
-  }
-
-  /**
-  * Set style key of node
-  * @memberof Class_Node
-  */
-  public set style(_: Class_NodeStyle) {
-    this._display.style.removeReference(this)
-    this._display.style = _
-    _.addReference(this)
+  public updateInputValue() {
+    this._input_data_value = 0
+    this.input_links_list.forEach(link => {
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._input_data_value = this._input_data_value + data_value
+    })
     this.draw()
   }
 
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_visible() {
-    if (this._display.attributes.shape_visible !== undefined) {
-      return this._display.attributes.shape_visible
+  public updateOutputValue() {
+    this._output_data_value = 0
+    this.output_links_list.forEach(link =>{
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._output_data_value = this._output_data_value + data_value
+    })
+    this.draw()
+  }
+
+  public resetAttributes() {
+    this._display.attributes = new Class_NodeAttribute()
+    this.draw()
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
+    return this._display.attributes[attr] !== undefined
+  }
+
+  public removeTag(tag: Class_Tag) {
+    if (this._tags[tag.id] !== undefined) {
+      delete this._tags[tag.id]
+      tag.removeReference(this)
     }
-    else if (this._display.style.shape_visible !== undefined) {
-      return this._display.style.shape_visible
+  }
+
+  public isEqual(_: Class_NodeElement) {
+
+    if (this.shape_visible !== _.shape_visible) {
+      return false
     }
-    return default_shape_visible
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_visible(_: boolean) {
-    this._display.attributes.shape_visible = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_min_width() {
-    if (this._display.attributes.shape_min_width !== undefined) {
-      return this._display.attributes.shape_min_width
-    } else if (this._display.style.shape_min_width !== undefined) {
-      return this._display.style.shape_min_width
+    if (this.name_label_visible !== _.name_label_visible) {
+      return false
     }
-    return default_shape_min_width
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_min_width(_: number) {
-    this._display.attributes.shape_min_width = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_min_height() {
-    if (this._display.attributes.shape_min_height !== undefined) {
-      return this._display.attributes.shape_min_height
-    } else if (this._display.style.shape_min_height !== undefined) {
-      return this._display.style.shape_min_height
+    if (this.shape_min_width !== _.shape_min_width) {
+      return false
     }
-    return default_shape_min_height
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_min_height(_: number) {
-    this._display.attributes.shape_min_height = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_color() {
-    if (this._display.attributes.shape_color !== undefined) {
-      return this._display.attributes.shape_color
-    } else if (this._display.style.shape_color !== undefined) {
-      return this._display.style.shape_color
+    if (this.shape_min_height !== _.shape_min_height) {
+      return false
     }
-    return default_shape_color
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_color(_: string) {
-    this._display.attributes.shape_color = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_type() {
-    if (this._display.attributes.shape_type !== undefined) {
-      return this._display.attributes.shape_type
-    } else if (this._display.style.shape_type !== undefined) {
-      return this._display.style.shape_type
+    if (this.shape_color !== _.shape_color) {
+      return false
     }
-    return default_shape_type
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_type(_: Type_Shape) {
-    this._display.attributes.shape_type = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_arrow_angle_factor() {
-    if (this._display.attributes.shape_arrow_angle_factor !== undefined) {
-      return this._display.attributes.shape_arrow_angle_factor
-    } else if (this._display.style.shape_arrow_angle_factor !== undefined) {
-      return this._display.style.shape_arrow_angle_factor
+    if (this.shape_type !== _.shape_type) {
+      return false
     }
-    return default_shape_arrow_angle_factor
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_arrow_angle_factor(_: number) {
-    this._display.attributes.shape_arrow_angle_factor = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_arrow_angle_direction() {
-    if (this._display.attributes.shape_arrow_angle_direction !== undefined) {
-      return this._display.attributes.shape_arrow_angle_direction
-    } else if (this._display.style.shape_arrow_angle_direction !== undefined) {
-      return this._display.style.shape_arrow_angle_direction
+    if (this.shape_arrow_angle_factor !== _.shape_arrow_angle_factor) {
+      return false
     }
-    return default_shape_arrow_angle_direction
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_arrow_angle_direction(_: string) {
-    this._display.attributes.shape_arrow_angle_direction = _
-    this.drawShape()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get shape_color_sustainable() {
-    if (this._display.attributes.shape_color_sustainable !== undefined) {
-      return this._display.attributes.shape_color_sustainable
-    } else if (this._display.style.shape_color_sustainable !== undefined) {
-      return this._display.style.shape_color_sustainable
+    if (this.shape_arrow_angle_direction !== _.shape_arrow_angle_direction) {
+      return false
     }
-    return default_shape_color_sustainable
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set shape_color_sustainable(_: boolean) {
-    this._display.attributes.shape_color_sustainable = _
-    this.drawShape()
-  }
-
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_visible() {
-    if (this._display.attributes.name_label_visible !== undefined) {
-      return this._display.attributes.name_label_visible
-    } else if (this._display.style.name_label_visible !== undefined) {
-      return this._display.style.name_label_visible
+    if (this.shape_color_sustainable !== _.shape_color_sustainable) {
+      return false
     }
-    return default_name_label_visible
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_visible(_: boolean) {
-    this._display.attributes.name_label_visible = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_font_family() {
-    if (this._display.attributes.name_label_font_family !== undefined) {
-      return this._display.attributes.name_label_font_family
-    } else if (this._display.style.name_label_font_family !== undefined) {
-      return this._display.style.name_label_font_family
+    if (this.name_label_font_family !== _.name_label_font_family) {
+      return false
     }
-    return default_label_font_family
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_font_family(_: string) {
-    this._display.attributes.name_label_font_family = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_font_size() {
-    if (this._display.attributes.name_label_font_size !== undefined) {
-      return this._display.attributes.name_label_font_size
-    } else if (this._display.style.name_label_font_size !== undefined) {
-      return this._display.style.name_label_font_size
+    if (this.name_label_font_size !== _.name_label_font_size) {
+      return false
     }
-    return default_label_font_size
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_font_size(_: number) {
-    this._display.attributes.name_label_font_size = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_uppercase() {
-    if (this._display.attributes.name_label_uppercase !== undefined) {
-      return this._display.attributes.name_label_uppercase
-    } else if (this._display.style.name_label_uppercase !== undefined) {
-      return this._display.style.name_label_uppercase
+    if (this.name_label_uppercase !== _.name_label_uppercase) {
+      return false
     }
-    return default_label_uppercase
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_uppercase(_: boolean) {
-    this._display.attributes.name_label_uppercase = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_bold() {
-    if (this._display.attributes.name_label_bold !== undefined) {
-      return this._display.attributes.name_label_bold
-    } else if (this._display.style.name_label_bold !== undefined) {
-      return this._display.style.name_label_bold
+    if (this.name_label_bold !== _.name_label_bold) {
+      return false
     }
-    return default_label_bold
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_bold(_: boolean) {
-    this._display.attributes.name_label_bold = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_italic() {
-    if (this._display.attributes.name_label_italic !== undefined) {
-      return this._display.attributes.name_label_italic
-    } else if (this._display.style.name_label_italic !== undefined) {
-      return this._display.style.name_label_italic
+    if (this.name_label_italic !== _.name_label_italic) {
+      return false
     }
-    return default_label_italic
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_italic(_: boolean) {
-    this._display.attributes.name_label_italic = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_box_width() {
-    if (this._display.attributes.name_label_box_width !== undefined) {
-      return this._display.attributes.name_label_box_width
-    } else if (this._display.style.name_label_box_width !== undefined) {
-      return this._display.style.name_label_box_width
+    if (this.name_label_box_width !== _.name_label_box_width) {
+      return false
     }
-    return default_label_box_width
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_box_width(_: number) {
-    this._display.attributes.name_label_box_width = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_color() {
-    if (this._display.attributes.name_label_color !== undefined) {
-      return this._display.attributes.name_label_color
-    } else if (this._display.style.name_label_color !== undefined) {
-      return this._display.style.name_label_color
+    if (this.name_label_color !== _.name_label_color) {
+      return false
     }
-    return default_label_color
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_color(_: boolean) {
-    this._display.attributes.name_label_color = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_vert() {
-    if (this._display.attributes.name_label_vert !== undefined) {
-      return this._display.attributes.name_label_vert
-    } else if (this._display.style.name_label_vert !== undefined) {
-      return this._display.style.name_label_vert
+    if (this.name_label_vert !== _.name_label_vert) {
+      return false
     }
-    return default_name_label_vert
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_vert(_: string) {
-    this._display.attributes.name_label_vert = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_horiz() {
-    if (this._display.attributes.name_label_horiz !== undefined) {
-      return this._display.attributes.name_label_horiz
-    } else if (this._display.style.name_label_horiz !== undefined) {
-      return this._display.style.name_label_horiz
+    if (this.name_label_horiz !== _.name_label_horiz) {
+      return false
     }
-    return default_name_label_horiz
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_horiz(_: string) {
-    this._display.attributes.name_label_horiz = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_background() {
-    if (this._display.attributes.name_label_background !== undefined) {
-      return this._display.attributes.name_label_background
-    } else if (this._display.style.name_label_background !== undefined) {
-      return this._display.style.name_label_background
+    if (this.name_label_background !== _.name_label_background) {
+      return false
     }
-    return default_label_background
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_background(_: boolean) {
-    this._display.attributes.name_label_background = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get value_label_visible() {
-    if (this._display.attributes.value_label_visible !== undefined) {
-      return this._display.attributes.value_label_visible
-    } else if (this._display.style.value_label_visible !== undefined) {
-      return this._display.style.value_label_visible
+    if (this.value_label_visible !== _.value_label_visible) {
+      return false
     }
-    return default_value_label_visible
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set value_label_visible(_: boolean) {
-    this._display.attributes.value_label_visible = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get value_label_vert() {
-    if (this._display.attributes.value_label_vert !== undefined) {
-      return this._display.attributes.value_label_vert
-    } else if (this._display.style.value_label_vert !== undefined) {
-      return this._display.style.value_label_vert
+    if (this.value_label_vert !== _.value_label_vert) {
+      return false
     }
-    return default_value_label_vert
+    if (this.value_label_horiz !== _.value_label_horiz) {
+      return false
+    }
+    if (this.value_label_font_size !== _.value_label_font_size) {
+      return false
+    }
+    return true
   }
 
-  /** Set value for value_label_vert
+  // Check links
+  public hasInputLinks() { return (this.input_links_list.length > 0) }
+  public hasOutputLinks() { return (this.output_links_list.length > 0) }
+
+  // Add links
+  public addInputLink(link: Class_LinkElement) {
+    if (!this._input_links[link.id]) {
+      this._input_links[link.id] = link
+      this._links_order.push(link)
+      this.drawLinks()
+    }
+  }
+  public addOutputLink(link: Class_LinkElement) {
+    if (!this._output_links[link.id]) {
+      this._output_links[link.id] = link
+      this._links_order.push(link)
+      this.drawLinks()
+    }
+  }
+
+  /**
+   * Move given input link to a given node
+   * @param {Class_LinkElement} link
+   * @param {Class_NodeElement} node
+   * @memberof Class_NodeElement
+   */
+  public swapInputLink(link: Class_LinkElement, node: Class_NodeElement) {
+    if (this._input_links[link.id] !== undefined) {
+      delete this._input_links[link.id]
+      node.addInputLink(link)
+      this.drawLinks()
+    }
+  }
+
+  /**
+   * Move given output link to a given node
+   * @param {Class_LinkElement} link
+   * @param {Class_NodeElement} node
+   * @memberof Class_NodeElement
+   */
+  public swapOutputLink(link: Class_LinkElement, node: Class_NodeElement) {
+    if (this._output_links[link.id] !== undefined) {
+      delete this._output_links[link.id]
+      node.addOutputLink(link)
+      this.drawLinks()
+    }
+  }
+
+  // Get links
+  public getFirstInputLink() {
+    if (this.hasInputLinks()) return this.input_links_list[0] // TODO pas bon
+    else return undefined
+  }
+
+  public getFirstOutputLink() {
+    if (this.hasOutputLinks()) return this.output_links_list[0] // TODO pas bon
+    else return undefined
+  }
+
+  /**
+   * Convert node to JSON
    *
-   TODO Description * @memberof Class_NodeElement
-   */
-  public set value_label_vert(_: string) {
-    this._display.attributes.value_label_vert = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get value_label_horiz() {
-    if (this._display.attributes.value_label_horiz !== undefined) {
-      return this._display.attributes.value_label_horiz
-    } else if (this._display.style.value_label_horiz !== undefined) {
-      return this._display.style.value_label_horiz
-    }
-    return default_value_label_horiz
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set value_label_horiz(_: string) {
-    this._display.attributes.value_label_horiz = _
-    this.drawLabel()
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get value_label_font_size() {
-    if (this._display.attributes.value_label_font_size !== undefined) {
-      return this._display.attributes.value_label_font_size
-    } else if (this._display.style.value_label_font_size !== undefined) {
-      return this._display.style.value_label_font_size
-    }
-    return default_label_font_size
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set value_label_font_size(_: number) {
-    this._display.attributes.value_label_font_size = _
-    this.drawLabel()
-  }
-
-  // PRIVATE GETTER / SETTER ============================================================
-
-  /**
-   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
-   * if that the case then we don't draw the node
    *
-   * @private
    * @return {*}
    * @memberof Class_NodeElement
    */
-  private get are_related_tags_selected() {
-    let to_display = true
+  public toJSON() {
+    const json_object = {} as { [_: string]: unknown }
 
-    Object.entries(this.drawing_area.sankey.node_taggs_dict).filter(nt => nt[0] !== 'Type de noeud' && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
-      // Check tags from the group attribued to the node
-      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-      const node_tags_attr = this._tags[nt[0]]
+    json_object['idNode'] = this.id
+    json_object['name'] = this.name
+    json_object['position'] = this.position_type
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
+    json_object['tooltip_text'] = this.tooltip_text
+    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+    json_object['style'] = Object.entries(this.drawing_area.sankey.node_styles_dict).filter(stl => stl[1] === (this.style))[0][0]
+    json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
 
-      if (node_tags_attr != undefined && node_tags_attr.length != 0) {
-        // If the node has at least 1 tag from the selected tag of the group then we display it
-        // If the node has tag from the group attribued to it but are not selected then we don't display it
-        if (!nt[1].tags) {
-          return
-        }
-        const tags_from_grp_to_display = Object.entries(nt[1].tags).filter(t => t[1].selected).map(t => t[1])
-        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
-      }
-    })
-    return to_display
+    json_object['local'] = this._display.attributes.toJSON()
+    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].map(nt => nt.id)]))
+
+    return json_object
   }
 
-  private get is_related_level_selected() {
-    let to_display = true
-    const lvl_ent = Object.entries(this.drawing_area.sankey.level_taggs_dict)
-    // Check if there is other aggregation tags than 'Primaire',
-    const multi_level = lvl_ent.filter(nt => nt[0] !== 'Primaire').map(nt => nt[0]).length > 0
+  /**
+   * Assign to node implementation values from json,
+   * json_node_object is a json of 1 node
+   *
+   *
+   * @param {{ [x: string]: any }} json_node_object
+   * @memberof Class_NodeElement
+   */
+  public fromJSON(json_node_object: { [x: string]: any }) {
 
-    const only_one_activated = lvl_ent.filter(nt => nt[1].activated).length == 1
-    const only_primaire_activated = lvl_ent.filter(nt => nt[1].activated).map(nt => nt[0])[0] == 'Primaire'
+    this._display.position.type = json_node_object['position'] ?? ''
+    this._display.position.x = json_node_object['x'] ?? 10
+    this._display.position.y = json_node_object['y'] ?? 10
+    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
 
-    const multy_but_only_primaire = multi_level && only_one_activated && only_primaire_activated
+    //  Input & output link should be automatically added when we create link from json
 
-    // To display a node according to level tag we search if:
-    // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
-    // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
-    // - The node has the grp tag name in his tags
-    lvl_ent.filter(nt => ((multi_level && !multy_but_only_primaire) ? nt[0] !== 'Primaire' : true) && nt[1].activated && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
-      // Check tags from the group attribued to the node
-      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-      const node_tags_attr = this._tags[nt[0]]
-      if (node_tags_attr != undefined) {
-        // If the node has at least 1 tag from the selected tag of the group then we display it
-        // If the node has tag from the group attribued to it but are not selected then we don't display it
-        const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t)
-        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
-        // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
+    this._display.style = this.drawing_area.sankey.node_styles_dict[json_node_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
 
-      }
-    })
-    return to_display
+    if (json_node_object['local']) {
+      this._display.attributes.fromJSON(json_node_object['local'])
+    }
+    // In JSON here are how supposed tags var is :
+    // tags:{key_grp_tag:string[] (key_tag_selected) }
+    // where 'key_grp_tag' represent the id of a node_taggs group
+    // &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
+    Object.entries(json_node_object['tags'] ?? {})
+      .filter(ent => (ent[0] in this.drawing_area.sankey.node_taggs_dict) && (ent[1] as string[]).length > 0)
+      .forEach(ent_nodetag => {
+        if (ent_nodetag.length > 0) {
+          const list_id_tag = ent_nodetag[1] as string[]
+          this._tags[ent_nodetag[0]] = list_id_tag.map(key_tag => {
+            return this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[key_tag]
+          })
+        }
+
+      })
+
+    // Same thing but for level tag
+    Object.entries(json_node_object['tags'] ?? {})
+      .filter(ent => (ent[0] in this.drawing_area.sankey.level_taggs_dict) && (ent[1] as string[]).length > 0)
+      .forEach(ent_lvltag => {
+        if (ent_lvltag.length > 0) {
+          const list_id_tag = ent_lvltag[1] as string[]
+          this._tags[ent_lvltag[0]] = list_id_tag.map(key_tag => {
+            return this.drawing_area.sankey.level_taggs_dict[ent_lvltag[0]].tags[key_tag]
+          })
+        }
+
+      })
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1411,279 +991,697 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  // GETTERS / SETTERS ==================================================================
 
-  // PUBLIC METHODS =====================================================================
+  public get is_visible() {
+    return(
+      this.are_related_tags_selected &&
+      this.is_related_level_selected &&
+      this._is_visible
+    )
+  }
+
+  public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } {
+    return this._dimensions
+  }
 
   /**
-   * Draw given node on drawing area
-   *
-   * @protected
+   * Get node name
    * @memberof Class_NodeElement
    */
-  public draw() {
-    // Heritance of draw function
-    super.draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_nodes')
-    // Apply styles
-    this.d3_selection?.style('display', this.getDisplayValue())
-    this.d3_selection?.style('font-family', this.name_label_font_family)
-    // Draw shape
-    this.drawShape()
-    // Draw label
+  public get name() {
+    return this._name
+  }
+
+  /**
+   * Set node name
+   * @memberof Class_NodeElement
+   */
+  public set name(_: string) {
+    // TODO update id
+    this._name = _
     this.drawLabel()
   }
 
-  public useDefaultStyle() {
-    this.style = this.drawing_area.sankey.default_node_style
-  }
-
-  public updateInputValue() {
-    this._input_data_value = 0
-    this.input_links_list.forEach(link => {
-      const data_value = link.data_value
-      if (data_value !== null)
-        this._input_data_value = this._input_data_value + data_value
-    })
-    this.draw()
-  }
-
-  public updateOutputValue() {
-    this._output_data_value = 0
-    this.output_links_list.forEach(link =>{
-      const data_value = link.data_value
-      if (data_value !== null)
-        this._output_data_value = this._output_data_value + data_value
-    })
-    this.draw()
-  }
-
-  public resetAttributes() {
-    this._display.attributes = new Class_NodeAttribute()
-    this.draw()
-  }
-
-  public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
-    return this._display.attributes[attr] !== undefined
-  }
-
-  public removeTag(tag: Class_Tag) {
-    if (this._tags[tag.id] !== undefined) {
-      delete this._tags[tag.id]
-      tag.removeReference(this)
-    }
-  }
-
-  public isEqual(_: Class_NodeElement) {
-
-    if (this.shape_visible !== _.shape_visible) {
-      return false
-    }
-    if (this.name_label_visible !== _.name_label_visible) {
-      return false
-    }
-    if (this.shape_min_width !== _.shape_min_width) {
-      return false
-    }
-    if (this.shape_min_height !== _.shape_min_height) {
-      return false
-    }
-    if (this.shape_color !== _.shape_color) {
-      return false
-    }
-    if (this.shape_type !== _.shape_type) {
-      return false
-    }
-    if (this.shape_arrow_angle_factor !== _.shape_arrow_angle_factor) {
-      return false
-    }
-    if (this.shape_arrow_angle_direction !== _.shape_arrow_angle_direction) {
-      return false
-    }
-    if (this.shape_color_sustainable !== _.shape_color_sustainable) {
-      return false
-    }
-    if (this.name_label_font_family !== _.name_label_font_family) {
-      return false
-    }
-    if (this.name_label_font_size !== _.name_label_font_size) {
-      return false
-    }
-    if (this.name_label_uppercase !== _.name_label_uppercase) {
-      return false
-    }
-    if (this.name_label_bold !== _.name_label_bold) {
-      return false
-    }
-    if (this.name_label_italic !== _.name_label_italic) {
-      return false
-    }
-    if (this.name_label_box_width !== _.name_label_box_width) {
-      return false
-    }
-    if (this.name_label_color !== _.name_label_color) {
-      return false
-    }
-    if (this.name_label_vert !== _.name_label_vert) {
-      return false
-    }
-    if (this.name_label_horiz !== _.name_label_horiz) {
-      return false
-    }
-    if (this.name_label_background !== _.name_label_background) {
-      return false
-    }
-    if (this.value_label_visible !== _.value_label_visible) {
-      return false
-    }
-    if (this.value_label_vert !== _.value_label_vert) {
-      return false
-    }
-    if (this.value_label_horiz !== _.value_label_horiz) {
-      return false
-    }
-    if (this.value_label_font_size !== _.value_label_font_size) {
-      return false
-    }
-    return true
-  }
-
-  // Check links
-  public hasInputLinks() { return (this.input_links_list.length > 0) }
-  public hasOutputLinks() { return (this.output_links_list.length > 0) }
-
-  // Add links
-  public addInputLink(link: Class_LinkElement) {
-    if (!this._input_links[link.id]) {
-      this._input_links[link.id] = link
-      this._links_order.push(link)
-      this.drawLinks()
-    }
-  }
-  public addOutputLink(link: Class_LinkElement) {
-    if (!this._output_links[link.id]) {
-      this._output_links[link.id] = link
-      this._links_order.push(link)
-      this.drawLinks()
-    }
-  }
-
   /**
-   * Move given input link to a given node
-   * @param {Class_LinkElement} link
-   * @param {Class_NodeElement} node
+   * Get node name formated as label
+   * @readonly
    * @memberof Class_NodeElement
    */
-  public swapInputLink(link: Class_LinkElement, node: Class_NodeElement) {
-    if (this._input_links[link.id] !== undefined) {
-      delete this._input_links[link.id]
-      node.addInputLink(link)
-      this.drawLinks()
+  public get name_label() {
+    if (this._name_label_separator !== '') {
+      return this._name.split(this._name_label_separator)[0]
     }
+    return this._name
+  }
+
+  // Selection
+  public setSelected() { this._is_selected = true; this.drawShape()}
+  public setUnSelected() { this._is_selected = false; this.drawShape()}
+
+  public get tags() {
+    // TODO faire autrement
+    return this._tags
+  }
+
+  public deRefTag(tag: Class_Tag) {
+    delete this._tags[tag.id]
   }
 
   /**
-   * Move given output link to a given node
-   * @param {Class_LinkElement} link
-   * @param {Class_NodeElement} node
+   * Get node value formatted as label
+   * @readonly
    * @memberof Class_NodeElement
    */
-  public swapOutputLink(link: Class_LinkElement, node: Class_NodeElement) {
-    if (this._output_links[link.id] !== undefined) {
-      delete this._output_links[link.id]
-      node.addOutputLink(link)
-      this.drawLinks()
-    }
-  }
-
-  // Get links
-  public getFirstInputLink() {
-    if (this.hasInputLinks()) return this.input_links_list[0] // TODO pas bon
-    else return undefined
-  }
-
-  public getFirstOutputLink() {
-    if (this.hasOutputLinks()) return this.output_links_list[0] // TODO pas bon
-    else return undefined
+  public get value_label() {
+    // TODO compute value
+    return 'NO VALUE'
   }
 
   /**
-   * Convert node to JSON
+   * Get dict of input links
    *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get input_links_dict() {
+    return this._input_links
+  }
+
+  /**
+   * Get list of all input link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get input_links_list() {
+    return Object.values(this._input_links)
+  }
+
+  /**
+   * Get dict of output links
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get output_links_dict() {
+    return this._output_links
+  }
+
+  /**
+   * Get list of all output link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get output_links_list() {
+    return Object.values(this._output_links)
+  }
+
+  /**
+   * Get style key of node
+   * @return {string}
+   * @memberof Class_Node
+   */
+  public get style() {
+    return this._display.style
+  }
+
+  /**
+  * Set style key of node
+  * @memberof Class_Node
+  */
+  public set style(_: Class_NodeStyle) {
+    this._display.style.removeReference(this)
+    this._display.style = _
+    _.addReference(this)
+    this.draw()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_visible() {
+    if (this._display.attributes.shape_visible !== undefined) {
+      return this._display.attributes.shape_visible
+    }
+    else if (this._display.style.shape_visible !== undefined) {
+      return this._display.style.shape_visible
+    }
+    return default_shape_visible
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_visible(_: boolean) {
+    this._display.attributes.shape_visible = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_min_width() {
+    if (this._display.attributes.shape_min_width !== undefined) {
+      return this._display.attributes.shape_min_width
+    } else if (this._display.style.shape_min_width !== undefined) {
+      return this._display.style.shape_min_width
+    }
+    return default_shape_min_width
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_min_width(_: number) {
+    this._display.attributes.shape_min_width = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_min_height() {
+    if (this._display.attributes.shape_min_height !== undefined) {
+      return this._display.attributes.shape_min_height
+    } else if (this._display.style.shape_min_height !== undefined) {
+      return this._display.style.shape_min_height
+    }
+    return default_shape_min_height
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_min_height(_: number) {
+    this._display.attributes.shape_min_height = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_color() {
+    if (this._display.attributes.shape_color !== undefined) {
+      return this._display.attributes.shape_color
+    } else if (this._display.style.shape_color !== undefined) {
+      return this._display.style.shape_color
+    }
+    return default_shape_color
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_color(_: string) {
+    this._display.attributes.shape_color = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_type() {
+    if (this._display.attributes.shape_type !== undefined) {
+      return this._display.attributes.shape_type
+    } else if (this._display.style.shape_type !== undefined) {
+      return this._display.style.shape_type
+    }
+    return default_shape_type
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_type(_: Type_Shape) {
+    this._display.attributes.shape_type = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_arrow_angle_factor() {
+    if (this._display.attributes.shape_arrow_angle_factor !== undefined) {
+      return this._display.attributes.shape_arrow_angle_factor
+    } else if (this._display.style.shape_arrow_angle_factor !== undefined) {
+      return this._display.style.shape_arrow_angle_factor
+    }
+    return default_shape_arrow_angle_factor
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_arrow_angle_factor(_: number) {
+    this._display.attributes.shape_arrow_angle_factor = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_arrow_angle_direction() {
+    if (this._display.attributes.shape_arrow_angle_direction !== undefined) {
+      return this._display.attributes.shape_arrow_angle_direction
+    } else if (this._display.style.shape_arrow_angle_direction !== undefined) {
+      return this._display.style.shape_arrow_angle_direction
+    }
+    return default_shape_arrow_angle_direction
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_arrow_angle_direction(_: string) {
+    this._display.attributes.shape_arrow_angle_direction = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get shape_color_sustainable() {
+    if (this._display.attributes.shape_color_sustainable !== undefined) {
+      return this._display.attributes.shape_color_sustainable
+    } else if (this._display.style.shape_color_sustainable !== undefined) {
+      return this._display.style.shape_color_sustainable
+    }
+    return default_shape_color_sustainable
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set shape_color_sustainable(_: boolean) {
+    this._display.attributes.shape_color_sustainable = _
+    this.drawShape()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_visible() {
+    if (this._display.attributes.name_label_visible !== undefined) {
+      return this._display.attributes.name_label_visible
+    } else if (this._display.style.name_label_visible !== undefined) {
+      return this._display.style.name_label_visible
+    }
+    return default_name_label_visible
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_visible(_: boolean) {
+    this._display.attributes.name_label_visible = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_font_family() {
+    if (this._display.attributes.name_label_font_family !== undefined) {
+      return this._display.attributes.name_label_font_family
+    } else if (this._display.style.name_label_font_family !== undefined) {
+      return this._display.style.name_label_font_family
+    }
+    return default_label_font_family
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_font_family(_: string) {
+    this._display.attributes.name_label_font_family = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_font_size() {
+    if (this._display.attributes.name_label_font_size !== undefined) {
+      return this._display.attributes.name_label_font_size
+    } else if (this._display.style.name_label_font_size !== undefined) {
+      return this._display.style.name_label_font_size
+    }
+    return default_label_font_size
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_font_size(_: number) {
+    this._display.attributes.name_label_font_size = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_uppercase() {
+    if (this._display.attributes.name_label_uppercase !== undefined) {
+      return this._display.attributes.name_label_uppercase
+    } else if (this._display.style.name_label_uppercase !== undefined) {
+      return this._display.style.name_label_uppercase
+    }
+    return default_label_uppercase
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_uppercase(_: boolean) {
+    this._display.attributes.name_label_uppercase = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_bold() {
+    if (this._display.attributes.name_label_bold !== undefined) {
+      return this._display.attributes.name_label_bold
+    } else if (this._display.style.name_label_bold !== undefined) {
+      return this._display.style.name_label_bold
+    }
+    return default_label_bold
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_bold(_: boolean) {
+    this._display.attributes.name_label_bold = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_italic() {
+    if (this._display.attributes.name_label_italic !== undefined) {
+      return this._display.attributes.name_label_italic
+    } else if (this._display.style.name_label_italic !== undefined) {
+      return this._display.style.name_label_italic
+    }
+    return default_label_italic
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_italic(_: boolean) {
+    this._display.attributes.name_label_italic = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_box_width() {
+    if (this._display.attributes.name_label_box_width !== undefined) {
+      return this._display.attributes.name_label_box_width
+    } else if (this._display.style.name_label_box_width !== undefined) {
+      return this._display.style.name_label_box_width
+    }
+    return default_label_box_width
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_box_width(_: number) {
+    this._display.attributes.name_label_box_width = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_color() {
+    if (this._display.attributes.name_label_color !== undefined) {
+      return this._display.attributes.name_label_color
+    } else if (this._display.style.name_label_color !== undefined) {
+      return this._display.style.name_label_color
+    }
+    return default_label_color
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_color(_: boolean) {
+    this._display.attributes.name_label_color = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_vert() {
+    if (this._display.attributes.name_label_vert !== undefined) {
+      return this._display.attributes.name_label_vert
+    } else if (this._display.style.name_label_vert !== undefined) {
+      return this._display.style.name_label_vert
+    }
+    return default_name_label_vert
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_vert(_: string) {
+    this._display.attributes.name_label_vert = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_horiz() {
+    if (this._display.attributes.name_label_horiz !== undefined) {
+      return this._display.attributes.name_label_horiz
+    } else if (this._display.style.name_label_horiz !== undefined) {
+      return this._display.style.name_label_horiz
+    }
+    return default_name_label_horiz
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_horiz(_: string) {
+    this._display.attributes.name_label_horiz = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get name_label_background() {
+    if (this._display.attributes.name_label_background !== undefined) {
+      return this._display.attributes.name_label_background
+    } else if (this._display.style.name_label_background !== undefined) {
+      return this._display.style.name_label_background
+    }
+    return default_label_background
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_background(_: boolean) {
+    this._display.attributes.name_label_background = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_visible() {
+    if (this._display.attributes.value_label_visible !== undefined) {
+      return this._display.attributes.value_label_visible
+    } else if (this._display.style.value_label_visible !== undefined) {
+      return this._display.style.value_label_visible
+    }
+    return default_value_label_visible
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_visible(_: boolean) {
+    this._display.attributes.value_label_visible = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_vert() {
+    if (this._display.attributes.value_label_vert !== undefined) {
+      return this._display.attributes.value_label_vert
+    } else if (this._display.style.value_label_vert !== undefined) {
+      return this._display.style.value_label_vert
+    }
+    return default_value_label_vert
+  }
+
+  /** Set value for value_label_vert
    *
+   TODO Description * @memberof Class_NodeElement
+   */
+  public set value_label_vert(_: string) {
+    this._display.attributes.value_label_vert = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_horiz() {
+    if (this._display.attributes.value_label_horiz !== undefined) {
+      return this._display.attributes.value_label_horiz
+    } else if (this._display.style.value_label_horiz !== undefined) {
+      return this._display.style.value_label_horiz
+    }
+    return default_value_label_horiz
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_horiz(_: string) {
+    this._display.attributes.value_label_horiz = _
+    this.drawLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_font_size() {
+    if (this._display.attributes.value_label_font_size !== undefined) {
+      return this._display.attributes.value_label_font_size
+    } else if (this._display.style.value_label_font_size !== undefined) {
+      return this._display.style.value_label_font_size
+    }
+    return default_label_font_size
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_font_size(_: number) {
+    this._display.attributes.value_label_font_size = _
+    this.drawLabel()
+  }
+
+  // PRIVATE GETTER / SETTER ============================================================
+
+  /**
+   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
+   * if that the case then we don't draw the node
+   *
+   * @private
    * @return {*}
    * @memberof Class_NodeElement
    */
-  public toJSON() {
-    const json_object = {} as { [_: string]: unknown }
+  private get are_related_tags_selected() {
+    let to_display = true
 
-    json_object['idNode'] = this.id
-    json_object['name'] = this.name
-    json_object['position'] = this.position_type
-    json_object['x'] = this.position_x
-    json_object['y'] = this.position_y
-    json_object['tooltip_text'] = this.tooltip_text
-    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
-    json_object['style'] = Object.entries(this.drawing_area.sankey.node_styles_dict).filter(stl => stl[1] === (this.style))[0][0]
-    json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
+    Object.entries(this.drawing_area.sankey.node_taggs_dict).filter(nt => nt[0] !== 'Type de noeud' && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
+      // Check tags from the group attribued to the node
+      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+      const node_tags_attr = this._tags[nt[0]]
 
-    json_object['local'] = this._display.attributes.toJSON()
-    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].map(nt => nt.id)]))
-
-    return json_object
+      if (node_tags_attr != undefined && node_tags_attr.length != 0) {
+        // If the node has at least 1 tag from the selected tag of the group then we display it
+        // If the node has tag from the group attribued to it but are not selected then we don't display it
+        if (!nt[1].tags) {
+          return
+        }
+        const tags_from_grp_to_display = Object.entries(nt[1].tags).filter(t => t[1].selected).map(t => t[1])
+        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+      }
+    })
+    return to_display
   }
 
-  /**
-   * Assign to node implementation values from json,
-   * json_node_object is a json of 1 node
-   *
-   *
-   * @param {{ [x: string]: any }} json_node_object
-   * @memberof Class_NodeElement
-   */
-  public fromJSON(json_node_object: { [x: string]: any }) {
+  private get is_related_level_selected() {
+    let to_display = true
+    const lvl_ent = Object.entries(this.drawing_area.sankey.level_taggs_dict)
+    // Check if there is other aggregation tags than 'Primaire',
+    const multi_level = lvl_ent.filter(nt => nt[0] !== 'Primaire').map(nt => nt[0]).length > 0
 
-    this._display.position.type = json_node_object['position'] ?? ''
-    this._display.position.x = json_node_object['x'] ?? 10
-    this._display.position.y = json_node_object['y'] ?? 10
-    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
+    const only_one_activated = lvl_ent.filter(nt => nt[1].activated).length == 1
+    const only_primaire_activated = lvl_ent.filter(nt => nt[1].activated).map(nt => nt[0])[0] == 'Primaire'
 
-    //  Input & output link should be automatically added when we create link from json
+    const multy_but_only_primaire = multi_level && only_one_activated && only_primaire_activated
 
-    this._display.style = this.drawing_area.sankey.node_styles_dict[json_node_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
+    // To display a node according to level tag we search if:
+    // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
+    // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
+    // - The node has the grp tag name in his tags
+    lvl_ent.filter(nt => ((multi_level && !multy_but_only_primaire) ? nt[0] !== 'Primaire' : true) && nt[1].activated && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
+      // Check tags from the group attribued to the node
+      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+      const node_tags_attr = this._tags[nt[0]]
+      if (node_tags_attr != undefined) {
+        // If the node has at least 1 tag from the selected tag of the group then we display it
+        // If the node has tag from the group attribued to it but are not selected then we don't display it
+        const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t)
+        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+        // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
 
-    if (json_node_object['local']) {
-      this._display.attributes.fromJSON(json_node_object['local'])
-    }
-    // In JSON here are how supposed tags var is :
-    // tags:{key_grp_tag:string[] (key_tag_selected) }
-    // where 'key_grp_tag' represent the id of a node_taggs group
-    // &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
-    Object.entries(json_node_object['tags'] ?? {})
-      .filter(ent => (ent[0] in this.drawing_area.sankey.node_taggs_dict) && (ent[1] as string[]).length > 0)
-      .forEach(ent_nodetag => {
-        if (ent_nodetag.length > 0) {
-          const list_id_tag = ent_nodetag[1] as string[]
-          this._tags[ent_nodetag[0]] = list_id_tag.map(key_tag => {
-            return this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[key_tag]
-          })
-        }
-
-      })
-
-    // Same thing but for level tag
-    Object.entries(json_node_object['tags'] ?? {})
-      .filter(ent => (ent[0] in this.drawing_area.sankey.level_taggs_dict) && (ent[1] as string[]).length > 0)
-      .forEach(ent_lvltag => {
-        if (ent_lvltag.length > 0) {
-          const list_id_tag = ent_lvltag[1] as string[]
-          this._tags[ent_lvltag[0]] = list_id_tag.map(key_tag => {
-            return this.drawing_area.sankey.level_taggs_dict[ent_lvltag[0]].tags[key_tag]
-          })
-        }
-
-      })
+      }
+    })
+    return to_display
   }
 }
 
@@ -1735,82 +1733,7 @@ export class Class_NodeAttribute {
   protected _value_label_horiz?: string
   protected _value_label_background?: boolean
 
-  // GETTERS ============================================================================
-
-  // Parameters for shape
-  public get shape_visible() { return this._shape_visible }
-  public get shape_type() { return this._shape_type }
-  public get shape_min_width() { return this._shape_min_width }
-  public get shape_min_height() { return this._shape_min_height }
-  public get shape_color() { return this._shape_color }
-  public get shape_color_sustainable() { return this._shape_color_sustainable }
-  public get shape_arrow_angle_factor() { return this._shape_arrow_angle_factor }
-  public get shape_arrow_angle_direction() { return this._shape_arrow_angle_direction }
-
-  // Parameter of node label
-  public get name_label_visible() { return this._name_label_visible }
-  public get name_label_font_family() { return this._name_label_font_family }
-  public get name_label_font_size() { return this._name_label_font_size }
-  public get name_label_uppercase() { return this._name_label_uppercase }
-  public get name_label_bold() { return this._name_label_bold }
-  public get name_label_italic() { return this._name_label_italic }
-  public get name_label_box_width() { return this._name_label_box_width }
-  public get name_label_color() { return this._name_label_color }
-  public get name_label_vert() { return this._name_label_vert }
-  public get name_label_horiz() { return this._name_label_horiz }
-  public get name_label_background() { return this._name_label_background }
-
-  // Parameter of node value label
-  public get value_label_visible() { return this._value_label_visible }
-  public get value_label_font_family() { return this._value_label_font_family }
-  public get value_label_font_size() { return this._value_label_font_size }
-  public get value_label_uppercase() { return this._value_label_uppercase }
-  public get value_label_bold() { return this._value_label_bold }
-  public get value_label_italic() { return this._value_label_italic }
-  public get value_label_box_width() { return this._value_label_box_width }
-  public get value_label_color() { return this._value_label_color }
-  public get value_label_vert() { return this._value_label_vert }
-  public get value_label_horiz() { return this._value_label_horiz }
-  public get value_label_background() { return this._value_label_background }
-
-  // SETTERS ============================================================================
-
-  // Parameters for shape
-  public set shape_visible(_: boolean | undefined) { this._shape_visible = _ }
-  public set shape_type(_: Type_Shape | undefined) { this._shape_type = _ }
-  public set shape_min_width(_: number | undefined) { this._shape_min_width = _ }
-  public set shape_min_height(_: number | undefined) { this._shape_min_height = _ }
-  public set shape_color(_: string | undefined) { this._shape_color = _ }
-  public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _ }
-  public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _ }
-  public set shape_arrow_angle_direction(_: string | undefined) { this._shape_arrow_angle_direction = _ }
-
-  // Parameter of node label
-  public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _ }
-  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _ }
-  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _ }
-  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _ }
-  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _ }
-  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _ }
-  public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _ }
-  public set name_label_color(_: boolean | undefined) { this._name_label_color = _ }
-  public set name_label_vert(_: string | undefined) { this._name_label_vert = _ }
-  public set name_label_horiz(_: string | undefined) { this._name_label_horiz = _ }
-  public set name_label_background(_: boolean | undefined) { this._name_label_background = _ }
-
-  // Parameter of node value label
-  public set value_label_visible(_: boolean | undefined) { this._value_label_visible = _ }
-  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _ }
-  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _ }
-  public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _ }
-  public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _ }
-  public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _ }
-  public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _ }
-  public set value_label_color(_: boolean | undefined) { this._value_label_color = _ }
-  public set value_label_vert(_: string | undefined) { this._value_label_vert = _ }
-  public set value_label_horiz(_: string | undefined) { this._value_label_horiz = _ }
-  public set value_label_background(_: boolean | undefined) { this._value_label_background = _ }
-
+  // PUBLIC METHODS =====================================================================
   public toJSON() {
     const json_object = {} as { [_: string]: any }
 
@@ -1916,6 +1839,83 @@ export class Class_NodeAttribute {
     if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = json_local_object['label_horiz_valeur']
     if (json_local_object['value_label_background'] !== undefined) this._value_label_background = json_local_object['value_label_background']
   }
+
+  // GETTERS ============================================================================
+
+  // Parameters for shape
+  public get shape_visible() { return this._shape_visible }
+  public get shape_type() { return this._shape_type }
+  public get shape_min_width() { return this._shape_min_width }
+  public get shape_min_height() { return this._shape_min_height }
+  public get shape_color() { return this._shape_color }
+  public get shape_color_sustainable() { return this._shape_color_sustainable }
+  public get shape_arrow_angle_factor() { return this._shape_arrow_angle_factor }
+  public get shape_arrow_angle_direction() { return this._shape_arrow_angle_direction }
+
+  // Parameter of node label
+  public get name_label_visible() { return this._name_label_visible }
+  public get name_label_font_family() { return this._name_label_font_family }
+  public get name_label_font_size() { return this._name_label_font_size }
+  public get name_label_uppercase() { return this._name_label_uppercase }
+  public get name_label_bold() { return this._name_label_bold }
+  public get name_label_italic() { return this._name_label_italic }
+  public get name_label_box_width() { return this._name_label_box_width }
+  public get name_label_color() { return this._name_label_color }
+  public get name_label_vert() { return this._name_label_vert }
+  public get name_label_horiz() { return this._name_label_horiz }
+  public get name_label_background() { return this._name_label_background }
+
+  // Parameter of node value label
+  public get value_label_visible() { return this._value_label_visible }
+  public get value_label_font_family() { return this._value_label_font_family }
+  public get value_label_font_size() { return this._value_label_font_size }
+  public get value_label_uppercase() { return this._value_label_uppercase }
+  public get value_label_bold() { return this._value_label_bold }
+  public get value_label_italic() { return this._value_label_italic }
+  public get value_label_box_width() { return this._value_label_box_width }
+  public get value_label_color() { return this._value_label_color }
+  public get value_label_vert() { return this._value_label_vert }
+  public get value_label_horiz() { return this._value_label_horiz }
+  public get value_label_background() { return this._value_label_background }
+
+  // SETTERS ============================================================================
+
+  // Parameters for shape
+  public set shape_visible(_: boolean | undefined) { this._shape_visible = _ }
+  public set shape_type(_: Type_Shape | undefined) { this._shape_type = _ }
+  public set shape_min_width(_: number | undefined) { this._shape_min_width = _ }
+  public set shape_min_height(_: number | undefined) { this._shape_min_height = _ }
+  public set shape_color(_: string | undefined) { this._shape_color = _ }
+  public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _ }
+  public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _ }
+  public set shape_arrow_angle_direction(_: string | undefined) { this._shape_arrow_angle_direction = _ }
+
+  // Parameter of node label
+  public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _ }
+  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _ }
+  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _ }
+  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _ }
+  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _ }
+  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _ }
+  public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _ }
+  public set name_label_color(_: boolean | undefined) { this._name_label_color = _ }
+  public set name_label_vert(_: string | undefined) { this._name_label_vert = _ }
+  public set name_label_horiz(_: string | undefined) { this._name_label_horiz = _ }
+  public set name_label_background(_: boolean | undefined) { this._name_label_background = _ }
+
+  // Parameter of node value label
+  public set value_label_visible(_: boolean | undefined) { this._value_label_visible = _ }
+  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _ }
+  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _ }
+  public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _ }
+  public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _ }
+  public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _ }
+  public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _ }
+  public set value_label_color(_: boolean | undefined) { this._value_label_color = _ }
+  public set value_label_vert(_: string | undefined) { this._value_label_vert = _ }
+  public set value_label_horiz(_: string | undefined) { this._value_label_horiz = _ }
+  public set value_label_background(_: boolean | undefined) { this._value_label_background = _ }
+
 }
 
 // CLASS NODE STYLE *********************************************************************
@@ -1988,6 +1988,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this.value_label_background = default_label_background
   }
 
+  // CLEANING ===========================================================================
+
   public delete() {
     if (this._is_deletable) {
       // Switch all refs to default style
@@ -1996,6 +1998,28 @@ export class Class_NodeStyle extends Class_NodeAttribute {
       this._references = {}
       // Garbage collector will do the rest....
     }
+  }
+
+  // PUBLIC METHODS =======================================================================
+
+  public addReference(_: Class_NodeElement) {
+    if (!this._references[_.id]) {
+      this._references[_.id] = _
+    }
+  }
+
+  public removeReference(_: Class_NodeElement) {
+    if (this._references[_.id] !== undefined) {
+      delete this._references[_.id]
+      _.useDefaultStyle()
+    }
+  }
+
+  // PRIVATE METHODS ======================================================================
+
+  private updateReferencesDraw() {
+    Object.values(this._references)
+      .forEach(ref => ref.draw())
   }
 
   // GETTERS ============================================================================
@@ -2046,25 +2070,4 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public set value_label_horiz(_: string) { this._value_label_horiz = _; this.updateReferencesDraw() }
   public set value_label_background(_: boolean) { this._value_label_background = _; this.updateReferencesDraw() }
 
-  // PUBLIC METHODS =======================================================================
-
-  public addReference(_: Class_NodeElement) {
-    if (!this._references[_.id]) {
-      this._references[_.id] = _
-    }
-  }
-
-  public removeReference(_: Class_NodeElement) {
-    if (this._references[_.id] !== undefined) {
-      delete this._references[_.id]
-      _.useDefaultStyle()
-    }
-  }
-
-  // PRIVATE METHODS ======================================================================
-
-  private updateReferencesDraw() {
-    Object.values(this._references)
-      .forEach(ref => ref.draw())
-  }
 }

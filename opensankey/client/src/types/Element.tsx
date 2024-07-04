@@ -68,13 +68,13 @@ export abstract class Class_ProtoElement {
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
-   * Display attributes for element
+   * Display attributes for proto element
    * @protected
+   * @abstract
    * @type {{
    *     drawing_area: Class_DrawingArea,
-   *     position: Type_ElementPosition,
    *   }}
-   * @memberof Class_Element
+   * @memberof Class_ProtoElement
    */
   protected abstract _display: {
     drawing_area: Class_DrawingArea,
