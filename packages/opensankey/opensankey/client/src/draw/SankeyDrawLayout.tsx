@@ -1612,7 +1612,7 @@ export const updateLayout: updateLayoutFuncType = (
         if (!n.tags[tagGroup]) {
           n.tags[tagGroup] = []
         }
-        if (new_layout.nodes[n.idNode].tags[tagGroup] != undefined) {
+        if (new_layout.nodes[n.idNode]?.tags[tagGroup] ?? false) {
           n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
         }
       })
