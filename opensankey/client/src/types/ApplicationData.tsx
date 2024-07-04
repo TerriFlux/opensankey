@@ -213,10 +213,10 @@ export class Class_ApplicationData {
         app_ref.drawing_area.selected_nodes_list.forEach(n => {
           link_to_update = link_to_update.concat(n.output_links_list)
           link_to_update = link_to_update.concat(n.input_links_list)
-          n.reset()
+          n.draw()
         })
         link_to_update = [...new Set(link_to_update)]
-        link_to_update.forEach(link => link.reset())
+        link_to_update.forEach(link => link.draw())
 
         this.drawing_area.checkAndUpdateAreaSize()
       }
@@ -241,8 +241,8 @@ export class Class_ApplicationData {
           app_ref.drawing_area.selected_links_list.forEach(link => app_ref.drawing_area.deleteLink(link))
 
           // Redraw remaining elements since their presence shape their appearence one another
-          app_ref.drawing_area.sankey.nodes_list.forEach(node => node.reset())
-          app_ref.drawing_area.sankey.links_list.forEach(link => link.reset())
+          app_ref.drawing_area.sankey.nodes_list.forEach(node => node.draw())
+          app_ref.drawing_area.sankey.links_list.forEach(link => link.draw())
 
           // Update component
           app_ref.menu_configuration.updateComponentMenuConfigNode.current()
