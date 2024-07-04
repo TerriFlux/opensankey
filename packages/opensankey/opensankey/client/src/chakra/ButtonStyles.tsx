@@ -516,8 +516,9 @@ export const btn_desc_licence = defineStyle({
 
 export const btn_lone_navigation = defineStyle({
   height: '3rem',
-  maxW:'12rem',
+  maxW:'11rem',
   marginLeft:'auto',
   marginRight:'1rem',
-  padding: '1rem'
+  paddingTop: '1rem',
+  paddingBottom: '1rem'
 })
