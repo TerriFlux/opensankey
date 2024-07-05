@@ -914,12 +914,10 @@ export class Class_DrawingArea {
           const new_target = this.sankey.nodes_dict[node_id]
           // Keep ref of ghost node target
           const ref_old_taget = this._ghost_link.target
-          // Change ghost link target
+          // Change ghost link target (this trigger a redraw of new target)
           this._ghost_link.target = new_target
           // Delete old target node
           this.deleteNode(ref_old_taget)
-          // Redraw new target node (and subsequentially the ghost link)
-          new_target.draw()
           // Deref newly created link as ghost link
           this._ghost_link = null
         } else {

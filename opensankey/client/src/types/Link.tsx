@@ -707,10 +707,12 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public set source(_: Class_NodeElement) {
-    // Clean old source
-    this._source.swapOutputLink(this, _)
-    // Set new source
-    this._source = _
+    if(this.source!==_){
+      const old_source=this._source
+      this._source=_
+      // Clean old source
+      old_source.swapOutputLink(this,_)      
+    }
   }
 
   /**
@@ -752,10 +754,12 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public set target(_: Class_NodeElement) {
-    // Clean old source
-    this._target.swapInputLink(this, _)
-    // Set new source
-    this._target = _
+    if(this.target!==_){
+      const old_target=this._target
+      this._target=_
+      // Clean old source
+      old_target.swapInputLink(this,_)      
+    }
   }
 
   /**
