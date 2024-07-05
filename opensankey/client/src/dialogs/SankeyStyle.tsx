@@ -25,6 +25,7 @@ import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfi
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
+import { default_style_name } from '../types/Sankey'
 
 
 export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> = ({
@@ -42,10 +43,10 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
   const { RedrawNodes } = node_function
 
   const [forceUpdate, setForceUpdate] = useState(false)
-  const [selected_style_node, set_selected_style_node] = useState('default')
+  const [selected_style_node, set_selected_style_node] = useState(default_style_name)
   ref_selected_style_node.current = selected_style_node
   if (data.style_node && !Object.keys(data.style_node).includes(selected_style_node)) {
-    set_selected_style_node('default')
+    set_selected_style_node(default_style_name)
   }
   const ref_input_name = useRef<HTMLInputElement>(null)
   const content = <Box layerStyle='menuconfigpanel_grid'>
@@ -110,9 +111,9 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
       {/* Boutton pour supprimer le noeud selectionné */}
       <Button
         variant='menuconfigpanel_del_button'
-        isDisabled={(selected_style_node === 'default')}
+        isDisabled={(selected_style_node === default_style_name)}
         onClick={() => {
-          Object.values(data.nodes).filter(n => n.style == selected_style_node).forEach(n => n.style = 'default')
+          Object.values(data.nodes).filter(n => n.style == selected_style_node).forEach(n => n.style = default_style_name)
           delete data.style_node[selected_style_node]
           const new_style = (Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : ''
           set_selected_style_node(new_style)
@@ -144,7 +145,7 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
         >
           <Input
             variant='menuconfigpanel_option_input'
-            disabled={(selected_style_node === 'default') ? true : false}
+            disabled={(selected_style_node === default_style_name) ? true : false}
             ref={ref_input_name}
             defaultValue={data.style_node[selected_style_node].name}
             onBlur={() => {
@@ -191,14 +192,14 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
   const { t } = applicationContext
   const { ref_selected_style_link } = applicationState
 
-  const [selected_style_link, set_selected_style_link] = useState('default')
+  const [selected_style_link, set_selected_style_link] = useState(default_style_name)
   const [forceUpdate, setForceUpdate] = useState(false)
   const ref_input_name = useRef<HTMLInputElement>(null)
   ref_selected_style_link.current = selected_style_link
 
   if (data.style_link && !Object.keys(data.style_link).includes(selected_style_link)) {
     // Protection if style is not existing (issue with old files)
-    set_selected_style_link('default')
+    set_selected_style_link(default_style_name)
   }
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
@@ -256,12 +257,12 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
       {/* Boutton pour supprimer le noeud selectionné */}
       <Button
         variant='menuconfigpanel_del_button'
-        isDisabled={(selected_style_link === 'default')}
+        isDisabled={(selected_style_link === default_style_name)}
         onClick={() => {
-          Object.values(data.links).filter(l => l.style == selected_style_link).forEach(l => l.style = 'default')
+          Object.values(data.links).filter(l => l.style == selected_style_link).forEach(l => l.style = default_style_name)
           delete data.style_link[selected_style_link]
-          set_selected_style_link('default')
-          ref_selected_style_link.current = 'default'
+          set_selected_style_link(default_style_name)
+          ref_selected_style_link.current = default_style_name
           new_data.menu_configuration.updateComponentMenuConfigLink.current()
           link_function.RedrawLinks(Object.values(applicationData.display_links))
         }}
@@ -286,7 +287,7 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
           <Input
             ref={ref_input_name}
             variant='menuconfigpanel_option_input'
-            disabled={(selected_style_link === 'default') ? true : false}
+            disabled={(selected_style_link === default_style_name) ? true : false}
             defaultValue={
               (selected_style_link !== '') ? data.style_link[selected_style_link].name : ''
             }
