@@ -197,6 +197,8 @@ export class Class_NodeElement extends Class_Element {
         tag.forEach(t => t.removeReference(this))
       })
     this._tags = {}
+    // Remove reference of self in style
+    this.style.removeReference(this)
   }
 
   /**
