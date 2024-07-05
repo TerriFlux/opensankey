@@ -438,12 +438,13 @@ export class Class_DrawingArea {
    * @return {*}
    * @memberof Class_DrawingArea
    */
-  private mouseOverNodeBlockDAEvent() {
+  private isMouseOverAnExistingNode() {
     let node_id: string
     for (node_id in this.sankey.nodes_dict) {
       if (this.sankey.nodes_dict[node_id].isMouseOver())
-        return false
+        return true
     }
+    return false
   }
 
   /**
@@ -453,8 +454,8 @@ export class Class_DrawingArea {
    */
   public eventsEnabled() {
     // Deal with node events in priority
-    const mouse_over_nodes = this.mouseOverNodeBlockDAEvent()
-    if (mouse_over_nodes === false) {
+    const mouse_over_nodes = this.isMouseOverAnExistingNode()
+    if (mouse_over_nodes === true) {
       return false
     }
     // Deal with link events
@@ -901,7 +902,7 @@ export class Class_DrawingArea {
           // So we only created 1 node
           this.deleteNode(this._ghost_link.target)
         }
-        else if (this.mouseOverNodeBlockDAEvent() === false) {
+        else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
           for (node_id in this.sankey.nodes_dict) {
             if (this.sankey.nodes_dict[node_id].isMouseOver())
