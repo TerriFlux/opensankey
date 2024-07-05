@@ -31,7 +31,7 @@ import {
   initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_Element, Class_ProtoElement } from './Element'
+import { Class_ProtoElement } from './Element'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -133,6 +133,15 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private _mode: 'edition' | 'selection' = 'edition'
+
+  /**
+   * Boolean to know if we are creating a link & another node at the release of the LMB
+   * 
+   * @private
+   * @type {boolean}
+   * @memberof Class_DrawingArea
+   */
+  private _ghost_link: Class_LinkElement | null = null
 
   // Elements that are contained in this area
   private _sankey: Class_Sankey
@@ -422,6 +431,20 @@ export class Class_DrawingArea {
 
     return json_object
   }
+  /**
+   * Test if mouse is over some node
+   *
+   * @private
+   * @return {*} 
+   * @memberof Class_DrawingArea
+   */
+  private mouseOverNodeBlockDAEvent() {
+    let node_id: string
+    for (node_id in this.sankey.nodes_dict) {
+      if (this.sankey.nodes_dict[node_id].isMouseOver())
+        return false
+    }
+  }
 
   /**
    * Checks if it is possible to directly deal with events
@@ -430,10 +453,9 @@ export class Class_DrawingArea {
    */
   public eventsEnabled() {
     // Deal with node events in priority
-    let node_id: string
-    for (node_id in this.sankey.nodes_dict) {
-      if (this.sankey.nodes_dict[node_id].isMouseOver())
-        return false
+    const mouse_over_nodes = this.mouseOverNodeBlockDAEvent()
+    if (mouse_over_nodes === false) {
+      return false
     }
     // Deal with link events
     for (const link_id in this.sankey.links_dict) {
@@ -614,12 +636,12 @@ export class Class_DrawingArea {
     if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
       this.setWidth(max_node_pos_x + this._grid_size)
       this.drawGrid()
-    } 
+    }
 
-// If bottomiest node is too close to the bottom of drawing area border then enlarege DA
+    // If bottomiest node is too close to the bottom of drawing area border then enlarege DA
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
-    if (max_node_pos_y > this._height - this.grid_size ||( (max_node_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
+    if (max_node_pos_y > this._height - this.grid_size || ((max_node_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
       this.setHeight(max_node_pos_y + this._grid_size)
       this.drawGrid()
     }
@@ -744,7 +766,7 @@ export class Class_DrawingArea {
           this.eventMaintainedClick(event))
       this.d3_selection?.on(
         'mouseup',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        (event: MouseEvent) =>
           this.eventReleasedClick(event))
       // Mouse cursor goes over this
       this.d3_selection?.on(
@@ -764,7 +786,7 @@ export class Class_DrawingArea {
       this.d3_selection?.on(
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event));
+          this.eventSimpleRMBCLick(event))
 
       // Zoom behavior(but can also drag drawing area in scroll zone)
       this.d3_selection_zoom_area?.call(
@@ -783,30 +805,7 @@ export class Class_DrawingArea {
   private eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if (this.eventsEnabled()) {
-      // EDITION MODE =============================================================
-      if (this.isInEditionMode()) {
-        // Create new node
-        const new_node = this.addNewDefaultNodeToSankey()
-        // Set position
-        const mouse_position = d3.pointer(event)
-        new_node.setPosXY(mouse_position[0], mouse_position[1])
-        this.application_data.menu_configuration.updateMenuEditionNode()
-
-        // TODO remove test
-        // const tgt_node = new Class_NodeElement('target', 'Target', this, this.application_data.menu_configuration)
-        // tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
-        // const new_link = new Class_LinkElement(new_node, tgt_node, this, this.application_data.menu_configuration)
-        // this.sankey.addLink(new_link)
-        // new_link.setPosXY(new_node.position_x, new_node.position_y)
-        // new_link.setOrientation('hh')
-      }
-      // SELECTION MODE ===========================================================
-      else if (this.isInSelectionMode()) {
-        // Purge selection list
-        this.purgeSelection()
-      }
-    }
+    
   }
 
   /**
@@ -840,9 +839,48 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventMaintainedClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    /* TODO définir clique gauche sur element */
+    event.preventDefault()
+
+    if (this.eventsEnabled() ) {
+      // EDITION MODE =============================================================
+      // event.button==0 check if we use LMB
+      if (this.isInEditionMode() && event.button==0) {
+        // Create new node
+        // Set position
+        const mouse_position = d3.pointer(event)
+        // new_node.setPosXY(mouse_position[0], mouse_position[1])
+
+        const source = this.sankey.addNewDefaultNode() 
+        // Position center of node to pointer pos
+        source.setPosXY(mouse_position[0] - (source.getShapeWidthToUse() / 2), mouse_position[1] - (source.getShapeHeightToUse() / 2))
+
+        const target = this.sankey.addNewDefaultNode()
+        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
+
+        // Make target a 'ghost' node 
+        target.shape_visible = false
+        target.name_label_visible = false
+
+        const n_link = this.sankey.addNewLink(source, target)
+        this._ghost_link = n_link //ref newly created link this var to be used in other mouse event
+        this.application_data.menu_configuration.updateMenuEditionNode()
+
+        // TODO remove test
+        // const tgt_node = new Class_NodeElement('target', 'Target', this, this.application_data.menu_configuration)
+        // tgt_node.setPosXY(mouse_position[0] + 200, mouse_position[1] + 200)
+        // const new_link = new Class_LinkElement(new_node, tgt_node, this, this.application_data.menu_configuration)
+        // this.sankey.addLink(new_link)
+        // new_link.setPosXY(new_node.position_x, new_node.position_y)
+        // new_link.setOrientation('hh')
+      }
+      // SELECTION MODE ===========================================================
+      else if (this.isInSelectionMode()) {
+        // Purge selection list
+        this.purgeSelection()
+      }
+    }
   }
 
   /**
@@ -852,9 +890,56 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventReleasedClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: MouseEvent
   ) {
-    /* TODO définir clique gauche sur element */
+    // EDITION MODE =============================================================
+    if (this.isInEditionMode()) {
+      // When we are creating a link with LMB
+      if (this._ghost_link !== null) {
+        const elementReleasedOn: any = d3.select(event.target as any)
+        // since d3_selection ref to the selection of a <g> element (which isn't a drawed element) we can't release the mouse on it but in one element of the group (We choosed the node shape)
+        const src_elmt_selection = this._ghost_link?.source?.d3_selection?.select('.node_shape')
+
+        if (src_elmt_selection?.node() == elementReleasedOn.node()) {
+          // If we release the mouse on the source of the link then delete the link & target to keep only the source
+          // So we only created 1 node
+          this.deleteNode(this._ghost_link?.target)
+        } else if (this.mouseOverNodeBlockDAEvent() === false) {
+          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
+          for (node_id in this.sankey.nodes_dict) {
+            if (this.sankey.nodes_dict[node_id].isMouseOver())
+              break //stop the loop when we fint the node hovered
+          }
+          // Get new node target
+          const new_target = this.sankey.nodes_dict[node_id]
+          // Keep ref of ghost node target
+          const ref_old_taget = this._ghost_link.target
+          // Change ghost link target
+          this._ghost_link.target = new_target
+          // Delete old target node
+          this.deleteNode(ref_old_taget)
+          // Redraw new target node (and subsequentially the ghost link)
+          new_target.draw()
+          // Deref newly created link as ghost link
+          this._ghost_link = null
+        } else {
+          // If we release the mouse on the background of the DA then we render ghost node visible & stop dragging it
+          const target = (this._ghost_link as Class_LinkElement).target
+          // Make ghost target visible
+          target.resetAttributes() //resetAttributes redraw node
+
+          // Deref newly created link as ghost link
+          this._ghost_link = null
+
+        }
+        // In case we get there still deref ghost link
+        this._ghost_link = null
+        this.application_data.menu_configuration.updateMenuEditionNode()
+        this.application_data.menu_configuration.updateMenuEditionLink()
+
+      }
+    }
+
   }
 
   /**
@@ -890,7 +975,18 @@ export class Class_DrawingArea {
   private eventMouseMove(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    /* TODO définir  */
+    // EDITION MODE =============================================================
+    if (this.isInEditionMode()) {
+
+      // When we are creating a link with LMB
+      if (this._ghost_link !== null) {
+        // Move ghost target
+        const mouse_position = d3.pointer(event)
+        const target = (this._ghost_link as Class_LinkElement).target
+        target.setPosXY(mouse_position[0] - (target.getShapeWidthToUse() / 2), mouse_position[1] - (target.getShapeHeightToUse() / 2))
+      }
+
+    }
   }
 
   /**
