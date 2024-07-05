@@ -162,8 +162,8 @@ export class Class_DrawingArea {
   private _scale: number = 20
 
   // Positionning
-  public _horizontal_spacing: number = 200
-  public _vertical_spacing: number = 50
+  private _horizontal_spacing: number = 200
+  private _vertical_spacing: number = 50
 
   // Zoom & positioning of drawing_area
   // if we want to move manually the drawing_area, we should use this variable (see areaFitHorizontally && areaFitVertically)
@@ -193,7 +193,6 @@ export class Class_DrawingArea {
     this._width = _width
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend = new Class_Legend(this, this.application_data.menu_configuration)
-    // this.legend.display.shape._width = 180 TODO faire plus proprement
   }
 
   // PUBLIC METHODS ====================================================================
@@ -328,18 +327,15 @@ export class Class_DrawingArea {
   public getHeight() { return this._height }
   public setHeight(_: number) { this._height = _; this.drawBackground() }
 
-
   /**
    * Return height of the top nav bar
    *
-   * @return {*} 
+   * @return {*}
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
     return (document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height) ?? 0
   }
-
-
 
   // Color
   public get color() { return this._color }
@@ -369,8 +365,11 @@ export class Class_DrawingArea {
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
 
-
-
+  // Horizontal spacing
+  public get horizontal_spacing() { return this._horizontal_spacing }
+  public set horizontal_spacing(_: number) { this._horizontal_spacing = _}
+  public get vertical_spacing() { return this._vertical_spacing }
+  public set vertical_spacing(_: number) { this._vertical_spacing = _}
 
   // PUBLIC METHODS =====================================================================
 
@@ -431,11 +430,12 @@ export class Class_DrawingArea {
 
     return json_object
   }
+
   /**
    * Test if mouse is over some node
    *
    * @private
-   * @return {*} 
+   * @return {*}
    * @memberof Class_DrawingArea
    */
   private mouseOverNodeBlockDAEvent() {
