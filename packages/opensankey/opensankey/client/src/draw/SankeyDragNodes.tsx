@@ -98,7 +98,8 @@ export const DragGNodeEvent: DragGNodeEventFType = (
  * @returns {*}
  */
 export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType = (
-  data: SankeyData
+  data,
+  node_function,
 ) => {
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
@@ -118,6 +119,7 @@ export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType
           d3.select(' .opensankey #ggg_' + node.idNode + ' .box_width_threshold').attr('width', tmp - event.dx / 2)
           AssignNodeLocalAttribute(data.nodes[node.idNode], 'label_box_width', tmp + event.dx)
         }
+        node_function.RedrawNodesLabels([data.nodes[node.idNode]])
       }
     })
 }
