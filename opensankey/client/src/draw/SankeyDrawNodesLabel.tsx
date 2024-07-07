@@ -239,5 +239,5 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     //.attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
     .attr('visibility','hidden')
   // .filter(()=>windowSankey.SankeyToolsStatic!==true)
-  .call(dragNodeTextEventWidthBoxEvent(data))
+  .call(dragNodeTextEventWidthBoxEvent(data,node_function))
 }
