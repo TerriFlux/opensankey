@@ -1081,24 +1081,6 @@ const setLocalAgregation = (
     n.local={} as SankeyNodeAttrLocal
   }
   n.local['local_aggregation'] = local_aggregation
-  n.inputLinksId.forEach(linkId => {
-    const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
-    if (node_types && node_types.includes('echange')) {
-      if (data.nodes[data.links[linkId].idSource].local == undefined ) {
-        data.nodes[data.links[linkId].idSource].local = {} as SankeyNodeAttrLocal
-      }
-      data.nodes[data.links[linkId].idSource].local!['local_aggregation'] = local_aggregation
-    }
-  })
-  n.outputLinksId.forEach(linkId => {
-    const node_types = data.nodes[data.links[linkId].idTarget].tags['Type de noeud']
-    if (node_types && node_types.includes('echange')) {
-      if (data.nodes[data.links[linkId].idTarget].local == undefined ) {
-        data.nodes[data.links[linkId].idTarget].local = {} as SankeyNodeAttrLocal
-      }
-      data.nodes[data.links[linkId].idTarget].local!['local_aggregation'] = local_aggregation
-    }
-  })
 }
 
 export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType = (
