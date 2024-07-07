@@ -242,6 +242,7 @@ export type DragGNodeEventFType=(
  */
 export type dragNodeTextEventWidthBoxEventFType = (
   data:SankeyData,
+  node_function:NodeFunctionTypes
 ) => DragBehavior<SVGRectElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**
