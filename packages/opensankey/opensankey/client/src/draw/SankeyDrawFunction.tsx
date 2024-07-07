@@ -1669,10 +1669,6 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
     draw_warning = left_in_src || right_in_src
   } else if (ReturnValueLink(data,l,'orientation') == 'vv') {
     draw_warning = top_in_src
-  } else if (ReturnValueLink(data,l,'orientation') == 'vh') {
-    draw_warning = left_in_src || right_in_src || top_in_src
-  } else {
-    draw_warning = left_in_src || right_in_src || top_in_src
   }
   if (draw_warning && !ReturnValueLink(data,l,'recycling')) {
     return 1
