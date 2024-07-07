@@ -1569,7 +1569,9 @@ export const updateLayout: updateLayoutFuncType = (
         Object.values(nodeTag.tags).forEach(tag=>
           Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
             tag.selected = ltag.selected
-            tag.color = ltag.color
+            if (ltag.color) {
+              tag.color = ltag.color
+            }
           })
         )
       })
