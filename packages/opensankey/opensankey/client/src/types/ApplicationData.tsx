@@ -140,7 +140,7 @@ export class Class_ApplicationData {
   public set filter_label(value: number) { this._filter_label = value }
 
   /**
-   * Reset value of drawing_area and substructur with data from JSON 
+   * Reset value of drawing_area and substructur with data from JSON
    * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
    *
    * @param {{ [_: string]: any }} json_object
@@ -156,9 +156,8 @@ export class Class_ApplicationData {
     draw_area.grid_size = json_object['grid_square_size'] ?? 50
     draw_area.grid_visible = json_object['grid_visible'] ?? false
 
-
-    draw_area._horizontal_spacing = json_object['h_space'] ?? 150
-    draw_area._vertical_spacing = json_object['v_space'] ?? 150
+    draw_area.horizontal_spacing = json_object['h_space'] ?? 150
+    draw_area.vertical_spacing = json_object['v_space'] ?? 150
 
     draw_area.scale = json_object['user_scale'] ?? 50
     draw_area.color = json_object['couleur_fond_sankey'] ?? 'whitesmoke'
@@ -175,12 +174,12 @@ export class Class_ApplicationData {
 
   /**
    * Function to create custom application behavior when we press a key,
-   * 
+   *
    * even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
    *
    * @private
    * @param {Class_ApplicationData} app_ref
-   * @return {*} 
+   * @return {*}
    * @memberof Class_ApplicationData
    */
   private keyboardEventListener(app_ref: Class_ApplicationData) {
@@ -230,7 +229,7 @@ export class Class_ApplicationData {
         // Deselect all element
         app_ref.drawing_area.purgeSelection()
 
-        // Close all menus 
+        // Close all menus
         app_ref.closeAllMenus()
 
       } else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
@@ -251,7 +250,8 @@ export class Class_ApplicationData {
           app_ref.menu_configuration.updateComponentMenuConfigNode.current()
           app_ref.menu_configuration.updateComponentMenuConfigLink.current()
         }
-      } else if (evt.key == 'a' && evt.ctrlKey) {
+      }
+      else if (evt.key == 'a' && evt.ctrlKey) {
         // Event to select all elements
 
         // Prevent default event on ctrl + a
@@ -282,15 +282,16 @@ export class Class_ApplicationData {
         // Update logo save in cache
         app_ref.menu_configuration.updateComponenSaveInCache.current(true)
 
-      } else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
+      }
+      else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
         // event to download current sankey in JSON
 
         // Prevent default event on ctrl + shift + s
         evt.preventDefault()
 
         ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
-
-      } else if ((evt.key === 'f') && !evt.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+      }
+      else if ((evt.key === 'f') && !evt.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
         if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
           evt.preventDefault()
           if (!document.fullscreenElement) {
@@ -299,8 +300,8 @@ export class Class_ApplicationData {
             document.exitFullscreen()
           }
         }
-
-      } else if (evt.key == 'Tab') {
+      }
+      else if (evt.key == 'Tab') {
         app_ref.menu_configuration.btn_toogle_menu.current?.click()
       }
     }
