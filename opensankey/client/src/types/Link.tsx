@@ -670,7 +670,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
-  // =========== Method about control points ============== 
+  // =========== Method about control points ==============
 
   /**
    * Function used to update starting curve point position value
@@ -801,7 +801,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       let next_handle_pos = -1
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_x = this._control_points.starting_curve_point.position_x + event.dx
 
         const x0 = this.position_x_start
@@ -810,7 +810,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         // Compute starting curve point coef based on new handle pos
         next_handle_pos = Math.abs(handle_new_pos_x - x0) / link_x_length
       } else {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_y = this._control_points.starting_curve_point.position_y + event.dy
 
         const y0 = this.position_y_start
@@ -836,7 +836,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       let next_handle_pos = -1
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_x = this._control_points.ending_curve_point.position_x + event.dx
         const x0 = this.position_x_start
         const x6 = this.position_x_end
@@ -844,7 +844,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         // Compute ending curve point coef based on new handle pos
         next_handle_pos = Math.abs(handle_new_pos_x - x0) / link_x_length
       } else {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_y = this._control_points.ending_curve_point.position_y + event.dy
         const y0 = this.position_y_start
         const y6 = this.position_y_end
@@ -869,7 +869,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       let next_handle_pos = -1
 
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_x = this._control_points.starting_bezier_point.position_x + event.dx
 
         if (this._control_points.starting_curve_point.position_x > handle_new_pos_x) return //Can't go past the curve point
@@ -879,7 +879,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         // Compute starting tangeant point coef based on new handle pos
         next_handle_pos = (handle_new_pos_x - x1) / (x5 - x1)
       } else {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_y = this._control_points.starting_bezier_point.position_y + event.dy
 
         const y1 = this._control_points.starting_curve_point.position_y
@@ -907,7 +907,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       let next_handle_pos = -1
 
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_x = this._control_points.ending_bezier_point.position_x + event.dx
 
         if (this._control_points.ending_curve_point.position_x < handle_new_pos_x) return //Can't go past the curve point
@@ -917,7 +917,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         // Compute starting tangeant point coef based on new handle pos
         next_handle_pos = (handle_new_pos_x - x5) / (x1 - x5)
       } else {
-        // Compute new handle position 
+        // Compute new handle position
         const handle_new_pos_y = this._control_points.ending_bezier_point.position_y + event.dy
 
         if (this._control_points.ending_curve_point.position_y < handle_new_pos_y) return //Can't go past the curve point
@@ -2045,6 +2045,8 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private _id: string
 
+  private _name: string
+
   private _is_deletable: boolean
 
   private _references: { [_: string]: Class_LinkElement } = {}
@@ -2052,6 +2054,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
+    name: string,
     is_deletable: boolean = true
   ) {
     // Instantiate super class
@@ -2059,6 +2062,9 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
     // Set id
     this._id = id
+
+    // Set name
+    this._name = name
 
     // Set as deletable or not
     this._is_deletable = is_deletable
@@ -2144,6 +2150,20 @@ export class Class_LinkStyle extends Class_LinkAttribute {
    * @memberof Class_NodeStyle
    */
   public get id() { return this._id }
+
+  /**
+   * Get name of style != id
+   * @memberof Class_NodeStyle
+   */
+  public get name() { return this._name }
+
+  // SETTERS =============================================================================
+
+  /**
+   * Set name of style != id
+   * @memberof Class_NodeStyle
+   */
+  public set name(_: string) { this._name = _ }
 }
 
 

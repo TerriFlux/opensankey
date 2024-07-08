@@ -36,9 +36,10 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
 
 // SPECIFIC CONSTANTS *******************************************************************
 
-export const default_style_name = 'default'
-const default_node_style = new Class_NodeStyle(default_style_name, false)
-const default_link_style = new Class_LinkStyle(default_style_name, false)
+export const default_style_id = 'default'
+export const default_style_name = 'Style par default'
+const default_node_style = new Class_NodeStyle(default_style_id, default_style_name, false)
+const default_link_style = new Class_LinkStyle(default_style_id, default_style_name, false)
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -108,8 +109,8 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config = menu_config
-    this._link_styles[default_style_name] = default_link_style
-    this._node_styles[default_style_name] = default_node_style
+    this._link_styles[default_style_id] = default_link_style
+    this._node_styles[default_style_id] = default_node_style
     this._colorMap = 'no_colormap'
     this._nodesColorMap = 'no_colormap'
     this._linksColorMap = 'no_colormap'
@@ -250,7 +251,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get default_node_style() {
-    return this._node_styles[default_style_name]
+    return this._node_styles[default_style_id]
   }
 
   /**
@@ -287,7 +288,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get default_link_style() {
-    return this._link_styles[default_style_name]
+    return this._link_styles[default_style_id]
   }
 
   /**
@@ -462,6 +463,36 @@ export class Class_Sankey {
     }
   }
 
+  // Style related ----------------------------------------------------------------------
+
+  private _addNewNodeStyle(
+    id: string,
+    name: string
+  ) : Class_NodeStyle {
+    if (!this._node_styles[id]) {
+      const style = new Class_NodeStyle(id, name, true)
+      this._node_styles[id] = style
+      return style
+    }
+    else {
+      return this._addNewNodeStyle(id+' (dup)', name)
+    }
+  }
+
+  private _addNewLinkStyle(
+    id: string,
+    name: string
+  ) : Class_LinkStyle {
+    if (!this._link_styles[id]) {
+      const style = new Class_LinkStyle(id, name, true)
+      this._link_styles[id] = style
+      return style
+    }
+    else {
+      return this._addNewLinkStyle(id+' (dup)', name)
+    }
+  }
+
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
@@ -602,6 +633,56 @@ export class Class_Sankey {
     delete this._links[link.id]
   }
 
+  // Style related -----------------------------------------------------------------------
+  /**
+   * Create a new default style for node
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public addNewDefaultNodeStyle() {
+    const _ = String(this.node_styles_list.length)
+    return this._addNewNodeStyle(
+      'style_node_' + _,
+      'Style ' + _)
+  }
+
+  /**
+   * Delete a given style
+   * @param {Class_NodeStyle} style
+   * @memberof Class_Sankey
+   */
+  public deleteNodeStyle(style: Class_NodeStyle) {
+    if (this._node_styles[style.id] !== undefined) {
+      this._node_styles[style.id].delete()
+      delete this._node_styles[style.id]
+    }
+  }
+
+  /**
+   *
+   *
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public addNewDefaultLinkStyle() {
+    const _ = String(this.link_styles_list.length)
+    return this._addNewLinkStyle(
+      'style_link_' + _,
+      'Style ' + _)
+  }
+
+  /**
+   * Delete a given style
+   * @param {Class_NodeStyle} style
+   * @memberof Class_Sankey
+   */
+  public deleteLinkStyle(style: Class_LinkStyle) {
+    if (this._link_styles[style.id] !== undefined) {
+      this._link_styles[style.id].delete()
+      delete this._link_styles[style.id]
+    }
+  }
+
   // Tags related ------------------------------------------------------------------------
 
   /**
@@ -709,7 +790,7 @@ export class Class_Sankey {
     // Set node styles from json data
     Object.entries(json_object['style_node']).forEach(ent_style_node => {
       // Create a node style
-      const new_style = new Class_NodeStyle(ent_style_node[0], true)
+      const new_style = new Class_NodeStyle(ent_style_node[0], ent_style_node[0], true)
       // Set node style value to node from JSON
       new_style.fromJSON(ent_style_node[1] as { [x: string]: any })
       // Add node style to sankey
@@ -719,7 +800,7 @@ export class Class_Sankey {
     // Set link styles from json data
     Object.entries(json_object['style_link']).forEach(ent_style_link => {
       // Create a link style
-      const new_style = new Class_LinkStyle(ent_style_link[0], true)
+      const new_style = new Class_LinkStyle(ent_style_link[0], ent_style_link[0], true)
       // Set link style value to link style from JSON
       new_style.fromJSON(ent_style_link[1] as { [x: string]: any })
       // Add link style to sankey

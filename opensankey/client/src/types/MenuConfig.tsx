@@ -1,14 +1,28 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Date : 29/05/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
 // External imports
 import * as d3 from 'd3'
 import { MutableRefObject, RefObject, useRef } from 'react'
 
 
-
+// CLASS MENU CONFIG ********************************************************************
+/**
+ * Define shortcut to update menu components
+ * @export
+ * @class Class_MenuConfig
+ */
 export class Class_MenuConfig {
+
+  // PRIVATE ATTRIBUTES =================================================================
 
   /* ========================================
    Ref to button on the configuration menu in the app
    ========================================*/
+
   // Button that open the configuration menu
   private _btn_toogle_menu: RefObject<HTMLButtonElement>
 
@@ -23,13 +37,25 @@ export class Class_MenuConfig {
 
 
   /* ========================================
- Updater of component in the configuration menu
- ========================================*/
+    Updater of component in the configuration menu
+    ========================================*/
+
+  // Update component OpenSankeyMenuConfigurationLayout
+  private _update_component_menu_config_layout: MutableRefObject<() => void>
+
   // Update component SankeyNodeEdition
-  private _updateComponentMenuConfigNode: MutableRefObject<() => void>
+  private _update_component_menu_config_node: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
-  private _updateComponentMenuConfigNodeAppearence: MutableRefObject<() => void>
+  private _update_component_menu_config_node_appearence: MutableRefObject<() => void>
+
+  // Update component SankeyMenuConfigurationNodesTooltip
+  private _update_component_menu_config_node_tooltips: MutableRefObject<(() => void)[]>
+
+  // Update component SankeyMenuConfigurationNodesIO
+  private _update_component_menu_config_node_io: MutableRefObject<(() => void)[]>
+
+
 
   // Update component SankeyMenuConfigurationLinks
   private _updateComponentMenuConfigLink: MutableRefObject<() => void>
@@ -37,22 +63,13 @@ export class Class_MenuConfig {
   // Update component ToolbarBuilder
   private _updateComponentToolbar: MutableRefObject<() => void>
 
-  // private _updateComponentMenuConfig: MutableRefObject<() => void>
-
-  // Update component OpenSankeyMenuConfigurationLayout
-  private _updateComponentMenuConfigLayout: MutableRefObject<() => void>
-
   // Update component Menu
   private _updateComponentMenu: MutableRefObject<() => void>
 
   // Update component OpenSankeySaveButton
   private _updateComponenSaveInCache: MutableRefObject<(b: boolean) => void>
 
-  // Update component SankeyMenuConfigurationNodesIO
-  private _updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(() => void)[]>
 
-  // Update component SankeyMenuConfigurationNodesTooltip
-  private _updateMenuConfigTextNodeTooltip: MutableRefObject<(() => void)[]>
 
   // Update component MenuConfigurationLinksTooltip
   private _updateMenuConfigTextLinkTooltip: MutableRefObject<(() => void)[]>
@@ -65,6 +82,12 @@ export class Class_MenuConfig {
 
 
 
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_MenuConfig.
+   * @memberof Class_MenuConfig
+   */
   constructor() {
     // Init button ref
     this._btn_toogle_menu = useRef<HTMLButtonElement>(null)
@@ -73,62 +96,73 @@ export class Class_MenuConfig {
     this._btn_accordion_config_link = useRef<HTMLButtonElement>(null)
 
     // Init component updater
-    this._updateComponentMenuConfigNode = useRef(() => null)
-    this._updateComponentMenuConfigNodeAppearence = useRef(() => null)
+    this._update_component_menu_config_layout = useRef(() => null)
+    this._update_component_menu_config_node = useRef(() => null)
+    this._update_component_menu_config_node_appearence = useRef(() => null)
+    this._update_component_menu_config_node_io = useRef([] as (() => void)[])
+    this._update_component_menu_config_node_tooltips = useRef([] as (() => void)[])
+    this._updateComponenSaveInCache = useRef(() => null)
+    this._updateComponentBtnUpdateLayout = useRef(() => null)
+    this._updateComponentMenu = useRef(() => null)
     this._updateComponentMenuConfigLink = useRef(() => null)
     this._updateComponentToolbar = useRef(() => null)
-    this._updateComponentMenuConfigLayout = useRef(() => null)
-    this._updateComponentMenu = useRef(() => null)
-    this._updateComponenSaveInCache = useRef(() => null)
-    this._updateComponentMenuNodeIOSelectSideNode = useRef([] as (() => void)[])
-    this._updateMenuConfigTextNodeTooltip = useRef([] as (() => void)[])
     this._updateMenuConfigTextLinkTooltip = useRef([] as (() => void)[])
-    this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateToolbar = useRef(() => null)
   }
 
+  // PUBLIC METHODS ====================================================================
+
   /**
    * Open menu configuration
-   *
    * @memberof Class_MenuConfig
    */
   public OpenConfigMenu() {
-    // Check if we linked the ref to the button to toggle the menu 
+    // Check if we linked the ref to the button to toggle the menu
     // and if _btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
-    if (this._btn_toogle_menu && this._btn_toogle_menu.current && this._btn_accordion_config_elements.current === null) {
+    if (
+      this._btn_toogle_menu &&
+      this._btn_toogle_menu.current &&
+      this._btn_accordion_config_elements.current === null
+    ) {
       this._btn_toogle_menu.current.click()
     }
   }
 
   /**
- * Check if we linked the ref to the button to open elements accordion 
- * and check if the accordion elements is open then click to the button 
+ * Check if we linked the ref to the button to open elements accordion
+ * and check if the accordion elements is open then click to the button
  * that _btn_accordion_config_elements ref to
  *
  * @memberof Class_MenuConfig
  */
   public OpenConfigMenuElements() {
-    if (this._btn_accordion_config_elements.current && d3.select(this._btn_accordion_config_elements.current).attr('aria-expanded') === 'false') {
+    if (
+      this._btn_accordion_config_elements.current &&
+      (d3.select(this._btn_accordion_config_elements.current).attr('aria-expanded') === 'false')
+    ) {
       this._btn_accordion_config_elements.current.click()
     }
   }
 
   /**
- * Check if we linked the ref to the button to toggle the menu 
+ * Check if we linked the ref to the button to toggle the menu
  * and check if the accordion nodes is open then click to the button
  * _btn_accordion_config_node ref to
  *
  * @memberof Class_MenuConfig
  */
   public OpenConfigMenuElementsNodes() {
-    if (this._btn_accordion_config_node.current && d3.select(this._btn_accordion_config_node.current).attr('aria-expanded') === 'false') {
+    if (
+      this._btn_accordion_config_node.current &&
+      (d3.select(this._btn_accordion_config_node.current).attr('aria-expanded') === 'false')
+    ) {
       this._btn_accordion_config_node.current.click()
     }
   }
 
   /**
-   * Re-render all components that edit node attributes 
-   * (SankeyNodeEdition,OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesIO,SankeyMenuConfigurationNodesTooltip)  
+   * Re-render all components that edit node attributes
+   * (SankeyNodeEdition,OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesIO,SankeyMenuConfigurationNodesTooltip)
    *
    * @memberof Class_MenuConfig
    */
@@ -138,13 +172,14 @@ export class Class_MenuConfig {
     this.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
     this.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
   }
+
   /**
- * Check if we linked the ref to the button to toggle the menu 
- * and check if the accordion nodes is open then click to the button
- * _btn_accordion_config_link ref to
- *
- * @memberof Class_MenuConfig
- */
+   * Check if we linked the ref to the button to toggle the menu
+   * and check if the accordion nodes is open then click to the button
+   * _btn_accordion_config_link ref to
+   *
+   * @memberof Class_MenuConfig
+   */
   public OpenConfigMenuElementsLinks() {
     if (this._btn_accordion_config_link.current && d3.select(this._btn_accordion_config_link.current).attr('aria-expanded') === 'false') {
       this._btn_accordion_config_link.current.click()
@@ -173,11 +208,11 @@ export class Class_MenuConfig {
   }
 
   public get updateComponentMenuConfigNode(): MutableRefObject<() => void> {
-    return this._updateComponentMenuConfigNode
+    return this._update_component_menu_config_node
   }
 
   public get updateComponentMenuConfigNodeAppearence(): MutableRefObject<() => void> {
-    return this._updateComponentMenuConfigNodeAppearence
+    return this._update_component_menu_config_node_appearence
   }
 
   public get updateComponentMenuConfigLink(): MutableRefObject<() => void> {
@@ -189,7 +224,7 @@ export class Class_MenuConfig {
   }
 
   public get updateComponentMenuConfigLayout(): MutableRefObject<() => void> {
-    return this._updateComponentMenuConfigLayout
+    return this._update_component_menu_config_layout
   }
 
   public get updateComponentMenu(): MutableRefObject<() => void> {
@@ -201,11 +236,11 @@ export class Class_MenuConfig {
   }
 
   public get updateComponentMenuNodeIOSelectSideNode(): MutableRefObject<(() => void)[]> {
-    return this._updateComponentMenuNodeIOSelectSideNode
+    return this._update_component_menu_config_node_io
   }
 
   public get updateMenuConfigTextNodeTooltip(): MutableRefObject<(() => void)[]> {
-    return this._updateMenuConfigTextNodeTooltip
+    return this._update_component_menu_config_node_tooltips
   }
 
   public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
