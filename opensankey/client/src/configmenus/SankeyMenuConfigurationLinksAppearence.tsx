@@ -69,7 +69,7 @@ import {
   isAttributeOverloaded,
 } from '../types/Link'
 import {
-  default_style_name
+  default_style_id
 } from '../types/Sankey'
 import {
   MenuConfigurationLinksAppearenceFType,
@@ -247,7 +247,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         t('Noeud.multi_style')
     }
     else {
-      return default_style_name
+      return default_style_id
     }
   }
 

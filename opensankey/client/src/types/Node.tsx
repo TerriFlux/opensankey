@@ -2222,6 +2222,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _id: string
 
+  private _name: string
+
   private _is_deletable: boolean
 
   private _references: { [_: string]: Class_NodeElement } = {}
@@ -2229,6 +2231,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
+    name: string,
     is_deletable: boolean = true
   ) {
     // Instantiate super class
@@ -2236,6 +2239,9 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
     // Set id
     this._id = id
+
+    // Set name
+    this._name = name
 
     // Set as deletable or not
     this._is_deletable = is_deletable
@@ -2321,9 +2327,22 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   /**
    * get id of style
-   *
    * @readonly
    * @memberof Class_NodeStyle
    */
   public get id() { return this._id }
+
+  /**
+   * Get name of style != id
+   * @memberof Class_NodeStyle
+   */
+  public get name() { return this._name }
+
+  // SETTERS =============================================================================
+
+  /**
+   * Set name of style != id
+   * @memberof Class_NodeStyle
+   */
+  public set name(_: string) { this._name = _ }
 }
