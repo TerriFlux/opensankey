@@ -102,6 +102,13 @@ export class Class_DrawingArea {
   public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
+   * d3 selection of svg group that contains drawing area legend elements
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
+  public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
    * Is drawing area in publish _mode or not. If so, blocks all interactions with it
    * @type {boolean}
    * @memberof Class_DrawingArea
@@ -225,6 +232,7 @@ export class Class_DrawingArea {
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
+    this.d3_selection_handlers = this.d3_selection.append('g').attr('id', 'g_handlers')
 
     // Draw background
     this.drawBackground()
