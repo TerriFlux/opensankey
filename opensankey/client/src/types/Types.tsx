@@ -770,7 +770,8 @@ export type SankeyAppTypes = {
   DrawAll:DrawAllType,
   installEventOnSVG:InstallEventsOnSVGType,
   ClickSaveDiagram:ClickSaveDiagramFuncType,
-  InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType
+  InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 }
 
 export type initializeMenuConfigurationFuncType=(
