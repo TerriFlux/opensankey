@@ -350,8 +350,7 @@ export const OSPTransformationElements : FunctionComponent<OSPTransformationElem
   applicationContext,
   ComponentUpdater
 }) => {
-  const {data,master_data,dataVarToUpdate}=applicationData
-  const data_to_use=master_data?master_data:data
+  const {dataVarToUpdate}=applicationData
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
   const is_master=applicationData.view==='none'
   const [forceUpdate,setForceUpdate]=useState(false)
