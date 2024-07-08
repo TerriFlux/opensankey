@@ -32,6 +32,7 @@ import {
 } from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
+import { GetSankeyMinWidthAndHeight } from './draw/SankeyDrawFunction'
 
 
 window.React = React
@@ -103,6 +104,7 @@ root.render(
 
     // Content of the popover node aggregation selector
     InitalizeSelectorDetailNodes={InitalizeSelectorDetailNodes}
+    GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
   />
 )
 
