@@ -269,7 +269,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
       }
     })
     .on('end',()=>{
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     })
 }
 /**
@@ -323,7 +323,7 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
 
     })
     .on('end',()=>{
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     })
 }
 

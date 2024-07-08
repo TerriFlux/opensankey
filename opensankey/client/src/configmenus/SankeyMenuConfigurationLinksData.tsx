@@ -1,3 +1,4 @@
+// External imports
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
@@ -6,6 +7,7 @@ import { OSTooltip } from './SankeyUtils'
 import { ComponentUpdaterType,  applicationDataType } from '../types/Types'
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, useBoolean } from '@chakra-ui/react'
 import { Class_Tag } from '../types/Tag'
+
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
@@ -171,11 +173,10 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   // Initialise hook with first link selected value
   const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.data_value)
 
-
-
   const f_onBlur=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
+
   return <InputGroup variant='menuconfigpanel_option_input' >
     <NumberInput allowMouseWheel
       variant={variantOfInput}

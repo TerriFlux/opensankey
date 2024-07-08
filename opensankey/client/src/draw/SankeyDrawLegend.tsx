@@ -457,7 +457,7 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
     multi_selected_links.current.forEach(d=>{
       SelectVisualyLinks(d)
     })
-    new_data.menu_configuration.updateComponentMenuConfigLink.current()
+    new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
   }}
   variant='contextmenu_button'>{text_button_select_element_by_tag} {}</Button>:<></>
@@ -575,7 +575,7 @@ const drag_legend_handle=(
       }
     })
     .on('end',()=>{
-      new_data.menu_configuration.updateComponentMenuConfigLayout.current()
+      new_data.menu_configuration.ref_to_menu_config_layout_updater.current()
 
       reDrawLegend()
       resizeCanvas(applicationData)

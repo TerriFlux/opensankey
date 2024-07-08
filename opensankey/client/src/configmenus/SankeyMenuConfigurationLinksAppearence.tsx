@@ -31,7 +31,8 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Select
+  Select,
+  useBoolean
 } from '@chakra-ui/react'
 
 import {
@@ -151,7 +152,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   // Get data
   const { data, new_data } = applicationData
   // UseState & Ref for UI updates
-  const [ forceUpdate, setForceUpdate ] = useState(false)
+  const [ , setForceUpdate ] = useBoolean()
   const { ref_selected_style_link, multi_selected_links } = applicationState
   // Selected links
   let selected_links
@@ -181,11 +182,14 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
    * Function used to reset menu UI
    */
   const updateMenuConfigurationLinkAttributes = () => {
+    // Whatever is done, set saving indicator
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    if (!menu_for_style) {
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+    // Update menus for node's apparence in case we use this for style
+    if (menu_for_style) {
+      new_data.menu_configuration.updateComponentsMenuConfigLink()
     }
-    setForceUpdate(!forceUpdate)
+    // And update this menu also
+    setForceUpdate.toggle()
   }
 
   /**
