@@ -22,7 +22,6 @@ import {
 /*************************************************************************************************/
 import SankeyDraw from './draw/SankeyDraw'
 import {
-  GetSankeyMinWidthAndHeight, // TODO
   NodeVisibleOnsSvg,
   resizeDrawingArea
 } from './draw/SankeyDrawFunction'
@@ -89,7 +88,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   DrawAll,
   installEventOnSVG,
   ClickSaveDiagram,
-  InitalizeSelectorDetailNodes
+  InitalizeSelectorDetailNodes,
+  GetSankeyMinWidthAndHeight
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
