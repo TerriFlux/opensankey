@@ -146,8 +146,8 @@ export const EventNodeClick: EventNodeClickFType = (
       })
     multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
   }
-  new_data.menu_configuration.updateComponentMenuConfigNode.current
-  new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current
+  new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
   new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
   new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
 }
@@ -534,9 +534,9 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     d3.selectAll('.selection_zone').remove()
     multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
     multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
-    new_data.menu_configuration.updateComponentMenuConfigNode.current
-    new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
-    new_data.menu_configuration.updateComponentMenuConfigLink.current()
+    new_data.menu_configuration.ref_to_menu_config_node_updater.current
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+    new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
     updateComponenSaveInCache.current(true)
   }
@@ -610,7 +610,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       node_function.CreateNodesOnSVG([new_node1])
       link_function.CreateLinksOnSVG([new_link])
       // update link congig panel
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     } else if ((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class') != 'node node_shape') {
 
       const n_link = DefaultLink(data)
@@ -655,7 +655,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
       node_function.CreateNodesOnSVG([n_node])
       link_function.CreateLinksOnSVG([n_link])
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     }
   }
 }
@@ -740,7 +740,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
         const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
         tmp.name = 'node' + (Object.keys(data.nodes).length - 1)
       }
-      new_data.menu_configuration.updateComponentMenuConfigLink.current()
+      new_data.menu_configuration.ref_to_menu_config_link_updater.current()
     }
 
     first_selected_node.current = undefined
@@ -904,9 +904,9 @@ export const selectOpenSankeyElementsInSelectionZone: selectOpenSankeyElementsIn
   d3.selectAll('.selection_zone').remove()
   multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
   multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
-  new_data.menu_configuration.updateComponentMenuConfigNode.current()
-  new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
-  new_data.menu_configuration.updateComponentMenuConfigLink.current()
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current()
+  new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+  new_data.menu_configuration.ref_to_menu_config_link_updater.current()
   new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
   updateComponenSaveInCache.current(true)
 }

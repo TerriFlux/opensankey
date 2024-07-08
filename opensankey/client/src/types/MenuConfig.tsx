@@ -41,24 +41,30 @@ export class Class_MenuConfig {
     ========================================*/
 
   // Update component OpenSankeyMenuConfigurationLayout
-  private _update_component_menu_config_layout: MutableRefObject<() => void>
+  private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
 
   // Update component SankeyNodeEdition
-  private _update_component_menu_config_node: MutableRefObject<() => void>
+  private _ref_to_menu_config_node_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
-  private _update_component_menu_config_node_appearence: MutableRefObject<() => void>
+  private _ref_to_menu_config_node_apparence_updater: MutableRefObject<() => void>
 
   // Update component SankeyMenuConfigurationNodesTooltip
-  private _update_component_menu_config_node_tooltips: MutableRefObject<(() => void)[]>
+  private _update_components_menu_config_node_tooltips: MutableRefObject<(() => void)[]>
 
   // Update component SankeyMenuConfigurationNodesIO
-  private _update_component_menu_config_node_io: MutableRefObject<(() => void)[]>
+  private _update_components_menu_config_node_io: MutableRefObject<(() => void)[]>
 
 
 
   // Update component SankeyMenuConfigurationLinks
-  private _updateComponentMenuConfigLink: MutableRefObject<() => void>
+  private _ref_to_menu_config_link_updater: MutableRefObject<() => void>
+
+  // Update component OpenSankeyConfigurationLinksAttributes
+  private _ref_to_menu_config_link_apparence_updater: MutableRefObject<() => void>
+
+  // Update component MenuConfigurationLinksTooltip
+  private _update_components_menu_config_link_tooltip: MutableRefObject<(() => void)[]>
 
   // Update component ToolbarBuilder
   private _updateComponentToolbar: MutableRefObject<() => void>
@@ -67,12 +73,10 @@ export class Class_MenuConfig {
   private _updateComponentMenu: MutableRefObject<() => void>
 
   // Update component OpenSankeySaveButton
-  private _updateComponenSaveInCache: MutableRefObject<(b: boolean) => void>
+  private _updateComponentSaveInCache: MutableRefObject<(b: boolean) => void>
 
 
 
-  // Update component MenuConfigurationLinksTooltip
-  private _updateMenuConfigTextLinkTooltip: MutableRefObject<(() => void)[]>
 
   // Update component OSPTransformationElements
   private _updateComponentBtnUpdateLayout: MutableRefObject<(() => void)>
@@ -96,17 +100,19 @@ export class Class_MenuConfig {
     this._btn_accordion_config_link = useRef<HTMLButtonElement>(null)
 
     // Init component updater
-    this._update_component_menu_config_layout = useRef(() => null)
-    this._update_component_menu_config_node = useRef(() => null)
-    this._update_component_menu_config_node_appearence = useRef(() => null)
-    this._update_component_menu_config_node_io = useRef([] as (() => void)[])
-    this._update_component_menu_config_node_tooltips = useRef([] as (() => void)[])
-    this._updateComponenSaveInCache = useRef(() => null)
+    this._ref_to_menu_config_layout_updater = useRef(() => null)
+    this._ref_to_menu_config_node_updater = useRef(() => null)
+    this._ref_to_menu_config_node_apparence_updater = useRef(() => null)
+    this._update_components_menu_config_node_io = useRef([] as (() => void)[])
+    this._update_components_menu_config_node_tooltips = useRef([] as (() => void)[])
+    this._ref_to_menu_config_link_updater = useRef(() => null)
+    this._ref_to_menu_config_link_apparence_updater = useRef(() => null)
+    this._update_components_menu_config_link_tooltip = useRef([] as (() => void)[])
+
+    this._updateComponentSaveInCache = useRef(() => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateComponentMenu = useRef(() => null)
-    this._updateComponentMenuConfigLink = useRef(() => null)
     this._updateComponentToolbar = useRef(() => null)
-    this._updateMenuConfigTextLinkTooltip = useRef([] as (() => void)[])
     this._updateToolbar = useRef(() => null)
   }
 
@@ -161,18 +167,27 @@ export class Class_MenuConfig {
   }
 
   /**
-   * Re-render all components that edit node attributes
-   * (SankeyNodeEdition,OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesIO,SankeyMenuConfigurationNodesTooltip)
-   *
+   * Re-render all menus for node config
+   * - SankeyNodeEdition
+   * - OpenSankeyConfigurationNodesAttributes
+   * - SankeyMenuConfigurationNodesIO
+   * - SankeyMenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
   public updateComponentsMenuConfigNode() {
-    this.updateComponentMenuConfigNode.current()
+    this.ref_to_menu_config_node_updater.current()
     this.updateComponentsSubmenuConfigNode()
   }
 
+  /**
+   * Re-render all submenus for node config
+   * - OpenSankeyConfigurationNodesAttributes
+   * - SankeyMenuConfigurationNodesIO
+   * - SankeyMenuConfigurationNodesTooltip
+   * @memberof Class_MenuConfig
+   */
   public updateComponentsSubmenuConfigNode() {
-    this.updateComponentMenuConfigNodeAppearence.current()
+    this.ref_to_menu_config_node_apparence_updater.current()
     this.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
     this.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
   }
@@ -185,19 +200,38 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public OpenConfigMenuElementsLinks() {
-    if (this._btn_accordion_config_link.current && d3.select(this._btn_accordion_config_link.current).attr('aria-expanded') === 'false') {
+    if (
+      this._btn_accordion_config_link.current &&
+      d3.select(this._btn_accordion_config_link.current).attr('aria-expanded') === 'false'
+    ) {
       this._btn_accordion_config_link.current.click()
     }
   }
 
-  public updateMenuEditionLink() {
-    this.updateComponentMenuConfigLink.current()
-    this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
+  /**
+   * Re-render all menus for link config
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentsMenuConfigLink() {
+    this.ref_to_menu_config_link_updater.current()
+    this.updateComponentsSubmenuConfigLink()
   }
 
+  /**
+   * Re-render all submenus for link config
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentsSubmenuConfigLink() {
+    // this.ref_to_menu_config_link_apparence_updater.current()
+    // this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
+  }
+
+  // GETTERS / SETTERS ==================================================================
+
   /* ========================================
-  Define setter & getter of class attributes
-  ========================================*/
+    Define setter & getter of class attributes
+    ========================================*/
+
   public get btn_toogle_menu(): RefObject<HTMLButtonElement> {
     return this._btn_toogle_menu
   }
@@ -206,49 +240,53 @@ export class Class_MenuConfig {
     return this._btn_accordion_config_elements
   }
 
-
   public get btn_accordion_config_node(): RefObject<HTMLButtonElement> {
     return this._btn_accordion_config_node
   }
 
-  public get updateComponentMenuConfigNode(): MutableRefObject<() => void> {
-    return this._update_component_menu_config_node
+  public get ref_to_menu_config_layout_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_layout_updater
   }
 
-  public get updateComponentMenuConfigNodeAppearence(): MutableRefObject<() => void> {
-    return this._update_component_menu_config_node_appearence
+  public get ref_to_menu_config_node_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_node_updater
   }
 
-  public get updateComponentMenuConfigLink(): MutableRefObject<() => void> {
-    return this._updateComponentMenuConfigLink
+  public get ref_to_menu_config_node_apparence_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_node_apparence_updater
+  }
+
+  public get updateComponentMenuNodeIOSelectSideNode(): MutableRefObject<(() => void)[]> {
+    return this._update_components_menu_config_node_io
+  }
+
+  public get updateMenuConfigTextNodeTooltip(): MutableRefObject<(() => void)[]> {
+    return this._update_components_menu_config_node_tooltips
+  }
+
+  public get ref_to_menu_config_link_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_link_updater
+  }
+
+  public get ref_to_menu_config_link_apparence_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_link_apparence_updater
   }
 
   public get updateComponentToolbar(): MutableRefObject<() => void> {
     return this._updateComponentToolbar
   }
 
-  public get updateComponentMenuConfigLayout(): MutableRefObject<() => void> {
-    return this._update_component_menu_config_layout
-  }
 
   public get updateComponentMenu(): MutableRefObject<() => void> {
     return this._updateComponentMenu
   }
 
   public get updateComponenSaveInCache(): MutableRefObject<(b: boolean) => void> {
-    return this._updateComponenSaveInCache
-  }
-
-  public get updateComponentMenuNodeIOSelectSideNode(): MutableRefObject<(() => void)[]> {
-    return this._update_component_menu_config_node_io
-  }
-
-  public get updateMenuConfigTextNodeTooltip(): MutableRefObject<(() => void)[]> {
-    return this._update_component_menu_config_node_tooltips
+    return this._updateComponentSaveInCache
   }
 
   public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
-    return this._updateMenuConfigTextLinkTooltip
+    return this._update_components_menu_config_link_tooltip
   }
 
   public get updateComponentBtnUpdateLayout(): MutableRefObject<(() => void)> {

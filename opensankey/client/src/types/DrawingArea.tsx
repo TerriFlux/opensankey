@@ -521,7 +521,7 @@ export class Class_DrawingArea {
     // Reset selection
     // TODO reset config menu
     this.application_data.menu_configuration.updateComponentsMenuConfigNode()
-    this.application_data.menu_configuration.updateMenuEditionLink()
+    this.application_data.menu_configuration.updateComponentsMenuConfigLink()
     // Clean selection dict
     this._selection = {}
   }
@@ -937,7 +937,7 @@ export class Class_DrawingArea {
         this._ghost_link.delete()
         this._ghost_link = null
         this.application_data.menu_configuration.updateComponentsMenuConfigNode()
-        this.application_data.menu_configuration.updateMenuEditionLink()
+        this.application_data.menu_configuration.updateComponentsMenuConfigLink()
       }
     }
   }

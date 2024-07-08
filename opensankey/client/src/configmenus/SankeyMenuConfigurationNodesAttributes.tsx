@@ -116,7 +116,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   advanced_label_value_content,
   link_function,
   ComponentUpdater,
-  node_function
 }) => {
 
   // CONSTANTS ==========================================================================
@@ -126,10 +125,13 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Get data
   const { data, new_data } = applicationData
   const { multi_selected_nodes } = applicationState
-  // UseState & Ref for UI updates
+  // Boolean used to force this component to reload
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current = setForceUpdate.toggle
-  // Selected nodes
+  // Link this menu's update function
+  if (!menu_for_style) {
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = setForceUpdate.toggle
+  }
+  // Get list of selected nodes
   let selected_nodes
   if (data.displayed_node_selector) {
     // All availables nodes
@@ -157,11 +159,13 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
    * Function used to reset menu UI
    */
   const updateMenuConfigurationNodeAttributes = () => {
+    // Whatever is done, set saving indicator
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    if (!menu_for_style) {
-      new_data.menu_configuration.updateComponentMenuConfigNode.current()
+    // Update menus for node's apparence in case we use this for style
+    if (menu_for_style) {
+      new_data.menu_configuration.updateComponentsMenuConfigNode()
     }
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    // And update this menu also
     setForceUpdate.toggle()
   }
 

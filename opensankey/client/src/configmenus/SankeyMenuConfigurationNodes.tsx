@@ -21,7 +21,6 @@ import {
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
-  SankeyNode,
   applicationContextType,
   applicationDataType,
   applicationStateType} from '../types/Types'
@@ -68,7 +67,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // Boolean used to force this component to reload
   const [, setForceUpdate] = useBoolean()
   // Link this menu's update function
-  new_data.menu_configuration.updateComponentMenuConfigNode.current = setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current = setForceUpdate.toggle
   // Data to display in this menu
   let nodes, selected_nodes
   if (new_data.drawing_area.sankey.filter_displayed_node_selector) {
@@ -83,14 +82,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
   const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
   const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
-
-  // Function to update menu when necessary
-  const updateMenuDisplay = () => {
-    // Update nodes edition menus
-    new_data.menu_configuration.updateComponentsSubmenuConfigNode()
-    // Update UI
-    setForceUpdate.toggle()
-  }
 
   const ui: { [s: string]: JSX.Element } = {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
@@ -152,8 +143,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   new_data.drawing_area.removeNodeFromSelection(n)
                 }
               })
-              // Update menus
-              updateMenuDisplay()
+              // Update all menus
+              new_data.menu_configuration.updateComponentsMenuConfigNode()
             }}
             valueRenderer={(entries_for_selected_nodes: Type_MenuSelectionEntry[]) => {
               return entries_for_selected_nodes.length ? entries_for_selected_nodes.map(({ label }) => label + ', ') : t('Noeud.NS')
@@ -289,8 +280,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               new_data.drawing_area.addNodeToSelection(new_node)
               // Trigger saving indicator
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              // Update UI
-              updateMenuDisplay()
+              // Update all menus
+              new_data.menu_configuration.updateComponentsMenuConfigNode()
             }}>
             <FaPlus />
           </Button>
@@ -312,8 +303,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 applicationData.new_data.drawing_area.deleteSelectedNodes()
                 // Trigger saving indicator
                 ComponentUpdater.updateComponenSaveInCache.current(false)
-                // Update UI
-                updateMenuDisplay()
+                // Update all menus
+                new_data.menu_configuration.updateComponentsMenuConfigNode()
               }}>
             <FaMinus />
           </Button>
@@ -327,8 +318,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               () => {
                 // Update indicator (only visible nodes / all nodes)
                 new_data.drawing_area.sankey.filter_displayed_node_selector = !new_data.drawing_area.sankey.filter_displayed_node_selector
-                // Update UI
-                updateMenuDisplay()
+                // Update only this menu
+                setForceUpdate.toggle()
               }}>
             {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
           </Button>
@@ -363,8 +354,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     return
                   }
                   selected_nodes[0].name = evt.target.value
-                  // Update UI
-                  updateMenuDisplay()
+                  // Update only this menu
+                  setForceUpdate.toggle()
                 }}
                 isDisabled={(selected_nodes.length == 1) ? false : true}
               />

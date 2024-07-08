@@ -316,8 +316,8 @@ export class Class_LinkElement extends Class_ProtoElement {
   public inverse() {
     const tmp_target = this._target
     const tmp_source = this._source
-    this._source = tmp_source
-    this._target = tmp_target
+    this._source = tmp_target
+    this._target = tmp_source
     this.drawElements()
   }
 
@@ -547,14 +547,14 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsLinks()
         // Update components related to link edition
-        this.menu_config.updateMenuEditionLink()
+        this.menu_config.updateComponentsMenuConfigLink()
 
       } else if (event.ctrlKey) {
         // Add link to selection
         drawing_area.addLinkToSelection(this)
 
         // Update components related to link edition
-        this.menu_config.updateMenuEditionLink()
+        this.menu_config.updateComponentsMenuConfigLink()
       }
       // OTHERS
       else {
