@@ -108,8 +108,8 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config = menu_config
-    this._link_styles[default_style_name]=default_link_style
-    this._node_styles[default_style_name]=default_node_style
+    this._link_styles[default_style_name] = default_link_style
+    this._node_styles[default_style_name] = default_node_style
     this._colorMap = 'no_colormap'
     this._nodesColorMap = 'no_colormap'
     this._linksColorMap = 'no_colormap'

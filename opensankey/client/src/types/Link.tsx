@@ -221,6 +221,9 @@ export class Class_LinkElement extends Class_ProtoElement {
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
     }
+    // Link with style
+    this._display.style.addReference(this)
+
     this._control_points = {
       starting_curve_point: new Class_Handler('cp_start_' + id, drawing_area, menu_config, this, this.startCurvePointDragEvent),
       ending_curve_point: new Class_Handler('cp_end_' + id, drawing_area, menu_config, this, this.endCurvePointDragEvent),
@@ -1821,90 +1824,8 @@ export class Class_LinkAttribute {
   protected _value_label_unit_visible?: boolean
   protected _value_label_unit?: string
 
-  // GETTERS ============================================================================
-
-  // Shape type
-  public get shape_is_curved() { return this._shape_is_curved }
-  public get shape_curvature() { return this._shape_curvature }
-  public get shape_is_recycling() { return this._shape_is_recycling }
-
-  // Shape orientation
-  public get shape_orientation() { return this._shape_orientation }
-  public get shape_starting_curve() { return this._shape_starting_curve }
-  public get shape_ending_curve() { return this._shape_ending_curve }
-  public get shape_starting_tangeant() { return this._shape_starting_tangeant }
-  public get shape_ending_tangeant() { return this._shape_ending_tangeant }
-  public get shape_vert_shift() { return this._shape_vert_shift }
-
-  // Shape's arrow attributes
-  public get shape_is_arrow() { return this._shape_is_arrow }
-  public get shape_arrow_size() { return this._shape_arrow_size }
-
-  // Shape's Filling attributes
-  public get shape_is_dashed() { return this._shape_is_dashed }
-  public get shape_color() { return this._shape_color }
-  public get shape_opacity() { return this._shape_opacity }
-
-  // Geometry link labels
-  public get value_label_position() { return this._value_label_position }
-  public get value_label_orthogonal_position() { return this._value_label_orthogonal_position }
-  public get value_label_on_path() { return this._value_label_on_path }
-  public get value_label_pos_auto() { return this._value_label_pos_auto }
-
-  // Value label display
-  public get value_label_is_visible() { return this._value_label_is_visible }
-  public get value_label_font_family() { return this._value_label_font_family }
-  public get value_label_font_size() { return this._value_label_font_size }
-  public get value_label_color() { return this._value_label_color }
-  public get value_label_to_precision() { return this._value_label_to_precision }
-  public get value_label_scientific_precision() { return this._value_label_scientific_precision }
-  public get value_label_custom_digit() { return this._value_label_custom_digit }
-  public get value_label_nb_digit() { return this._value_label_nb_digit }
-  public get value_label_unit_visible() { return this._value_label_unit_visible }
-  public get value_label_unit() { return this._value_label_unit }
-
-
-  // SETTERS ============================================================================
-
-  // Shape type
-  public set shape_is_curved(_: boolean | undefined) { this._shape_is_curved = _ }
-  public set shape_curvature(_: number | undefined) { this._shape_curvature = _ }
-  public set shape_is_recycling(_: boolean | undefined) { this._shape_is_recycling = _ }
-
-  // Shape orientation
-  public set shape_orientation(_: Type_Orientation | undefined) { this._shape_orientation = _ }
-  public set shape_starting_curve(_: number | undefined) { this._shape_starting_curve = _ }
-  public set shape_ending_curve(_: number | undefined) { this._shape_ending_curve = _ }
-  public set shape_starting_tangeant(_: number | undefined) { this._shape_starting_tangeant = _ }
-  public set shape_ending_tangeant(_: number | undefined) { this._shape_ending_tangeant = _ }
-  public set shape_vert_shift(_: number | undefined) { this._shape_vert_shift = _ }
-
-  // Shape's arrow attributes
-  public set shape_is_arrow(_: boolean | undefined) { this._shape_is_arrow = _ }
-  public set shape_arrow_size(_: number | undefined) { this._shape_arrow_size = _ }
-
-  // Shape's Filling attributes
-  public set shape_is_dashed(_: boolean | undefined) { this._shape_is_dashed = _ }
-  public set shape_color(_: string | undefined) { this._shape_color = _ }
-  public set shape_opacity(_: number | undefined) { this._shape_opacity = _ }
-
-  // Geometry link labels
-  public set value_label_position(_: string | undefined) { this._value_label_position = _ }
-  public set value_label_orthogonal_position(_: string | undefined) { this._value_label_orthogonal_position = _ }
-  public set value_label_on_path(_: boolean | undefined) { this._value_label_on_path = _ }
-  public set value_label_pos_auto(_: boolean | undefined) { this._value_label_pos_auto = _ }
-
-  // Value label display
-  public set value_label_is_visible(_: boolean | undefined) { this._value_label_is_visible = _ }
-  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _ }
-  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _ }
-  public set value_label_color(_: string | undefined) { this._value_label_color = _ }
-  public set value_label_to_precision(_: boolean | undefined) { this._value_label_to_precision = _ }
-  public set value_label_scientific_precision(_: number | undefined) { this._value_label_scientific_precision = _ }
-  public set value_label_custom_digit(_: boolean | undefined) { this._value_label_custom_digit = _ }
-  public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _ }
-  public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _ }
-  public set value_label_unit(_: string | undefined) { this._value_label_unit = _ }
+  // CONSTRUCTOR ========================================================================
+  constructor() {}
 
   // PUBLIC METHODES ====================================================================
 
@@ -1983,6 +1904,120 @@ export class Class_LinkAttribute {
     if (json_local_object['custom_digit'] !== undefined) this.value_label_custom_digit = json_local_object['custom_digit']
     if (json_local_object['nb_digit'] !== undefined) this.value_label_nb_digit = json_local_object['nb_digit']
   }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected update() {}
+
+  // GETTERS ============================================================================
+
+  // Shape type
+  public get shape_is_curved() { return this._shape_is_curved }
+  public get shape_curvature() { return this._shape_curvature }
+  public get shape_is_recycling() { return this._shape_is_recycling }
+
+  // Shape orientation
+  public get shape_orientation() { return this._shape_orientation }
+  public get shape_starting_curve() { return this._shape_starting_curve }
+  public get shape_ending_curve() { return this._shape_ending_curve }
+  public get shape_starting_tangeant() { return this._shape_starting_tangeant }
+  public get shape_ending_tangeant() { return this._shape_ending_tangeant }
+  public get shape_vert_shift() { return this._shape_vert_shift }
+
+  // Shape's arrow attributes
+  public get shape_is_arrow() { return this._shape_is_arrow }
+  public get shape_arrow_size() { return this._shape_arrow_size }
+
+  // Shape's Filling attributes
+  public get shape_is_dashed() { return this._shape_is_dashed }
+  public get shape_color() { return this._shape_color }
+  public get shape_opacity() { return this._shape_opacity }
+
+  // Geometry link labels
+  public get value_label_position() { return this._value_label_position }
+  public get value_label_orthogonal_position() { return this._value_label_orthogonal_position }
+  public get value_label_on_path() { return this._value_label_on_path }
+  public get value_label_pos_auto() { return this._value_label_pos_auto }
+
+  // Value label display
+  public get value_label_is_visible() { return this._value_label_is_visible }
+  public get value_label_font_family() { return this._value_label_font_family }
+  public get value_label_font_size() { return this._value_label_font_size }
+  public get value_label_color() { return this._value_label_color }
+  public get value_label_to_precision() { return this._value_label_to_precision }
+  public get value_label_scientific_precision() { return this._value_label_scientific_precision }
+  public get value_label_custom_digit() { return this._value_label_custom_digit }
+  public get value_label_nb_digit() { return this._value_label_nb_digit }
+  public get value_label_unit_visible() { return this._value_label_unit_visible }
+  public get value_label_unit() { return this._value_label_unit }
+
+  // SETTERS ============================================================================
+
+  // Shape type
+  public set shape_is_curved(_: boolean | undefined) { this._shape_is_curved = _; this.update() }
+  public set shape_curvature(_: number | undefined) { this._shape_curvature = _; this.update() }
+  public set shape_is_recycling(_: boolean | undefined) { this._shape_is_recycling = _; this.update() }
+
+  // Shape orientation
+  public set shape_orientation(_: Type_Orientation | undefined) { this._shape_orientation = _; this.update() }
+  public set shape_starting_curve(_: number | undefined) {
+    if (_ !== undefined) {
+      if (
+        (_ >= 0) &&
+        (_ < (this.shape_ending_curve ?? default_shape_ending_curve))
+      ) {
+        this._shape_starting_curve = _
+      }
+    }
+    else {
+      this._shape_starting_curve = _
+    }
+    this.update()
+  }
+  public set shape_ending_curve(_: number | undefined) {
+    if (_ !== undefined) {
+      if (
+        (_ <= 1) &&
+        (_ > (this.shape_starting_curve ?? default_shape_ending_curve))
+      ) {
+        this._shape_ending_curve = _
+      }
+    }
+    else {
+      this._shape_ending_curve = _
+    }
+    this.update()
+  }
+  public set shape_starting_tangeant(_: number | undefined) { this._shape_starting_tangeant = _; this.update() }
+  public set shape_ending_tangeant(_: number | undefined) { this._shape_ending_tangeant = _; this.update() }
+  public set shape_vert_shift(_: number | undefined) { this._shape_vert_shift = _; this.update() }
+
+  // Shape's arrow attributes
+  public set shape_is_arrow(_: boolean | undefined) { this._shape_is_arrow = _; this.update() }
+  public set shape_arrow_size(_: number | undefined) { this._shape_arrow_size = _; this.update() }
+
+  // Shape's Filling attributes
+  public set shape_is_dashed(_: boolean | undefined) { this._shape_is_dashed = _; this.update() }
+  public set shape_color(_: string | undefined) { this._shape_color = _; this.update() }
+  public set shape_opacity(_: number | undefined) { this._shape_opacity = _; this.update() }
+
+  // Geometry link labels
+  public set value_label_position(_: string | undefined) { this._value_label_position = _; this.update() }
+  public set value_label_orthogonal_position(_: string | undefined) { this._value_label_orthogonal_position = _; this.update() }
+  public set value_label_on_path(_: boolean | undefined) { this._value_label_on_path = _; this.update() }
+  public set value_label_pos_auto(_: boolean | undefined) { this._value_label_pos_auto = _; this.update() }
+
+  // Value label display
+  public set value_label_is_visible(_: boolean | undefined) { this._value_label_is_visible = _; this.update() }
+  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _; this.update() }
+  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _; this.update() }
+  public set value_label_color(_: string | undefined) { this._value_label_color = _; this.update() }
+  public set value_label_to_precision(_: boolean | undefined) { this._value_label_to_precision = _; this.update() }
+  public set value_label_scientific_precision(_: number | undefined) { this._value_label_scientific_precision = _; this.update() }
+  public set value_label_custom_digit(_: boolean | undefined) { this._value_label_custom_digit = _; this.update() }
+  public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _; this.update() }
+  public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _; this.update() }
+  public set value_label_unit(_: string | undefined) { this._value_label_unit = _; this.update() }
 }
 
 // CLASS LINK STYLE *********************************************************************
@@ -2062,68 +2097,6 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     }
   }
 
-  // GETTERS ============================================================================
-
-  /**
-   * get id of style
-   *
-   * @readonly
-   * @memberof Class_NodeStyle
-   */
-  public get id() { return this._id }
-
-  // SETTERS ============================================================================
-
-  // Shape type
-  public set shape_is_curved(_: boolean) { this._shape_is_curved = _; this.updateReferencesDraw() }
-  public set shape_curvature(_: number) { this._shape_curvature = _; this.updateReferencesDraw() }
-  public set shape_is_recycling(_: boolean) { this._shape_is_recycling = _; this.updateReferencesDraw() }
-
-  // Shape orientation
-  public set shape_orientation(_: Type_Orientation) { this._shape_orientation = _; this.updateReferencesDraw() }
-  public set shape_starting_curve(_: number) {
-    if (_ >= 0 && _ < this.shape_ending_curve) {
-      this._shape_starting_curve = _
-      this.updateReferencesDraw()
-    }
-  }
-  public set shape_ending_curve(_: number) {
-    if (_ <= 1 && _ > this.shape_starting_curve) {
-      this._shape_ending_curve = _
-      this.updateReferencesDraw()
-    }
-  }
-  public set shape_starting_tangeant(_: number) { this._shape_starting_tangeant = _; this.updateReferencesDraw() }
-  public set shape_ending_tangeant(_: number) { this._shape_ending_tangeant = _; this.updateReferencesDraw() }
-  public set shape_vert_shift(_: number) { this._shape_vert_shift = _; this.updateReferencesDraw() }
-
-  // Shape's arrow attributes
-  public set shape_is_arrow(_: boolean) { this._shape_is_arrow = _; this.updateReferencesDraw() }
-  public set shape_arrow_size(_: number) { this._shape_arrow_size = _; this.updateReferencesDraw() }
-
-  // Shape's Filling attributes
-  public set shape_is_dashed(_: boolean) { this._shape_is_dashed = _; this.updateReferencesDraw() }
-  public set shape_color(_: string) { this._shape_color = _; this.updateReferencesDraw() }
-  public set shape_opacity(_: number) { this._shape_opacity = _; this.updateReferencesDraw() }
-
-  // Geometry link labels
-  public set value_label_position(_: string) { this._value_label_position = _; this.updateReferencesDraw() }
-  public set value_label_orthogonal_position(_: string) { this._value_label_orthogonal_position = _; this.updateReferencesDraw() }
-  public set value_label_on_path(_: boolean) { this._value_label_on_path = _; this.updateReferencesDraw() }
-  public set value_label_pos_auto(_: boolean) { this._value_label_pos_auto = _; this.updateReferencesDraw() }
-
-  // Value label display
-  public set value_label_is_visible(_: boolean) { this._value_label_is_visible = _; this.updateReferencesDraw() }
-  public set value_label_font_family(_: string) { this._value_label_font_family = _; this.updateReferencesDraw() }
-  public set value_label_font_size(_: number) { this._value_label_font_size = _; this.updateReferencesDraw() }
-  public set value_label_color(_: string) { this._value_label_color = _; this.updateReferencesDraw() }
-  public set value_label_to_precision(_: boolean) { this._value_label_to_precision = _; this.updateReferencesDraw() }
-  public set value_label_scientific_precision(_: number) { this._value_label_scientific_precision = _; this.updateReferencesDraw() }
-  public set value_label_custom_digit(_: boolean) { this._value_label_custom_digit = _; this.updateReferencesDraw() }
-  public set value_label_nb_digit(_: number) { this._value_label_nb_digit = _; this.updateReferencesDraw() }
-  public set value_label_unit_visible(_: boolean) { this._value_label_unit_visible = _; this.updateReferencesDraw() }
-  public set value_label_unit(_: string) { this._value_label_unit = _; this.updateReferencesDraw() }
-
   // PUBLIC METHODS =====================================================================
 
   public addReference(_: Class_LinkElement) {
@@ -2139,12 +2112,28 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     }
   }
 
+  // PROTECTED METHODS ==================================================================
+
+  protected update() {
+    this.updateReferencesDraw()
+  }
+
   // PRIVATE METHODS ====================================================================
 
   private updateReferencesDraw() {
     Object.values(this._references)
       .forEach(ref => ref.drawElements())
   }
+
+  // GETTERS ============================================================================
+
+  /**
+   * get id of style
+   *
+   * @readonly
+   * @memberof Class_NodeStyle
+   */
+  public get id() { return this._id }
 }
 
 
