@@ -640,6 +640,7 @@ root.render(
     }
 
     InitalizeSelectorDetailNodes={OSPInitalizeSelectorDetailNodes}
+    GetSankeyMinWidthAndHeight={sankey_plus_min_width_and_height}
   />
 )
 

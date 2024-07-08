@@ -1837,7 +1837,7 @@ const update_heredited_attr_from_master = (
   view_data: OSPData,
   master_data: OSPData
 ): void => {
-  let heredited_attr_from_master = view.heredited_attr_from_master
+  const heredited_attr_from_master = view.heredited_attr_from_master
   if (heredited_attr_from_master.indexOf('attrGeneral') !== -1 ) {
     let differences = getDiff(view_data, master_data)
     if (differences) {
@@ -1980,7 +1980,7 @@ const update_heredited_attr_from_master = (
       if (!layoutNode.local) {
         layoutNode.local = {}
       }
-      let differences = getDiff(node.local, layoutNode.local)
+      const differences = getDiff(node.local, layoutNode.local)
       if (differences && differences.length > 1) {
         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrNode'),1)
       }
@@ -1999,7 +1999,7 @@ const update_heredited_attr_from_master = (
       if (!layoutLink.local) {
         layoutLink.local = {}
       }
-      let differences = getDiff(link.local, layoutLink.local)
+      const differences = getDiff(link.local, layoutLink.local)
       if (differences && differences.length > 1) {
         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrFlux'),1)
       }
@@ -2026,7 +2026,7 @@ const update_heredited_attr_from_master = (
   }
 
   if (heredited_attr_from_master.indexOf('tagLevel') !== -1 ) {
-    let differences = getDiff(view_data.levelTags, master_data.levelTags)
+    const differences = getDiff(view_data.levelTags, master_data.levelTags)
     if (differences) {
       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagLevel'),1)
       //alert('Niveau de détail modifié. Cet attribut n\'est plus hérité du maître.')
@@ -2034,7 +2034,7 @@ const update_heredited_attr_from_master = (
   }
 
   if (heredited_attr_from_master.indexOf('tagNode') !== -1 ) {
-    let differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+    const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
     if (differences) {
       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagNode'),1)
       //alert('Etiquettes de noeuds modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
@@ -2042,7 +2042,7 @@ const update_heredited_attr_from_master = (
   }
 
   if (heredited_attr_from_master.indexOf('tagFlux') !== -1 ) {
-    let differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+    const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
     if (differences) {
       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagFlux'),1)
       //alert('Etiquettes de flux modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
@@ -2050,7 +2050,7 @@ const update_heredited_attr_from_master = (
   }
 
   if (heredited_attr_from_master.indexOf('tagData') !== -1 ) {
-    let differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+    const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
     if (differences) {
       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagData'),1)
       //alert('Etiquettes de données modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
