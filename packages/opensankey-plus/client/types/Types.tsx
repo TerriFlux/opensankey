@@ -256,7 +256,7 @@ type paramOSPInitializeAdditionalMenusType=[...paramInitializeAdditionalMenusTyp
 // Exemple for dict of elements selected : it return recasted multi_selected_nodes,multi_selected_links,
 // and exclusive OSP var type : multi_selected_label,r_setter_editor_content_fo_node,r_setter_editor_content_fo_zdt,r_setter_value_editor_name_view
 // (some function from OS take no parameters and return void but we still create an override in the event of change in OS)
-export type OSPinitializeApplicationDataVarType = RecastReturnTypeOfFunction<paramInitAppDataType, OSPApplicationDataVarType>
+export type OSPInitializeApplicationDataVarType = RecastReturnTypeOfFunction<paramInitAppDataType, OSPApplicationDataVarType>
 export type OSPInitializeElementSelectedType = RecastReturnTypeOfFunction<parmaInitializeElementSelectedType, OSPElementsSelectedVarType>
 export type OSPInitializeShowDialogType = RecastReturnTypeOfFunction<parmaInitializeShowDialogType, OSPShowMenuComponentsVarType>
 export type OSPInitializeApplicationDrawType = RecastReturnTypeOfFunction<parmaInitializeApplicationDrawType, OSPApplicationDrawVarType>

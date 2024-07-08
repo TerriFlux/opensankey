@@ -31,7 +31,7 @@ import {
   OSPInitializeShowDialogType,
   OSPInitializeUIElementsRefType,
   OSPUpdateMenuConfType,
-  OSPinitializeApplicationDataVarType,
+  OSPInitializeApplicationDataVarType,
   OSPApplicationContextType,
   OSPApplicationDrawType,
   OSPApplicationDrawVarType,
@@ -135,7 +135,7 @@ export const OSPInitializeApplicationContext : OSPInitializeApplicationContextVa
 }
 
 
-export const OSPInitializeApplicationData : OSPinitializeApplicationDataVarType= (
+export const OSPInitializeApplicationData : OSPInitializeApplicationDataVarType= (
   data,
   set_data,
   get_default_data,
