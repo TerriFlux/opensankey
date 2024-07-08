@@ -590,7 +590,7 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
             set_data(JSON.parse(JSON.stringify(master_data)))
           }
         }
-        sValueEditorNameView(master_data!.view.filter(v=>v.id===view)[0].nom)
+        sValueEditorNameView(master_data!.view.filter(v=>v.id===master_data!.current_view)[0].nom)
       }
     }
     value={view}
@@ -1466,17 +1466,18 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               let difference = getDiff(master_data, data)
               difference = (difference !== undefined)?difference:[]
               difference = difference.filter((d)=>!(d.path!.includes('view')))
-            master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
+              master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
+              update_heredited_attr_from_master(master_data!.view.filter(v => v.id === view_not_saved)[0],data,master_data!)
+              if(view !== 'none'){
+                const data_view=GetDataFromView(master_data,view) as OSPData
 
-            if(view !== 'none'){
-              const data_view=GetDataFromView(master_data,view) as OSPData
-              set_master_data(JSON.parse(JSON.stringify(master_data)))
-              set_data(JSON.parse(JSON.stringify(data_view)))
+                set_master_data(JSON.parse(JSON.stringify(master_data)))
+                set_data(JSON.parse(JSON.stringify(data_view)))
 
-            } else if(view === 'none'){
-              set_data(JSON.parse(JSON.stringify(master_data)))
-            }
-            set_view_not_saved('')
+              } else if(view === 'none'){
+                set_data(JSON.parse(JSON.stringify(master_data)))
+              }
+              set_view_not_saved('')
             }}
           >
             {t('view.save')}
@@ -1826,16 +1827,233 @@ export const OpenOSPCheckpointButton : OpenOSPCheckpointButtonFType = (
   </OSTooltip>
 }
 
+/**
+ * Modify heredited_attr_from_master in function of the modification done in the view.
+ * If an attribute in the view is modified which was heredited from master the set attributes
+ * containing the attribute is removed from the list of heredited attributes
+ */
+const update_heredited_attr_from_master = (
+  view: ViewType,
+  view_data: OSPData,
+  master_data: OSPData
+): void => {
+  let heredited_attr_from_master = view.heredited_attr_from_master
+  if (heredited_attr_from_master.indexOf('attrGeneral') !== -1 ) {
+    let differences = getDiff(view_data, master_data)
+    if (differences) {
+      const legend_pos = differences.filter( difference=>difference.path![0] == 'legend_position')
+      if (legend_pos.length > 0) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'),1)
+      }
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'E') &&
+          (difference.path!.length === 1 ) &&
+          (difference.path![0]!=='current_view'))
+      if (differences.length > 0) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'),1)
+      }
+    }
+    const display_style_diff = getDiff(view_data.display_style, master_data.display_style)
+    if (display_style_diff) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'),1)
+    }
 
+    const node_style_differences = getDiff(view_data.style_node, master_data.style_node)
+    if (node_style_differences) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'),1)
+    }
 
-// const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
+    const link_style_differences = getDiff(view_data.style_link, master_data.style_link)
+    if (link_style_differences) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'),1)
+    }
+  }
 
-//   if(tree.children && path.length>0){
-//     const index=path.shift()??-1
-//     const sub_tree=tree.children[index]
-//     return getNodeFromTree(path,sub_tree)
-//   }else{
-//     const id=tree.id,checked=tree.checked
-//     return {id,checked}
-//   }
-// }
+  if (heredited_attr_from_master.indexOf('addNode') !== -1 ) {
+    let differences = getDiff(view_data.nodes, master_data.nodes)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'N') &&
+          (difference.path!.length === 1))
+      if (differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('addNode'),1)
+      }
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('removeNode') !== -1 ) {
+    let differences = getDiff(view_data.nodes, master_data.nodes)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'D') &&
+          (difference.path!.length === 1))
+      if (differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('removeNode'),1)
+      }
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('addFlux') !== -1 ) {
+    let differences = getDiff(view_data.links, master_data.links)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'N') &&
+          (difference.path!.length === 1))
+      if (differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('addFlux'),1)
+      }
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('removeFlux') !== -1 ) {
+    let differences = getDiff(view_data.links, master_data.links)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'D') &&
+          (difference.path!.length === 1))
+      if (differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('removeFlux'),1)
+      }
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('posNode') !== -1 ) {
+    let differences = getDiff(view_data.nodes, master_data.nodes)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'E') &&
+          (['x', 'y', 'x_label', 'y_label'].includes(difference.path![1])))
+      if (differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('posNode'),1)
+      }
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('posLink') !== -1 ) {
+    const geometry_attributes = [
+      'orientation',
+      'left_horiz_shift',
+      'right_horiz_shift',
+      'vert_shift',
+      'curvature',
+      'curved',
+      'recycling',
+      'arrow_size',
+      // Geometry link labels
+      'x_label',
+      'y_label',
+      'label_position',
+      'orthogonal_label_position',
+      'label_on_path'
+    ]
+    let differences = getDiff(view_data.links, master_data.links)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'D' || difference.kind === 'N') &&
+          (difference.path!.length === 3) &&
+          (difference.path![1] === 'local') &&
+          (geometry_attributes.includes(difference.path![2])) ||
+          (difference.kind === 'E' && geometry_attributes.includes(difference.path![1]))
+      )
+      if (differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('posLink'),1)
+      }
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('attrNode') !== -1 ) {
+    Object.entries(view_data.nodes).forEach(([key, node]) => {
+      const layoutNode = master_data.nodes[key]
+      if (!layoutNode) {
+        return
+      }
+      if (!node.local) {
+        node.local = {}
+      }
+      if (!layoutNode.local) {
+        layoutNode.local = {}
+      }
+      let differences = getDiff(node.local, layoutNode.local)
+      if (differences && differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrNode'),1)
+      }
+    })
+  }
+
+  if (heredited_attr_from_master.indexOf('attrFlux') !== -1 ) {
+    Object.entries(view_data.links).forEach(([key, link]) => {
+      const layoutLink = master_data.links[key]
+      if (!layoutLink) {
+        return
+      }
+      if (!link.local) {
+        link.local = {}
+      }
+      if (!layoutLink.local) {
+        layoutLink.local = {}
+      }
+      let differences = getDiff(link.local, layoutLink.local)
+      if (differences && differences.length > 1) {
+        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrFlux'),1)
+      }
+
+    })
+  }
+
+  if (heredited_attr_from_master.indexOf('Values') !== -1 ) {
+    const dataTagsNames = Object.values(view_data.dataTags).map(tagGroup=>tagGroup.group_name)
+    const layoutTagsNames = Object.values(master_data.dataTags).map(tagGroup=>tagGroup.group_name)
+
+    if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
+      Object.entries(view_data.links).forEach(([key, link]) => {
+        const layoutLink = master_data.links[key]
+        if (!layoutLink) {
+          return
+        }
+        const differences = getDiff(link.value, layoutLink.value)
+        if (differences) {
+          heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('Values'),1)
+        }
+      })
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('tagLevel') !== -1 ) {
+    let differences = getDiff(view_data.levelTags, master_data.levelTags)
+    if (differences) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagLevel'),1)
+      //alert('Niveau de détail modifié. Cet attribut n\'est plus hérité du maître.')
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('tagNode') !== -1 ) {
+    let differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+    if (differences) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagNode'),1)
+      //alert('Etiquettes de noeuds modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('tagFlux') !== -1 ) {
+    let differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+    if (differences) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagFlux'),1)
+      //alert('Etiquettes de flux modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
+    }
+  }
+
+  if (heredited_attr_from_master.indexOf('tagData') !== -1 ) {
+    let differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+    if (differences) {
+      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagData'),1)
+      //alert('Etiquettes de données modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
+    }
+  }
+}
