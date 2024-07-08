@@ -16,9 +16,12 @@ import {
   Class_MenuConfig
 } from './MenuConfig'
 import {
+  default_element_position,
   Type_ElementPosition,
   Type_Position
 } from './Utils'
+import { Class_LinkElement } from './Link'
+import { Class_NodeElement } from './Node'
 
 // CONSTANT *****************************************************************************
 
@@ -192,7 +195,7 @@ export abstract class Class_ProtoElement {
   public unsetMouseOver() { this._is_mouse_over = false }
 
   // Get application config menu
-  protected get menu_config(): Class_MenuConfig {return this._menu_config}
+  protected get menu_config(): Class_MenuConfig { return this._menu_config }
 
   // PROTECTED METHODES =================================================================
 
@@ -533,3 +536,59 @@ export abstract class Class_Element extends Class_ProtoElement {
 
 }
 
+export class Class_Handler extends Class_Element {
+
+  private _size: number = 5
+  private _ref_element: Class_LinkElement | Class_NodeElement
+  protected _display: {
+    drawing_area: Class_DrawingArea,
+    position: Type_ElementPosition,
+  }
+
+  constructor(
+    id: string,
+    drawing_area: Class_DrawingArea,
+    menu_config: Class_MenuConfig,
+    ref_link: Class_LinkElement | Class_NodeElement,
+    drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void
+  ) {
+    // Init parent class attributes
+    super(id, menu_config, 'g_handlers')
+    this._ref_element = ref_link
+    // Init other class attributes
+    this._display = {
+      drawing_area: drawing_area,
+      position: structuredClone(default_element_position),
+    }
+
+    this.eventMouseDrag = drag_function
+  }
+
+  draw() {
+    super.draw()
+    this.drawElements()
+  }
+
+
+  drawElements() {
+    this.d3_selection?.attr('class', 'gg_handler')
+    // this.d3_selection?.style('display', this.getDisplayValue())
+    this.d3_selection?.append('rect')
+      .attr('x', -this._size / 2)
+      .attr('y', -this._size / 2)
+      .attr('width', this._size)
+      .attr('height', this._size)
+      .attr('fill', 'black')
+      .attr('cursor', 'move')
+  }
+
+  /**
+ * Getter used to display or not the handler (called in draw of Class_Element)
+ *
+ * @readonly
+ * @memberof Class_Handler
+ */
+  public get is_visible() {
+    return this._ref_element.is_selected
+  }
+}
