@@ -166,8 +166,12 @@ export class Class_MenuConfig {
    *
    * @memberof Class_MenuConfig
    */
-  public updateMenuEditionNode() {
+  public updateComponentsMenuConfigNode() {
     this.updateComponentMenuConfigNode.current()
+    this.updateComponentsSubmenuConfigNode()
+  }
+
+  public updateComponentsSubmenuConfigNode() {
     this.updateComponentMenuConfigNodeAppearence.current()
     this.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
     this.updateMenuConfigTextNodeTooltip.current.forEach(f => f())

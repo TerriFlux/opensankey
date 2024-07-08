@@ -598,14 +598,14 @@ export class Class_NodeElement extends Class_Element {
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsNodes()
         // Update components related to node edition
-        this.menu_config.updateMenuEditionNode()
+        this.menu_config.updateComponentsMenuConfigNode()
 
       } else if (event.ctrlKey) {
         // Add node to selection
         drawing_area.addNodeToSelection(this)
 
         // Update components related to node edition
-        this.menu_config.updateMenuEditionNode()
+        this.menu_config.updateComponentsMenuConfigNode()
       }
       // OTHERS
       else {
@@ -2306,7 +2306,6 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public removeReference(_: Class_NodeElement) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
-      _.useDefaultStyle()
     }
   }
 
