@@ -520,7 +520,7 @@ export class Class_DrawingArea {
     // TODO Unselect other things
     // Reset selection
     // TODO reset config menu
-    this.application_data.menu_configuration.updateMenuEditionNode()
+    this.application_data.menu_configuration.updateComponentsMenuConfigNode()
     this.application_data.menu_configuration.updateMenuEditionLink()
     // Clean selection dict
     this._selection = {}
@@ -875,7 +875,7 @@ export class Class_DrawingArea {
           source,
           target,
           this, this.application_data.menu_configuration)
-        this.application_data.menu_configuration.updateMenuEditionNode()
+        this.application_data.menu_configuration.updateComponentsMenuConfigNode()
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
@@ -936,7 +936,7 @@ export class Class_DrawingArea {
         // In case we get there still deref ghost link
         this._ghost_link.delete()
         this._ghost_link = null
-        this.application_data.menu_configuration.updateMenuEditionNode()
+        this.application_data.menu_configuration.updateComponentsMenuConfigNode()
         this.application_data.menu_configuration.updateMenuEditionLink()
       }
     }

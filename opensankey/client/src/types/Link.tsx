@@ -2124,7 +2124,6 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   public removeReference(_: Class_LinkElement) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
-      _.useDefaultStyle()
     }
   }
 
