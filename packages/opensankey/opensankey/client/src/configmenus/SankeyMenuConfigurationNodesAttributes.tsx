@@ -68,6 +68,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   advanced_label_value_content,
   link_function,
   ComponentUpdater,
+  updateMenus,
   node_function
 }) => {
   const { t } = applicationContext
@@ -165,7 +166,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           Object.values(parameter_to_modify)
             .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
             .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,menu_for_style))
-          updateMenuConfigNode()
+          updateMenus[1](!updateMenus[0])
         }}
       >
         <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')}>
