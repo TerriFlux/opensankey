@@ -4,11 +4,11 @@
  * Copyright (c) 2014, Jason Chen
  * Copyright (c) 2013, salesforce.com
  */
-.ql-container {
+ .ql-container {
   box-sizing: border-box;
   font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
-  height:78%;
+  min-height:230px;
   margin: 0px;
   position: relative;
 }
@@ -29,6 +29,7 @@
   margin: 0;
   padding: 0;
 }
+
 .ql-editor {
   box-sizing: border-box;
   line-height: 1.42;
@@ -837,7 +838,8 @@
 .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before {
   content: 'Huge';
 }
-.ql-snow{
+/*https://gitlab.com/su-model/sankeyanimation/-/issues/127*/
+/* .ql-snow{
   .ql-picker{
       &.ql-size{
           .ql-picker-label,
@@ -848,7 +850,7 @@
           }
       }
   }
-  }
+  } */
 
   .quill .ql-picker-options{
     max-height: 20em;

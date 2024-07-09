@@ -2,7 +2,6 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
-import { Quill } from 'react-quill'
 import ReactQuill from 'react-quill'
 import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
@@ -44,21 +43,13 @@ export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
     }
   }
 
-  // Create a custom size list of font-size
-  const list_size=[]
-  for(let i=6;i<=50;i++){
-    list_size.push(i+'px')
-  }
 
-  const Size = Quill.import('attributors/style/size')
-  Size.whitelist = list_size
-  Quill.register(Size, true)
 
   const modules = {
     toolbar: [
       [{ 'font': [] }],
       ['bold', 'italic', 'underline','strike'],
-      [{ 'size': list_size }],
+      [{ 'size': [] }],
       [{ 'color': [] }, { 'background': [] }],
       [{'list': 'ordered'}, {'list': 'bullet'}],
       [{'align':[]}],
@@ -77,8 +68,9 @@ export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo=<Box as='span' width='calc(20vw - 1.5em)'>
+  const editor_fo=<Box style={{'height':'300px'}}>
     <ReactQuill
+      className='quill_editor'
       value={s_editor_content_fo_node}
       onChange={(evt, _, s) => {
         if(s==='user'){

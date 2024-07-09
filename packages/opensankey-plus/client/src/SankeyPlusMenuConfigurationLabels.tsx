@@ -220,21 +220,13 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
 
   const valAllLabelBorderTransparent=IsAllZdtAttrSameValue(data,multi_selected_label.current,'transparent_border') as boolean[]
 
-  // Create a custom size list of font-size
-  // const list_size=[]
-  // for(let i=6;i<=7;i++){
-  //   list_size.push(i+'px')
-  // }
 
-  // const Size = Quill.import('attributors/style/size')
-  // Size.whitelist = ['small','large','huge']
-  // Quill.register(Size, true)
 
   const modules = {
     toolbar: [
       [{ 'font': [] }],
       ['bold', 'italic', 'underline','strike'],
-      [{ 'size': [] }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
       [{ 'color': [] }, { 'background': [] }],
       [{'list': 'ordered'}, {'list': 'bullet'}],
       [{'align':[]}],
