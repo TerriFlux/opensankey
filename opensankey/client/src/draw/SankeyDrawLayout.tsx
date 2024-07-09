@@ -11,6 +11,7 @@ import {
   SankeyData,
   SankeyLink,
   SankeyLinkValue,
+  SankeyLinkValueDict,
   SankeyNode,
   SankeyNodeAttrLocal,
   agregationType,
@@ -53,7 +54,8 @@ import {
   TestLinkValue,
   ReturnValueLink,
   DeleteNode,
-  DeleteLink
+  DeleteLink,
+  AddDataTags
 } from '../configmenus/SankeyUtils'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
@@ -1414,6 +1416,14 @@ export const updateLayout: updateLayoutFuncType = (
         reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
         reorganize_node_outputLinksId(data, data.nodes[new_layout.links[linkId].idSource], data.nodes, data.links)
         data.linkZIndex.push(linkId)
+      })
+      linksId.forEach(linkId => {
+        const l = data.links[linkId]
+        AddDataTags(
+          Object.values(data.dataTags),
+          l.value as {[key:string] : SankeyLinkValue | SankeyLinkValueDict },
+          0
+        )
       })
     }
   }
