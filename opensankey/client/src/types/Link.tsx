@@ -49,8 +49,8 @@ export const default_shape_opacity = 0.85
 export const default_shape_orientation = 'hh'
 export const default_shape_starting_curve = 0.05
 export const default_shape_ending_curve = 0.95
-export const default_shape_starting_tangeant = 0.5
-export const default_shape_ending_tangeant = 0.5
+export const default_shape_starting_tangeant = 0.25
+export const default_shape_ending_tangeant = 0.25
 export const default_shape_vert_shift = 0
 export const default_value_label_color = 'black'
 export const default_value_label_custom_digit = false
@@ -163,6 +163,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     ending_curve_point: Class_Handler,
     starting_bezier_point: Class_Handler,
     ending_bezier_point: Class_Handler,
+    is_dragged: boolean
   }
 
   // PROTECTED ATTRIBUTES ===============================================================
@@ -227,6 +228,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       ending_curve_point: new Class_Handler('cp_end_' + id, drawing_area, menu_config, this, this.endCurvePointDragEvent()),
       starting_bezier_point: new Class_Handler('bz_start_' + id, drawing_area, menu_config, this, this.startTangeantDragEvent()),
       ending_bezier_point: new Class_Handler('bz_end_' + id, drawing_area, menu_config, this, this.endTangeantDragEvent()),
+      is_dragged: false
     }
     // Values
     this._values = new Class_LinkValue(this)
@@ -578,10 +580,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.d3_selection?.selectAll('.link_path').remove()
     // Failsafe
     if (this._source && this._target) {
-
-      // Compute control points
-      this.computeControlPoints()
-
       // Add new path shape
       this.d3_selection?.append('path')
         .classed('link', true)
@@ -608,10 +606,37 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   private drawControlPoint() {
+    // Draw control handler
     this._control_points.starting_curve_point.draw()
     this._control_points.ending_curve_point.draw()
     this._control_points.starting_bezier_point.draw()
     this._control_points.ending_bezier_point.draw()
+    // Clean previous shape
+    this.d3_selection?.selectAll('.link_control_path').remove()
+    if (this._control_points.is_dragged) {
+      // Get control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
+      const x5 = this._control_points.ending_curve_point.position_x
+      const y5 = this._control_points.ending_curve_point.position_y
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
+      const x4 = this._control_points.ending_bezier_point.position_x
+      const y4 = this._control_points.ending_bezier_point.position_y
+      // Add new path shape
+      const path = 'M ' + x1 + ',' + y1
+        + ' L ' + x2 + ',' + y2
+        + ' L ' + x4 + ',' + y4
+        + ' L ' + x5 + ',' + y5
+      this.d3_selection?.append('path')
+        .classed('link', true)
+        .classed('link_control_path', true)
+        .attr('d', path)
+        .attr('fill', 'none')
+        .attr('stroke', 'red')
+        .attr('stroke-opacity', 0.75)
+        .attr('stroke-width', 1)
+    }
   }
 
   private getPathColorToUse() {
@@ -799,6 +824,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private startCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      this._control_points.is_dragged = true
       if (this.is_horizontal || this.is_horizontal_vertical) {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.starting_curve_point.position_x + event.dx
@@ -819,6 +845,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         if (dy6y0 > 0) // Avoid NaN
           this.shape_starting_curve = Math.abs(handle_new_pos_y - y0) / dy6y0
       }
+      this._control_points.is_dragged = false
     }
   }
 
@@ -831,6 +858,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private endCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      this._control_points.is_dragged = true
       if (this.is_horizontal || this.is_vertical_horizontal) {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.ending_curve_point.position_x + event.dx
@@ -851,6 +879,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         if (dy6y0 > 0) // Avoid NaN
           this.shape_ending_curve = Math.abs(handle_new_pos_y - y0) / dy6y0
       }
+      this._control_points.is_dragged = false
     }
   }
 
@@ -863,6 +892,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private startTangeantDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      this._control_points.is_dragged = true
       if (this.is_horizontal || this.is_horizontal_vertical) {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.starting_bezier_point.position_x + event.dx
@@ -883,6 +913,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         if (dy1y5 > 0) // Avoid NaN
           this.shape_starting_tangeant = Math.abs(handle_new_pos_y - y1) / dy1y5
       }
+      this._control_points.is_dragged = false
     }
   }
 
@@ -895,6 +926,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   */
   private endTangeantDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      this._control_points.is_dragged = true
       if (this.is_horizontal || this.is_vertical_horizontal) {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.ending_bezier_point.position_x + event.dx
@@ -915,6 +947,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         if (dy1y5 > 0) // Avoid NaN
           this.shape_ending_tangeant = Math.abs(handle_new_pos_y - y5) / dy1y5
       }
+      this._control_points.is_dragged = false
     }
   }
 
