@@ -216,6 +216,14 @@ const eventLinkClick=(
           }
         }, 200)
       }
+      // Open element accordion if not already openend
+      if (
+        accordion_ref &&
+        accordion_ref.current &&
+        d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        accordion_ref.current.click()
+      }
       // Open link accordion if not already openend
       if (
         links_accordion_ref &&
