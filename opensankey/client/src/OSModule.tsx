@@ -130,7 +130,7 @@ export const initializeApplicationContext : initializeApplicationContextType = (
   url_prefix : '/opensankey/',
   logo : logo,
   logo_terriflux : logo_terriflux,
-  has_free_account:false
+  has_free_account:true
 }}
 
 // Global variables not stored in SankeyData
@@ -220,6 +220,7 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   contextMenu:contextMenuType,
   applicationContext,
   ComponentUpdater,
+  updateMenus,
   uiElementsRef,
   node_function,
   link_function,
@@ -414,6 +415,7 @@ export const DrawAll : DrawAllType = (
   link_function,
   NodeTooltipsContent,
   ComponentUpdater,
+  updateMenus,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   GetSankeyMinWidthAndHeight,
@@ -572,6 +574,7 @@ export const moduleDialogs : module_dialogsType = (
   node_function,
   link_function,
   ComponentUpdater,
+  updateMenus,
   additional_menus,
   menu_configuration_nodes_attributes,
   reDrawLegend
@@ -915,6 +918,7 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
   link_function,
   NodeTooltipsContent,
   ComponentUpdater,
+  updateMenus,
   dict_hook_ref_setter_show_dialog_components,
   applicationContext,
   node_function,
