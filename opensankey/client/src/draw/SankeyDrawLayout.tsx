@@ -1407,6 +1407,8 @@ export const updateLayout: updateLayoutFuncType = (
         if (!data.nodes[new_layout.links[linkId].idTarget]) {
           data.nodes[new_layout.links[linkId].idTarget] = new_layout.nodes[new_layout.links[linkId].idTarget]
         }
+      })
+      linksId.forEach(linkId => {
         data.nodes[new_layout.links[linkId].idSource].outputLinksId.push(linkId)
         data.nodes[new_layout.links[linkId].idTarget].inputLinksId.push(linkId)
         reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
