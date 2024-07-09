@@ -1519,7 +1519,7 @@ export const NodeLabelValuePosY : NodeLabelValuePosYFType = (
   const val_font_size=(ReturnValueNode(data,n,'font_size') as number)
   const is_same_pos=NodeValueAndTextSamePos(data,n)
   if (val == 'middle') {
-    return height / 2 + ((is_same_pos)?val_font_size:0)
+    return height / 2 + 0.25*val_font_size
   } else if (val == 'top') {
     return 0+ ((is_same_pos)?-height_text*1.5:0)
   } else if (val == 'bottom') {
