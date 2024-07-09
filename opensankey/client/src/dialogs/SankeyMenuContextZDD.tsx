@@ -92,9 +92,9 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   </>
 
   // Item to change sankey scale
-  const dropdown_c_zdd_scale = <Box as={Button} variant='contextmenu_button'>
+  const dropdown_c_zdd_scale = <Box>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name'>
+      <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
         {t('MEP.Echelle')}
       </Box>
 
@@ -120,13 +120,13 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     </MenuButton>
     <MenuList as={Box} layerStyle='context_menu' >
       {/* Set horizontal value for automatic positionning */}
-      <Box as={Button} variant='contextmenu_button'>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name'>
+          <Box  as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
             {t('MEP.Horizontal')}
           </Box>
 
           <NumberInput
+            variant='menuconfigpanel_option_numberinput_with_right_addon'
             min={0}
             value={node_hspace}
             onChange={evt => {
@@ -137,16 +137,16 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
             <NumberInputField/>
           </NumberInput>
         </Box>
-      </Box>
 
       {/* Set vertical value for automatic positionning */}
-      <Box as={Button} variant='contextmenu_button'>
+
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name'>
+          <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
             {t('MEP.Vertical')}
           </Box>
 
           <NumberInput
+            variant='menuconfigpanel_option_numberinput_with_right_addon'
             min={0}
             value={node_vspace}
             onChange={evt => {
@@ -157,11 +157,12 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
             <NumberInputField/>
           </NumberInput>
         </Box>
-      </Box>
+
 
       <Button variant='contextmenu_button'
         onClick={() => {
           applicationData.function_on_wait.current = () => {
+            applicationData.data.v_space = node_vspace
             ComputeAutoSankey(applicationData, node_hspace, false)
             Object.values(applicationData.display_nodes).forEach(n => {
               d3.select('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
