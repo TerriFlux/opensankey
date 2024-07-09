@@ -1000,7 +1000,7 @@ export class Class_NodeElement extends Class_Element {
         }
         else {  // link.source_side === 'bottom'
           link.setPosXYStartingPoint(x0 + dx_bottom + thickness/2, y0 + height)
-          dy_left = dy_left + thickness
+          dx_bottom = dx_bottom + thickness
         }
       }
       // Or current node is link's target
@@ -1019,7 +1019,7 @@ export class Class_NodeElement extends Class_Element {
         }
         else {  // link.target_side === 'bottom'
           link.setPosXYEndingPoint(x0 + dx_bottom + thickness/2, y0 + height)
-          dy_left = dy_left + thickness
+          dx_bottom = dx_bottom + thickness
         }
       }
     })
@@ -1142,7 +1142,7 @@ export class Class_NodeElement extends Class_Element {
       return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side))/2)
     }
     else {
-      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side)/2))
+      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side))/2)
     }
   }
 
