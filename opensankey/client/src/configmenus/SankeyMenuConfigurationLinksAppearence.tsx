@@ -322,7 +322,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               'menuconfigpanel_option_button_center'}
             onClick={() => {
               elements.forEach(element => element.shape_orientation = 'vv')
-
               updateMenuConfigurationLinkAttributes()
             }}
           >
