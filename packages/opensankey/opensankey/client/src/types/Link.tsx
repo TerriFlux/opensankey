@@ -100,6 +100,27 @@ export function isAttributeOverloaded(
  */
 export class Class_LinkElement extends Class_ProtoElement {
 
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  /**
+   * Display attributes for link
+   * @protected
+   * @type {{
+  *     drawing_area: Class_DrawingArea,
+  *     position: Type_ElementPosition,
+  *     local: Class_LinkAttribute,
+  *     style: Class_LinkStyle
+  *   }}
+  * @memberof Class_LinkElement
+  */
+ protected _display: {
+   drawing_area: Class_DrawingArea,
+   position_starting: Type_ElementPosition,
+   position_ending: Type_ElementPosition,
+   style: Class_LinkStyle,
+   attributes: Class_LinkAttribute
+ }
+
   // PRIVATE ATTRIBUTES =================================================================
 
   /**
@@ -164,27 +185,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     starting_bezier_point: Class_Handler,
     ending_bezier_point: Class_Handler,
     is_dragged: boolean
-  }
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  /**
-   * Display attributes for link
-   * @protected
-   * @type {{
-   *     drawing_area: Class_DrawingArea,
-   *     position: Type_ElementPosition,
-   *     local: Class_LinkAttribute,
-   *     style: Class_LinkStyle
-   *   }}
-   * @memberof Class_LinkElement
-   */
-  protected _display: {
-    drawing_area: Class_DrawingArea,
-    position_starting: Type_ElementPosition,
-    position_ending: Type_ElementPosition,
-    style: Class_LinkStyle,
-    attributes: Class_LinkAttribute
   }
 
   // CONSTRUCTOR ========================================================================
@@ -1050,7 +1050,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       return 'left'
     }
     // Normal behavior
-    if (this.is_horizontal || this.is_horizontal_vertical) {
+    if (this.is_horizontal || this.is_vertical_horizontal) {
       if (this.source.position_x <= this.target.position_x)
         return 'left'
       else
@@ -1086,6 +1086,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     // Cast as number
     if (value !== null) {
       value.data_value = _
+      // Need to update and redraw from source and target also
       this.source.updateOutputValue()
       this.target.updateInputValue()
     }
@@ -1210,14 +1211,16 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   public set shape_orientation(_: Type_Orientation) {
     this._display.attributes.shape_orientation = _
-    this.drawPath()
+    // Need to redraw from nodes
+    this.source.draw()
+    this.target.draw()
   }
 
   // Orientation
   public get is_horizontal() { return this.shape_orientation === 'hh' }
   public get is_vertical() { return this.shape_orientation === 'vv' }
   public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
-  public get is_vertical_horizontal() { return this.shape_orientation === 'hv' }
+  public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
 
   /**
    * TODO Description
