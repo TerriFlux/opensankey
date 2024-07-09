@@ -1410,7 +1410,7 @@ export const TextNodeValue : TextNodeValueFType =(
       for (let i = 0; i < d.outputLinksId.length; i++) {
         const link = display_links[d.outputLinksId[i]]
         if (link === undefined) {
-          return ''
+          continue
         }
         if (scientific_precision === 0 && ReturnValueLink(data, link, 'to_precision')) {
           scientific_precision = ReturnValueLink(data, link, 'scientific_precision') as number
@@ -1430,8 +1430,7 @@ export const TextNodeValue : TextNodeValueFType =(
         for (let i = 0; i < d.inputLinksId.length; i++) {
           const link = display_links[d.inputLinksId[i]]
           if (link === undefined) {
-            //alert('Corruption du diagramme')
-            return ''
+            continue
           }
           if (scientific_precision === 0 && ReturnValueLink(data, link, 'to_precision')) {
             scientific_precision = ReturnValueLink(data, link, 'scientific_precision') as number
