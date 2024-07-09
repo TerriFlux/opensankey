@@ -335,6 +335,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     advanced_label_value_content={additionalMenus.advanced_label_value_content}
     link_function={link_function}
     ComponentUpdater={ComponentUpdater}
+    updateMenus={updateMenus}
     node_function={node_function}
   />
 
@@ -587,6 +588,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                     advanced_label_value_content={additionalMenus.advanced_label_value_content}
                     link_function={link_function}
                     ComponentUpdater={ComponentUpdater}
+                    updateMenus={updateMenus}
                     node_function={node_function}
                   />
                 }/>
