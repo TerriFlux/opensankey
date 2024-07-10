@@ -64,14 +64,13 @@ export type MenuDraggableFType = (
   content:JSX.Element|JSX.Element[],
   pointer_pos:{current:number[]},
   title:string,
-  width_menu?:number
 )=> JSX.Element
 
 export type OpenSankeySaveButtonFType = {
   ComponentUpdater:ComponentUpdaterType,
   applicationContext:applicationContextType
 }
- 
+
 export type LastCheckpointTimeFType = (t:TFunction,ComponentUpdater:ComponentUpdaterType) => JSX.Element
 export type SankeyMenuFileExportFType=(
   t:TFunction,
@@ -102,5 +101,5 @@ export type ModalTutoType={
     show_tuto:boolean,
     set_show_tuto:(b:boolean)=>void,
     Reinitialization:()=>void
-  
+
   }
