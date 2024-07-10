@@ -8,24 +8,24 @@ import * as d3 from 'd3'
 import LZString from 'lz-string'
 import './traduction'
 
-import { 
-  applicationDataType, ComponentUpdaterType, 
-  LinkFunctionTypes, NodeFunctionTypes, applicationContextType, contextMenuType, 
-  applicationStateType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType, 
-  applicationDrawType, 
+import {
+  applicationDataType, ComponentUpdaterType,
+  LinkFunctionTypes, NodeFunctionTypes, applicationContextType, contextMenuType,
+  applicationStateType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType,
+  applicationDrawType,
   AdditionalMenusType,
   processFunctionsType,
   SankeyData
 } from 'open-sankey/src/types/Types'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { 
-  convert_data, DefaultNode,initializeAdditionalMenus, DefaultLink, initializeApplicationContext, 
-  initializeApplicationData, initializeApplicationDraw, initializeComponentUpdater, 
-  initializeElementSelected, initializeShowDialog, initializeContextMenu, initializeLinkFunctions, 
+import {
+  convert_data, DefaultNode,initializeAdditionalMenus, DefaultLink, initializeApplicationContext,
+  initializeApplicationData, initializeApplicationDraw, initializeComponentUpdater,
+  initializeElementSelected, initializeShowDialog, initializeContextMenu, initializeLinkFunctions,
   initializeProcessFunctions, initializeUIElementsRef, initializeReinitialization, initializeNodeFunctions,
   InstallEventsOnSVG,
-  moduleDialogs, DrawAll, closeAllMenu, 
+  moduleDialogs, DrawAll, closeAllMenu,
   DefaultSankeyData,
   complete_sankey_data,
   SankeyApp,
@@ -34,10 +34,10 @@ import {
   ClickSaveDiagram
 } from './import/OpenSankey'
 import { OSPApplicationContextType, OSPApplicationDrawType, OSPComponentUpdaterType, OSPElementsSelectedType, OSPUiElementsRefType, OSPApplicationDataType, OSPContextMenuType, OSPData, OSPDataVar, OSPLabel, OSPLink, OSPNode, OSPShowMenuComponentsType, OSPNodeFuntionType } from '../types/Types'
-import { 
-  OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
-  OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
-  OSPInitializeContextMenu, OSPInitializeUIElementsRef, OSPInitializeLinkFunctions, 
+import {
+  OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected,
+  OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization,
+  OSPInitializeContextMenu, OSPInitializeUIElementsRef, OSPInitializeLinkFunctions,
   OSPInitializeNodeFunctions, OSPInitializeAdditionalMenus, OSPModuleDialogs, OSPDrawAll, OSPInstallEventsOnSVG,
   OSPUpdateMenuConf,
   OSPInitializeKeyHandler,
@@ -80,7 +80,7 @@ const get_default_data=()=>{
     style_node:os_var.style_node
   }
   const tmp:OSPData=Object.assign(os_var,osp_var)
-  
+
   return tmp
 }
 
@@ -102,7 +102,7 @@ if (json_data !== null && json_data != '' && json_data!='null') {
 
 // window.SankeyToolsStatic = true
 // if (!window.sankey) {
-//   window.sankey = { 
+//   window.sankey = {
 //     footer: true,
 //     header: 'Sankey Viewer'
 //   }
@@ -133,7 +133,7 @@ root.render(
       }
     }
     initializeApplicationData={
-      (  
+      (
         data,
         set_data,
         get_default_data,
@@ -156,7 +156,7 @@ root.render(
       }
     }
     initializeApplicationDraw={
-      (  
+      (
         applicationData : applicationDataType,
         applicationState : applicationStateType,
         contextMenu : contextMenuType,
@@ -167,23 +167,23 @@ root.render(
         link_function:LinkFunctionTypes,
         start_point :{ current: number[]; },
         resizeCanvas :() => void,
-        ref_alt_key_pressed
+        ref_alt_key_pressed?: MutableRefObject<boolean>
       )=>{
         const _ = initializeApplicationDraw(
           applicationData,applicationState,contextMenu,
-          applicationContext, ComponentUpdater,uiElementsRef, node_function, link_function,
-          start_point, resizeCanvas,ref_alt_key_pressed
+          applicationContext, ComponentUpdater, uiElementsRef, node_function, link_function,
+          start_point, resizeCanvas
         )
         Object.assign(_,OSPInitializeApplicationDraw(
           applicationData,applicationState,contextMenu,
           applicationContext,ComponentUpdater,uiElementsRef,node_function,link_function,
-          start_point, resizeCanvas,ref_alt_key_pressed
+          start_point, resizeCanvas
         ))
         OSPNodeDragEvent(
           applicationData as OSPApplicationDataType,
           applicationState as OSPElementsSelectedType,
           applicationContext as OSPApplicationContextType,
-          ref_alt_key_pressed!.current,
+          ref_alt_key_pressed?.current ?? false,
           ComponentUpdater,
           (node_function as OSPNodeFuntionType),
           link_function,
@@ -257,7 +257,7 @@ root.render(
         )
         OSPUpdateMenuConf(menu_conf,applicationData,applicationContext,uiElementsRef)
         return menu_conf
-  
+
       }
     }
     initializeReinitialization={
@@ -306,7 +306,7 @@ root.render(
       }
     }
     initializeLinkFunctions={
-      (  
+      (
         applicationData: applicationDataType,
         applicationState: applicationStateType,
         contextMenu:contextMenuType,
@@ -408,7 +408,7 @@ root.render(
       }
     }
     moduleDialogs={
-      (  
+      (
         applicationContext:applicationContextType,
         applicationData:applicationDataType,
         applicationState:applicationStateType,
@@ -439,7 +439,7 @@ root.render(
             additional_menus,
             menu_configuration_nodes_attributes,
             applicationDraw.reDrawLegend,
-            processFunctions 
+            processFunctions
           ),
           ...OSPModuleDialogs(
             applicationContext,
@@ -563,7 +563,7 @@ root.render(
     }
     }
     // Input data used for updateLayout
-    // (OS only use data from imported file 
+    // (OS only use data from imported file
     // but OSP can use its view as imported data
     // )
     initializeDiagrammSelector={(applicationData)=>{
@@ -575,7 +575,7 @@ root.render(
     }
     ClickSaveDiagram={
       (
-        applicationData: applicationDataType, 
+        applicationData: applicationDataType,
         data:SankeyData,
         applicationState:applicationStateType,
         options:SaveDiagramOptionsType
@@ -612,7 +612,7 @@ root.render(
         node_function,
         applicationDraw
       )=>{
-        InstallEventsOnSVG(  
+        InstallEventsOnSVG(
           contextMenu,
           applicationContext,
           applicationData,
