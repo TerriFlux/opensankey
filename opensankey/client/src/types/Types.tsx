@@ -393,7 +393,7 @@ export type contextMenuType = {
   pointer_pos : { current : number[] },
   showContextZDDRef : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]|undefined>
 }
-export type initializeCloseAllMenuContextType =(  
+export type initializeCloseAllMenuContextType =(
   ref_setter_contextualised_node : MutableRefObject<Dispatch<SetStateAction<SankeyNode|undefined>>|undefined>,
   ref_setter_contextualised_link : MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
   tagContext : RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
@@ -524,13 +524,13 @@ export type applicationDataType = {
   setDiagram:setDiagramFuncType
 
 }
-export type initializeApplicationDataType = (  
+export type initializeApplicationDataType = (
   data:SankeyData,
   set_data:(_:SankeyData)=>void,
   get_default_data:OSGetDefaultData,
   display_nodes : {[_:string]:SankeyNode},
   display_links : {[_:string]:SankeyLink},
-  
+
 )=>applicationDataType
 
 /*****************************************************************************/
@@ -546,7 +546,7 @@ export type initializeApplicationDrawType = (
   link_function:LinkFunctionTypes,
   start_point:{current:number[]},
   resizeCanvas:()=>void,
-  ref_alt_key_pressed:MutableRefObject<boolean>
+  ref_alt_key_pressed?: MutableRefObject<boolean>
 )=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
@@ -646,7 +646,7 @@ export type ComponentUpdaterType={
   updateComponenSaveInCache: MutableRefObject<(b:boolean)=>void>
   updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(()=>null)[]>
   updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
-  updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>  
+  updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>
   updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>
 }
 export type initializeComponentUpdaterType = ()=>ComponentUpdaterType
@@ -660,7 +660,7 @@ export type AdditionalMenusType = {
   external_file_export_item: JSX.Element[],
   externale_save_item: JSX.Element[],
   externale_navbar_item:{[_:string]:JSX.Element}
-  
+
   // Mise en page
   extra_background_element: JSX.Element
   apply_transformation_additional_elements:JSX.Element[]
@@ -668,10 +668,10 @@ export type AdditionalMenusType = {
   advanced_appearence_content: JSX.Element[],
   advanced_label_content: JSX.Element[],
   advanced_label_value_content: JSX.Element[],
-  additional_menu_configuration_nodes:{[_:string]:JSX.Element},  
+  additional_menu_configuration_nodes:{[_:string]:JSX.Element},
   additional_context_element_menu:JSX.Element[],
   additional_context_element_other:JSX.Element[],
-  
+
   // Links
   additional_data_element: JSX.Element[],
   additional_link_appearence_items: JSX.Element[],
@@ -753,7 +753,7 @@ export type SankeyAppTypes = {
   initializeApplicationDraw :initializeApplicationDrawType,
   initializeShowDialog : initializeShowDialogType,
   initializeComponentUpdater: ()=>ComponentUpdaterType
-  closeAllMenu : (    
+  closeAllMenu : (
     dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
     contextMenu:contextMenuType
   )=>()=>void,

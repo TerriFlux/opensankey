@@ -120,43 +120,43 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     </MenuButton>
     <MenuList as={Box} layerStyle='context_menu' >
       {/* Set horizontal value for automatic positionning */}
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box  as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
-            {t('MEP.Horizontal')}
-          </Box>
-
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            value={node_hspace}
-            onChange={evt => {
-              set_node_hspace(+evt)
-              data.h_space = +evt
-              ComponentUpdater.updateComponenSaveInCache.current(false)
-            }}>
-            <NumberInputField/>
-          </NumberInput>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box  as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Horizontal')}
         </Box>
+
+        <NumberInput
+          variant='menuconfigpanel_option_numberinput_with_right_addon'
+          min={0}
+          value={node_hspace}
+          onChange={evt => {
+            set_node_hspace(+evt)
+            data.h_space = +evt
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+          }}>
+          <NumberInputField/>
+        </NumberInput>
+      </Box>
 
       {/* Set vertical value for automatic positionning */}
 
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
-            {t('MEP.Vertical')}
-          </Box>
-
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            value={node_vspace}
-            onChange={evt => {
-              set_node_vspace(+evt)
-              data.h_space = +evt
-              ComponentUpdater.updateComponenSaveInCache.current(false)
-            }}>
-            <NumberInputField/>
-          </NumberInput>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Vertical')}
         </Box>
+
+        <NumberInput
+          variant='menuconfigpanel_option_numberinput_with_right_addon'
+          min={0}
+          value={node_vspace}
+          onChange={evt => {
+            set_node_vspace(+evt)
+            data.h_space = +evt
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+          }}>
+          <NumberInputField/>
+        </NumberInput>
+      </Box>
 
 
       <Button variant='contextmenu_button'
