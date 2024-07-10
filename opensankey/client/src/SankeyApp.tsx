@@ -309,7 +309,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   initializeAdditionalMenus(
     additionalMenus,
-    updateMenus,
     applicationContext,
     applicationData,
     applicationDraw,
@@ -335,7 +334,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     advanced_label_value_content={additionalMenus.advanced_label_value_content}
     link_function={link_function}
     ComponentUpdater={ComponentUpdater}
-    updateMenus={updateMenus}
     node_function={node_function}
   />
 
@@ -439,7 +437,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     link_function,
     applicationDraw,
     ComponentUpdater,
-    updateMenus,
     menu_configuration_nodes,
     config_link_data,
     config_link_attr,
@@ -588,7 +585,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                     advanced_label_value_content={additionalMenus.advanced_label_value_content}
                     link_function={link_function}
                     ComponentUpdater={ComponentUpdater}
-                    updateMenus={updateMenus}
                     node_function={node_function}
                   />
                 }/>

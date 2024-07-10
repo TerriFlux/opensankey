@@ -8,7 +8,6 @@ export type SankeySettingsEditionElementTagsTypes = {
     node_function:NodeFunctionTypes,
     link_function:LinkFunctionTypes,
     ComponentUpdater:ComponentUpdaterType,
-    updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
     reDrawLegend:()=>void
   }
   

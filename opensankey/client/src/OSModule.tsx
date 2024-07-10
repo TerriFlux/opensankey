@@ -523,7 +523,8 @@ export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
     updateComponentBtnUpdateLayout : useRef(()=>null),
     updateMenuConfigTextNodeTooltip:useRef([] as (()=>void)[]),
     updateMenuConfigTextLinkTooltip:useRef([] as (()=>void)[]),
-    updatePreference:useRef(()=>null)
+    updatePreference:useRef(()=>null),
+    updateMenus:[false,()=>null] as [boolean, Dispatch<SetStateAction<boolean>>]
   }
   _.updateMenuConfigTextNodeTooltip.current=[]
   _.updateMenuConfigTextLinkTooltip.current=[]
@@ -543,7 +544,6 @@ export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {retur
 
 export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
-  updateMenus,
   applicationContext,
   applicationData,
   applicationDraw,
@@ -825,7 +825,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   link_function,
   applicationDraw,
   ComponentUpdater,
-  updateMenus,
   menu_configuration_nodes,
   config_link_data,
   config_link_attr,
@@ -856,7 +855,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
-      updateMenus={updateMenus}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     <SankeySettingsEditionElementTags
@@ -867,7 +865,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
-      updateMenus={updateMenus}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     <SankeySettingsEditionElementTags
@@ -878,7 +875,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
-      updateMenus={updateMenus}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     menu_configuration_nodes,

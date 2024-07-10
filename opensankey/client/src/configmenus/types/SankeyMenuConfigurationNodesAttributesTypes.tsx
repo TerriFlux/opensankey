@@ -13,7 +13,6 @@ export type OpenSankeyConfigurationNodesAttributesFType = {
   advanced_label_value_content:JSX.Element[],
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
-  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   node_function:NodeFunctionTypes
 }
 
