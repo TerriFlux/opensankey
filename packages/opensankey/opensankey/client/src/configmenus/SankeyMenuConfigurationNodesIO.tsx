@@ -454,7 +454,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   const { t } = applicationContext
   const { data, display_nodes, display_links } = applicationData
   const { multi_selected_nodes, multi_selected_links } = applicationState
-  const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
+  const { updateComponentMenuNodeIOSelectSideNode,updateComponentMenuConfigLink } = ComponentUpdater
   const [ tab_colored, set_tab_colored ] = useState(false)
   const [ forceUpdate, setForceUpdate ] = useState(false)
 
@@ -740,6 +740,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
             multi_selected_links
               .current
               .forEach(l=>SelectVisualyLinks(l))
+            updateComponentMenuConfigLink.current()
           }}
         >
           {t('Noeud.SlctOutLink')}
@@ -761,6 +762,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
             multi_selected_links
               .current
               .forEach(l=>SelectVisualyLinks(l))
+            updateComponentMenuConfigLink.current()
           }}
         >
           {t('Noeud.SlctInLink')}

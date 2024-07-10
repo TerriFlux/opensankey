@@ -648,6 +648,7 @@ export type ComponentUpdaterType={
   updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
   updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>
   updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>
+  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 export type initializeComponentUpdaterType = ()=>ComponentUpdaterType
 
@@ -704,7 +705,6 @@ export type AdditionalMenusType = {
 
 export type initializeAdditionalMenusType = (
   additional_menus:AdditionalMenusType,
-  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   applicationContext:applicationContextType,
   applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
@@ -785,7 +785,6 @@ node_function:NodeFunctionTypes,
 link_function:LinkFunctionTypes,
 applicationDraw:applicationDrawType,
 ComponentUpdater:ComponentUpdaterType,
-updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
 menu_configuration_nodes:{[s: string]: JSX.Element;},
 config_link_data:JSX.Element,
 config_link_attr:JSX.Element,
