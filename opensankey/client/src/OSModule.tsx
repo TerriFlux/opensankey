@@ -130,7 +130,7 @@ export const initializeApplicationContext : initializeApplicationContextType = (
   url_prefix : '/opensankey/',
   logo : logo,
   logo_terriflux : logo_terriflux,
-  has_free_account:false
+  has_free_account:true
 }}
 
 // Global variables not stored in SankeyData

@@ -11,6 +11,7 @@ import {
   SankeyData,
   SankeyLink,
   SankeyLinkValue,
+  SankeyLinkValueDict,
   SankeyNode,
   SankeyNodeAttrLocal,
   agregationType,
@@ -53,7 +54,8 @@ import {
   TestLinkValue,
   ReturnValueLink,
   DeleteNode,
-  DeleteLink
+  DeleteLink,
+  AddDataTags
 } from '../configmenus/SankeyUtils'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
@@ -1389,7 +1391,7 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('addFlux')) {
-    let differences = getDiff(data.links, new_layout.links)
+    let differences = getDiff(data.links, JSON.parse(JSON.stringify(new_layout.links)))
     if (differences) {
       const linksId: string[] = []
       differences = differences.filter(
@@ -1400,18 +1402,30 @@ export const updateLayout: updateLayoutFuncType = (
       differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {'value':'','display_value':'','tags':{},'extension':{}})
       differences.forEach((difference) => linksId.push(difference.path![0]))
       differences.forEach((difference) => applyChange(data.links, {}, difference))
+      const copyLinksId = [...linksId]
       linksId.forEach(linkId => {
-        if (!data.nodes[new_layout.links[linkId].idSource]) {
-          data.nodes[new_layout.links[linkId].idSource] = new_layout.nodes[new_layout.links[linkId].idSource]
+        if (!data.nodes[new_layout.links[linkId].idSource] || !data.nodes[new_layout.links[linkId].idTarget]) {
+          if (copyLinksId.indexOf(linkId) !== -1 ) {
+            copyLinksId.splice(copyLinksId.indexOf(linkId),1)
+            delete data.links[linkId] 
+          }
         }
-        if (!data.nodes[new_layout.links[linkId].idTarget]) {
-          data.nodes[new_layout.links[linkId].idTarget] = new_layout.nodes[new_layout.links[linkId].idTarget]
-        }
+      })
+
+      copyLinksId.forEach(linkId => {
         data.nodes[new_layout.links[linkId].idSource].outputLinksId.push(linkId)
         data.nodes[new_layout.links[linkId].idTarget].inputLinksId.push(linkId)
         reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
         reorganize_node_outputLinksId(data, data.nodes[new_layout.links[linkId].idSource], data.nodes, data.links)
         data.linkZIndex.push(linkId)
+      })
+      copyLinksId.forEach(linkId => {
+        const l = data.links[linkId]
+        AddDataTags(
+          Object.values(data.dataTags),
+          l.value as {[key:string] : SankeyLinkValue | SankeyLinkValueDict },
+          0
+        )
       })
     }
   }
