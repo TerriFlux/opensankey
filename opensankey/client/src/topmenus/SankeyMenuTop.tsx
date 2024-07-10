@@ -1170,7 +1170,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   if (window.SankeyToolsStatic) {
     menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem
   }
-  if (show_data) {
+  if (show_data && Object.keys(data_tags).length <=2) {
     DDDT = <DataTagSelector
       applicationData={applicationData}
       node_function={node_function}
@@ -1178,7 +1178,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       applicationDraw={applicationDraw}
       ComponentUpdater={ComponentUpdater}
       in_popover={false}
-    />
+    />    
   }
   const modal_resolution_png = Modale_resolution_png(applicationContext.t,
     dict_hook_ref_setter_show_dialog_components, applicationData, contextMenu.pointer_pos

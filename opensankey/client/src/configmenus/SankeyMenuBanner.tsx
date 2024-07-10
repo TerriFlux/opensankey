@@ -554,7 +554,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
             <Slider
               min={0}
               max={max_link_value}
-              defaultValue={filter}
+              value={filter}
               onChange={evt => {
                 set_current_filter(Number(evt))
                 setForceUpdate(!forceUpdate)
@@ -568,14 +568,14 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
 
             <NumberInput
               min={0}
-              max={filter}
-              defaultValue={filter}
+              max={max_link_value}
+              value={filter}
               onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
+                let tmp = evt
+                if (Number(tmp) > max_link_value) {
+                  tmp = max_link_value as unknown as string
                 }
-                set_current_filter(tmp)
+                set_current_filter(Number(tmp))
                 setForceUpdate(!forceUpdate)
               }}>
               <NumberInputField />
@@ -1171,7 +1171,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 
     return (
       <Box
-        layerStyle='menuconfigpanel_grid'
+        as='span' layerStyle='menuconfigpanel_row_2cols'
       >
         <Box
           as='span'
