@@ -10,7 +10,6 @@ import * as d3 from 'd3'
 // Local types
 import {
   Type_ElementPosition,
-  Type_Label,
   default_element_color,
 } from './Utils'
 import {
@@ -184,6 +183,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     ending_curve_point: Class_Handler,
     starting_bezier_point: Class_Handler,
     ending_bezier_point: Class_Handler,
+    middle_recycling_point: Class_Handler,
     is_dragged: boolean
   }
 
@@ -224,10 +224,46 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._display.style.addReference(this)
     // Add control points
     this._control_points = {
-      starting_curve_point: new Class_Handler('cp_start_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.startCurvePointDragEvent(), this.dragHandleEnd()),
-      ending_curve_point: new Class_Handler('cp_end_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.endCurvePointDragEvent(), this.dragHandleEnd()),
-      starting_bezier_point: new Class_Handler('bz_start_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.startTangeantDragEvent(), this.dragHandleEnd()),
-      ending_bezier_point: new Class_Handler('bz_end_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.endTangeantDragEvent(), this.dragHandleEnd()),
+      starting_curve_point: new Class_Handler(
+        'cp_start_' + id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.startCurvePointDragEvent(),
+        this.dragHandleEnd()),
+      ending_curve_point: new Class_Handler(
+        'cp_end_' + id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.endCurvePointDragEvent(),
+        this.dragHandleEnd()),
+      starting_bezier_point: new Class_Handler(
+        'bz_start_' + id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.startTangeantDragEvent(),
+        this.dragHandleEnd()),
+      ending_bezier_point: new Class_Handler(
+        'bz_end_' + id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.endTangeantDragEvent(),
+        this.dragHandleEnd()),
+      middle_recycling_point: new Class_Handler(
+        'recy_middle_' + id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.middleRecyclingDragEvent(),
+        this.dragHandleEnd()),
       is_dragged: false
     }
     // Values
@@ -653,47 +689,146 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
+  /**
+   * Return a svg path for link path drawing
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
   private getBezierPath() {
-    // Get starting and ending position per type of shape
-    const x0 = this.position_x_start  // Shorter to write
-    const y0 = this.position_y_start  // ...
-    const x6 = this.position_x_end
-    const y6 = this.position_y_end
-
     // Update control points
     this.computeControlPoints()
 
-    // Get control points coordinates
-    const x1 = this._control_points.starting_curve_point.position_x
-    const y1 = this._control_points.starting_curve_point.position_y
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      // Get starting and ending position per type of shape
+      const x0 = this.position_x_start  // Shorter to write
+      const y0 = this.position_y_start  // ...
+      const x6 = this.position_x_end
+      const y6 = this.position_y_end
 
-    const x5 = this._control_points.ending_curve_point.position_x
-    const y5 = this._control_points.ending_curve_point.position_y
+      // Get control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
 
-    const x2 = this._control_points.starting_bezier_point.position_x
-    const y2 = this._control_points.starting_bezier_point.position_y
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
 
-    const x4 = this._control_points.ending_bezier_point.position_x
-    const y4 = this._control_points.ending_bezier_point.position_y
+      const x4 = this._control_points.ending_bezier_point.position_x
+      const y4 = this._control_points.ending_bezier_point.position_y
 
-    // Center point
-    // TODO gerer cas non vertical ou horizontal
-    const x3 = (x2 + x4) / 2
-    const y3 = (y2 + y4) / 2
+      const x5 = this._control_points.ending_curve_point.position_x
+      const y5 = this._control_points.ending_curve_point.position_y
 
-    // Return paths
-    if (!this.shape_is_curved) {
-      return 'M ' + x0 + ',' + y0
-        + ' L ' + x1 + ',' + y1
-        + ' L ' + x5 + ',' + y5
-        + ' L ' + x6 + ',' + y6
+      // Center point
+      const x3 = (x2 + x4) / 2
+      const y3 = (y2 + y4) / 2
+
+      // Return paths
+      if (!this.shape_is_curved) {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' L ' + x5 + ',' + y5
+          + ' L ' + x6 + ',' + y6
+      }
+      else {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+          + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+          + ' L ' + x6 + ',' + y6
+      }
     }
+    // Recycling mode
     else {
-      return 'M ' + x0 + ',' + y0
-        + ' L ' + x1 + ',' + y1
-        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
-        + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
-        + ' L ' + x6 + ',' + y6
+      // Get starting and ending position per type of shape
+      const x0 = this.position_x_start  // Shorter to write
+      const y0 = this.position_y_start  // ...
+      const xf = this.position_x_end
+      const yf = this.position_y_end
+
+      // Get starting control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
+
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
+
+      // First curve
+      let x3, y3
+      let x4, y4
+      let x5, y5
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        x4 = x2
+        y4 = y2 + 100 // todo param
+        x3 = x4
+        y3 = (y4 + y2)/2
+        x5 = x1
+        y5 = y4
+      }
+      else {
+        x4 = x2 + 100
+        y4 = y2
+        x3 = (x4 + x2)/2
+        y3 = y4
+        x5 = x4
+        y5 = y1
+      }
+
+      // Get ending control points coordinates
+      const x9 = this._control_points.ending_bezier_point.position_x
+      const y9 = this._control_points.ending_bezier_point.position_y
+
+      const x10 = this._control_points.ending_curve_point.position_x
+      const y10 = this._control_points.ending_curve_point.position_y
+
+      // End curve
+      let x6, y6
+      let x7, y7
+      let x8, y8
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        x7 = x9
+        y7 = y9 + 100 // todo param
+        x8 = x9
+        y8 = (y7 + y9)/2
+        x6 = x10
+        y6 = y7
+      }
+      else {
+        x7 = x9 + 100 // todo param
+        y7 = y9
+        x8 = (x7 + x9)/2
+        y8 = y7
+        x6 = x7
+        y6 = y10
+      }
+
+      // Return paths
+      if (!this.shape_is_curved) {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' L ' + x2 + ',' + y2
+          + ' L ' + x3 + ',' + y3
+          + ' L ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+          + ' L ' + x5 + ',' + y5
+          + ' L ' + x6 + ',' + y6
+          + ' L ' + x7 + ',' + y7
+          + ' L ' + x8 + ',' + y8
+          + ' L ' + x9 + ',' + y9
+          + ' L ' + x10 + ',' + y10
+          + ' L ' + xf + ',' + yf
+      }
+      else {
+        return 'M ' + x0 + ',' + y0
+          + ' L ' + x1 + ',' + y1
+          + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+          + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+          + ' T ' + x6 + ',' + y6
+          + ' Q ' + x7 + ',' + y7 + ' ' + x8 + ',' + y8
+          + ' Q ' + x9 + ',' + y9 + ' ' + x10 + ',' + y10
+          + ' L ' + xf + ',' + yf
+      }
     }
   }
 
@@ -716,13 +851,28 @@ export class Class_LinkElement extends Class_ProtoElement {
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
     let x1, y1
-    if (this.is_horizontal || this.is_horizontal_vertical) {
-      x1 = x0 + horizontal_direction * starting_shift
-      y1 = y0
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        x1 = x0 + horizontal_direction * starting_shift
+        y1 = y0
+      }
+      else {
+        x1 = x0
+        y1 = y0 + vertical_direction * starting_shift
+      }
     }
+    // Recycling mode
     else {
-      x1 = x0
-      y1 = y0 + vertical_direction * starting_shift
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        x1 = x0 - horizontal_direction * starting_shift
+        y1 = y0
+      }
+      else {
+        x1 = x0
+        y1 = y0 - vertical_direction * starting_shift
+      }
+
     }
     this._control_points.starting_curve_point.setPosXY(x1, y1)
   }
@@ -745,13 +895,27 @@ export class Class_LinkElement extends Class_ProtoElement {
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
     let x5, y5
-    if (this.is_horizontal || this.is_vertical_horizontal) {
-      x5 = x6 - horizontal_direction * ending_shift
-      y5 = y6
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        x5 = x6 - horizontal_direction * ending_shift
+        y5 = y6
+      }
+      else {
+        x5 = x6
+        y5 = y6 - vertical_direction * ending_shift
+      }
     }
+    // Recycling mode
     else {
-      x5 = x6
-      y5 = y6 - vertical_direction * ending_shift
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        x5 = x6 + horizontal_direction * ending_shift
+        y5 = y6
+      }
+      else {
+        x5 = x6
+        y5 = y6 + vertical_direction * ending_shift
+      }
     }
     this._control_points.ending_curve_point.setPosXY(x5, y5)
   }
@@ -770,15 +934,28 @@ export class Class_LinkElement extends Class_ProtoElement {
     const y5 = this._control_points.ending_curve_point.position_y
 
     let x2, y2
-    if (this.is_horizontal || this.is_horizontal_vertical) {
-      x2 = x1 + (x5 - x1) * this.shape_starting_tangeant
-      y2 = y1
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        x2 = x1 + (x5 - x1) * this.shape_starting_tangeant
+        y2 = y1
+      }
+      else {
+        x2 = x1
+        y2 = y1 + (y5 - y1) * this.shape_starting_tangeant
+      }
     }
+    // Recycling mode
     else {
-      x2 = x1
-      y2 = y1 + (y5 - y1) * this.shape_starting_tangeant
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        x2 = x1 - (x5 - x1) * this.shape_starting_tangeant
+        y2 = y1
+      }
+      else {
+        x2 = x1
+        y2 = y1 - (y5 - y1) * this.shape_starting_tangeant
+      }
     }
-
     this._control_points.starting_bezier_point.setPosXY(x2, y2)
   }
 
@@ -796,13 +973,27 @@ export class Class_LinkElement extends Class_ProtoElement {
     const y5 = this._control_points.ending_curve_point.position_y
 
     let x4, y4
-    if (this.is_horizontal || this.is_vertical_horizontal) {
-      x4 = x5 + (x1 - x5) * this.shape_ending_tangeant
-      y4 = y5
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        x4 = x5 + (x1 - x5) * this.shape_ending_tangeant
+        y4 = y5
+      }
+      else {
+        x4 = x5
+        y4 = y5 + (y1 - y5) * this.shape_ending_tangeant
+      }
     }
+    // Recycling mode
     else {
-      x4 = x5
-      y4 = y5 + (y1 - y5) * this.shape_ending_tangeant
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        x4 = x5 - (x1 - x5) * this.shape_ending_tangeant
+        y4 = y5
+      }
+      else {
+        x4 = x5
+        y4 = y5 - (y1 - y5) * this.shape_ending_tangeant
+      }
     }
 
     this._control_points.ending_bezier_point.setPosXY(x4, y4)
@@ -818,7 +1009,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * Activate the control points alignement guide
    *
    * @private
-   * @return {*} 
+   * @return {*}
    * @memberof Class_LinkElement
    */
   private dragHandleStart() {
@@ -829,7 +1020,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Deactivate the control points alignement guide
    * @private
-   * @return {*} 
+   * @return {*}
    * @memberof Class_LinkElement
    */
   private dragHandleEnd() {
@@ -973,6 +1164,12 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
+  private middleRecyclingDragEvent() {
+    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      // TODO
+    }
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   /**
@@ -1025,17 +1222,34 @@ export class Class_LinkElement extends Class_ProtoElement {
       return 'right'
     }
     // Normal behavior
-    if (this.is_horizontal || this.is_horizontal_vertical) {
-      if (this.source.position_x <= this.target.position_x)
-        return 'right'
-      else
-        return 'left'
+    if (!this.shape_is_recycling) {
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        if (this.source.position_x <= this.target.position_x)
+          return 'right'
+        else
+          return 'left'
+      }
+      else {
+        if (this.source.position_y <= this.target.position_y)
+          return 'bottom'
+        else
+          return 'top'
+      }
     }
+    // Recylcing mode
     else {
-      if (this.source.position_y <= this.target.position_y)
-        return 'bottom'
-      else
-        return 'top'
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        if (this.source.position_x <= this.target.position_x)
+          return 'left'
+        else
+          return 'right'
+      }
+      else {
+        if (this.source.position_y <= this.target.position_y)
+          return 'top'
+        else
+          return 'bottom'
+      }
     }
   }
 
@@ -1072,17 +1286,34 @@ export class Class_LinkElement extends Class_ProtoElement {
       return 'left'
     }
     // Normal behavior
-    if (this.is_horizontal || this.is_vertical_horizontal) {
-      if (this.source.position_x <= this.target.position_x)
-        return 'left'
-      else
-        return 'right'
+    if (!this.shape_is_recycling) {
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        if (this.source.position_x <= this.target.position_x)
+          return 'left'
+        else
+          return 'right'
+      }
+      else {
+        if (this.source.position_y <= this.target.position_y)
+          return 'top'
+        else
+          return 'bottom'
+      }
     }
+    // Recycling mode
     else {
-      if (this.source.position_y <= this.target.position_y)
-        return 'top'
-      else
-        return 'bottom'
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        if (this.source.position_x <= this.target.position_x)
+          return 'right'
+        else
+          return 'left'
+      }
+      else {
+        if (this.source.position_y <= this.target.position_y)
+          return 'bottom'
+        else
+          return 'top'
+      }
     }
   }
 
@@ -1418,7 +1649,12 @@ export class Class_LinkElement extends Class_ProtoElement {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_recycling(_: boolean) { this._display.attributes.shape_is_recycling = _; this.drawPath() }
+  public set shape_is_recycling(_: boolean) {
+    this._display.attributes.shape_is_recycling = _
+    // Need to redraw from nodes
+    this.source.draw()
+    this.target.draw()
+  }
 
   /**
    * TODO Description
