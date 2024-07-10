@@ -70,8 +70,8 @@ export const AddDataTags:AddDataTagsFuncType = (
         return
       }
       v[listKey[i]] = {
-        value: v.value as unknown as number,
-        display_value: v.display_value as unknown as string,
+        value: '',
+        display_value: '',
         tags: {},
         extension: {}
       }
