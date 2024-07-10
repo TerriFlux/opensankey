@@ -121,8 +121,8 @@ import {
 } from './HeadingStyles'
 import {
   breadcrumb_base_style,
-  pagination_welecome
-} from '../dialogs/BreadcrumbStyle'
+  pagination_welcome
+} from './BreadcrumbStyle'
 import {
   tag_base_style,
   tag_dev_navbar
@@ -196,7 +196,7 @@ export const opensankey_theme = extendTheme({
     Breadcrumb:{
       baseStyle:breadcrumb_base_style,
       variants:{
-        pagination_welecome
+        pagination_welcome
       }
     },
     Card:{
@@ -448,8 +448,8 @@ export const opensankey_theme = extendTheme({
       textStyle: 'h3',
       textAlign: 'start',
       flex: '1',
-      paddingStart: '0.5rem',
-      paddingEnd: '0'
+      paddingStart: '0.25rem',
+      paddingEnd: '1.25rem'
     },
     menutop_button_style: {
       display: 'grid',
@@ -498,14 +498,6 @@ export const opensankey_theme = extendTheme({
         padding:'0.25rem'
       }
     },
-    MenuNavTopUserNavigation:{
-      background:'gray.50',
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr 0.5fr',
-      gridColumnGap: '0.25rem',
-      marginLeft:'auto'
-
-    },
     account_row:{
       display: 'grid',
       gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr',
@@ -538,6 +530,13 @@ export const opensankey_theme = extendTheme({
       gridTemplateColumns: '1fr 1fr 1fr 1fr',
       gridColumnGap: '0.12rem',
       height: '2rem'
+    },
+    options_cards: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr 1fr',
+      gridColumnGap: '0.25rem',
+      gridTemplateRows: 'repeat(auto, 1fr)',
+      gridRowGap: '0.25rem'
     },
     licence_row:{
       display: 'grid',
@@ -572,17 +571,19 @@ export const opensankey_theme = extendTheme({
       alignItems: 'center'
     },
     menucontext_layout: {
+      padding: '0.25rem',
       display: 'grid',
       gridRowGap: '0.5rem',
+      gridColGap: '0.5rem',
+      alignItems: 'center',
+      width: 'fit-content',
+      maxWidth: '40vw',
       color: 'gray.600',
       bg: 'white',
       bgColor: 'white',
-      width: 'fit-content',
       border: 'solid 1px',
       borderColor: 'primaire.2',
       borderRadius: '6px',
-      alignItems: 'center',
-      maxWidth: '40vw'
     },
     menucontext_title_layout: {
       display: 'grid',

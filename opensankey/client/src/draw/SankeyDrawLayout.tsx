@@ -11,6 +11,7 @@ import {
   SankeyData,
   SankeyLink,
   SankeyLinkValue,
+  SankeyLinkValueDict,
   SankeyNode,
   SankeyNodeAttrLocal,
   agregationType,
@@ -53,7 +54,8 @@ import {
   TestLinkValue,
   ReturnValueLink,
   DeleteNode,
-  DeleteLink
+  DeleteLink,
+  AddDataTags
 } from '../configmenus/SankeyUtils'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
@@ -624,7 +626,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
           }
         }
 
-        // If we launched the function from process example 
+        // If we launched the function from process example
         // then we assume we need to place node label according to some parameters
         if(launched_from_process){
         // Place labels accordingly
@@ -948,10 +950,11 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
         } } >
         <ModalOverlay/>
 
-        <ModalContent>
-
+        <ModalContent
+          maxWidth='inherit'
+        >
           <ModalHeader >
-        Dimension difference'agrégation
+            Dimension difference'agrégation
           </ModalHeader>
           <ModalCloseButton/>
           <ModalBody>
@@ -1020,7 +1023,9 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           set_dim_name('')
         }} >
         <ModalOverlay/>
-        <ModalContent>
+        <ModalContent
+          maxWidth='inherit'
+        >
           <ModalHeader>
           Dimension desagrégation
           </ModalHeader>
@@ -1078,24 +1083,6 @@ const setLocalAgregation = (
     n.local={} as SankeyNodeAttrLocal
   }
   n.local['local_aggregation'] = local_aggregation
-  n.inputLinksId.forEach(linkId => {
-    const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
-    if (node_types && node_types.includes('echange')) {
-      if (data.nodes[data.links[linkId].idSource].local == undefined ) {
-        data.nodes[data.links[linkId].idSource].local = {} as SankeyNodeAttrLocal
-      }
-      data.nodes[data.links[linkId].idSource].local!['local_aggregation'] = local_aggregation
-    }
-  })
-  n.outputLinksId.forEach(linkId => {
-    const node_types = data.nodes[data.links[linkId].idTarget].tags['Type de noeud']
-    if (node_types && node_types.includes('echange')) {
-      if (data.nodes[data.links[linkId].idTarget].local == undefined ) {
-        data.nodes[data.links[linkId].idTarget].local = {} as SankeyNodeAttrLocal
-      }
-      data.nodes[data.links[linkId].idTarget].local!['local_aggregation'] = local_aggregation
-    }
-  })
 }
 
 export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType = (
@@ -1341,7 +1328,7 @@ export const updateLayout: updateLayoutFuncType = (
     let differences = getDiff(data, new_layout)
     if (differences) {
       const legend_pos = differences.filter( difference=>difference.path![0] == 'legend_position')
-      legend_pos.forEach((difference) => applyChange(data, {}, difference))  
+      legend_pos.forEach((difference) => applyChange(data, {}, difference))
       differences = differences.filter(
         (difference) =>
           (difference.kind === 'E') &&
@@ -1404,7 +1391,7 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('addFlux')) {
-    let differences = getDiff(data.links, new_layout.links)
+    let differences = getDiff(data.links, JSON.parse(JSON.stringify(new_layout.links)))
     if (differences) {
       const linksId: string[] = []
       differences = differences.filter(
@@ -1412,21 +1399,33 @@ export const updateLayout: updateLayoutFuncType = (
           (difference.kind === 'N') &&
           (difference.path!.length === 1))
       // added flux have no values
-      differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {"value":"","display_value":"","tags":{},"extension":{}})
+      differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {'value':'','display_value':'','tags':{},'extension':{}})
       differences.forEach((difference) => linksId.push(difference.path![0]))
       differences.forEach((difference) => applyChange(data.links, {}, difference))
+      const copyLinksId = [...linksId]
       linksId.forEach(linkId => {
-        if (!data.nodes[new_layout.links[linkId].idSource]) {
-          data.nodes[new_layout.links[linkId].idSource] = new_layout.nodes[new_layout.links[linkId].idSource]
+        if (!data.nodes[new_layout.links[linkId].idSource] || !data.nodes[new_layout.links[linkId].idTarget]) {
+          if (copyLinksId.indexOf(linkId) !== -1 ) {
+            copyLinksId.splice(copyLinksId.indexOf(linkId),1)
+            delete data.links[linkId] 
+          }
         }
-        if (!data.nodes[new_layout.links[linkId].idTarget]) {
-          data.nodes[new_layout.links[linkId].idTarget] = new_layout.nodes[new_layout.links[linkId].idTarget]
-        }
+      })
+
+      copyLinksId.forEach(linkId => {
         data.nodes[new_layout.links[linkId].idSource].outputLinksId.push(linkId)
         data.nodes[new_layout.links[linkId].idTarget].inputLinksId.push(linkId)
         reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
         reorganize_node_outputLinksId(data, data.nodes[new_layout.links[linkId].idSource], data.nodes, data.links)
         data.linkZIndex.push(linkId)
+      })
+      copyLinksId.forEach(linkId => {
+        const l = data.links[linkId]
+        AddDataTags(
+          Object.values(data.dataTags),
+          l.value as {[key:string] : SankeyLinkValue | SankeyLinkValueDict },
+          0
+        )
       })
     }
   }
@@ -1584,7 +1583,9 @@ export const updateLayout: updateLayoutFuncType = (
         Object.values(nodeTag.tags).forEach(tag=>
           Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
             tag.selected = ltag.selected
-            tag.color = ltag.color
+            if (ltag.color) {
+              tag.color = ltag.color
+            }
           })
         )
       })
@@ -1609,7 +1610,7 @@ export const updateLayout: updateLayoutFuncType = (
         if (!n.tags[tagGroup]) {
           n.tags[tagGroup] = []
         }
-        if (new_layout.nodes[n.idNode].tags[tagGroup] != undefined) {
+        if (new_layout.nodes[n.idNode]?.tags[tagGroup] ?? false) {
           n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
         }
       })
@@ -1694,7 +1695,7 @@ export const updateLayout: updateLayoutFuncType = (
   //- Sanity check
   const nodes_to_remove = Object.entries(data.nodes).filter(([, n]) => !n.idNode)
   nodes_to_remove.forEach(([key]) => delete data.nodes[key])
-  const links_to_remove = Object.entries(data.links).filter(([, l]) => !l.idLink)
+  const links_to_remove = Object.entries(data.links).filter(([, l]) => !l.idLink || !data.nodes[l.idSource] || !data.nodes[l.idTarget])
   links_to_remove.forEach(([key]) => delete data.links[key])
   if (links_to_remove.length > 0) {
     compute_default_input_outputLinksId(data.nodes, data.links)

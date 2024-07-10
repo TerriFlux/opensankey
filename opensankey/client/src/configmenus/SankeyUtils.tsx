@@ -70,8 +70,8 @@ export const AddDataTags:AddDataTagsFuncType = (
         return
       }
       v[listKey[i]] = {
-        value: v.value as unknown as number,
-        display_value: v.display_value as unknown as string,
+        value: '',
+        display_value: '',
         tags: {},
         extension: {}
       }
@@ -100,8 +100,12 @@ export const GetLinkValue:GetLinkValueFuncType = (
   // Split the id and search for value after the original link id
   //  each value represent wich dataTag to choose among those where selected is at true in link.value
   // If there no dataTag (or no multiple dataTag selected then it take the first selected)
-  const idDt=idLink.split('_')
-  idDt.splice(0,1)
+  let idDt : string[] = []
+  if ( Object.values(dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0) {
+    idDt = idLink.split('_')
+    idDt.splice(0,1)
+  }
+
   const defaultInd=Object.values(data.dataTags)
     .map(d=>{
       return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
@@ -349,7 +353,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value'
+                      data.show_structure !== 'free_value' &&
+                      !(nodes[links[the_id].idTarget].position == 'relative')
       if (extension.display_thin || is_free ) {
         // if flux is displayed thin
         offset_width_top += inv_scale(applicationData.min_link_thickness)
@@ -383,7 +388,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value'
+                      data.show_structure !== 'free_value' &&
+                      !(nodes[links[the_id].idTarget].position == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_width_bottom += inv_scale(applicationData.min_link_thickness)
@@ -418,7 +424,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value'
+                      data.show_structure !== 'free_value' &&
+                      !(nodes[links[the_id].idTarget].position == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_left += inv_scale(applicationData.min_link_thickness)
@@ -452,7 +459,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value'
+                      data.show_structure !== 'free_value' &&
+                      !(nodes[links[the_id].idTarget].position == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_right += inv_scale(applicationData.min_link_thickness)
@@ -564,8 +572,11 @@ export const TestLinkValue:TestLinkValueFuncType = (
   }
   let val = d.value
   const listKey: string[] = []
-  const idDt=d.idLink.split('_')
-  idDt.splice(0,1)
+  let idDt : string[] = []
+  if ( Object.values(dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0) {
+    idDt = d.idLink.split('_')
+    idDt.splice(0,1)
+  }
   const defaultInd=Object.values(data.dataTags)
     .map(d=>{
       return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
@@ -690,13 +701,18 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
  * @param {SankeyData} data
  * @returns {*}
  */
-export const LinkColor:LinkColorFuncType = (l: SankeyLink,data:SankeyData,
+export const LinkColor:LinkColorFuncType = (
+  l: SankeyLink,
+  data:SankeyData,
   GetLinkValue:GetLinkValueFuncType
 ): string => {
   let colorLink=''
 
   if(Object.keys(data.dataTags).map(d=>'dataTags_'+d).includes(data.linksColorMap)){
-    const idDt=l.idLink.split('_')
+    let idDt : string[] = []
+    if ( Object.values(data.dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0) {
+      idDt = l.idLink.split('_')
+    }
     const colorMapFilterd=data.linksColorMap.slice(9,data.linksColorMap.length)
     const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
 
@@ -795,8 +811,11 @@ export const LinkVisible: LinkVisibleFunctType=(
   let val = l.value
   const listKey = [] as string[]
   let missing_key = false
-  const idDt=l.idLink.split('_')
-  idDt.splice(0,1)
+  let idDt : string[] = []
+  if ( Object.values(dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0) {
+    idDt = l.idLink.split('_')
+    idDt.splice(0,1)
+  }
   const defaultInd=Object.values(data.dataTags)
     .map(d=>{
       return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]

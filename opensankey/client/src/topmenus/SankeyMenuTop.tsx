@@ -30,7 +30,6 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  SimpleGrid,
   Stack,
   Tab,
   TabList,
@@ -132,8 +131,7 @@ import {
   DrawerContent
 } from '@chakra-ui/react'
 import {
-  DataTagSelector,
-  setDiagram
+  DataTagSelector
 } from '../configmenus/SankeyMenuBanner'
 
 
@@ -234,7 +232,8 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   external_file_export_item,
   externale_save_item,
   externale_navbar_item,
-  convert_data
+  convert_data,
+  setDiagram
 ) => {
   const {data,set_data,new_data}=applicationData
   const _load_json = useRef<HTMLInputElement>(null)
@@ -274,6 +273,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
     }
   }
   const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [s_diagram_2, sDiagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui: { [s: string]: JSX.Element[] } = {}
@@ -291,6 +291,39 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
       </Select>
     </FormControl></Box> : <React.Fragment key={'1'} />
+
+  if (window.SankeyToolsStatic && sous_filieres && is_split) {
+    diagrams_element =<Box
+      margin='0.25rem'
+      alignSelf='center'
+      justifySelf='center'
+    >
+      <FormControl key={'1'} >
+        <Select style={{ width: '200px', color:'black' }}
+          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+            sDiagram(evt.target.value)
+            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+            setDiagram(diagram_path, set_data,convert_data,get_default_data)
+          }}
+          value={s_diagram}>
+          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Select>
+      </FormControl>
+      {is_split ?
+        (  <FormControl key={'2'} >
+          <Select style={{ width: '200px', color:'black' }}
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+              sDiagram2(evt.target.value)
+              const diagram_path = s_diagram+'/'+evt.target.value
+              setDiagram(diagram_path, set_data,convert_data,get_default_data)
+            }}
+            value={s_diagram_2}>
+            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+          </Select></FormControl>) :(<React.Fragment />)
+      }
+    </Box>
+  }
+
   if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
   const excel_element = window.sankey && window.sankey.excel ? (
     <Box
@@ -302,7 +335,6 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       // href={window.sankey.excel}
       >{t('Banner.tl')}</Button>
     </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
-
 
   if (window.sankey && window.sankey.excel) ui['excel'] = [(excel_element)]
 
@@ -1079,7 +1111,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     position='absolute'
                     zIndex='1'
                     top='0'
-                    right='0.5rem'
+                    right='0'
                   >
                     <Badge>
                       Dev
@@ -1132,7 +1164,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = '100px 100px auto '+ data_rem + ' ' + unit_rem + ' 12fr'
+  let menutop_grid_template = 'minmax(7vw, 150px) minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
   if (window.SankeyToolsStatic) {
     menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem
   }
@@ -1188,37 +1220,60 @@ export const Menu: FunctionComponent<MenuTypes> = (
             )
           }} >
 
-          {!window.SankeyToolsStatic ? <Box
-            margin='0.25rem'
-            alignSelf='center'
-            justifySelf='center'
-          >
-            <Image
-              src={applicationContext.logo_terriflux}
-              onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-            />
-          </Box> : <></>
+          {
+            !window.SankeyToolsStatic ?
+              <Box
+                margin='0.25rem'
+                alignSelf='center'
+                justifySelf='center'
+              >
+                <Image
+                  src={applicationContext.logo_terriflux}
+                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                />
+              </Box> :
+              <></>
           }
-          { applicationContext.logo != '' ?
-            <Box
-              margin='0.25rem'
-              alignSelf='center'
-              justifySelf='center'
-            >
-              <Image
-                src={applicationContext.logo}
-              />
-            </Box> : <Box></Box>}
-          {window.SankeyToolsStatic && window.sankey.header ?           <Box
-            margin='0.25rem'
-            alignSelf='center'
-            justifySelf='center'
-          ><Text
-              fontStyle='h1'>
-              {window.sankey.header}</Text>          </Box>:
-            <></>}
-          {!window.SankeyToolsStatic ? menu_nav :<></>}
-          {window.SankeyToolsStatic ? <ButtonGroup> {Object.keys(ordered_menu).map(k => ordered_menu[k])}</ButtonGroup> :<></>}
+          {
+            applicationContext.logo != '' ?
+              <Box
+                margin='0.25rem'
+                alignSelf='center'
+                justifySelf='center'
+              >
+                <Image
+                  src={applicationContext.logo}
+                />
+              </Box> :
+              <></>
+          }
+          {
+            window.SankeyToolsStatic && window.sankey.header ?
+              <Box
+                margin='0.25rem'
+                alignSelf='center'
+                justifySelf='center'
+              >
+                <Text
+                  fontStyle='h1'
+                >
+                  {window.sankey.header}
+                </Text>
+              </Box>:
+              <></>
+          }
+          {
+            !window.SankeyToolsStatic ?
+              menu_nav :
+              <></>
+          }
+          {
+            window.SankeyToolsStatic ?
+              <ButtonGroup>
+                {Object.keys(ordered_menu).map(k => ordered_menu[k])}
+              </ButtonGroup> :
+              <></>
+          }
           <Box
             margin='0.25rem'
             alignSelf='center'
@@ -1239,7 +1294,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           <Box
             margin='0.25rem'
             alignSelf='center'
-            justifySelf='center'
+            justifySelf='end'
             display='grid'
             gridTemplateColumns='1fr 1fr'
             gridColumnGap='0.25rem'
@@ -1258,7 +1313,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       >
         <Box
           display="grid"
-          gridTemplateColumns="1fr 1fr 1fr 1fr 1.1fr"
+          gridTemplateColumns="1fr 1fr 1fr 1fr 30rem"
         >
           <Box
             layerStyle="menubottom_item_style"
@@ -1280,6 +1335,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           <Box
             layerStyle="menubottom_item_style"
             justifySelf='end'
+            paddingRight='1.5rem'
           >
             9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)4 56 47 00 71
           </Box>
@@ -1384,14 +1440,22 @@ export const Menu: FunctionComponent<MenuTypes> = (
       />
 
       {
-        <Modal size='full' isOpen={show_template} onClose={() => set_show_template(false)} scrollBehavior='inside'>
-          <ModalContent>
+        <Modal
+          isOpen={show_template}
+          onClose={() => set_show_template(false)}
+          scrollBehavior='inside'
+        >
+          <ModalContent
+            maxWidth='inherit'
+          >
             <ModalHeader>{applicationContext.t('Banner.sdr')}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <SimpleGrid spacing={2} templateColumns='1fr 1fr 1fr'>
+              <Box
+                layerStyle='options_cards'
+              >
                 {cardsTemplate}
-              </SimpleGrid>
+              </Box>
             </ModalBody>
           </ModalContent>
         </Modal>
@@ -1410,7 +1474,6 @@ export const MenuDraggable: MenuDraggableFType = (
   content: JSX.Element | JSX.Element[],
   pointer_pos: { current: number[] },
   title: string,
-  _ = 25
 ) => {
   const [display_menu, set_display_menu] = useState(false)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
@@ -1627,9 +1690,9 @@ export const launchToastConstructor = (
 ) => {
   intake?.success
   const defaultToastText = {
-    success: { title: (intake?.success) ? intake?.success : 'Action finished', description: 'Looks great' },
-    error: { title: 'Action denied', description: 'Something wrong' },
-    loading: { title: (intake?.loading) ? intake?.loading : 'Please wait', description: 'Please wait' },
+    success: { title: (intake?.success) ? intake?.success : 'Terminé', description: '' },
+    error: { title: 'Echec de la sauvegarde', description: '' },
+    loading: { title: (intake?.loading) ? intake?.loading : 'Sauvegarde', description: 'Veuillez patienter' },
   }
   const tmp = new Promise((resole) => {
     setTimeout(() => {
@@ -1740,7 +1803,9 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
   })
 
   return <Modal size='full' id='modal_tutoriel' isOpen={show_tuto} onClose={() => set_show_tuto(false)}>
-    <ModalContent>
+    <ModalContent
+      maxWidth='inherit'
+    >
       <ModalHeader>{applicationContext.t('Menu.formation')}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>

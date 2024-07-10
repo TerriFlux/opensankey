@@ -22,7 +22,6 @@ import {
 /*************************************************************************************************/
 import SankeyDraw from './draw/SankeyDraw'
 import {
-  GetSankeyMinWidthAndHeight, // TODO
   NodeVisibleOnsSvg,
   resizeDrawingArea
 } from './draw/SankeyDrawFunction'
@@ -88,7 +87,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   DrawAll,
   installEventOnSVG,
   ClickSaveDiagram,
-  InitalizeSelectorDetailNodes
+  InitalizeSelectorDetailNodes,
+  GetSankeyMinWidthAndHeight
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
@@ -146,17 +146,17 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     const pre_link_key=Object.keys(pre_display_links)
 
     applicationData.display_links={}
-    applicationData.data.linkZIndex=pre_link_key
-    pre_link_key.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
-    //if (applicationData.data.linkZIndex.length == 0) {
-    // applicationData.data.linkZIndex = applicationData.data.linkZIndex.filter(lid=>pre_display_links[lid] !== undefined)
-    // pre_link_key.forEach(lid=>{
-    //   if (!applicationData.data.linkZIndex.includes(lid)) {
-    //     applicationData.data.linkZIndex.push(lid)
-    //   }
-    // })
-    // //}
-    // applicationData.data.linkZIndex.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
+    if (applicationData.data.linkZIndex.length == 0) {
+      applicationData.data.linkZIndex=pre_link_key
+    } else {
+      applicationData.data.linkZIndex = applicationData.data.linkZIndex.filter(lid=>pre_display_links[lid] !== undefined)
+      pre_link_key.forEach(lid=>{
+        if (!applicationData.data.linkZIndex.includes(lid)) {
+          applicationData.data.linkZIndex.push(lid)
+        }
+      })
+    }
+    applicationData.data.linkZIndex.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
 
     // delete element no longer displayed
     const curr_displayed_nodes= Object.keys(applicationData.display_nodes)
@@ -309,7 +309,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   initializeAdditionalMenus(
     additionalMenus,
-    updateMenus,
     applicationContext,
     applicationData,
     applicationDraw,
