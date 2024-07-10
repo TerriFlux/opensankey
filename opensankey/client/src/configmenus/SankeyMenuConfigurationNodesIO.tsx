@@ -494,12 +494,13 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     )
   }
 
-  updateComponentMenuNodeIOSelectSideNode.current = ()=>{
-    const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
-    applicationState.link_io.current = io
-    applicationState.link_pos.current = pos
-    setForceUpdate.toggle()
-  }
+  // TODO refaire
+  // updateComponentMenuNodeIOSelectSideNode.current = ()=>{
+  //   const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
+  //   applicationState.link_io.current = io
+  //   applicationState.link_pos.current = pos
+  //   setForceUpdate.toggle()
+  // }
 
   const content_reorg=<Box
     layerStyle='menuconfigpanel_grid'

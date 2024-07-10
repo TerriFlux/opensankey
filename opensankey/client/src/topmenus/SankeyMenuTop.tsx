@@ -277,7 +277,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui: { [s: string]: JSX.Element[] } = {}
-  const diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Box
+  let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Box
     margin='0.25rem'
     alignSelf='center'
     justifySelf='center'

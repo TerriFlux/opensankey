@@ -1,7 +1,8 @@
 import React, {
   Dispatch,
   SetStateAction,
-  useRef
+  useRef,
+  useState
 } from 'react'
 import { useTranslation } from 'react-i18next'
 /*************************************************************************************************/
@@ -512,10 +513,11 @@ export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
   const _ = {
     updateComponentMenuConfig:useRef(()=>null),
     updateComponenSaveInCache:useRef((b:boolean)=>null),
-    updateComponentMenuNodeIOSelectSideNode : useRef(()=>null),
-    updateMenuConfigTextNodeTooltip : useRef([()=>null]),
-    updateMenuConfigTextLinkTooltip : useRef([()=>null]),
+    updateComponentMenuNodeIOSelectSideNode : useRef([] as (() => null)[]),
+    updateMenuConfigTextNodeTooltip : useRef([] as (() => void)[]),
+    updateMenuConfigTextLinkTooltip : useRef([] as (() => void)[]),
     updateComponentBtnUpdateLayout : useRef(()=>null),
+    updateMenus: useState<boolean>(false)
   }
   return _
 }
