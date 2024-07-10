@@ -550,7 +550,9 @@ export class Class_Handler extends Class_Element {
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
     ref_link: Class_LinkElement | Class_NodeElement,
-    drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void
+    dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
+    drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
+    dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_handlers')
@@ -561,7 +563,9 @@ export class Class_Handler extends Class_Element {
       position: structuredClone(default_element_position),
     }
 
+    this.eventMouseDragStart = dragStart_function
     this.eventMouseDrag = drag_function
+    this.eventMouseDragEnd = dragEnd_function
   }
 
   draw() {
@@ -685,8 +689,8 @@ export class Class_ZoneSelection extends Class_Element {
     this.setPosXY(0, 0)
     this._width = 0
     this._height = 0
-    this.starting_x_point=0
-    this.starting_y_point=0
+    this.starting_x_point = 0
+    this.starting_y_point = 0
     this._is_visible = false
     this.draw()
   }
@@ -698,9 +702,9 @@ export class Class_ZoneSelection extends Class_Element {
   public get height(): number { return this._height }
   public set height(value: number) { this._height = value }
 
-  public get starting_x_point(): number {return this._starting_x_point}
-  public set starting_x_point(value: number) {this._starting_x_point = value}
+  public get starting_x_point(): number { return this._starting_x_point }
+  public set starting_x_point(value: number) { this._starting_x_point = value }
 
-  public get starting_y_point(): number {return this._starting_y_point}
-  public set starting_y_point(value: number) {this._starting_y_point = value}
+  public get starting_y_point(): number { return this._starting_y_point }
+  public set starting_y_point(value: number) { this._starting_y_point = value }
 }

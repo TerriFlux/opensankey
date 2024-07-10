@@ -113,13 +113,13 @@ export class Class_LinkElement extends Class_ProtoElement {
   *   }}
   * @memberof Class_LinkElement
   */
- protected _display: {
-   drawing_area: Class_DrawingArea,
-   position_starting: Type_ElementPosition,
-   position_ending: Type_ElementPosition,
-   style: Class_LinkStyle,
-   attributes: Class_LinkAttribute
- }
+  protected _display: {
+    drawing_area: Class_DrawingArea,
+    position_starting: Type_ElementPosition,
+    position_ending: Type_ElementPosition,
+    style: Class_LinkStyle,
+    attributes: Class_LinkAttribute
+  }
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -224,10 +224,10 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._display.style.addReference(this)
     // Add control points
     this._control_points = {
-      starting_curve_point: new Class_Handler('cp_start_' + id, drawing_area, menu_config, this, this.startCurvePointDragEvent()),
-      ending_curve_point: new Class_Handler('cp_end_' + id, drawing_area, menu_config, this, this.endCurvePointDragEvent()),
-      starting_bezier_point: new Class_Handler('bz_start_' + id, drawing_area, menu_config, this, this.startTangeantDragEvent()),
-      ending_bezier_point: new Class_Handler('bz_end_' + id, drawing_area, menu_config, this, this.endTangeantDragEvent()),
+      starting_curve_point: new Class_Handler('cp_start_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.startCurvePointDragEvent(), this.dragHandleEnd()),
+      ending_curve_point: new Class_Handler('cp_end_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.endCurvePointDragEvent(), this.dragHandleEnd()),
+      starting_bezier_point: new Class_Handler('bz_start_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.startTangeantDragEvent(), this.dragHandleEnd()),
+      ending_bezier_point: new Class_Handler('bz_end_' + id, drawing_area, menu_config, this, this.dragHandleStart(), this.endTangeantDragEvent(), this.dragHandleEnd()),
       is_dragged: false
     }
     // Values
@@ -814,6 +814,30 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.computeStartingBezierPoint()
     this.computeEndingBezierPoint()
   }
+  /**
+   * Activate the control points alignement guide
+   *
+   * @private
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  private dragHandleStart() {
+    return () => {
+      this._control_points.is_dragged = true
+    }
+  }
+  /**
+   * Deactivate the control points alignement guide
+   * @private
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  private dragHandleEnd() {
+    return () => {
+      this._control_points.is_dragged = false
+      this.drawControlPoint()
+    }
+  }
 
   /**
    * Function called when we drag the starting curve point, it update variable shape_starting_curve
@@ -824,7 +848,6 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private startCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-      this._control_points.is_dragged = true
       if (this.is_horizontal || this.is_horizontal_vertical) {
         // Compute new handle position
         const handle_new_pos_x = this._control_points.starting_curve_point.position_x + event.dx
@@ -845,7 +868,6 @@ export class Class_LinkElement extends Class_ProtoElement {
         if (dy6y0 > 0) // Avoid NaN
           this.shape_starting_curve = Math.abs(handle_new_pos_y - y0) / dy6y0
       }
-      this._control_points.is_dragged = false
     }
   }
 
@@ -2399,4 +2421,12 @@ function recursiveCallLinkValueJSON(path: string[], JSONValue: { [x: string]: an
     if (JSONValue.value) return JSONValue.value
     else return null // in case of error
   }
+}
+
+// CLASS GHOST LINK *********************************************************************
+export class Class_GhostLinkElement extends Class_LinkElement {
+
+  // PROTECTED METHODS ==================================================================
+
+  public get is_visible() { return this._is_visible }
 }
