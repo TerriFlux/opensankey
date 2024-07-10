@@ -1391,7 +1391,7 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('addFlux')) {
-    let differences = getDiff(data.links, new_layout.links)
+    let differences = getDiff(data.links, JSON.parse(JSON.stringify(new_layout.links)))
     if (differences) {
       const linksId: string[] = []
       differences = differences.filter(
