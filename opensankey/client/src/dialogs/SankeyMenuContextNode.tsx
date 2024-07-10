@@ -331,6 +331,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
             applicationState.ref_display_link_opacity.current.forEach(setter => setter(opacity))
           })
           multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
+          updateComponentMenuConfigLink.current()
           set_contextualised_node(undefined)
         }}>
         {t('Noeud.SlctIL')}
