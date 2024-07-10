@@ -29,7 +29,8 @@ import {
 } from './Tag'
 import {
   Class_LinkElement,
-  Type_Side
+  Type_Side,
+  Class_GhostLinkElement
 } from './Link'
 
 
@@ -209,7 +210,9 @@ export class Class_NodeElement extends Class_Element {
   public deleteInputLink(link: Class_LinkElement) {
     if (this._input_links[link.id] !== undefined) {
       delete this._input_links[link.id]
+      this.deleteOrderedLink(link)
       link.delete()
+      this.draw()
     }
   }
 
@@ -221,7 +224,9 @@ export class Class_NodeElement extends Class_Element {
   public deleteOutputLink(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined) {
       delete this._output_links[link.id]
+      this.deleteOrderedLink(link)
       link.delete()
+      this.draw()
     }
   }
 
@@ -264,7 +269,7 @@ export class Class_NodeElement extends Class_Element {
 
   public updateOutputValue() {
     this._output_data_value = 0
-    this.output_links_list.forEach(link =>{
+    this.output_links_list.forEach(link => {
       const data_value = link.data_value
       if (data_value !== null)
         this._output_data_value = this._output_data_value + data_value
@@ -646,9 +651,42 @@ export class Class_NodeElement extends Class_Element {
           .forEach(n => {
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
-          this.drawing_area.checkAndUpdateAreaSize()
+        this.drawing_area.checkAndUpdateAreaSize()
       }
     }
+  }
+
+/**
+ *
+ *
+ * @protected
+ * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+ * @memberof Class_NodeElement
+ */
+protected eventMaintainedClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+
+    // EDITION MODE =============================================================
+    // event.button==0 check if we use LMB
+    if (this.drawing_area.isInEditionMode() && event.button == 0) {
+
+      // Get mouse position
+      // Create default source node
+      // Position center of source node to pointer pos
+      // Create default target node
+      const target = this.drawing_area.sankey.addNewDefaultNode()
+      target.setPosXY(this.position_x, this.position_y)
+      // Make target a 'ghost' node
+      target.setInvisible()
+      // Ref newly created link this var to be used in other mouse event
+      this.drawing_area.ghost_link = new Class_GhostLinkElement(
+        'ghost_link',
+        this,
+        target,
+        this.drawing_area, this.menu_config)
+    }
+
   }
 
   // PRIVATE METHODS ====================================================================
@@ -739,7 +777,7 @@ export class Class_NodeElement extends Class_Element {
         label_pos_y = -label_pos_dy
       }
       else if (this.name_label_vert === 'middle') {
-        label_pos_y = shape_height/2
+        label_pos_y = shape_height / 2
       }
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
@@ -754,7 +792,7 @@ export class Class_NodeElement extends Class_Element {
         box_pos_x = box_pos_x - box_width
       }
       else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width/2
+        box_pos_x = box_pos_x - box_width / 2
       }
       // Add name label background
       if (this.name_label_background) {
@@ -851,7 +889,7 @@ export class Class_NodeElement extends Class_Element {
         label_pos_y = -label_pos_dy
       }
       else if (this.value_label_vert === 'middle') {
-        label_pos_y = (shape_height/2) + (this.value_label_font_size/2)
+        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2)
       }
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
@@ -864,7 +902,7 @@ export class Class_NodeElement extends Class_Element {
         box_pos_x = box_pos_x - box_width
       }
       else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width/2
+        box_pos_x = box_pos_x - box_width / 2
       }
       // Add name label background
       if (this.value_label_background) {
@@ -918,47 +956,47 @@ export class Class_NodeElement extends Class_Element {
     // Svg path to construct
     let path = ''
     // Arrow toward the right side
-    if(this.shape_arrow_angle_direction  ===  'right') {
-      const opp = Math.tan(this.shape_arrow_angle_factor*Math.PI/180)*(height/2)
+    if (this.shape_arrow_angle_direction === 'right') {
+      const opp = Math.tan(this.shape_arrow_angle_factor * Math.PI / 180) * (height / 2)
       const p0: string = '0,0'
-      const p1: string = (width-opp) + ',0'
-      const p2: string = width + ',' + (height/2)
-      const p3: string = (width-opp) + ',' + height
+      const p1: string = (width - opp) + ',0'
+      const p2: string = width + ',' + (height / 2)
+      const p3: string = (width - opp) + ',' + height
       const p4: string = '0,' + height
-      const p5: string = opp + ',' + (height/2)
+      const p5: string = opp + ',' + (height / 2)
       path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
     }
     // Arrow toward the left side
-    else if(this.shape_arrow_angle_direction  ===  'left') {
-      const opp = Math.tan((this.shape_arrow_angle_factor*Math.PI/180))*(height/2)
+    else if (this.shape_arrow_angle_direction === 'left') {
+      const opp = Math.tan((this.shape_arrow_angle_factor * Math.PI / 180)) * (height / 2)
       const p0: string = opp + ',0'
       const p1: string = width + ',0'
-      const p2: string = width-opp + ',' + (height/2)
+      const p2: string = width - opp + ',' + (height / 2)
       const p3: string = width + ',' + height
       const p4: string = opp + ',' + height
-      const p5: string = '0,' + (height/2)
+      const p5: string = '0,' + (height / 2)
       path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
     }
     // Arrow toward the top
-    else if(this.shape_arrow_angle_direction  ===  'top') {
-      const opp = Math.tan((this.shape_arrow_angle_factor*Math.PI/180))*(width/2)
+    else if (this.shape_arrow_angle_direction === 'top') {
+      const opp = Math.tan((this.shape_arrow_angle_factor * Math.PI / 180)) * (width / 2)
       const p0: string = '0,' + opp
-      const p1: string = width/2 + ',0'
+      const p1: string = width / 2 + ',0'
       const p2: string = width + ',' + opp
       const p3: string = width + ',' + height
-      const p4: string = width/2 + ',' + (height-opp)
+      const p4: string = width / 2 + ',' + (height - opp)
       const p5: string = '0,' + height
       path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
     }
     // Arrow toward the bottom
     else {
-      const opp = Math.tan((this.shape_arrow_angle_factor*Math.PI/180))*(width/2)
+      const opp = Math.tan((this.shape_arrow_angle_factor * Math.PI / 180)) * (width / 2)
       const p0: string = '0,0'
-      const p1: string = (width/2) + ',' + opp
+      const p1: string = (width / 2) + ',' + opp
       const p2: string = width + ',0'
-      const p3: string = width + ',' + (height-opp)
-      const p4: string = (width/2) + ',' + height
-      const p5: string = '0,' + (height-opp)
+      const p3: string = width + ',' + (height - opp)
+      const p4: string = (width / 2) + ',' + height
+      const p5: string = '0,' + (height - opp)
       path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
     }
     return path
@@ -987,38 +1025,38 @@ export class Class_NodeElement extends Class_Element {
       // Current node is link's source
       if (link.source === this) {
         if (link.source_side === 'right') {
-          link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness/2)
+          link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
           dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
-          link.setPosXYStartingPoint(x0, y0 + dy_left + thickness/2)
+          link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
           dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
-          link.setPosXYStartingPoint(x0 + dx_top + thickness/2, y0)
+          link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
           dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
-          link.setPosXYStartingPoint(x0 + dx_bottom + thickness/2, y0 + height)
+          link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
           dx_bottom = dx_bottom + thickness
         }
       }
       // Or current node is link's target
       else if (link.target === this) {
         if (link.target_side === 'right') {
-          link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness/2)
+          link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
           dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
-          link.setPosXYEndingPoint(x0, y0 + dy_left + thickness/2)
+          link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
           dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
-          link.setPosXYEndingPoint(x0 + dx_top + thickness/2, y0)
+          link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
           dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
-          link.setPosXYEndingPoint(x0 + dx_bottom + thickness/2, y0 + height)
+          link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -1121,7 +1159,7 @@ export class Class_NodeElement extends Class_Element {
    * @return {*}
    * @memberof Class_NodeElement
    */
-  private getSumOfLinksThickness(side: Type_Side){
+  private getSumOfLinksThickness(side: Type_Side) {
     let sum = 0
     this.getLinksOrdered(side).forEach(link => {
       sum = sum + link.thickness
@@ -1139,17 +1177,27 @@ export class Class_NodeElement extends Class_Element {
    */
   private getLinksStartingPositionOffSet(side: Type_Side) {
     if (side === 'left' || side === 'right') {
-      return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side))/2)
+      return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side)) / 2)
     }
     else {
-      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side))/2)
+      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side)) / 2)
     }
+  }
+
+  private deleteOrderedLink(link: Class_LinkElement) {
+    let i = 0
+    for (i; i <= this._links_order.length; i++) {
+      if (this._links_order[i] === link) {
+        break
+      }
+    }
+    this._links_order.splice(i, 1)
   }
 
   // GETTERS / SETTERS ==================================================================
 
   public get is_visible() {
-    return(
+    return (
       this.are_related_tags_selected &&
       this.is_related_level_selected &&
       this._is_visible
@@ -2016,7 +2064,7 @@ export class Class_NodeAttribute {
   protected _value_label_background?: boolean
 
   // CONSTRUCTOR ========================================================================
-  constructor() {}
+  constructor() { }
 
   // PUBLIC METHODS =====================================================================
 
@@ -2128,7 +2176,7 @@ export class Class_NodeAttribute {
 
   // PROTECTED METHODS ==================================================================
 
-  protected update() {}
+  protected update() { }
 
   // GETTERS ============================================================================
 

@@ -22,6 +22,7 @@ import {
   sortNodesElements
 } from './Node'
 import {
+  Class_GhostLinkElement,
   Class_LinkElement,
   sortLinksElements
 } from './Link'
@@ -301,6 +302,8 @@ export class Class_DrawingArea {
   // Legend
   public get legend(): Class_Legend { return this._legend }
   public set legend(value: Class_Legend) { this._legend = value }
+
+  public set ghost_link(value: Class_GhostLinkElement | null) { this._ghost_link = value }
 
   // Selections
   public get selected_nodes_list(): Class_NodeElement[] {
@@ -895,8 +898,8 @@ export class Class_DrawingArea {
         // Display the selection zone & set it starting position
         const mouse_position = d3.pointer(event)
         this._selection_zone.setVisible()
-        this._selection_zone.starting_x_point=mouse_position[0]
-        this._selection_zone.starting_y_point=mouse_position[1]
+        this._selection_zone.starting_x_point = mouse_position[0]
+        this._selection_zone.starting_y_point = mouse_position[1]
         this._selection_zone.draw()
 
       }
@@ -940,6 +943,7 @@ export class Class_DrawingArea {
         else {
           // Make ghost target visible
           this._ghost_link.target.setVisible()
+
           // Create new link
           this.sankey.addNewLink(
             this._ghost_link.source,
@@ -1013,25 +1017,25 @@ export class Class_DrawingArea {
         const mouse_position = d3.pointer(event)
 
         // Variable that can be modifier if we move the selection zone above or at the left of it starting point
-        let new_x=this.selection_zone.starting_x_point,
-        new_y=this.selection_zone.starting_y_point
+        let new_x = this.selection_zone.starting_x_point,
+          new_y = this.selection_zone.starting_y_point
 
-        if(mouse_position[0]>this._selection_zone.position_x){
-          this.selection_zone.width=mouse_position[0] - this._selection_zone.position_x
-        }else{
-          this.selection_zone.width=Math.abs( mouse_position[0]-this._selection_zone.starting_x_point)
-          new_x=mouse_position[0]
+        if (mouse_position[0] > this._selection_zone.position_x) {
+          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
+        } else {
+          this.selection_zone.width = Math.abs(mouse_position[0] - this._selection_zone.starting_x_point)
+          new_x = mouse_position[0]
         }
 
-        if(mouse_position[1]>this._selection_zone.starting_y_point){
-          this.selection_zone.height=mouse_position[1] - this._selection_zone.starting_y_point
-        }else{
-          this.selection_zone.height=Math.abs(this._selection_zone.starting_y_point- mouse_position[1] )
-          new_y=mouse_position[1]
+        if (mouse_position[1] > this._selection_zone.starting_y_point) {
+          this.selection_zone.height = mouse_position[1] - this._selection_zone.starting_y_point
+        } else {
+          this.selection_zone.height = Math.abs(this._selection_zone.starting_y_point - mouse_position[1])
+          new_y = mouse_position[1]
         }
 
         // Update shape on drawing area
-        this.selection_zone.setPosXY(new_x,new_y)
+        this.selection_zone.setPosXY(new_x, new_y)
         this._selection_zone.setSize()
       }
     }
@@ -1053,10 +1057,3 @@ export class Class_DrawingArea {
 }
 
 
-// CLASS GHOST LINK *********************************************************************
-class Class_GhostLinkElement extends Class_LinkElement {
-
-  // PROTECTED METHODS ==================================================================
-
-  public get is_visible() { return this._is_visible }
-}
