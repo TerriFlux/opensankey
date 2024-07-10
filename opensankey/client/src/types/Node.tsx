@@ -598,14 +598,14 @@ export class Class_NodeElement extends Class_Element {
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsNodes()
         // Update components related to node edition
-        this.menu_config.updateMenuEditionNode()
+        this.menu_config.updateComponentsMenuConfigNode()
 
       } else if (event.ctrlKey) {
         // Add node to selection
         drawing_area.addNodeToSelection(this)
 
         // Update components related to node edition
-        this.menu_config.updateMenuEditionNode()
+        this.menu_config.updateComponentsMenuConfigNode()
       }
       // OTHERS
       else {
@@ -1000,7 +1000,7 @@ export class Class_NodeElement extends Class_Element {
         }
         else {  // link.source_side === 'bottom'
           link.setPosXYStartingPoint(x0 + dx_bottom + thickness/2, y0 + height)
-          dy_left = dy_left + thickness
+          dx_bottom = dx_bottom + thickness
         }
       }
       // Or current node is link's target
@@ -1019,7 +1019,7 @@ export class Class_NodeElement extends Class_Element {
         }
         else {  // link.target_side === 'bottom'
           link.setPosXYEndingPoint(x0 + dx_bottom + thickness/2, y0 + height)
-          dy_left = dy_left + thickness
+          dx_bottom = dx_bottom + thickness
         }
       }
     })
@@ -1142,7 +1142,7 @@ export class Class_NodeElement extends Class_Element {
       return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side))/2)
     }
     else {
-      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side)/2))
+      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side))/2)
     }
   }
 
@@ -2222,6 +2222,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _id: string
 
+  private _name: string
+
   private _is_deletable: boolean
 
   private _references: { [_: string]: Class_NodeElement } = {}
@@ -2229,6 +2231,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
+    name: string,
     is_deletable: boolean = true
   ) {
     // Instantiate super class
@@ -2236,6 +2239,9 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
     // Set id
     this._id = id
+
+    // Set name
+    this._name = name
 
     // Set as deletable or not
     this._is_deletable = is_deletable
@@ -2300,7 +2306,6 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public removeReference(_: Class_NodeElement) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
-      _.useDefaultStyle()
     }
   }
 
@@ -2321,9 +2326,22 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   /**
    * get id of style
-   *
    * @readonly
    * @memberof Class_NodeStyle
    */
   public get id() { return this._id }
+
+  /**
+   * Get name of style != id
+   * @memberof Class_NodeStyle
+   */
+  public get name() { return this._name }
+
+  // SETTERS =============================================================================
+
+  /**
+   * Set name of style != id
+   * @memberof Class_NodeStyle
+   */
+  public set name(_: string) { this._name = _ }
 }

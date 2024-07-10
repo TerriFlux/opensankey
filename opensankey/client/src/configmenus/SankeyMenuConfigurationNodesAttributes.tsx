@@ -85,7 +85,7 @@ import {
   ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
-import { default_style_name } from '../types/Sankey'
+import { default_style_id } from '../types/Sankey'
 
 /**
  * Define the menu that allows to modifiy appararence for nodes / properties for a node style
@@ -116,7 +116,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   advanced_label_value_content,
   link_function,
   ComponentUpdater,
-  node_function
 }) => {
 
   // CONSTANTS ==========================================================================
@@ -126,10 +125,13 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Get data
   const { data, new_data } = applicationData
   const { multi_selected_nodes } = applicationState
-  // UseState & Ref for UI updates
+  // Boolean used to force this component to reload
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current = setForceUpdate.toggle
-  // Selected nodes
+  // Link this menu's update function
+  if (!menu_for_style) {
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = setForceUpdate.toggle
+  }
+  // Get list of selected nodes
   let selected_nodes
   if (data.displayed_node_selector) {
     // All availables nodes
@@ -153,35 +155,18 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
 
   // LOCAL FUNCTIONS ====================================================================
 
-  const { RedrawLinks } = link_function  // TODO faire le menage
-
   /**
    * Function used to reset menu UI
    */
   const updateMenuConfigurationNodeAttributes = () => {
+    // Whatever is done, set saving indicator
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    if (!menu_for_style) {
-      new_data.menu_configuration.updateComponentMenuConfigNode.current()
+    // Update menus for node's apparence in case we use this for style
+    if (menu_for_style) {
+      new_data.menu_configuration.updateComponentsMenuConfigNode()
     }
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    // And update this menu also
     setForceUpdate.toggle()
-  }
-
-  const updateLinkAttachedToNodes = () => {
-    if (!menu_for_style) {
-      // Redraw link attached to modified node when the modification to the node
-      // modify links path
-      let link_to_update: string[] = []
-      multi_selected_nodes.current.forEach(n => {
-        link_to_update = link_to_update.concat(n.outputLinksId)
-        link_to_update = link_to_update.concat(n.inputLinksId)
-      })
-      link_to_update = [...new Set(link_to_update)]
-      const list_links = link_to_update.map(lid => data.links[lid])
-      RedrawLinks(list_links)
-    } else {
-      RedrawLinks(Object.values(applicationData.display_links))
-    }
   }
 
   /**
@@ -200,7 +185,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         t('Noeud.multi_style')
     }
     else {
-      return default_style_name
+      return default_style_id
     }
   }
 
@@ -307,7 +292,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             onChange={evt => {
               elements.forEach(element => element.shape_color = evt.target.value)
               updateMenuConfigurationNodeAttributes()
-              updateLinkAttachedToNodes()
             }}
           />
         </OSTooltip>
@@ -349,7 +333,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             onClick={() => {
               elements.forEach(element => element.shape_type = 'ellipse')
               updateMenuConfigurationNodeAttributes()
-              updateLinkAttachedToNodes()
             }}
           >
             <svg
@@ -372,7 +355,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             onClick={() => {
               elements.forEach(element => element.shape_type = 'rect')
               updateMenuConfigurationNodeAttributes()
-              updateLinkAttachedToNodes()
             }}
           >
             <svg
@@ -397,7 +379,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             onClick={() => {
               elements.forEach(element => element.shape_type = 'arrow')
               updateMenuConfigurationNodeAttributes()
-              updateLinkAttachedToNodes()
             }}
           >
             <svg
@@ -547,7 +528,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           menu_for_style={menu_for_style}
           function_onBlur={() => {
             updateMenuConfigurationNodeAttributes()
-            updateLinkAttachedToNodes()
           }}
           stepper={true}
           minimum_value={1}
@@ -569,7 +549,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           menu_for_style={menu_for_style}
           function_onBlur={() => {
             updateMenuConfigurationNodeAttributes()
-            updateLinkAttachedToNodes()
           }}
           stepper={true}
           minimum_value={1}

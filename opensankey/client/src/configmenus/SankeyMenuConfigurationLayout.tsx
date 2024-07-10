@@ -38,7 +38,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
   const [leg_pos_x, setLegPosX] = useState(new_data.drawing_area.legend.position_x)
   const [leg_pos_y, setLegPosY] = useState(new_data.drawing_area.legend.position_y)
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigLayout.current = setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_config_layout_updater.current = setForceUpdate.toggle
 
 
   // TODO : re implement number input when class element for legend created

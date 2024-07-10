@@ -335,9 +335,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 //     //   applicationDraw.GetSankeyMinWidthAndHeight,
 //     //   applicationDraw.resizeCanvas)
 
-//     new_data.menu_configuration.updateComponentMenuConfigNode.current
-//     new_data.menu_configuration.updateComponentMenuConfigNodeAppearence.current()
-//     new_data.menu_configuration.updateComponentMenuConfigLink.current()
+//     new_data.menu_configuration.ref_to_menu_config_node_updater.current
+//     new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+//     new_data.menu_configuration.ref_to_menu_config_link_updater.current()
 //   } else if (e.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
 
 //     if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
@@ -353,8 +353,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 //       node_function.recomputeDisplayedElement()
 //       node_function.RedrawNodes(Object.values(applicationData.display_nodes))
 //       link_function.RedrawLinks(Object.values(applicationData.display_links))
-//       new_data.menu_configuration.updateComponentMenuConfigNode.current
-//       new_data.menu_configuration.updateComponentMenuConfigLink.current()
+//       new_data.menu_configuration.ref_to_menu_config_node_updater.current
+//       new_data.menu_configuration.ref_to_menu_config_link_updater.current()
 
 
 //     }

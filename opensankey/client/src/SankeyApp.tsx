@@ -335,7 +335,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     advanced_label_value_content={additionalMenus.advanced_label_value_content}
     link_function={link_function}
     ComponentUpdater={ComponentUpdater}
-    node_function={node_function}
   />
 
   const sankey_menus = OpenSankeyMenus(
@@ -491,17 +490,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 pointer_pos={contextMenu.pointer_pos}
                 additional_link_appearence_items={[]}
-                link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
               />
               </React.Fragment>,
               <React.Fragment key={'modale_style_node'}><SankeyModalStyleNode
                 applicationContext={applicationContext}
                 applicationData={applicationData}
+                applicationState={applicationState}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-                ref_selected_style_node={applicationState.ref_selected_style_node}
                 ComponentUpdater={ComponentUpdater}
-                node_function={node_function}
                 pointer_pos={contextMenu.pointer_pos}
                 node_attribute_tab={
                   <OpenSankeyConfigurationNodesAttributes
@@ -515,7 +512,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                     advanced_label_value_content={additionalMenus.advanced_label_value_content}
                     link_function={link_function}
                     ComponentUpdater={ComponentUpdater}
-                    node_function={node_function}
                   />
                 }/>
               </React.Fragment>,
