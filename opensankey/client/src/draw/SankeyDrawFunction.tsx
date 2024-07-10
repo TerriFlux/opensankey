@@ -216,9 +216,16 @@ export const TextNodeWrap : TextNodeWrapFType = (
       return 0
     }
   })
+  let nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
+  if (d.name.split(' ').length == 1 && nb_tspan>1) {
+    const el = d3.select(' .opensankey #ggg_' + d.idNode + ' text')
+    el.select("tspan:first-child").remove()
+    d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dy',0)
+  }
+  nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   //Nombre de tspan dans la balise text
   const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
-  const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
+
   if (d.x_label) {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((ReturnValueNode(data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
   } else if (ReturnValueNode(data,d,'label_vert')  == 'middle') {
