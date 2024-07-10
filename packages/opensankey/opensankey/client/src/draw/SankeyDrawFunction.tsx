@@ -1448,8 +1448,8 @@ export const TextNodeValue : TextNodeValueFType =(
     }
     if (scientific_precision !==0) {
       return ToPrecision(total,t,scientific_precision)+unit
-    }
-    return total+unit
+    } 
+    return ToPrecision(total,t,data.style_link['default']['scientific_precision'])+unit
   } else {
     return ''
   }
