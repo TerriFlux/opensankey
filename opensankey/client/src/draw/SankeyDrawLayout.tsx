@@ -1402,22 +1402,24 @@ export const updateLayout: updateLayoutFuncType = (
       differences.forEach((difference)=>(difference as unknown as {'rhs' : {'value':object}}).rhs['value'] = {'value':'','display_value':'','tags':{},'extension':{}})
       differences.forEach((difference) => linksId.push(difference.path![0]))
       differences.forEach((difference) => applyChange(data.links, {}, difference))
+      const copyLinksId = [...linksId]
       linksId.forEach(linkId => {
-        if (!data.nodes[new_layout.links[linkId].idSource]) {
-          data.nodes[new_layout.links[linkId].idSource] = new_layout.nodes[new_layout.links[linkId].idSource]
-        }
-        if (!data.nodes[new_layout.links[linkId].idTarget]) {
-          data.nodes[new_layout.links[linkId].idTarget] = new_layout.nodes[new_layout.links[linkId].idTarget]
+        if (!data.nodes[new_layout.links[linkId].idSource] || !data.nodes[new_layout.links[linkId].idTarget]) {
+          if (copyLinksId.indexOf(linkId) !== -1 ) {
+            copyLinksId.splice(copyLinksId.indexOf(linkId),1)
+            delete data.links[linkId] 
+          }
         }
       })
-      linksId.forEach(linkId => {
+
+      copyLinksId.forEach(linkId => {
         data.nodes[new_layout.links[linkId].idSource].outputLinksId.push(linkId)
         data.nodes[new_layout.links[linkId].idTarget].inputLinksId.push(linkId)
         reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
         reorganize_node_outputLinksId(data, data.nodes[new_layout.links[linkId].idSource], data.nodes, data.links)
         data.linkZIndex.push(linkId)
       })
-      linksId.forEach(linkId => {
+      copyLinksId.forEach(linkId => {
         const l = data.links[linkId]
         AddDataTags(
           Object.values(data.dataTags),
