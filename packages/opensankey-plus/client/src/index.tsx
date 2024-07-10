@@ -167,11 +167,11 @@ root.render(
         link_function:LinkFunctionTypes,
         start_point :{ current: number[]; },
         resizeCanvas :() => void,
-        ref_alt_key_pressed:MutableRefObject<boolean>
+        ref_alt_key_pressed
       )=>{
         const _ = initializeApplicationDraw(
           applicationData,applicationState,contextMenu,
-          applicationContext, ComponentUpdater, uiElementsRef, node_function, link_function,
+          applicationContext, ComponentUpdater,uiElementsRef, node_function, link_function,
           start_point, resizeCanvas,ref_alt_key_pressed
         )
         Object.assign(_,OSPInitializeApplicationDraw(
@@ -183,7 +183,7 @@ root.render(
           applicationData as OSPApplicationDataType,
           applicationState as OSPElementsSelectedType,
           applicationContext as OSPApplicationContextType,
-          ref_alt_key_pressed.current,
+          ref_alt_key_pressed!.current,
           ComponentUpdater,
           (node_function as OSPNodeFuntionType),
           link_function,
