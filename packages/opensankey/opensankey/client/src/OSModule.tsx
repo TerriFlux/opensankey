@@ -225,7 +225,6 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   link_function,
   start_point,
   resizeCanvas,
-  _
 )=> {
   const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
@@ -644,7 +643,6 @@ export const moduleDialogs : module_dialogsType = (
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.MEP'),
-    33
   ),
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
