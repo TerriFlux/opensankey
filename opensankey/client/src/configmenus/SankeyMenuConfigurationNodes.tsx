@@ -21,7 +21,6 @@ import {
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
-  SankeyNode,
   applicationContextType,
   applicationDataType,
   applicationStateType} from '../types/Types'
@@ -61,13 +60,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     node_function
   }
 ) => {
-  const {  new_data } = applicationData
+  const { new_data } = applicationData
 
   // Traduction
   const { t } = applicationContext
-  // Set state & Ref for UI update
+  // Boolean used to force this component to reload
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigNode.current = setForceUpdate.toggle
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current = setForceUpdate.toggle
   // Data to display in this menu
   let nodes, selected_nodes
   if (new_data.drawing_area.sankey.filter_displayed_node_selector) {
@@ -143,10 +143,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   new_data.drawing_area.removeNodeFromSelection(n)
                 }
               })
-              // Update UI
-              setForceUpdate.toggle()
-              new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
-              new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
+              // Update all menus
+              new_data.menu_configuration.updateComponentsMenuConfigNode()
             }}
             valueRenderer={(entries_for_selected_nodes: Type_MenuSelectionEntry[]) => {
               return entries_for_selected_nodes.length ? entries_for_selected_nodes.map(({ label }) => label + ', ') : t('Noeud.NS')
@@ -280,10 +278,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
               // Add node to selection
               new_data.drawing_area.addNodeToSelection(new_node)
-              // Update UI
+              // Trigger saving indicator
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
-              setForceUpdate.toggle()
+              // Update all menus
+              new_data.menu_configuration.updateComponentsMenuConfigNode()
             }}>
             <FaPlus />
           </Button>
@@ -303,10 +301,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               () => {
                 // Delete all selected nodes
                 applicationData.new_data.drawing_area.deleteSelectedNodes()
-                // UPdate ui
+                // Trigger saving indicator
                 ComponentUpdater.updateComponenSaveInCache.current(false)
-                new_data.menu_configuration.updateComponentMenuConfigLink.current()
-                setForceUpdate.toggle()
+                // Update all menus
+                new_data.menu_configuration.updateComponentsMenuConfigNode()
               }}>
             <FaMinus />
           </Button>
@@ -318,8 +316,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             variant='menuconfigpanel_option_button'
             onClick={
               () => {
-                // Update UI with only visible nodes / all nodes
+                // Update indicator (only visible nodes / all nodes)
                 new_data.drawing_area.sankey.filter_displayed_node_selector = !new_data.drawing_area.sankey.filter_displayed_node_selector
+                // Update only this menu
                 setForceUpdate.toggle()
               }}>
             {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
@@ -350,10 +349,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   (selected_nodes.length != 1) ? '' : selected_nodes[0].name
                 }
                 onChange={evt => {
+                  // Update selected nodes' name
                   if (selected_nodes.length != 1) {
                     return
                   }
                   selected_nodes[0].name = evt.target.value
+                  // Update only this menu
                   setForceUpdate.toggle()
                 }}
                 isDisabled={(selected_nodes.length == 1) ? false : true}

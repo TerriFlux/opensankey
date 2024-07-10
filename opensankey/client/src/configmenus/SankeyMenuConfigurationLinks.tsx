@@ -54,9 +54,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const { data, new_data } = applicationData
   // Traduction
   const { t } = applicationContext
-  // Set state & Ref for UI update
+  // Boolean used to force this component to reload
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.updateComponentMenuConfigLink.current = setForceUpdate.toggle
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_link_updater.current = setForceUpdate.toggle
 
   // Links to display in selection menus ------------------------------------------------
   let links, selected_links
@@ -163,9 +164,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_data.drawing_area.removeLinkFromSelection(link)
                 }
               })
-              // Update UI
-              setForceUpdate.toggle()
-              new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
+              // Update all link menus
+              new_data.menu_configuration.updateComponentsMenuConfigLink()
             }}
           />
         </Box>
@@ -191,9 +191,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
               // Add link to selection
               new_data.drawing_area.addLinkToSelection(new_link)
-              // Update UI
+              // Toogle saving indicator
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              setForceUpdate.toggle()
+              // Update all link menus
+              new_data.menu_configuration.updateComponentsMenuConfigLink()
             }}>
           <FaPlus />
         </Button>
@@ -212,9 +213,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             () => {
               // Delete all selected links
               applicationData.new_data.drawing_area.deleteSelectedLinks()
-              // Update UI
+              // Toogle saving indicator
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              setForceUpdate.toggle()
+              // Update all link menus
+              new_data.menu_configuration.updateComponentsMenuConfigLink()
             }}>
           <FaMinus />
         </Button>
@@ -228,6 +230,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             () => {
               // Update UI with only visible links / all links
               data.displayed_link_selector = !data.displayed_link_selector
+              // Update  only this menu
               setForceUpdate.toggle()
             }}>
           {new_data.drawing_area.sankey.filter_displayed_link_selector ? <FaEye /> : <FaEyeSlash />}
@@ -261,8 +264,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const new_source = new_data.drawing_area.sankey.getNode(event.target.value)
                 if (new_source !== null) {
+                  // Update link's source
                   selected_links.forEach(link => link.source = new_source)
+                  // Toogle saving indicator
                   ComponentUpdater.updateComponenSaveInCache.current(false)
+                  // Update only this menu
                   setForceUpdate.toggle()
                 }
               }}
@@ -288,8 +294,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const new_target = new_data.drawing_area.sankey.getNode(event.target.value)
                 if (new_target !== null) {
+                  // Update link's target
                   selected_links.forEach(link => link.target = new_target)
+                  // Toogle saving indicator
                   ComponentUpdater.updateComponenSaveInCache.current(false)
+                  // Update only this menu
                   setForceUpdate.toggle()
                 }
               }}
@@ -306,8 +315,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <Button
             height='100%'
             onClick={() => {
+              // Inverse link source & target
               selected_links.forEach(link => link.inverse())
+              // Toogle saving indicator
               ComponentUpdater.updateComponenSaveInCache.current(false)
+              // Update only this menu
               setForceUpdate.toggle()
             }}
           >

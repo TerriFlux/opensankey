@@ -532,8 +532,8 @@ export class Class_DrawingArea {
     // TODO Unselect other things
     // Reset selection
     // TODO reset config menu
-    this.application_data.menu_configuration.updateMenuEditionNode()
-    this.application_data.menu_configuration.updateMenuEditionLink()
+    this.application_data.menu_configuration.updateComponentsMenuConfigNode()
+    this.application_data.menu_configuration.updateComponentsMenuConfigLink()
     // Clean selection dict
     this._selection = {}
   }
@@ -887,7 +887,7 @@ export class Class_DrawingArea {
           source,
           target,
           this, this.application_data.menu_configuration)
-        this.application_data.menu_configuration.updateMenuEditionNode()
+        this.application_data.menu_configuration.updateComponentsMenuConfigNode()
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
@@ -916,11 +916,6 @@ export class Class_DrawingArea {
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
       if (this._ghost_link !== null) {
-        // // since d3_selection ref to the selection of a <g> element (which isn't a drawed element)
-        // // we can't release the mouse on it but in one element of the group
-        // // (We choosed the node shape)
-        // const d3_element_under_cursor: any = d3.select(event.target as any)
-        // const d3_element_of_source_node = this._ghost_link?.source?.d3_selection?.select('.node_shape')
         // Mouse released on source node
         if (this._ghost_link.source.isMouseOver()) {
           // If we release the mouse on the source of the link
@@ -954,8 +949,8 @@ export class Class_DrawingArea {
         // In case we get there still deref ghost link
         this._ghost_link.delete()
         this._ghost_link = null
-        this.application_data.menu_configuration.updateMenuEditionNode()
-        this.application_data.menu_configuration.updateMenuEditionLink()
+        this.application_data.menu_configuration.updateComponentsMenuConfigNode()
+        this.application_data.menu_configuration.updateComponentsMenuConfigLink()
       }
     } else if (this.isInSelectionMode()) {
       if (!event.shiftKey) {
