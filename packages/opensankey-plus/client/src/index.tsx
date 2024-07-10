@@ -237,7 +237,6 @@ root.render(
         link_function,
         applicationDraw,
         ComponentUpdater,
-        updateMenus,
         menu_configuration_nodes,
         config_link_data,
         config_link_attr,
@@ -251,7 +250,6 @@ root.render(
           dict_hook_ref_setter_show_dialog_components,additional_menus,node_function,link_function,
           applicationDraw,
           ComponentUpdater,
-          updateMenus,
           menu_configuration_nodes,config_link_data,config_link_attr,
           contextMenu,ref_alt_key_pressed
         )
@@ -358,7 +356,6 @@ root.render(
     initializeAdditionalMenus={
       (
         additionalMenus,
-        updateMenus,
         applicationContext,
         applicationData,
         applicationDraw,
@@ -395,13 +392,11 @@ root.render(
         }
         initializeAdditionalMenus(
           additionalMenus,
-          updateMenus,
           applicationContext,applicationData,applicationDraw,ComponentUpdater,applicationState,
           uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
         OSPInitializeAdditionalMenus(
           additionalMenus,
-          updateMenus,
           applicationContext,applicationData,applicationDraw,ComponentUpdater,applicationState,
           uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )

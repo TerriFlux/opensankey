@@ -196,7 +196,7 @@ export const OSPInitializeElementSelected : OSPInitializeElementSelectedType = (
     multi_selected_links : useRef([]),
     multi_selected_label : useRef([]),
     r_editor_ZDT :  useRef<ReactQuill|undefined>(),
-    r_setter_editor_content_fo_zdt : useRef<Dispatch<SetStateAction<string>>[]>([]),
+    //r_setter_editor_content_fo_zdt : useRef<Dispatch<SetStateAction<string>>[]>([]),
     r_setter_editor_content_fo_node : useRef<Dispatch<SetStateAction<string>>>(),
     r_setter_value_editor_name_view: useRef<Dispatch<SetStateAction<string>>>(),
     saveViewGetter:useRef<boolean>(false)
@@ -448,7 +448,6 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
 // we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
 export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   additionalMenus,
-  updateMenus,
   applicationContext,
   applicationData,
   applicationDraw,
@@ -535,7 +534,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     <OSPMenuPreferenceLabels
       t={applicationContext.t}
       data={applicationData.data as OSPData}
-      updateMenus={updateMenus}
+      updateMenus={ComponentUpdater.updateMenus}
     />
   )
   additionalMenus.additional_preferences.push(
@@ -597,7 +596,7 @@ export const OSPModuleDialogs : module_dialogsType = (
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   link_function,
-  ComponentUpdater
+  ComponentUpdater,
   // additional_menus,
   // menu_configuration_nodes_attributes,
   // reDrawLegend

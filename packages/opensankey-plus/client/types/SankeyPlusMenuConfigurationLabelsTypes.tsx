@@ -5,7 +5,7 @@ import { contextMenuType } from 'open-sankey/src/types/Types'
 
 export type OSPMenuPreferenceLabelsFType={
   t:TFunction,
-  data:OSPData,
+  data:OSPData
   updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 

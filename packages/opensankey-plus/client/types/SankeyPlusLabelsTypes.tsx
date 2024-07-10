@@ -34,7 +34,7 @@ export type eventLabelClickFType=(
   multi_selected_label:{current:OSPLabel[]},
   multi_selected_nodes:{current:OSPNode[]},
   multi_selected_links:{current:OSPLink[]},
-  ComponentUpdater:OSPComponentUpdaterType,
+  ComponentUpdater:OSPComponentUpdaterType
 )=> void
 
 // Function used to drag the free label

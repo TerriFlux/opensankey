@@ -93,15 +93,15 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
-  const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
+  //const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
   const [forceUpdate,setForceUpdate]=useState(false)
-  const {updateComponentMenuConfigZdt} = ComponentUpdater
+  const {updateComponentMenuConfigZdt,updateMenus} = ComponentUpdater
   updateComponentMenuConfigZdt.current.push(()=>setForceUpdate(!forceUpdate))
-  applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
+  //applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
 
-  if (multi_selected_label.current.length == 0 && s_editor_content_fo_zdt != '') {
-    sEditorContentFOZdt('')
-  }
+  // if (multi_selected_label.current.length == 0 && s_editor_content_fo_zdt != '') {
+  //   sEditorContentFOZdt('')
+  // }
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
@@ -165,9 +165,9 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
               reDrawOSPLabels(multi_selected_label.current)
               if(multi_selected_label.current.length>0){
                 const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
-                applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
+                updateMenus[1](!updateMenus[0])
               }else{
-                applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+                updateMenus[1](!updateMenus[0])
               }
               updateComponentMenuConfigZdt.current.forEach(f=>f())
             }}
@@ -334,7 +334,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
         variant='menuconfigpanel_del_button'
         isDisabled={disable_options}
         onClick={() => {
-          deleteGLabel(multi_selected_label.current,applicationState)
+          deleteGLabel(updateMenus,multi_selected_label.current,applicationState)
           data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
           multi_selected_label.current = []
           updateComponentMenuConfigZdt.current.forEach(f=>f())
@@ -434,14 +434,15 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
 
     {button_icon_or_image==='zdt'?<Box style={{'height':'300px'}}><ReactQuill
       className='quill_editor'
-      value={s_editor_content_fo_zdt}
+      value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].content : ''}
       ref={r_editor_ZDT}
       onChange={(evt) => {
-        sEditorContentFOZdt(evt)
+        //sEditorContentFOZdt(evt)
         Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
           d.content = evt
         })
         reDrawOSPLabels(multi_selected_label.current)
+        setForceUpdate(!forceUpdate)
       }}
       theme="snow"
       modules={modules}

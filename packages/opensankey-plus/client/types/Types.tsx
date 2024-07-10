@@ -162,7 +162,7 @@ export type OSPElementsSelectedVarType={
   multi_selected_label: { current: OSPLabel[] }
   r_editor_ZDT : MutableRefObject<ReactQuill|undefined>
   r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
-  r_setter_editor_content_fo_zdt: MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
+  //r_setter_editor_content_fo_zdt: MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
   r_setter_value_editor_name_view: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   saveViewGetter:MutableRefObject<boolean>
 }

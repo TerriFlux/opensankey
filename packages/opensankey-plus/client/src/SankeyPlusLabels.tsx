@@ -104,15 +104,15 @@ export const OSPDrawLabels : OSPDrawLabelsFType = (
             evt.preventDefault()
             pointer_pos.current=[evt.pageX,evt.pageY]
             if(multi_selected_label.current.includes(d)){
-              applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
+              //applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
             (contextMenu as OSPContextMenuType).contextualised_zdt.current!(d)
             }else{
               multi_selected_label.current.forEach(l=>{
                 deselect_visualy_zdt(l)
               })
               multi_selected_label.current=[d]
-              select_visualy_zdt(d)
-              applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
+              select_visualy_zdt(d);
+              //applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
               (contextMenu as OSPContextMenuType).contextualised_zdt.current!(d)
             }
           }
@@ -183,9 +183,9 @@ export const eventLabelClick : eventLabelClickFType =(
   multi_selected_label,
   multi_selected_nodes,
   multi_selected_links,
-  ComponentUpdater,
+  ComponentUpdater
 )=>{
-
+  const {updateMenus} = ComponentUpdater
   const { button_ref, accordion_ref, zdt_accordion_ref } =uiElementsRef
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     const sankeyTooltip=d3.select('.sankey-tooltip')
@@ -196,10 +196,10 @@ export const eventLabelClick : eventLabelClickFType =(
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       if (multi_selected_label.current.includes(d)) {
         // if label is selected the accordion is not open and the label is deselected
-        multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
         multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',false))
         multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',false))
-        applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+        multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
+        updateMenus[1](!updateMenus[0])
         return
       }
       button_ref.current.click()
@@ -226,10 +226,19 @@ export const eventLabelClick : eventLabelClickFType =(
         multi_selected_label.current.push(d)
         multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',true))
         multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',true))
-        applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
+        //applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
+        updateMenus[1](!updateMenus[0])
         ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       }, 200)
     }
+      // Open element accordion if not already openend
+      if (
+        accordion_ref &&
+        accordion_ref.current &&
+        d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        accordion_ref.current.click()
+      }
     // Open node accordion if not already openend
     if ( accordion_ref && accordion_ref.current) {
       if (
@@ -242,20 +251,21 @@ export const eventLabelClick : eventLabelClickFType =(
     }
 
     if (multi_selected_label.current.includes(d)) {
-      multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',false))
       multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',false))
+      multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
       // If we deselect a zdt use the last one selected as displayed in config
       // if(multi_selected_label.current.length>0)applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(
       //   multi_selected_label.current[multi_selected_label.current.length-1].content)
       // )
-      applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+      updateMenus[1](!updateMenus[0])
+      
     } else {
       multi_selected_label.current.push(d)
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',true))
       multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',true))
       // Display the content of the last zdt selected in the menu config
-      applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
+      updateMenus[1](!updateMenus[0])
     }
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
 
@@ -265,7 +275,7 @@ export const eventLabelClick : eventLabelClickFType =(
     multi_selected_label.current=[]
     multi_selected_nodes.current=[]
     multi_selected_links.current=[]
-    applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+    updateMenus[1](!updateMenus[0])
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
 
   }
@@ -612,13 +622,15 @@ const deselect_visualy_zdt=(zdt:OSPLabel)=>{
 }
 
 export const deleteGLabel=(
+  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   zdt_to_delete:OSPLabel[],
-  applicationState:OSPElementsSelectedType)=>{
+  applicationState:OSPElementsSelectedType
+)=>{
   zdt_to_delete.forEach(zdt=>{
     d3.select('#'+zdt.idLabel).remove()
     d3.selectAll('#gg_zdt_handles_'+zdt.idLabel).remove()
   })
 
-  applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+  updateMenus[1](!updateMenus[0])
 
 }
