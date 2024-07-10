@@ -266,39 +266,6 @@ export const resources = {
           unit_from_excel: 'Excel  Generate views from one or more excel files',
           choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher Choose links values to display'
         }
-
-      },
-      welcome: {
-        'news': 'Updates',
-        'interface':'Interface',
-        'view': 'Buttons to navigate through the differents views of the sankey',
-        'news_content': {
-          230803: {
-            'main_title': 'August 03, 2023: New features',
-            'main_content': 'We added new features to make it easier to manipulate Sankey diagrams',
-            'sub_title_1': 'Right-click with a lot of options',
-            'sub_content_1': 'From now on, a lot of actions on nodes, links and even drawing areas are accessible by right-clicking on the concerned elements.',
-            'sub_title_2': 'Multiple selection frame',
-            'sub_content_2': 'Multiple selection of nodes can now be made with selection frames.',
-            'sub_title_3': 'Ease the expansion of your diagrams',
-            'sub_content_3': 'The drawing area can be expanded in any direction by dragging nodes/flows/text boxes/captions in the chosen direction.',
-            'image1': 'clic droit noeud EN.PNG',
-            'image2': 'clic droit flux EN.PNG',
-            'image3': 'clic droit fond EN.PNG',
-            'image4': 'Zone de selection.PNG'
-          },
-          230908: {
-            'main_title': 'September 08, 2023 ',
-            'main_content': 'Visual enhancement of configuration menu',
-            'sub_title_1': 'Visual redesign of the input in the configuration menu',
-            'sub_content_1': 'Configuration menu inputs have been reshaped with more visible labels and logos for buttons to better understand their usefulness',
-            'sub_title_2': 'Data checkpoint',
-            'sub_content_2': 'At any time you can make a quick backup of your current diagram, once the backup is done you can continue to develop your diagram and if the changes made do not please you, reload the application to find your diagram at the time of backup',
-            'img1': 'menu_config_enhanced_en.PNG',
-            'img2': 'menu_config_enhanced_zdd_en.PNG',
-            'img3': 'menu_last_save_en.PNG',
-          }
-        }
       },
       'useTemplate': 'Use this template',
       'dl': 'Download excel',
@@ -307,7 +274,7 @@ export const resources = {
       'elements_sankey+_blocked_long': 'Some Sankey elements are not visible because they come from OpenSankey+ and your account does not have this module',
       'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
 
-      // Trad for icons 
+      // Trad for icons
       'import':{'import':'Imported icon'},
       agricol:{
         'agricol':'agricol',
@@ -749,45 +716,13 @@ export const resources = {
           choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher',
         }
       },
-      welcome: {
-        'news': 'Nouveautés',
-        'interface':'Interface',
-        'view': 'Boutons permettant de naviguer entre les différentes vues du diagramme',
-        'news_content': {
-          230803: {
-            'main_title': '03 Août 2023 : Nouvelles fonctionnalités',
-            'main_content': 'Pleins de nouvelles fonctionnalités pour faciliter la manipulation des diagrammes de Sankey',
-            'sub_title_1': 'Ajout d\'un clic droit avec options d\'édition',
-            'sub_content_1': 'Désormais, un certain nombre d\'options sur les noeuds, flux et zone de dessin sont accessible par clic droit sur les éléments concernés.',
-            'sub_title_2': 'Ajout d\'un cadre de selection multiple',
-            'sub_content_2': 'La selection multiple de noeuds peut maintenant se faire avec cadre de sélection.',
-            'sub_title_3': 'Possibilité d\'agrandir la zone de dessin',
-            'sub_content_3': 'La zone de dessin devient extensible dans toutes les directions en glissant les noeuds / flux / zones de texte / légende dans la direction choisie',
-            'image1': 'clic droit noeud.PNG',
-            'image2': 'clic droit flux.PNG',
-            'image3': 'clic droit fond.PNG',
-            'image4': 'Zone de selection.PNG'
-          },
-          230908: {
-            'main_title': '08 Septembre 2023 ',
-            'main_content': 'Amélioration graphique des menu de configuration',
-            'sub_title_1': 'Refonte visuel des inputs dans les menu de configuration',
-            'sub_content_1': 'Les inputs du menu de configuration ont été remis en formes avec des labels plus visibles et des logos pour les boutons afin de mieux comprendre leur utilité',
-            'sub_title_2': 'Point de contrôle des données',
-            'sub_content_2': 'A tous moment vous pouvez faire une sauvegarde rapide de votre diagramme en cours, une fois la sauvegarde faite vous pouvez continuer de développer votre diagramme et si les modifications faites ne vous plaise pas, recharchez l\'application pour retrouver votre diagramme au moment de la sauvegarde ',
-            'img1': 'menu_config_enhanced_fr.PNG',
-            'img2': 'menu_config_enhanced_zdd_fr.PNG',
-            'img3': 'menu_last_save_fr.PNG',
-          }
-        }
-      },
       'useTemplate': 'Utiliser ce modèle',
       'dl': 'Télécharger (excel)',
       'elements_sankey+_blocked': 'Elements du diagrame bloqués (OpenSankey+)',
       'elements_mfa_blocked': 'Elements du diagrame bloqués (MFASankey+)',
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
-    
+
       // Traduction pour le nom des icons
       'import':{'import':'Icônes importées'},
       agricol:{
