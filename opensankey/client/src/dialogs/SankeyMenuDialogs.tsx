@@ -449,7 +449,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   allowMouseWheel
                   value={stretchFactorH}
                   onChange={evt=>{
-                    set_stretchFactorH(+evt)
+                    set_stretchFactorH(evt as unknown as number)
                   }}>
                   <NumberInputField/>
                   <NumberInputStepper>
@@ -479,7 +479,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   allowMouseWheel
                   value={stretchFactorV}
                   onChange={evt=>{
-                    set_stretchFactorV(+evt)
+                    set_stretchFactorV(evt as unknown as number)
                   }}>
                   <NumberInputField/>
                   <NumberInputStepper>
