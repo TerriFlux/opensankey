@@ -31,7 +31,7 @@ import {
   initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_ProtoElement } from './Element'
+import { Class_ProtoElement, Class_ZoneSelection } from './Element'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -108,6 +108,13 @@ export class Class_DrawingArea {
    */
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
+
+  /**
+ * d3 selection of svg group that contains drawing area zone of selection element
+ * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+ * @memberof Class_DrawingArea
+ */
+  public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   /**
    * Is drawing area in publish _mode or not. If so, blocks all interactions with it
    * @type {boolean}
@@ -153,6 +160,7 @@ export class Class_DrawingArea {
   // Elements that are contained in this area
   private _sankey: Class_Sankey
   private _legend: Class_Legend
+  private _selection_zone: Class_ZoneSelection
 
   // Elements that are selected in this area
   private _selection: { [id: string]: Class_ProtoElement } = {}
@@ -200,6 +208,7 @@ export class Class_DrawingArea {
     this._width = _width
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend = new Class_Legend(this, this.application_data.menu_configuration)
+    this._selection_zone = new Class_ZoneSelection(this, this.application_data.menu_configuration)
   }
 
   // PUBLIC METHODS ====================================================================
@@ -232,6 +241,7 @@ export class Class_DrawingArea {
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
     this.d3_selection_handlers = this.d3_selection.append('g').attr('id', 'g_handlers')
+    this.d3_selection_zone_select = this.d3_selection.append('g').attr('id', 'g_select_zone')
 
     // Draw background
     this.drawBackground()
@@ -375,9 +385,11 @@ export class Class_DrawingArea {
 
   // Horizontal spacing
   public get horizontal_spacing() { return this._horizontal_spacing }
-  public set horizontal_spacing(_: number) { this._horizontal_spacing = _}
+  public set horizontal_spacing(_: number) { this._horizontal_spacing = _ }
   public get vertical_spacing() { return this._vertical_spacing }
-  public set vertical_spacing(_: number) { this._vertical_spacing = _}
+  public set vertical_spacing(_: number) { this._vertical_spacing = _ }
+
+  public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
   // PUBLIC METHODS =====================================================================
 
@@ -852,10 +864,10 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
 
-    if (this.eventsEnabled() ) {
+    if (this.eventsEnabled()) {
       // EDITION MODE =============================================================
       // event.button==0 check if we use LMB
-      if (this.isInEditionMode() && event.button==0) {
+      if (this.isInEditionMode() && event.button == 0) {
         // Get mouse position
         const mouse_position = d3.pointer(event)
         // Create default source node
@@ -879,8 +891,14 @@ export class Class_DrawingArea {
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
-        // Purge selection list
-        this.purgeSelection()
+
+        // Display the selection zone & set it starting position
+        const mouse_position = d3.pointer(event)
+        this._selection_zone.setVisible()
+        this._selection_zone.starting_x_point=mouse_position[0]
+        this._selection_zone.starting_y_point=mouse_position[1]
+        this._selection_zone.draw()
+
       }
     }
   }
@@ -939,6 +957,13 @@ export class Class_DrawingArea {
         this.application_data.menu_configuration.updateMenuEditionNode()
         this.application_data.menu_configuration.updateMenuEditionLink()
       }
+    } else if (this.isInSelectionMode()) {
+      if (!event.shiftKey) {
+        this.purgeSelection()
+      }
+      // Select element inside the selection zone & reset it (hide the zone)
+      this._selection_zone.selectElementsInside()
+      this._selection_zone.reset()
     }
   }
 
@@ -985,6 +1010,34 @@ export class Class_DrawingArea {
         target.setPosXY(
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
+      }
+    } else if (this.isInSelectionMode()) {
+      if (this._selection_zone.is_visible) {
+        // change the size of the selection zone
+
+        const mouse_position = d3.pointer(event)
+
+        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
+        let new_x=this.selection_zone.starting_x_point,
+        new_y=this.selection_zone.starting_y_point
+
+        if(mouse_position[0]>this._selection_zone.position_x){
+          this.selection_zone.width=mouse_position[0] - this._selection_zone.position_x
+        }else{
+          this.selection_zone.width=Math.abs( mouse_position[0]-this._selection_zone.starting_x_point)
+          new_x=mouse_position[0]
+        }
+
+        if(mouse_position[1]>this._selection_zone.starting_y_point){
+          this.selection_zone.height=mouse_position[1] - this._selection_zone.starting_y_point
+        }else{
+          this.selection_zone.height=Math.abs(this._selection_zone.starting_y_point- mouse_position[1] )
+          new_y=mouse_position[1]
+        }
+
+        // Update shape on drawing area
+        this.selection_zone.setPosXY(new_x,new_y)
+        this._selection_zone.setSize()
       }
     }
   }
