@@ -75,12 +75,12 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
           //MENU PARAMETRE GENERAUX
         }
         <AccordionButton
-      onClick={()=>{
-        const scroll_x = window.scrollX
-        const scroll_y = window.scrollY
-        setTimeout(() => {
-          document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-        },50)}}
+          onClick={()=>{
+            const scroll_x = window.scrollX
+            const scroll_y = window.scrollY
+            setTimeout(() => {
+              document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+            },50)}}
         >
           <Box
             as='span'
@@ -108,7 +108,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
           const scroll_y = window.scrollY
           setTimeout(() => {
             document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-         },50)
+          },50)
         }
         }
       >
@@ -135,7 +135,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 const scroll_y = window.scrollY
                 setTimeout(() => {
                   document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-               },50)
+                },50)
               }}
             >
               <Box
@@ -170,7 +170,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 const scroll_y = window.scrollY
                 setTimeout(() => {
                   document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-               },50)
+                },50)
               }}
             >
               <Box
@@ -239,7 +239,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                   const scroll_y = window.scrollY
                   setTimeout(() => {
                     document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-                },50)
+                  },50)
                 }}>
                 <Box
                   as='span'
@@ -260,13 +260,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 //MENU ETIQUETTES DE FLUX
               }
               <AccordionButton
-              onClick={()=>{
-                const scroll_x = window.scrollX
-                const scroll_y = window.scrollY
-                setTimeout(() => {
-                  document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-               },50)
-              }}
+                onClick={()=>{
+                  const scroll_x = window.scrollX
+                  const scroll_y = window.scrollY
+                  setTimeout(() => {
+                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+                  },50)
+                }}
               >
                 <Box
                   as='span'
@@ -287,13 +287,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 //MENU ETIQUETTES DE DONNÉES
               }
               <AccordionButton
-              onClick={()=>{
-                const scroll_x = window.scrollX
-                const scroll_y = window.scrollY
-                setTimeout(() => {
-                  document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-               },50)
-              }}
+                onClick={()=>{
+                  const scroll_x = window.scrollX
+                  const scroll_y = window.scrollY
+                  setTimeout(() => {
+                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+                  },50)
+                }}
               >
                 <Box
                   as='span'
