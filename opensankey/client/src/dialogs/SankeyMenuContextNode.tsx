@@ -164,6 +164,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const dropdown_c_n_io = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
+    ComponentUpdater.updateComponentMenuNodeIOSelectSideNode.current.forEach(_=>_())
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
   }} variant='contextmenu_button'>{t('Noeud.PF.PF')}{icon_open_modal}</Button>
@@ -328,6 +329,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
             applicationState.ref_display_link_opacity.current.forEach(setter => setter(opacity))
           })
           multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
+          updateComponentMenuConfigLink.current()
           set_contextualised_node(undefined)
         }}>
         {t('Noeud.SlctIL')}

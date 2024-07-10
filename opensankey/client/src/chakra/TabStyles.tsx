@@ -56,10 +56,10 @@ export const tabs_navbar = definePartsStyle({
     textStyle: 'h1',
   },
   tab: {
-    width: '7rem',
+    minWidth: '7rem',
     borderBottom: 'none',
     margin: '0rem 0rem 0rem 0.25rem !important',
-    padding: '0 !important',
+    padding: '0rem !important',
     height: '2rem !important',
     justifySelf: 'start',
     alignSelf: 'center',
@@ -74,7 +74,7 @@ export const tabs_navbar = definePartsStyle({
   },
   tablist: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(7, 7rem)',
+    gridTemplateColumns: 'repeat(7, minmax(8.5rem, 12rem))',
     gridColumnGap: '1px',
     border: '0 !important',
     margin: '0 !important',

@@ -449,7 +449,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   allowMouseWheel
                   value={stretchFactorH}
                   onChange={evt=>{
-                    set_stretchFactorH(+evt)
+                    set_stretchFactorH(evt as unknown as number)
                   }}>
                   <NumberInputField/>
                   <NumberInputStepper>
@@ -479,7 +479,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   allowMouseWheel
                   value={stretchFactorV}
                   onChange={evt=>{
-                    set_stretchFactorV(+evt)
+                    set_stretchFactorV(evt as unknown as number)
                   }}>
                   <NumberInputField/>
                   <NumberInputStepper>
@@ -541,8 +541,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     'ref_setter_show_apply_layout',
     content_modal_layout,
     {current:[window.innerWidth/4,window.innerHeight/4]},
-    t('Menu.Transformation.title'),
-    60
+    t('Menu.Transformation.title')
   )
   return dragLayout
 
@@ -584,7 +583,9 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
     isOpen={show_save_json_modal}
     onClose={() => set_show_save_json_modal(false)}
   >
-    <ModalContent>
+    <ModalContent
+      maxWidth='inherit'
+    >
       <ModalHeader>
         {t('Menu.SaveJSON')}
       </ModalHeader>
@@ -689,7 +690,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
       >{t('Menu.ouvrir')}</Button>
     </Box>
   </Box>
-  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'),30)
+  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'))
 
 }
 

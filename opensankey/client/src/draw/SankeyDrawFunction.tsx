@@ -216,10 +216,19 @@ export const TextNodeWrap : TextNodeWrapFType = (
       return 0
     }
   })
+  let nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
+  if (d.name.split(' ').length == 1 && nb_tspan>1) {
+    const el = d3.select(' .opensankey #ggg_' + d.idNode + ' text')
+    el.select("tspan:first-child").remove()
+    d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dy',0)
+  }
+  nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   //Nombre de tspan dans la balise text
   const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
-  const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
-  if (ReturnValueNode(data,d,'label_vert')  == 'middle') {
+
+  if (d.x_label) {
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((ReturnValueNode(data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
+  } else if (ReturnValueNode(data,d,'label_vert')  == 'middle') {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> {
       const size_text=(ReturnValueNode(data,(n as SankeyNode),'font_size') as number)
       const shift=(0.25 *(size_text))
@@ -349,7 +358,7 @@ export const DrawArrows : DrawArrowsType = (
   let cum_v_right = 0
   let cum_h_bottom = 0
   let is_v = true
-  const is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
+  let is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
   const node_shape=ReturnValueNode(data,n,'shape')
 
   let node_angle_direction='right'
@@ -408,7 +417,11 @@ export const DrawArrows : DrawArrowsType = (
       if (extension.display_thin) {
         link_value = inv_scale(applicationData.min_link_thickness)
       }
+      if (data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'  && extension.free_mini !== undefined  && is_exportation_node) {
+        is_exportation_node = false
+      }
     }
+    
 
     const source_node = data.nodes[l.idSource]
     if (ori === 'hh' || ori === 'vh') {
@@ -1404,7 +1417,7 @@ export const TextNodeValue : TextNodeValueFType =(
       for (let i = 0; i < d.outputLinksId.length; i++) {
         const link = display_links[d.outputLinksId[i]]
         if (link === undefined) {
-          return ''
+          continue
         }
         if (scientific_precision === 0 && ReturnValueLink(data, link, 'to_precision')) {
           scientific_precision = ReturnValueLink(data, link, 'scientific_precision') as number
@@ -1424,8 +1437,7 @@ export const TextNodeValue : TextNodeValueFType =(
         for (let i = 0; i < d.inputLinksId.length; i++) {
           const link = display_links[d.inputLinksId[i]]
           if (link === undefined) {
-            //alert('Corruption du diagramme')
-            return ''
+            continue
           }
           if (scientific_precision === 0 && ReturnValueLink(data, link, 'to_precision')) {
             scientific_precision = ReturnValueLink(data, link, 'scientific_precision') as number
@@ -1443,8 +1455,8 @@ export const TextNodeValue : TextNodeValueFType =(
     }
     if (scientific_precision !==0) {
       return ToPrecision(total,t,scientific_precision)+unit
-    }
-    return total+unit
+    } 
+    return ToPrecision(total,t,data.style_link['default']['scientific_precision'])+unit
   } else {
     return ''
   }
@@ -1514,7 +1526,7 @@ export const NodeLabelValuePosY : NodeLabelValuePosYFType = (
   const val_font_size=(ReturnValueNode(data,n,'font_size') as number)
   const is_same_pos=NodeValueAndTextSamePos(data,n)
   if (val == 'middle') {
-    return height / 2 + ((is_same_pos)?val_font_size:0)
+    return height / 2 + 0.25*val_font_size
   } else if (val == 'top') {
     return 0+ ((is_same_pos)?-height_text*1.5:0)
   } else if (val == 'bottom') {
@@ -1663,10 +1675,6 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
     draw_warning = left_in_src || right_in_src
   } else if (ReturnValueLink(data,l,'orientation') == 'vv') {
     draw_warning = top_in_src
-  } else if (ReturnValueLink(data,l,'orientation') == 'vh') {
-    draw_warning = left_in_src || right_in_src || top_in_src
-  } else {
-    draw_warning = left_in_src || right_in_src || top_in_src
   }
   if (draw_warning && !ReturnValueLink(data,l,'recycling')) {
     return 1

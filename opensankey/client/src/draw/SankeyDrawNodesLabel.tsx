@@ -5,6 +5,7 @@ import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelVa
 import { ReturnValueNode, default_element_color } from '../configmenus/SankeyUtils'
 import { DrawAddNodesFtype, DrawAllNodesLabelFType } from './types/SankeyDrawNodesLabelTypes'
 import { windowSankey } from '../configmenus/SankeyUtils'
+import { dragNodeTextEventWidthBoxEvent } from './SankeyDragNodes'
 
 
 
@@ -24,7 +25,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
   GetLinkValue,t,
   node_function
 ) => {
-  const { data,display_nodes,display_links } = applicationData
+  const { data, display_nodes, display_links } = applicationData
   //------------------LABEL------------------------
   // Add node label and apply parameter
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
@@ -54,6 +55,9 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('x',n => NodeLabelPosX(data,n as SankeyNode))
     .attr('y', n => NodeLabelPosY(data,n as SankeyNode))
     .attr('text-anchor', n => {
+      if (n.x_label) {
+        return 'start'
+      }
       if (ReturnValueNode(data,n,'label_horiz') == 'middle') {
         return 'middle'
       } else if (ReturnValueNode(data,n,'label_horiz') == 'left') {
@@ -126,12 +130,12 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
 
         return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg-2
       }
-      
+
     })
       .attr('y',n=>{
         const font_size=ReturnValueNode(data,n,'font_size') as number
         if(n.y_label){
-          return n.y_label-font_size
+          return n.y_label
         }else{
           const pos_y=ReturnValueNode(data,n,'label_vert')
           const org_text_pos= NodeLabelPosY(data,n as SankeyNode)
@@ -148,10 +152,10 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
               shift_y=(nb_tspan+0.5)*font_size/2
             }
           }
-  
+
           return org_text_pos-shift_y
         }
-        
+
       })
       .attr('width',n=>{
         return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0))/scale_svg+4
@@ -235,5 +239,5 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     //.attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
     .attr('visibility','hidden')
   // .filter(()=>windowSankey.SankeyToolsStatic!==true)
-  // .call(dragNodeTextEventWidthBoxEvent(data,set_data))
+    .call(dragNodeTextEventWidthBoxEvent(data,node_function))
 }

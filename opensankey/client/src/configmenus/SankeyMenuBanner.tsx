@@ -292,8 +292,8 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
       const selected = tmp.length > 0 ? tmp[0][0] : ''
 
       selector = <Select
-        key={tags_group.name}
-        defaultValue={selected}
+        key={tags_group.group_name}
+        value={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // delete_local_aggregation(data)
           handleSimpleDropdown(evt, tags_group)
@@ -413,6 +413,7 @@ export const setDiagram: setDiagramFuncType = (
   convert_data: ConvertDataFuncType,
   DefaultSankeyData: () => SankeyData,
 ) => {
+  console.log('setDiagram')
   const sous_filieres = window.sankey.sous_filieres
 
   const new_data = JSON.parse(
@@ -1107,9 +1108,9 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
       if (Object.entries(tags_group.tags).filter(([, v]) => v.selected).length > 0) {
         selected = Object.entries(tags_group.tags).filter(([, v]) => v.selected)[0][0]
       }
-      selector = <Select
-        key={tags_group.name}
-        defaultValue={selected}
+      selecteor = <Select
+        key={tags_group.group_name}
+        value={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // let had_suffix = false
           // const pl = Object.entries(links_dict).map(l => {
@@ -1254,4 +1255,5 @@ const redrawSankeyWithSelectedTag = (
     //redrawNodeLinkLegend(applicationData,node_function,link_function,ComponentUpdater,applicationDraw)
     actualizeDrawAreaFrame(applicationData, GetSankeyMinWidthAndHeight)
   }
+  applicationDraw.reDrawLegend()
 }

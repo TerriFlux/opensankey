@@ -216,6 +216,14 @@ const eventLinkClick=(
           }
         }, 200)
       }
+      // Open element accordion if not already openend
+      if (
+        accordion_ref &&
+        accordion_ref.current &&
+        d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        accordion_ref.current.click()
+      }
       // Open link accordion if not already openend
       if (
         links_accordion_ref &&
@@ -232,7 +240,7 @@ const eventLinkClick=(
       // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
       // alors on cherche quel étiquette de quel groupe il represente
       // On prend pour référence pour la valeur le premier flux sélectionné
-      if(link_data_ref.includes('_')){
+      if(Object.values(data.dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0 && link_data_ref.includes('_')){
         const index_grp_tag=link_data_ref.split('_')
         // Supprime le première élément du tableau qui ne contient que l'id du flux
         index_grp_tag.shift()
@@ -314,9 +322,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       .subject(Object)
       .on('start',(event,link)=>{
         if (alt_key_pressed.current) {
-          // AssignLinkLocalAttribute(link,'label_on_path',false)
           AssignLinkLocalAttribute(link,'label_position','frozen')
-          AssignLinkLocalAttribute(link,'orthogonal_label_position','frozen')
           if(!(link.x_label && link.y_label)){
             const link_value = TestLinkValue(applicationData, link,GetLinkValue)
             const source_node=data.nodes[link.idSource]

@@ -5,18 +5,35 @@ const { definePartsStyle } =
   createMultiStyleConfigHelpers(modalAnatomy.keys)
 
 export const modal_base_style = definePartsStyle({
+  dialog: {
+    width: 'fit-content',
+    maxWidth: 'inherit',
+    display: 'grid',
+    gridGap: '1rem',
+    padding: '0.25rem',
+  },
+  body: {
+    width: 'fit-content',
+    maxWidth:'75vw',
+    minWidth:'30vw',
+    display: 'grid',
+    gridGap: '1rem',
+    padding: '0.25rem',
+  }
 })
-
-const screenHeight = window.innerHeight
 
 export const modal_welcome = definePartsStyle({
   dialog:{
-    width:'75%',
-    maxWidth:'inherit'
+    width:'max-content',
+    top:'3rem',
+    maxWidth: 'inherit',
   },
   body: {
-    maxHeight:(screenHeight*0.6)+'px',
-    overflowY:'auto'
+    maxHeight:'80vh',
+    overflowY:'scroll'
+  },
+  footer: {
+    height: '3rem',
   }
 })
 

@@ -17,11 +17,11 @@ import {
   Modal,
   ModalContent,
   ModalBody,
-  ModalHeader,
   ModalCloseButton,
   Checkbox,
   Breadcrumb,
-  BreadcrumbItem
+  BreadcrumbItem,
+  Text,
 } from '@chakra-ui/react'
 
 import { windowSankey } from '../configmenus/SankeyUtils'
@@ -102,31 +102,79 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
     {additional_shortcut_item}
   </Accordion>
   external_content['rc'] = windowSankey.SankeyToolsStatic?content_rc_static:content_rc_not_static
-  
-  const content=<Modal variant='modal_welcome' isOpen={show_wecome && !never_see_again.current} onClose={()=>set_show_welcome(false)}>
-    <ModalContent>
-      <ModalHeader>
-        <Box  className='title_menu'>
-          {t('welcome.'+active_page)}
-        </Box>
-      </ModalHeader>
+
+  const content=<Modal
+    variant='modal_welcome'
+    isOpen={show_wecome && !never_see_again.current}
+    onClose={()=>set_show_welcome(false)}
+  >
+    <ModalContent
+      maxWidth='inherit'
+    >
       <ModalCloseButton/>
-      <ModalBody>
-        {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
+      <ModalBody
+        display='grid'
+        gridTemplateColumns='minmax(10rem, 10%) auto'
+        gridGap='0.25rem'
+      >
+        <Breadcrumb
+          variant={'pagination_welcome'}
+          separator={''}
+          listProps={{
+            'display': 'grid',
+            'gridAutoFlow': 'rows',
+            'gridRowGap': '1rem',
+            'gridTemplateRows': 'repeat(auto, 1fr)',
+            'alignItems': 'center',
+            'padding': '0.25rem'
+          }}
+        >
+          {
+            Object.entries(external_pagination)
+              .map((k)=>{
+                return <BreadcrumbItem
+                  isCurrentPage={active_page===k[0]}
+                  key={k[0]}
+                >
+                  {k[1]}
+                </BreadcrumbItem>
+              })
+          }
+        </Breadcrumb>
+        <Box
+          display='grid'
+          gridAutoFlow='rows'
+          padding='0rem 0.5rem 0.5rem 0.5rem'
+        >
+          {/* Titre  */}
+          <Text
+            textStyle='h1'
+            fontSize='1.5rem'
+            color='white'
+            background='primaire.2'
+            borderRadius='6px'
+            paddingInlineStart='1rem'
+            width='calc(100% - 2rem)'
+          >
+            {t('welcome.'+active_page)}
+          </Text>
+          {/* Contenu */}
+          {external_content[active_page as 'read_me' | 'intro' | 'interface' | 'rc' | 'licence' | 'news']}
+        </Box>
+
       </ModalBody>
       <ModalFooter style={{justifyContent:'center'}}>
         <Box layerStyle='box_footer_welcome'>
-          <Breadcrumb variant={'pagination_welecome'} separator='-' >
-            {Object.entries(external_pagination).map((k)=>{return <BreadcrumbItem isCurrentPage={active_page===k[0]}  key={k[0]}>{k[1]}</BreadcrumbItem>})}
-          </Breadcrumb>
-
-          <Checkbox 
+          <Checkbox
             variant='checkbox_dont_show_again'
             isChecked={never_see_again.current} onChange={evt=>{
               never_see_again.current = evt.target.checked
               localStorage.setItem('dontSeeAggainWelcome','1')
               set_show_welcome(false)
-            }}>{t('dontSeeAgain')}</Checkbox>
+            }}
+          >
+            {t('dontSeeAgain')}
+          </Checkbox>
         </Box>
       </ModalFooter>
     </ModalContent>

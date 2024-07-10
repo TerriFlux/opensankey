@@ -60,6 +60,9 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         // (the position of the label is not by label_vert & label_horiz, but by coordinate relative to the node )
         // Else if we don't press 'alt' we drag the node (with the label)
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
+          const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + node.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
+          d3.select(' .opensankey #ggg_' + node.idNode + ' .node_text')
+            .attr('transform',n=> 'translate(0,'+((ReturnValueNode(applicationData.data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
@@ -95,7 +98,8 @@ export const DragGNodeEvent: DragGNodeEventFType = (
  * @returns {*}
  */
 export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType = (
-  data: SankeyData
+  data,
+  node_function,
 ) => {
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
@@ -115,6 +119,7 @@ export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType
           d3.select(' .opensankey #ggg_' + node.idNode + ' .box_width_threshold').attr('width', tmp - event.dx / 2)
           AssignNodeLocalAttribute(data.nodes[node.idNode], 'label_box_width', tmp + event.dx)
         }
+        node_function.RedrawNodesLabels([data.nodes[node.idNode]])
       }
     })
 }
@@ -186,12 +191,21 @@ export const drag_node_text: drag_node_textFuncType = (
   node: SankeyNode,
   event: d3.D3DragEvent<Element, unknown, unknown>
 ) => {
-  const old_x = +d3.select(' .opensankey #text_' + node.idNode).attr('x'), old_y = +d3.select(' .opensankey #text_' + node.idNode).attr('y'), new_x = old_x + event.dx, new_y = old_y + event.dy
+  const old_x = +d3.select(' .opensankey #text_' + node.idNode).attr('x')
+  const old_y = +d3.select(' .opensankey #text_' + node.idNode).attr('y')
+  const new_x = old_x + event.dx
+  const new_y = old_y + event.dy
+  d3.select(' .opensankey #text_' + node.idNode).attr('text-anchor', 'start')
   d3.select(' .opensankey #text_' + node.idNode).attr('x', new_x)
   d3.select(' .opensankey #text_' + node.idNode).attr('y', new_y)
   node.x_label = new_x
   node.y_label = new_y
   d3.select(' .opensankey #text_' + node.idNode).selectAll('tspan').attr('x', new_x)
+
+  if (!d3.select(' .opensankey #label_bg_for_'+node.idNode).empty()){
+    d3.select(' .opensankey #label_bg_for_'+node.idNode).attr('x', new_x).attr('y', new_y)
+  }
+
 }
 
 export const ReturnOutOfBoundElement: ReturnOutOfBoundElementFuncType = (

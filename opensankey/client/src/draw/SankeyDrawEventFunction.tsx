@@ -209,7 +209,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
     new_tags_selected
   )
 
-  if (link_data_ref.includes('_')) {
+  if ( Object.values(data.dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0 && link_data_ref.includes('_')) {
     const index_grp_tag = link_data_ref.split('_')
     // Supprime le première élément du tableau qui ne contient que l'id du flux
     index_grp_tag.shift()
@@ -307,11 +307,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
 
       if ((!evt.ctrlKey && !evt.metaKey)) {
         if (!token && Object.keys(data.nodes).length > 15) {
-          if (setter_limited_application?.ref_setter_show_toast_limit_node) setter_limited_application.ref_setter_show_toast_limit_node.current!(true)
-
-          setTimeout(function () {
-            if (setter_limited_application?.ref_setter_show_toast_limit_node) setter_limited_application.ref_setter_show_toast_limit_node.current!(false)
-          }, 3000)
+          dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current({ success: 'The limits is 15 nodes. You need to login to add more nodes.' })
         } else {
           const new_node1 = DefaultNode(data)
           let idNode = Object.keys(data.nodes).length
@@ -549,10 +545,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       first_selected_node.current = undefined
-      if (setter_limited_application?.ref_setter_show_toast_limit_node) setter_limited_application.ref_setter_show_toast_limit_node.current!(true)
-      setTimeout(function () {
-        if (setter_limited_application?.ref_setter_show_toast_limit_node) setter_limited_application.ref_setter_show_toast_limit_node.current!(false)
-      }, 3000)
+      dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current({ success: 'The limits is 15 nodes. You need to login to add more nodes.' })
     } else if ((pos[0] === start_point.current[0] && pos[1] === start_point.current[1])) {
       // If we release the mouse at the same point of when we pressed it then don't create a second node,
       // it can happend when we click just to create 1 node and the application think we release the button on the draw zone (the first node didn't have time to appear and trigger the mouse release on the first node created)

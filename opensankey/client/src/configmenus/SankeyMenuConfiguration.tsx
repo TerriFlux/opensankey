@@ -77,7 +77,14 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
         {
           //MENU PARAMETRE GENERAUX
         }
-        <AccordionButton>
+        <AccordionButton
+          onClick={()=>{
+            const scroll_x = window.scrollX
+            const scroll_y = window.scrollY
+            setTimeout(() => {
+              document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+            },50)}}
+        >
           <Box
             as='span'
             layerStyle='menuconfig_entry'>
@@ -181,7 +188,15 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
         {
           //MENU ETIQUETTES
         }
-        <AccordionButton>
+        <AccordionButton
+          onClick={()=>{
+            const scroll_x = window.scrollX
+            const scroll_y = window.scrollY
+            setTimeout(() => {
+              document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+            },50)
+          }}
+        >
           <Box
             as='span'
             layerStyle='menuconfig_entry'>
@@ -200,7 +215,14 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               {
                 //MENU ETIQUETTES DE NOEUDS
               }
-              <AccordionButton>
+              <AccordionButton
+                onClick={()=>{
+                  const scroll_x = window.scrollX
+                  const scroll_y = window.scrollY
+                  setTimeout(() => {
+                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+                  },50)
+                }}>
                 <Box
                   as='span'
                   layerStyle='submenuconfig_entry'>
@@ -219,7 +241,15 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               {
                 //MENU ETIQUETTES DE FLUX
               }
-              <AccordionButton>
+              <AccordionButton
+                onClick={()=>{
+                  const scroll_x = window.scrollX
+                  const scroll_y = window.scrollY
+                  setTimeout(() => {
+                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+                  },50)
+                }}
+              >
                 <Box
                   as='span'
                   layerStyle='submenuconfig_entry'>
@@ -238,7 +268,15 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               {
                 //MENU ETIQUETTES DE DONNÉES
               }
-              <AccordionButton>
+              <AccordionButton
+                onClick={()=>{
+                  const scroll_x = window.scrollX
+                  const scroll_y = window.scrollY
+                  setTimeout(() => {
+                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
+                  },50)
+                }}
+              >
                 <Box
                   as='span'
                   layerStyle='submenuconfig_entry'>

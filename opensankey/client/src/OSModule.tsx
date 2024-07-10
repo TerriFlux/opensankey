@@ -131,7 +131,7 @@ export const initializeApplicationContext : initializeApplicationContextType = (
   url_prefix : '/opensankey/',
   logo : logo,
   logo_terriflux : logo_terriflux,
-  has_free_account:false
+  has_free_account:true
 }}
 
 // Global variables not stored in SankeyData
@@ -226,7 +226,6 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   link_function,
   start_point,
   resizeCanvas,
-  _
 )=> {
   const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
@@ -534,7 +533,6 @@ export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {retur
 
 export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
-  updateMenus,
   applicationContext,
   applicationData,
   applicationDraw,
@@ -630,7 +628,6 @@ export const moduleDialogs : module_dialogsType = (
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.MEP'),
-    33
   ),
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
