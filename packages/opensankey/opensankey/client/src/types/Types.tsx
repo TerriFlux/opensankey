@@ -550,7 +550,7 @@ export type initializeApplicationDrawType = (
   link_function:LinkFunctionTypes,
   start_point:{current:number[]},
   resizeCanvas:()=>void,
-  ref_alt_key_pressed:MutableRefObject<boolean>
+  ref_alt_key_pressed?: MutableRefObject<boolean>
 )=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
@@ -642,10 +642,11 @@ export type InstallEventsOnSVGType = (
 export type ComponentUpdaterType={
   updateComponentMenuConfig: MutableRefObject<()=>void>
   updateComponenSaveInCache: MutableRefObject<(b:boolean)=>void>
-  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<()=>void>
+  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(()=>null)[]>
   updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
   updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>
   updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>
+  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 export type initializeComponentUpdaterType = ()=>ComponentUpdaterType
 
@@ -702,7 +703,6 @@ export type AdditionalMenusType = {
 
 export type initializeAdditionalMenusType = (
   additional_menus:AdditionalMenusType,
-  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   applicationContext:applicationContextType,
   applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
@@ -767,7 +767,8 @@ export type SankeyAppTypes = {
   DrawAll:DrawAllType,
   installEventOnSVG:InstallEventsOnSVGType,
   ClickSaveDiagram:ClickSaveDiagramFuncType,
-  InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType
+  InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 }
 
 export type initializeMenuConfigurationFuncType=(

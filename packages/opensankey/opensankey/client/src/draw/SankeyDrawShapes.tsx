@@ -627,7 +627,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   // Some link can be in displayed_links but not visible, their style display is none (it happen when their value is 0)
-  const link_displayed_to_create_sabot = n.outputLinksId.filter(idLink => Object.keys(applicationData.display_links).includes(idLink) && d3.select('#gg_' + idLink).style('display') !== 'none')
+  const link_displayed_to_create_sabot = n.outputLinksId.filter(idLink => Object.keys(applicationData.display_links).includes(idLink) && !d3.select('#gg_' + idLink).empty() && d3.select('#gg_' + idLink).style('display') !== 'none')
 
   for (let i = 0; i < link_displayed_to_create_sabot.length; i++) {
     const l = data.links[n.outputLinksId[i]]
