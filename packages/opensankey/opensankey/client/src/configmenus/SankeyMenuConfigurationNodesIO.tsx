@@ -439,7 +439,20 @@ export const updateDefaultNodeIO=(
   return [link_pos,link_io]
 }
 
-
+/**
+ * Define IO selection menu for nodes
+ *
+ * @param {*} {
+ *   applicationContext,
+ *   applicationData,
+ *   applicationState,
+ *   node_function,
+ *   link_function,
+ *   ComponentUpdater,
+ *   menu_for_modal
+ * }
+ * @return {*}
+ */
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
   applicationData,
@@ -450,10 +463,10 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   menu_for_modal
 }) => {
   const { t } = applicationContext
-  const { data, display_nodes, display_links,new_data } = applicationData
+  const { data, display_nodes, display_links, new_data } = applicationData
   const { multi_selected_nodes, multi_selected_links } = applicationState
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
-  const {GetLinkValue}=link_function
+  const { GetLinkValue }=link_function
   const [ link_io, set_link_io ] = useState('output')
   const [ link_pos, set_link_pos ] = useState('right')
   const [ tab_colored, set_tab_colored ] = useState(false)

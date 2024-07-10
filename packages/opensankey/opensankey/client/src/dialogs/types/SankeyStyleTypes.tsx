@@ -1,18 +1,17 @@
 import { MutableRefObject } from 'react'
-import { 
+import {
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
-  applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType 
+  applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType
 } from '../../types/Types'
 
 export type SankeyModalStyleNodeFType = {
     applicationContext:applicationContextType,
     applicationData:applicationDataType,
+    applicationState:applicationStateType,
     dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-    ref_selected_style_node:MutableRefObject<string>,
     ComponentUpdater:ComponentUpdaterType,
-    node_function:NodeFunctionTypes,
     pointer_pos:{current:number[]},
     node_attribute_tab:JSX.Element,
 }
@@ -25,7 +24,6 @@ export type SankeyModalStyleLinkFType = {
     dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
     pointer_pos:{current:number[]},
     additional_link_appearence_items:JSX.Element[],
-    link_function:LinkFunctionTypes,
     ComponentUpdater:ComponentUpdaterType,
 }
 
