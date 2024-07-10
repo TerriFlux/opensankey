@@ -32,7 +32,8 @@ import {
   initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_ProtoElement, Class_ZoneSelection } from './Element'
+import { Class_ProtoElement } from './Element'
+import { Class_ZoneSelection } from './Selection_Zone'
 
 
 // CLASS DRAWING AREA *******************************************************************
@@ -894,13 +895,14 @@ export class Class_DrawingArea {
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
-
-        // Display the selection zone & set it starting position
-        const mouse_position = d3.pointer(event)
-        this._selection_zone.setVisible()
-        this._selection_zone.starting_x_point = mouse_position[0]
-        this._selection_zone.starting_y_point = mouse_position[1]
-        this._selection_zone.draw()
+        if (event.button == 0) {
+          // Display the selection zone & set it starting position
+          const mouse_position = d3.pointer(event)
+          this._selection_zone.setVisible()
+          this._selection_zone.starting_x_point = mouse_position[0]
+          this._selection_zone.starting_y_point = mouse_position[1]
+          this._selection_zone.draw()
+        }
 
       }
     }
