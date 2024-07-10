@@ -68,7 +68,6 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   advanced_label_value_content,
   link_function,
   ComponentUpdater,
-  updateMenus,
   node_function
 }) => {
   const { t } = applicationContext
@@ -77,7 +76,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current
-  const {updateComponentMenuConfigNodeAppearence,updateComponentMenuConfigNode}= ComponentUpdater
+  const {updateComponentMenuConfigNodeAppearence,updateComponentMenuConfigNode,updateMenus}= ComponentUpdater
   const {RedrawNodes}=node_function
   const {RedrawLinks}=link_function
   updateComponentMenuConfigNodeAppearence.current=()=>setForceUpdate(!forceUpdate)

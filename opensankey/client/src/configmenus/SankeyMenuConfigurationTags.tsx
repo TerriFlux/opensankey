@@ -21,7 +21,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   node_function,
   link_function,
   ComponentUpdater,
-  updateMenus,
   reDrawLegend
 }) => {
   const {data}=applicationData
@@ -29,7 +28,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
-  const {updateComponentToolbar,updateComponenSaveInCache}= ComponentUpdater
+  const {updateComponentToolbar,updateComponenSaveInCache,updateMenus}= ComponentUpdater
   //const [forceUpdate,setForceUpdate]=useState(false)
   const colormaps = [
     'custom',
