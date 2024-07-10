@@ -129,7 +129,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <Box layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
         <Input
-          variant='menuconfigpanel_option_input' value={data.node_label_separator} 
+          variant='menuconfigpanel_option_input' value={data.node_label_separator}
           onChange={evt=>{
             data.node_label_separator=evt.target.value
             // ComponentUpdater.updateComponentMenuConfig.current()
@@ -167,7 +167,7 @@ export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
     })}
   </>
 
-  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modal_preference',content,pointer_pos,t('Menu.title_pref'),34)
+  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modal_preference',content,pointer_pos,t('Menu.title_pref'))
 
 }
 

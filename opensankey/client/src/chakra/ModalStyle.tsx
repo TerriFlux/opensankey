@@ -29,8 +29,11 @@ export const modal_welcome = definePartsStyle({
     maxWidth: 'inherit',
   },
   body: {
-    maxHeight:'60vh',
-    overflowY:'auto'
+    maxHeight:'80vh',
+    overflowY:'scroll'
+  },
+  footer: {
+    height: '3rem',
   }
 })
 

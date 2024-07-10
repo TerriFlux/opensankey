@@ -30,7 +30,6 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  SimpleGrid,
   Stack,
   Tab,
   TabList,
@@ -294,34 +293,34 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
 
   if (window.SankeyToolsStatic && sous_filieres && is_split) {
     diagrams_element =<Box
-        margin='0.25rem'
-        alignSelf='center'
-        justifySelf='center'
-      >
-        <FormControl key={'1'} >
+      margin='0.25rem'
+      alignSelf='center'
+      justifySelf='center'
+    >
+      <FormControl key={'1'} >
+        <Select style={{ width: '200px', color:'black' }}
+          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+            sDiagram(evt.target.value)
+            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+            setDiagram(diagram_path, set_data,convert_data,get_default_data)
+          }}
+          value={s_diagram}>
+          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Select>
+      </FormControl>
+      {is_split ?
+        (  <FormControl key={'2'} >
           <Select style={{ width: '200px', color:'black' }}
-            onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-              sDiagram(evt.target.value)
-              const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+              sDiagram2(evt.target.value)
+              const diagram_path = s_diagram+'/'+evt.target.value
               setDiagram(diagram_path, set_data,convert_data,get_default_data)
             }}
-            value={s_diagram}>
-            {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
-          </Select>
-        </FormControl>
-        {is_split ?
-          (  <FormControl key={'2'} >
-            <Select style={{ width: '200px', color:'black' }}
-              onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-                sDiagram2(evt.target.value)
-                const diagram_path = s_diagram+'/'+evt.target.value
-                setDiagram(diagram_path, set_data,convert_data,get_default_data)
-              }}
-              value={s_diagram_2}>
-              {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
-            </Select></FormControl>) :(<React.Fragment />)
-        }
-      </Box>
+            value={s_diagram_2}>
+            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+          </Select></FormControl>) :(<React.Fragment />)
+      }
+    </Box>
   }
 
   if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
@@ -1477,7 +1476,6 @@ export const MenuDraggable: MenuDraggableFType = (
   content: JSX.Element | JSX.Element[],
   pointer_pos: { current: number[] },
   title: string,
-  _ = 25
 ) => {
   const [display_menu, set_display_menu] = useState(false)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu

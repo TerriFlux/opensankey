@@ -121,7 +121,7 @@ import {
 } from './HeadingStyles'
 import {
   breadcrumb_base_style,
-  pagination_welecome
+  pagination_welcome
 } from './BreadcrumbStyle'
 import {
   tag_base_style,
@@ -196,7 +196,7 @@ export const opensankey_theme = extendTheme({
     Breadcrumb:{
       baseStyle:breadcrumb_base_style,
       variants:{
-        pagination_welecome
+        pagination_welcome
       }
     },
     Card:{

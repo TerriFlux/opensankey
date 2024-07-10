@@ -627,7 +627,6 @@ export const open_resources = {
         fn:'Null Link Visible',
         visible:'Visible',
         hlp_1:'Sankey diagram',
-        hlp_1_txt_1:'The thickness of an arrow is proportional to the value of the flux it represents.',
         hlp_1_txt_2:'Choose the displayed level of aggregation for all the diagram\'s nodes',
         hlp_1_txt_3:'Filters can be used to display only parts of the diagram. To do this use the selectors',
         hlp_1_txt_4:'Different color palettes can be used to color nodes and links using the Color Palette selector',
@@ -653,9 +652,16 @@ export const open_resources = {
       welcome:{
         welcome:'Welcome to OpenSankey web application',
         read_me:'Read me',
-        intro:'Introduction',
-        rc:'Keyboard Shortcut',
-        licence:'Licences',
+        intro: 'Quick overview of the application\'s functionalities',
+        interface: 'Interface\'s buttons explained',
+        rc: 'Keyboard Shortcuts',
+        licence: 'Licences',
+        breadcrumbs: {
+          intro: 'Overview',
+          interface:'Interface',
+          rc: 'Shortcuts',
+          licence: 'Licences',
+        },
         1:'Mouse mode selection button, there are 2 modes: a mode to select nodes and links to be able to move them, then a mode to create links and nodes with mouse click',
         2:'Buttons to filter the visibility or colors of nodes and links according to the groups to which they are associated',
         3:'Buttons to filter the nodes according to their aggregation level',
@@ -1310,7 +1316,6 @@ export const open_resources = {
         fn:'Flux nuls visibles',
         visible:'Visible',
         hlp_1:'Les diagrammes de Sankey',
-        hlp_1_txt_1:'L\'épaisseur d\'une flèche est proportionnelle à la valeur du flux qu\'elle représente.',
         hlp_1_txt_2:'Choisir le niveau d\'agrégation du diagramme',
         hlp_1_txt_3:'Des filtres peuvent être utilisés pour n\'afficher que des parties du diagramme. Pour cela utiliser les selecteurs',
         hlp_1_txt_4:'Différents palettes de couleurs peuvent être utiliser pour colorer les noeuds et les flux en utilisant le sélecteur Palette de Couleurs',
@@ -1334,11 +1339,18 @@ export const open_resources = {
 
       },
       welcome:{
-        welcome:'Bienvenue sur l\'application web OpenSankey',
-        read_me:'Lisez moi',
-        intro:'Introduction',
-        rc:'Raccourcis clavier',
-        licence:'Licences',
+        welcome: 'Bienvenue sur l\'application web OpenSankey',
+        read_me: 'Lisez moi',
+        intro: 'Présentation rapide de l\'outils et de ses fonctionnalités',
+        interface: 'Présentation des actions associées aux boutons et menus',
+        rc: 'Pour plus de rapidité, des raccourcis clavier sont disponibles',
+        licence: 'Optez pour la licence adaptée à votre usage',
+        breadcrumbs: {
+          intro: 'Fonctionnalités',
+          interface: 'Boutons et Menus',
+          rc: 'Raccourcis',
+          licence: 'Licences',
+        },
         1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant de sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds aux cliques de la souris',
         2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
         3:'Bouton permettant de filtrer les noeuds en fonction de leur niveau d\'agrégation',
@@ -1366,8 +1378,6 @@ export const open_resources = {
       Avancé:'Avancé',
       separator_interval:';',
       sep_decimal:',',
-
-
     }
   }
 }
