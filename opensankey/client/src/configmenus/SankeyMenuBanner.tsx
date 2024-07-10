@@ -292,7 +292,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
       const selected = tmp.length > 0 ? tmp[0][0] : ''
 
       selector = <Select
-        key={tags_group.group_name}
+        key={tags_group.name}
         value={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // delete_local_aggregation(data)
@@ -1108,8 +1108,8 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
       if (Object.entries(tags_group.tags).filter(([, v]) => v.selected).length > 0) {
         selected = Object.entries(tags_group.tags).filter(([, v]) => v.selected)[0][0]
       }
-      selecteor = <Select
-        key={tags_group.group_name}
+      selector = <Select
+        key={tags_group.name}
         value={selected}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // let had_suffix = false
