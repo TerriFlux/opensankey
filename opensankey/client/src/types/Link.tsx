@@ -50,7 +50,8 @@ export const default_shape_starting_curve = 0.05
 export const default_shape_ending_curve = 0.95
 export const default_shape_starting_tangeant = 0.25
 export const default_shape_ending_tangeant = 0.25
-export const default_shape_vert_shift = 0
+export const default_shape_middle_recyling = 100
+export const default_shape_vert_shift = 0  // TODO supprimer ce truc -> sert à rien
 export const default_value_label_color = 'black'
 export const default_value_label_custom_digit = false
 export const default_value_label_font_family = 'Arialserif'
@@ -278,9 +279,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     // Target
     this._target = target
     this._target.addInputLink(this)
-
-    this.computeControlPoints()
     // Instanciate display on svg
+    this.computeControlPoints()
     this.draw()
   }
 
@@ -647,6 +647,11 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._control_points.ending_curve_point.draw()
     this._control_points.starting_bezier_point.draw()
     this._control_points.ending_bezier_point.draw()
+    // Recyling handler
+    if (this.shape_is_recycling)
+      this._control_points.middle_recycling_point.setVisible()
+    else
+      this._control_points.middle_recycling_point.setInvisible()
     // Clean previous shape
     this.d3_selection?.selectAll('.link_control_path').remove()
     if (this._control_points.is_dragged) {
@@ -659,11 +664,39 @@ export class Class_LinkElement extends Class_ProtoElement {
       const y2 = this._control_points.starting_bezier_point.position_y
       const x4 = this._control_points.ending_bezier_point.position_x
       const y4 = this._control_points.ending_bezier_point.position_y
-      // Add new path shape
-      const path = 'M ' + x1 + ',' + y1
-        + ' L ' + x2 + ',' + y2
-        + ' L ' + x4 + ',' + y4
-        + ' L ' + x5 + ',' + y5
+      // Compute path
+      let path
+      // Normal mode
+      if (!this.shape_is_recycling) {
+        path = 'M ' + x1 + ',' + y1
+          + ' L ' + x2 + ',' + y2
+          + ' L ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+      }
+      else {
+        const xmid = this._control_points.middle_recycling_point.position_x
+        const ymid = this._control_points.middle_recycling_point.position_y
+        if (this.is_horizontal)
+          path = 'M ' + x1 + ',' + y1
+            + ' L ' + x2 + ',' + y2
+            + ' L ' + x2 + ',' + ymid
+            + ' L ' + x4 + ',' + ymid
+            + ' L ' + x4 + ',' + y4
+            + ' L ' + x5 + ',' + y5
+        else if (this.is_vertical)
+          path = 'M ' + x1 + ',' + y1
+            + ' L ' + x2 + ',' + y2
+            + ' L ' + xmid + ',' + y2
+            + ' L ' + xmid + ',' + y4
+            + ' L ' + x4 + ',' + y4
+            + ' L ' + x5 + ',' + y5
+        else
+          path = 'M ' + x1 + ',' + y1
+            + ' L ' + x2 + ',' + y2
+            + ' L ' + xmid + ',' + ymid
+            + ' L ' + x4 + ',' + y4
+            + ' L ' + x5 + ',' + y5
+      }
       this.d3_selection?.append('path')
         .classed('link', true)
         .classed('link_control_path', true)
@@ -747,6 +780,10 @@ export class Class_LinkElement extends Class_ProtoElement {
       const xf = this.position_x_end
       const yf = this.position_y_end
 
+      // Get middle point coordinates
+      const x_mid = this._control_points.middle_recycling_point.position_x
+      const y_mid = this._control_points.middle_recycling_point.position_y
+
       // Get starting control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
       const y1 = this._control_points.starting_curve_point.position_y
@@ -758,21 +795,27 @@ export class Class_LinkElement extends Class_ProtoElement {
       let x3, y3
       let x4, y4
       let x5, y5
-      if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (this.is_horizontal) {
         x4 = x2
-        y4 = y2 + 100 // todo param
+        y4 = y_mid
         x3 = x4
         y3 = (y4 + y2)/2
         x5 = x1
         y5 = y4
       }
-      else {
-        x4 = x2 + 100
+      else if (this.is_vertical) {
+        x4 = x_mid
         y4 = y2
         x3 = (x4 + x2)/2
         y3 = y4
         x5 = x4
         y5 = y1
+      }
+      else {
+        x4 = x_mid
+        y4 = y_mid
+        x3 = (x4 + x2)/2
+        y3 = (y4 + y2)/2
       }
 
       // Get ending control points coordinates
@@ -786,48 +829,62 @@ export class Class_LinkElement extends Class_ProtoElement {
       let x6, y6
       let x7, y7
       let x8, y8
-      if (this.is_horizontal || this.is_vertical_horizontal) {
+      if (this.is_horizontal) {
         x7 = x9
-        y7 = y9 + 100 // todo param
+        y7 = y_mid
         x8 = x9
         y8 = (y7 + y9)/2
         x6 = x10
         y6 = y7
       }
-      else {
-        x7 = x9 + 100 // todo param
+      else if (this.is_vertical) {
+        x7 = x_mid
         y7 = y9
         x8 = (x7 + x9)/2
         y8 = y7
         x6 = x7
         y6 = y10
       }
+      else {
+        x7 = x_mid
+        y7 = y_mid
+        x8 = (x7 + x9)/2
+        y8 = (y7 + y9)/2
+      }
 
       // Return paths
       if (!this.shape_is_curved) {
-        return 'M ' + x0 + ',' + y0
+        let path = 'M ' + x0 + ',' + y0
           + ' L ' + x1 + ',' + y1
           + ' L ' + x2 + ',' + y2
           + ' L ' + x3 + ',' + y3
-          + ' L ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
-          + ' L ' + x5 + ',' + y5
-          + ' L ' + x6 + ',' + y6
+        if (this.is_vertical || this.is_horizontal)
+          path = path
+            + ' L ' + x4 + ',' + y4
+            + ' L ' + x5 + ',' + y5
+            + ' L ' + x5 + ',' + y5
+            + ' L ' + x6 + ',' + y6
+        path = path
           + ' L ' + x7 + ',' + y7
           + ' L ' + x8 + ',' + y8
           + ' L ' + x9 + ',' + y9
           + ' L ' + x10 + ',' + y10
           + ' L ' + xf + ',' + yf
+        return path
       }
       else {
-        return 'M ' + x0 + ',' + y0
+        let path = 'M ' + x0 + ',' + y0
           + ' L ' + x1 + ',' + y1
           + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
-          + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
-          + ' T ' + x6 + ',' + y6
+        if (this.is_vertical || this.is_horizontal)
+          path = path
+            + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+            + ' L ' + x6 + ',' + y6
+        path = path
           + ' Q ' + x7 + ',' + y7 + ' ' + x8 + ',' + y8
           + ' Q ' + x9 + ',' + y9 + ' ' + x10 + ',' + y10
           + ' L ' + xf + ',' + yf
+        return path
       }
     }
   }
@@ -995,8 +1052,41 @@ export class Class_LinkElement extends Class_ProtoElement {
         y4 = y5 - (y1 - y5) * this.shape_ending_tangeant
       }
     }
-
+    // Update point
     this._control_points.ending_bezier_point.setPosXY(x4, y4)
+  }
+
+  private computeMiddleRecyclingPoint() {
+    // Get starting & ending position
+    const x0 = this.position_x_start  // Shorter to write
+    const y0 = this.position_y_start  // ...
+    const xf = this.position_x_end
+    const yf = this.position_y_end
+    // Compute ref points
+    const x_ref = (x0 + xf)/2
+    const y_ref = (y0 + yf)/2
+    // Compute point
+    let x_mid, y_mid
+    if (this.is_horizontal) {
+      x_mid = x_ref
+      y_mid = y_ref + this.shape_middle_recycling
+    }
+    else if (this.is_vertical) {
+      x_mid = x_ref + this.shape_middle_recycling
+      y_mid = y_ref
+    }
+    else {
+      const vx = (xf - x0)
+      const vy = (yf - y0)
+      const vx_ortho = -vy
+      const vy_ortho = vx
+      const d = Math.sqrt(vx*vx + vy*vy)
+      const scale_norm = this.shape_middle_recycling/Math.sqrt(2)
+      x_mid = x_ref + scale_norm*(vx_ortho/d)
+      y_mid = y_ref + scale_norm*(vy_ortho/d)
+    }
+    // Update point
+    this._control_points.middle_recycling_point.setPosXY(x_mid, y_mid)
   }
 
   private computeControlPoints() {
@@ -1004,6 +1094,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.computeEndingCurvePoint()
     this.computeStartingBezierPoint()
     this.computeEndingBezierPoint()
+    if (this.shape_is_recycling)
+      this.computeMiddleRecyclingPoint()
   }
   /**
    * Activate the control points alignement guide
@@ -1166,7 +1258,35 @@ export class Class_LinkElement extends Class_ProtoElement {
 
   private middleRecyclingDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-      // TODO
+      // Only in recylcing
+      if (this.shape_is_recycling) {
+        if (this.is_horizontal) {
+          const handle_new_pos_y = this._control_points.middle_recycling_point.position_y + event.dy
+          const y0 = this.position_y_start
+          const yf = this.position_y_end
+          this.shape_middle_recycling = handle_new_pos_y - (y0 + yf)/2
+        }
+        else if (this.is_vertical) {
+          const handle_new_pos_x = this._control_points.middle_recycling_point.position_x + event.dx
+          const x0 = this.position_x_start
+          const xf = this.position_x_end
+          this.shape_middle_recycling = handle_new_pos_x - (x0 + xf)/2
+        }
+        else {
+          // Starting & Ending positions
+          const x0 = this.position_x_start
+          const xf = this.position_x_end
+          const y0 = this.position_y_start
+          const yf = this.position_y_end
+          // Vector start->end
+          const vx = (xf - x0)
+          const vy = (yf - y0)
+          // Middle recyling is at given distance
+          const sign = Math.sign(vx*event.dy - vy*event.dx) // Produit vectoriel
+          const d = Math.sqrt(event.dx*event.dx + event.dy*event.dy)
+          this.shape_middle_recycling = this.shape_middle_recycling + sign*d
+        }
+      }
     }
   }
 
@@ -1574,6 +1694,30 @@ export class Class_LinkElement extends Class_ProtoElement {
       this.drawControlPoint()
     }
   }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public get shape_middle_recycling() {
+    if (this._display.attributes.shape_middle_recycling !== undefined) {
+      return this._display.attributes.shape_middle_recycling
+    } else if (this._display.style.shape_middle_recycling !== undefined) {
+      return this._display.style.shape_middle_recycling
+    }
+    return default_shape_middle_recyling
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set shape_middle_recycling(_: number) {
+    this._display.attributes.shape_middle_recycling = _
+    this.drawPath()
+    this.drawControlPoint()
+  }
+
 
   /**
    * TODO Description
@@ -2095,6 +2239,7 @@ export class Class_LinkAttribute {
   protected _shape_ending_curve?: number
   protected _shape_starting_tangeant?: number
   protected _shape_ending_tangeant?: number
+  protected _shape_middle_recycling?: number
   protected _shape_vert_shift?: number
 
   // Shape's arrow attributes
@@ -2222,6 +2367,7 @@ export class Class_LinkAttribute {
   public get shape_ending_curve() { return this._shape_ending_curve }
   public get shape_starting_tangeant() { return this._shape_starting_tangeant }
   public get shape_ending_tangeant() { return this._shape_ending_tangeant }
+  public get shape_middle_recycling() { return this._shape_middle_recycling }
   public get shape_vert_shift() { return this._shape_vert_shift }
 
   // Shape's arrow attributes
@@ -2288,8 +2434,33 @@ export class Class_LinkAttribute {
     }
     this.update()
   }
-  public set shape_starting_tangeant(_: number | undefined) { this._shape_starting_tangeant = _; this.update() }
-  public set shape_ending_tangeant(_: number | undefined) { this._shape_ending_tangeant = _; this.update() }
+  public set shape_starting_tangeant(_: number | undefined) {
+    if (_ !== undefined) {
+      if (_ > 0) {
+        this._shape_starting_tangeant = _
+      }
+    }
+    else {
+      this._shape_starting_tangeant = _
+    }
+    this.update()
+  }
+  public set shape_ending_tangeant(_: number | undefined) {
+    if (_ !== undefined) {
+      if (_ > 0) {
+        this._shape_ending_tangeant = _
+      }
+    }
+    else {
+      this._shape_ending_tangeant = _
+    }
+    this.update()
+  }
+  public set shape_middle_recycling(_: number | undefined) {
+    this._shape_middle_recycling = _
+    this.update()
+  }
+
   public set shape_vert_shift(_: number | undefined) { this._shape_vert_shift = _; this.update() }
 
   // Shape's arrow attributes
