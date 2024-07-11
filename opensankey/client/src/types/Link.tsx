@@ -82,6 +82,15 @@ export function sortLinksElements(
   else return 0
 }
 
+export function sortDisplayedLinksElements(
+  a: Class_LinkElement,
+  b: Class_LinkElement
+) {
+  if (a.displaying_order > b.displaying_order) return 1
+  else if (a.displaying_order < b.displaying_order) return -1
+  else return 0
+}
+
 export function isAttributeOverloaded(
   links: Class_LinkElement[],
   attr: keyof Class_LinkAttribute
@@ -115,6 +124,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   */
   protected _display: {
     drawing_area: Class_DrawingArea,
+    displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
     style: Class_LinkStyle,
@@ -208,6 +218,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     // Display
     this._display = {
       drawing_area: drawing_area,
+      displaying_order: drawing_area.addElement(),
       position_starting: {
         type: 'relative',
         x: 0,
@@ -320,6 +331,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     super.draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links')
+    // Setup order
+    this.drawing_area.orderElements()
     // Draw elements
     this.drawElements()
   }
@@ -361,6 +374,26 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._display.position_ending.x = x
     this._display.position_ending.y = y
     this.drawElements()
+  }
+
+  public increaseDisplayOrder() {
+    this._display.displaying_order = this._display.displaying_order + 3
+    this.draw()
+  }
+
+  public decreaseDisplayOrder() {
+    this._display.displaying_order = this._display.displaying_order - 3
+    this.draw()
+  }
+
+  public setTopDisplayOrder() {
+    this._display.displaying_order = this._display.drawing_area.addElement()
+    this.draw()
+  }
+
+  public setDownDisplayOrder() {
+    this._display.displaying_order = -1
+    this.draw()
   }
 
   public deleteRelativeLabelPos() {
@@ -595,13 +628,6 @@ export class Class_LinkElement extends Class_ProtoElement {
         drawing_area.addLinkToSelection(this)
       }
     }
-  }
-
-  protected update_visibility() {
-
-  }
-
-  protected element_displayed() {
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1307,6 +1333,18 @@ export class Class_LinkElement extends Class_ProtoElement {
       this.are_related_tags_selected &&
       this._is_visible
     )
+  }
+
+  /**
+   * displaying order on drawing area
+   * @memberof Class_LinkElement
+   */
+  public get displaying_order() {
+    return this._display.displaying_order
+  }
+
+  public set displaying_order(_: number) {
+    this._display.displaying_order = _
   }
 
   /**
@@ -2833,7 +2871,6 @@ function recursiveCallLinkValueJSON(path: string[], JSONValue: { [x: string]: an
 // CLASS GHOST LINK *********************************************************************
 export class Class_GhostLinkElement extends Class_LinkElement {
 
-  // PROTECTED METHODS ==================================================================
-
+  // GETTER / SETTER ====================================================================
   public get is_visible() { return this._is_visible }
 }
