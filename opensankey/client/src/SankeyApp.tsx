@@ -118,6 +118,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const contextMenu = initializeContextMenu()
 
   const ComponentUpdater = initializeComponentUpdater()
+  ComponentUpdater.updateMenus = updateMenus
 
   const processFunctions = initializeProcessFunctions(dict_hook_ref_setter_show_dialog_components)
   const uiElementsRef = initializeUIElementsRef()
