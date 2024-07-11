@@ -1225,11 +1225,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           <Button
             className='btn_menu_config'
             variant={'menuconfigpanel_option_button_left'}
-            isDisabled={multi_selected_links.current.length != 1}
+            isDisabled={selected_links.length === 0}
             onClick={() => {
-              multi_selected_links.current.map(l => {
-                handleDownLink(data, l.idLink)
-              })
+              selected_links.forEach(link => link.increaseDisplayOrder())
               updateMenuConfigurationLinkAttributes()
             }}>
             <FaAngleUp />
@@ -1239,17 +1237,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.tooltips.upup')}>
           <Button
             variant={'menuconfigpanel_option_button_center'}
-            isDisabled={multi_selected_links.current.length < 1}
+            isDisabled={selected_links.length === 0}
             className='btn_menu_config'
             onClick={() => {
-              const tab_toshift: string[] = []
-              const list_link_id_selected = multi_selected_links.current.map(l => l.idLink)
-
-              data.linkZIndex.filter(l => list_link_id_selected.includes(l)).forEach(l => {
-                const posElemt = data.linkZIndex.indexOf(l)
-                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
-              })
-              tab_toshift.forEach(l => data.linkZIndex.push(l))
+              selected_links.forEach(link => link.setTopDisplayOrder())
               updateMenuConfigurationLinkAttributes()
             }}>
             <FaAngleDoubleUp />
@@ -1260,14 +1251,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.tooltips.dwn')}>
           <Button
             variant={'menuconfigpanel_option_button_center'}
-            isDisabled={multi_selected_links.current.length != 1}
+            isDisabled={selected_links.length === 0}
             className='btn_menu_config'
             onClick={() => {
-              multi_selected_links.current.map(l => {
-                handleUpLink(data, l.idLink)
-              })
+              selected_links.forEach(link => link.decreaseDisplayOrder())
               updateMenuConfigurationLinkAttributes()
-
             }}>
             <FaAngleDown />
           </Button>
@@ -1276,21 +1264,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.tooltips.dwndwn')}>
           <Button
             variant={'menuconfigpanel_option_button_right'}
-            isDisabled={multi_selected_links.current.length < 1}
+            isDisabled={selected_links.length === 0}
             className='btn_menu_config'
             onClick={() => {
-              const tab_toshift: string[] = []
-              const list_link_id_selected = multi_selected_links.current.map(l => l.idLink)
-
-              data.linkZIndex.filter(l => list_link_id_selected.includes(l)).forEach(l => {
-                const posElemt = data.linkZIndex.indexOf(l)
-                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
-              })
-              const reverse_linkzindex = data.linkZIndex.reverse();
-              (tab_toshift.reverse()).forEach(l => reverse_linkzindex.push(l))
-              data.linkZIndex = reverse_linkzindex.reverse()
+              selected_links.forEach(link => link.setDownDisplayOrder())
               updateMenuConfigurationLinkAttributes()
-
             }}>
             <FaAngleDoubleDown />
           </Button>
