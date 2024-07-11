@@ -32,7 +32,7 @@ import {
   NumberInputField,
   NumberInputStepper,
   Select,
-  useBoolean
+  useBoolean,
 } from '@chakra-ui/react'
 
 import {
@@ -43,8 +43,8 @@ import {
   Class_LinkStyle,
   default_shape_arrow_size,
   default_shape_color,
-  default_shape_curvature,
   default_shape_ending_curve,
+  default_shape_ending_tangeant,
   default_shape_is_arrow,
   default_shape_is_curved,
   default_shape_is_dashed,
@@ -52,7 +52,7 @@ import {
   default_shape_opacity,
   default_shape_orientation,
   default_shape_starting_curve,
-  default_shape_vert_shift,
+  default_shape_starting_tangeant,
   default_value_label_color,
   default_value_label_custom_digit,
   default_value_label_font_family,
@@ -153,7 +153,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const { data, new_data } = applicationData
   // UseState & Ref for UI updates
   const [ , setForceUpdate ] = useBoolean()
-  const { ref_selected_style_link, multi_selected_links } = applicationState
+  // Link this menu's update function
+  if (!menu_for_style) {
+    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = setForceUpdate.toggle
+  }
+  const { ref_selected_style_link } = applicationState
   // Selected links
   let selected_links
   if (data.displayed_link_selector) {
@@ -206,8 +210,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const shape_orientation = (elements[0]?.shape_orientation ?? default_shape_orientation)
   const shape_starting_curve = (elements[0]?.shape_starting_curve ?? default_shape_starting_curve)
   const shape_ending_curve = (elements[0]?.shape_ending_curve ?? default_shape_ending_curve)
-  const shape_vert_shift = (elements[0]?.shape_vert_shift ?? default_shape_vert_shift)
-  const shape_curvature = (elements[0]?.shape_curvature ?? default_shape_curvature)
+  const shape_starting_tangeant = (elements[0]?.shape_starting_tangeant ?? default_shape_starting_tangeant)
+  const shape_ending_tangeant = (elements[0]?.shape_ending_tangeant ?? default_shape_ending_tangeant)
   const shape_is_curved = (elements[0]?.shape_is_curved ?? default_shape_is_curved)
   const shape_is_recycling = (elements[0]?.shape_is_recycling ?? default_shape_is_recycling)
   const shape_arrow_size = (elements[0]?.shape_arrow_size ?? default_shape_arrow_size)
@@ -229,14 +233,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const value_label_unit = (elements[0]?.value_label_unit ?? default_value_label_unit)
   const value_label_custom_digit = (elements[0]?.value_label_custom_digit ?? default_value_label_custom_digit)
   const value_label_nb_digit = (elements[0]?.value_label_nb_digit ?? default_value_label_nb_digit)
-
-  const shiftCenter = () => {
-    return parseFloat(((shape_starting_curve + shape_ending_curve) / 2).toPrecision(2))
-  }
-
-  const shift = () => {
-    return parseFloat(((shape_ending_curve - shape_starting_curve) / 2).toPrecision(2))
-  }
 
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
@@ -386,7 +382,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.shape_arrow_size')}
+        {t('Flux.apparence.arrow_size')}
         {
           (!menu_for_style) &&
           isAttributeOverloaded(selected_links, 'shape_arrow_size') ?
@@ -395,7 +391,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         }
       </Box>
       <InputGroup variant='menuconfigpanel_option_input' >
-        <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_size')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
           <ConfigLinkAttributeNumberInput
             valueOfAttr={shape_arrow_size}
             menu_for_style={menu_for_style}
@@ -423,134 +419,121 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       </OSTooltip>
     </Checkbox>
 
-
-    {/* Modification du rayon de courbure du flux  */}
+    {/* Départ de courbure */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.courbure')}
+        {t('Flux.apparence.starting_curve')}
         {
-          (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_curvature') ?
+          (
+            (!menu_for_style) &&
+            isAttributeOverloaded(selected_links, 'shape_starting_curve')
+          ) ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
       </Box>
-      <InputGroup variant='menuconfigpanel_option_input' >
-        <OSTooltip label={t('Flux.apparence.tooltips.courbure')}>
-          <ConfigLinkAttributeNumberInput
-            valueOfAttr={shape_curvature}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            maximum_value={1}
-            step={0.01}
-            stepper={true}
-            function_onChange={(s: string, value: number) => elements.forEach(element => element.shape_curvature = value)}
-            function_onBlur={updateMenuConfigurationLinkAttributes}
-          />
-        </OSTooltip>
-      </InputGroup>
-    </Box>
-
-    {/* Positionnement du centre du flux  */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.pdc')}
-      </Box>
-      <OSTooltip label={t('Flux.apparence.tooltips.pdc')}>
-        <InputGroup variant='menuconfigpanel_option_input' >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            max={100}
-            step={1}
-            value={Math.round(shiftCenter() * 100)}
-            isDisabled={['hv', 'vh'].includes(shape_orientation as string)}
-            onChange={(_, val) => {
-              // TODO revoir
-              const center = val / 100
-              elements.forEach(element => {
-                let shift_gap = ((element.shape_ending_curve as number) - (element.shape_starting_curve as number)) / 2
-                if (center - shift_gap < 0) {
-                  shift_gap = center
-                }
-                if (center + shift_gap > 1) {
-                  shift_gap = 1 - center
-                }
-                element.shape_starting_curve = (center - shift_gap)
-                element.shape_ending_curve = (center + shift_gap)
-              })
-              updateMenuConfigurationLinkAttributes()
-            }}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <InputRightAddon>
-            %
-          </InputRightAddon>
-        </InputGroup>
+      <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
+        <ConfigLinkAttributeNumberInput
+          valueOfAttr={shape_starting_curve*100}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          maximum_value={shape_ending_curve*100}
+          step={1}
+          stepper={true}
+          unitText='%'
+          function_onChange={(s: string, value: number) =>
+            elements.forEach(element => element.shape_starting_curve = value/100)}
+          function_onBlur={setForceUpdate.toggle}
+        />
       </OSTooltip>
     </Box>
 
-    {/* Distance des poignée */}
+    {/* Fin de courbure */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.apparence.eep')}
+        {t('Flux.apparence.ending_curve')}
         {
           (
             (!menu_for_style) &&
-            isAttributeOverloaded(selected_links, 'shape_starting_curve') &&
             isAttributeOverloaded(selected_links, 'shape_ending_curve')
           ) ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
       </Box>
-
-      <OSTooltip label={t('Flux.apparence.tooltips.eep')}>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            max={50}
-            value={Math.round(shift() * 100)}
-            isDisabled={['hv', 'vh'].includes(shape_orientation as string)}
-            onChange={(_, val) => {
-              // TODO revoir
-              const shift_gap = val / 100
-              if (shift_gap > 0.5) {
-                return
-              }
-              elements.forEach(element => {
-                let new_center_position = shiftCenter()
-                if (new_center_position - shift_gap < 0) {
-                  new_center_position = shift_gap
-                }
-                if (new_center_position + shift_gap > 1) {
-                  new_center_position = 1 - shift_gap
-                }
-                element.shape_starting_curve = (new_center_position - shift_gap)
-                element.shape_ending_curve = (new_center_position + shift_gap)
-              })
-              updateMenuConfigurationLinkAttributes()
-            }}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <InputRightAddon>
-            %
-          </InputRightAddon>
-        </InputGroup>
+      <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
+        <ConfigLinkAttributeNumberInput
+          valueOfAttr={shape_ending_curve*100}
+          menu_for_style={menu_for_style}
+          minimum_value={shape_starting_curve*100}
+          maximum_value={100}
+          step={1}
+          stepper={true}
+          unitText='%'
+          function_onChange={(s: string, value: number) =>
+            elements.forEach(element => element.shape_ending_curve = value/100)
+          }
+          function_onBlur={setForceUpdate.toggle}
+        />
       </OSTooltip>
+    </Box>
+
+
+    {/* Modification de la longueur de la tangente de départ  */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Flux.apparence.starting_tangeant')}
+        {
+          (!menu_for_style) &&
+          isAttributeOverloaded(selected_links, 'shape_starting_tangeant') ?
+            <>{TooltipValueSurcharge('link_var_', t)}</> :
+            <></>
+        }
+      </Box>
+      <InputGroup variant='menuconfigpanel_option_input' >
+        <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
+          <ConfigLinkAttributeNumberInput
+            valueOfAttr={shape_starting_tangeant*100}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unitText='%'
+            function_onChange={(s: string, value: number) =>
+              elements.forEach(element => element.shape_starting_tangeant = value/100)}
+            function_onBlur={updateMenuConfigurationLinkAttributes}
+          />
+        </OSTooltip>
+      </InputGroup>
+    </Box>
+
+
+    {/* Modification de la longueur de la tangente de fin  */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Flux.apparence.ending_tangeant')}
+        {
+          (!menu_for_style) &&
+          isAttributeOverloaded(selected_links, 'shape_ending_tangeant') ?
+            <>{TooltipValueSurcharge('link_var_', t)}</> :
+            <></>
+        }
+      </Box>
+      <InputGroup variant='menuconfigpanel_option_input' >
+        <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
+          <ConfigLinkAttributeNumberInput
+            valueOfAttr={shape_ending_tangeant*100}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unitText='%'
+            function_onChange={(s: string, value: number) =>
+              elements.forEach(element => element.shape_ending_tangeant = value/100)}
+            function_onBlur={updateMenuConfigurationLinkAttributes}
+          />
+        </OSTooltip>
+      </InputGroup>
     </Box>
 
     {/* Choix de la couleur du flux */}
@@ -565,9 +548,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         }
       </Box>
       <Input
-        variant='menuconfigpanel_option_input_shape_color'
-        type='shape_color'
-        value={is_indeterminate ? '#ffffff' : (shape_color)}
+        variant='menuconfigpanel_option_input_color'
+        type='color'
+        value={shape_color}
         onChange={evt => {
           elements.forEach(element => element.shape_color = evt.target.value)
           updateMenuConfigurationLinkAttributes()
@@ -605,7 +588,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {/* Flux hachuré */}
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
-      iconColor={is_indeterminate ? '#78C2AD' : 'white'}
       isIndeterminate={is_indeterminate}
       isChecked={shape_is_dashed}
       onChange={(evt) => {
@@ -664,7 +646,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           {t('Flux.label.NbPrecision')}
         </Box>
         <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
-
           <ConfigLinkAttributeNumberInput
             valueOfAttr={value_label_scientific_precision}
             menu_for_style={menu_for_style}
@@ -1369,19 +1350,7 @@ export const ConfigLinkAttributeNumberInput: FunctionComponent<ConfigLinkNumberI
   const ref_input = useRef<HTMLInputElement>(null)
   const isModifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variantOfInput = unitText ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [val, setVal] = useState(valueOfAttr)
-  // Initialise hook with first link selected value
-  // const [displayed_value, setDisplayedValue] = useState(() => {
-  //   let val = 0
-  //   if (selected_parameter[0]) {
-  //     val = ReturnCorrectLinkAttributeValue(data, selected_parameter[0], local_var_of_node) as number
-  //     if (val == null) {
-  //       //TODO investigate
-  //       val = 0
-  //     }
-  //   }
-  //   return String(val)
-  // })
+  const [_value,setValue]=useState(valueOfAttr)
 
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -1393,8 +1362,13 @@ export const ConfigLinkAttributeNumberInput: FunctionComponent<ConfigLinkNumberI
   const inputUnit = unitText ? <InputRightAddon>{unitText}</InputRightAddon> : <></>
 
   return <InputGroup variant='menuconfigpanel_option_input' >
-    <NumberInput allowMouseWheel variant={variantOfInput} min={minimum_value} max={maximum_value} step={step}
-      value={val}
+    <NumberInput
+      allowMouseWheel
+      variant={variantOfInput}
+      min={minimum_value}
+      max={maximum_value}
+      step={step}
+      value={_value}
       onChange={(_, value) => {
         function_onChange(_, value)
 
@@ -1406,11 +1380,12 @@ export const ConfigLinkAttributeNumberInput: FunctionComponent<ConfigLinkNumberI
           }
           // launch timeout that automatically blur the input
           isModifying.current = setTimeout(() => {
-            function_onBlur()
+            function_onChange(_, value)
             ref_input.current?.blur()
           }, 2000)
         }
         // Update displayed value
+        setValue(value)
       }}
       onBlur={() => {
         if (!menu_for_style) {
