@@ -24,6 +24,7 @@ import {
 import {
   Class_GhostLinkElement,
   Class_LinkElement,
+  sortDisplayedLinksElements,
   sortLinksElements
 } from './Link'
 import {
@@ -59,7 +60,6 @@ export class Class_DrawingArea {
  * @memberof Class_DrawingArea
  */
   public d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null
-
 
   /**
    * d3 svg groups for drawing area
@@ -110,13 +110,13 @@ export class Class_DrawingArea {
    */
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
-
   /**
- * d3 selection of svg group that contains drawing area zone of selection element
- * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof Class_DrawingArea
- */
+   * d3 selection of svg group that contains drawing area zone of selection element
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
   /**
    * Is drawing area in publish _mode or not. If so, blocks all interactions with it
    * @type {boolean}
@@ -149,6 +149,8 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private _mode: 'edition' | 'selection' = 'edition'
+
+  private _number_of_elements: number = 0
 
   /**
    * Boolean to know if we are creating a link & another node at the release of the LMB
@@ -330,14 +332,17 @@ export class Class_DrawingArea {
       .filter(element => element instanceof Class_LinkElement)
       .map(element => element as Class_LinkElement)
   }
+
   public get selected_links_list_sorted() {
     return this.selected_links_list
       .sort((a, b) => sortLinksElements(a, b))
   }
+
   public get visible_and_selected_links_list() {
     return this.selected_links_list
       .filter(link => link.is_visible)
   }
+
   public get visible_and_selected_links_list_sorted() {
     return this.visible_and_selected_links_list
       .sort((a, b) => sortLinksElements(a, b))
@@ -348,6 +353,9 @@ export class Class_DrawingArea {
   public setWidth(_: number) { this._width = _; this.drawBackground() }
   public getHeight() { return this._height }
   public setHeight(_: number) { this._height = _; this.drawBackground() }
+
+  // Number of element
+  public get number_of_element() { return this._number_of_elements }
 
   /**
    * Return height of the top nav bar
@@ -396,6 +404,36 @@ export class Class_DrawingArea {
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
   // PUBLIC METHODS =====================================================================
+
+  public addElement() {
+    // We increase by two, in order to easyly swap elements
+    // ie : element0 order = 0, element1 order = 2, element3 order = 4
+    // to increase element 0 order, juste add 3
+    // then : element0 order = 3, element1 order = 2, element3 order = 4
+    // then orderElement() method will display elements as wanted + update their order value
+    // ie : element1 order = 0, element0 order = 2, element3 order = 4
+    this._number_of_elements = this._number_of_elements + 2
+    return this._number_of_elements
+  }
+
+  public orderElements() {
+    // Sort links
+    let new_order = 0
+    this.sankey.links_list
+      .sort((a, b) => sortDisplayedLinksElements(a, b))
+      .forEach(link => {
+        if (link.is_visible) {
+          link.d3_selection?.raise()
+        }
+        // Re-update display order as consecutive
+        link.displaying_order = new_order
+        new_order = new_order + 2
+      })
+    // Sort nodes
+    // TODO if necessary
+    // Update number of elements
+    this._number_of_elements = new_order
+  }
 
   /**
    * Convert current drawing area & all substructure as JSON data
