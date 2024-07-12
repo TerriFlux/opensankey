@@ -915,6 +915,39 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
+  private getLabelToDisplay() {
+    // Get raw value // data tags selected
+    const value = this.value
+    let text_value = value?.text_value
+    let data_value = value?.data_value
+    // If present, text value is prioritaire
+    if (text_value) {
+      return text_value
+    }
+    // Value can be null if not specified by user
+    if (data_value) {
+      // Do we need to keep only N significant numbers ?
+      if (this.value_label_scientific_precision > 0) {
+        // 12345.67 avec nb_sign = 4 devient 12340
+        text_value = data_value.toPrecision(this.value_label_scientific_precision)
+        data_value = parseFloat(text_value)
+      }
+      //
+      if (this.value_label_to_precision) {
+        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+        text_value = data_value.toPrecision()
+      }
+      else if (this.value_label_custom_digit) {
+        text_value = data_value.toFixed(this.value_label_nb_digit)
+      }
+    }
+    // Add unit suffix
+    if (text_value &&  this.value_label_unit_visible)
+      text_value = text_value + this.value_label_unit
+    // Output
+    return text_value
+  }
+
   // =========== Method about control points ==============
 
   /**
