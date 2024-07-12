@@ -593,7 +593,7 @@ export class Class_Handler extends Class_Element {
  * @memberof Class_Handler
  */
   public get is_visible() {
-    return this._ref_element.is_selected
+    return (this._ref_element.is_selected && this._is_visible)
   }
 }
 
