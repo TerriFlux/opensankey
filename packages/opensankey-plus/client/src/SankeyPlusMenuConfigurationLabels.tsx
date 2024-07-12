@@ -164,7 +164,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
               multi_selected_label.current = m_s
               reDrawOSPLabels(multi_selected_label.current)
               if(multi_selected_label.current.length>0){
-                const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
+                // const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
                 updateMenus[1](!updateMenus[0])
               }else{
                 updateMenus[1](!updateMenus[0])
@@ -334,7 +334,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
         variant='menuconfigpanel_del_button'
         isDisabled={disable_options}
         onClick={() => {
-          deleteGLabel(updateMenus,multi_selected_label.current,applicationState)
+          deleteGLabel(updateMenus,multi_selected_label.current)
           data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
           multi_selected_label.current = []
           updateComponentMenuConfigZdt.current.forEach(f=>f())

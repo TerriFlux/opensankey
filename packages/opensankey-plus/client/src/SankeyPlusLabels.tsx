@@ -231,14 +231,14 @@ export const eventLabelClick : eventLabelClickFType =(
         ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       }, 200)
     }
-      // Open element accordion if not already openend
-      if (
-        accordion_ref &&
+    // Open element accordion if not already openend
+    if (
+      accordion_ref &&
         accordion_ref.current &&
         d3.select(accordion_ref.current).attr('aria-expanded')==='false'
-      ) {
-        accordion_ref.current.click()
-      }
+    ) {
+      accordion_ref.current.click()
+    }
     // Open node accordion if not already openend
     if ( accordion_ref && accordion_ref.current) {
       if (
@@ -259,7 +259,7 @@ export const eventLabelClick : eventLabelClickFType =(
       //   multi_selected_label.current[multi_selected_label.current.length-1].content)
       // )
       updateMenus[1](!updateMenus[0])
-      
+
     } else {
       multi_selected_label.current.push(d)
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',true))
@@ -624,13 +624,10 @@ const deselect_visualy_zdt=(zdt:OSPLabel)=>{
 export const deleteGLabel=(
   updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   zdt_to_delete:OSPLabel[],
-  applicationState:OSPElementsSelectedType
 )=>{
   zdt_to_delete.forEach(zdt=>{
     d3.select('#'+zdt.idLabel).remove()
     d3.selectAll('#gg_zdt_handles_'+zdt.idLabel).remove()
   })
-
   updateMenus[1](!updateMenus[0])
-
 }
