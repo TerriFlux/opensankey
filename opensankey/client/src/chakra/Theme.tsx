@@ -112,7 +112,8 @@ import {
   table_base_style,
   table_edit_tag_link,
   table_edit_tag_data,
-  table_edit_grp_tag_node_link
+  table_edit_grp_tag_node_link,
+  table_welcome_buttons
 } from './TableStyle'
 import {
   heading_base_style,
@@ -187,21 +188,21 @@ export const opensankey_theme = extendTheme({
         toolbar_main_button,
       }
     },
-    ButtonGroup:{
+    ButtonGroup: {
       baseStyle:buttongroup_base_style,
-      variants:{
+      variants: {
         buttongroup_sideBar,
       }
     },
-    Breadcrumb:{
+    Breadcrumb: {
       baseStyle:breadcrumb_base_style,
-      variants:{
+      variants: {
         pagination_welcome
       }
     },
-    Card:{
+    Card: {
       baseStyle:card_base_style,
-      variants:{
+      variants: {
         card_icon_selected,
         card_icon_not_selected,
         card_import_icon,
@@ -231,17 +232,17 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_input_table
       }
     },
-    Modal:{
+    Modal: {
       baseStyle:modal_base_style,
-      variants:{
+      variants: {
         modal_welcome,
         modal_select_unit_from_data,
         modal_select_unit_from_excel
       }
     },
-    Menu:{
+    Menu: {
       baseStyle:menu_button_base_style,
-      variants:{
+      variants: {
         menu_button_subnav_style,
         menu_button_subnav_account_style,
         menu_subnav_item_demo,
@@ -254,9 +255,9 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_numberinput_with_right_addon
       }
     },
-    Popover:{
+    Popover: {
       baseStyle:popover_base_style,
-      variants:{
+      variants: {
         toolbar_popover_window
       }
     },
@@ -273,45 +274,49 @@ export const opensankey_theme = extendTheme({
     },
     Tabs: {
       baseStyle: tabs_base_style,
-      variants:{
+      variants: {
         tabs_variant_lib_cion,
         tabs_navbar
       }
     },
-    Table:{
-      baseStyle:table_base_style,
-      variants:{table_edit_tag_node,
+    Table: {
+      baseStyle: table_base_style,
+      variants: {
+        table_edit_tag_node,
         table_edit_tag_link,
         table_edit_tag_data,
-        table_edit_grp_tag_node_link
+        table_edit_grp_tag_node_link,
+        table_welcome_buttons
       }
     },
-    Tag:{
-      baseStyle:tag_base_style,
-      variants:{tag_dev_navbar}
+    Tag: {
+      baseStyle: tag_base_style,
+      variants: {
+        tag_dev_navbar
+      }
     },
     TextArea: {
       baseStyle: textarea_base_style
     },
-    Drawer:{
+    Drawer: {
       baseStyle:drawer_base_style,
-      variants:{
+      variants: {
         drawer_menu_config
       }
     },
-    Heading:{
+    Heading: {
       baseStyle:heading_base_style,
-      variants:{
+      variants: {
         heading_welcome_style,
         heading_template_dashboard,
       }
     }
   },
   layerStyles: {
-    box_footer_welcome:{
+    box_footer_welcome: {
       display:'grid'
     },
-    context_menu:{
+    context_menu: {
       display:'grid',
       rowGap:'0.1rem',
       background:'white',
@@ -433,7 +438,7 @@ export const opensankey_theme = extendTheme({
       gridRowGap: '0',
       height: '3rem'
     },
-    menutop_layout_style:{
+    menutop_layout_style: {
       display: 'grid',
       gridColumnGap: '0.25rem',
       height: '6rem',
@@ -484,7 +489,7 @@ export const opensankey_theme = extendTheme({
       alignSelf: 'center',
       justifySelf: 'center'
     },
-    menutop_userpages_layout_style:{
+    menutop_userpages_layout_style: {
       display: 'grid',
       gridTemplateColumns: '1fr auto 1fr',
       gridColumnGap: '0',
@@ -493,17 +498,17 @@ export const opensankey_theme = extendTheme({
       alignItems:'center',
       background:'gray.50',
       color: 'gray.600',
-      img:{
+      img: {
         height:'6rem',
         padding:'0.25rem'
       }
     },
-    account_row:{
+    account_row: {
       display: 'grid',
       gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr',
       gridColumnGap: '0.25rem',
       alignItems: 'center',
-      p:{
+      p: {
         margin:'0'
       }
     },
@@ -538,17 +543,14 @@ export const opensankey_theme = extendTheme({
       gridTemplateRows: 'repeat(auto, 1fr)',
       gridRowGap: '0.25rem'
     },
-    licence_row:{
+    licence_row: {
       display: 'grid',
       gridTemplateColumns: '1fr 3fr',
       gridColumnGap: '0.25rem',
+      margin: '0.5rem',
+      padding: '0.5rem'
     },
-    licence_row_inverse:{
-      display: 'grid',
-      gridTemplateColumns: '3fr 1fr',
-      gridColumnGap: '0.25rem',
-    },
-    licence_desc:{
+    licence_desc: {
       whiteSpace:'pre-line'
     },
     menustylepanel_row_droplist: {
@@ -615,7 +617,7 @@ export const opensankey_theme = extendTheme({
     sm: {
       fontSize: '14px',
     },
-    md:{
+    md: {
       fontSize: '12px',
     },
     lg: {
