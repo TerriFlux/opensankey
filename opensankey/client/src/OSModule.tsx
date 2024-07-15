@@ -538,13 +538,11 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
   applicationContext,
   applicationData,
-  applicationDraw,
-  ComponentUpdater
 ) => {
   if (!window.SankeyToolsStatic) {
     additional_menus.additional_nav_item.push(
       <OpenSankeySaveButton
-        ComponentUpdater={ComponentUpdater}
+        applicationData={applicationData}
         applicationContext={applicationContext}
       />
     )
@@ -609,7 +607,6 @@ export const moduleDialogs : module_dialogsType = (
       applicationContext={applicationContext}
       additional_link_appearence_items={additional_menus.additional_link_appearence_items}
       menu_for_style={false}
-      ComponentUpdater={ComponentUpdater}
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')

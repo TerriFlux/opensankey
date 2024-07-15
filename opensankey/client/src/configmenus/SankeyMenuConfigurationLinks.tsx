@@ -43,10 +43,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     menu_config_link_attr,
     link_function,
     ComponentUpdater,
-    contextMenu,
-    uiElementsRef,
-    alt_key_pressed,
-    dict_hook_ref_setter_show_dialog_components,
     node_function
   }
 ) => {
@@ -95,6 +91,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         </>
       )
     }
+  }
+
+  // Function used to reset menu UI -----------------------------------------------------
+  const setForceFullUpdate = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Update values displayed in menus for link's configuration
+    new_data.menu_configuration.updateComponentsSubmenuConfigLink()
+    // And update this menu also
+    setForceUpdate.toggle()
   }
 
   // Sub-menus --------------------------------------------------------------------------
@@ -165,14 +171,13 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 }
               })
               // Update all link menus
-              new_data.menu_configuration.updateComponentsMenuConfigLink()
+              setForceFullUpdate()
             }}
           />
         </Box>
       </Box>)
     return DD
   }
-
 
   // Links upper menu -------------------------------------------------------------------
   return (<Box layerStyle='menuconfigpanel_grid'>
@@ -192,9 +197,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               // Add link to selection
               new_data.drawing_area.addLinkToSelection(new_link)
               // Toogle saving indicator
-              ComponentUpdater.updateComponenSaveInCache.current(false)
-              // Update all link menus
-              new_data.menu_configuration.updateComponentsMenuConfigLink()
+              setForceFullUpdate()
             }}>
           <FaPlus />
         </Button>
@@ -214,9 +217,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               // Delete all selected links
               applicationData.new_data.drawing_area.deleteSelectedLinks()
               // Toogle saving indicator
-              ComponentUpdater.updateComponenSaveInCache.current(false)
-              // Update all link menus
-              new_data.menu_configuration.updateComponentsMenuConfigLink()
+              setForceFullUpdate()
             }}>
           <FaMinus />
         </Button>
@@ -267,7 +268,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   // Update link's source
                   selected_links.forEach(link => link.source = new_source)
                   // Toogle saving indicator
-                  ComponentUpdater.updateComponenSaveInCache.current(false)
+                  new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
                   // Update only this menu
                   setForceUpdate.toggle()
                 }
@@ -297,7 +298,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   // Update link's target
                   selected_links.forEach(link => link.target = new_target)
                   // Toogle saving indicator
-                  ComponentUpdater.updateComponenSaveInCache.current(false)
+                  new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
                   // Update only this menu
                   setForceUpdate.toggle()
                 }
@@ -318,7 +319,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               // Inverse link source & target
               selected_links.forEach(link => link.inverse())
               // Toogle saving indicator
-              ComponentUpdater.updateComponenSaveInCache.current(false)
+              new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
               // Update only this menu
               setForceUpdate.toggle()
             }}

@@ -65,7 +65,7 @@ export type MenuDraggableFType = (
 )=> JSX.Element
 
 export type OpenSankeySaveButtonFType = {
-  ComponentUpdater:ComponentUpdaterType,
+  applicationData:applicationDataType,
   applicationContext:applicationContextType
 }
 

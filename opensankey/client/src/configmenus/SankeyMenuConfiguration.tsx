@@ -180,10 +180,6 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
                 menu_config_link_attr={menu_config_link_attr}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
-                contextMenu={contextMenu}
-                uiElementsRef={uiElementsRef}
-                alt_key_pressed={alt_key_pressed}
-                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 node_function={node_function}
               />
             </AccordionPanel>

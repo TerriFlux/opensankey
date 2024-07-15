@@ -704,17 +704,7 @@ export type AdditionalMenusType = {
 export type initializeAdditionalMenusType = (
   additional_menus:AdditionalMenusType,
   applicationContext:applicationContextType,
-  applicationData:applicationDataType,
-  applicationDraw:applicationDrawType,
-  ComponentUpdater:ComponentUpdaterType,
-  applicationState:applicationStateType,
-  uiElementsRef:uiElementsRefType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  processFunctions:processFunctionsType,
-  Reinitialization:() => void,
-  contextMenu: contextMenuType
+  applicationData:applicationDataType
 ) => void
 
 export type module_dialogsType = (
