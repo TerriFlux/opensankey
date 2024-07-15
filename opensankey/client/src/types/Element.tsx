@@ -606,7 +606,8 @@ export class Class_Handler extends Class_Element {
       .attr('height', this._size)
       .attr('stroke', this._color)
       .attr('stroke-width', 1)
-      .attr('fill', this._filled ? this._color : 'none')
+      .attr('fill', this._color)
+      .attr('fill-opacity', this._filled ? 1 : 0)
       .attr('cursor', 'move')
   }
 
