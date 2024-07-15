@@ -34,6 +34,8 @@ import {
 
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
+export type Type_PathLabelHPosition = 'frozen' | 'start' | 'middle' | 'end'
+export type Type_PathLabelVPosition = 'frozen' | 'above' | 'middle' | 'below'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -59,9 +61,9 @@ export const default_value_label_font_size = 20
 export const default_value_label_is_visible = true
 export const default_value_label_nb_digit = 0
 export const default_value_label_on_path = true
-export const default_value_label_orthogonal_position = 'middle'
 export const default_value_label_pos_auto = false
-export const default_value_label_position = 'middle'
+export const default_value_label_position: Type_PathLabelHPosition = 'middle'
+export const default_value_label_orthogonal_position: Type_PathLabelVPosition = 'middle'
 export const default_value_label_scientific_precision = 5
 export const default_value_label_to_precision = false
 export const default_value_label_unit = ''
@@ -660,10 +662,82 @@ export class Class_LinkElement extends Class_ProtoElement {
 
   private drawLabel() {
     // Clean previous label
-    this.d3_selection?.selectAll('.label').remove()
-    // Failsafe
-    if (this._source && this._target) {
-      // TODO a faire
+    this.d3_selection?.selectAll('.link_label').remove()
+    // Add value label
+    if (this.value_label_is_visible) {
+      // Failsafe
+      if (this._source && this._target) {
+        // Compute label to display
+        const label_to_display = this.getLabelToDisplay()
+        // If label is undefined or null, do nothing
+        if (label_to_display) {
+          // Create text object
+          const d3_text_selection = this.d3_selection?.append('text')
+            .classed('link', true)
+            .classed('link_label', true)
+            .classed('link_label_text', true)
+            .attr('id', 'label_text_' + this.id)
+          // Create text on path
+          const d3_textpath_selection = d3_text_selection?.append('textPath')
+            .classed('link', true)
+            .classed('link_label', true)
+            .classed('link_label_textpath', true)
+            .attr('id', 'label_textpath_' + this.id)
+            .attr('href', '#' + this.id)
+          // Add styling text attributes directly on text object
+          d3_text_selection?.style('font-weight', 'bold')
+            .style('font-style', 'normal')
+            .style('font-size', String(this.value_label_font_size) + 'px')
+            .style('font-family', this.value_label_font_family)
+            .attr('fill', this.value_label_color)
+          // Add text directly on textpath object
+          d3_textpath_selection?.text(label_to_display)
+          // Compute text position
+          if (this.value_label_on_path) {
+            // Relative position from starting point of path
+            let label_anchor, label_hposition
+            if (this.value_label_position === 'start') {
+              label_anchor = 'start'
+              label_hposition = '1%'
+            }
+            else if (this.value_label_position === 'middle') {
+              label_anchor = 'middle'
+              label_hposition = '50%'
+            }
+            else if (this.value_label_position === 'end') {
+              label_anchor = 'end'
+              label_hposition = '99%'
+            }
+            else { // Frozen
+              label_anchor = 'start'
+              label_hposition = '10px'
+            }
+            d3_textpath_selection?.attr('startOffset', label_hposition)
+            d3_textpath_selection?.attr('text-anchor', label_anchor)
+            // Ortogonal position from path
+            let label_ortho_position
+            let label_dominant_baseline
+            if (this.value_label_orthogonal_position === 'above') {
+              label_ortho_position = -this.thickness/2
+              label_dominant_baseline = 'text-after-edge'
+            }
+            else if (this.value_label_orthogonal_position === 'middle') {
+              label_ortho_position = 0
+              label_dominant_baseline = 'middle'
+            }
+            else if (this.value_label_orthogonal_position === 'below') {
+              label_ortho_position = this.thickness/2 + this.value_label_font_size
+              label_dominant_baseline = 'text-top'
+            }
+            else { // Frozen
+              label_ortho_position = 0
+              label_dominant_baseline = 'middle'
+            }
+            d3_text_selection?.attr('dy', label_ortho_position)
+            d3_text_selection?.attr('dominant-baseline', label_dominant_baseline)
+          }
+        }
+      }
     }
   }
 
@@ -988,7 +1062,6 @@ export class Class_LinkElement extends Class_ProtoElement {
         x1 = x0
         y1 = y0 - vertical_direction * starting_shift
       }
-
     }
     this._control_points.starting_curve_point.setPosXY(x1, y1)
   }
@@ -1907,7 +1980,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_position(_: string) { this._display.attributes.value_label_position = _; this.drawLabel() }
+  public set value_label_position(_: Type_PathLabelHPosition) {
+    this._display.attributes.value_label_position = _
+    this.drawLabel()
+  }
 
   /**
    * TODO Description
@@ -1926,7 +2002,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_orthogonal_position(_: string) { this._display.attributes.value_label_orthogonal_position = _; this.drawLabel() }
+  public set value_label_orthogonal_position(_: Type_PathLabelVPosition) {
+    this._display.attributes.value_label_orthogonal_position = _
+    this.drawLabel()
+  }
 
   /**
    * TODO Description
@@ -2323,8 +2402,8 @@ export class Class_LinkAttribute {
   protected _shape_opacity?: number
 
   // Geometry link labels
-  protected _value_label_position?: string
-  protected _value_label_orthogonal_position?: string
+  protected _value_label_position?: Type_PathLabelHPosition
+  protected _value_label_orthogonal_position?: Type_PathLabelVPosition
   protected _value_label_on_path?: boolean
   protected _value_label_pos_auto?: boolean
 
@@ -2544,8 +2623,8 @@ export class Class_LinkAttribute {
   public set shape_opacity(_: number | undefined) { this._shape_opacity = _; this.update() }
 
   // Geometry link labels
-  public set value_label_position(_: string | undefined) { this._value_label_position = _; this.update() }
-  public set value_label_orthogonal_position(_: string | undefined) { this._value_label_orthogonal_position = _; this.update() }
+  public set value_label_position(_: Type_PathLabelHPosition | undefined) { this._value_label_position = _; this.update() }
+  public set value_label_orthogonal_position(_: Type_PathLabelVPosition | undefined) { this._value_label_orthogonal_position = _; this.update() }
   public set value_label_on_path(_: boolean | undefined) { this._value_label_on_path = _; this.update() }
   public set value_label_pos_auto(_: boolean | undefined) { this._value_label_pos_auto = _; this.update() }
 

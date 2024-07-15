@@ -772,12 +772,15 @@ protected eventMaintainedClick(
       }
       // Label Y position is only set by text relative position / shape
       let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
-      let label_pos_y = label_pos_dy + shape_height + this.name_label_font_size
+      let label_pos_y = label_pos_dy + shape_height
+      let label_baseline = 'text-before-edge'
       if (this.name_label_vert === 'top') {
         label_pos_y = -label_pos_dy
+        label_baseline = 'text-after-edge'
       }
       else if (this.name_label_vert === 'middle') {
         label_pos_y = shape_height / 2
+        label_baseline = 'middle'
       }
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
@@ -820,6 +823,7 @@ protected eventMaintainedClick(
         .attr('id', 'name_label_text_' + this.id)
         .attr('x', label_pos_x)
         .attr('y', label_pos_y)
+        .attr('dominant-baseline', label_baseline)
         .attr('text-anchor', label_anchor)
         .style('text-align', label_align)
         .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
