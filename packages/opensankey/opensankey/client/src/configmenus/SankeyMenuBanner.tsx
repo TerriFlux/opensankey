@@ -147,10 +147,10 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
 
   if (Object.keys(level_taggs).includes('Primaire')) {
 
-    if (Object.keys(level_taggs['Primaire'].tags).length < 2) {
+    if (Object.keys(level_taggs['Primaire'].tags_dict).length < 2) {
       return <></>
     }
-    const tmp = Object.entries(level_taggs['Primaire'].tags).filter(tag => tag[1].selected)
+    const tmp = Object.entries(level_taggs['Primaire'].tags_dict).filter(tag => tag[1].is_selected)
     const selected = tmp.length > 0 ? tmp[0][0] : ''
     return (
       <>
@@ -168,7 +168,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
             )
             setUpdate.toggle()
           }}>{
-            Object.entries(level_taggs['Primaire'].tags).map(([tag_key, tag], i) => {
+            Object.entries(level_taggs['Primaire'].tags_dict).map(([tag_key, tag], i) => {
               return (<option key={i} value={tag_key}>{tag.name}</option>)
             })}
         </Select>}
@@ -200,11 +200,11 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
   const { nodesColorMap, nodes_dict } = new_data.drawing_area.sankey
   let banner_grouptag: [string, Class_TagGroup][] | [string, Class_TagGroupNodeLevel][] = Object.entries(node_taggs).filter(([, tags_group]) => tags_group.banner !== 'none')
   if (level) {
-    const nb_level_tag = Object.values(level_taggs).filter(tags_group => (Object.keys(tags_group.tags).length > 0)).length
+    const nb_level_tag = Object.values(level_taggs).filter(tags_group => (Object.keys(tags_group.tags_dict).length > 0)).length
     if (nb_level_tag > 1) {
-      banner_grouptag = Object.entries(level_taggs).filter(([, tags_group]) => tags_group.name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
+      banner_grouptag = Object.entries(level_taggs).filter(([, tags_group]) => tags_group.name !== 'Primaire' && Object.keys(tags_group.tags_dict).length > 0)
     } else {
-      banner_grouptag = Object.entries(level_taggs).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
+      banner_grouptag = Object.entries(level_taggs).filter(([, tags_group]) => Object.keys(tags_group.tags_dict).length > 1)
     }
   }
 
@@ -242,7 +242,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
         }}
       />
     }
-    else if (level && Object.values(tags_group.tags).length > 0) {
+    else if (level && Object.values(tags_group.tags_dict).length > 0) {
       const tags_group_node_level = tags_group as Class_TagGroupNodeLevel
       btn_switch = ((tags_group_node_level.siblings !== undefined) && (tags_group_node_level.siblings.length > 0)) ?
         <Checkbox
@@ -279,16 +279,16 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
           redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
           setForceUpdate.toggle()
         }}>{
-          Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
+          Object.entries(tags_group.tags_dict).map(([tag_key, tag], i) => {
             return (<option key={i} value={tag_key}>{tag.name}</option>)
           })}
       </Select>
     }
-    else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
-      if (Object.keys(tags_group.tags).length < 1) {
+    else if (tags_group.banner === 'level' && Object.values(tags_group.tags_dict).length > 0) {
+      if (Object.keys(tags_group.tags_dict).length < 1) {
         return <></>
       }
-      const tmp = Object.entries(tags_group.tags).filter(tag => tag[1].selected)
+      const tmp = Object.entries(tags_group.tags_dict).filter(tag => tag[1].is_selected)
       const selected = tmp.length > 0 ? tmp[0][0] : ''
 
       selector = <Select
@@ -305,14 +305,14 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
           )
           setForceUpdate.toggle()
         }}>{
-          Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
+          Object.entries(tags_group.tags_dict).map(([tag_key, tag], i) => {
             return (<option key={i} value={tag_key}>{tag.name}</option>)
           })}
       </Select>
     }
     else if (tags_group.banner == 'multi') {
-      const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const options = Object.entries(tags_group.tags_dict).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const selected = Object.entries(tags_group.tags_dict).filter(d => d[1].is_selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
 
       selector = <MultiSelect
         className={'multidropdown_filter_node_link'}
@@ -369,8 +369,13 @@ const handleSimpleDropdown = (
   evt: React.ChangeEvent<HTMLSelectElement>,
   tags_group: Class_TagGroup,
 ) => {
-  const val = evt.target.value
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
+  const val =
+  tags_group.tags_list.forEach(tag => {
+    if (tag.id === evt.target.value)
+      tag.setSelected()
+    else
+      tag.setUnSelected()
+  })
 }
 
 /**
@@ -387,10 +392,18 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
   const tab_sel = selected.map((d) => {
     return d.value
   })
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
+  tags_group.tags_list.forEach(tag => {
+    if (tab_sel.includes(tag.name))
+      tag.setSelected()
+    else
+      tag.setUnSelected()
+  })
   // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
-  if (tab_sel.length == 0 && sankey_data.data_taggs_list.map(dt => dt.name).includes(tags_group.name)) {
-    Object.entries(tags_group.tags)[0][1].selected = true
+  if (
+    tab_sel.length === 0 &&
+    sankey_data.data_taggs_list.map(dt => dt.name).includes(tags_group.name)
+  ) {
+    Object.entries(tags_group.tags_dict)[0][1].setSelected()
   }
 }
 
@@ -1012,13 +1025,13 @@ const AddAllDropDownFlux: AddAllDropDownFluxFType = (
           redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
           setForceUpdate.toggle()
         }}>{
-          Object.entries(the_tags_group.tags).map(([tag_key, tag], i) => {
+          Object.entries(the_tags_group.tags_dict).map(([tag_key, tag], i) => {
             return (<option key={i} value={tag_key}>{tag.name}</option>)
           })}
       </Select>
     } else {
-      const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const options = Object.entries(the_tags_group.tags_dict).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const selected = Object.entries(the_tags_group.tags_dict).filter(d => d[1].is_selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       selector = <MultiSelect
         className={'multidropdown_filter_node_link'}
         // style={{ color: 'black',width:'200px' }}
@@ -1105,8 +1118,8 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
     let selector = <></>
     if (tags_group.banner == 'one') {
       let selected = ''
-      if (Object.entries(tags_group.tags).filter(([, v]) => v.selected).length > 0) {
-        selected = Object.entries(tags_group.tags).filter(([, v]) => v.selected)[0][0]
+      if (Object.entries(tags_group.tags_dict).filter(([, v]) => v.is_selected).length > 0) {
+        selected = Object.entries(tags_group.tags_dict).filter(([, v]) => v.is_selected)[0][0]
       }
       selector = <Select
         key={tags_group.name}
@@ -1146,14 +1159,14 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
           new_data.menu_configuration.updateComponentMenu.current()
         }}>
         {
-          Object.entries(tags_group.tags).map(([tag_key, tag], i) => {
+          Object.entries(tags_group.tags_dict).map(([tag_key, tag], i) => {
             return (<option key={i} value={tag_key} >{tag.name}</option>)
           })}
       </Select>
     }
     else {
-      const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name, 'disabled': ((selected.length < 2 && tag[1].name == selected[0].label)) } })
+      const selected = Object.entries(tags_group.tags_dict).filter(d => d[1].is_selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const options = Object.entries(tags_group.tags_dict).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name, 'disabled': ((selected.length < 2 && tag[1].name == selected[0].label)) } })
       selector = <MultiSelect
         className={'multidropdown_filter_node_link'}
         labelledBy={'dropdown_link_filter'}

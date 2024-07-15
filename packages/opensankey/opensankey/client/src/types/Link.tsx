@@ -547,7 +547,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     // where 'key_grp_tag' represent the id of a flux_taggs group
     // &  'key_tag_selected' represent the id of the tag selected for that flux_taggs group
     Object.entries(json_object['tags'] ?? {}).filter(ent => ent[0] in this.drawing_area.sankey.flux_taggs_dict).forEach(ent_fluxtag => {
-      this._tags[ent_fluxtag[0]] = this.drawing_area.sankey.flux_taggs_dict[ent_fluxtag[0]].tags[ent_fluxtag[1] as string]
+      this._tags[ent_fluxtag[0]] = this.drawing_area.sankey.flux_taggs_dict[ent_fluxtag[0]].tags_dict[ent_fluxtag[1] as string]
     })
 
     json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
@@ -574,7 +574,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       allPath.forEach(path => {
         const cpy_path = structuredClone(path)
         const list_tag = cpy_path.map((tag_id, idx) => {
-          return list_data_taggs[idx].tags[tag_id]
+          return list_data_taggs[idx].tags_dict[tag_id]
         })
         const valForPath = recursiveCallLinkValueJSON(cpy_path, obj);
         (this._values as Class_LinkValueTree).setDataValue(list_tag, valForPath)
@@ -2362,7 +2362,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private get are_related_tags_selected() {
-    return Object.entries(this._tags).filter(t => !t[1].selected).length === 0
+    return Object.entries(this._tags).filter(t => !t[1].is_selected).length === 0
   }
 
   /**

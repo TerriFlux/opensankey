@@ -1,7 +1,9 @@
 // Standard libs
 import React, {
   FunctionComponent,
-  Ref,
+  MutableRefObject,
+  useRef,
+  useState,
 } from 'react'
 import { ReactElementLike } from 'prop-types'
 
@@ -12,7 +14,15 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Box
+  Box,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  InputRightAddon,
+  InputGroup,
+  Input,
 } from '@chakra-ui/react'
 
 // Local libs
@@ -317,4 +327,168 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
       })}
     </Accordion>
   )
+}
+
+/**
+ * Component developped for number input of the config menu
+ * @param {*} {
+ *   default_value,
+ *   function_onChange,
+ *   function_onBlur,
+ *   menu_for_style = false,
+ *   minimum_value = 0,
+ *   maximum_value = 1e6,
+ *   stepper = false,
+ *   step = 1,
+ *   unit_text = undefined,
+ * }
+ * @return {*}
+ */
+export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
+  default_value,
+  function_onChange,
+  function_onBlur,
+  menu_for_style = false,
+  minimum_value = Number.MIN_SAFE_INTEGER,
+  maximum_value = Number.MAX_SAFE_INTEGER,
+  stepper = false,
+  step = 1,
+  unit_text = undefined,
+}) => {
+  const ref_input = useRef<HTMLInputElement>(null)
+  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
+  const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
+  const [value, setValue] = useState(default_value)
+
+  // Add stepper addon if specified
+  const stepperBtn = stepper ? <NumberInputStepper>
+    <NumberIncrementStepper />
+    <NumberDecrementStepper />
+  </NumberInputStepper> : <></>
+
+  // Add unit addon if specified
+  const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
+
+  return <InputGroup>
+    <NumberInput
+      allowMouseWheel
+      variant={variant}
+      min={minimum_value}
+      max={maximum_value}
+      step={step}
+      value={(value === null) ? undefined : value}
+      onChange={(_, updated_value) => {
+        // Launch/reset timeout before the input auto blur (and update the updated_value in data)
+        if (!menu_for_style) {
+          // reset timeout if exist
+          if (is_modifying.current) {
+            clearTimeout(is_modifying.current)
+          }
+          // launch timeout that automatically blur the input
+          is_modifying.current = setTimeout(() => {
+            ref_input.current?.blur()
+          }, 2000)
+        }
+        // Update displayed updated_value
+        setValue(updated_value)
+      }}
+      onKeyDown={e=> {
+        if (e.key === 'Enter') {
+          ref_input.current?.blur()
+        }
+      }}
+    >
+    <NumberInputField
+      ref={ref_input}
+      onBlur={() => {
+        if (!menu_for_style) {
+          clearTimeout(is_modifying.current)
+        }
+        // Update selected elements value
+        function_onBlur()
+        // UPdate value
+        function_onChange(value)
+      }}
+    />
+      {stepperBtn}
+    </NumberInput>
+    {input_unit}
+  </InputGroup>
+}
+
+export type FCType_ConfigMenuNumberInput = {
+  default_value: number | null | undefined,
+  function_onChange: (val: number | null | undefined) => void
+  function_onBlur: () => void
+  menu_for_style?: boolean
+  minimum_value?: number
+  maximum_value?: number
+  stepper?: boolean
+  step?: number
+  unit_text?: string
+}
+
+/**
+ * Component developped for text input of the config menu
+ * @param {*} {
+ *   default_value,
+ *   function_onChange,
+ *   function_onBlur,
+ *   menu_for_style = false
+ * }
+ * @return {*}
+ */
+export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> = ({
+  default_value,
+  function_onChange,
+  function_onBlur,
+  menu_for_style = false
+}) => {
+  const ref_input = useRef<HTMLInputElement>(null)
+  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
+  const [value, setValue] = useState(default_value)
+
+  return <InputGroup>
+    <Input
+      ref={ref_input}
+      variant='menuconfigpanel_option_input'
+      value={(value === null) ? undefined : value}
+      onChange={evt => {
+        const updated_value = evt.target.value
+        // Launch/reset timeout before the input auto blur (and update the updated_value in data)
+        if (!menu_for_style) {
+          // reset timeout if exist
+          if (is_modifying.current) {
+            clearTimeout(is_modifying.current)
+          }
+          // launch timeout that automatically blur the input
+          is_modifying.current = setTimeout(() => {
+            ref_input.current?.blur()
+          }, 2000)
+        }
+        // Update displayed updated_value
+        setValue(updated_value)
+      }}
+      onKeyDown={e=> {
+        if (e.key === 'Enter') {
+          ref_input.current?.blur()
+        }
+      }}
+      onBlur={() => {
+        if (!menu_for_style) {
+          clearTimeout(is_modifying.current)
+        }
+        // Update selected elements value
+        function_onBlur()
+        function_onChange(value)
+      }}
+    />
+  </InputGroup>
+}
+
+export type FCType_ConfigMenuTextInput = {
+  default_value: string | null | undefined,
+  function_onChange: (_: string | null | undefined) => void
+  function_onBlur: () => void
+  menu_for_style?: boolean
 }
