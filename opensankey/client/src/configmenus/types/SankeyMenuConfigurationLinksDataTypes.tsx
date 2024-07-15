@@ -2,9 +2,7 @@ import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, application
 
 export type MenuConfigurationLinksDataFType = {
   applicationData:applicationDataType,
-  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
-  ComponentUpdater:ComponentUpdaterType
 }
 

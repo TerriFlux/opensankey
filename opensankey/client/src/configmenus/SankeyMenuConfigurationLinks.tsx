@@ -50,7 +50,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     node_function
   }
 ) => {
-  // Old
+  // Old TODO menage
   const { data, new_data } = applicationData
   // Traduction
   const { t } = applicationContext

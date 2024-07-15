@@ -594,10 +594,8 @@ export const moduleDialogs : module_dialogsType = (
     'ref_setter_show_menu_link_data',
     <MenuConfigurationLinksData
       applicationData={applicationData}
-      applicationState={applicationState}
       applicationContext={applicationContext}
       additional_data_element={additional_menus.additional_data_element}
-      ComponentUpdater={ComponentUpdater}
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
