@@ -23,6 +23,7 @@ import {
 } from './DrawingArea'
 import {
   Class_Element,
+  Class_Handler,
 } from './Element'
 import {
   Class_Tag
@@ -126,6 +127,8 @@ export class Class_NodeElement extends Class_Element {
   private _input_links: { [_: string]: Class_LinkElement } = {}
   private _output_links: { [_: string]: Class_LinkElement } = {}
 
+  private _handle_links: { [x: string]: Class_Handler } = {}
+
   // Links orderings
   private _links_order: Class_LinkElement[] = []
 
@@ -143,6 +146,10 @@ export class Class_NodeElement extends Class_Element {
       parent_name: Class_NodeElement
     }
   } = {}
+
+  // Reference to link dragged when we drag a handle
+  private _link_dragged: Class_LinkElement | undefined
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -209,6 +216,8 @@ export class Class_NodeElement extends Class_Element {
    */
   public deleteInputLink(link: Class_LinkElement) {
     if (this._input_links[link.id] !== undefined) {
+      this._handle_links[link.id].delete()
+      delete this._handle_links[link.id]
       delete this._input_links[link.id]
       this.deleteOrderedLink(link)
       link.delete()
@@ -223,6 +232,8 @@ export class Class_NodeElement extends Class_Element {
    */
   public deleteOutputLink(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined) {
+      this._handle_links[link.id].delete()
+      delete this._handle_links[link.id]
       delete this._output_links[link.id]
       this.deleteOrderedLink(link)
       link.delete()
@@ -371,11 +382,138 @@ export class Class_NodeElement extends Class_Element {
   public hasInputLinks() { return (this.input_links_list.length > 0) }
   public hasOutputLinks() { return (this.output_links_list.length > 0) }
 
+  private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
+    const custom_id = input ? 'input' : 'output'
+    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink,{filled:false,color:'#78C2AD'})
+    this._handle_links[link.id] = handle
+  }
+
+  private dragHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Since we pass this func to a Class_Handler (without executing it)
+    // 'this' take the scope of the handler so we have to cast it here for compilation
+    const handler = this as unknown as Class_Handler
+
+    // Get node from the handler 
+    const node_ref = handler.ref_element as Class_NodeElement
+
+    if (node_ref.link_dragged && (event.dy !== 0 || event.dx !== 0)) {
+      // Get link currently dragged
+      const link_dragged = (node_ref.link_dragged as Class_LinkElement)
+      // Search if handler is for a link incoming or outcoming from the node 
+      const handle_src_or_trgt = (link_dragged.target === node_ref) ? 'target' : 'source'
+      const dragged_side = (handle_src_or_trgt === 'target') ? link_dragged.target_side : link_dragged.source_side
+      const node_ref_io = (handle_src_or_trgt === 'target') ? node_ref.input_links_list : node_ref.output_links_list
+
+      // Create an array from links_order with only the links in or out the same side of the dragged link 
+      const list_links_node_side = node_ref._links_order.filter(link => {
+        const curr_link_side = handle_src_or_trgt === 'source' ? link.source_side : link.target_side
+        return node_ref_io.includes(link) && (curr_link_side == dragged_side)
+      })
+
+      // Get index of dragged link in this filtered array
+      const idx_drgd_link = list_links_node_side.indexOf(link_dragged)
+
+      // Variable to know in which directions we move the mouse
+      const move_to_the_top = Math.sign(event.dy) == -1
+      const move_to_the_left = Math.sign(event.dx) == -1
+
+      // If we move the mouse vertically then this variable should be true,
+      // it will allow to swap dragged link with previous/next link coming/going on the same side (left/right) to the node_ref
+      const is_handler_on_horiz_side = (handle_src_or_trgt === 'target' && ['hh', 'vh'].includes(link_dragged.shape_orientation)) ||
+        handle_src_or_trgt === 'source' && ['hh', 'hv'].includes(link_dragged.shape_orientation)
+
+      // If we move the mouse horizontally then this variable should be true ,
+      // it will allow to swap dragged link with previous/next link coming/going on the same side (bottom/top) to the node_ref
+      const is_handler_on_vert_side = (handle_src_or_trgt === 'target' && ['vv', 'hv'].includes(link_dragged.shape_orientation)) ||
+        handle_src_or_trgt === 'source' && ['vv', 'vh'].includes(link_dragged.shape_orientation)
+
+      if (((move_to_the_top && is_handler_on_horiz_side) || (move_to_the_left && is_handler_on_vert_side)) && idx_drgd_link > 0) {
+        // Move dragged link before the previous link coming/going th the node
+        const prev_link = list_links_node_side[idx_drgd_link - 1]
+        node_ref.moveLinkToPositionInOrderBefore(link_dragged, prev_link)
+      } else if (((!move_to_the_top && is_handler_on_horiz_side) || (!move_to_the_left && is_handler_on_vert_side)) && (idx_drgd_link < list_links_node_side.length - 1)) {
+        // Move dragged link after the next link coming/going th the node
+        const next_link = list_links_node_side[idx_drgd_link + 1]
+        node_ref.moveLinkToPositionInOrderAfter(link_dragged, next_link)
+      }
+
+      node_ref.drawLinks()
+    }
+
+  }
+
+  private moveLinkToPositionInOrderBefore(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
+
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link before the link target in the order array
+      this._links_order.splice(idx_link_trgt, 0, link_to_move)
+    }
+  }
+
+  private moveLinkToPositionInOrderAfter(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link after the link target in the order array
+      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
+
+
+    }
+  }
+
+
+
+  private dragStartHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    const handler = this as unknown as Class_Handler
+    const node_ref_handler = handler.ref_element as Class_NodeElement
+    const link_ref = (handler.ref_element as Class_NodeElement).getLinkFromHandler(handler)
+    if (link_ref) {
+      node_ref_handler.link_dragged = link_ref
+    }
+  }
+  private dragEndHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    const handler = this as unknown as Class_Handler
+    const node_ref_handler = handler.ref_element as Class_NodeElement
+    node_ref_handler.link_dragged = undefined
+  }
+
+  private getLinkFromHandler(handler: Class_Handler) {
+    const list_id = Object.entries(this._handle_links).filter(ent_handle => {
+      return ent_handle[1] === handler
+    })
+
+    if (list_id.length === 1) {
+      let link_referenced: Class_LinkElement
+      if (list_id[0][0] in this.input_links_dict) {
+        link_referenced = this.input_links_dict[list_id[0][0]]
+      } else if (list_id[0][0] in this.output_links_dict) {
+        link_referenced = this.output_links_dict[list_id[0][0]]
+      } else {
+        return
+      }
+      return link_referenced
+
+    }
+  }
+
   // Add links
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
+      this.addLinkMoveOrderHandle(link, true)
       this.updateInputValue()
       this.drawLinks()
       this.drawValueLabel()
@@ -385,6 +523,7 @@ export class Class_NodeElement extends Class_Element {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
+      this.addLinkMoveOrderHandle(link, false)
       this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
@@ -656,14 +795,14 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-/**
- *
- *
- * @protected
- * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
- * @memberof Class_NodeElement
- */
-protected eventMaintainedClick(
+  /**
+   *
+   *
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_NodeElement
+   */
+  protected eventMaintainedClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
 
@@ -1015,6 +1154,7 @@ protected eventMaintainedClick(
     // Reference position
     const x0 = this.position_x
     const y0 = this.position_y
+
     // Compute width & Height (based on links values)
     const width = this.getShapeWidthToUse()
     const height = this.getShapeHeightToUse()
@@ -1027,21 +1167,27 @@ protected eventMaintainedClick(
     this._links_order.forEach(link => {
       const thickness = link.thickness
       // Current node is link's source
+      const shift = 5
+
       if (link.source === this) {
         if (link.source_side === 'right') {
           link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
+          this._handle_links[link.id].initPosXY(link.position_x_start + shift, link.position_y_start)
           dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
           link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
+          this._handle_links[link.id].initPosXY(link.position_x_start - shift, link.position_y_start)
           dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
           link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
+          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start - shift)
           dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
           link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
+          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start + shift)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -1049,18 +1195,22 @@ protected eventMaintainedClick(
       else if (link.target === this) {
         if (link.target_side === 'right') {
           link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
+          this._handle_links[link.id].initPosXY(link.position_x_end + shift, link.position_y_end)
           dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
           link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
+          this._handle_links[link.id].initPosXY(link.position_x_end - shift, link.position_y_end)
           dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
           link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
+          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end - shift)
           dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
           link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
+          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end + shift)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -2017,6 +2167,9 @@ protected eventMaintainedClick(
     })
     return to_display
   }
+
+  public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
+  public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
