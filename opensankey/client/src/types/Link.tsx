@@ -295,6 +295,15 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._source.deleteOutputLink(this)
     // Unref self from target node
     this._target.deleteInputLink(this)
+
+    // Delete control points
+    this._control_points.starting_curve_point.delete()
+    this._control_points.ending_curve_point.delete()
+    this._control_points.starting_bezier_point.delete()
+    this._control_points.ending_bezier_point.delete()
+    this._control_points.middle_recycling_point.delete()
+
+
     // Unref self from all tags
     Object.values(this._tags)
       .forEach(tag => {
