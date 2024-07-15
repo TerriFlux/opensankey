@@ -544,6 +544,8 @@ export abstract class Class_Element extends Class_ProtoElement {
 export class Class_Handler extends Class_Element {
 
   private _size: number = 5
+  private _color: string = 'black'
+  private _filled: boolean = true
   private _ref_element: Class_LinkElement | Class_NodeElement
   protected _display: {
     drawing_area: Class_DrawingArea,
@@ -557,7 +559,8 @@ export class Class_Handler extends Class_Element {
     ref_link: Class_LinkElement | Class_NodeElement,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
-    dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void
+    dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
+    options?: { size?: number, color?: string, filled?: boolean }
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_handlers')
@@ -571,6 +574,20 @@ export class Class_Handler extends Class_Element {
     this.eventMouseDragStart = dragStart_function
     this.eventMouseDrag = drag_function
     this.eventMouseDragEnd = dragEnd_function
+
+    // Set optional variable value
+    if (options) {
+      if (options.size !== undefined) {
+        this._size = options.size
+      }
+      if (options.color !== undefined) {
+        this._color = options.color
+      }
+      if (options.filled !== undefined) {
+        this._filled = options.filled
+      }
+    }
+
   }
 
   draw() {
@@ -587,7 +604,9 @@ export class Class_Handler extends Class_Element {
       .attr('y', -this._size / 2)
       .attr('width', this._size)
       .attr('height', this._size)
-      .attr('fill', 'black')
+      .attr('stroke', this._color)
+      .attr('stroke-width', 1)
+      .attr('fill', this._filled ? this._color : 'none')
       .attr('cursor', 'move')
   }
 
@@ -601,6 +620,6 @@ export class Class_Handler extends Class_Element {
     return this._ref_element.is_selected && this._is_visible
   }
 
-  public get ref_element(): Class_LinkElement | Class_NodeElement {return this._ref_element}
+  public get ref_element(): Class_LinkElement | Class_NodeElement { return this._ref_element }
 }
 
