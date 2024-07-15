@@ -3,7 +3,6 @@ import React, { FunctionComponent, MutableRefObject, useRef, useState } from 're
 
 import {
   Box,
-  Input,
   InputGroup,
   NumberDecrementStepper,
   NumberIncrementStepper,
@@ -22,9 +21,6 @@ import {
   ComponentUpdaterType,
   applicationDataType
 } from '../types/Types'
-import {
-  Class_Tag
-} from '../types/Tag'
 
 // Local components or functions
 import {
@@ -37,23 +33,21 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfigur
 
 export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
   applicationData,
-  applicationState,
   applicationContext,
   additional_data_element,
-  ComponentUpdater
 }) => {
+  // Traduction
   const { t } = applicationContext
+  // Sankey datas
   const { new_data } = applicationData
+  // Boolean used to force this component to reload
   const [ , setForceUpdate ] = useBoolean()
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = setForceUpdate.toggle
 
+  // Data tags and links
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
   const list_links_selected = new_data.drawing_area.selected_links_list
-
-  const { displayedInputLinkValueSetterRef,displayedInputLinkValueRef  } = applicationState
-  const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
-
-  displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
-  displayedInputLinkValueRef.current=displayed_input_link_value
 
   const content = <Box
     layerStyle='menuconfigpanel_grid'
@@ -85,17 +79,6 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                 })
                 // Update this menu
                 setForceUpdate.toggle()
-                // TODO supprimer
-                // //Modifie les paramètres selectionnés
-                // const { name, value } = evt.target
-                // let tmp={}
-                // tmp= ({...tags_selected,[name]: value})
-                // set_tags_selected()
-                // // Create new path to get link value
-                // const path_to_link_value=Object.values(tmp) as Class_Tag[]
-                // displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                //   list_links_selected[0]?.text_value
-                // ))
               }}
             >
               {

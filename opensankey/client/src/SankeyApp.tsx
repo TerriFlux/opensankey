@@ -354,10 +354,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const config_link_data = <MenuConfigurationLinksData
     applicationData={applicationData}
-    applicationState={applicationState}
     applicationContext={applicationContext}
     additional_data_element={additionalMenus.additional_data_element}
-    ComponentUpdater={ComponentUpdater}
   />
   const config_link_attr = <MenuConfigurationLinksAppearence
     applicationData={applicationData}
