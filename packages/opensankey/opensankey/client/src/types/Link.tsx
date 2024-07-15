@@ -701,6 +701,8 @@ export class Class_LinkElement extends Class_ProtoElement {
             .attr('fill', this.value_label_color)
           // Add text directly on textpath object
           d3_textpath_selection?.text(label_to_display)
+            .attr('spacing', 'exact')
+            .attr('method', 'align')
           // Compute text position
           if (this.value_label_on_path) {
             // Relative position from starting point of path
