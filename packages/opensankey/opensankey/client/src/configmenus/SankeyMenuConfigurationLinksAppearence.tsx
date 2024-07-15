@@ -902,7 +902,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             elements.forEach(element => {
               const orth_pos = element.value_label_orthogonal_position
               element.value_label_pos_auto = evt.target.checked
-              element.value_label_position = 'beginning'
+              element.value_label_position = 'start'
               element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
             })
             selected_links.forEach(link => link.deleteRelativeLabelPos())
@@ -936,7 +936,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   paddingEnd='0'
                   minWidth='0'
                   variant={
-                    (!is_indeterminate && (value_label_position === 'beginning')) ?
+                    (!is_indeterminate && (value_label_position === 'start')) ?
                       'menuconfigpanel_option_button_activated_left' :
                       'menuconfigpanel_option_button_left'
                   }
@@ -944,7 +944,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                     () => {
                       elements.forEach(element => {
                         const orth_pos = element.value_label_orthogonal_position
-                        element.value_label_position = 'beginning'
+                        element.value_label_position = 'start'
                         element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
