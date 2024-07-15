@@ -393,18 +393,18 @@ export class Class_NodeElement extends Class_Element {
     // 'this' take the scope of the handler so we have to cast it here for compilation
     const handler = this as unknown as Class_Handler
 
-    // Get node from the handler 
+    // Get node from the handler
     const node_ref = handler.ref_element as Class_NodeElement
 
     if (node_ref.link_dragged && (event.dy !== 0 || event.dx !== 0)) {
       // Get link currently dragged
       const link_dragged = (node_ref.link_dragged as Class_LinkElement)
-      // Search if handler is for a link incoming or outcoming from the node 
+      // Search if handler is for a link incoming or outcoming from the node
       const handle_src_or_trgt = (link_dragged.target === node_ref) ? 'target' : 'source'
       const dragged_side = (handle_src_or_trgt === 'target') ? link_dragged.target_side : link_dragged.source_side
       const node_ref_io = (handle_src_or_trgt === 'target') ? node_ref.input_links_list : node_ref.output_links_list
 
-      // Create an array from links_order with only the links in or out the same side of the dragged link 
+      // Create an array from links_order with only the links in or out the same side of the dragged link
       const list_links_node_side = node_ref._links_order.filter(link => {
         const curr_link_side = handle_src_or_trgt === 'source' ? link.source_side : link.target_side
         return node_ref_io.includes(link) && (curr_link_side == dragged_side)
@@ -632,7 +632,7 @@ export class Class_NodeElement extends Class_Element {
         if (ent_nodetag.length > 0) {
           const list_id_tag = ent_nodetag[1] as string[]
           this._tags[ent_nodetag[0]] = list_id_tag.map(key_tag => {
-            return this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags[key_tag]
+            return this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags_dict[key_tag]
           })
         }
 
@@ -645,7 +645,7 @@ export class Class_NodeElement extends Class_Element {
         if (ent_lvltag.length > 0) {
           const list_id_tag = ent_lvltag[1] as string[]
           this._tags[ent_lvltag[0]] = list_id_tag.map(key_tag => {
-            return this.drawing_area.sankey.level_taggs_dict[ent_lvltag[0]].tags[key_tag]
+            return this.drawing_area.sankey.level_taggs_dict[ent_lvltag[0]].tags_dict[key_tag]
           })
         }
 
@@ -2127,11 +2127,11 @@ export class Class_NodeElement extends Class_Element {
       if (node_tags_attr != undefined && node_tags_attr.length != 0) {
         // If the node has at least 1 tag from the selected tag of the group then we display it
         // If the node has tag from the group attribued to it but are not selected then we don't display it
-        if (!nt[1].tags) {
+        if (!nt[1].tags_dict) {
           return
         }
-        const tags_from_grp_to_display = Object.entries(nt[1].tags).filter(t => t[1].selected).map(t => t[1])
-        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+        const node_tags_selected = nt[1].selected_tags_list
+        to_display = (node_tags_attr.filter(t => node_tags_selected.includes(t)).length > 0) ? to_display : false
       }
     })
     return to_display
@@ -2159,8 +2159,8 @@ export class Class_NodeElement extends Class_Element {
       if (node_tags_attr != undefined) {
         // If the node has at least 1 tag from the selected tag of the group then we display it
         // If the node has tag from the group attribued to it but are not selected then we don't display it
-        const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t)
-        to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
+        const level_tags_selected = nt[1].selected_tags_list
+        to_display = (node_tags_attr.filter(t => level_tags_selected.includes(t)).length > 0) ? to_display : false
         // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
 
       }

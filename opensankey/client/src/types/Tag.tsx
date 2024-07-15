@@ -41,7 +41,7 @@ export class Class_Tag {
   private _color: string = default_grey_color
 
   // Boolean to show elements that are assigned to this tag
-  private _selected: boolean = true
+  private _is_selected: boolean = true
 
   // Constructor ========================================================================
 
@@ -83,7 +83,7 @@ export class Class_Tag {
     const json_object = {} as { [_: string]: any }
     json_object['id'] = this._id
     json_object['name'] = this._name
-    json_object['selected'] = this._selected
+    json_object['selected'] = this._is_selected
     json_object['color'] = this._color
 
     return json_object
@@ -96,7 +96,7 @@ export class Class_Tag {
    * @memberof Class_Tag
    */
   public fromJSON(json_object: { [_: string]: any }) {
-    this._selected = json_object['selected'] ?? false
+    this._is_selected = json_object['selected'] ?? false
     this._color = json_object['color'] ?? 'grey'
   }
 
@@ -110,8 +110,10 @@ export class Class_Tag {
   public get color() { return this._color }
   public set color(value: string) { this._color = value }
 
-  public get selected() { return this._selected }
-  public set selected(value: boolean) { this._selected = value }
+  // Selection
+  public setSelected() { this._is_selected = true }
+  public setUnSelected() { this._is_selected = false }
+  public get is_selected() { return this._is_selected }
 
   public get group() { return this._group }
 }
@@ -241,16 +243,14 @@ export class Class_TagGroup {
   public get name(): string { return this._name }
 
   /**
-   *
-   *
+   * Return dict tag from the current group
    * @type {{ [_: string]: Class_Tag }}
    * @memberof Class_TagGroup
    */
-  public get tags(): { [_: string]: Class_Tag } { return this._tags }
+  public get tags_dict(): { [_: string]: Class_Tag } { return this._tags }
 
   /**
- * Return list tag from the current group
-  *
+  * Return list tag from the current group
   * @readonly
   * @memberof Class_TagGroup
   */
@@ -258,11 +258,17 @@ export class Class_TagGroup {
 
   /**
    * Return list of selected tag from the current group
-   *
    * @readonly
    * @memberof Class_TagGroup
    */
-  public get selected_tags_list() { return Object.values(this._tags).filter(t => t.selected) }
+  public get selected_tags_list() { return Object.values(this._tags).filter(t => t.is_selected) }
+
+  /**
+   * True if tag group has tags
+   * @readonly
+   * @memberof Class_TagGroup
+   */
+  public get has_tags() { return this.selected_tags_list.length > 0 }
 
   public get banner(): tag_banner_type { return this._banner }
   public set banner(value: tag_banner_type) { this._banner = value }

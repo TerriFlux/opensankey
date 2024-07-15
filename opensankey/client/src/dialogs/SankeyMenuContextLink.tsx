@@ -293,7 +293,6 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
     <MenuList>
       <ConfigLinkDataNumberInput
         applicationData={applicationData}
-        tags_selected={tags_selected}
         ComponentUpdater={ComponentUpdater}
       />
     </MenuList>

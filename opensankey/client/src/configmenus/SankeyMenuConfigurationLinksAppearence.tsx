@@ -1319,22 +1319,20 @@ type ConfigLinkNumberInputType = {
   function_onBlur: () => void
 }
 
-
 /**
  * Component developped for number input of the nodes attributs config menu
- *
- * @param {applicationDataType} applicationData
- * @param {keyof SankeyNodeAttrLocal} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
- * @param {{[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}} parameter_to_modify multi_selected_links or dict of node style
- * @param {SankeyNodeStyle[] | SankeyNode[]} selected_parameter either modify node style or selected node depending on if we are in the edition of style or configuration menu
- * @param {boolean} menu_for_style Modify either the style of node or the multi_selected_links
- * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
- * @param {number} maximum_value (optional, if not specified it mean the value can be undefined )
- * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
- * @param {string} unitText (default:'') text of the addon
- * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
- *
- * @return {JSX.Elmement}
+ * @param {*} {
+ *   valueOfAttr,
+ *   menu_for_style,
+ *   minimum_value,
+ *   maximum_value,
+ *   stepper = false,
+ *   step = 1,
+ *   unitText,
+ *   function_onChange,
+ *   function_onBlur
+ * }
+ * @return {*}
  */
 export const ConfigLinkAttributeNumberInput: FunctionComponent<ConfigLinkNumberInputType> = ({
   valueOfAttr,
