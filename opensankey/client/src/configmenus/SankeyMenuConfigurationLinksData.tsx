@@ -45,10 +45,19 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   // Link this menu's update function
   new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = setForceUpdate.toggle
 
-  // Data tags and links
+  // Function used to reset menu UI -----------------------------------------------------
+  const setForceFullUpdate = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    setForceUpdate.toggle()
+  }
+
+  // Data tags and links ---------------------------------------------------------------
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
   const list_links_selected = new_data.drawing_area.selected_links_list
 
+  // JSX -------------------------------------------------------------------------------
   const content = <Box
     layerStyle='menuconfigpanel_grid'
   >
@@ -78,7 +87,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                     tag.setUnSelected()
                 })
                 // Update this menu
-                setForceUpdate.toggle()
+                setForceFullUpdate()
               }}
             >
               {
@@ -111,7 +120,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
               link.data_value = _ ?? null
             })}
           }
-          function_onBlur={() => setForceUpdate.toggle()}
+          function_onBlur={setForceFullUpdate}
           minimum_value={0}
           stepper={true}
           step={1}
@@ -142,7 +151,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
               link.text_value = _ ?? ''
             })
           }}
-          function_onBlur={() => setForceUpdate.toggle()}
+          function_onBlur={setForceFullUpdate}
         />
       </Box>
     </OSTooltip>

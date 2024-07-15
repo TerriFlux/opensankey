@@ -360,7 +360,9 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   public resetAttributes() {
     this._display.attributes = new Class_LinkAttribute()
-    this.drawElements()
+    // Need to redraw from nodes
+    this.source.draw()
+    this.target.draw()
   }
 
   /**
@@ -698,7 +700,10 @@ export class Class_LinkElement extends Class_ProtoElement {
             .style('font-style', 'normal')
             .style('font-size', String(this.value_label_font_size) + 'px')
             .style('font-family', this.value_label_font_family)
-            .attr('fill', this.value_label_color)
+            .attr('fill',
+              (this.value_label_color === 'color') ?
+                this.shape_color :
+                this.value_label_color)
           // Add text directly on textpath object
           d3_textpath_selection?.text(label_to_display)
             .attr('spacing', 'exact')
