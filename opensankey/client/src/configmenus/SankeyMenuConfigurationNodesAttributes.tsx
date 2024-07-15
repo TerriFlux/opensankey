@@ -1233,7 +1233,12 @@ const ConfigNodeAttributeNumberInput: FunctionComponent<ConfigLayoutNumberInputT
   const inputUnit = unitText ? <InputRightAddon>{unitText}</InputRightAddon> : <></>
 
   return <InputGroup variant='menuconfigpanel_option_input' >
-    <NumberInput allowMouseWheel variant={variantOfInput} min={minimum_value} max={maximum_value} step={1}
+    <NumberInput 
+      allowMouseWheel 
+      variant={variantOfInput} 
+      min={minimum_value} 
+      max={maximum_value} 
+      step={1}
       value={_value}
       onChange={(_, value) => {
         function_onChange(_, value)
