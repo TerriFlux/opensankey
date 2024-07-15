@@ -73,7 +73,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   if (tags_group_list.length > 0 && tags_group_key !== '') {
     const list_key_grp_tag = tags_group_list.map(grp => grp.id)
     if (list_key_grp_tag.includes(tags_group_key)) {
-      element_tags = Object.keys(group_tag.tags)
+      element_tags = Object.keys(group_tag.tags_dict)
     } else {
       console.log('tutu')
     }
@@ -83,7 +83,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   //add a tags to the selected groupTag
   const handleAddTagButton = () => {
-    const new_key = Object.keys(group_tag.tags).length
+    const new_key = Object.keys(group_tag.tags_dict).length
     group_tag.addTag('key_tag_' + new_key, 'Tag')
     setForceUpdate.toggle()
     redrawGenereal()
@@ -107,7 +107,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   // Delete a tag
   const handleDelTag = (n: string) => {
 
-    delete group_tag.tags[n]
+    delete group_tag.tags_dict[n]
     setForceUpdate.toggle()
     redrawGenereal()
   }
@@ -196,9 +196,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           size='sm'
           onClick={() => {
             const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-            const size_color = Object.keys(group_tag.tags).length
+            const size_color = Object.keys(group_tag.tags_dict).length
             for (const i in d3.range(size_color)) {
-              group_tag.tags[element_tags[i]].color = d3.color(color_selected(+i / size_color))?.formatHex() ?? 'grey'
+              group_tag.tags_dict[element_tags[i]].color = d3.color(color_selected(+i / size_color))?.formatHex() ?? 'grey'
 
             }
             redrawGenereal()
@@ -215,7 +215,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           size='sm'
           onClick={() => {
             const color = element_tags.map(d => {
-              return group_tag.tags[d].color
+              return group_tag.tags_dict[d].color
             })
             let size_color = color.length
             for (const i in d3.range(size_color)) {
@@ -224,7 +224,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               const c = color.splice(color_to_select, 1)
               if (c != undefined && c != null) {
                 const v = c[0]
-                group_tag.tags[element_tags[i]].color = v
+                group_tag.tags_dict[element_tags[i]].color = v
               }
             }
             redrawGenereal()
@@ -241,7 +241,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
               setColorMap(evt.target.value)
-              const nb_tags = Object.keys(group_tag.tags).length
+              const nb_tags = Object.keys(group_tag.tags_dict).length
               if (evt.target.value === 'custom') {
                 return
               }
@@ -255,8 +255,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               if (nb_tags < 11) {
                 step = Math.round(11 / nb_tags)
               }
-              Object.keys(group_tag.tags).forEach(
-                (tag_key, i) => group_tag.tags[tag_key].color = colors[i * step]
+              Object.keys(group_tag.tags_dict).forEach(
+                (tag_key, i) => group_tag.tags_dict[tag_key].color = colors[i * step]
               )
               redrawGenereal()
               setForceUpdate.toggle()
@@ -312,7 +312,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         <Tbody>
           {element_tags.length > 0 ? element_tags.map(
             (tag_key, i) => {
-              const tag_visible = group_tag.tags[tag_key].selected
+              const tag_visible = group_tag.tags_dict[tag_key].is_selected
               return (
                 <Tr key={i.toString()} >
                   {/* Supprimer une etiquette  */}
@@ -334,12 +334,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           variant='menuconfigpanel_option_input_table'
                           id={i.toString()}
                           type="text"
-                          value={group_tag.tags[tag_key].name}
+                          value={group_tag.tags_dict[tag_key].name}
                           onChange={
                             (evt: React.ChangeEvent) => {
                               const new_nb_element = evt.target as HTMLInputElement
                               const name = new_nb_element.value
-                              group_tag.tags[tag_key].name = name
+                              group_tag.tags_dict[tag_key].name = name
                               redrawGenereal()
                               setForceUpdate.toggle()
                             }
@@ -358,10 +358,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           onClick={
                             () => {
                               const visible = !tag_visible
-                              group_tag.tags[tag_key].selected = visible
+                              if (visible)
+                                group_tag.tags_dict[tag_key].setSelected()
+                              else
+                                group_tag.tags_dict[tag_key].setUnSelected()
                               redrawGenereal()
                               setForceUpdate.toggle()
-                            }}>{tag_visible ? <FaEye /> : <FaEyeSlash />}</Button>
+                            }}
+                        >
+                          {tag_visible ? <FaEye /> : <FaEyeSlash />}
+                        </Button>
                       </OSTooltip>
 
                     </Td> : <></>
@@ -371,10 +377,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     <OSTooltip label={t('Tags.tooltips.couleur')}>
                       <Input padding='0.25rem' width='revert' height='revert'
                         type='color'
-                        value={group_tag.tags[tag_key].color as string}
+                        value={group_tag.tags_dict[tag_key].color as string}
                         onChange={
                           evt => {
-                            group_tag.tags[tag_key].color = evt.target.value
+                            group_tag.tags_dict[tag_key].color = evt.target.value
                             redrawGenereal()
                             setForceUpdate.toggle()
                           }} />
@@ -386,11 +392,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                       <OSTooltip label={t('Tags.tooltips.forme')}>
                         <Select variant='menuconfigpanel_option_select_table'
                           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            group_tag.tags[tag_key].shape = evt.target.value
+                            group_tag.tags_dict[tag_key].shape = evt.target.value
                             redrawGenereal()
                             setForceUpdate.toggle()
                           }}
-                          value={group_tag.tags[tag_key].shape as string}
+                          value={group_tag.tags_dict[tag_key].shape as string}
                         >
                           <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
                           <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>

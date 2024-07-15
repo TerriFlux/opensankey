@@ -175,6 +175,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   applicationState : applicationStateType,
   contextMenu : contextMenuType
 ) => ()=>{
+  // TODO Revoir reinitilisation
   const new_data = applicationData.get_default_data()
   applicationState.multi_selected_nodes.current = []
   applicationState.multi_selected_links.current = []

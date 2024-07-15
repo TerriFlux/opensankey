@@ -23,7 +23,8 @@ import {
   NodeFunctionTypes,
   applicationContextType,
   applicationDataType,
-  applicationStateType} from '../types/Types'
+  applicationStateType
+} from '../types/Types'
 
 /*************************************************************************************************/
 import {

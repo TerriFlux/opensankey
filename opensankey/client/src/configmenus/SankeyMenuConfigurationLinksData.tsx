@@ -1,12 +1,37 @@
 // External imports
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
-import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
+import {
+  Box,
+  Input,
+  InputGroup,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  Select,
+  useBoolean
+} from '@chakra-ui/react'
 
-import { OSTooltip } from './SankeyUtils'
-import { ComponentUpdaterType,  applicationDataType } from '../types/Types'
-import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, useBoolean } from '@chakra-ui/react'
-import { Class_Tag } from '../types/Tag'
+// Local types
+import {
+  MenuConfigurationLinksDataFType
+} from './types/SankeyMenuConfigurationLinksDataTypes'
+import {
+  ComponentUpdaterType,
+  applicationDataType
+} from '../types/Types'
+import {
+  Class_Tag
+} from '../types/Tag'
+
+// Local components or functions
+import {
+  OSTooltip
+} from './SankeyUtils'
+import { default_value_label_unit } from '../types/Link'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
 
@@ -18,77 +43,74 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   ComponentUpdater
 }) => {
   const { t } = applicationContext
-  const [,setForceUpdate]=useBoolean()
   const { new_data } = applicationData
-  const entries_data_taggs=new_data.drawing_area.sankey.data_taggs_entries
-  const list_links_selected=new_data.drawing_area.selected_links_list
+  const [ , setForceUpdate ] = useBoolean()
 
-  const { displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = applicationState
+  const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
+  const list_links_selected = new_data.drawing_area.selected_links_list
+
+  const { displayedInputLinkValueSetterRef,displayedInputLinkValueRef  } = applicationState
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
 
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
   displayedInputLinkValueRef.current=displayed_input_link_value
 
-  // Data tags selections
-  const newEntries = new Map(entries_data_taggs.map(([dataTagKey, dataTag]) => {
-    return (Object.keys(dataTag.tags).length > 0) ? [
-      dataTagKey,
-      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-  }))
-  const dataTagsSelected = Object.fromEntries(newEntries)
-  const [tags_selected, set_tags_selected] = useState(new_data.drawing_area.sankey.selected_data_tags_entries)
-  // displayedInputLinkDataTagSetterRef.current.push(set_tags_selected)
-  // if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
-  //   set_tags_selected(dataTagsSelected)
-  // }
-
-  // Value text for links
-  // const link_display_text=list_links_selected[0]?.text_value
-const link_display_text = ''
-  const content=<Box
+  const content = <Box
     layerStyle='menuconfigpanel_grid'
   >
-    {// Définition des valeurs selon les paramètre dataTags
-      entries_data_taggs.map(([dataTagKey, dataTag]) => {
-        if (Object.keys(dataTag.tags).length != 0) {
+    {
+      // Définition des valeurs selon les paramètre dataTags
+      list_data_taggs.map(data_tagg => {
+        if (data_tagg.has_tags) {
           return (<>
             <Box
               as='span'
               layerStyle='menuconfigpanel_part_title_3'
             >
-              {dataTag.name}
+              {data_tagg.name}
             </Box>
             <Select
-              name={dataTagKey}
+              name={data_tagg.id}
               variant='menuconfigpanel_option_select'
               value={
-                tags_selected[dataTagKey]?.id
+                data_tagg.selected_tags_list[0]?.id ?? data_tagg.tags_list[0].id // fallback to first tag
               }
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                //Modifie les paramètres selectionnés
-                const { name, value } = evt.target
-                let tmp={}
-                tmp= ({...tags_selected,[name]: value})
-                set_tags_selected(tmp)
-                // Create new path to get link value
-                const path_to_link_value=Object.values(tmp) as Class_Tag[]
-                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  list_links_selected[0]?.text_value
-                ))
+                // Update selected attributes for tags
+                data_tagg.tags_list.forEach(tag => {
+                  if (tag.id === evt.target.value)
+                    tag.setSelected()
+                  else
+                    tag.setUnSelected()
+                })
+                // Update this menu
+                setForceUpdate.toggle()
+                // TODO supprimer
+                // //Modifie les paramètres selectionnés
+                // const { name, value } = evt.target
+                // let tmp={}
+                // tmp= ({...tags_selected,[name]: value})
+                // set_tags_selected()
+                // // Create new path to get link value
+                // const path_to_link_value=Object.values(tmp) as Class_Tag[]
+                // displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
+                //   list_links_selected[0]?.text_value
+                // ))
               }}
             >
-              {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
-                return (
-                  <option key={tag.name} value={tag_key}>{tag.name}</option>
-                )
-              })}
+              {
+                data_tagg.tags_list.map(tag => {
+                  return <option key={tag.id} value={tag.id}>{tag.name}</option>
+                })
+              }
             </Select></>
-
           )
         }
-      })}
-    {/* Valeur du flux pour les parametre (flitres) choisi  */}
-    {/* Valeur du flux  */}
+      })
+    }
+
+    {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
+
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
         as='span'
@@ -99,11 +121,25 @@ const link_display_text = ''
         >
           {t('Flux.data.vpp')}
         </Box>
-        <ConfigLinkDataNumberInput
-          key={Object.values(tags_selected).join('&')}
-          applicationData={applicationData}
-          tags_selected={tags_selected}
-          ComponentUpdater={ComponentUpdater}
+        <ConfigMenuNumberInput
+          default_value={list_links_selected[0]?.data_value}
+          function_onChange={(_) => {
+            list_links_selected.forEach(link => {
+              link.data_value = _ ?? null
+            })}
+          }
+          function_onBlur={() => setForceUpdate.toggle()}
+          minimum_value={0}
+          stepper={true}
+          step={1}
+          unit_text={
+            (
+              list_links_selected[0]?.value_label_unit_visible &&
+              list_links_selected[0]?.value_label_unit !== default_value_label_unit
+            ) ?
+              list_links_selected[0]?.value_label_unit :
+              undefined
+          }
         />
       </Box>
     </OSTooltip>
@@ -116,86 +152,79 @@ const link_display_text = ''
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Flux.data.affichage')}
         </Box>
-
-        <InputGroup variant='menuconfigpanel_option_input' >
-          <Input
-            variant='menuconfigpanel_option_input'
-            value={link_display_text}
-            onChange={evt => {
-              list_links_selected.forEach(l=>{
-                l.text_value = evt.target.value
-              })
-              setForceUpdate.toggle()
-            }}
-          />
-        </InputGroup>
+        <ConfigMenuTextInput
+          default_value={list_links_selected[0]?.text_value}
+          function_onChange={(_) => {
+            list_links_selected.forEach(link=>{
+              link.text_value = _ ?? ''
+            })
+          }}
+          function_onBlur={() => setForceUpdate.toggle()}
+        />
       </Box>
     </OSTooltip>
 
     {additional_data_element}
 
   </Box>
+
   return content
 }
 
 
 type ConfigLinkDataNumberInputType={
   applicationData:applicationDataType
-  tags_selected: {[k: string]: Class_Tag;}
   ComponentUpdater:ComponentUpdaterType
 }
 /**
- * Component developped for number input of the layout config menu
- *
- * @param {SankeyData} data
- * @param {keyof SankeyData} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
- * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
- * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
- * @param {boolean} hasUnit (default:false) add an addon after the input
- * @param {string} unitText (default:'') text of the addon
- * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
- *
+ * TODO A supprimer apres passe sur menus contextuels
+ * Component developped for number input of the link data config menu
+ * @param {applicationData} TODO
+ * @param {ComponentUpdater} TODO
  * @return {JSX.Elmement}
  */
-export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInputType>=({
+export const ConfigLinkDataNumberInput: FunctionComponent<ConfigLinkDataNumberInputType>=({
   applicationData,
-  tags_selected,
   ComponentUpdater,
 })=>{
-  const {new_data}=applicationData
-  const list_links_selected=new_data.drawing_area.selected_links_list
-  const ref_input=useRef<HTMLInputElement>(null)
-  const variantOfInput='menuconfigpanel_option_numberinput'
+  const { new_data } = applicationData
+  const list_links_selected = new_data.drawing_area.selected_links_list
+  const ref_input = useRef<HTMLInputElement>(null)
+  const variantOfInput = 'menuconfigpanel_option_numberinput'
   const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
 
-  const path_to_link_value=Object.values(tags_selected)
-
   // Initialise hook with first link selected value
-  const [displayed_value,setDisplayedValue]=useState(()=>list_links_selected[0]?.data_value)
+  const [ displayed_value, setDisplayedValue ] = useState(
+    () => list_links_selected[0]?.data_value)
 
   const f_onBlur=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
 
+  // Add stepper addon if specified
+  const stepperBtn=<NumberInputStepper>
+    <NumberIncrementStepper/>
+    <NumberDecrementStepper/>
+  </NumberInputStepper>
+
   return <InputGroup variant='menuconfigpanel_option_input' >
     <NumberInput allowMouseWheel
       variant={variantOfInput}
       step={1}
-      value={(displayed_value===null)?undefined:displayed_value}
+      value={ (displayed_value === null) ? undefined : displayed_value }
       onChange={(_,val)=>{
         // Launch/reset timeout before the input auto blur (and update the value in data)
         if(isModifying.current){
           clearTimeout(isModifying.current)
         }
+        // launch timeout that automatically blur the input
         isModifying.current=setTimeout(()=>{
           f_onBlur()
           ref_input.current?.blur()
         },2000)
-
-        // Update displayed value
+        // Update only displayed value
         setDisplayedValue(val)
       }}
-
       onBlur={()=>{
         clearTimeout(isModifying.current)
         list_links_selected.forEach(l=>{
@@ -209,8 +238,3 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
     </NumberInput>
   </InputGroup>
 }
-// Add stepper addon if specified
-const stepperBtn=<NumberInputStepper>
-  <NumberIncrementStepper/>
-  <NumberDecrementStepper/>
-</NumberInputStepper>

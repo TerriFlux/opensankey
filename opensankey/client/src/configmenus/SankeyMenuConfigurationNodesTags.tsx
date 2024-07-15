@@ -74,7 +74,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
       {
         tags_visible && tags_group_key != '' && Object.keys(sankey_data.node_taggs_dict).includes(tags_group_key) ?
           Object
-            .entries(sankey_data.node_taggs_dict[tags_group_key].tags)
+            .entries(sankey_data.node_taggs_dict[tags_group_key].tags_dict)
             .map(tags => {
               const allChecked = IsAllNodeTagsSame(list_node_selected,tags[1],tags_group_key)
               return (

@@ -20,9 +20,9 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   const newEntries = new Map(Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
-    return (Object.keys(dataTag.tags).length > 0) ? [
+    return (dataTag.tags_list.length > 0) ? [
       dataTagKey,
-      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+      dataTag.selected_tags_list.length > 0 ? Object.entries(dataTag.tags_dict).filter(tag => tag[1].is_selected)[0][0] : Object.keys(dataTag.tags_dict)[0]] : ['n', 'n']
   }))
   const dataTagsSelected = Object.fromEntries(newEntries)
 
@@ -91,7 +91,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
 
     {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
-        if (Object.keys(dataTag.tags).length != 0) {
+        if (Object.keys(dataTag.tags_dict).length != 0) {
           return (<>
             <Box
               as='span'
@@ -113,7 +113,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                   }))
                   setForceUpdate(!forceUpdate)
                 }}>
-              {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
+              {Object.entries(dataTag.tags_dict).map(([tag_key, tag]) => {
                 return (
                   <option key={tag.name} value={tag_key}>{tag.name}</option>
                 )
@@ -134,7 +134,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
           selected_links.length!=0
         )
         ?
-          Object.entries(flux_taggs[tags_group_key].tags)
+          Object.entries(flux_taggs[tags_group_key].tags_dict)
             .map(([tag_key,tag]) => {
               const is_selected = (
                 flux_reference_for_displayed_value.tags[tags_group_key] &&
