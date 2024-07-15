@@ -76,7 +76,7 @@ export class Class_MenuConfig {
   private _updateComponentMenu: MutableRefObject<() => void>
 
   // Update component OpenSankeySaveButton
-  private _updateComponentSaveInCache: MutableRefObject<(b: boolean) => void>
+  private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
 
 
 
@@ -113,7 +113,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_link_apparence_updater = useRef(() => null)
     this._update_components_menu_config_link_tooltip = useRef([] as (() => void)[])
 
-    this._updateComponentSaveInCache = useRef(() => null)
+    this._ref_to_save_in_cache_indicator = useRef((_:boolean) => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateComponentMenu = useRef(() => null)
     this._updateComponentToolbar = useRef(() => null)
@@ -281,6 +281,15 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_link_apparence_updater
   }
 
+  public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
+    return this._update_components_menu_config_link_tooltip
+  }
+
+  // Toolbar -----------------------------------------------------------------------------
+  public get ref_to_save_in_cache_indicator(): MutableRefObject<(b: boolean) => void> {
+    return this._ref_to_save_in_cache_indicator
+  }
+
   public get updateComponentToolbar(): MutableRefObject<() => void> {
     return this._updateComponentToolbar
   }
@@ -290,13 +299,7 @@ export class Class_MenuConfig {
     return this._updateComponentMenu
   }
 
-  public get updateComponenSaveInCache(): MutableRefObject<(b: boolean) => void> {
-    return this._updateComponentSaveInCache
-  }
 
-  public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
-    return this._update_components_menu_config_link_tooltip
-  }
 
   public get updateComponentBtnUpdateLayout(): MutableRefObject<(() => void)> {
     return this._updateComponentBtnUpdateLayout
