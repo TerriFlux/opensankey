@@ -205,19 +205,21 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   public draw() {
-    const d3_drawing_area = this.drawing_area.d3_selection
-    if (d3_drawing_area !== null) {
-      // Undraw all
-      this.unDraw()
-      // Draw only if visible
-      if (this.is_visible) {
-        // Set d3 selection
-        this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-          .datum(this)
-          .append('g')
-          .attr('id', 'gg_' + this._id)
-        // Add events listeners
-        this.setEventsListeners()
+    if (!this._is_currently_deleted) {
+      const d3_drawing_area = this.drawing_area.d3_selection
+      if (d3_drawing_area !== null) {
+        // Undraw all
+        this.unDraw()
+        // Draw only if visible
+        if (this.is_visible) {
+          // Set d3 selection
+          this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+            .datum(this)
+            .append('g')
+            .attr('id', 'gg_' + this._id)
+          // Add events listeners
+          this.setEventsListeners()
+        }
       }
     }
   }
@@ -280,21 +282,24 @@ export abstract class Class_ProtoElement {
           this.eventSimpleRMBCLick(event))
       // Drag events TODO
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
-      this.d3_selection?.call(
-        d3.drag<SVGGElement, this>()
-          .on(
-            'start',
-            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-              this.eventMouseDragStart(event))
-          .on(
-            'drag',
-            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-              this.eventMouseDrag(event))
-          .on(
-            'end',
-            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-              this.eventMouseDragEnd(event))
-      )
+      if (this.drawing_area.isInSelectionMode()) {
+        this.d3_selection?.call(
+          d3.drag<SVGGElement, this>()
+            .on(
+              'start',
+              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+                this.eventMouseDragStart(event))
+            .on(
+              'drag',
+              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+                this.eventMouseDrag(event))
+            .on(
+              'end',
+              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+                this.eventMouseDragEnd(event))
+        )
+      }
+
     }
   }
 
@@ -593,7 +598,9 @@ export class Class_Handler extends Class_Element {
  * @memberof Class_Handler
  */
   public get is_visible() {
-    return this._ref_element.is_selected
+    return this._ref_element.is_selected && this._is_visible
   }
+
+  public get ref_element(): Class_LinkElement | Class_NodeElement {return this._ref_element}
 }
 
