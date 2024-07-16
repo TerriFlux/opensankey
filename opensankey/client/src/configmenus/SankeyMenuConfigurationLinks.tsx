@@ -129,11 +129,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
       applicationContext={applicationContext}
       applicationData={applicationData}
-      applicationState={applicationState}
       menu_for_modal={false}
-      ComponentUpdater={ComponentUpdater}
-      node_function={node_function}
-      link_function={link_function}
     />
   }
 

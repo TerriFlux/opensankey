@@ -644,9 +644,6 @@ export const moduleDialogs : module_dialogsType = (
     <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
-      applicationState={applicationState}
-      node_function={node_function}
-      ComponentUpdater={ComponentUpdater}
       menu_for_modal={true}
     />,
     contextMenu.pointer_pos,
@@ -658,11 +655,7 @@ export const moduleDialogs : module_dialogsType = (
     <MenuConfigurationLinksTags
       applicationContext={applicationContext}
       applicationData={applicationData}
-      applicationState={applicationState}
       menu_for_modal={true}
-      ComponentUpdater={ComponentUpdater}
-      node_function={node_function}
-      link_function={link_function}
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.Flux')+' '+applicationContext.t('Menu.Etiquettes')

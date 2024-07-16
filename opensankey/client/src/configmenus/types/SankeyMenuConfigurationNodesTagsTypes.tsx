@@ -10,9 +10,6 @@ import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContext
 export type SankeyMenuConfigurationNodesTagsFType = {
   applicationContext : applicationContextType,
   applicationData : applicationDataType,
-  applicationState : applicationStateType,
-  node_function:NodeFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
   menu_for_modal:boolean
 }
 
