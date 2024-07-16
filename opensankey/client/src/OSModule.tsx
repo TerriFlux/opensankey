@@ -175,6 +175,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   applicationState : applicationStateType,
   contextMenu : contextMenuType
 ) => ()=>{
+  // TODO Revoir reinitilisation
   const new_data = applicationData.get_default_data()
   applicationState.multi_selected_nodes.current = []
   applicationState.multi_selected_links.current = []
@@ -537,13 +538,11 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
   applicationContext,
   applicationData,
-  applicationDraw,
-  ComponentUpdater
 ) => {
   if (!window.SankeyToolsStatic) {
     additional_menus.additional_nav_item.push(
       <OpenSankeySaveButton
-        ComponentUpdater={ComponentUpdater}
+        applicationData={applicationData}
         applicationContext={applicationContext}
       />
     )
@@ -593,10 +592,8 @@ export const moduleDialogs : module_dialogsType = (
     'ref_setter_show_menu_link_data',
     <MenuConfigurationLinksData
       applicationData={applicationData}
-      applicationState={applicationState}
       applicationContext={applicationContext}
       additional_data_element={additional_menus.additional_data_element}
-      ComponentUpdater={ComponentUpdater}
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
@@ -610,7 +607,6 @@ export const moduleDialogs : module_dialogsType = (
       applicationContext={applicationContext}
       additional_link_appearence_items={additional_menus.additional_link_appearence_items}
       menu_for_style={false}
-      ComponentUpdater={ComponentUpdater}
     />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')

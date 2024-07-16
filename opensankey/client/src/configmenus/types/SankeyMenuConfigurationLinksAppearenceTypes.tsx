@@ -5,8 +5,7 @@ export type MenuConfigurationLinksAppearenceFType = {
   applicationState:applicationStateType,
   applicationContext:applicationContextType,
   additional_link_appearence_items:JSX.Element[],
-  menu_for_style:boolean,
-  ComponentUpdater:ComponentUpdaterType,
+  menu_for_style:boolean
 }
 
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data

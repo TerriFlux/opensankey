@@ -310,17 +310,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initializeAdditionalMenus(
     additionalMenus,
     applicationContext,
-    applicationData,
-    applicationDraw,
-    ComponentUpdater,
-    applicationState,
-    uiElementsRef,
-    dict_hook_ref_setter_show_dialog_components,
-    node_function,
-    link_function,
-    processFunctions,
-    Reinitialization,
-    contextMenu
+    applicationData
   )
 
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
@@ -354,10 +344,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const config_link_data = <MenuConfigurationLinksData
     applicationData={applicationData}
-    applicationState={applicationState}
     applicationContext={applicationContext}
     additional_data_element={additionalMenus.additional_data_element}
-    ComponentUpdater={ComponentUpdater}
   />
   const config_link_attr = <MenuConfigurationLinksAppearence
     applicationData={applicationData}
@@ -365,7 +353,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     applicationContext={applicationContext}
     additional_link_appearence_items={additionalMenus.additional_link_appearence_items}
     menu_for_style={false}
-    ComponentUpdater={ComponentUpdater}
   />
 
   const {filter}=applicationData.data.display_style

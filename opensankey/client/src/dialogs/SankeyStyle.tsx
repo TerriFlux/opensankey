@@ -315,7 +315,6 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
         applicationContext={applicationContext}
         additional_link_appearence_items={additional_link_appearence_items}
         menu_for_style={true}
-        ComponentUpdater={ComponentUpdater}
       />
     }
   </Box>
