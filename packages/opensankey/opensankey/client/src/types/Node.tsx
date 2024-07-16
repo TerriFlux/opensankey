@@ -384,7 +384,7 @@ export class Class_NodeElement extends Class_Element {
 
   private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
     const custom_id = input ? 'input' : 'output'
-    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink,{filled:false,color:'#78C2AD'})
+    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD' })
     this._handle_links[link.id] = handle
   }
 
@@ -528,6 +528,8 @@ export class Class_NodeElement extends Class_Element {
       this.drawLinks()
       this.drawValueLabel()
     }
+    //todo finir
+
   }
 
   /**
@@ -593,7 +595,7 @@ export class Class_NodeElement extends Class_Element {
     json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
     json_object['style'] = Object.entries(this.drawing_area.sankey.node_styles_dict).filter(stl => stl[1] === (this.style))[0][0]
     json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
-
+    json_object['links_order'] = this._links_order.map(link => link.id)
     json_object['local'] = this._display.attributes.toJSON()
     json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].map(nt => nt.id)]))
 
@@ -650,6 +652,11 @@ export class Class_NodeElement extends Class_Element {
         }
 
       })
+  }
+
+  public fromJSONLinksOrder(json_node_object: { [x: string]: any }) {
+    const new_order: Class_LinkElement[] = json_node_object[this.id]['links_order'].map((lid: string) => { return this.drawing_area.sankey.links_dict[lid] })
+    this._links_order = new_order
   }
 
   // PROTECTED METHODS ==================================================================
