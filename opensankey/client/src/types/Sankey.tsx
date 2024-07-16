@@ -69,7 +69,7 @@ export class Class_Sankey {
 
   // Existing styles
   private _link_styles: { [_: string]: Class_LinkStyle } = {}
-  private _node_styles: { [_: string]: Class_NodeStyle } ={}
+  private _node_styles: { [_: string]: Class_NodeStyle } = {}
 
   // Tags
   private _node_taggs: { [_: string]: Class_TagGroup } = {}
@@ -121,7 +121,7 @@ export class Class_Sankey {
   public get colorMap(): string { return this._colorMap }
   public set colorMap(value: string) { this._colorMap = value }
 
-  public get nodesColorMap(): string { return this._nodesColorMap}
+  public get nodesColorMap(): string { return this._nodesColorMap }
   public set nodesColorMap(value: string) { this._nodesColorMap = value }
 
   public get linksColorMap(): string { return this._linksColorMap }
@@ -336,7 +336,7 @@ export class Class_Sankey {
     return Object.values(this._data_taggs)
   }
 
-  public get data_taggs_entries(){
+  public get data_taggs_entries() {
     return Object.entries(this._data_taggs)
   }
 
@@ -355,46 +355,46 @@ export class Class_Sankey {
   }
 
 
-    /**
-   * Return an object wherekey are data_taggs id ,
-   * and value an array of id of tag selected of that data_taggs
-   *
-   * @readonly
-   * @memberof Class_Sankey
-   */
+  /**
+ * Return an object wherekey are data_taggs id ,
+ * and value an array of id of tag selected of that data_taggs
+ *
+ * @readonly
+ * @memberof Class_Sankey
+ */
   public get selected_data_tags_entries() {
-    const obj_data_tags_selected: {[x:string]:Class_Tag} ={}
+    const obj_data_tags_selected: { [x: string]: Class_Tag } = {}
     this.data_taggs_list.forEach(data_tagg => {
-      obj_data_tags_selected[data_tagg.id]=data_tagg.selected_tags_list[0]
+      obj_data_tags_selected[data_tagg.id] = data_tagg.selected_tags_list[0]
     })
     return obj_data_tags_selected
   }
 
-   /**
-   * Return an array of possible path to link value,
-   * it use the combinitation of all tags from different data_taggs
-   *
-   * Exemple :
-   * [
-   *
-   * [grp1_key1,grp2_key1],
-   *
-   * [grp1_key1,grp2_key2],
-   *
-   * [grp1_key2,grp2_key1],
-   *
-   * [grp1_key2,grp2_key2],
-   * ...
-   * ]
-   * *
-   * @readonly
-   * @memberof Class_Sankey
-   */
-   public get list_combinatorial_data_taggs_path() {
-    const list_tag_by_grp:string[][]=[]
-    const tmp=this.data_taggs_entries
-    tmp.forEach(grp_tag=>{
-      list_tag_by_grp.push(grp_tag[1].tags_list.map(tag=>tag.id))
+  /**
+  * Return an array of possible path to link value,
+  * it use the combinitation of all tags from different data_taggs
+  *
+  * Exemple :
+  * [
+  *
+  * [grp1_key1,grp2_key1],
+  *
+  * [grp1_key1,grp2_key2],
+  *
+  * [grp1_key2,grp2_key1],
+  *
+  * [grp1_key2,grp2_key2],
+  * ...
+  * ]
+  * *
+  * @readonly
+  * @memberof Class_Sankey
+  */
+  public get list_combinatorial_data_taggs_path() {
+    const list_tag_by_grp: string[][] = []
+    const tmp = this.data_taggs_entries
+    tmp.forEach(grp_tag => {
+      list_tag_by_grp.push(grp_tag[1].tags_list.map(tag => tag.id))
     })
     return list_tag_by_grp
   }
@@ -444,7 +444,7 @@ export class Class_Sankey {
     id: string,
     source: Class_NodeElement,
     target: Class_NodeElement,
-  ) : Class_LinkElement {
+  ): Class_LinkElement {
     if (!this._links[id]) {
       const link = new Class_LinkElement(
         id,
@@ -457,7 +457,7 @@ export class Class_Sankey {
     }
     else {
       return this._addNewLink(
-        id+' (dup)',
+        id + ' (dup)',
         source,
         target)
     }
@@ -468,28 +468,28 @@ export class Class_Sankey {
   private _addNewNodeStyle(
     id: string,
     name: string
-  ) : Class_NodeStyle {
+  ): Class_NodeStyle {
     if (!this._node_styles[id]) {
       const style = new Class_NodeStyle(id, name, true)
       this._node_styles[id] = style
       return style
     }
     else {
-      return this._addNewNodeStyle(id+' (dup)', name)
+      return this._addNewNodeStyle(id + ' (dup)', name)
     }
   }
 
   private _addNewLinkStyle(
     id: string,
     name: string
-  ) : Class_LinkStyle {
+  ): Class_LinkStyle {
     if (!this._link_styles[id]) {
       const style = new Class_LinkStyle(id, name, true)
       this._link_styles[id] = style
       return style
     }
     else {
-      return this._addNewLinkStyle(id+' (dup)', name)
+      return this._addNewLinkStyle(id + ' (dup)', name)
     }
   }
 
@@ -513,8 +513,8 @@ export class Class_Sankey {
    * @return {Class_Node}
    * @memberof Class_Sankey
    */
-  public addNewNode(id: string, name: string) : Class_NodeElement {
-    if (!this._nodes[id]){
+  public addNewNode(id: string, name: string): Class_NodeElement {
+    if (!this._nodes[id]) {
       // Create node
       const node = new Class_NodeElement(id, name, this.drawing_area, this.menu_config)
       // Set node to default position
@@ -524,7 +524,7 @@ export class Class_Sankey {
       return node
     }
     else {
-      return this.addNewNode(id+'_0', name+'_0')
+      return this.addNewNode(id + '_0', name + '_0')
     }
   }
 
@@ -706,7 +706,7 @@ export class Class_Sankey {
     }
     else {
       // Recursive to avoid id duplicates
-      return this.addTagGroup(id+'_0', name+'_0', type_group)
+      return this.addTagGroup(id + '_0', name + '_0', type_group)
     }
   }
 
@@ -808,7 +808,7 @@ export class Class_Sankey {
     })
 
     // Set node tag & tag group from json data
-    Object.entries(json_object['nodeTags']).filter(ent_nt=>ent_nt[1]).forEach(ent_nt => {
+    Object.entries(json_object['nodeTags']).filter(ent_nt => ent_nt[1]).forEach(ent_nt => {
       // Create a node tag group
       const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
       new_grp.removeTag(Object.values(new_grp.tags)[0])
@@ -828,16 +828,16 @@ export class Class_Sankey {
       // Add flux tag group to sankey
       this._flux_taggs[ent_ft[0]] = new_grp
     })
-        // Set level tag & tag group from json data
-        Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
-          // Create a flux tag group
-          const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
-          new_grp.removeTag(Object.values(new_grp.tags)[0])
-          // Set flux tag group value from JSON
-          new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
-          // Add flux tag group to sankey
-          this._level_taggs[ent_lvl_tag[0]] = new_grp
-        })
+    // Set level tag & tag group from json data
+    Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
+      // Create a flux tag group
+      const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
+      new_grp.removeTag(Object.values(new_grp.tags)[0])
+      // Set flux tag group value from JSON
+      new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
+      // Add flux tag group to sankey
+      this._level_taggs[ent_lvl_tag[0]] = new_grp
+    })
 
     // Set data tag & tag group from json data
     Object.entries(json_object['dataTags']).forEach(ent_dt => {
@@ -860,33 +860,39 @@ export class Class_Sankey {
     })
 
     // Redo a go throught, but this time create nodes dimension
-    this.nodes_list.forEach(n=>{
+    this.nodes_list.forEach(n => {
       // get dimensions in json
-      const dim =json_object['nodes'][n.id].dimensions
+      const dim = json_object['nodes'][n.id].dimensions
 
       /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like :
       dimensions :{...,
           keyGrpLevelTag:{}  // dimensions have an object but it doesn't have parent
         }
       )*/
-      if(dim ){
+      if (dim) {
         Object.entries(dim)
-        .filter(ent_dim=>((ent_dim)[1] as {parent_name?:string}).parent_name!==undefined)
-        .forEach(ent_dim=>n.dimensions[ent_dim[0]]={ parent_name:this.nodes_dict[((ent_dim)[1] as {parent_name:string}).parent_name]})
+          .filter(ent_dim => ((ent_dim)[1] as { parent_name?: string }).parent_name !== undefined)
+          .forEach(ent_dim => n.dimensions[ent_dim[0]] = { parent_name: this.nodes_dict[((ent_dim)[1] as { parent_name: string }).parent_name] })
       }
     })
 
 
     Object.entries(json_object['links']).forEach(ent_link => {
-      const obj=ent_link[1] as {[x:string]:any}
-      const source =this.nodes_dict[obj['idSource']]
-      const target =this.nodes_dict[obj['idTarget']]
+      const obj = ent_link[1] as { [x: string]: any }
+      const source = this.nodes_dict[obj['idSource']]
+      const target = this.nodes_dict[obj['idTarget']]
       // Create a link
       const link = new Class_LinkElement(ent_link[0], source, target, this.drawing_area, this.menu_config)
       // Set link value to link from JSON
       link.fromJSON(obj)
       // Add link to sankey
       this._addLink(link)
+    })
+
+    // Order links io position in each nodes 
+    // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement 
+    this.nodes_list.filter(n => json_object['nodes'][n.id]['links_order'] !== undefined).forEach(n => {
+      n.fromJSONLinksOrder(json_object['nodes'][n.id])
     })
   }
 }
