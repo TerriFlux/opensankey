@@ -268,8 +268,7 @@ export class Class_Legend extends Class_Element {
         this._dy += document.getElementById('GrpTag_title_' + tag_group[0])?.getBoundingClientRect().height ?? 0
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
-        Object.entries(tag_group[1].tags)
-          .filter((d) => d[1].selected)
+        tag_group[1].selected_tags_list.map(t => t) // TODO netoyer code pour enlever ça
           // .filter(tag => {
           //     // Filter tag that have elements associated to them displayed (nodes,links)
           //     if ( Object.keys(flux_taggs).includes(linksColorMap) && Object.keys(flux_taggs).includes(tag_group[0]) ) {
@@ -302,7 +301,7 @@ export class Class_Legend extends Class_Element {
           // })
           .forEach((tag) => {
             const tagElement = legendElements2?.append('g')
-              .attr('id', 'tag_' + tag[1].name.replaceAll(' ', '__')
+              .attr('id', 'tag_' + tag.name.replaceAll(' ', '__')
               )
               .attr('transform', () => {
                 return 'translate(' + this._dx + ',' + (this._dy) + ')'
@@ -387,7 +386,7 @@ export class Class_Legend extends Class_Element {
               .attr('y', -0.75 * this._legend_police)
               .attr('rx', 3)
               .attr('ry', 3)
-              .style('fill', () => (tag as [string, { color: string }])[1].color)
+              .style('fill', () => tag.color)
               .style('fill-opacity', 1)
 
             // Ajout du label
@@ -395,10 +394,10 @@ export class Class_Legend extends Class_Element {
               .attr('x', 35)
               .attr('y', 0)
               .attr('font-size', this._legend_police + 'px')
-              .text(() => { return tag[1].name })
+              .text(tag.name)
               .call(this._wrapper)
 
-            this._dy += document.getElementById('tag_' + tag[1].name.replaceAll(' ', '__'))?.getBoundingClientRect().height ?? 0
+            this._dy += document.getElementById('tag_' + tag.name.replaceAll(' ', '__'))?.getBoundingClientRect().height ?? 0
           })
       })
     const show_data = Object.values(data_taggs).filter(d => d.show_legend).length == 0
@@ -411,7 +410,7 @@ export class Class_Legend extends Class_Element {
           .attr('transform', 'translate(0,' + this._dy + ' )')
           .attr('x', 0)
           .attr('y', 0)
-          .text((tag_group[1].name + ' : ' + Object.values(tag_group[1].tags).filter(t => t.selected).map(t => t.name).join(', ')))
+          .text((tag_group[1].name + ' : ' + tag_group[1].selected_tags_list.map(t => t.name).join(', ')))
           .attr('style', ('font-size:' + this._legend_police + 'px;'))
           .call(this._wrapper)
         this._dy += document.getElementById('leg_dataTag_' + tag_group[0])?.getBoundingClientRect().height ?? 0

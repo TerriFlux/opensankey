@@ -60,6 +60,9 @@ export class Class_MenuConfig {
   // Update component SankeyMenuConfigurationLinks
   private _ref_to_menu_config_link_updater: MutableRefObject<() => void>
 
+  // Update componenet MenuConfigurationLinksData
+  private _ref_to_menu_config_link_data_updater: MutableRefObject<() => void>
+
   // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_link_apparence_updater: MutableRefObject<() => void>
 
@@ -73,7 +76,7 @@ export class Class_MenuConfig {
   private _updateComponentMenu: MutableRefObject<() => void>
 
   // Update component OpenSankeySaveButton
-  private _updateComponentSaveInCache: MutableRefObject<(b: boolean) => void>
+  private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
 
 
 
@@ -106,10 +109,11 @@ export class Class_MenuConfig {
     this._update_components_menu_config_node_io = useRef([] as (() => void)[])
     this._update_components_menu_config_node_tooltips = useRef([] as (() => void)[])
     this._ref_to_menu_config_link_updater = useRef(() => null)
+    this._ref_to_menu_config_link_data_updater = useRef(() => null)
     this._ref_to_menu_config_link_apparence_updater = useRef(() => null)
     this._update_components_menu_config_link_tooltip = useRef([] as (() => void)[])
 
-    this._updateComponentSaveInCache = useRef(() => null)
+    this._ref_to_save_in_cache_indicator = useRef((_:boolean) => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateComponentMenu = useRef(() => null)
     this._updateComponentToolbar = useRef(() => null)
@@ -175,7 +179,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentsMenuConfigNode() {
-    this.ref_to_menu_config_node_updater.current()
+    this._ref_to_menu_config_node_updater.current()
     this.updateComponentsSubmenuConfigNode()
   }
 
@@ -187,9 +191,28 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateComponentsSubmenuConfigNode() {
-    this.ref_to_menu_config_node_apparence_updater.current()
+    this._ref_to_menu_config_node_apparence_updater.current()
     this.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
     this.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
+  }
+
+  /**
+   * Re-render all menus for link config
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentsMenuConfigLink() {
+    this._ref_to_menu_config_link_updater.current()
+    this.updateComponentsSubmenuConfigLink()
+  }
+
+  /**
+   * Re-render all submenus for link config
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentsSubmenuConfigLink() {
+    this._ref_to_menu_config_link_data_updater.current()
+    this._ref_to_menu_config_link_apparence_updater.current()
+    // this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
   }
 
   /**
@@ -208,29 +231,7 @@ export class Class_MenuConfig {
     }
   }
 
-  /**
-   * Re-render all menus for link config
-   * @memberof Class_MenuConfig
-   */
-  public updateComponentsMenuConfigLink() {
-    this.ref_to_menu_config_link_updater.current()
-    this.updateComponentsSubmenuConfigLink()
-  }
-
-  /**
-   * Re-render all submenus for link config
-   * @memberof Class_MenuConfig
-   */
-  public updateComponentsSubmenuConfigLink() {
-    // this.ref_to_menu_config_link_apparence_updater.current()
-    // this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
-  }
-
   // GETTERS / SETTERS ==================================================================
-
-  /* ========================================
-    Define setter & getter of class attributes
-    ========================================*/
 
   public get btn_toogle_menu(): RefObject<HTMLButtonElement> {
     return this._btn_toogle_menu
@@ -248,6 +249,8 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_layout_updater
   }
 
+  // Nodes menus ------------------------------------------------------------------------
+
   public get ref_to_menu_config_node_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_node_updater
   }
@@ -264,12 +267,27 @@ export class Class_MenuConfig {
     return this._update_components_menu_config_node_tooltips
   }
 
+  // Links menus ------------------------------------------------------------------------
+
   public get ref_to_menu_config_link_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_link_updater
   }
 
+  public get ref_to_menu_config_link_data_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_link_apparence_updater
+  }
+
   public get ref_to_menu_config_link_apparence_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_link_apparence_updater
+  }
+
+  public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
+    return this._update_components_menu_config_link_tooltip
+  }
+
+  // Toolbar -----------------------------------------------------------------------------
+  public get ref_to_save_in_cache_indicator(): MutableRefObject<(b: boolean) => void> {
+    return this._ref_to_save_in_cache_indicator
   }
 
   public get updateComponentToolbar(): MutableRefObject<() => void> {
@@ -281,13 +299,7 @@ export class Class_MenuConfig {
     return this._updateComponentMenu
   }
 
-  public get updateComponenSaveInCache(): MutableRefObject<(b: boolean) => void> {
-    return this._updateComponentSaveInCache
-  }
 
-  public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
-    return this._update_components_menu_config_link_tooltip
-  }
 
   public get updateComponentBtnUpdateLayout(): MutableRefObject<(() => void)> {
     return this._updateComponentBtnUpdateLayout

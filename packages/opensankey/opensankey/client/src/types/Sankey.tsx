@@ -354,14 +354,13 @@ export class Class_Sankey {
     return data_tags
   }
 
-
   /**
- * Return an object wherekey are data_taggs id ,
- * and value an array of id of tag selected of that data_taggs
- *
- * @readonly
- * @memberof Class_Sankey
- */
+   * Return an object wherekey are data_taggs id ,
+   * and value an array of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof Class_Sankey
+   */
   public get selected_data_tags_entries() {
     const obj_data_tags_selected: { [x: string]: Class_Tag } = {}
     this.data_taggs_list.forEach(data_tagg => {
@@ -371,30 +370,29 @@ export class Class_Sankey {
   }
 
   /**
-  * Return an array of possible path to link value,
-  * it use the combinitation of all tags from different data_taggs
-  *
-  * Exemple :
-  * [
-  *
-  * [grp1_key1,grp2_key1],
-  *
-  * [grp1_key1,grp2_key2],
-  *
-  * [grp1_key2,grp2_key1],
-  *
-  * [grp1_key2,grp2_key2],
-  * ...
-  * ]
-  * *
-  * @readonly
-  * @memberof Class_Sankey
-  */
+   * Return an array of possible path to link value,
+   * it use the combinitation of all tags from different data_taggs
+   *
+   * Exemple :
+   * [
+   *
+   * [grp1_key1,grp2_key1],
+   *
+   * [grp1_key1,grp2_key2],
+   *
+   * [grp1_key2,grp2_key1],
+   *
+   * [grp1_key2,grp2_key2],
+   * ...
+   * ]
+   * *
+   * @readonly
+   * @memberof Class_Sankey
+   */
   public get list_combinatorial_data_taggs_path() {
-    const list_tag_by_grp: string[][] = []
-    const tmp = this.data_taggs_entries
-    tmp.forEach(grp_tag => {
-      list_tag_by_grp.push(grp_tag[1].tags_list.map(tag => tag.id))
+    const list_tag_by_grp:string[][]=[]
+    this.data_taggs_list.forEach(data_tagg => {
+      list_tag_by_grp.push(data_tagg.tags_list.map(tag=>tag.id))
     })
     return list_tag_by_grp
   }
@@ -811,7 +809,7 @@ export class Class_Sankey {
     Object.entries(json_object['nodeTags']).filter(ent_nt => ent_nt[1]).forEach(ent_nt => {
       // Create a node tag group
       const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
-      new_grp.removeTag(Object.values(new_grp.tags)[0])
+      new_grp.removeTag(new_grp.tags_list[0])
       // Set node tag group value from JSON
       new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
       // Add node tag group to sankey
@@ -822,28 +820,28 @@ export class Class_Sankey {
     Object.entries(json_object['fluxTags']).forEach(ent_ft => {
       // Create a flux tag group
       const new_grp = new Class_TagGroup(ent_ft[0], (ent_ft[1] as { group_name: string }).group_name)
-      new_grp.removeTag(Object.values(new_grp.tags)[0])
+      new_grp.removeTag(new_grp.tags_list[0])
       // Set flux tag group value from JSON
       new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
       // Add flux tag group to sankey
       this._flux_taggs[ent_ft[0]] = new_grp
     })
-    // Set level tag & tag group from json data
-    Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
-      // Create a flux tag group
-      const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
-      new_grp.removeTag(Object.values(new_grp.tags)[0])
-      // Set flux tag group value from JSON
-      new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
-      // Add flux tag group to sankey
-      this._level_taggs[ent_lvl_tag[0]] = new_grp
-    })
+        // Set level tag & tag group from json data
+        Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
+          // Create a flux tag group
+          const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
+          new_grp.removeTag(new_grp.tags_list[0])
+          // Set flux tag group value from JSON
+          new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
+          // Add flux tag group to sankey
+          this._level_taggs[ent_lvl_tag[0]] = new_grp
+        })
 
     // Set data tag & tag group from json data
     Object.entries(json_object['dataTags']).forEach(ent_dt => {
       // Create a flux tag group
       const new_grp = new Class_TagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name)
-      new_grp.removeTag(Object.values(new_grp.tags)[0])
+      new_grp.removeTag(new_grp.tags_list[0])
       // Set flux tag group value from JSON
       new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
       // Add flux tag group to sankey
