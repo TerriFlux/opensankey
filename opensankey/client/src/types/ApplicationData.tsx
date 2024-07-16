@@ -280,8 +280,7 @@ export class Class_ApplicationData {
         localStorage.setItem('last_save', 'true')
 
         // Update logo save in cache
-        app_ref.menu_configuration.updateComponenSaveInCache.current(true)
-
+        app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       }
       else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
         // event to download current sankey in JSON

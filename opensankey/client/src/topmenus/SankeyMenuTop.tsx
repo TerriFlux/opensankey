@@ -1513,14 +1513,16 @@ export const MenuDraggable: MenuDraggableFType = (
 }
 
 export const OpenSankeySaveButton: FunctionComponent<OpenSankeySaveButtonFType> = ({
-  ComponentUpdater,
+  applicationData,
   applicationContext
 }) => {
   const last_save = localStorage.getItem('last_save')
   const has_save_in_cache = last_save !== undefined && last_save !== null
+  const { new_data } = applicationData
 
   const [forceUpdate, setForceUpdate] = useState(true)
-  ComponentUpdater.updateComponenSaveInCache.current = (b: boolean) => setForceUpdate(b)
+  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => setForceUpdate(b)
+
   let indicator_saved_data = <></>
   if (has_save_in_cache) {
     const color_icon = forceUpdate ? 'tertiaire.3' : 'tertiaire.1'
