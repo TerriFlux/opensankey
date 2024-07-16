@@ -26,7 +26,9 @@ import {
   Class_Handler,
 } from './Element'
 import {
-  Class_Tag
+  Class_Tag,
+  Class_TagGroup,
+  Class_TagGroupNodeLevel
 } from './Tag'
 import {
   Class_LinkElement,
@@ -137,7 +139,7 @@ export class Class_NodeElement extends Class_Element {
   private _output_data_value: number = 0
 
   // Node tags
-  private _tags: { [_: string]: Class_Tag[] } = {}
+  private _tags: { [_: string]: Class_Tag } = {}
 
   // Level & Parent
   // Dimensions
@@ -200,10 +202,7 @@ export class Class_NodeElement extends Class_Element {
       })
     this._output_links = {}
     // Remove reference of self in related tags
-    Object.values(this._tags)
-      .forEach(tag => {
-        tag.forEach(t => t.removeReference(this))
-      })
+    this.tags_list.forEach(tag => tag.removeReference(this))
     this._tags = {}
     // Remove reference of self in style
     this.style.removeReference(this)
@@ -297,13 +296,6 @@ export class Class_NodeElement extends Class_Element {
     return this._display.attributes[attr] !== undefined
   }
 
-  public removeTag(tag: Class_Tag) {
-    if (this._tags[tag.id] !== undefined) {
-      delete this._tags[tag.id]
-      tag.removeReference(this)
-    }
-  }
-
   public isEqual(_: Class_NodeElement) {
 
     if (this.shape_visible !== _.shape_visible) {
@@ -378,135 +370,72 @@ export class Class_NodeElement extends Class_Element {
     return true
   }
 
+  /**
+   * Get the width to apply on shape
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public getShapeWidthToUse() {
+    // Compute sum of thickness on each sides
+    let sum_of_top_thickness = this.getSumOfLinksThickness('top')
+    let sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
+    // Return max thickness
+    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
+  }
+
+  /**
+   * Get the height to apply on shape
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public getShapeHeightToUse() {
+    // Compute sum of thickness on each sides
+    let sum_of_left_thickness = this.getSumOfLinksThickness('left')
+    let sum_of_right_thickness = this.getSumOfLinksThickness('right')
+    // Return max thickness
+    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
+  }
+
+  /**
+   * Check if given tag is referenced by node
+   * @param {Class_Tag} tag
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  public hasGivenTag(tag: Class_Tag) {
+    return (this._tags[tag.id] !== undefined)
+  }
+
+  /**
+   * Add and cross-reference a Tag with node
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
+   */
+  public addTag(tag: Class_Tag)  {
+    if (!this.hasGivenTag(tag)){
+      this._tags[tag.id] = tag
+      tag.addReference(this)
+      this.draw()
+    }
+  }
+
+  /**
+   * Remove tag and its cross-reference from node
+   *
+   * @param {Class_Tag} tag
+   * @memberof Class_NodeElement
+   */
+  public removeTag(tag: Class_Tag) {
+    if (this.hasGivenTag(tag)) {
+      delete this._tags[tag.id]
+      tag.removeReference(this)
+      this.draw()
+    }
+  }
+
   // Check links
   public hasInputLinks() { return (this.input_links_list.length > 0) }
   public hasOutputLinks() { return (this.output_links_list.length > 0) }
-
-  private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
-    const custom_id = input ? 'input' : 'output'
-    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD' })
-    this._handle_links[link.id] = handle
-  }
-
-  private dragHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    // Since we pass this func to a Class_Handler (without executing it)
-    // 'this' take the scope of the handler so we have to cast it here for compilation
-    const handler = this as unknown as Class_Handler
-
-    // Get node from the handler
-    const node_ref = handler.ref_element as Class_NodeElement
-
-    if (node_ref.link_dragged && (event.dy !== 0 || event.dx !== 0)) {
-      // Get link currently dragged
-      const link_dragged = (node_ref.link_dragged as Class_LinkElement)
-      // Search if handler is for a link incoming or outcoming from the node
-      const handle_src_or_trgt = (link_dragged.target === node_ref) ? 'target' : 'source'
-      const dragged_side = (handle_src_or_trgt === 'target') ? link_dragged.target_side : link_dragged.source_side
-      const node_ref_io = (handle_src_or_trgt === 'target') ? node_ref.input_links_list : node_ref.output_links_list
-
-      // Create an array from links_order with only the links in or out the same side of the dragged link
-      const list_links_node_side = node_ref._links_order.filter(link => {
-        const curr_link_side = handle_src_or_trgt === 'source' ? link.source_side : link.target_side
-        return node_ref_io.includes(link) && (curr_link_side == dragged_side)
-      })
-
-      // Get index of dragged link in this filtered array
-      const idx_drgd_link = list_links_node_side.indexOf(link_dragged)
-
-      // Variable to know in which directions we move the mouse
-      const move_to_the_top = Math.sign(event.dy) == -1
-      const move_to_the_left = Math.sign(event.dx) == -1
-
-      // If we move the mouse vertically then this variable should be true,
-      // it will allow to swap dragged link with previous/next link coming/going on the same side (left/right) to the node_ref
-      const is_handler_on_horiz_side = (handle_src_or_trgt === 'target' && ['hh', 'vh'].includes(link_dragged.shape_orientation)) ||
-        handle_src_or_trgt === 'source' && ['hh', 'hv'].includes(link_dragged.shape_orientation)
-
-      // If we move the mouse horizontally then this variable should be true ,
-      // it will allow to swap dragged link with previous/next link coming/going on the same side (bottom/top) to the node_ref
-      const is_handler_on_vert_side = (handle_src_or_trgt === 'target' && ['vv', 'hv'].includes(link_dragged.shape_orientation)) ||
-        handle_src_or_trgt === 'source' && ['vv', 'vh'].includes(link_dragged.shape_orientation)
-
-      if (((move_to_the_top && is_handler_on_horiz_side) || (move_to_the_left && is_handler_on_vert_side)) && idx_drgd_link > 0) {
-        // Move dragged link before the previous link coming/going th the node
-        const prev_link = list_links_node_side[idx_drgd_link - 1]
-        node_ref.moveLinkToPositionInOrderBefore(link_dragged, prev_link)
-      } else if (((!move_to_the_top && is_handler_on_horiz_side) || (!move_to_the_left && is_handler_on_vert_side)) && (idx_drgd_link < list_links_node_side.length - 1)) {
-        // Move dragged link after the next link coming/going th the node
-        const next_link = list_links_node_side[idx_drgd_link + 1]
-        node_ref.moveLinkToPositionInOrderAfter(link_dragged, next_link)
-      }
-
-      node_ref.drawLinks()
-    }
-
-  }
-
-  private moveLinkToPositionInOrderBefore(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
-    // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
-
-      // Remove link to move from the array of link order
-      const idx_link_to_move = this._links_order.indexOf(link_to_move)
-      this._links_order.splice(idx_link_to_move, 1)
-
-      // Get the position in link order of the link we want the first link to move to
-      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
-      // Add the link before the link target in the order array
-      this._links_order.splice(idx_link_trgt, 0, link_to_move)
-    }
-  }
-
-  private moveLinkToPositionInOrderAfter(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
-    // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
-      // Remove link to move from the array of link order
-      const idx_link_to_move = this._links_order.indexOf(link_to_move)
-      this._links_order.splice(idx_link_to_move, 1)
-
-      // Get the position in link order of the link we want the first link to move to
-      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
-      // Add the link after the link target in the order array
-      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
-
-
-    }
-  }
-
-
-
-  private dragStartHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    const handler = this as unknown as Class_Handler
-    const node_ref_handler = handler.ref_element as Class_NodeElement
-    const link_ref = (handler.ref_element as Class_NodeElement).getLinkFromHandler(handler)
-    if (link_ref) {
-      node_ref_handler.link_dragged = link_ref
-    }
-  }
-  private dragEndHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    const handler = this as unknown as Class_Handler
-    const node_ref_handler = handler.ref_element as Class_NodeElement
-    node_ref_handler.link_dragged = undefined
-  }
-
-  private getLinkFromHandler(handler: Class_Handler) {
-    const list_id = Object.entries(this._handle_links).filter(ent_handle => {
-      return ent_handle[1] === handler
-    })
-
-    if (list_id.length === 1) {
-      let link_referenced: Class_LinkElement
-      if (list_id[0][0] in this.input_links_dict) {
-        link_referenced = this.input_links_dict[list_id[0][0]]
-      } else if (list_id[0][0] in this.output_links_dict) {
-        link_referenced = this.output_links_dict[list_id[0][0]]
-      } else {
-        return
-      }
-      return link_referenced
-
-    }
-  }
 
   // Add links
   public addInputLink(link: Class_LinkElement) {
@@ -519,6 +448,7 @@ export class Class_NodeElement extends Class_Element {
       this.drawValueLabel()
     }
   }
+
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
@@ -529,7 +459,6 @@ export class Class_NodeElement extends Class_Element {
       this.drawValueLabel()
     }
     //todo finir
-
   }
 
   /**
@@ -597,7 +526,13 @@ export class Class_NodeElement extends Class_Element {
     json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
     json_object['links_order'] = this._links_order.map(link => link.id)
     json_object['local'] = this._display.attributes.toJSON()
-    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].map(nt => nt.id)]))
+    json_object['tags'] = Object.fromEntries(
+      this.taggs_list
+        .map(tagg => [
+          tagg.id,
+          this.tags_list
+            .filter(tag => (tag.group === tagg))
+        ]))
 
     return json_object
   }
@@ -624,33 +559,32 @@ export class Class_NodeElement extends Class_Element {
     if (json_node_object['local']) {
       this._display.attributes.fromJSON(json_node_object['local'])
     }
+
     // In JSON here are how supposed tags var is :
     // tags:{key_grp_tag:string[] (key_tag_selected) }
     // where 'key_grp_tag' represent the id of a node_taggs group
     // &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
     Object.entries(json_node_object['tags'] ?? {})
-      .filter(ent => (ent[0] in this.drawing_area.sankey.node_taggs_dict) && (ent[1] as string[]).length > 0)
-      .forEach(ent_nodetag => {
-        if (ent_nodetag.length > 0) {
-          const list_id_tag = ent_nodetag[1] as string[]
-          this._tags[ent_nodetag[0]] = list_id_tag.map(key_tag => {
-            return this.drawing_area.sankey.node_taggs_dict[ent_nodetag[0]].tags_dict[key_tag]
-          })
-        }
-
+      .filter(tagg_ent =>
+        (tagg_ent[0] in this.drawing_area.sankey.node_taggs_dict) &&
+        (tagg_ent[1] as string[]).length > 0)
+      .forEach(tagg_ent => {
+        const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_ent[0]]
+        Object.entries(tagg.tags_dict)
+          .filter(tag_ent => tag_ent[0] in (tagg_ent[1] as string[]))
+          .forEach(tag_ent => this.addTag(tag_ent[1]))
       })
 
     // Same thing but for level tag
     Object.entries(json_node_object['tags'] ?? {})
-      .filter(ent => (ent[0] in this.drawing_area.sankey.level_taggs_dict) && (ent[1] as string[]).length > 0)
-      .forEach(ent_lvltag => {
-        if (ent_lvltag.length > 0) {
-          const list_id_tag = ent_lvltag[1] as string[]
-          this._tags[ent_lvltag[0]] = list_id_tag.map(key_tag => {
-            return this.drawing_area.sankey.level_taggs_dict[ent_lvltag[0]].tags_dict[key_tag]
-          })
-        }
-
+      .filter(tagg_ent =>
+        (tagg_ent[0] in this.drawing_area.sankey.level_taggs_dict) &&
+        (tagg_ent[1] as string[]).length > 0)
+      .forEach(tagg_ent => {
+        const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_ent[0]]
+        Object.entries(tagg.tags_dict)
+          .filter(tag_ent => tag_ent[0] in (tagg_ent[1] as string[]))
+          .forEach(tag_ent => this.addTag(tag_ent[1]))
       })
   }
 
@@ -1244,41 +1178,16 @@ export class Class_NodeElement extends Class_Element {
       .html(this?.tooltip_text ?? '')
   }
 
-  /**
-   * Get the width to apply on shape
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public getShapeWidthToUse() {
-    // Compute sum of thickness on each sides
-    let sum_of_top_thickness = this.getSumOfLinksThickness('top')
-    let sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
-    // Return max thickness
-    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
-  }
-
-  /**
-   * Get the height to apply on shape
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public getShapeHeightToUse() {
-    // Compute sum of thickness on each sides
-    let sum_of_left_thickness = this.getSumOfLinksThickness('left')
-    let sum_of_right_thickness = this.getSumOfLinksThickness('right')
-    // Return max thickness
-    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
-  }
-
   private getShapeColorToUse() {
+    const tagg_dict = this.taggs_dict // Avoid recomputing
     if (
       (!this.shape_color_sustainable) &&
-      (this.drawing_area.sankey.nodesColorMap !== 'no_colormap') &&
-      (this.drawing_area.sankey.nodesColorMap in this._tags) &&
-      (this._tags[this.drawing_area.sankey.nodesColorMap].length > 0)
+      (tagg_dict[this.drawing_area.sankey.nodesColorMap])
     ) {
-      const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.nodesColorMap]
-      return list_tag_from_grp_to_use_color[0].color
+      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.nodesColorMap]
+      const tag_for_colormap = this.tags_list
+        .filter(tag => (tag.group === tagg_for_colormap))
+      return tag_for_colormap[0].color
     }
     else {
       return this.shape_color
@@ -1355,6 +1264,128 @@ export class Class_NodeElement extends Class_Element {
     this._links_order.splice(i, 1)
   }
 
+  private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
+    const custom_id = input ? 'input' : 'output'
+    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD' })
+    this._handle_links[link.id] = handle
+  }
+
+  private dragHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Since we pass this func to a Class_Handler (without executing it)
+    // 'this' take the scope of the handler so we have to cast it here for compilation
+    const handler = this as unknown as Class_Handler
+
+    // Get node from the handler
+    const node_ref = handler.ref_element as Class_NodeElement
+
+    if (node_ref.link_dragged && (event.dy !== 0 || event.dx !== 0)) {
+      // Get link currently dragged
+      const link_dragged = (node_ref.link_dragged as Class_LinkElement)
+      // Search if handler is for a link incoming or outcoming from the node
+      const handle_src_or_trgt = (link_dragged.target === node_ref) ? 'target' : 'source'
+      const dragged_side = (handle_src_or_trgt === 'target') ? link_dragged.target_side : link_dragged.source_side
+      const node_ref_io = (handle_src_or_trgt === 'target') ? node_ref.input_links_list : node_ref.output_links_list
+
+      // Create an array from links_order with only the links in or out the same side of the dragged link
+      const list_links_node_side = node_ref._links_order.filter(link => {
+        const curr_link_side = handle_src_or_trgt === 'source' ? link.source_side : link.target_side
+        return node_ref_io.includes(link) && (curr_link_side == dragged_side)
+      })
+
+      // Get index of dragged link in this filtered array
+      const idx_drgd_link = list_links_node_side.indexOf(link_dragged)
+
+      // Variable to know in which directions we move the mouse
+      const move_to_the_top = Math.sign(event.dy) == -1
+      const move_to_the_left = Math.sign(event.dx) == -1
+
+      // If we move the mouse vertically then this variable should be true,
+      // it will allow to swap dragged link with previous/next link coming/going on the same side (left/right) to the node_ref
+      const is_handler_on_horiz_side = (handle_src_or_trgt === 'target' && ['hh', 'vh'].includes(link_dragged.shape_orientation)) ||
+        handle_src_or_trgt === 'source' && ['hh', 'hv'].includes(link_dragged.shape_orientation)
+
+      // If we move the mouse horizontally then this variable should be true ,
+      // it will allow to swap dragged link with previous/next link coming/going on the same side (bottom/top) to the node_ref
+      const is_handler_on_vert_side = (handle_src_or_trgt === 'target' && ['vv', 'hv'].includes(link_dragged.shape_orientation)) ||
+        handle_src_or_trgt === 'source' && ['vv', 'vh'].includes(link_dragged.shape_orientation)
+
+      if (((move_to_the_top && is_handler_on_horiz_side) || (move_to_the_left && is_handler_on_vert_side)) && idx_drgd_link > 0) {
+        // Move dragged link before the previous link coming/going th the node
+        const prev_link = list_links_node_side[idx_drgd_link - 1]
+        node_ref.moveLinkToPositionInOrderBefore(link_dragged, prev_link)
+      } else if (((!move_to_the_top && is_handler_on_horiz_side) || (!move_to_the_left && is_handler_on_vert_side)) && (idx_drgd_link < list_links_node_side.length - 1)) {
+        // Move dragged link after the next link coming/going th the node
+        const next_link = list_links_node_side[idx_drgd_link + 1]
+        node_ref.moveLinkToPositionInOrderAfter(link_dragged, next_link)
+      }
+
+      node_ref.drawLinks()
+    }
+
+  }
+
+  private moveLinkToPositionInOrderBefore(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
+
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link before the link target in the order array
+      this._links_order.splice(idx_link_trgt, 0, link_to_move)
+    }
+  }
+
+  private moveLinkToPositionInOrderAfter(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link after the link target in the order array
+      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
+    }
+  }
+
+  private dragStartHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    const handler = this as unknown as Class_Handler
+    const node_ref_handler = handler.ref_element as Class_NodeElement
+    const link_ref = (handler.ref_element as Class_NodeElement).getLinkFromHandler(handler)
+    if (link_ref) {
+      node_ref_handler.link_dragged = link_ref
+    }
+  }
+
+  private dragEndHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    const handler = this as unknown as Class_Handler
+    const node_ref_handler = handler.ref_element as Class_NodeElement
+    node_ref_handler.link_dragged = undefined
+  }
+
+  private getLinkFromHandler(handler: Class_Handler) {
+    const list_id = Object.entries(this._handle_links).filter(ent_handle => {
+      return ent_handle[1] === handler
+    })
+
+    if (list_id.length === 1) {
+      let link_referenced: Class_LinkElement
+      if (list_id[0][0] in this.input_links_dict) {
+        link_referenced = this.input_links_dict[list_id[0][0]]
+      } else if (list_id[0][0] in this.output_links_dict) {
+        link_referenced = this.output_links_dict[list_id[0][0]]
+      } else {
+        return
+      }
+      return link_referenced
+
+    }
+  }
   // GETTERS / SETTERS ==================================================================
 
   public get is_visible() {
@@ -1399,13 +1430,46 @@ export class Class_NodeElement extends Class_Element {
     return this._name
   }
 
-  public get tags() {
-    // TODO faire autrement
+  /**
+   * Dict as [id: tag] of tags related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get tags_dict() {
     return this._tags
   }
 
-  public deRefTag(tag: Class_Tag) {
-    delete this._tags[tag.id]
+  /**
+   * Array of tags related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get tags_list() {
+    return Object.values(this._tags)
+  }
+
+  /**
+   * Dict as [id: tag group] of tag groups related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get taggs_dict() {
+    const taggs: {[_:string]: Class_TagGroup} = {}
+    this.tags_list
+      .forEach(tag => {
+        if (!taggs[tag.group.id])
+          taggs[tag.group.id] = tag.group
+      })
+    return taggs
+  }
+
+  /**
+   * Array of tag groups related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get taggs_list() {
+    return Object.values(this.taggs_dict)
   }
 
   /**
@@ -2124,54 +2188,69 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private get are_related_tags_selected() {
+    // Existing node tags
+    const node_taggs = this.drawing_area.sankey.node_taggs_dict
+    // Check if all node tags are selected = ok to display
     let to_display = true
-
-    Object.entries(this.drawing_area.sankey.node_taggs_dict).filter(nt => nt[0] !== 'Type de noeud' && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
-      // Check tags from the group attribued to the node
-      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-      const node_tags_attr = this._tags[nt[0]]
-
-      if (node_tags_attr != undefined && node_tags_attr.length != 0) {
-        // If the node has at least 1 tag from the selected tag of the group then we display it
-        // If the node has tag from the group attribued to it but are not selected then we don't display it
-        if (!nt[1].tags_dict) {
-          return
-        }
-        const node_tags_selected = nt[1].selected_tags_list
-        to_display = (node_tags_attr.filter(t => node_tags_selected.includes(t)).length > 0) ? to_display : false
-      }
-    })
+    this.tags_list
+      .filter(tag => (
+        (tag.group.id in node_taggs) &&
+        (tag.group.activated)
+      ))
+      .forEach(tag => to_display = (to_display && tag.is_selected))
     return to_display
   }
 
   private get is_related_level_selected() {
-    let to_display = true
-    const lvl_ent = Object.entries(this.drawing_area.sankey.level_taggs_dict)
+    // Existing level tags
+    const level_taggs = this.drawing_area.sankey.node_taggs_dict
     // Check if there is other aggregation tags than 'Primaire',
-    const multi_level = lvl_ent.filter(nt => nt[0] !== 'Primaire').map(nt => nt[0]).length > 0
-
-    const only_one_activated = lvl_ent.filter(nt => nt[1].activated).length == 1
-    const only_primaire_activated = lvl_ent.filter(nt => nt[1].activated).map(nt => nt[0])[0] == 'Primaire'
-
-    const multy_but_only_primaire = multi_level && only_one_activated && only_primaire_activated
-
+    const opt_level_taggs = Object.values(level_taggs)
+      .filter(tagg => tagg.id !== 'Primaire') // TODO id Or name ?
+    const multi_level_taggs = (opt_level_taggs.length > 0)
+    // Activated level taggs
+    const activ_level_taggs = Object.values(level_taggs)
+      .filter(tagg => tagg.activated)
+    const only_one_activated = (activ_level_taggs.length === 1)
+    // Is only primary level activated
+    const only_primaire_activated = (
+      this.drawing_area.sankey.node_taggs_dict['Primaire'].activated &&
+      only_one_activated)
+    const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
+    // Check if level tags are correctly selected = ok to display
+    let to_display = true
     // To display a node according to level tag we search if:
-    // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
-    // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
+    // - The node.nodeTags have more level grp tag than 'Primaire',
+    //   if that's the case we don't use grp tag 'Primaire' in the filter
+    //   of node grp tag
+    // - The node grp tag is activated (variable is set false if we activate
+    //   another grp tag that has this grp tag in variable sibling)
     // - The node has the grp tag name in his tags
-    lvl_ent.filter(nt => ((multi_level && !multy_but_only_primaire) ? nt[0] !== 'Primaire' : true) && nt[1].activated && Object.keys(this._tags).includes(nt[0])).forEach(nt => {
-      // Check tags from the group attribued to the node
-      // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-      const node_tags_attr = this._tags[nt[0]]
-      if (node_tags_attr != undefined) {
-        // If the node has at least 1 tag from the selected tag of the group then we display it
-        // If the node has tag from the group attribued to it but are not selected then we don't display it
-        const level_tags_selected = nt[1].selected_tags_list
-        to_display = (node_tags_attr.filter(t => level_tags_selected.includes(t)).length > 0) ? to_display : false
-        // to_display=tags_from_grp_to_display.includes(node_tags_attr)?to_display:false
-
-      }
-    })
+    Object.entries(level_taggs)
+      .filter(ent => (
+        (
+          (
+            (multi_level_taggs) &&
+            (!multi_but_only_primaire)
+          ) ?
+            ent[0] !== 'Primaire' :
+            true
+        ) &&
+        ent[1].activated &&
+        Object.keys(this.taggs_dict).includes(ent[0])
+      ))
+      .forEach(ent => {
+        // Check tags from the group attribued to the node
+        // If the node don't have tag attribued from the group then it
+        // is not affected by filter and we display it
+        let tmp_to_display = false;
+        (ent[1] as Class_TagGroupNodeLevel).tags_list
+          .forEach(tag => {
+            if (this.hasGivenTag(tag))
+              tmp_to_display = true
+          })
+        to_display = to_display && tmp_to_display
+      })
     return to_display
   }
 

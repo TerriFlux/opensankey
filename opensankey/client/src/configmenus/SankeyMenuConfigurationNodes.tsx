@@ -101,9 +101,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
-      applicationState={applicationState}
-      node_function={node_function}
-      ComponentUpdater={ComponentUpdater}
       menu_for_modal={false}
     />
   }
