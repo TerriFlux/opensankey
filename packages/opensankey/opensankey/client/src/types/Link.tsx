@@ -308,20 +308,14 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._source.deleteOutputLink(this)
     // Unref self from target node
     this._target.deleteInputLink(this)
-
     // Delete control points
     this._control_points.starting_curve_point.delete()
     this._control_points.ending_curve_point.delete()
     this._control_points.starting_bezier_point.delete()
     this._control_points.ending_bezier_point.delete()
     this._control_points.middle_recycling_point.delete()
-
-
-    // Unref self from all tags
-    Object.values(this._tags)
-      .forEach(tag => {
-        tag.removeReference(this)
-      })
+    // Remove reference of self in related tags
+    this.tags_list.forEach(tag => tag.removeReference(this))
     this._tags = {}
     // Unref self from styles
     this.style.removeReference(this)
@@ -415,15 +409,40 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.drawLabel()
   }
 
+
   /**
-   * Remove given tag from link
+   * Check if given tag is referenced by link
+   * @param {Class_Tag} tag
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  public hasGivenTag(tag: Class_Tag) {
+    return (this._tags[tag.id] !== undefined)
+  }
+
+  /**
+   * Add and cross-reference a Tag with a link
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
+   */
+  public addTag(tag: Class_Tag) {
+    if (!this.hasGivenTag(tag)){
+      this._tags[tag.id] = tag
+      tag.addReference(this)
+      this.draw()
+    }
+  }
+
+  /**
+   * Remove given tag and cross-reference from link
    * @param {Class_Tag} tag
    * @memberof Class_LinkElement
    */
   public removeTag(tag: Class_Tag) {
-    if (this._tags[tag.id] !== undefined) {
+    if (this.hasGivenTag(tag)) {
       delete this._tags[tag.id]
       tag.removeReference(this)
+      this.draw()
     }
   }
 
@@ -1652,10 +1671,48 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
-  public get tags() {
-    // TODO Faire autrement
+  /**
+   * Dict as [id: tag] of tags related to link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get tags_dict() {
     return this._tags
   }
+
+  /**
+   * Array of tags related to link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get tags_list() {
+    return Object.values(this._tags)
+  }
+
+  /**
+   * Dict as [id: tag group] of tag groups related to link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get taggs_dict() {
+    const taggs: {[_:string]: Class_TagGroup} = {}
+    this.tags_list
+      .forEach(tag => {
+        if (!taggs[tag.group.id])
+          taggs[tag.group.id] = tag.group
+      })
+    return taggs
+  }
+
+  /**
+   * Array of tag groups related to link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get taggs_list() {
+    return Object.values(this.taggs_dict)
+  }
+
 
   /**
    * Set tooltip text
