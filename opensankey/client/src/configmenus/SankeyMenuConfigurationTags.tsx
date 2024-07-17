@@ -67,22 +67,24 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const { t } = applicationContext
   const { new_data } = applicationData
 
-  // Trigger reloading of this component ------------------------------------------------
-
-  const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.ref_to_menu_config_tags_updater.current = setForceUpdate.toggle
-
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
   const tags_group_list = new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
-  const [tags_group_entry_id, setTagsGroupEntryId] = useState(
-    tags_group_list.length > 0 ?
-      tags_group_list[0].id :
-      ''
-  )
+  const [tags_group_entry_id, setTagsGroupEntryId] = useState(tags_group_list[0]?.id ?? '')
   const tags_group_entry = tags_group_dict[tags_group_entry_id]
   const tags_entry = tags_group_entry?.tags_list ?? []
+
+  // Trigger reloading of this component ------------------------------------------------
+
+  const [, refreshThis] = useBoolean()
+  const updateThis = () => {
+    if (tags_group_dict[tags_group_entry_id])
+      refreshThis.toggle()
+    else
+      setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
+  }
+  new_data.menu_configuration.ref_to_menu_config_tags_updater.current = updateThis
 
   // Chosen color palette used ----------------------------------------------------------
   // Couleur issues de : https://github.com/d3/d3-scale-chromatic
@@ -137,18 +139,18 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   // Update function --------------------------------------------------------------------
 
-  const updateSimple = () => {
+  const updateThisAndToggleSavingIndicator = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update this menu
-    setForceUpdate.toggle()
+    updateThis()
   }
 
-  const updateFull = () => {
+  const updateThisAndRelatedComponents = () => {
     // Update components related to tags in menu config or toolbar
     new_data.menu_configuration.updateComponentsRelatedToTags()
     // Update the rest
-    updateSimple()
+    updateThisAndToggleSavingIndicator()
   }
 
   // Buttons handlers -------------------------------------------------------------------
@@ -160,7 +162,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // Create default tag in current tag group
     tags_group_entry.addDefaultTag()
     // Full update
-    updateFull()
+    updateThisAndRelatedComponents()
   }
 
   /**
@@ -185,7 +187,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // Delete given tag
     tag.delete()
     // Update menus
-    updateFull()
+    updateThisAndRelatedComponents()
   }
 
   /**
@@ -197,7 +199,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // Delete given tag group
     new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tagg)
     // Update menus
-    updateFull()
+    updateThisAndRelatedComponents()
   }
 
   /**
@@ -212,7 +214,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // UPdate banner for given tag group
     tag_group.banner = new_banner_type
     // Update menus
-    updateFull()
+    updateThisAndRelatedComponents()
   }
 
   // --------------------------------------------
@@ -230,7 +232,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   //   })
   //   for (const member in data[elementTagNameProp]) delete data[elementTagNameProp][member]
   //   Object.assign(data[elementTagNameProp], new_cat)
-  //   setForceUpdate.toggle()
+  //   refreshThis.toggle()
   // }
   // // Switch the position of the groupTag with the one after him on the list of grouptag
   // const handleDownGrpTag = (i: string) => {
@@ -245,7 +247,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   //   })
   //   for (const member in data[elementTagNameProp]) delete data[elementTagNameProp][member]
   //   Object.assign(data[elementTagNameProp], new_cat)
-  //   setForceUpdate.toggle()
+  //   refreshThis.toggle()
   // }
 
   // Tags tables ------------------------------------------------------------------------
@@ -296,7 +298,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                 d3.color(color_selected(+i / nb_of_colors))?.formatHex() ?? default_grey_color
             }
             // Update only this menu
-            updateSimple()
+            updateThisAndToggleSavingIndicator()
           }}>
           <FaPalette />
         </Button>
@@ -335,7 +337,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               tags_entry[1].color = colors[0]
             }
             // Update only this menu
-            updateSimple()
+            updateThisAndToggleSavingIndicator()
           }}>
           <FaRandom />
         </Button>
@@ -371,7 +373,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               )
               // Update displayed menu
               setColorMap(evt.target.value)
-              updateSimple()
+              updateThisAndToggleSavingIndicator()
             }}
           value={color_map}
         >
@@ -465,7 +467,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                                 // Change tag name
                                 tag.name = (evt.target as HTMLInputElement).value
                                 // Update all related menus
-                                updateFull()
+                                updateThisAndRelatedComponents()
                               }
                             } />
                         </InputGroup>
@@ -484,8 +486,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                                 () => {
                                   // Inverse selection
                                   tag.toogleSelected()
-                                  // Update this menu only
-                                  setForceUpdate.toggle()
+                                  // Update only this menu
+                                  updateThisAndToggleSavingIndicator()
                                 }}
                             >
                               {tag.is_selected ? <FaEye /> : <FaEyeSlash />}
@@ -505,7 +507,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               // Update tag color
                               tag.color = evt.target.value
                               // Update only this menu
-                              updateSimple()
+                              updateThisAndToggleSavingIndicator()
                             }} />
                       </OSTooltip>
                     </Td>
@@ -518,7 +520,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                                 tags_group_entry.tags_dict[tag_key].shape = evt.target.value
                                 redrawGenereal()
-                                setForceUpdate.toggle()
+                                refreshThis.toggle()
                               }}
                               value={tags_group_entry.tags_dict[tag_key].shape as string}
                             >
@@ -602,7 +604,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                                 const new_name = (evt.target as HTMLInputElement).value
                                 tag_group.name = new_name
                                 // Update all related menus
-                                updateFull()
+                                updateThisAndRelatedComponents()
                               }} />
                         </InputGroup>
                       </OSTooltip>

@@ -41,16 +41,16 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   // Sankey datas
   const { new_data } = applicationData
   // Boolean used to force this component to reload
-  const [ , setForceUpdate ] = useBoolean()
+  const [ , refreshThis ] = useBoolean()
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = refreshThis.toggle
 
   // Function used to reset menu UI -----------------------------------------------------
-  const setForceFullUpdate = () => {
+  const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setForceUpdate.toggle()
+    refreshThis.toggle()
   }
 
   // Data tags and links ---------------------------------------------------------------
@@ -87,7 +87,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                     tag.setUnSelected()
                 })
                 // Update this menu
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
               }}
             >
               {
@@ -117,10 +117,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           default_value={list_links_selected[0]?.data_value}
           function_onChange={(_) => {
             list_links_selected.forEach(link => {
-              link.data_value = _ ?? null
+              link.data_value = (_ ?? null)
             })}
           }
-          function_onBlur={setForceFullUpdate}
+          function_onBlur={refreshThisAndUpdateRelatedComponents}
           minimum_value={0}
           stepper={true}
           step={1}
@@ -148,10 +148,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           default_value={list_links_selected[0]?.text_value}
           function_onChange={(_) => {
             list_links_selected.forEach(link=>{
-              link.text_value = _ ?? ''
+              link.text_value = (_ ?? '')
             })
           }}
-          function_onBlur={setForceFullUpdate}
+          function_onBlur={refreshThisAndUpdateRelatedComponents}
         />
       </Box>
     </OSTooltip>

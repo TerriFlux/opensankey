@@ -7,7 +7,7 @@
 // Local types
 import { Class_LinkElement } from './Link'
 import { Class_NodeElement } from './Node'
-import { default_grey_color } from './Utils'
+import { default_grey_color, makeId } from './Utils'
 
 
 // SPECIFIC TYPES ***********************************************************************
@@ -53,8 +53,8 @@ export class Class_Tag {
 
   // Constructor ========================================================================
 
-  constructor(id: string, name: string, group: Class_TagGroup) {
-    this._id = id
+  constructor(name: string, group: Class_TagGroup) {
+    this._id = makeId(name)
     this._name = name
     this._group = group
     this._color
@@ -185,6 +185,7 @@ export class Class_TagGroup {
 
   // List of tags
   private _tags: { [_: string]: Class_Tag } = {}
+  private _tag_count: number = 0
 
   // Display attributes
   private _activated: boolean = false
@@ -210,7 +211,7 @@ export class Class_TagGroup {
     this._id = id
     this._name = name
     // Create a first default tag
-    this.addTag('etiquette0', 'Etiquette 0')
+    this.addTag('Etiquette 0')
   }
 
   /**
@@ -233,21 +234,17 @@ export class Class_TagGroup {
 
   // PUBLIC METHODS =====================================================================
 
-  public addTag(id: string, name: string) {
-    if (!this._tags[id]) {
-      const tag = new Class_Tag(id, name, this)
-      this._tags[id] = tag
-    }
-    else {
-      this.addTag(id + '_0', name + '_0')
-    }
+  public addTag(name: string) {
+    const tag = new Class_Tag(name, this)
+    this._tags[tag.id] = tag
+    this._tag_count = this._tag_count + 1
+    return tag
   }
 
   public addDefaultTag() {
-    const n = String(Object.values(this._tags).length)
-    const id = 'etiquette' + n
+    const n = String(this._tag_count)
     const name = 'Etiquette ' + n
-    this.addTag(id, name)
+    this.addTag(name)
   }
 
   public removeTag(_: Class_Tag) {
@@ -288,9 +285,8 @@ export class Class_TagGroup {
     this._banner = json_object['banner'] ?? 'one'
 
     Object.entries(json_object['tags']).forEach(ent_tags => {
-      const new_tag = new Class_Tag(ent_tags[0], (ent_tags[1] as { name: string }).name, this)
+      const new_tag = this.addTag((ent_tags[1] as { name: string }).name)
       new_tag.fromJSON((ent_tags[1] as { [x: string]: any }))
-      this._tags[ent_tags[0]]=new_tag
     })
 
     // Set level_taggs value from json

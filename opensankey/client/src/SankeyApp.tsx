@@ -316,14 +316,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
     applicationContext={applicationContext}
     applicationData={applicationData}
-    applicationState={applicationState}
     menu_for_style={false}
     ref_selected_style_node={applicationState.ref_selected_style_node}
     advanced_appearence_content={additionalMenus.advanced_appearence_content}
     advanced_label_content={additionalMenus.advanced_label_content}
     advanced_label_value_content={additionalMenus.advanced_label_value_content}
-    link_function={link_function}
-    ComponentUpdater={ComponentUpdater}
   />
 
   const sankey_menus = OpenSankeyMenus(
@@ -490,14 +487,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                   <OpenSankeyConfigurationNodesAttributes
                     applicationContext={applicationContext}
                     applicationData={applicationData}
-                    applicationState={applicationState}
                     menu_for_style={true}
                     ref_selected_style_node={applicationState.ref_selected_style_node}
                     advanced_appearence_content={additionalMenus.advanced_appearence_content}
                     advanced_label_content={additionalMenus.advanced_label_content}
                     advanced_label_value_content={additionalMenus.advanced_label_value_content}
-                    link_function={link_function}
-                    ComponentUpdater={ComponentUpdater}
                   />
                 }/>
               </React.Fragment>,

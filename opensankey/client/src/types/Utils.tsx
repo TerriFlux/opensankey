@@ -5,6 +5,7 @@
 // ==================================================================================================
 
 // CONSTANTS ****************************************************************************
+
 export const default_grey_color = 'grey'
 export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
@@ -100,39 +101,27 @@ export const default_element_position: Type_ElementPosition = {
 }
 
 /**
- * Define necessary properties for a label
- *
- * @type Type_Label
+ * Create random id
+ * from https://stackoverflow.com/a/1349426
+ * @param {number} length
+ * @return {*}
  */
-export type Type_Label = {
-  visible: boolean,
-  position: Type_ElementPosition,
-  box_width: number,
-  font_family: string,
-  font_size: number,
-  uppercase: boolean,
-  bold: boolean,
-  italic: boolean,
-  color: boolean,
-  vert: string,
-  horiz: 'start' | 'middle' | 'end',
-  background: boolean,
-}
-export const default_label: Type_Label = {
-  visible: true,
-  position: structuredClone(default_element_position),
-  box_width: 100,
-  font_family: default_font,
-  font_size: 14,
-  uppercase: false,
-  bold: false,
-  italic: false,
-  color: false,
-  vert: 'center',
-  horiz: 'middle',
-  background: false
+export function randomId(length: number = 5) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
 }
 
-
+export function makeId(name: string) {
+  const std_name = name.toLowerCase()
+    .replace(/[^a-z0-9]/gi, '')
+  return  std_name + '_' + randomId
+}
 
 

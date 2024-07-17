@@ -252,7 +252,9 @@ export class Class_MenuConfig {
   }
 
   public updateComponentsRelatedToTags() {
+    this._ref_to_menu_config_node_updater.current()
     this._ref_to_menu_config_node_tags_updater.current()
+    this._ref_to_menu_config_link_updater.current()
     this._ref_to_menu_config_link_tags_updater.current()
     this._ref_to_menu_config_link_data_updater.current()
     this.ref_to_toolbar_updater.current()
