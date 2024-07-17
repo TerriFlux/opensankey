@@ -99,8 +99,6 @@ import { default_style_id } from '../types/Sankey'
  *   advanced_appearence_content,
  *   advanced_label_content,
  *   advanced_label_value_content,
- *   link_function,
- *   ComponentUpdater,
  *   node_function
  * }
  * @return {*}
@@ -108,14 +106,11 @@ import { default_style_id } from '../types/Sankey'
 export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
   applicationData,
-  applicationState,
   menu_for_style,
   ref_selected_style_node,
   advanced_appearence_content,
   advanced_label_content,
   advanced_label_value_content,
-  link_function,
-  ComponentUpdater,
 }) => {
 
   // CONSTANTS ==========================================================================
@@ -124,14 +119,18 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const { t } = applicationContext
   // Get data
   const { data, new_data } = applicationData
-  const { multi_selected_nodes } = applicationState
+
+  // Trigger reloading of this component ------------------------------------------------
+
   // Boolean used to force this component to reload
-  const [, setForceUpdate] = useBoolean()
+  const [, refreshThis] = useBoolean()
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = setForceUpdate.toggle
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = refreshThis.toggle
   }
-  // Get list of selected nodes
+
+  // Get list of selected nodes ---------------------------------------------------------
+
   let selected_nodes
   if (data.displayed_node_selector) {
     // All availables nodes
@@ -158,15 +157,15 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   /**
    * Function used to reset menu UI
    */
-  const updateMenuConfigurationNodeAttributes = () => {
+  const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update menus for node's apparence in case we use this for style
     if (menu_for_style) {
       new_data.menu_configuration.updateComponentsMenuConfigNode()
     }
     // And update this menu also
-    setForceUpdate.toggle()
+    refreshThis.toggle()
   }
 
   /**
@@ -248,7 +247,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           elements.forEach(
             element => (element.shape_visible = evt.target.checked)
           )
-          updateMenuConfigurationNodeAttributes()
+          refreshThisAndUpdateRelatedComponents()
         }}
       >
         <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')}>
@@ -291,7 +290,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             value={shape_color}
             onChange={evt => {
               elements.forEach(element => element.shape_color = evt.target.value)
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}
           />
         </OSTooltip>
@@ -304,7 +303,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button'}
             onClick={() => {
               elements.forEach(element => element.shape_color_sustainable = !shape_color_sustainable)
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {shape_color_sustainable ? <FaLock /> : <FaLockOpen />}
@@ -332,7 +331,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button'}
             onClick={() => {
               elements.forEach(element => element.shape_type = 'ellipse')
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             <svg
@@ -354,7 +353,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 'menuconfigpanel_option_button'}
             onClick={() => {
               elements.forEach(element => element.shape_type = 'rect')
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             <svg
@@ -378,7 +377,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             }
             onClick={() => {
               elements.forEach(element => element.shape_type = 'arrow')
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             <svg
@@ -418,9 +417,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 value={shape_arrow_angle_factor}
                 onChange={(value) => {
                   elements.forEach(element => element.shape_arrow_angle_factor = value)
-                  updateMenuConfigurationNodeAttributes()
-                  // Redraw only sabot of link attached to the node already shaped as an arrow
-                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n => ReturnValueNode(data, n, 'shape') === 'arrow'))
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <SliderMark
@@ -450,10 +447,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 minWidth={0}
                 onClick={() => {
                   elements.forEach(element => element.shape_arrow_angle_direction = 'left')
-                  updateMenuConfigurationNodeAttributes()
-                  // Redraw only sabot of link attached to the node already shaped as an arrow
-                  link_function.reDrawLinkStartSabot(
-                    multi_selected_nodes.current.filter(n => ReturnValueNode(data, n, 'shape') === 'arrow'))
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <FaArrowLeft />
@@ -467,9 +461,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 minWidth={0}
                 onClick={() => {
                   elements.forEach(element => element.shape_arrow_angle_direction = 'right')
-                  updateMenuConfigurationNodeAttributes()
-                  // Redraw only sabot of link attached to the node already shaped as an arrow
-                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n => ReturnValueNode(data, n, 'shape') === 'arrow'))
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <FaArrowRight />
@@ -483,9 +475,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 minWidth={0}
                 onClick={() => {
                   elements.forEach(element => element.shape_arrow_angle_direction = 'top')
-                  updateMenuConfigurationNodeAttributes()
-                  // Redraw only sabot of link attached to the node already shaped as an arrow
-                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n => ReturnValueNode(data, n, 'shape') === 'arrow'))
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <FaArrowUp />
@@ -499,9 +489,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 minWidth={0}
                 onClick={() => {
                   elements.forEach(element => element.shape_arrow_angle_direction = 'bottom')
-                  updateMenuConfigurationNodeAttributes()
-                  // Redraw only sabot of link attached to the node already shaped as an arrow
-                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n => ReturnValueNode(data, n, 'shape') === 'arrow'))
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <FaArrowDown />
@@ -527,7 +515,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           function_onChange={(_, val) => elements.forEach(element => element.shape_min_width = val)}
           menu_for_style={menu_for_style}
           function_onBlur={() => {
-            updateMenuConfigurationNodeAttributes()
+            refreshThisAndUpdateRelatedComponents()
           }}
           stepper={true}
           minimum_value={1}
@@ -548,7 +536,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           function_onChange={(_, val) => elements.forEach(element => element.shape_min_height = val)}
           menu_for_style={menu_for_style}
           function_onBlur={() => {
-            updateMenuConfigurationNodeAttributes()
+            refreshThisAndUpdateRelatedComponents()
           }}
           stepper={true}
           minimum_value={1}
@@ -570,7 +558,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         isChecked={name_label_visible}
         onChange={(evt) => {
           elements.forEach(element => element.name_label_visible = evt.target.checked)
-          updateMenuConfigurationNodeAttributes()
+          refreshThisAndUpdateRelatedComponents()
         }}
       >
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
@@ -602,7 +590,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             isChecked={name_label_color}
             onChange={(evt) => {
               elements.forEach(element => element.name_label_color = evt.target.checked)
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}>
             <OSTooltip label={t('Noeud.labels.tooltips.lb')}>
               {t('Noeud.labels.lb')}
@@ -630,7 +618,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 minWidth='0'
                 onClick={() => {
                   elements.forEach(element => element.name_label_bold = !name_label_bold)
-                  updateMenuConfigurationNodeAttributes()
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <FaBold />
@@ -648,7 +636,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 minWidth='0'
                 onClick={() => {
                   elements.forEach(element => element.name_label_uppercase = !name_label_uppercase)
-                  updateMenuConfigurationNodeAttributes()
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 {svg_label_upper}
@@ -667,7 +655,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 onClick={() => {
                   elements.forEach(element => element.name_label_italic = !name_label_italic)
 
-                  updateMenuConfigurationNodeAttributes()
+                  refreshThisAndUpdateRelatedComponents()
                 }}
               >
                 <FaItalic />
@@ -681,7 +669,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               }
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 elements.forEach(element => element.name_label_font_family = evt.target.value)
-                updateMenuConfigurationNodeAttributes()
+                refreshThisAndUpdateRelatedComponents()
               }}
             >
               {
@@ -702,7 +690,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               function_onChange={(_, val) => elements.forEach(element => element.name_label_font_size = val)}
               menu_for_style={menu_for_style}
               function_onBlur={() => {
-                updateMenuConfigurationNodeAttributes()
+                refreshThisAndUpdateRelatedComponents()
               }}
               stepper={true}
               unitText='pixels'
@@ -717,7 +705,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             isChecked={name_label_background}
             onChange={(evt) => {
               elements.forEach(element => element.name_label_background = evt.target.checked)
-              updateMenuConfigurationNodeAttributes()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
@@ -752,7 +740,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 valueOfAttr={name_label_box_width}
                 function_onChange={(_, val) => elements.forEach(element => element.name_label_box_width = val)}
                 menu_for_style={menu_for_style}
-                function_onBlur={() => updateMenuConfigurationNodeAttributes()}
+                function_onBlur={() => refreshThisAndUpdateRelatedComponents()}
                 stepper={true}
                 minimum_value={0}
                 maximum_value={500}
@@ -783,7 +771,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     onClick={() => {
                       // TODO : Delete x_label & y_label when we modify label position (horizontally & vertically)
                       elements.forEach(element => element.name_label_horiz = 'left')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     <FaAlignLeft />
@@ -803,7 +791,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.name_label_horiz = 'middle')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     <FaAlignCenter />
@@ -823,7 +811,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.name_label_horiz = 'right')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}>
                     <FaAlignRight />
                   </Button>
@@ -846,7 +834,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     onClick={() => {
                       elements.forEach(element => element.name_label_vert = 'top')
 
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     {svg_label_top}
@@ -866,7 +854,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.name_label_vert = 'middle')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     {svg_label_center}
@@ -886,7 +874,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.name_label_vert = 'bottom')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     {svg_label_bottom}
@@ -912,7 +900,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         isChecked={value_label_visible}
         onChange={(evt) => {
           elements.forEach(element => element.value_label_visible = evt.target.checked)
-          updateMenuConfigurationNodeAttributes()
+          refreshThisAndUpdateRelatedComponents()
         }}
       >
         <OSTooltip label={t('Noeud.labels.tooltips.vdv')}>
@@ -941,7 +929,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               valueOfAttr={value_label_font_size}
               menu_for_style={menu_for_style}
               function_onChange={(_, val) => elements.forEach(element => element.value_label_font_size = val)}
-              function_onBlur={() => updateMenuConfigurationNodeAttributes()}
+              function_onBlur={() => refreshThisAndUpdateRelatedComponents()}
               stepper={true}
               minimum_value={11}
               unitText='pixels'
@@ -969,7 +957,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.value_label_horiz = 'left')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     <FaAlignLeft />
@@ -989,7 +977,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.value_label_horiz = 'middle')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     <FaAlignCenter />
@@ -1009,7 +997,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.value_label_horiz = 'right')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     <FaAlignRight />
@@ -1032,7 +1020,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.value_label_vert = 'top')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     {svg_label_top}
@@ -1052,7 +1040,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     minWidth='0'
                     onClick={() => {
                       elements.forEach(element => element.value_label_vert = 'middle')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     {svg_label_center}
@@ -1072,7 +1060,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     paddingEnd='0'
                     onClick={() => {
                       elements.forEach(element => element.value_label_vert = 'bottom')
-                      updateMenuConfigurationNodeAttributes()
+                      refreshThisAndUpdateRelatedComponents()
                     }}
                   >
                     {svg_label_bottom}
@@ -1111,7 +1099,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                     selected_nodes.map(node => {
                       node.style = style
                     })
-                    updateMenuConfigurationNodeAttributes()
+                    refreshThisAndUpdateRelatedComponents()
                   }}
                 >
                   {style.id}
@@ -1126,7 +1114,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         variant='menuconfigpanel_option_button'
         onClick={() => {
           selected_nodes.forEach(node => node.resetAttributes())
-          updateMenuConfigurationNodeAttributes()
+          refreshThisAndUpdateRelatedComponents()
         }}
       >
         <FaUndo />
@@ -1233,11 +1221,11 @@ const ConfigNodeAttributeNumberInput: FunctionComponent<ConfigLayoutNumberInputT
   const inputUnit = unitText ? <InputRightAddon>{unitText}</InputRightAddon> : <></>
 
   return <InputGroup variant='menuconfigpanel_option_input' >
-    <NumberInput 
-      allowMouseWheel 
-      variant={variantOfInput} 
-      min={minimum_value} 
-      max={maximum_value} 
+    <NumberInput
+      allowMouseWheel
+      variant={variantOfInput}
+      min={minimum_value}
+      max={maximum_value}
       step={1}
       value={_value}
       onChange={(_, value) => {
