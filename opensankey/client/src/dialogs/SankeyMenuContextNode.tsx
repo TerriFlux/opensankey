@@ -1,21 +1,7 @@
-import * as d3 from 'd3'
 import React, { FunctionComponent, useState } from 'react'
-import { SelectVisualyLinks, nodeTransform } from '../draw/SankeyDrawFunction'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import {
-  NodeContextHasAggregate, NodeContextHasDesaggregate, DeleteNode,
-  ReturnValueLink,
-  ReturnValueNode,
-  AssignNodeLocalAttribute
-} from '../configmenus/SankeyUtils'
-import { Aggregate, Desaggregate } from '../draw/SankeyDrawLayout'
-import { reorganize_node_outputLinksId } from '../draw/SankeyDrawLayout'
-import { reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
 import { ContextMenuNodeFType } from './types/SankeyMenuContextNodeTypes'
-import { SankeyNode } from '../types/Types'
-import { DeleteGLinks } from '../draw/SankeyDrawLinks'
-import { DeleteGNodes } from '../draw/SankeyDrawNodes'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -25,68 +11,72 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   applicationContext,
   applicationData,
-  applicationState,
-  contextMenu,
   dict_hook_ref_setter_show_dialog_components,
   agregation,
-  node_function,
-  link_function,
-  ComponentUpdater,
   additional_context_element_menu,
   additional_context_element_other
 }) => {
-  const [contextualised_node, set_contextualised_node] = useState<SankeyNode>()
-  contextMenu.ref_setter_contextualised_node.current = set_contextualised_node
+  const { new_data } = applicationData
+  const contextualised_node = new_data.drawing_area.node_contextualied
   const [forceUpdate, setForceUpdate] = useState(false)
+  new_data.menu_configuration.update_components_menu_context_node.current = () => setForceUpdate(!forceUpdate)
   const { t } = applicationContext
-  const { data, set_data } = applicationData
-  const { multi_selected_nodes, multi_selected_links } = applicationState
-  const { pointer_pos } = contextMenu
-  const { RedrawNodes } = node_function
-  const { RedrawLinks } = link_function
+
+  const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+  const list_select_nodes = new_data.drawing_area.selected_nodes_list
+
   let style_c_n = '0px 0px auto auto'
   let is_top = true
-  let pos_x = pointer_pos.current[0] + 10
-  let pos_y = pointer_pos.current[1] - 20
+  let pos_x = 0
+  let pos_y = 0
 
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (contextualised_node) {
-    if (pointer_pos.current[0] + 410 > window.innerWidth) {
-      pos_x = pointer_pos.current[0] - 400
+    if (new_data.drawing_area.pointer_pos[0] + 410 > window.innerWidth) {
+      pos_x = new_data.drawing_area.pointer_pos[0] - 400
     }
+    pos_x = new_data.drawing_area.pointer_pos[0]
+    pos_y = new_data.drawing_area.pointer_pos[1]
 
-    if (pointer_pos.current[1] + 490 > window.innerHeight) {
-      pos_y = pointer_pos.current[1] - 470
+    if (new_data.drawing_area.pointer_pos[1] + 490 > window.innerHeight) {
+      pos_y = new_data.drawing_area.pointer_pos[1] - 470
       is_top = false
     }
     style_c_n = pos_y + 'px auto auto ' + pos_x + 'px'
   }
-  const contextualised_node_shape_visible = contextualised_node !== undefined ? ReturnValueNode(data, contextualised_node, 'shape_visible') : false
-  const contextualised_node_label_visible = contextualised_node !== undefined ? ReturnValueNode(data, contextualised_node, 'label_visible') : false
-  const contextualised_node_value_visible = contextualised_node !== undefined ? ReturnValueNode(data, contextualised_node, 'show_value') : false
 
+  const contextualised_node_shape_visible = contextualised_node !== undefined ? contextualised_node.shape_visible : false
+  const contextualised_node_label_visible = contextualised_node !== undefined ? contextualised_node.name_label_visible : false
+  const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_visible : false
 
   // b:before,m:middle,a:after
-  const align_node = (ref: 'min' | 'max', attr: 'x' | 'y', pos: 'b' | 'm' | 'a') => {
-    const node_ref = multi_selected_nodes.current.filter(nf => nf.position != 'relative').sort((n1, n2) => {
+  const align_node = (ref: 'min' | 'max', attr: 'position_x' | 'position_y', pos: 'b' | 'm' | 'a') => {
+    const node_ref = list_select_nodes.filter(nf => nf.position_type != 'relative').sort((n1, n2) => {
       return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
     })[0]
-    const pos_ref = node_ref[attr]
-    const wORh = (attr == 'x') ? 'width' : 'height'
-    const is_circle = d3.select('#shape_' + node_ref.idNode).attr('rx') !== null
 
-    const wORh_ref = is_circle ? Number(d3.select('#shape_' + node_ref.idNode).attr('r' + attr)) : Number(d3.select('#shape_' + node_ref.idNode).attr(wORh))
+    const pos_ref = node_ref[attr]
+
+    const is_circle = node_ref.shape_type === 'ellipse'
+    let wORh_ref = is_circle ? node_ref.getShapeWidthToUse() / 2 : node_ref.getShapeWidthToUse()
+    if (attr === 'position_y') {
+      wORh_ref = is_circle ? node_ref.getShapeHeightToUse() / 2 : node_ref.getShapeHeightToUse()
+    }
     let center_ref = 0
 
     if (pos === 'm') {
       center_ref = pos_ref + (wORh_ref / 2)
     }
 
-    multi_selected_nodes.current.filter(n => n != node_ref && n.position != 'relative').forEach(n => {
+    list_select_nodes.filter(n => n != node_ref && n.position_type != 'relative').forEach(n => {
+      const is_circle_to_shift = n.shape_type === 'ellipse'
 
-      const is_circle_to_shift = d3.select('#shape_' + n.idNode).attr('rx') !== null
-      const wORh_to_shift = is_circle_to_shift ? Number(d3.select('#shape_' + n.idNode).attr('r' + attr)) : Number(d3.select('#shape_' + n.idNode).attr(wORh))
+      let wORh_to_shift = is_circle_to_shift ? n.getShapeWidthToUse() / 2 : n.getShapeWidthToUse()
+      if (attr === 'position_y') {
+        wORh_to_shift = is_circle_to_shift ? n.getShapeHeightToUse() / 2 : n.getShapeHeightToUse()
+      }
 
       if (pos === 'm') {
         n[attr] = center_ref - ((wORh_to_shift) / 2)
@@ -97,30 +87,20 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       }
     })
 
-    multi_selected_nodes.current.forEach(n => {
-      d3.select('#ggg_' + n.idNode).attr('transform', nodeTransform(n, applicationData.display_nodes, applicationData.display_links))
-    })
-    let link_to_update: string[] = []
-    multi_selected_nodes.current.forEach(n => {
-      link_to_update = link_to_update.concat(n.outputLinksId)
-      link_to_update = link_to_update.concat(n.inputLinksId)
-    })
-    link_to_update = [...new Set(link_to_update)]
-    RedrawLinks(link_to_update.map(lid => data.links[lid]))
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    list_select_nodes.forEach(n => n.draw())
+    indicateSankeyToSaveInCache()
 
   }
 
   const dropdown_c_n_apparence = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(true)
-    set_contextualised_node(undefined)
-    contextMenu.ref_contextualised_node.current = undefined
+    new_data.drawing_area.node_contextualied = undefined
   }} variant='contextmenu_button'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
 
   const dropdown_c_n_tooltip = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(true)
-    set_contextualised_node(undefined)
-    contextMenu.ref_contextualised_node.current = undefined
+    new_data.drawing_area.node_contextualied = undefined
+    
   }} variant='contextmenu_button'>{t('Noeud.IS')} {icon_open_modal}</Button>
 
   // Menu to change some pararmeter concerning the style of the node
@@ -130,13 +110,13 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuButton>
     <MenuList>
       {
-        Object.values(data.style_node).map(sn => {
+        new_data.drawing_area.sankey.node_styles_list_sorted.map(sn => {
           return <MenuItem onClick={() => {
             if (contextualised_node) {
-              contextualised_node.style = sn.idNode
-              multi_selected_nodes.current.filter(n => n != contextualised_node).forEach(n => n.style = sn.idNode)
-              RedrawNodes(multi_selected_nodes.current)
-              ComponentUpdater.updateComponenSaveInCache.current(false)
+              list_select_nodes.map(node => {
+                node.style = sn
+              })
+              indicateSankeyToSaveInCache()
             }
           }}>
             {sn.name}
@@ -152,10 +132,8 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuButton>
     <MenuList>
       <Button variant='contextmenu_button' onClick={() => {
-        delete contextualised_node!.local
-        multi_selected_nodes.current.filter(n => n != contextualised_node).forEach(n => delete n.local)
-        RedrawNodes(multi_selected_nodes.current)
-        ComponentUpdater.updateComponenSaveInCache.current(false)
+        list_select_nodes.forEach(node => node.resetAttributes())
+        indicateSankeyToSaveInCache()
 
       }}>{t('Noeud.AS')}</Button>
       {dropdown_c_n_style_select}
@@ -164,9 +142,8 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const dropdown_c_n_io = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
-    ComponentUpdater.updateComponentMenuNodeIOSelectSideNode.current.forEach(_=>_())
-    set_contextualised_node(undefined)
-    contextMenu.ref_contextualised_node.current = undefined
+    new_data.drawing_area.node_contextualied = undefined
+    
   }} variant='contextmenu_button'>{t('Noeud.PF.PF')}{icon_open_modal}</Button>
   const dropdown_c_n_align_h_min_ori = <Menu placement='end'>
     <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
@@ -174,15 +151,15 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuButton>
     <MenuList>
       <MenuItem onClick={() => {
-        align_node('min', 'x', 'b')
+        align_node('min', 'position_x', 'b')
       }}>{t('Noeud.align_horiz_left')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('min', 'x', 'm')
+        align_node('min', 'position_x', 'm')
       }}>{t('Noeud.align_horiz_center')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('min', 'x', 'a')
+        align_node('min', 'position_x', 'a')
       }}>{t('Noeud.align_horiz_right')}
       </MenuItem>
     </MenuList>
@@ -194,15 +171,15 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuButton>
     <MenuList>
       <MenuItem onClick={() => {
-        align_node('max', 'x', 'b')
+        align_node('max', 'position_x', 'b')
       }}>{t('Noeud.align_horiz_left')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('max', 'x', 'm')
+        align_node('max', 'position_x', 'm')
       }}>{t('Noeud.align_horiz_center')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('max', 'x', 'a')
+        align_node('max', 'position_x', 'a')
       }}>{t('Noeud.align_horiz_right')}
       </MenuItem>
     </MenuList>
@@ -228,15 +205,15 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuButton>
     <MenuList>
       <MenuItem onClick={() => {
-        align_node('min', 'y', 'b')
+        align_node('min', 'position_y', 'b')
       }}>{t('Noeud.align_vert_top')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('min', 'y', 'm')
+        align_node('min', 'position_y', 'm')
       }}>{t('Noeud.align_horiz_center')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('min', 'y', 'a')
+        align_node('min', 'position_y', 'a')
       }}>{t('Noeud.align_vert_bottom')}
       </MenuItem>
     </MenuList>
@@ -248,15 +225,15 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     </MenuButton>
     <MenuList>
       <MenuItem onClick={() => {
-        align_node('max', 'y', 'b')
+        align_node('max', 'position_y', 'b')
       }}>{t('Noeud.align_vert_top')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('max', 'y', 'm')
+        align_node('max', 'position_y', 'm')
       }}>{t('Noeud.align_horiz_center')}
       </MenuItem>
       <MenuItem onClick={() => {
-        align_node('max', 'y', 'a')
+        align_node('max', 'position_y', 'a')
       }}>{t('Noeud.align_vert_bottom')}
       </MenuItem>
     </MenuList>
@@ -284,18 +261,20 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const button_edit_label_node = <Button variant='contextmenu_button'
     onClick={() => {
-      const label_x = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().x ?? 0
-      const label_y = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().y ?? 0
-      const node_x = document.getElementById('shape_' + contextualised_node!.idNode)?.getBoundingClientRect().x ?? 0
-      const node_y = document.getElementById('shape_' + contextualised_node!.idNode)?.getBoundingClientRect().y ?? 0
+      // TODO : when we can edit node label on DA re-instance this function 
 
-      d3.select('#fo_input_label_' + contextualised_node!.idNode).style('display', 'inline-block')
-      d3.select('#fo_input_label_' + contextualised_node!.idNode).attr('x', (label_x - node_x)).attr('y', label_y - node_y)
-      d3.select('#text_' + contextualised_node!.idNode).style('visibility', 'hidden')
-      document.getElementById('input_label_' + contextualised_node!.idNode)?.focus()
+      // const label_x = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().x ?? 0
+      // const label_y = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().y ?? 0
+      // const node_x = document.getElementById('shape_' + contextualised_node!.idNode)?.getBoundingClientRect().x ?? 0
+      // const node_y = document.getElementById('shape_' + contextualised_node!.idNode)?.getBoundingClientRect().y ?? 0
 
-      set_contextualised_node(undefined)
-      contextMenu.ref_contextualised_node.current = undefined
+      // d3.select('#fo_input_label_' + contextualised_node!.idNode).style('display', 'inline-block')
+      // d3.select('#fo_input_label_' + contextualised_node!.idNode).attr('x', (label_x - node_x)).attr('y', label_y - node_y)
+      // d3.select('#text_' + contextualised_node!.idNode).style('visibility', 'hidden')
+      // document.getElementById('input_label_' + contextualised_node!.idNode)?.focus()
+
+      // new_data.drawing_area.node_contextualied = undefined
+      // 
     }}
   >
     {t('Noeud.labels.edit_node_label')}
@@ -310,27 +289,21 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
       <MenuItem
         onClick={() => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-            multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l => d.outputLinksId.includes(l.idLink)))
-            const opacity = ReturnValueLink(data, multi_selected_links.current[0], 'opacity') as string
-            applicationState.ref_display_link_opacity.current.forEach(setter => setter(opacity))
+          // Select links attached to selected nodes
+          list_select_nodes.forEach(n => {
+            n.output_links_list.forEach(l => new_data.drawing_area.addLinkToSelection(l))
           })
-          multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
-          set_contextualised_node(undefined)
-
+          new_data.drawing_area.node_contextualied = undefined
         }}>
         {t('Noeud.SlctOL')}
       </MenuItem>
       <MenuItem
         onClick={() => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-            multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l => d.inputLinksId.includes(l.idLink)))
-            const opacity = ReturnValueLink(data, multi_selected_links.current[0], 'opacity') as string
-            applicationState.ref_display_link_opacity.current.forEach(setter => setter(opacity))
+          // Select links attached to selected nodes
+          list_select_nodes.forEach(n => {
+            n.input_links_list.forEach(l => new_data.drawing_area.addLinkToSelection(l))
           })
-          multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
-          // updateComponentMenuConfigLink.current() TODO fix
-          set_contextualised_node(undefined)
+          new_data.drawing_area.node_contextualied = undefined
         }}>
         {t('Noeud.SlctIL')}
       </MenuItem>
@@ -340,61 +313,47 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   const btn_reorganise_link_io = <Button
     variant='contextmenu_button'
     onClick={() => {
-      reorganize_node_inputLinksId(data, contextualised_node!, data.nodes, data.links)
-      reorganize_node_outputLinksId(data, contextualised_node!, data.nodes, data.links)
-      multi_selected_nodes.current.filter(n => n != contextualised_node).forEach(n => {
-        reorganize_node_inputLinksId(data, n, data.nodes, data.links)
-        reorganize_node_outputLinksId(data, n, data.nodes, data.links)
-      })
-      set_contextualised_node(undefined)
-      contextMenu.ref_contextualised_node.current = undefined
-      RedrawNodes(multi_selected_nodes.current)
-      // Redraw link attached to modified node when the modification to the node
-      let link_to_update: string[] = []
-      multi_selected_nodes.current.forEach(n => {
-        link_to_update = link_to_update.concat(n.outputLinksId)
-        link_to_update = link_to_update.concat(n.inputLinksId)
-      })
-      link_to_update = [...new Set(link_to_update)]
-      const list_links = link_to_update.map(lid => data.links[lid])
-      RedrawLinks(list_links)
-      ComponentUpdater.updateComponenSaveInCache.current(false)
+
+      list_select_nodes.forEach(node => node.reorganizeIOLinks()) // TODO : function to reorganise IO links of nodes depending on source/target position
+      indicateSankeyToSaveInCache()
 
     }}>
     {t('Noeud.Reorg')}
   </Button>
 
-  const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
-    Aggregate(contextualised_node, data, agregation)
-    multi_selected_nodes.current = []
-    node_function.recomputeDisplayedElement()
-    set_data({ ...data })
-    set_contextualised_node(undefined)
-    contextMenu.ref_contextualised_node.current = undefined
-    ComponentUpdater.updateComponenSaveInCache.current(false)
 
-  }}>{t('Noeud.context_agregate')}</Button> : <></>
+  // TODO : function to aggregate/deaggregate only 1 node 
 
-  const btn_desagregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasDesaggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
-    Desaggregate(contextualised_node, applicationData, agregation)
-    multi_selected_nodes.current = []
-    node_function.recomputeDisplayedElement()
-    set_data({ ...data })
-    set_contextualised_node(undefined)
-    contextMenu.ref_contextualised_node.current = undefined
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+  // const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
+  //   Aggregate(contextualised_node, data, agregation)
+  //   multi_selected_nodes.current = []
+  //   node_function.recomputeDisplayedElement()
+  //   set_data({ ...data })
+  //   new_data.drawing_area.node_contextualied = undefined
+  //   
+  //   indicateSankeyToSaveInCache()
 
-  }}>{t('Noeud.context_desagregate')}</Button> : <></>
+  // }}>{t('Noeud.context_agregate')}</Button> : <></>
+
+  // const btn_desagregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasDesaggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
+  //   Desaggregate(contextualised_node, applicationData, agregation)
+  //   multi_selected_nodes.current = []
+  //   node_function.recomputeDisplayedElement()
+  //   set_data({ ...data })
+  //   new_data.drawing_area.node_contextualied = undefined
+  //   
+  //   indicateSankeyToSaveInCache()
+
+  // }}>{t('Noeud.context_desagregate')}</Button> : <></>
 
   const btn_mask_shape = <Button variant='contextmenu_button'
     onClick={() => {
-      multi_selected_nodes.current.forEach(n => {
-        AssignNodeLocalAttribute(n, 'shape_visible', !contextualised_node_shape_visible)
+      list_select_nodes.forEach(n => {
+        n.shape_visible = !contextualised_node_shape_visible
       })
-      RedrawNodes(multi_selected_nodes.current)
-      setForceUpdate(!forceUpdate)
-      ComponentUpdater.updateComponenSaveInCache.current(false)
 
+      setForceUpdate(!forceUpdate)
+      indicateSankeyToSaveInCache()
     }}
   >
     {contextualised_node_shape_visible ? t('Noeud.apparence.hide_shape') : t('Noeud.apparence.display_shape')}
@@ -402,12 +361,11 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const btn_mask_label = <Button variant='contextmenu_button'
     onClick={() => {
-      multi_selected_nodes.current.forEach(n => {
-        AssignNodeLocalAttribute(n, 'label_visible', !contextualised_node_label_visible)
+      list_select_nodes.forEach(n => {
+        n.name_label_visible = !contextualised_node_label_visible
       })
-      RedrawNodes(multi_selected_nodes.current)
       setForceUpdate(!forceUpdate)
-      ComponentUpdater.updateComponenSaveInCache.current(false)
+      indicateSankeyToSaveInCache()
 
     }}
   >
@@ -416,12 +374,11 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const btn_mask_value = <Button variant='contextmenu_button'
     onClick={() => {
-      multi_selected_nodes.current.forEach(n => {
-        AssignNodeLocalAttribute(n, 'show_value', !contextualised_node_value_visible)
+      list_select_nodes.forEach(n => {
+        n.value_label_visible = !contextualised_node_value_visible
       })
-      RedrawNodes(multi_selected_nodes.current)
       setForceUpdate(!forceUpdate)
-      ComponentUpdater.updateComponenSaveInCache.current(false)
+      indicateSankeyToSaveInCache()
 
     }}
   >
@@ -430,8 +387,8 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const btn_c_n_show_tags_menu = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
-    set_contextualised_node(undefined)
-    contextMenu.ref_contextualised_node.current = undefined
+    new_data.drawing_area.node_contextualied = undefined
+    
   }} variant='contextmenu_button'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
 
   // Pop over that serve as context menu
@@ -439,10 +396,10 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     className={'context_popover ' + (is_top ? '' : 'at_bot')}
     style={{ maxWidth: '100%', position: 'absolute', inset: style_c_n }}>
     <ButtonGroup orientation='vertical' isAttached>
-      {btn_aggregate}
-      {btn_desagregate}
+      {/* {btn_aggregate} */}
+      {/* {btn_desagregate} */}
       {sep}
-      {multi_selected_nodes.current.length > 1 ? <>
+      {list_select_nodes.length > 1 ? <>
         {dropdown_c_n_align}
         {sep}</> : <></>
       }
@@ -453,30 +410,12 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       <Button
         variant='contextmenu_button'
         onClick={() => {
-          multi_selected_nodes.current.map(d => DeleteNode(data, d))
-          multi_selected_nodes.current = []
-          set_contextualised_node(undefined)
-          contextMenu.ref_contextualised_node.current = undefined
-
-          const tmp_node = Object.keys(data.nodes)
-          Object.entries(applicationData.display_nodes).filter(n => {
-            return !tmp_node.includes(n[0])
-          }).forEach(n => {
-            DeleteGNodes([n[0]])
-            delete applicationData.display_nodes[n[0]]
-          })
-
-          const tmp_link = Object.keys(data.links)
-          Object.entries(applicationData.display_links).filter(l => {
-            return !tmp_link.includes(l[0])
-          }).forEach(l => {
-            DeleteGLinks([l[0]])
-            delete applicationData.display_links[l[0]]
-          })
-
-          RedrawNodes(Object.values(applicationData.display_nodes))
-          RedrawLinks(Object.values(applicationData.display_links))
-          ComponentUpdater.updateComponenSaveInCache.current(false)
+          new_data.drawing_area.deleteSelectedNodes()
+          new_data.drawing_area.node_contextualied = undefined
+          
+          // Redraw sankey
+          new_data.drawing_area.drawElements()
+          indicateSankeyToSaveInCache()
 
         }}>
         {t('Menu.suppr')}
@@ -495,11 +434,9 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       {sep}
       {dropdown_c_n_apparence}
       {btn_c_n_show_tags_menu}
-      {multi_selected_nodes.current.length == 1 ? dropdown_c_n_io : <></>}
+      {list_select_nodes.length == 1 ? dropdown_c_n_io : <></>}
       {dropdown_c_n_tooltip}
       {additional_context_element_menu}
-
-
     </ButtonGroup>
   </Box> : <></>
 }
