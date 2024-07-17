@@ -887,8 +887,8 @@ export class Class_Sankey {
       this._addLink(link)
     })
 
-    // Order links io position in each nodes 
-    // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement 
+    // Order links io position in each nodes
+    // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement
     this.nodes_list.filter(n => json_object['nodes'][n.id]['links_order'] !== undefined).forEach(n => {
       n.fromJSONLinksOrder(json_object['nodes'][n.id])
     })

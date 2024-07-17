@@ -1,147 +1,155 @@
+// External imports
 import React, { FunctionComponent, useState } from 'react'
 import {
   Box,
   Checkbox,
   Select,
-  TabPanel
+  TabPanel,
+  useBoolean
 } from '@chakra-ui/react'
+
+// Local types
 import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigurationNodesTagsTypes'
-import { Class_NodeElement } from '../types/Node'
 import { Class_Tag } from '../types/Tag'
 
 
 /**
-   * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
-   * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
-   * then in the nodes filter button, select the groupTag you want to apply and in the dropdown select the node/nodes you want to see
-   *
-   * @type {*}
-   */
+ * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
+ * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
+ * then in the nodes filter button, select the groupTag you want to apply and in the dropdown select the node/nodes you want to see
+ *
+ * @type {*}
+ */
 export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
   applicationContext,
   applicationData,
-  applicationState,
-  node_function,
-  ComponentUpdater,
   menu_for_modal
 })=> {
   const { t } = applicationContext
   const { new_data} = applicationData
-  const sankey_data=new_data.drawing_area.sankey
-  const list_node_selected=new_data.drawing_area.selected_nodes_list
 
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(sankey_data.node_taggs_dict).length > 0 ? Object.keys(sankey_data.node_taggs_dict)[0] : '')
-  const [forceUpdate, setForceUpdate]=useState(false)
-  const tags_visible = Object.keys(sankey_data.node_taggs_dict).length > 0
+  // Node tags groups
+  const node_taggs = new_data.drawing_area.sankey.node_taggs_list
+  const has_node_taggs = node_taggs.length > 0
+  const [node_tagg_entry_id, setNodeTaggEntryId] = useState(has_node_taggs ? node_taggs[0].id : '')
+  const node_tagg_entry = new_data.drawing_area.sankey.flux_taggs_dict[node_tagg_entry_id]
 
-  if ((tags_group_key == '' && Object.keys(sankey_data.node_taggs_dict).length > 0) || (!Object.keys(sankey_data.node_taggs_dict).includes(tags_group_key) && Object.keys(sankey_data.node_taggs_dict).length > 0)) {
-    set_tags_group_key(Object.keys(sankey_data.node_taggs_dict)[0])
+  // Selected nodes
+  const nodes_selected = new_data.drawing_area.selected_nodes_list
+
+  // Menu updaters
+  const [ , setForceUpdate ] = useBoolean()
+  new_data.menu_configuration.ref_to_menu_config_node_tags_updater.current = setForceUpdate.toggle
+
+  /**
+   * Function used to reset menu UI
+   */
+  const setForceFullUpdate = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    setForceUpdate.toggle()
   }
 
-  const content= <Box
-    layerStyle='menuconfigpanel_grid'
-  >
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
-      {t('Menu.EN')}
-    </Box>
+  /**
+   *
+   *
+   * @param {Class_Tag} tag
+   * @return {*}
+   */
+  const haveAllSelectedNodesGivenTag = (
+    tag: Class_Tag
+  ) => {
+    let allTrue = true
+    let allFalse = true
+    nodes_selected
+      .forEach(node => {
+        const test = node.hasGivenTag(tag)
+        allTrue = allTrue && (test === true)
+        allFalse = allFalse && (test === false)
+      })
+    return [allTrue, allFalse]
+  }
 
-    {/* Groupe d'étiquettes  */}
-    <Select
-      variant='menuconfigpanel_option_select'
-      value={tags_group_key}
-      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
-    >
-      {
-        Object
-          .entries(sankey_data.node_taggs_dict)
-          .map((tags_group, i) =>
-            <option
-              key={i}
-              value={tags_group[0]}
-            >
-              {tags_group[1].name}
-            </option>
-          )
-      }
-    </Select>
 
-    <Box
-      layerStyle='menuconfigpanel_grid'
-    >
-      {
-        tags_visible && tags_group_key != '' && Object.keys(sankey_data.node_taggs_dict).includes(tags_group_key) ?
-          Object
-            .entries(sankey_data.node_taggs_dict[tags_group_key].tags_dict)
-            .map(tags => {
-              const allChecked = IsAllNodeTagsSame(list_node_selected,tags[1],tags_group_key)
-              return (
-                <Checkbox
+  const content = <> {
+    (
+      has_node_taggs &&
+      nodes_selected.length > 0
+    ) ?
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_part_title_1'
+        >
+          {t('Menu.EN')}
+        </Box>
+
+        {/* Groupe d'étiquettes  */}
+        <Select
+          variant='menuconfigpanel_option_select'
+          value={node_tagg_entry_id}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+            setNodeTaggEntryId(evt.target.value)}
+        >
+          {
+            node_taggs
+              .map(node_tagg =>
+                <option
+                  key={node_tagg.id}
+                  value={node_tagg.id}
+                >
+                  {node_tagg.name}
+                </option>
+              )
+          }
+        </Select>
+
+        <Box
+          layerStyle='menuconfigpanel_grid'
+        >
+          {
+            node_tagg_entry.tags_list
+              .map(node_tag => {
+                const [allTrue, allFalse] = haveAllSelectedNodesGivenTag(node_tag)
+                return <Checkbox
                   variant='menuconfigpanel_tag_checkbox'
-                  isIndeterminate={allChecked[1]}
-                  isChecked={allChecked[0] as boolean}
+                  isIndeterminate = {
+                    (nodes_selected.length > 1) &&
+                    (!allTrue) &&
+                    (!allFalse)
+                  }
+                  isChecked={allTrue}
                   onChange={(evt) => {
                     const visible = evt.target.checked
-                    list_node_selected.forEach(d => {
+                    nodes_selected.forEach(node => {
                       if (visible) {
-                        d.tags[tags_group_key].push(tags[1])
-                      } else {
-                        // Remove deselected tag from array of selected for the groupe tag tags_group_key of selected nodes
-                        d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[1]),1)
+                        node.addTag(node_tag)
+                      }
+                      else {
+                        node.removeTag(node_tag)
                       }
                     })
-                    setForceUpdate(!forceUpdate)
-                    // node_function.RedrawNodes(multi_selected_nodes.current)
-                    list_node_selected.forEach(n=>n.draw())
-                    ComponentUpdater.updateComponenSaveInCache.current(false)
+                    // Full update
+                    setForceFullUpdate()
                   }}
                 >
-                  {tags[1].name}
+                  {node_tag.name}
                 </Checkbox>
-              )}):
-          (<></>)
-      }
-    </Box>
-  </Box>
+              })
+          }
+        </Box>
+      </Box>
+      :
+      <></>
+  } </>
 
-  return menu_for_modal ? content:
-  // <><Tab>
-  //   <Box
-  //     layerStyle='submenuconfig_tab'
-  //   >
-  //     {t('Noeud.tabs.tags')}
-  //   </Box>
-  // </Tab>,
+
+  return menu_for_modal ?
+    content:
     <TabPanel>
       {content}
     </TabPanel>
-}
-
-// Check if all value of the attribute "k" is the same in the selected nodes (or selected style)
-// If the value come from local attribute or the style of the node doesn't matter, we look only the value
-const IsAllNodeTagsSame=(list_nodes:Class_NodeElement[],tag_class_obj:Class_Tag,key_grp_tag:string)=>{
-  // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected nodes attribute
-  // In second position it contain a boolean that return true if all selected nodes have the same value for the key
-  let store_value=[false,false]
-
-  if(list_nodes.length>0){
-    // For each selected nodes
-
-    list_nodes.map((d,i) => {
-      const val=(key_grp_tag in d.tags && d.tags[key_grp_tag].includes(tag_class_obj))
-
-      if(i===0){
-        store_value=[val,false]
-      }else{
-        store_value[1]=val!==store_value[0]?true:store_value[1]
-      }
-
-    })
-  }else{
-    store_value=[false,false]
-  }
-  return store_value
 }
