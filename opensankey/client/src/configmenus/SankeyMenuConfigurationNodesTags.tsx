@@ -13,6 +13,8 @@ import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigu
 import { Class_Tag } from '../types/Tag'
 
 
+// Component definition =================================================================
+
 /**
  * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
  * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
@@ -25,37 +27,50 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   applicationData,
   menu_for_modal
 })=> {
+
+  // Data ------------------------------------------------------------------------------
+
   const { t } = applicationContext
   const { new_data} = applicationData
 
   // Node tags groups
-  const node_taggs = new_data.drawing_area.sankey.node_taggs_list
-  const has_node_taggs = node_taggs.length > 0
-  const [node_tagg_entry_id, setNodeTaggEntryId] = useState(has_node_taggs ? node_taggs[0].id : '')
-  const node_tagg_entry = new_data.drawing_area.sankey.flux_taggs_dict[node_tagg_entry_id]
+  const list_node_taggs = new_data.drawing_area.sankey.node_taggs_list
+  const has_node_taggs = list_node_taggs.length > 0
+  const [node_tagg_entry_index, setNodeTaggEntryIndex] = useState(0)
+  const node_tagg_entry = list_node_taggs[node_tagg_entry_index]
 
   // Selected nodes
   const nodes_selected = new_data.drawing_area.selected_nodes_list
 
-  // Menu updaters
-  const [ , setForceUpdate ] = useBoolean()
-  new_data.menu_configuration.ref_to_menu_config_node_tags_updater.current = setForceUpdate.toggle
+  // Menu updaters ----------------------------------------------------------------------
+
+  const [ , refreshThis ] = useBoolean()
+  const updateThis = () => {
+    // Can just use simple refresh if node_tagg entry exists
+    if (new_data.drawing_area.sankey.node_taggs_list[node_tagg_entry_index])
+      refreshThis.toggle()
+    // If not, reset entry index
+    else
+      setNodeTaggEntryIndex(0)
+  }
+  new_data.menu_configuration.ref_to_menu_config_node_tags_updater.current = updateThis
 
   /**
    * Function used to reset menu UI
    */
-  const setForceFullUpdate = () => {
+  const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setForceUpdate.toggle()
+    refreshThis.toggle()
   }
 
+  // Utils functions --------------------------------------------------------------------
+
   /**
-   *
-   *
+   * Check if all selected nodes are related to the given tag
    * @param {Class_Tag} tag
-   * @return {*}
+   * @return [allTrue: boolean, allFalse: boolean]
    */
   const haveAllSelectedNodesGivenTag = (
     tag: Class_Tag
@@ -71,7 +86,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
     return [allTrue, allFalse]
   }
 
-
+  // JSX content ------------------------------------------------------------------------
   const content = <> {
     (
       has_node_taggs &&
@@ -90,16 +105,17 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
         {/* Groupe d'étiquettes  */}
         <Select
           variant='menuconfigpanel_option_select'
-          value={node_tagg_entry_id}
+          value={node_tagg_entry_index}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
-            setNodeTaggEntryId(evt.target.value)}
+            setNodeTaggEntryIndex(Number(evt.target.value))
+          }
         >
           {
-            node_taggs
-              .map(node_tagg =>
+            list_node_taggs
+              .map((node_tagg, node_tagg_index) =>
                 <option
                   key={node_tagg.id}
-                  value={node_tagg.id}
+                  value={node_tagg_index}
                 >
                   {node_tagg.name}
                 </option>
@@ -133,7 +149,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                       }
                     })
                     // Full update
-                    setForceFullUpdate()
+                    refreshThisAndUpdateRelatedComponents()
                   }}
                 >
                   {node_tag.name}

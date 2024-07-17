@@ -12,21 +12,26 @@ import {
 import {
   MenuConfigurationLinksTagsFType
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
+import { Class_Tag } from '../types/Tag'
 
 // Component definition =================================================================
+
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   applicationData,
   applicationContext,
   menu_for_modal,
 })=>{
+
+  // Data -------------------------------------------------------------------------------
+
   const { t } = applicationContext
   const { new_data } = applicationData
 
   // Flux tag groups
-  const flux_taggs = new_data.drawing_area.sankey.flux_taggs_list
-  const has_flux_taggs = flux_taggs.length > 0
-  const [flux_tagg_entry_id, setFluxTaggEntryId] = useState(has_flux_taggs ? flux_taggs[0].id : '')
-  const flux_tagg_entry = new_data.drawing_area.sankey.flux_taggs_dict[flux_tagg_entry_id]
+  const list_flux_taggs = new_data.drawing_area.sankey.flux_taggs_list
+  const has_flux_taggs = list_flux_taggs.length > 0
+  const [flux_tagg_entry_index, setFluxTaggEntryIndex] = useState(0)
+  const flux_tagg_entry = list_flux_taggs[flux_tagg_entry_index]
 
   // Data tag groups
   const data_taggs = new_data.drawing_area.sankey.data_taggs_list
@@ -35,21 +40,52 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   const selected_links = new_data.drawing_area.selected_links_list
   const reference_link = selected_links[0] // Used for value displaying in this menu
 
-  // Menu updaters
-  const [ , setForceUpdate ] = useBoolean()
-  new_data.menu_configuration.ref_to_menu_config_link_tags_updater.current = setForceUpdate.toggle
+  // Menu updaters ----------------------------------------------------------------------
+
+  const [ , refreshThis ] = useBoolean()
+  const updateThis = () => {
+    // Can just use simple refresh if flux_tagg entry exists
+    if (new_data.drawing_area.sankey.flux_taggs_list[flux_tagg_entry_index])
+      refreshThis.toggle()
+    // If not, reset entry
+    else
+      setFluxTaggEntryIndex(0)
+  }
+  new_data.menu_configuration.ref_to_menu_config_link_tags_updater.current = updateThis
 
   /**
    * Function used to reset menu UI
    */
-  const setForceFullUpdate = () => {
+  const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setForceUpdate.toggle()
+    refreshThis.toggle()
   }
 
-  // DIsplayed content in menu
+  // Utils functions --------------------------------------------------------------------
+
+  /**
+   * Check if all selected nodes are related to the given tag
+   * @param {Class_Tag} tag
+   * @return [allTrue: boolean, allFalse: boolean]
+   */
+  const haveAllSelectedLinksGivenTag = (
+    tag: Class_Tag
+  ) => {
+    let allTrue = true
+    let allFalse = true
+    selected_links
+      .forEach(link => {
+        const test = link.hasGivenTag(tag)
+        allTrue = allTrue && (test === true)
+        allFalse = allFalse && (test === false)
+      })
+    return [allTrue, allFalse]
+  }
+
+  // JSX content ------------------------------------------------------------------------
+
   const content = <>
   {
     (
@@ -69,17 +105,19 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
       <Select
         variant='menuconfigpanel_option_select'
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          setFluxTaggEntryId(evt.target.value)
+          setFluxTaggEntryIndex(Number(evt.target.value))
         }}
-        value={flux_tagg_entry_id}
+        value={flux_tagg_entry_index}
       >
-        {flux_taggs.map(flux_tagg =>
+        {
+          list_flux_taggs.map((flux_tagg, flux_tagg_index) =>
             <option
               key={flux_tagg.id}
-              value={flux_tagg.id}
+              value={flux_tagg_index}
             >
               {flux_tagg.name}
-            </option>)}
+            </option>)
+        }
       </Select>
 
       {/* Définition des valeurs selon les paramètre dataTags */}
@@ -108,7 +146,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                           data_tag.setUnSelected()
                       })
                     // Update only this menu
-                    setForceUpdate.toggle()
+                    refreshThis.toggle()
                   }
                 }
               >
@@ -150,7 +188,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                       }
                     })
                     // Full update
-                    setForceFullUpdate()
+                    refreshThisAndUpdateRelatedComponents()
                   }}>
                   {flux_tag.name}
                 </Checkbox>

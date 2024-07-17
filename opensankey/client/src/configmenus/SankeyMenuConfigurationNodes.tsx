@@ -61,15 +61,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     node_function
   }
 ) => {
-  const { new_data } = applicationData
-
   // Traduction
   const { t } = applicationContext
+  // Data class
+  const { new_data } = applicationData
   // Boolean used to force this component to reload
-  const [, setForceUpdate] = useBoolean()
+  const [, refreshThis] = useBoolean()
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_node_updater.current = setForceUpdate.toggle
-  // Data to display in this menu
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current = refreshThis.toggle
+
+  // Data to display in this menu ------------------------------------------------------
+
   let nodes, selected_nodes
   if (new_data.drawing_area.sankey.filter_displayed_node_selector) {
     // All availables nodes
@@ -83,6 +85,22 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
   const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
   const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
+
+  // Function used to reset menu UI -----------------------------------------------------
+
+  const refreshThisAndToggleSaving = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Refresh this menu
+    refreshThis.toggle()
+  }
+
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Update values displayed in menus for link's configuration
+    new_data.menu_configuration.updateComponentsSubmenuConfigNode()
+    // Update and update saving indicator
+    refreshThisAndToggleSaving()
+  }
 
   const ui: { [s: string]: JSX.Element } = {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
@@ -142,7 +160,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 }
               })
               // Update all menus
-              new_data.menu_configuration.updateComponentsMenuConfigNode()
+              refreshThisAndUpdateRelatedComponents()
             }}
             valueRenderer={(entries_for_selected_nodes: Type_MenuSelectionEntry[]) => {
               return entries_for_selected_nodes.length ? entries_for_selected_nodes.map(({ label }) => label + ', ') : t('Noeud.NS')
@@ -276,10 +294,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
               // Add node to selection
               new_data.drawing_area.addNodeToSelection(new_node)
-              // Trigger saving indicator
-              ComponentUpdater.updateComponenSaveInCache.current(false)
               // Update all menus
-              new_data.menu_configuration.updateComponentsMenuConfigNode()
+              refreshThisAndUpdateRelatedComponents()
             }}>
             <FaPlus />
           </Button>
@@ -299,10 +315,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               () => {
                 // Delete all selected nodes
                 applicationData.new_data.drawing_area.deleteSelectedNodes()
-                // Trigger saving indicator
-                ComponentUpdater.updateComponenSaveInCache.current(false)
                 // Update all menus
-                new_data.menu_configuration.updateComponentsMenuConfigNode()
+                refreshThisAndUpdateRelatedComponents()
               }}>
             <FaMinus />
           </Button>
@@ -316,8 +330,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               () => {
                 // Update indicator (only visible nodes / all nodes)
                 new_data.drawing_area.sankey.filter_displayed_node_selector = !new_data.drawing_area.sankey.filter_displayed_node_selector
-                // Update only this menu
-                setForceUpdate.toggle()
+                // Simple refresh of this menu
+                refreshThis.toggle()
               }}>
             {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
           </Button>
@@ -352,8 +366,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     return
                   }
                   selected_nodes[0].name = evt.target.value
-                  // Update only this menu
-                  setForceUpdate.toggle()
+                  // Refresh and toggle saving
+                  refreshThisAndToggleSaving()
                 }}
                 isDisabled={(selected_nodes.length == 1) ? false : true}
               />

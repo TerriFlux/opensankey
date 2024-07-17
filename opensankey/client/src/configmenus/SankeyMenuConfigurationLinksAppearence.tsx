@@ -145,11 +145,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const { t } = applicationContext
   // Get data
   const { data, new_data } = applicationData
-  // UseState & Ref for UI updates
-  const [ , setForceUpdate ] = useBoolean()
+  // State variable to trigger this menu refreshing
+  const [ , refreshThis ] = useBoolean()
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = setForceUpdate.toggle
+    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = refreshThis.toggle
   }
   const { ref_selected_style_link } = applicationState
   // Selected links
@@ -179,7 +179,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   /**
    * Function used to reset menu UI
    */
-  const setForceFullUpdate = () => {
+  const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update menus for node's apparence in case we use this for style
@@ -187,7 +187,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       new_data.menu_configuration.updateComponentsMenuConfigLink()
     }
     // And update this menu also
-    setForceUpdate.toggle()
+    refreshThis.toggle()
   }
 
   /**
@@ -264,7 +264,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       onChange={
         (evt) => {
           elements.forEach(element => {element.shape_is_recycling = evt.target.checked})
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}>
       <OSTooltip label={t('Flux.apparence.tooltips.recy')}>{t('Flux.apparence.recy')}
       </OSTooltip>
@@ -295,7 +295,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             onClick={
               () => {
                 elements.forEach(element => element.shape_orientation = 'hh')
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
               }
             }
           >
@@ -312,7 +312,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               'menuconfigpanel_option_button_center'}
             onClick={() => {
               elements.forEach(element => element.shape_orientation = 'vv')
-              setForceFullUpdate()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {logo_vv}
@@ -331,7 +331,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             }
             onClick={() => {
                 elements.forEach(element => element.shape_orientation = 'vh')
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
             }}
           >
             {logo_vh}
@@ -350,7 +350,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             }
             onClick={() => {
               elements.forEach(element => element.shape_orientation = 'hv')
-              setForceFullUpdate()
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {logo_hv}
@@ -366,7 +366,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       isChecked={shape_is_arrow}
       onChange={(evt) => {
         elements.forEach(element => element.shape_is_arrow = evt.target.checked)
-        setForceFullUpdate()
+        refreshThisAndUpdateRelatedComponents()
       }}
     >
       <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
@@ -394,7 +394,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             function_onChange={(value) =>
               elements.forEach(element => element.shape_arrow_size = value ?? undefined)
             }
-            function_onBlur={setForceFullUpdate}
+            function_onBlur={refreshThisAndUpdateRelatedComponents}
           />
         </OSTooltip>
       </InputGroup>
@@ -407,7 +407,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       isChecked={shape_is_curved}
       onChange={(evt) => {
         elements.forEach(element => element.shape_is_curved = evt.target.checked)
-        setForceFullUpdate()
+        refreshThisAndUpdateRelatedComponents()
       }}
     >
       <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
@@ -441,7 +441,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             if (value)
               elements.forEach(element => element.shape_starting_curve = value/100)
           }}
-          function_onBlur={setForceFullUpdate}
+          function_onBlur={refreshThisAndUpdateRelatedComponents}
         />
       </OSTooltip>
     </Box>
@@ -472,7 +472,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             if (value)
               elements.forEach(element => element.shape_ending_curve = value/100)
           }}
-          function_onBlur={setForceUpdate.toggle}
+          function_onBlur={refreshThis.toggle}
         />
       </OSTooltip>
     </Box>
@@ -502,7 +502,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               if (value)
                 elements.forEach(element => element.shape_starting_tangeant = value/100)
             }}
-            function_onBlur={setForceFullUpdate}
+            function_onBlur={refreshThisAndUpdateRelatedComponents}
           />
         </OSTooltip>
       </InputGroup>
@@ -533,7 +533,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               if (value)
                 elements.forEach(element => element.shape_ending_tangeant = value/100)
             }}
-            function_onBlur={setForceFullUpdate}
+            function_onBlur={refreshThisAndUpdateRelatedComponents}
           />
         </OSTooltip>
       </InputGroup>
@@ -556,7 +556,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         value={shape_color}
         onChange={evt => {
           elements.forEach(element => element.shape_color = evt.target.value)
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}
       />
     </Box>
@@ -583,7 +583,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             stepper={true}
             function_onChange={(value) =>
               elements.forEach(element => element.shape_opacity = value ?? undefined)}
-            function_onBlur={setForceFullUpdate}
+            function_onBlur={refreshThisAndUpdateRelatedComponents}
           />
         </OSTooltip>
       </InputGroup>
@@ -596,7 +596,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       isChecked={shape_is_dashed}
       onChange={(evt) => {
         elements.forEach(element => element.shape_is_dashed = evt.target.checked)
-        setForceFullUpdate()
+        refreshThisAndUpdateRelatedComponents()
       }}>
       <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
         {t('Flux.apparence.hach') + ' '}
@@ -628,7 +628,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         isChecked={value_label_is_visible}
         onChange={(evt) => {
           elements.forEach(element => element.value_label_is_visible = evt.target.checked)
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb') + ' '}
@@ -657,7 +657,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             stepper={true}
             function_onChange={(value) =>
               elements.forEach(element => element.value_label_scientific_precision = value ?? undefined)}
-            function_onBlur={setForceFullUpdate}
+            function_onBlur={refreshThisAndUpdateRelatedComponents}
           />
         </OSTooltip>
       </Box>
@@ -672,7 +672,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             element.value_label_custom_digit = false
             element.value_label_to_precision = evt.target.checked
           })
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.toPrecision')}>
           {t('Flux.label.toPrecision') + ' '}
@@ -701,7 +701,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             element.value_label_custom_digit = evt.target.checked
             element.value_label_to_precision = false
           })
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
           {t('Flux.label.custom_digit') + ' '}
@@ -728,7 +728,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               stepper={true}
               function_onChange={(value) =>
                 elements.forEach(element => element.value_label_nb_digit = value ?? undefined)}
-              function_onBlur={setForceFullUpdate}
+              function_onBlur={refreshThisAndUpdateRelatedComponents}
             />
           </OSTooltip>
         </Box></> : <></>}
@@ -740,7 +740,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         isChecked={value_label_unit_visible}
         onChange={(evt) => {
           elements.forEach(element => element.value_label_unit_visible = evt.target.checked)
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
           {t('Flux.label.l_u_v') + ' '}
@@ -773,7 +773,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                   value={value_label_unit}
                   onChange={evt => {
                     elements.forEach(element => element.value_label_unit = evt.target.value)
-                    setForceFullUpdate()
+                    refreshThisAndUpdateRelatedComponents()
                   }}
                 />
               </OSTooltip>
@@ -802,7 +802,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               }
               onClick={() => {
                 elements.forEach(element => element.value_label_color = 'black')
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
               }}
             >
               {t('Flux.label.len')}
@@ -825,7 +825,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               }
               onClick={() => {
                 elements.forEach(element => element.value_label_color = 'white')
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
               }}
             >
               {t('Flux.label.lb')}
@@ -848,7 +848,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               }
               onClick={() => {
                 elements.forEach(element => element.value_label_color = 'color')
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
               }}
             >
               {t('Flux.label.lec')}
@@ -873,7 +873,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 elements.forEach(element => element.value_label_font_family = evt.target.value)
-                setForceFullUpdate()
+                refreshThisAndUpdateRelatedComponents()
             }}
           >
             {data.display_style.font_family.map((d) => {
@@ -893,7 +893,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             unit_text='pixels'
             function_onChange={(value) =>
               elements.forEach(element => element.value_label_font_size = value ?? undefined)}
-            function_onBlur={setForceFullUpdate}
+            function_onBlur={refreshThisAndUpdateRelatedComponents}
           />
         </Box>
 
@@ -913,7 +913,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               element.value_label_orthogonal_position = (orth_pos === 'frozen') ? 'middle' : orth_pos
             })
             selected_links.forEach(link => link.deleteRelativeLabelPos())
-            setForceFullUpdate()
+            refreshThisAndUpdateRelatedComponents()
           }}
         >
           <OSTooltip label={t('Flux.tooltips.ajust_label')}>
@@ -955,7 +955,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                         element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      setForceFullUpdate()
+                      refreshThisAndUpdateRelatedComponents()
                     }}>
                   <FaAlignLeft />
                 </Button>
@@ -980,7 +980,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                         element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      setForceFullUpdate()
+                      refreshThisAndUpdateRelatedComponents()
                     }}>
                   <FaAlignCenter />
                 </Button>
@@ -1004,7 +1004,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                         element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      setForceFullUpdate()
+                      refreshThisAndUpdateRelatedComponents()
                     }}>
                   <FaAlignRight />
                 </Button>
@@ -1035,7 +1035,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                       element.value_label_orthogonal_position = 'below'
                     })
                     selected_links.forEach(link => link.deleteRelativeLabelPos())
-                    setForceFullUpdate()
+                    refreshThisAndUpdateRelatedComponents()
                   }}
                 >
                   {svg_label_bottom}
@@ -1064,7 +1064,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                       element.value_label_orthogonal_position = 'middle'
                     })
                     selected_links.forEach(link => link.deleteRelativeLabelPos())
-                    setForceFullUpdate()
+                    refreshThisAndUpdateRelatedComponents()
                   }}
                 >
                   {svg_label_center}
@@ -1094,7 +1094,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                         element.value_label_orthogonal_position = 'above'
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      setForceFullUpdate()
+                      refreshThisAndUpdateRelatedComponents()
                     }}>
                   {svg_label_top}
                 </Button>
@@ -1120,7 +1120,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             }
           })
           selected_links.forEach(link => link.deleteRelativeLabelPos())
-          setForceFullUpdate()
+          refreshThisAndUpdateRelatedComponents()
         }}>
         <OSTooltip label={t('Flux.label.tooltips.acf')}>
           {t('Flux.label.acf') + ' '}
@@ -1167,7 +1167,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                     selected_links.map(link => {
                       link.style = style
                     })
-                    setForceFullUpdate()
+                    refreshThisAndUpdateRelatedComponents()
                   }}
                 >
                   {style.id}
@@ -1182,7 +1182,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           variant='menuconfigpanel_option_button'
           onClick={() => {
             selected_links.forEach(link => link.resetAttributes())
-            setForceFullUpdate()
+            refreshThisAndUpdateRelatedComponents()
           }}
         >
           <FaUndo />
@@ -1216,7 +1216,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             isDisabled={selected_links.length === 0}
             onClick={() => {
               selected_links.forEach(link => link.increaseDisplayOrder())
-              setForceFullUpdate()
+              refreshThisAndUpdateRelatedComponents()
             }}>
             <FaAngleUp />
           </Button>
@@ -1229,7 +1229,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             className='btn_menu_config'
             onClick={() => {
               selected_links.forEach(link => link.setTopDisplayOrder())
-              setForceFullUpdate()
+              refreshThisAndUpdateRelatedComponents()
             }}>
             <FaAngleDoubleUp />
           </Button>
@@ -1243,7 +1243,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             className='btn_menu_config'
             onClick={() => {
               selected_links.forEach(link => link.decreaseDisplayOrder())
-              setForceFullUpdate()
+              refreshThisAndUpdateRelatedComponents()
             }}>
             <FaAngleDown />
           </Button>
@@ -1256,7 +1256,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             className='btn_menu_config'
             onClick={() => {
               selected_links.forEach(link => link.setDownDisplayOrder())
-              setForceFullUpdate()
+              refreshThisAndUpdateRelatedComponents()
             }}>
             <FaAngleDoubleDown />
           </Button>
