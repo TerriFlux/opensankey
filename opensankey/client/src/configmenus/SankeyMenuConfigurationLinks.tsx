@@ -37,19 +37,15 @@ import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodes
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   {
     applicationData,
-    applicationState,
     applicationContext,
     menu_config_link_data,
     menu_config_link_attr,
-    link_function,
-    ComponentUpdater,
-    node_function
   }
 ) => {
-  // Old TODO menage
-  const { data, new_data } = applicationData
   // Traduction
   const { t } = applicationContext
+  // Old TODO menage
+  const { data, new_data } = applicationData
   // Boolean used to force this component to reload
   const [, setForceUpdate] = useBoolean()
   // Link this menu's update function
