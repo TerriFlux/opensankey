@@ -2214,6 +2214,7 @@ export class Class_NodeElement extends Class_Element {
     const only_one_activated = (activ_level_taggs.length === 1)
     // Is only primary level activated
     const only_primaire_activated = (
+      this.drawing_area.sankey.node_taggs_dict['Primaire'] && 
       this.drawing_area.sankey.node_taggs_dict['Primaire'].activated &&
       only_one_activated)
     const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
