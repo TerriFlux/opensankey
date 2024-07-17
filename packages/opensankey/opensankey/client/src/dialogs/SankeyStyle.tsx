@@ -168,12 +168,13 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
     }
   </Box>
 
-  return MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_style_node',
-    content, pointer_pos,
-    t('Menu.esn')
-  )
+  return <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_style_node'}
+    content={content}
+    pointer_pos={pointer_pos}
+    title={t('Menu.esn')}
+  />
 }
 
 
@@ -319,10 +320,11 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
     }
   </Box>
 
-  return MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_style_link',
-    content, pointer_pos,
-    t('Menu.esf')
-  )
+  return <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_style_link'}
+    content={content}
+    pointer_pos={pointer_pos}
+    title={t('Menu.esf')}
+  />
 }

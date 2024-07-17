@@ -19,8 +19,6 @@ import {
   SankeyLink,
   SankeyNode
 } from './types/Types'
-/*************************************************************************************************/
-import SankeyDraw from './draw/SankeyDraw'
 import {
   NodeVisibleOnsSvg,
   resizeDrawingArea
@@ -32,9 +30,7 @@ import { NodeTooltipsContent } from './draw/SankeyTooltip'
 import {
   GetLinkValue,
   LinkVisible,
-  NodeDisplayed,
-  windowSankey
-} from './configmenus/SankeyUtils'
+  NodeDisplayed} from './configmenus/SankeyUtils'
 import { ToolbarBuilder } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
@@ -53,7 +49,6 @@ import {
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
 import { DeleteGNodes } from './draw/SankeyDrawNodes'
-import { Class_ApplicationData } from './types/ApplicationData'
 
 
 declare const window: Window &
@@ -432,7 +427,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         applicationData.new_data?.drawing_area?.reset();
   })
   /*************************************************************************************************/
-
+  console.trace('in sankey app')
   return <ChakraProvider theme={opensankey_theme}>
     <div id='sankey_app' style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
@@ -536,35 +531,21 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <ContextMenuNode
         applicationContext = {applicationContext}
         applicationData = {applicationData}
-        applicationState = {applicationState}
-        contextMenu = {contextMenu}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
         agregation = {agregation}
-        node_function={node_function}
-        link_function={link_function}
-        ComponentUpdater={ComponentUpdater}
         additional_context_element_menu = {additionalMenus.additional_context_element_menu}
         additional_context_element_other = {additionalMenus.additional_context_element_other}
       />
       <ContextMenuLink
         applicationContext = {applicationContext}
         applicationData = {applicationData}
-        applicationState = {applicationState}
-        contextMenu = {contextMenu}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
-        node_function={node_function}
-        link_function={link_function}
         ComponentUpdater={ComponentUpdater}
       />
       <ContextMenuZdd
         applicationContext = {applicationContext}
         applicationData = {applicationData}
-        contextMenu = {contextMenu}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
-        node_function={node_function}
-        link_function={link_function}
-        reDrawLegend={applicationDraw.reDrawLegend}
-        ComponentUpdater={ComponentUpdater}
       />
       <ContextLegendTags
         applicationContext = {applicationContext}

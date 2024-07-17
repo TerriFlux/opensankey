@@ -937,13 +937,13 @@ export const Modale_resolution_png: Modale_resolution_pngFType = (
     </Button>
   </>
 
-  return MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_resolution_save_png',
-    content,
-    pointer_pos,
-    t('Menu.setResolutionPNG')
-  )
+  return <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_resolution_save_png'}
+    content={content}
+    pointer_pos={pointer_pos}
+    title={t('Menu.setResolutionPNG')}
+  />
 }
 
 const clickSavePNG = (
@@ -1151,12 +1151,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
     </Text>
   </>
 
-  const modal_support = MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_modale_support',
-    content_support,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.c_support'))
+  const modal_support = <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_modale_support'}
+    content={content_support}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.c_support')}
+    />
 
   const data_tags = Object.assign({}, applicationData.data.dataTags)
   const show_data = Object.values(data_tags).length > 0
@@ -1468,12 +1469,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
 }
 
 
-export const MenuDraggable: MenuDraggableFType = (
+export const MenuDraggable: FunctionComponent<MenuDraggableFType> = ({
   dict_hook_ref_setter_show_dialog_components,
   dialog_name,
-  content: JSX.Element | JSX.Element[],
-  pointer_pos: { current: number[] },
-  title: string,
+  content,
+  pointer_pos,
+  title}
 ) => {
   const [display_menu, set_display_menu] = useState(false)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
