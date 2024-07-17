@@ -16,24 +16,20 @@ const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''
 export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   applicationContext,
   applicationData,
-  contextMenu,
   dict_hook_ref_setter_show_dialog_components,
-  node_function,
-  link_function,
-  reDrawLegend,
-  ComponentUpdater
 }) => {
 
-  const [show_context_zdd, set_show_context_zdd] = useState(false)
-  contextMenu.showContextZDDRef.current = [show_context_zdd, set_show_context_zdd]
-  const { data, set_data } = applicationData
+
+  const {new_data } = applicationData
   const { t } = applicationContext
-  const { pointer_pos } = contextMenu
-  const { RedrawNodes } = node_function
-  const { RedrawLinks } = link_function
-  const [node_hspace, set_node_hspace] = useState(data.h_space)
-  const [node_vspace, set_node_vspace] = useState(data.v_space)
+
+  console.log(new_data.drawing_area.is_drawing_area_contextualised)
   const [forceUpdate, setForceUpdate] = useState(false)
+
+  new_data.menu_configuration.update_components_menu_context_DA.current=()=>setForceUpdate(!forceUpdate)
+
+  const indicateSankeyToSaveInCache=()=>new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
   const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
     d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
     d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
@@ -42,18 +38,18 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
   let style_c_zdd = '0px 0px auto auto'
   let is_top = true
-  let pos_x = pointer_pos.current[0] + 10
-  let pos_y = pointer_pos.current[1] - 20
+  let pos_x = new_data.drawing_area.pointer_pos[0] + 10
+  let pos_y = new_data.drawing_area.pointer_pos[1] - 20
 
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
-  if (show_context_zdd) {
-    if (pointer_pos.current[0] + 450 > window.innerWidth) {
-      pos_x = pointer_pos.current[0] - 455
+  if (new_data.drawing_area.is_drawing_area_contextualised) {
+    if (new_data.drawing_area.pointer_pos[0] + 450 > window.innerWidth) {
+      pos_x = new_data.drawing_area.pointer_pos[0] - 455
     }
 
-    if (pointer_pos.current[1] + 330 > window.innerHeight) {
-      pos_y = pointer_pos.current[1] - 310
+    if (new_data.drawing_area.pointer_pos[1] + 330 > window.innerHeight) {
+      pos_y = new_data.drawing_area.pointer_pos[1] - 310
       is_top = false
     }
     style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
@@ -62,32 +58,28 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   const button_bg_color = <Button variant='contextmenu_button'>
     <Input hidden type='color' id='color_bg_zdd' name='color_bg_zdd'
       onChange={(evt) => {
-        data.couleur_fond_sankey = evt.target.value
-        d3.select('#svg').style('background-color', data.couleur_fond_sankey)
+        new_data.drawing_area.color=evt.target.value
       }}
-      onBlur={() => set_data({ ...data })}
     >
     </Input>
     <label htmlFor='color_bg_zdd' style={{ width: '100%', margin: 0 }}>{t('Menu.BgC')}</label>
   </Button>
 
   const button_bg_grid = <><Button variant='contextmenu_button' onClick={() => {
-    data.grid_visible = !data.grid_visible
+    new_data.drawing_area.grid_visible=!new_data.drawing_area.grid_visible
     setForceUpdate(!forceUpdate)
-    ComponentUpdater.updateComponenSaveInCache.current(false)
-    DrawGrid(data)
-  }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
+    indicateSankeyToSaveInCache()
+  }}>{t('MEP.TCG')}{checked(new_data.drawing_area.grid_visible)}</Button>
   </>
   const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-    const n_keys = Object.keys(data.nodes)
-    const size_color = n_keys.length
+   
+    const size_color = new_data.drawing_area.sankey.nodes_list.length
 
     for (const i in d3.range(size_color)) {
-      AssignNodeLocalAttribute(data.nodes[n_keys[i]], 'color', (d3.color(color_selected(+i / size_color))?.formatHex() as string))
+      new_data.drawing_area.sankey.nodes_list[i].shape_color=(d3.color(color_selected(+i / size_color))?.formatHex() as string)
     }
-    RedrawNodes(Object.values(applicationData.display_nodes))
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    indicateSankeyToSaveInCache()
   }}>{t('Menu.rand_node_color')}</Button>
   </>
 
@@ -100,12 +92,11 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
       <NumberInput
         min={0}
-        value={data.user_scale}
+        value={new_data.drawing_area.scale}
         onChange={evt => {
-          data.user_scale = +evt
-          RedrawNodes(Object.values(applicationData.display_nodes))
-          RedrawLinks(Object.values(applicationData.display_links))
-          ComponentUpdater.updateComponenSaveInCache.current(false)
+          new_data.drawing_area.scale=+evt
+          new_data.drawing_area.sankey.nodes_list.forEach(node=>node.draw())
+          indicateSankeyToSaveInCache()
           setForceUpdate(!forceUpdate)
         }}>
         <NumberInputField/>
@@ -128,18 +119,16 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
         <NumberInput
           variant='menuconfigpanel_option_numberinput_with_right_addon'
           min={0}
-          value={node_hspace}
+          value={new_data.drawing_area.horizontal_spacing}
           onChange={evt => {
-            set_node_hspace(+evt)
-            data.h_space = +evt
-            ComponentUpdater.updateComponenSaveInCache.current(false)
+            new_data.drawing_area.horizontal_spacing = +evt
+            indicateSankeyToSaveInCache()
           }}>
           <NumberInputField/>
         </NumberInput>
       </Box>
 
       {/* Set vertical value for automatic positionning */}
-
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
           {t('MEP.Vertical')}
@@ -148,11 +137,10 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
         <NumberInput
           variant='menuconfigpanel_option_numberinput_with_right_addon'
           min={0}
-          value={node_vspace}
+          value={new_data.drawing_area.vertical_spacing}
           onChange={evt => {
-            set_node_vspace(+evt)
-            data.h_space = +evt
-            ComponentUpdater.updateComponenSaveInCache.current(false)
+            new_data.drawing_area.vertical_spacing = +evt
+            indicateSankeyToSaveInCache()
           }}>
           <NumberInputField/>
         </NumberInput>
@@ -162,13 +150,11 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
       <Button variant='contextmenu_button'
         onClick={() => {
           applicationData.function_on_wait.current = () => {
-            applicationData.data.v_space = node_vspace
-            ComputeAutoSankey(applicationData, node_hspace, false)
-            Object.values(applicationData.display_nodes).forEach(n => {
-              d3.select('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
-            })
-            RedrawLinks(Object.values(applicationData.display_links))
-            ComponentUpdater.updateComponenSaveInCache.current(false)
+
+            // TODO re-implment function when computeautosankey is re-implemented with classes
+            // ComputeAutoSankey(applicationData, node_hspace, false)
+            
+            indicateSankeyToSaveInCache()
           }
           dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current({ success: 'Layout Updated' })
         }}>
@@ -180,23 +166,20 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   // Item to display or mask the legend
   const button_mask_leg = <Button variant='contextmenu_button'
     onClick={() => {
-      data.mask_legend = !data.mask_legend
-      reDrawLegend()
-      ComponentUpdater.updateComponenSaveInCache.current(false)
+      new_data.drawing_area.legend.masked=!new_data.drawing_area.legend.masked
+      indicateSankeyToSaveInCache()
       setForceUpdate(!forceUpdate)
     }}>
-    {data.mask_legend ? t('MEP.hide_leg') : t('MEP.show_leg')}
+    {new_data.drawing_area.legend.masked ? t('MEP.hide_leg') : t('MEP.show_leg')}
   </Button>
 
   const button_an = <Button variant='contextmenu_button'
     onClick={() => {
-      arrangeNodes(data)
-      RedrawNodes(Object.values(applicationData.display_nodes))
-      RedrawLinks(Object.values(applicationData.display_links))
-      ComponentUpdater.updateComponenSaveInCache.current(false)
-      Object.values(applicationData.display_nodes).filter(n => n.position != 'relative').forEach(n => {
-        d3.select('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
-      })
+      // TODO re-implement arrange nodes with classes
+      // arrangeNodes(data)
+    
+      indicateSankeyToSaveInCache()
+    
     }}>
     {t('MEP.AN')}
   </Button>
@@ -215,7 +198,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
       } else if (document.exitFullscreen) {
         document.exitFullscreen()
       }
-      set_show_context_zdd(false)
+      new_data.drawing_area.is_drawing_area_contextualised = false
     }}
   >
     {full}
@@ -224,12 +207,12 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   // Item to open a draggable modal with the configuration menu of the draw area
   const button_open_layout = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(true)
-    set_show_context_zdd(false)
+    new_data.drawing_area.is_drawing_area_contextualised = false
   }} variant='contextmenu_button'>
     {t('Menu.MEP')} {icon_open_modal}
   </Button>
 
-  return show_context_zdd ? <Box id="context_zdd_pop_over" layerStyle='context_menu'
+  return new_data.drawing_area.is_drawing_area_contextualised ? <Box id="context_zdd_pop_over" layerStyle='context_menu'
     className={'context_popover ' + (is_top ? '' : 'at_bot')}
 
     style={{ maxWidth: '100%', position: 'absolute', inset: style_c_zdd }}>
