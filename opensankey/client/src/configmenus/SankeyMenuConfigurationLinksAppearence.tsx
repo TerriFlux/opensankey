@@ -1,4 +1,4 @@
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FunctionComponent } from 'react'
 import {
   FaAlignLeft,
   FaAlignCenter,
@@ -21,16 +21,10 @@ import {
   Checkbox,
   Input,
   InputGroup,
-  InputRightAddon,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   Select,
   useBoolean,
 } from '@chakra-ui/react'

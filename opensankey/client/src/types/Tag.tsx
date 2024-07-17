@@ -43,6 +43,14 @@ export class Class_Tag {
   // Boolean
   private _is_selected: boolean = true
 
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid cross calls of delete() method
+   * @private
+   * @memberof Class_Tag
+   */
+  private _is_currently_deleted = false
+
   // Constructor ========================================================================
 
   constructor(id: string, name: string, group: Class_TagGroup) {
@@ -57,13 +65,19 @@ export class Class_Tag {
    * @memberof Class_Tag
    */
   public delete() {
-    // Unref this tag from all references
-    Object.values(this._references)
-      .forEach(element => {
-        element.removeTag(this)
-      })
-    this._references = {}
-    // Garbage collection will do the rest
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Unref this from tag group
+      this.group.removeTag(this)
+      // Unref this tag from all references
+      Object.values(this._references)
+        .forEach(element => {
+          element.removeTag(this)
+        })
+      this._references = {}
+      // Garbage collection will do the rest
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -84,6 +98,34 @@ export class Class_Tag {
       delete this._references[_.id]
       _.removeTag(this)
     }
+  }
+
+  public updateReferences() {
+    Object.values(this._references)
+      .forEach(element => {
+        element.draw()
+      })
+  }
+
+  public setSelected() {
+    // Set attributes
+    this._is_selected = true
+    // Redraw all related elements
+    this.updateReferences()
+  }
+
+  public setUnSelected() {
+    // Set attributes
+    this._is_selected = false
+    // Redraw all related elements
+    this.updateReferences()
+  }
+
+  public toogleSelected() {
+    // Set attributes
+    this._is_selected = !this._is_selected
+    // Redraw all related elements
+    this.updateReferences()
   }
 
   public toJSON() {
@@ -115,11 +157,14 @@ export class Class_Tag {
   public set name(value: string) { this._name = value }
 
   public get color() { return this._color }
-  public set color(value: string) { this._color = value }
+  public set color(value: string) {
+    // Set attributes
+    this._color = value
+    // Redraw all related elements
+    this.updateReferences()
+  }
 
   // Selection
-  public setSelected() { this._is_selected = true }
-  public setUnSelected() { this._is_selected = false }
   public get is_selected() { return this._is_selected }
 
   public get group() { return this._group }
@@ -146,6 +191,13 @@ export class Class_TagGroup {
   private _show_legend: boolean = false
   private _banner: tag_banner_type = 'one'
 
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid cross calls of delete() method
+   * @private
+   * @memberof Class_TagGroup
+   */
+  private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
   /**
@@ -166,13 +218,17 @@ export class Class_TagGroup {
    * @memberof Class_Tag
    */
   public delete() {
-    // Unref this tag from all references
-    Object.values(this._tags)
-      .forEach(element => {
-        element.delete()
-      })
-    this._tags = {}
-    // Garbage collection will do the rest ...
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Delete all tags properly
+      Object.values(this._tags)
+        .forEach(tag => {
+          tag.delete()
+        })
+      this._tags = {}
+      // Garbage collection will do the rest ...
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -199,6 +255,11 @@ export class Class_TagGroup {
       _.delete()
       delete this._tags[_.id]
     }
+  }
+
+  public updateTagsReferences() {
+    Object.values(this._tags)
+      .forEach(tag => tag.updateReferences())
   }
 
   public toJSON() {

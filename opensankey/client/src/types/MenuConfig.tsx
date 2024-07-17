@@ -75,8 +75,13 @@ export class Class_MenuConfig {
   // Update component MenuConfigurationLinksTooltip
   private _update_components_menu_config_link_tooltip: MutableRefObject<(() => void)[]>
 
+
+  // Update component SankeySettingsEditionElementTags
+  private _ref_to_menu_config_tags_updater: MutableRefObject<() => void>
+
+
   // Update component ToolbarBuilder
-  private _updateComponentToolbar: MutableRefObject<() => void>
+  private _ref_to_toolbar_updater: MutableRefObject<() => void>
 
   // Update component Menu
   private _updateComponentMenu: MutableRefObject<() => void>
@@ -129,11 +134,14 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_link_tags_updater = useRef(() => null)
     this._update_components_menu_config_link_tooltip = useRef([] as (() => void)[])
 
+    // Tags
+    this._ref_to_menu_config_tags_updater = useRef(() => null)
+
     // Toolbar
     this._ref_to_save_in_cache_indicator = useRef((_:boolean) => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateComponentMenu = useRef(() => null)
-    this._updateComponentToolbar = useRef(() => null)
+    this._ref_to_toolbar_updater = useRef(() => null)
     this._updateToolbar = useRef(() => null)
   }
 
@@ -191,6 +199,7 @@ export class Class_MenuConfig {
    * Re-render all menus for node config
    * - SankeyNodeEdition
    * - OpenSankeyConfigurationNodesAttributes
+   * - OpenSankeyConfigurationNodesTags
    * - SankeyMenuConfigurationNodesIO
    * - SankeyMenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
@@ -203,6 +212,7 @@ export class Class_MenuConfig {
   /**
    * Re-render all submenus for node config
    * - OpenSankeyConfigurationNodesAttributes
+   * - OpenSankeyConfigurationNodesTags
    * - SankeyMenuConfigurationNodesIO
    * - SankeyMenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
@@ -216,6 +226,10 @@ export class Class_MenuConfig {
 
   /**
    * Re-render all menus for link config
+   * - SankeyMenuConfigurationLinks
+   * - MenuConfigurationLinksData
+   * - MenuConfigurationLinksAppearence
+   * - MenuConfigurationLinksTags
    * @memberof Class_MenuConfig
    */
   public updateComponentsMenuConfigLink() {
@@ -225,6 +239,9 @@ export class Class_MenuConfig {
 
   /**
    * Re-render all submenus for link config
+   * - MenuConfigurationLinksData
+   * - MenuConfigurationLinksAppearence
+   * - MenuConfigurationLinksTags
    * @memberof Class_MenuConfig
    */
   public updateComponentsSubmenuConfigLink() {
@@ -232,6 +249,13 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_link_apparence_updater.current()
     this._ref_to_menu_config_link_tags_updater.current()
     // this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
+  }
+
+  public updateComponentsRelatedToTags() {
+    this._ref_to_menu_config_node_tags_updater.current()
+    this._ref_to_menu_config_link_tags_updater.current()
+    this._ref_to_menu_config_link_data_updater.current()
+    this.ref_to_toolbar_updater.current()
   }
 
   /**
@@ -312,13 +336,19 @@ export class Class_MenuConfig {
     return this._update_components_menu_config_link_tooltip
   }
 
+  // Tags menus -------------------------------------------------------------------------
+
+  public get ref_to_menu_config_tags_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_tags_updater
+  }
+
   // Toolbar -----------------------------------------------------------------------------
   public get ref_to_save_in_cache_indicator(): MutableRefObject<(b: boolean) => void> {
     return this._ref_to_save_in_cache_indicator
   }
 
-  public get updateComponentToolbar(): MutableRefObject<() => void> {
-    return this._updateComponentToolbar
+  public get ref_to_toolbar_updater(): MutableRefObject<() => void> {
+    return this._ref_to_toolbar_updater
   }
 
 

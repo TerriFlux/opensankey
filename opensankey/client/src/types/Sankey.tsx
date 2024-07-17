@@ -700,6 +700,7 @@ export class Class_Sankey {
     if (!macro_tag_group[id]) {
       const tag_group = new Class_TagGroup(id, name)
       macro_tag_group[id] = tag_group
+      // TODO redraw all drawing area (or just legend ?)
       return tag_group
     }
     else {
@@ -731,6 +732,7 @@ export class Class_Sankey {
     const macro_tag_group = this.getTagGroupsAsDict(type_group)
     if (macro_tag_group[id] !== undefined) {
       macro_tag_group[id].delete()
+      // TODO redraw all drawing area (or just legend ?)
       delete macro_tag_group[id]
     }
   }

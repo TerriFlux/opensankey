@@ -827,22 +827,16 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='node_taggs'
-      ComponentUpdater={ComponentUpdater}
-      reDrawLegend={applicationDraw.reDrawLegend}
     />,
     <SankeySettingsEditionElementTags
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='flux_taggs'
-      ComponentUpdater={ComponentUpdater}
-      reDrawLegend={applicationDraw.reDrawLegend}
     />,
     <SankeySettingsEditionElementTags
       applicationContext={applicationContext}
       applicationData={applicationData}
       elementTagNameProp='data_taggs'
-      ComponentUpdater={ComponentUpdater}
-      reDrawLegend={applicationDraw.reDrawLegend}
     />,
     menu_configuration_nodes_attributes,
     config_link_data,
