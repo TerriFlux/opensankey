@@ -53,8 +53,12 @@ export class Class_Tag {
 
   // Constructor ========================================================================
 
-  constructor(name: string, group: Class_TagGroup) {
-    this._id = makeId(name)
+  constructor(
+    name: string,
+    group: Class_TagGroup,
+    id: string | undefined = undefined
+  ) {
+    this._id = id ?? makeId(name)
     this._name = name
     this._group = group
     this._color
@@ -234,8 +238,11 @@ export class Class_TagGroup {
 
   // PUBLIC METHODS =====================================================================
 
-  public addTag(name: string) {
-    const tag = new Class_Tag(name, this)
+  public addTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = new Class_Tag(name, this, id)
     this._tags[tag.id] = tag
     this._tag_count = this._tag_count + 1
     return tag
@@ -285,7 +292,7 @@ export class Class_TagGroup {
     this._banner = json_object['banner'] ?? 'one'
 
     Object.entries(json_object['tags']).forEach(ent_tags => {
-      const new_tag = this.addTag((ent_tags[1] as { name: string }).name)
+      const new_tag = this.addTag((ent_tags[1] as { name: string }).name, ent_tags[0])
       new_tag.fromJSON((ent_tags[1] as { [x: string]: any }))
     })
 

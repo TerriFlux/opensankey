@@ -1,4 +1,4 @@
-import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContextType, applicationDataType, applicationStateType } from '../../types/Types'
+import { SankeyNode, applicationContextType, applicationDataType } from '../../types/Types'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
