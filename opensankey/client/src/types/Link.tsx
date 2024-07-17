@@ -662,6 +662,24 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
+  protected eventSimpleRMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    if (this.drawing_area.isInSelectionMode() ) {
+      event.preventDefault()
+      this.drawing_area.pointer_pos=[event.pageX,event.pageY]
+
+      if (!this.drawing_area.selected_links_list.includes(this)) {
+        this.drawing_area.addLinkToSelection(this)
+      } else {
+      }
+      this.menu_config.updateComponentsMenuConfigLink()
+
+      this.drawing_area.link_contextualied = this
+      this.menu_config.update_components_menu_context_link.current()
+    }
+
+  }
   // PRIVATE METHODS ====================================================================
 
   /**

@@ -536,13 +536,13 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     </TabPanels>
 
   </Tabs>
-  const dragLayout= MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_apply_layout',
-    content_modal_layout,
-    {current:[window.innerWidth/4,window.innerHeight/4]},
-    t('Menu.Transformation.title')
-  )
+  const dragLayout= <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_apply_layout'}
+    content={content_modal_layout}
+    pointer_pos={{current:[window.innerWidth/4,window.innerHeight/4]}}
+    title={t('Menu.Transformation.title')}
+  />
   return dragLayout
 
 }
@@ -690,7 +690,13 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
       >{t('Menu.ouvrir')}</Button>
     </Box>
   </Box>
-  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'))
+  return <MenuDraggable
+   dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+   dialog_name={'ref_setter_show_excel_dialog'}
+   content={content}
+   pointer_pos={pointer_pos}
+   title={t('Menu.open_excel_file')}
+  />
 
 }
 

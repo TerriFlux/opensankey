@@ -565,17 +565,17 @@ export const moduleDialogs : module_dialogsType = (
   menu_configuration_nodes_attributes,
   reDrawLegend
 ) => {return [
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_node_apparence',
-    menu_configuration_nodes_attributes,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence'),
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_node_io',
-    <SankeyMenuConfigurationNodesIO
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_node_apparence'}
+    content={menu_configuration_nodes_attributes}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_node_io'}
+    content={<SankeyMenuConfigurationNodesIO
       applicationContext={applicationContext}
       applicationData={applicationData}
       applicationState={applicationState}
@@ -583,38 +583,38 @@ export const moduleDialogs : module_dialogsType = (
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       menu_for_modal={true}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_link_data',
-    <MenuConfigurationLinksData
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_link_data'}
+    content={<MenuConfigurationLinksData
       applicationData={applicationData}
       applicationContext={applicationContext}
       additional_data_element={additional_menus.additional_data_element}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_link_appearence',
-    <MenuConfigurationLinksAppearence
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_link_appearence'}
+    content={<MenuConfigurationLinksAppearence
       applicationData={applicationData}
       applicationState={applicationState}
       applicationContext={applicationContext}
       additional_link_appearence_items={additional_menus.additional_link_appearence_items}
       menu_for_style={false}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_layout',
-    <OpenSankeyMenuConfigurationLayout
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_layout'}
+    content={<OpenSankeyMenuConfigurationLayout
       applicationData={applicationData}
       applicationState={applicationState}
       applicationContext={applicationContext}
@@ -623,54 +623,54 @@ export const moduleDialogs : module_dialogsType = (
       reDrawLegend={reDrawLegend}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.MEP'),
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_node_tooltip',
-    <SankeyMenuConfigurationNodesTooltip
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.MEP')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_node_tooltip'}
+    content={<SankeyMenuConfigurationNodesTooltip
       applicationData={applicationData}
       applicationContext={applicationContext}
       menu_for_modal = {true}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IS')
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_node_tags',
-    <SankeyMenuConfigurationNodesTags
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IS')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_node_tags'}
+    content={<SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
       menu_for_modal={true}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Menu.Etiquettes')
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_link_tags',
-    <MenuConfigurationLinksTags
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Menu.Etiquettes')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_link_tags'}
+    content={<MenuConfigurationLinksTags
       applicationContext={applicationContext}
       applicationData={applicationData}
       menu_for_modal={true}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.Flux')+' '+applicationContext.t('Menu.Etiquettes')
-  ),
-  MenuDraggable(
-    dict_hook_ref_setter_show_dialog_components,
-    'ref_setter_show_menu_link_tooltip',
-    <MenuConfigurationLinksTooltip
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.Flux')+' '+applicationContext.t('Menu.Etiquettes')}
+  />,
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_menu_link_tooltip'}
+    content={<MenuConfigurationLinksTooltip
       applicationData={applicationData}
       applicationContext={applicationContext}
       menu_for_modal={true}
-    />,
-    contextMenu.pointer_pos,
-    applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB'),
-  )
+    />}
+    pointer_pos={contextMenu.pointer_pos}
+    title={applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB')}
+  />
 ]}
 
 // Visibility states for the modal dialogs

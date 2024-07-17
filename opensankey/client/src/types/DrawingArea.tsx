@@ -184,6 +184,17 @@ export class Class_DrawingArea {
   private _horizontal_spacing: number = 200
   private _vertical_spacing: number = 50
 
+  // Context menu
+  private _pointer_pos: [number, number] = [0, 0]
+
+  private _node_contextualied: Class_NodeElement | undefined = undefined
+  private _link_contextualied: Class_LinkElement | undefined = undefined
+
+  private _is_drawing_area_contextualised: boolean = false
+
+
+
+
   // Zoom & positioning of drawing_area
   // if we want to move manually the drawing_area, we should use this variable (see areaFitHorizontally && areaFitVertically)
   private zoomListener = d3.zoom<SVGSVGElement, unknown>()
@@ -402,6 +413,21 @@ export class Class_DrawingArea {
   public set vertical_spacing(_: number) { this._vertical_spacing = _ }
 
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
+
+  // Node Context menu
+  public get node_contextualied(): Class_NodeElement | undefined { return this._node_contextualied }
+  public set node_contextualied(value: Class_NodeElement | undefined) { this._node_contextualied = value }
+
+  // Link Context menu
+  public get link_contextualied(): Class_LinkElement | undefined { return this._link_contextualied }
+  public set link_contextualied(value: Class_LinkElement | undefined) { this._link_contextualied = value }
+
+  // Mouve pos when we right click an element
+  public get pointer_pos(): [number, number] { return this._pointer_pos }
+  public set pointer_pos(value: [number, number]) { this._pointer_pos = value }
+
+  public get is_drawing_area_contextualised(): boolean {return this._is_drawing_area_contextualised}
+  public set is_drawing_area_contextualised(value: boolean) {this._is_drawing_area_contextualised = value}
 
   // PUBLIC METHODS =====================================================================
 
@@ -892,7 +918,18 @@ export class Class_DrawingArea {
   private eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
+    if(this.eventsEnabled()){
+      if (this.isInSelectionMode()) {
+        event.preventDefault()
+        this.pointer_pos = [event.pageX, event.pageY]
+  
+        this.application_data.menu_configuration.updateComponentsMenuConfigLink()
+        console.log('rmb da')
+        this.is_drawing_area_contextualised=true
+        this.application_data.menu_configuration.update_components_menu_context_DA.current()
+      }
+    }
+    
   }
 
   /**
@@ -934,6 +971,16 @@ export class Class_DrawingArea {
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
         if (event.button == 0) {
+          // Close context menus
+          this.node_contextualied = undefined
+          this.application_data.menu_configuration.update_components_menu_context_node.current()
+
+          this.link_contextualied = undefined
+          this.application_data.menu_configuration.update_components_menu_context_link.current()
+
+          this.is_drawing_area_contextualised = false
+          this.application_data.menu_configuration.update_components_menu_context_DA.current()
+
           // Display the selection zone & set it starting position
           const mouse_position = d3.pointer(event)
           this._selection_zone.setVisible()
@@ -996,7 +1043,7 @@ export class Class_DrawingArea {
         this.application_data.menu_configuration.updateComponentsMenuConfigNode()
         this.application_data.menu_configuration.updateComponentsMenuConfigLink()
       }
-    } else if (this.isInSelectionMode()) {
+    } else if (this.isInSelectionMode() && event.button == 0) {
       if (!event.shiftKey) {
         this.purgeSelection()
       }
