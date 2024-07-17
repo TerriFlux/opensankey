@@ -1,184 +1,172 @@
+// External imports
 import React, { FunctionComponent, useState } from 'react'
-import { Box, Checkbox, Select, TabPanel } from '@chakra-ui/react'
-import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfigurationLinksTagsTypes'
+import {
+  Box,
+  Checkbox,
+  Select,
+  TabPanel,
+  useBoolean
+} from '@chakra-ui/react'
 
+// Local types
+import {
+  MenuConfigurationLinksTagsFType
+} from './types/SankeyMenuConfigurationLinksTagsTypes'
+
+// Component definition =================================================================
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   applicationData,
-  applicationState,
   applicationContext,
   menu_for_modal,
-  ComponentUpdater,
-  node_function,
-  link_function
 })=>{
-  const {new_data}=applicationData
-  const flux_taggs = new_data.drawing_area.sankey.flux_taggs_dict
-  const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
-  const selected_links=new_data.drawing_area.selected_links_list
-  const flux_reference_for_displayed_value=selected_links[0]
+  const { t } = applicationContext
+  const { new_data } = applicationData
 
-  const {t}=applicationContext
-  const [forceUpdate,setForceUpdate]=useState(false)
-  const newEntries = new Map(Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
-    return (dataTag.tags_list.length > 0) ? [
-      dataTagKey,
-      dataTag.selected_tags_list.length > 0 ? Object.entries(dataTag.tags_dict).filter(tag => tag[1].is_selected)[0][0] : Object.keys(dataTag.tags_dict)[0]] : ['n', 'n']
-  }))
-  const dataTagsSelected = Object.fromEntries(newEntries)
+  // Flux tag groups
+  const flux_taggs = new_data.drawing_area.sankey.flux_taggs_list
+  const has_flux_taggs = flux_taggs.length > 0
+  const [flux_tagg_entry_id, setFluxTaggEntryId] = useState(has_flux_taggs ? flux_taggs[0].id : '')
+  const flux_tagg_entry = new_data.drawing_area.sankey.flux_taggs_dict[flux_tagg_entry_id]
 
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(flux_taggs).length > 0 ? Object.keys(flux_taggs)[0] : '')
-  const [data_tags_selected, set_data_tags_selected] = useState(dataTagsSelected)
+  // Data tag groups
+  const data_taggs = new_data.drawing_area.sankey.data_taggs_list
 
-  if (Object.keys(data_tags_selected).length !== Object.keys(dataTagsSelected).length) {
-    set_data_tags_selected(dataTagsSelected)
+  // Currently selected links
+  const selected_links = new_data.drawing_area.selected_links_list
+  const reference_link = selected_links[0] // Used for value displaying in this menu
+
+  // Menu updaters
+  const [ , setForceUpdate ] = useBoolean()
+  new_data.menu_configuration.ref_to_menu_config_link_tags_updater.current = setForceUpdate.toggle
+
+  /**
+   * Function used to reset menu UI
+   */
+  const setForceFullUpdate = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    setForceUpdate.toggle()
   }
-  const tags_visible = Object.keys(flux_taggs).length > 0
 
-  // const ValueSelectedParameter = (): SankeyLinkValue => {
-  //   if(multi_selected_links.current.length==0){
-  //     return ({} as SankeyLinkValue)
-  //   }else{
-  //     if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
-  //       let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
-  //       Object.values(data_tags_selected).map(tag_selected => {
-  //         if (val[tag_selected] === undefined) {
-  //           val[tag_selected] = {}
-  //         }
-  //         val = val[tag_selected]
-  //       })
-  //       return val
-  //     }
-  //     let val = JSON.parse(JSON.stringify(Object(data.links[multi_selected_links.current[0].idLink].value)))
-  //     Object.values(data_tags_selected).map(tag_selected => {
-  //       if (val[tag_selected] === undefined) {
-  //         val[tag_selected] = {'display_value': '',tags:{},value:0}
-  //       }
-  //       val = val[tag_selected]
-  //     })
-  //     return val
-  //   }
-
-  // }
-  // Si le tags_group_key n'est pas (qu'il soit vide ou différent) dans la liste des keys de flux_taggs, alors on met à jour en prenant le premier
-  if(!Object.keys(flux_taggs).includes(tags_group_key) && Object.keys(flux_taggs).length>0){
-    set_tags_group_key(Object.keys(flux_taggs)[0])
-  }
-  const content =<Box
-    layerStyle='menuconfigpanel_grid'
-  >
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
-      {t('Menu.EF')}</Box>
-
-    {/* Groupe d'étiquettes  */}
-    <Select
-      variant='menuconfigpanel_option_select'
-      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {set_tags_group_key(evt.target.value)
-        setForceUpdate(!forceUpdate)
-      }}
-      value={tags_group_key}
-    >
-      {Object.entries(flux_taggs).map(
-        (tags_group, i) =>
-          <option
-            key={i}
-            value={tags_group[0]}>
-            {tags_group[1].name}
-          </option>)}
-    </Select>
-
-    {//Définition des valeurs selon les paramètre dataTags
-      Object.entries(data_taggs).map(([dataTagKey, dataTag]) => {
-        if (Object.keys(dataTag.tags_dict).length != 0) {
-          return (<>
-            <Box
-              as='span'
-              layerStyle='menuconfigpanel_part_title_3'
-            >
-              {dataTag.name}
-            </Box>
-            <Select
-              variant='menuconfigpanel_option_select'
-              name={dataTagKey}
-              value={data_tags_selected[dataTagKey]}
-              onChange={
-                (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  //Modifie les paramètres selectionnés
-                  const { name, value } = evt.target
-                  set_data_tags_selected(prevState => ({
-                    ...prevState,
-                    [name]: value
-                  }))
-                  setForceUpdate(!forceUpdate)
-                }}>
-              {Object.entries(dataTag.tags_dict).map(([tag_key, tag]) => {
-                return (
-                  <option key={tag.name} value={tag_key}>{tag.name}</option>
-                )
-              })}
-            </Select></>
-          )
-        }
-      })}
-
+  // DIsplayed content in menu
+  const content = <>
+  {
+    (
+      has_flux_taggs &&
+      selected_links.length !== 0
+    ) ?
     <Box
       layerStyle='menuconfigpanel_grid'
     >
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_part_title_1'
+      >
+        {t('Menu.EF')}</Box>
+
+      {/* Groupe d'étiquettes  */}
+      <Select
+        variant='menuconfigpanel_option_select'
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+          setFluxTaggEntryId(evt.target.value)
+        }}
+        value={flux_tagg_entry_id}
+      >
+        {flux_taggs.map(flux_tagg =>
+            <option
+              key={flux_tagg.id}
+              value={flux_tagg.id}
+            >
+              {flux_tagg.name}
+            </option>)}
+      </Select>
+
+      {/* Définition des valeurs selon les paramètre dataTags */}
       {
-        (
-          tags_visible &&
-          tags_group_key != '' &&
-          Object.keys(flux_taggs).includes(tags_group_key) &&
-          selected_links.length!=0
-        )
-        ?
-          Object.entries(flux_taggs[tags_group_key].tags_dict)
-            .map(([tag_key,tag]) => {
-              const is_selected = (
-                flux_reference_for_displayed_value.tags[tags_group_key] &&
-                flux_reference_for_displayed_value.tags[tags_group_key] === (tag))
+        data_taggs
+          .filter(data_tagg => data_tagg.has_tags) // Secu
+          .map(data_tagg => {
+            return (<>
+              <Box
+                as='span'
+                layerStyle='menuconfigpanel_part_title_3'
+              >
+                {data_tagg.name}
+              </Box>
+              <Select
+                variant='menuconfigpanel_option_select'
+                name={data_tagg.id}
+                value={data_tagg.first_selected_tags?.id ?? '-'}
+                onChange={
+                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    data_tagg.tags_list
+                      .forEach(data_tag => {
+                        if (data_tag.id === evt.target.value)
+                          data_tag.setSelected()
+                        else
+                          data_tag.setUnSelected()
+                      })
+                    // Update only this menu
+                    setForceUpdate.toggle()
+                  }
+                }
+              >
+                {
+                  data_tagg.tags_list
+                    .map(data_tag => {
+                    return (
+                      <option
+                        key={data_tag.id}
+                        value={data_tag.id}
+                      >
+                        {data_tag.name}
+                      </option>
+                    )
+                })}
+              </Select></>
+            )
+          })
+      }
+
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        {
+          flux_tagg_entry.tags_list
+            .map(flux_tag => {
               return (
                 <Checkbox
                   variant='menuconfigpanel_option_checkbox'
-                  isChecked={is_selected}
+                  isChecked={reference_link.hasGivenTag(flux_tag)}
                   onChange={(evt) => {
                     const visible = evt.target.checked
-                    selected_links.forEach(l=>{
+                    selected_links.forEach(link=>{
                       if (visible) {
-                        l.tags[tags_group_key]=tag
+                        link.addTag(flux_tag)
                       }
                       else {
-                        // Remove deselected tag from links
-                        delete l.tags[tags_group_key]
+                        link.removeTag(flux_tag)
                       }
                     })
-                    selected_links.forEach(l=>l.draw())
-                    ComponentUpdater.updateComponenSaveInCache.current(false)
-                    setForceUpdate(!forceUpdate)
+                    // Full update
+                    setForceFullUpdate()
                   }}>
-                  {tag.name}
+                  {flux_tag.name}
                 </Checkbox>
               )
             })
-        :
-          <></>
-      }
+        }
+      </Box>
     </Box>
-  </Box>
+    :
+    <></>
+  }</>
 
 
 
-  return menu_for_modal?content:
-    // [
-    //   <Tab>
-    //     <Box
-    //       layerStyle='submenuconfig_tab'
-    //     >
-    //       {t('Noeud.tags_node.tags')}
-    //     </Box>
-    //   </Tab>,
+  return menu_for_modal ?
+    content :
     <TabPanel >
       {content}
     </TabPanel>
