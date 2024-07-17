@@ -56,13 +56,13 @@ export type SankeyModalWelcomeFType = {
   }
 }
 
-export type MenuDraggableFType = (
+export type MenuDraggableFType = {
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   dialog_name: keyof dict_hook_ref_setter_show_dialog_componentsType,
   content:JSX.Element|JSX.Element[],
   pointer_pos:{current:number[]},
   title:string,
-)=> JSX.Element
+}
 
 export type OpenSankeySaveButtonFType = {
   applicationData:applicationDataType,

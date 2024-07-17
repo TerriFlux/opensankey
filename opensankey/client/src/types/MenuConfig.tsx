@@ -59,6 +59,14 @@ export class Class_MenuConfig {
   private _update_components_menu_config_node_io: MutableRefObject<(() => void)[]>
 
 
+  private _update_components_menu_context_node: MutableRefObject<(() => void)>
+
+
+  private _update_components_menu_context_link: MutableRefObject<(() => void)>
+
+  private _update_components_menu_context_DA: MutableRefObject<(() => void)>
+
+
 
   // Update component SankeyMenuConfigurationLinks
   private _ref_to_menu_config_link_updater: MutableRefObject<() => void>
@@ -121,6 +129,9 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_node_tags_updater = useRef(() => null)
     this._update_components_menu_config_node_io = useRef([] as (() => void)[])
     this._update_components_menu_config_node_tooltips = useRef([] as (() => void)[])
+    this._update_components_menu_context_node = useRef(() => null)
+    this._update_components_menu_context_link = useRef(() => null)
+    this._update_components_menu_context_DA = useRef(() => null)
 
     // Links
     this._ref_to_menu_config_link_updater = useRef(() => null)
@@ -130,7 +141,7 @@ export class Class_MenuConfig {
     this._update_components_menu_config_link_tooltip = useRef([] as (() => void)[])
 
     // Toolbar
-    this._ref_to_save_in_cache_indicator = useRef((_:boolean) => null)
+    this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateComponentMenu = useRef(() => null)
     this._updateComponentToolbar = useRef(() => null)
@@ -268,6 +279,10 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_layout_updater
   }
 
+  public get update_components_menu_context_DA(): MutableRefObject<(() => void)> {
+    return this._update_components_menu_context_DA
+  }
+
   // Nodes menus ------------------------------------------------------------------------
 
   public get ref_to_menu_config_node_updater(): MutableRefObject<() => void> {
@@ -290,6 +305,11 @@ export class Class_MenuConfig {
     return this._update_components_menu_config_node_tooltips
   }
 
+  // Nodes context menu
+  public get update_components_menu_context_node(): MutableRefObject<(() => void)> {
+    return this._update_components_menu_context_node
+  }
+
   // Links menus ------------------------------------------------------------------------
 
   public get ref_to_menu_config_link_updater(): MutableRefObject<() => void> {
@@ -310,6 +330,11 @@ export class Class_MenuConfig {
 
   public get updateMenuConfigTextLinkTooltip(): MutableRefObject<(() => void)[]> {
     return this._update_components_menu_config_link_tooltip
+  }
+
+  // Link context menu
+  public get update_components_menu_context_link(): MutableRefObject<(() => void)> {
+    return this._update_components_menu_context_link
   }
 
   // Toolbar -----------------------------------------------------------------------------
@@ -339,4 +364,7 @@ export class Class_MenuConfig {
   public get updateToolbar(): MutableRefObject<(() => void)> {
     return this._updateToolbar
   }
+
+
+
 }

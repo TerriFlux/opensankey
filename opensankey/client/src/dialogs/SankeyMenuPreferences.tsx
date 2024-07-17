@@ -167,7 +167,13 @@ export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
     })}
   </>
 
-  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modal_preference',content,pointer_pos,t('Menu.title_pref'))
+  return <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_modal_preference'}
+    content={content}
+    pointer_pos={pointer_pos}
+    title={t('Menu.title_pref')}
+  />
 
 }
 

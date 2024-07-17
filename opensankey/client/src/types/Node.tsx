@@ -411,8 +411,8 @@ export class Class_NodeElement extends Class_Element {
    * @param {Class_Tag} tag
    * @memberof Class_LinkElement
    */
-  public addTag(tag: Class_Tag)  {
-    if (!this.hasGivenTag(tag)){
+  public addTag(tag: Class_Tag) {
+    if (!this.hasGivenTag(tag)) {
       this._tags[tag.id] = tag
       tag.addReference(this)
       this.draw()
@@ -502,6 +502,16 @@ export class Class_NodeElement extends Class_Element {
   public getFirstOutputLink() {
     if (this.hasOutputLinks()) return this.output_links_list[0] // TODO pas bon
     else return undefined
+  }
+
+  /**
+   * Function to reorganize links_order depending of source/target position 
+   *
+   * @memberof Class_NodeElement
+   */
+  public reorganizeIOLinks() {
+
+    // S'aider des fonctions reorganize_node_inputLinksId, reorganize_node_outputLinksId
   }
 
   /**
@@ -665,7 +675,7 @@ export class Class_NodeElement extends Class_Element {
       drawing_area.application_data.closeAllMenus()
     }
     // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode()) {
+    else if (drawing_area.isInSelectionMode() && event.button==0) {
       // ALT
       if (event.altKey) {
         // Purge selection list
@@ -765,6 +775,24 @@ export class Class_NodeElement extends Class_Element {
         this,
         target,
         this.drawing_area, this.menu_config)
+    }
+
+  }
+
+  protected eventSimpleRMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    if (this.drawing_area.isInSelectionMode()) {
+      event.preventDefault()
+      this.drawing_area.pointer_pos=[event.pageX,event.pageY]
+      if (!this.drawing_area.selected_nodes_list.includes(this)) {
+        this.drawing_area.addNodeToSelection(this)
+      } else {
+      }
+
+      this.menu_config.updateComponentsMenuConfigNode()
+      this.drawing_area.node_contextualied = this
+      this.menu_config.update_components_menu_context_node.current()
     }
 
   }
@@ -1454,7 +1482,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public get taggs_dict() {
-    const taggs: {[_:string]: Class_TagGroup} = {}
+    const taggs: { [_: string]: Class_TagGroup } = {}
     this.tags_list
       .forEach(tag => {
         if (!taggs[tag.group.id])
@@ -2214,7 +2242,7 @@ export class Class_NodeElement extends Class_Element {
     const only_one_activated = (activ_level_taggs.length === 1)
     // Is only primary level activated
     const only_primaire_activated = (
-      this.drawing_area.sankey.node_taggs_dict['Primaire'] && 
+      this.drawing_area.sankey.node_taggs_dict['Primaire'] &&
       this.drawing_area.sankey.node_taggs_dict['Primaire'].activated &&
       only_one_activated)
     const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
