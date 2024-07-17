@@ -175,12 +175,8 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               <SankeyMenuConfigurationLinks
                 applicationData={applicationData}
                 applicationContext={applicationContext}
-                applicationState={applicationState}
                 menu_config_link_data={menu_config_link_data}
                 menu_config_link_attr={menu_config_link_attr}
-                link_function={link_function}
-                ComponentUpdater={ComponentUpdater}
-                node_function={node_function}
               />
             </AccordionPanel>
           </AccordionItem>

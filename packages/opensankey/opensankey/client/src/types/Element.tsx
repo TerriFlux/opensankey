@@ -63,7 +63,7 @@ export abstract class Class_ProtoElement {
   /**
    * True if element is currently on a deletion process
    * Avoid cross calls of delete() method
-   * @protected
+   * @private
    * @memberof Class_Element
    */
   private _is_currently_deleted = false
