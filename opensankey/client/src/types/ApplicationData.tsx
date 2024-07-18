@@ -18,9 +18,9 @@ import { Class_LinkElement } from './Link'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 
 
-export const initial_window_width=window.innerWidth -50 //TODO : replace 50 by width of toolbar
-export const initial_window_height=window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-const initial_show_structure='reconciled'
+export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
+export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
+const initial_show_structure = 'reconciled'
 /**
  * Class that contains all elements to make the application work
  *
@@ -302,24 +302,18 @@ export class Class_ApplicationData {
 
   }
 
-  public reset(){
+  public reset() {
     this._show_structure = initial_show_structure
     delete this._maximum_flux
     delete this._minimum_flux
-    this._filter_label =0
+    this._filter_label = 0
 
-    this.drawing_area.removeDrawingArea()
+    this.drawing_area.reinit()
     this.drawing_area = new Class_DrawingArea(
       initial_window_height,
       initial_window_width,
       this)
-      
 
-
-    this.drawing_area.reinit()
-
-    this.menu_configuration.updateComponentsMenuConfigNode()
-    this.menu_configuration.updateComponentsMenuConfigLink()
-    this.menu_configuration.updateComponentsRelatedToTags()
+    this.menu_configuration.updateAllMenuComponent()
   }
 }

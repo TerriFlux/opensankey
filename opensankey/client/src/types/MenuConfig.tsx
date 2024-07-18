@@ -271,6 +271,12 @@ export class Class_MenuConfig {
     this.ref_to_toolbar_updater.current()
   }
 
+  public updateAllMenuComponent() {
+    this.updateComponentsMenuConfigNode()
+    this.updateComponentsMenuConfigLink()
+    this._ref_to_menu_config_tags_updater.current()
+  }
+
   /**
    * Check if we linked the ref to the button to toggle the menu
    * and check if the accordion nodes is open then click to the button
