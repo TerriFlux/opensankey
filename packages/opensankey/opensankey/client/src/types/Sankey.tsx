@@ -38,8 +38,6 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
 
 export const default_style_id = 'default'
 export const default_style_name = 'Style par default'
-const default_node_style = new Class_NodeStyle(default_style_id, default_style_name, false)
-const default_link_style = new Class_LinkStyle(default_style_id, default_style_name, false)
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -109,11 +107,42 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config = menu_config
-    this._link_styles[default_style_id] = default_link_style
-    this._node_styles[default_style_id] = default_node_style
+    this._link_styles[default_style_id] = new Class_LinkStyle(default_style_id, default_style_name, false)
+    this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
     this._colorMap = 'no_colormap'
     this._nodesColorMap = 'no_colormap'
     this._linksColorMap = 'no_colormap'
+  }
+
+  public delete(){
+    this.nodes_list.forEach(n=>{
+      n.delete()
+    })
+    this._nodes={}
+    this._links={}
+
+    this.node_styles_list.forEach(sn=>{
+      sn.delete()
+    })
+    this._node_styles={}
+
+    this.link_styles_list.forEach(sl=>{
+      sl.delete()
+    })
+    this._link_styles={}
+
+    this.getTagGroupsAsList('node_taggs').forEach(grp=>grp.delete())
+    this.getTagGroupsAsList('flux_taggs').forEach(grp=>grp.delete())
+    this.getTagGroupsAsList('data_taggs').forEach(grp=>grp.delete())
+    this.getTagGroupsAsList('level_taggs').forEach(grp=>grp.delete())
+
+    this._node_taggs={}
+    this._flux_taggs={}
+    this._data_taggs={}
+    this._level_taggs={}
+
+    
+
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -390,9 +419,9 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get list_combinatorial_data_taggs_path() {
-    const list_tag_by_grp:string[][]=[]
+    const list_tag_by_grp: string[][] = []
     this.data_taggs_list.forEach(data_tagg => {
-      list_tag_by_grp.push(data_tagg.tags_list.map(tag=>tag.id))
+      list_tag_by_grp.push(data_tagg.tags_list.map(tag => tag.id))
     })
     return list_tag_by_grp
   }
@@ -805,68 +834,82 @@ export class Class_Sankey {
   public fromJSON(json_object: { [_: string]: any }) {
     // TODO : define default value in case data is not in JSON
 
-    // Set node styles from json data
-    Object.entries(json_object['style_node']).forEach(ent_style_node => {
-      // Create a node style
-      const new_style = new Class_NodeStyle(ent_style_node[0], ent_style_node[0], true)
-      // Set node style value to node from JSON
-      new_style.fromJSON(ent_style_node[1] as { [x: string]: any })
-      // Add node style to sankey
-      this._node_styles[ent_style_node[0]] = new_style
-    })
+    if (json_object['style_node'] !== undefined) {
+      // Set node styles from json data
+      Object.entries(json_object['style_node']).forEach(ent_style_node => {
+        // Create a node style
+        const new_style = new Class_NodeStyle(ent_style_node[0], ent_style_node[0], true)
+        // Set node style value to node from JSON
+        new_style.fromJSON(ent_style_node[1] as { [x: string]: any })
+        // Add node style to sankey
+        this._node_styles[ent_style_node[0]] = new_style
+      })
 
-    // Set link styles from json data
-    Object.entries(json_object['style_link']).forEach(ent_style_link => {
-      // Create a link style
-      const new_style = new Class_LinkStyle(ent_style_link[0], ent_style_link[0], true)
-      // Set link style value to link style from JSON
-      new_style.fromJSON(ent_style_link[1] as { [x: string]: any })
-      // Add link style to sankey
-      this._link_styles[ent_style_link[0]] = new_style
-    })
+    }
 
-    // Set node tag & tag group from json data
-    Object.entries(json_object['nodeTags']).filter(ent_nt => ent_nt[1]).forEach(ent_nt => {
-      // Create a node tag group
-      const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
-      new_grp.removeTag(new_grp.tags_list[0])
-      // Set node tag group value from JSON
-      new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
-      // Add node tag group to sankey
-      this._node_taggs[ent_nt[0]] = new_grp
-    })
+    if (json_object['style_link'] !== undefined) {
+      // Set link styles from json data
+      Object.entries(json_object['style_link']).forEach(ent_style_link => {
+        // Create a link style
+        const new_style = new Class_LinkStyle(ent_style_link[0], ent_style_link[0], true)
+        // Set link style value to link style from JSON
+        new_style.fromJSON(ent_style_link[1] as { [x: string]: any })
+        // Add link style to sankey
+        this._link_styles[ent_style_link[0]] = new_style
+      })
 
-    // Set flux tag & tag group from json data
-    Object.entries(json_object['fluxTags']).forEach(ent_ft => {
-      // Create a flux tag group
-      const new_grp = new Class_TagGroup(ent_ft[0], (ent_ft[1] as { group_name: string }).group_name)
-      new_grp.removeTag(new_grp.tags_list[0])
-      // Set flux tag group value from JSON
-      new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
-      // Add flux tag group to sankey
-      this._flux_taggs[ent_ft[0]] = new_grp
-    })
-        // Set level tag & tag group from json data
-        Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
-          // Create a flux tag group
-          const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
-          new_grp.removeTag(new_grp.tags_list[0])
-          // Set flux tag group value from JSON
-          new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
-          // Add flux tag group to sankey
-          this._level_taggs[ent_lvl_tag[0]] = new_grp
-        })
+    }
 
-    // Set data tag & tag group from json data
-    Object.entries(json_object['dataTags']).forEach(ent_dt => {
-      // Create a flux tag group
-      const new_grp = new Class_TagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name)
-      new_grp.removeTag(new_grp.tags_list[0])
-      // Set flux tag group value from JSON
-      new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
-      // Add flux tag group to sankey
-      this._data_taggs[ent_dt[0]] = new_grp
-    })
+    if (json_object['nodeTags'] !== undefined) {
+      // Set node tag & tag group from json data
+      Object.entries(json_object['nodeTags']).filter(ent_nt => ent_nt[1]).forEach(ent_nt => {
+        // Create a node tag group
+        const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
+        new_grp.removeTag(new_grp.tags_list[0])
+        // Set node tag group value from JSON
+        new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
+        // Add node tag group to sankey
+        this._node_taggs[ent_nt[0]] = new_grp
+      })
+    }
+
+    if (json_object['fluxTags'] !== undefined) {
+      // Set flux tag & tag group from json data
+      Object.entries(json_object['fluxTags']).forEach(ent_ft => {
+        // Create a flux tag group
+        const new_grp = new Class_TagGroup(ent_ft[0], (ent_ft[1] as { group_name: string }).group_name)
+        new_grp.removeTag(new_grp.tags_list[0])
+        // Set flux tag group value from JSON
+        new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
+        // Add flux tag group to sankey
+        this._flux_taggs[ent_ft[0]] = new_grp
+      })
+    }
+    if (json_object['levelTags'] !== undefined) {
+      // Set level tag & tag group from json data
+      Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
+        // Create a flux tag group
+        const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
+        new_grp.removeTag(new_grp.tags_list[0])
+        // Set flux tag group value from JSON
+        new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
+        // Add flux tag group to sankey
+        this._level_taggs[ent_lvl_tag[0]] = new_grp
+      })
+    }
+
+    if (json_object['dataTags'] !== undefined) {
+      // Set data tag & tag group from json data
+      Object.entries(json_object['dataTags']).forEach(ent_dt => {
+        // Create a flux tag group
+        const new_grp = new Class_TagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name)
+        new_grp.removeTag(new_grp.tags_list[0])
+        // Set flux tag group value from JSON
+        new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
+        // Add flux tag group to sankey
+        this._data_taggs[ent_dt[0]] = new_grp
+      })
+    }
 
     Object.entries(json_object['nodes']).forEach(ent_node => {
       // Create a node

@@ -599,7 +599,7 @@ export class Class_NodeElement extends Class_Element {
   }
 
   public fromJSONLinksOrder(json_node_object: { [x: string]: any }) {
-    const new_order: Class_LinkElement[] = json_node_object[this.id]['links_order'].map((lid: string) => { return this.drawing_area.sankey.links_dict[lid] })
+    const new_order: Class_LinkElement[] = json_node_object['links_order'].map((lid: string) => { return this.drawing_area.sankey.links_dict[lid] })
     this._links_order = new_order
   }
 
