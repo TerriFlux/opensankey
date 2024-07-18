@@ -227,7 +227,14 @@ export class Class_DrawingArea {
   }
 
   // PUBLIC METHODS ====================================================================
+  public reinit() {
+    this._sankey.delete()
+    this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
 
+    this._legend = new Class_Legend(this, this.application_data.menu_configuration)
+
+    this.reset()
+  }
   /**
    * Reset drawing area
    * @memberof Class_DrawingArea
@@ -251,7 +258,7 @@ export class Class_DrawingArea {
 
     // Add specific groups for nodes, link and others
     this.d3_selection_bg = this.d3_selection.append('g').attr('id', 'g_background')
-    this.d3_selection_grid = this.d3_selection.append('g').attr('id', 'g_grid')
+    this.d3_selection_grid = this.d3_selection_bg.append('g').attr('id', 'g_grid')
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
@@ -302,14 +309,18 @@ export class Class_DrawingArea {
 
   // Mode
   public isInSelectionMode() { return this._mode === 'selection' }
-  public setSelectionMode() { this._mode = 'selection' }
+  public setSelectionMode() { this._mode = 'selection'; this.changeCursor(false) }
   public isInEditionMode() { return this._mode === 'edition' }
-  public setEditionMode() { this._mode = 'edition' }
+  public setEditionMode() { this._mode = 'edition'; this.changeCursor(true) }
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
   }
 
+  public changeCursor(is_edition: boolean) {
+    this.d3_selection_bg?.classed('edition_mode', is_edition);
+    this.d3_selection_bg?.classed('selection_mode', !is_edition)
+  }
   // Sankey
   public get sankey() { return this._sankey }
 
@@ -426,8 +437,8 @@ export class Class_DrawingArea {
   public get pointer_pos(): [number, number] { return this._pointer_pos }
   public set pointer_pos(value: [number, number]) { this._pointer_pos = value }
 
-  public get is_drawing_area_contextualised(): boolean {return this._is_drawing_area_contextualised}
-  public set is_drawing_area_contextualised(value: boolean) {this._is_drawing_area_contextualised = value}
+  public get is_drawing_area_contextualised(): boolean { return this._is_drawing_area_contextualised }
+  public set is_drawing_area_contextualised(value: boolean) { this._is_drawing_area_contextualised = value }
 
   // PUBLIC METHODS =====================================================================
 
@@ -788,6 +799,7 @@ export class Class_DrawingArea {
       .attr('height', this.getHeight())
       .style('stroke-width', 5)
       .style('stroke', default_black_color)
+    this.changeCursor(true)
   }
 
   /**
@@ -826,6 +838,8 @@ export class Class_DrawingArea {
           .style('stroke-dasharray', 4)
           .style('stroke', this.grid_color)
       }
+
+      this.d3_selection_grid?.raise()
     }
   }
 
@@ -918,18 +932,17 @@ export class Class_DrawingArea {
   private eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if(this.eventsEnabled()){
+    if (this.eventsEnabled()) {
       if (this.isInSelectionMode()) {
         event.preventDefault()
         this.pointer_pos = [event.pageX, event.pageY]
-  
+
         this.application_data.menu_configuration.updateComponentsMenuConfigLink()
-        console.log('rmb da')
-        this.is_drawing_area_contextualised=true
+        this.is_drawing_area_contextualised = true
         this.application_data.menu_configuration.update_components_menu_context_DA.current()
       }
     }
-    
+
   }
 
   /**

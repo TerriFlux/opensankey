@@ -426,7 +426,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public addTag(tag: Class_Tag) {
-    if (!this.hasGivenTag(tag)){
+    if (!this.hasGivenTag(tag)) {
       this._tags[tag.id] = tag
       tag.addReference(this)
       this.draw()
@@ -568,8 +568,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     json_object['local'] = this._display.attributes.toJSON()
     json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
 
-    // json_object['value'] = this._values //Todo create function to JSONize link value
-    json_object['value'] = {}//Todo create function to JSONize link value
+    json_object['value'] = this._values.toJSON()
 
     return json_object
   }
@@ -593,7 +592,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
 
     this.setValueFromJSON(json_object['value'])
-    // this._values = json_object['value']  //Todo create function to read link value from JSON
+
   }
 
   /**
@@ -604,11 +603,17 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private setValueFromJSON(obj: { [x: string]: any }) {
-    if ('value' in obj) { // sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
-      (this._values as Class_LinkValue).data_value = obj['value'].value
+    const list_dataTag_combinaison = this.drawing_area.sankey.list_combinatorial_data_taggs_path
+    if (list_dataTag_combinaison.length == 0) { // sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
+
+      (this._values as Class_LinkValue).data_value = obj.data_value;
+      (this._values as Class_LinkValue).text_value = obj.text_value_value
+
     } else { // if sankey has data_taggs
+
+      const allPath = allPossibleCases(list_dataTag_combinaison)
+
       // Get all possible path with actual data_taggs
-      const allPath = allPossibleCases(this.drawing_area.sankey.list_combinatorial_data_taggs_path)
       const list_data_taggs = this.drawing_area.sankey.data_taggs_list
       // Get each value (if present, otherwise return null) of each path for this link
       allPath.forEach(path => {
@@ -616,8 +621,16 @@ export class Class_LinkElement extends Class_ProtoElement {
         const list_tag = cpy_path.map((tag_id, idx) => {
           return list_data_taggs[idx].tags_dict[tag_id]
         })
+
         const valForPath = recursiveCallLinkValueJSON(cpy_path, obj);
-        (this._values as Class_LinkValueTree).setDataValue(list_tag, valForPath)
+
+        if (valForPath.data_value !== undefined) {
+          (this._values as Class_LinkValueTree).setDataValue(list_tag, valForPath.data_value)
+        }
+
+        if (valForPath.text_value !== undefined) {
+          (this._values as Class_LinkValueTree).setTextValue(list_tag, valForPath.text_value)
+        }
       })
     }
   }
@@ -684,9 +697,9 @@ export class Class_LinkElement extends Class_ProtoElement {
   protected eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if (this.drawing_area.isInSelectionMode() ) {
+    if (this.drawing_area.isInSelectionMode()) {
       event.preventDefault()
-      this.drawing_area.pointer_pos=[event.pageX,event.pageY]
+      this.drawing_area.pointer_pos = [event.pageX, event.pageY]
 
       if (!this.drawing_area.selected_links_list.includes(this)) {
         this.drawing_area.addLinkToSelection(this)
@@ -790,7 +803,7 @@ export class Class_LinkElement extends Class_ProtoElement {
             let label_ortho_position
             let label_dominant_baseline
             if (this.value_label_orthogonal_position === 'above') {
-              label_ortho_position = -this.thickness/2
+              label_ortho_position = -this.thickness / 2
               label_dominant_baseline = 'text-after-edge'
             }
             else if (this.value_label_orthogonal_position === 'middle') {
@@ -798,7 +811,7 @@ export class Class_LinkElement extends Class_ProtoElement {
               label_dominant_baseline = 'middle'
             }
             else if (this.value_label_orthogonal_position === 'below') {
-              label_ortho_position = this.thickness/2 + this.value_label_font_size
+              label_ortho_position = this.thickness / 2 + this.value_label_font_size
               label_dominant_baseline = 'text-top'
             }
             else { // Frozen
@@ -971,14 +984,14 @@ export class Class_LinkElement extends Class_ProtoElement {
         x4 = x2
         y4 = y_mid
         x3 = x4
-        y3 = (y4 + y2)/2
+        y3 = (y4 + y2) / 2
         x5 = x1
         y5 = y4
       }
       else if (this.is_vertical) {
         x4 = x_mid
         y4 = y2
-        x3 = (x4 + x2)/2
+        x3 = (x4 + x2) / 2
         y3 = y4
         x5 = x4
         y5 = y1
@@ -986,8 +999,8 @@ export class Class_LinkElement extends Class_ProtoElement {
       else {
         x4 = x_mid
         y4 = y_mid
-        x3 = (x4 + x2)/2
-        y3 = (y4 + y2)/2
+        x3 = (x4 + x2) / 2
+        y3 = (y4 + y2) / 2
       }
 
       // Get ending control points coordinates
@@ -1005,14 +1018,14 @@ export class Class_LinkElement extends Class_ProtoElement {
         x7 = x9
         y7 = y_mid
         x8 = x9
-        y8 = (y7 + y9)/2
+        y8 = (y7 + y9) / 2
         x6 = x10
         y6 = y7
       }
       else if (this.is_vertical) {
         x7 = x_mid
         y7 = y9
-        x8 = (x7 + x9)/2
+        x8 = (x7 + x9) / 2
         y8 = y7
         x6 = x7
         y6 = y10
@@ -1020,8 +1033,8 @@ export class Class_LinkElement extends Class_ProtoElement {
       else {
         x7 = x_mid
         y7 = y_mid
-        x8 = (x7 + x9)/2
-        y8 = (y7 + y9)/2
+        x8 = (x7 + x9) / 2
+        y8 = (y7 + y9) / 2
       }
 
       // Return paths
@@ -1088,7 +1101,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       }
     }
     // Add unit suffix
-    if (text_value &&  this.value_label_unit_visible)
+    if (text_value && this.value_label_unit_visible)
       text_value = text_value + this.value_label_unit
     // Output
     return text_value
@@ -1267,8 +1280,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     const xf = this.position_x_end
     const yf = this.position_y_end
     // Compute ref points
-    const x_ref = (x0 + xf)/2
-    const y_ref = (y0 + yf)/2
+    const x_ref = (x0 + xf) / 2
+    const y_ref = (y0 + yf) / 2
     // Compute point
     let x_mid, y_mid
     if (this.is_horizontal) {
@@ -1284,10 +1297,10 @@ export class Class_LinkElement extends Class_ProtoElement {
       const vy = (yf - y0)
       const vx_ortho = -vy
       const vy_ortho = vx
-      const d = Math.sqrt(vx*vx + vy*vy)
-      const scale_norm = this.shape_middle_recycling/Math.sqrt(2)
-      x_mid = x_ref + scale_norm*(vx_ortho/d)
-      y_mid = y_ref + scale_norm*(vy_ortho/d)
+      const d = Math.sqrt(vx * vx + vy * vy)
+      const scale_norm = this.shape_middle_recycling / Math.sqrt(2)
+      x_mid = x_ref + scale_norm * (vx_ortho / d)
+      y_mid = y_ref + scale_norm * (vy_ortho / d)
     }
     // Update point
     this._control_points.middle_recycling_point.setPosXY(x_mid, y_mid)
@@ -1468,13 +1481,13 @@ export class Class_LinkElement extends Class_ProtoElement {
           const handle_new_pos_y = this._control_points.middle_recycling_point.position_y + event.dy
           const y0 = this.position_y_start
           const yf = this.position_y_end
-          this.shape_middle_recycling = handle_new_pos_y - (y0 + yf)/2
+          this.shape_middle_recycling = handle_new_pos_y - (y0 + yf) / 2
         }
         else if (this.is_vertical) {
           const handle_new_pos_x = this._control_points.middle_recycling_point.position_x + event.dx
           const x0 = this.position_x_start
           const xf = this.position_x_end
-          this.shape_middle_recycling = handle_new_pos_x - (x0 + xf)/2
+          this.shape_middle_recycling = handle_new_pos_x - (x0 + xf) / 2
         }
         else {
           // Starting & Ending positions
@@ -1486,9 +1499,9 @@ export class Class_LinkElement extends Class_ProtoElement {
           const vx = (xf - x0)
           const vy = (yf - y0)
           // Middle recyling is at given distance
-          const sign = Math.sign(vx*event.dy - vy*event.dx) // Produit vectoriel
-          const d = Math.sqrt(event.dx*event.dx + event.dy*event.dy)
-          this.shape_middle_recycling = this.shape_middle_recycling + sign*d
+          const sign = Math.sign(vx * event.dy - vy * event.dx) // Produit vectoriel
+          const d = Math.sqrt(event.dx * event.dx + event.dy * event.dy)
+          this.shape_middle_recycling = this.shape_middle_recycling + sign * d
         }
       }
     }
@@ -1732,7 +1745,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_NodeElement
    */
   public get taggs_dict() {
-    const taggs: {[_:string]: Class_TagGroup} = {}
+    const taggs: { [_: string]: Class_TagGroup } = {}
     this.tags_list
       .forEach(tag => {
         if (!taggs[tag.group.id])
@@ -3135,6 +3148,13 @@ export class Class_LinkValueTree {
     }
   }
 
+  public setTextValue(tags: Class_Tag[], val: string | null) {
+    const value = this.getValue(tags)
+    if (value !== null) {
+      value.text_value = val
+    }
+  }
+
   public getTextValue(tags: Class_Tag[]): string | null {
     const value = this.getValue(tags)
     if (value !== null) {
@@ -3145,6 +3165,13 @@ export class Class_LinkValueTree {
     }
   }
 
+  public toJSON() {
+    const tmp: { [x: string]: JSON } = {}
+    Object.entries(this.children).forEach(ent_val => {
+      tmp[ent_val[0]] = ent_val[1].toJSON()
+    })
+    return tmp
+  }
 
   // PRIVATE METHODS ====================================================================
 
@@ -3279,6 +3306,16 @@ export class Class_LinkValue {
     // Return new parent
     return new_parent
   }
+
+  public toJSON() {
+    // TODO flux_taggs must be associated to link value and not the flux
+    // then when jsonified jsonify also Class_TagGroup & Class_Tag
+    return {
+      'data_value': this.data_value,
+      'text_value': this.text_value,
+    }
+  }
+
 }
 
 function allPossibleCases(arr: string[][]): string[][] {
@@ -3297,6 +3334,10 @@ function allPossibleCases(arr: string[][]): string[][] {
   }
 }
 
+type JSONifiedLinkValue = {
+  data_value: number,
+  text_value: string
+}
 /**
  * function that get value for link from JSON with a given path
  *
@@ -3304,15 +3345,25 @@ function allPossibleCases(arr: string[][]): string[][] {
  * @param {{ [x: string]: any }} JSONValue
  * @return {*}  {(number | null)}
  */
-function recursiveCallLinkValueJSON(path: string[], JSONValue: { [x: string]: any }): number | null {
+function recursiveCallLinkValueJSON(path: string[], JSONValue: { [x: string]: any }): JSONifiedLinkValue {
   if (path.length > 0) {
     const next_tag = path.shift() as string
-
     if (next_tag in JSONValue) return recursiveCallLinkValueJSON(path, JSONValue[next_tag]) // if JSON has next tag_id
-    else return null // if JSON doesn't have next tag_id that would mean an error in JSON file or it is not defined in JSON
+    else return {} as JSONifiedLinkValue // if JSON doesn't have next tag_id that would mean an error in JSON file or it is not defined in JSON
   } else {
-    if (JSONValue.value) return JSONValue.value
-    else return null // in case of error
+    const val = {} as JSONifiedLinkValue
+    if (JSONValue.data_value) {
+      val['data_value'] = JSONValue.data_value
+    }
+
+    if (JSONValue.text_value) {
+      val['text_value'] = JSONValue.text_value
+    }
+
+    // TODO return flux_taggs associated to this link value
+
+    return val
+
   }
 }
 
