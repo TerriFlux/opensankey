@@ -23,7 +23,6 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   const {new_data } = applicationData
   const { t } = applicationContext
 
-  console.log(new_data.drawing_area.is_drawing_area_contextualised)
   const [forceUpdate, setForceUpdate] = useState(false)
 
   new_data.menu_configuration.update_components_menu_context_DA.current=()=>setForceUpdate(!forceUpdate)

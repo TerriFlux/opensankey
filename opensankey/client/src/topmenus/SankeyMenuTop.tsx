@@ -1197,28 +1197,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
           layerStyle='menutop_layout_style'
           gridTemplateColumns={menutop_grid_template}
           onClick={() => {
-            contextMenu.ref_setter_contextualised_node.current!(undefined)
-            contextMenu.ref_contextualised_node.current = undefined
-            contextMenu.ref_setter_contextualised_link.current!(undefined)
-            contextMenu.showContextZDDRef.current![1](false)
-            contextMenu.tagContext.current![0][1](undefined)
-            ref_setter_mode_selection.current('s')
-            AddDrawNodesEvent(
-              contextMenu,
-              applicationData,
-              uiElementsRef,
-              applicationState,
-              applicationContext,
-              ref_alt_key_pressed,
-              accept_simple_click,
-              link_function,
-              NodeTooltipsContent,
-              ComponentUpdater,
-              dict_hook_ref_setter_show_dialog_components,
-              node_function,
-              applicationDraw.GetSankeyMinWidthAndHeight,
-              applicationDraw.resizeCanvas
-            )
+            new_data.drawing_area.node_contextualied = undefined
+            new_data.menu_configuration.update_components_menu_context_node.current()
+
+            new_data.drawing_area.link_contextualied = undefined
+            new_data.menu_configuration.update_components_menu_context_link.current()
+
+            new_data.drawing_area.is_drawing_area_contextualised=false
+            new_data.menu_configuration.update_components_menu_context_DA.current()
+            
           }} >
 
           {
