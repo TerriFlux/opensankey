@@ -38,8 +38,6 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
 
 export const default_style_id = 'default'
 export const default_style_name = 'Style par default'
-const default_node_style = new Class_NodeStyle(default_style_id, default_style_name, false)
-const default_link_style = new Class_LinkStyle(default_style_id, default_style_name, false)
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -109,11 +107,42 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this.menu_config = menu_config
-    this._link_styles[default_style_id] = default_link_style
-    this._node_styles[default_style_id] = default_node_style
+    this._link_styles[default_style_id] = new Class_LinkStyle(default_style_id, default_style_name, false)
+    this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
     this._colorMap = 'no_colormap'
     this._nodesColorMap = 'no_colormap'
     this._linksColorMap = 'no_colormap'
+  }
+
+  public delete(){
+    this.nodes_list.forEach(n=>{
+      n.delete()
+    })
+    this._nodes={}
+    this._links={}
+
+    this.node_styles_list.forEach(sn=>{
+      sn.delete()
+    })
+    this._node_styles={}
+
+    this.link_styles_list.forEach(sl=>{
+      sl.delete()
+    })
+    this._link_styles={}
+
+    this.getTagGroupsAsList('node_taggs').forEach(grp=>grp.delete())
+    this.getTagGroupsAsList('flux_taggs').forEach(grp=>grp.delete())
+    this.getTagGroupsAsList('data_taggs').forEach(grp=>grp.delete())
+    this.getTagGroupsAsList('level_taggs').forEach(grp=>grp.delete())
+
+    this._node_taggs={}
+    this._flux_taggs={}
+    this._data_taggs={}
+    this._level_taggs={}
+
+    
+
   }
 
   // GETTERS / SETTERS ==================================================================
