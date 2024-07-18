@@ -5,7 +5,7 @@
 // ==================================================================================================
 
 // Local types
-import { Class_LinkElement } from './Link'
+import { Class_LinkValue } from './Link'
 import { Class_NodeElement } from './Node'
 import { default_grey_color, makeId } from './Utils'
 
@@ -14,7 +14,7 @@ import { default_grey_color, makeId } from './Utils'
 
 export type tag_banner_type= 'none' | 'one' | 'multi' | 'level'
 
-type Type_TagReference = Class_NodeElement | Class_LinkElement
+type Type_TagReference = Class_NodeElement | Class_LinkValue
 
 
 // CLASS TAG ****************************************************************************
