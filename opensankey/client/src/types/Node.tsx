@@ -522,8 +522,9 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public toJSON() {
-    const json_object = {} as { [_: string]: unknown }
-
+    // Init output JSON
+    const json_object: { [_: string]: unknown } = {}
+    // Fill dara
     json_object['idNode'] = this.id
     json_object['name'] = this.name
     json_object['position'] = this.position_type
@@ -543,7 +544,7 @@ export class Class_NodeElement extends Class_Element {
           this.tags_list
             .filter(tag => (tag.group === tagg))
         ]))
-
+    // Return
     return json_object
   }
 
@@ -557,9 +558,9 @@ export class Class_NodeElement extends Class_Element {
    */
   public fromJSON(json_node_object: { [x: string]: any }) {
 
-    this._display.position.type = json_node_object['position'] ?? ''
-    this._display.position.x = json_node_object['x'] ?? 10
-    this._display.position.y = json_node_object['y'] ?? 10
+    this._display.position.type = json_node_object['position'] ?? default_element_position.type
+    this._display.position.x = json_node_object['x'] ?? default_element_position.x
+    this._display.position.y = json_node_object['y'] ?? default_element_position.y
     this.tooltip_text = json_node_object['tooltip_text'] ?? ''
 
     //  Input & output link should be automatically added when we create link from json

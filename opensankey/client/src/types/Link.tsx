@@ -11,6 +11,7 @@ import * as d3 from 'd3'
 import {
   Type_ElementPosition,
   default_element_color,
+  makeId,
 } from './Utils'
 import {
   Class_MenuConfig
@@ -161,14 +162,6 @@ export class Class_LinkElement extends Class_ProtoElement {
   private _values: Class_LinkValueTree | Class_LinkValue
 
   /**
-   * FluxTags
-   * @private
-   * @type {{ [_: string]: Class_Tag }}
-   * @memberof Class_LinkElement
-   */
-  private _tags: { [_: string]: Class_Tag } = {}
-
-  /**
    * Value of tooltip text associated to link
    * @private
    * @type {string}
@@ -285,7 +278,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._values = new Class_LinkValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
-        this._values = this._values.addTagGroup(data_tagg)
+        this._values = this._values.expand(data_tagg)
       })
     // Source
     this._source = source
@@ -315,9 +308,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._control_points.starting_bezier_point.delete()
     this._control_points.ending_bezier_point.delete()
     this._control_points.middle_recycling_point.delete()
-    // Remove reference of self in related tags
-    this.tags_list.forEach(tag => tag.removeReference(this))
-    this._tags = {}
     // Unref self from styles
     this.style.removeReference(this)
     // Delete related values
@@ -411,13 +401,16 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   /**
-   * Check if given tag is referenced by link
+   * Check if given tag is referenced by link's data
    * @param {Class_Tag} tag
    * @return {*}
    * @memberof Class_LinkElement
    */
   public hasGivenTag(tag: Class_Tag) {
-    return (this._tags[tag.id] !== undefined)
+    const value = this.value
+    if (value)
+      return value.hasGivenTag(tag)
+    return false
   }
 
   /**
@@ -426,11 +419,9 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public addTag(tag: Class_Tag) {
-    if (!this.hasGivenTag(tag)) {
-      this._tags[tag.id] = tag
-      tag.addReference(this)
-      this.draw()
-    }
+    const value = this.value
+    if (value)
+      value.addTag(tag)
   }
 
   /**
@@ -439,30 +430,28 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public removeTag(tag: Class_Tag) {
-    if (this.hasGivenTag(tag)) {
-      delete this._tags[tag.id]
-      tag.removeReference(this)
-      this.draw()
-    }
+    const value = this.value
+    if (value)
+      value.removeTag(tag)
   }
 
   public addDataTagGroup(tagg: Class_TagGroup) {
-    this._values.addTagGroup(tagg)
+    this._values.expand(tagg)
   }
 
   public removeDataTagGroup(tagg: Class_TagGroup) {
     if (this._values instanceof Class_LinkValueTree)
-      this._values.removeTagGroup(tagg)
+      this._values.prune(tagg)
   }
 
   public addDataTag(tag: Class_Tag) {
     if (this._values instanceof Class_LinkValueTree)
-      this._values.addTag(tag)
+      this._values.extend(tag)
   }
 
   public removeDataTag(tag: Class_Tag) {
     if (this._values instanceof Class_LinkValueTree)
-      this._values.removeTag(tag)
+      this._values.reduce(tag)
   }
 
   public useDefaultStyle() {
@@ -566,7 +555,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     json_object['style'] = Object.entries(this.drawing_area.sankey.link_styles_dict).filter(stl => stl[1] === (this._display.style))[0][0]
 
     json_object['local'] = this._display.attributes.toJSON()
-    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
 
     json_object['value'] = this._values.toJSON()
 
@@ -581,18 +569,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       this._display.attributes.fromJSON(json_object['local'])
     }
 
-    // In JSON here are how supposed tags var is :
-    // tags:{key_grp_tag:key_tag_selected }
-    // where 'key_grp_tag' represent the id of a flux_taggs group
-    // &  'key_tag_selected' represent the id of the tag selected for that flux_taggs group
-    Object.entries(json_object['tags'] ?? {}).filter(ent => ent[0] in this.drawing_area.sankey.flux_taggs_dict).forEach(ent_fluxtag => {
-      this._tags[ent_fluxtag[0]] = this.drawing_area.sankey.flux_taggs_dict[ent_fluxtag[0]].tags_dict[ent_fluxtag[1] as string]
-    })
-
-    json_object['tags'] = Object.fromEntries(Object.entries(this._tags).map(ent => [ent[0], ent[1].id]))
-
     this.setValueFromJSON(json_object['value'])
-
   }
 
   /**
@@ -894,13 +871,12 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   private getPathColorToUse() {
-    if (
-      (this.drawing_area.sankey.linksColorMap !== 'no_colormap') &&
-      (this.drawing_area.sankey.linksColorMap in this._tags) &&
-      (this._tags[this.drawing_area.sankey.linksColorMap])
-    ) {
-      const list_tag_from_grp_to_use_color = this._tags[this.drawing_area.sankey.linksColorMap]
-      return list_tag_from_grp_to_use_color.color
+    const tagg_dict = this.taggs_dict // Avoid recomputing
+    if (tagg_dict[this.drawing_area.sankey.linksColorMap]) {
+      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.linksColorMap]
+      const tag_for_colormap = this.tags_list
+        .filter(tag => (tag.group === tagg_for_colormap))
+      return tag_for_colormap[0].color
     }
     else {
       return this.shape_color
@@ -1727,7 +1703,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_NodeElement
    */
   public get tags_dict() {
-    return this._tags
+    const value = this.value
+    if (value)
+      return this.value.flux_tags_dict
+    return {}
   }
 
   /**
@@ -1736,7 +1715,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_NodeElement
    */
   public get tags_list() {
-    return Object.values(this._tags)
+    const value = this.value
+    if (value)
+      return this.value.flux_tags_list
+    return []
   }
 
   /**
@@ -1745,13 +1727,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_NodeElement
    */
   public get taggs_dict() {
-    const taggs: { [_: string]: Class_TagGroup } = {}
-    this.tags_list
-      .forEach(tag => {
-        if (!taggs[tag.group.id])
-          taggs[tag.group.id] = tag.group
-      })
-    return taggs
+    const value = this.value
+    if (value)
+      return this.value.flux_taggs_dict
+    return {}
   }
 
   /**
@@ -1762,7 +1741,6 @@ export class Class_LinkElement extends Class_ProtoElement {
   public get taggs_list() {
     return Object.values(this.taggs_dict)
   }
-
 
   /**
    * Set tooltip text
@@ -2476,7 +2454,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private get are_related_tags_selected() {
-    return Object.entries(this._tags).filter(t => !t[1].is_selected).length === 0
+    return this.tags_list.filter(t => !t.is_selected).length === 0
   }
 
   /**
@@ -2912,9 +2890,10 @@ export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public tag_group: Class_TagGroup
   public parent: Class_LinkValueTree | Class_LinkElement
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
+
+  public tag_group: Class_TagGroup
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -2976,11 +2955,11 @@ export class Class_LinkValueTree {
    * @return {*}
    * @memberof Class_LinkValueTree
    */
-  public addTagGroup(tag_group: Class_TagGroup) {
+  public expand(tag_group: Class_TagGroup) {
     if (this.tag_group !== tag_group) // Protection against tag group already present
       Object.keys(this.children)
         .forEach(id => {
-          this.children[id] = this.children[id].addTagGroup(tag_group)
+          this.children[id] = this.children[id].expand(tag_group)
         })
     return this
   }
@@ -2993,7 +2972,7 @@ export class Class_LinkValueTree {
    * @return {*}
    * @memberof Class_LinkValueTree
    */
-  public removeTagGroup(tag_group: Class_TagGroup) {
+  public prune(tag_group: Class_TagGroup) {
     // If tag_group correspond to this tree's tag group - do the pruning process
     if (this.tag_group === tag_group) {
       // Keep parent ref in memory
@@ -3021,7 +3000,7 @@ export class Class_LinkValueTree {
         .forEach(id => {
           const child = this.children[id]
           if (child instanceof Class_LinkValueTree)
-            child.removeTagGroup(tag_group)
+            child.prune(tag_group)
         })
       return this
     }
@@ -3033,7 +3012,7 @@ export class Class_LinkValueTree {
    * @return {*}
    * @memberof Class_LinkValueTree
    */
-  public addTag(tag: Class_Tag) {
+  public extend(tag: Class_Tag) {
     // What kind of children
     const [allValues, allTrees] = this.kindOfChildren()
     // Case 1 : Last node tree before values
@@ -3074,7 +3053,7 @@ export class Class_LinkValueTree {
         Object.values(this.children)
           .forEach(child => {
             // Child can only be Class_LinkValueTree because of test on (!allValues && AllTrees)
-            const _ = child.addTag(tag)
+            const _ = child.extend(tag)
             // Return something not undefined if possible
             if (_ && (!output)) output = _
           })
@@ -3089,7 +3068,7 @@ export class Class_LinkValueTree {
    * @param {Class_Tag} tag
    * @memberof Class_LinkValueTree
    */
-  public removeTag(tag: Class_Tag) {
+  public reduce(tag: Class_Tag) {
     // Tag is from correct tag group
     if (tag.group === this.tag_group) {
       this.removeTagId(tag.id)
@@ -3099,7 +3078,7 @@ export class Class_LinkValueTree {
       Object.values(this.children)
         .forEach(child => {
           if (child instanceof Class_LinkValueTree)
-            child.removeTag(tag)
+            child.reduce(tag)
         })
     }
   }
@@ -3215,7 +3194,7 @@ export class Class_LinkValueTree {
    * @param {(Class_LinkValue | Class_LinkValueTree)} child
    * @memberof Class_LinkValueTree
    */
-  private getChildId(child: Class_LinkValue | Class_LinkValueTree) {
+  private getChildId(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
     let id = undefined
     Object.keys(this.children)
       .forEach(tag_id => {
@@ -3249,11 +3228,26 @@ export class Class_LinkValueTree {
     }
   }
 
+  public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
+    const id = this.getChildId(child)
+    if (id) {
+      if (this.parent instanceof Class_LinkValueTree) {
+        const prev_id = this.parent.getDataTagsIdCombination(this)
+        prev_id.push(id)
+        return prev_id
+      }
+      else return [id]
+    }
+    return []
+  }
+
   // GETTERS / SETTERS ==================================================================
+
   public get link(): Class_LinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
+
 }
 
 /**
@@ -3271,33 +3265,62 @@ export class Class_LinkValue {
   public data_value: number | null = null
   public text_value: string | null = null
 
-  private _extension?: { [_: string]: string }
+  // PRIVATE ATTRIBUTES ==================================================================
+
+  /**
+   * id of value
+   */
+  private _id: string
+
+  /**
+   * FluxTags
+   * @private
+   * @type {{ [_: string]: Class_Tag }}
+   * @memberof Class_LinkElement
+   */
+  private _flux_tags: { [_: string]: Class_Tag } = {}
 
   // CONSTRUCTOR ========================================================================
 
   constructor(parent: Class_LinkValueTree | Class_LinkElement) {
     // Parents / Children relations
     this.parent = parent
+    // Id
+    const name = (this.link?.id ?? '') + '_value_'
+    this.data_tags_id
+      .forEach(tag_id => name + '_' + tag_id)
+    this._id = makeId(name)
   }
 
   delete() {
     // Unref from parent
     if (this.parent instanceof Class_LinkValueTree)
       this.parent.removeChild(this)
+    // Remove reference of self in related tags
+    this.flux_tags_list.forEach(tag => tag.removeReference(this))
+    this._flux_tags = {}
   }
 
   // PUBLIC METHODS =====================================================================
 
+  public draw() {
+    this.link?.draw()
+  }
+
   public copyFrom(element: Class_LinkValue) {
     this.data_value = element.data_value
     this.text_value = element.text_value
+    element.flux_tags_list
+      .forEach(flux_tag => {
+        flux_tag.addReference(this)
+      })
   }
 
-  public addTagGroup(tag_group: Class_TagGroup) {
-    const new_parent = new Class_LinkValueTree(this.parent, tag_group)
+  public expand(data_tag_group: Class_TagGroup) {
+    const new_parent = new Class_LinkValueTree(this.parent, data_tag_group)
     // Copy values from child in grandchildren
-    tag_group.tags_list.forEach(tag => {
-      const _ = new_parent.addTag(tag)
+    data_tag_group.tags_list.forEach(tag => {
+      const _ = new_parent.extend(tag)
       if (_ instanceof Class_LinkValue) // Should always be the case here, but needed
         _.copyFrom(this)
     })
@@ -3307,15 +3330,151 @@ export class Class_LinkValue {
     return new_parent
   }
 
-  public toJSON() {
-    // TODO flux_taggs must be associated to link value and not the flux
-    // then when jsonified jsonify also Class_TagGroup & Class_Tag
-    return {
-      'data_value': this.data_value,
-      'text_value': this.text_value,
+  /**
+   * Check if given flux tag is referenced by value
+   * @param {Class_Tag} tag
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  public hasGivenTag(tag: Class_Tag) {
+    return (this._flux_tags[tag.id] !== undefined)
+  }
+
+  /**
+   * Add and cross-reference a Flux tag with this value
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
+   */
+  public addTag(tag: Class_Tag) {
+    if (!this.hasGivenTag(tag)) {
+      this._flux_tags[tag.id] = tag
+      tag.addReference(this)
+      this.draw()
     }
   }
 
+  /**
+   * Remove given tag and cross-reference from link
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkElement
+   */
+  public removeTag(tag: Class_Tag) {
+    if (this.hasGivenTag(tag)) {
+      delete this._flux_tags[tag.id]
+      tag.removeReference(this)
+      this.draw()
+    }
+  }
+
+  public toJSON() {
+    // Init output JSON
+    const json_object: { [_: string]: unknown } = {}
+    // Fill data
+    json_object['data_value'] = this.data_value
+    json_object['text_value'] = this.text_value
+    json_object['tags'] = Object.fromEntries(
+      this.flux_taggs_list
+        .map(tagg => [
+          tagg.id,
+          this.flux_tags_list
+            .filter(tag => (tag.group === tagg))
+        ]))
+    // Output
+    return json_object
+  }
+
+  public fromJSON(json_object: { [x: string]: any }) {
+    this.data_value = json_object['data_value'] ?? null
+    this.text_value = json_object['text_value'] ?? null
+
+    // In JSON here are how supposed tags var is :
+    // tags: {key_grp_tag: [key_tag, ...] }
+    // where 'key_grp_tag' represent the id of a flux tag group
+    // &  '[key_tag, ...]' represent the array of id of tag selected
+    // for that flux tag group
+    const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
+    Object.entries(json_object['tags'] ?? {})
+      .filter(tagg_ent =>
+        (tagg_ent[0] in flux_taggs_dict) &&
+        (tagg_ent[1] as string[]).length > 0)
+      .forEach(tagg_ent => {
+        const tagg = flux_taggs_dict[tagg_ent[0]]
+        Object.entries(tagg?.tags_dict ?? {})
+          .filter(tag_ent => tag_ent[0] in (tagg_ent[1] as string[]))
+          .forEach(tag_ent => this.addTag(tag_ent[1]))
+      })
+  }
+
+  // GETTERS / SETTERS ==================================================================
+
+  /**
+   * Id of value
+   *
+   * @readonly
+   * @memberof Class_LinkValue
+   */
+  public get id() { return this._id }
+
+  /**
+   * Related link of value
+   *
+   * @readonly
+   * @type {(Class_LinkElement | null)}
+   * @memberof Class_LinkValue
+   */
+  public get link(): Class_LinkElement | null {
+    if (this.parent instanceof Class_LinkValueTree) return this.parent.link
+    else return this.parent
+  }
+
+  /**
+   * Dict as [id: tag] of flux tags related to this value
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get flux_tags_dict() {
+    return this._flux_tags
+  }
+
+  /**
+   * Array of flux tags related to this value
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get flux_tags_list() {
+    return Object.values(this._flux_tags)
+  }
+
+  /**
+   * Dict as [id: tag group] of tag groups related to link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get flux_taggs_dict() {
+    const taggs: { [_: string]: Class_TagGroup } = {}
+    this.flux_tags_list
+      .forEach(tag => {
+        if (!taggs[tag.group.id])
+          taggs[tag.group.id] = tag.group
+      })
+    return taggs
+  }
+
+  /**
+   * Array of tag groups related to link
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get flux_taggs_list() {
+    return Object.values(this.flux_taggs_dict)
+  }
+
+  public get data_tags_id() {
+    if (this.parent instanceof Class_LinkValueTree)
+      return this.parent.getDataTagsIdCombination(this)
+    else
+      return []
+  }
 }
 
 function allPossibleCases(arr: string[][]): string[][] {
@@ -3337,6 +3496,7 @@ function allPossibleCases(arr: string[][]): string[][] {
 type JSONifiedLinkValue = {
   data_value: number,
   text_value: string
+  tags: { [_: string]: Class_Tag }
 }
 /**
  * function that get value for link from JSON with a given path
@@ -3345,12 +3505,18 @@ type JSONifiedLinkValue = {
  * @param {{ [x: string]: any }} JSONValue
  * @return {*}  {(number | null)}
  */
-function recursiveCallLinkValueJSON(path: string[], JSONValue: { [x: string]: any }): JSONifiedLinkValue {
+function recursiveCallLinkValueJSON(
+  path: string[],
+  JSONValue: { [x: string]: any }): JSONifiedLinkValue
+{
   if (path.length > 0) {
     const next_tag = path.shift() as string
-    if (next_tag in JSONValue) return recursiveCallLinkValueJSON(path, JSONValue[next_tag]) // if JSON has next tag_id
-    else return {} as JSONifiedLinkValue // if JSON doesn't have next tag_id that would mean an error in JSON file or it is not defined in JSON
-  } else {
+    if (next_tag in JSONValue)
+      return recursiveCallLinkValueJSON(path, JSONValue[next_tag]) // if JSON has next tag_id
+    else
+      return {} as JSONifiedLinkValue // if JSON doesn't have next tag_id that would mean an error in JSON file or it is not defined in JSON
+  }
+  else {
     const val = {} as JSONifiedLinkValue
     if (JSONValue.data_value) {
       val['data_value'] = JSONValue.data_value
