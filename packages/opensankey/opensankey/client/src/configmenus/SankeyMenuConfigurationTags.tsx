@@ -355,21 +355,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               }
               // Get random colors from color palette
               const nb_tags = tags_entry.length
-              const nb_max_colors = 11 // TODO : why ?
               const colors = colormap({
                 colormap: evt.target.value,
-                nshades: Math.max(nb_max_colors, nb_tags),
+                nshades:  nb_tags,
                 format: 'hex',
                 alpha: 1
               })
-              // Colors steping // number max of colors
-              let step = 1
-              if (nb_tags < nb_max_colors) {
-                step = Math.round(nb_max_colors / nb_tags)
-              }
               // Apply colors to tags
               tags_entry.forEach(
-                (tag, i) => tag.color = colors[i * step]
+                (tag, i) => tag.color = colors[i]
               )
               // Update displayed menu
               setColorMap(evt.target.value)
