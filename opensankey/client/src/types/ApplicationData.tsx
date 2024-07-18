@@ -20,7 +20,7 @@ import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 
 export const initial_window_width=window.innerWidth -50 //TODO : replace 50 by width of toolbar
 export const initial_window_height=window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-
+const initial_show_structure='reconciled'
 /**
  * Class that contains all elements to make the application work
  *
@@ -65,7 +65,7 @@ export class Class_ApplicationData {
   menu_configuration: Class_MenuConfig
 
   // Display
-  private _show_structure: Type_Structure = 'reconciled'
+  private _show_structure: Type_Structure = initial_show_structure
 
   fit_screen: boolean
 
@@ -149,27 +149,22 @@ export class Class_ApplicationData {
   public new_drawing_area_fromJSON(json_object: { [_: string]: any }) {
     // TODO : define default value in case data is not in JSON
 
-    const w = json_object['width'] ?? 1000
-    const h = json_object['height'] ?? 1000
-    const draw_area = new Class_DrawingArea(h, w, this)
+    this.reset()
+    this.drawing_area.grid_size = json_object['grid_square_size'] ?? 50
+    this.drawing_area.grid_visible = json_object['grid_visible'] ?? false
 
-    draw_area.grid_size = json_object['grid_square_size'] ?? 50
-    draw_area.grid_visible = json_object['grid_visible'] ?? false
+    this.drawing_area.horizontal_spacing = json_object['h_space'] ?? 150
+    this.drawing_area.vertical_spacing = json_object['v_space'] ?? 150
 
-    draw_area.horizontal_spacing = json_object['h_space'] ?? 150
-    draw_area.vertical_spacing = json_object['v_space'] ?? 150
-
-    draw_area.scale = json_object['user_scale'] ?? 50
-    draw_area.color = json_object['couleur_fond_sankey'] ?? 'whitesmoke'
+    this.drawing_area.scale = json_object['user_scale'] ?? 50
+    this.drawing_area.color = json_object['couleur_fond_sankey'] ?? 'whitesmoke'
 
     // draw_area.node_label_separator=json_object['node_label_separator']??''
 
-    draw_area.legend.fromJSON(json_object)
+    this.drawing_area.legend.fromJSON(json_object)
 
     // Set values for nodes,links,node_style,flux_style,node_taggs,flux_taggs,data_taggs and all their substructur
-    draw_area.sankey.fromJSON(json_object)
-    this.drawing_area.removeDrawingArea()
-    this.drawing_area = draw_area
+    this.drawing_area.sankey.fromJSON(json_object)
   }
 
   /**
@@ -305,5 +300,26 @@ export class Class_ApplicationData {
       }
     }
 
+  }
+
+  public reset(){
+    this._show_structure = initial_show_structure
+    delete this._maximum_flux
+    delete this._minimum_flux
+    this._filter_label =0
+
+    this.drawing_area.removeDrawingArea()
+    this.drawing_area = new Class_DrawingArea(
+      initial_window_height,
+      initial_window_width,
+      this)
+      
+
+
+    this.drawing_area.reinit()
+
+    this.menu_configuration.updateComponentsMenuConfigNode()
+    this.menu_configuration.updateComponentsMenuConfigLink()
+    this.menu_configuration.updateComponentsRelatedToTags()
   }
 }

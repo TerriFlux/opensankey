@@ -90,6 +90,17 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const toast=useToast()
   const updateMenus = useState(false)
 
+  // Search if a data is stored in localStorage of the navigator
+  const json_data = LZString.decompress(localStorage.getItem('data') as string)
+  let inital_data: JSON | undefined = undefined
+  // If there is, store the data in the sankey_data
+  if (json_data !== null && json_data != '' && json_data != 'null') {
+    const new_data = JSON.parse(json_data)
+
+    inital_data = new_data
+
+  }
+
   // Logo, names, licences
   const applicationContext = initializeApplicationContext()
   // Data, displayed data, default data
@@ -98,7 +109,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     set_data,
     get_default_data,
     {},
-    {}
+    {},
+    inital_data
   )
   // applicationData.new_data = new Class_ApplicationData(window, false)
   const applicationState = initializeElementSelected()
