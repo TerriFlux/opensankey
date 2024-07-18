@@ -696,15 +696,29 @@ export class Class_Sankey {
     name: string,
     type_group: Type_MacroTagGroup
   ): Class_TagGroup {
-    const macro_tag_group = this.getTagGroupsAsDict(type_group)
-    if (!macro_tag_group[id]) {
-      const tag_group = new Class_TagGroup(id, name)
-      macro_tag_group[id] = tag_group
-      // TODO redraw all drawing area (or just legend ?)
+    // Get dict of tag groups that is related to specifed type of group
+    const dict_taggs = this.getTagGroupsAsDict(type_group)
+    // Do not create a new tag group with the same id of another
+    if (!dict_taggs[id]) {
+      // Create
+      let tag_group: Class_TagGroup | Class_TagGroupNodeLevel
+      if (type_group === 'level_taggs') {
+        tag_group = new Class_TagGroupNodeLevel(id, name)
+      }
+      else if (type_group === 'data_taggs'){
+        tag_group = new Class_TagGroup(id, name)
+        this.links_list.forEach(link => link.addDataTagGroup(tag_group)) // Update value tree
+      }
+      else {
+        tag_group = new Class_TagGroup(id, name)
+      }
+      // Update reference
+      dict_taggs[id] = tag_group
+      // Return
       return tag_group
     }
+    // Recursive to avoid id duplicates
     else {
-      // Recursive to avoid id duplicates
       return this.addTagGroup(id + '_0', name + '_0', type_group)
     }
   }
@@ -731,8 +745,12 @@ export class Class_Sankey {
   public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
     const macro_tag_group = this.getTagGroupsAsDict(type_group)
     if (macro_tag_group[id] !== undefined) {
+      // Prune value tree for data tags
+      if (type_group === 'data_taggs')
+        this.links_list.forEach(link => link.removeDataTagGroup(macro_tag_group[id]))
+      // Delete tag groupe properly
       macro_tag_group[id].delete()
-      // TODO redraw all drawing area (or just legend ?)
+      // Remove reference to tag group
       delete macro_tag_group[id]
     }
   }
