@@ -29,6 +29,7 @@ import {
   Class_Tag,
   Class_TagGroup
 } from './Tag'
+import { truncate } from 'fs'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -284,7 +285,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._values = new Class_LinkValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
-        this._values = this._values.addNewTagGroup(data_tagg)
+        this._values = this._values.addTagGroup(data_tagg)
       })
     // Source
     this._source = source
@@ -409,7 +410,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.drawLabel()
   }
 
-
   /**
    * Check if given tag is referenced by link
    * @param {Class_Tag} tag
@@ -444,6 +444,25 @@ export class Class_LinkElement extends Class_ProtoElement {
       tag.removeReference(this)
       this.draw()
     }
+  }
+
+  public addDataTagGroup(tagg: Class_TagGroup) {
+    this._values.addTagGroup(tagg)
+  }
+
+  public removeDataTagGroup(tagg: Class_TagGroup) {
+    if (this._values instanceof Class_LinkValueTree)
+      this._values.removeTagGroup(tagg)
+  }
+
+  public addDataTag(tag: Class_Tag) {
+    if (this._values instanceof Class_LinkValueTree)
+      this._values.addTag(tag)
+  }
+
+  public removeDataTag(tag: Class_Tag) {
+    if (this._values instanceof Class_LinkValueTree)
+      this._values.removeTag(tag)
   }
 
   public useDefaultStyle() {
@@ -2880,14 +2899,24 @@ export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public tag_group: Class_TagGroup | null
-  public parent: Class_LinkValueTree | Class_LinkElement | null
+  public tag_group: Class_TagGroup
+  public parent: Class_LinkValueTree | Class_LinkElement
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
 
+  /**
+   * Creates an instance of Class_LinkValueTree.
+   * @param {(Class_LinkValueTree | Class_LinkElement)} parent
+   * @param {Class_TagGroup} tag_group
+   * @memberof Class_LinkValueTree
+   */
   constructor(
-    parent: Class_LinkValueTree | Class_LinkElement | null,
+    parent: Class_LinkValueTree | Class_LinkElement,
     tag_group: Class_TagGroup
   ) {
     // Instanciate parent
@@ -2901,42 +2930,178 @@ export class Class_LinkValueTree {
     })
   }
 
+  /**
+   * Define deletion behavior
+   * - Remove self from parent
+   * - Delete childrens
+   * @memberof Class_LinkValueTree
+   */
   delete() {
-    // Delete children
-    Object.keys(this.children)
-      .forEach(id => {
-        this.children[id].delete()
-      }
-      )
-    this.children = {}
-    // Unref parent
-    this.parent = null
-    // Unref taggroup
-    this.tag_group = null
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Delete children
+      Object.keys(this.children)
+        .forEach(id => {
+          this.children[id].delete()
+        })
+      this.children = {}
+      // Unref from parent
+      if (this.parent instanceof Class_LinkValueTree)
+        this.parent.removeChild(this)
+      // // Unref taggroup
+      // this.tag_group = null
+    }
   }
 
   // PUBLIC METHODS =====================================================================
 
-  public addNewTagGroup(tag_group: Class_TagGroup) {
-    Object.keys(this.children)
-      .forEach(id => {
-        this.children[id] = this.children[id].addNewTagGroup(tag_group)
-      })
+  /**
+   * Add new children related to new tagGroup
+   * Always add in the bottom of the tree
+   * @param {Class_TagGroup} tag_group
+   * @return {*}
+   * @memberof Class_LinkValueTree
+   */
+  public addTagGroup(tag_group: Class_TagGroup) {
+    if (this.tag_group !== tag_group) // Protection against tag group already present
+      Object.keys(this.children)
+        .forEach(id => {
+          this.children[id] = this.children[id].addTagGroup(tag_group)
+        })
     return this
   }
 
-  public addChild(tag: Class_Tag, children: Class_LinkValueTree | Class_LinkValue) {
-    if (!this.children[tag.id])
-      this.children[tag.id] = children
+  /**
+   * Remove all children related to given tag group
+   * - Either prune bottom of tree (simple case)
+   * - Or slice tree to keep sub-combinations of tags
+   * @param {Class_TagGroup} tag_group
+   * @return {*}
+   * @memberof Class_LinkValueTree
+   */
+  public removeTagGroup(tag_group: Class_TagGroup) {
+    // If tag_group correspond to this tree's tag group - do the pruning process
+    if (this.tag_group === tag_group) {
+      // Keep parent ref in memory
+      const parent = this.parent
+      // Keep first child ref in memory
+      const id = Object.keys(this.children)[0]
+      const child = this.children[id]
+      // Delete ref to first child
+      delete this.children[id]
+      // Re-attach tree together
+      if (parent instanceof Class_LinkValueTree){
+        // When pruning this, first child is preserve because ref has been deleted from children table
+        parent.removeAndReplaceChild(this, child)
+        return parent
+      }
+      else {
+        // Parent is LinkElement
+        return child
+      }
+    }
+    // If tag_group is different than the one used by
+    else {
+      // Recurse, only if children are also trees
+      Object.keys(this.children)
+        .forEach(id => {
+          const child = this.children[id]
+          if (child instanceof Class_LinkValueTree)
+            child.removeTagGroup(tag_group)
+        })
+      return this
+    }
   }
 
-  public createNewChildAsValue(tag: Class_Tag) {
-    if (!this.children[tag.id]) {
-      const _ = new Class_LinkValue(this)
-      this.children[tag.id] = _
-      return _
+  /**
+   * Add new child from given tag
+   * @param {Class_Tag} tag
+   * @return {*}
+   * @memberof Class_LinkValueTree
+   */
+  public addTag(tag: Class_Tag) {
+    // What kind of children
+    const [allValues, allTrees] = this.kindOfChildren()
+    // Case 1 : Last node tree before values
+    if (allValues && (!allTrees)) {
+      // Tag must be from this tree's tag group
+      if (tag.group === this.tag_group) {
+        // If not already existing, create a new child // given tag
+        if (!this.children[tag.id]) {
+          const _ = new Class_LinkValue(this)
+          this.children[tag.id] = _
+        }
+        // Return child // given tag
+        return this.children[tag.id]
+      }
+    }
+    // Case 2 : Current children's are also tree
+    else if ((!allValues) && allTrees) {
+      // If tag's group correspond to this tree's tag group - add new child
+      if (tag.group === this.tag_group) {
+        // If not already existing, create a new child // given tag
+        if (!this.children[tag.id]) {
+          const ref_child = Object.values(this.children)[0] // Never undefined beacause of test on (!allValues && AllTrees)
+          if (ref_child instanceof Class_LinkValueTree) {
+            // Create and reference
+            const _ = new Class_LinkValueTree(this, ref_child.tag_group)
+            this.children[tag.id] = _
+            // Recursivly copy values / sub-trees
+            _.copyFrom(ref_child)
+          }
+        }
+        // Return child // given tag
+        return this.children[tag.id]
+      }
+      // Tag group is different than the one used
+      else {
+        // Go deeper recursivley
+        let output: Class_LinkValue | Class_LinkValueTree | undefined = undefined
+        Object.values(this.children)
+          .forEach(child => {
+            // Child can only be Class_LinkValueTree because of test on (!allValues && AllTrees)
+            const _ = child.addTag(tag)
+            // Return something not undefined if possible
+            if (_ && (!output)) output = _
+          })
+        return output
+      }
     }
     return undefined
+  }
+
+  /**
+   * Remove child related to given Tag
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkValueTree
+   */
+  public removeTag(tag: Class_Tag) {
+    // Tag is from correct tag group
+    if (tag.group === this.tag_group) {
+      this.removeTagId(tag.id)
+    }
+    // Recursive call
+    else {
+      Object.values(this.children)
+        .forEach(child => {
+          if (child instanceof Class_LinkValueTree)
+            child.removeTag(tag)
+        })
+    }
+  }
+
+  /**
+   * Remove given child from children (ie prune tree)
+   * @private
+   * @param {(Class_LinkValue | Class_LinkValueTree)} child
+   * @memberof Class_LinkValueTree
+   */
+  public removeChild(child: Class_LinkValue | Class_LinkValueTree) {
+    // Get child's id
+    const id = this.getChildId(child)
+    // Remove it
+    if (id) this.removeTagId(id)
   }
 
   public getValue(tags: Class_Tag[]): Class_LinkValue | null {
@@ -2980,6 +3145,83 @@ export class Class_LinkValueTree {
     }
   }
 
+
+  // PRIVATE METHODS ====================================================================
+
+  private kindOfChildren() {
+    let allLinkValue = true
+    let allLinkValueTree = true
+    Object.values(this.children)
+      .forEach(child => {
+        allLinkValue = allLinkValue && (child instanceof Class_LinkValue)
+        allLinkValueTree = allLinkValueTree && (child instanceof Class_LinkValueTree)
+      })
+    return [allLinkValue, allLinkValueTree]
+  }
+
+  private copyFrom(element: Class_LinkValueTree) {
+    // Check types of children
+    const [allValues, allTrees] = element.kindOfChildren()
+    // Clean children
+    Object.values(this.children)
+      .forEach(child => child.delete())
+    // Copy children recursively
+    Object.keys(element.children)
+      .forEach(tag_id => {
+        const child_to_copy = element.children[tag_id]
+        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
+          const new_child = new Class_LinkValueTree(this, child_to_copy.tag_group)
+          this.children[tag_id] = new_child
+          new_child.copyFrom(child_to_copy)
+        }
+        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
+          const new_child = new Class_LinkValue(this)
+          this.children[tag_id] = new_child
+          new_child.copyFrom(child_to_copy)
+        }
+      })
+  }
+
+  /**
+   * Find corresponding id for given child
+   * @private
+   * @param {(Class_LinkValue | Class_LinkValueTree)} child
+   * @memberof Class_LinkValueTree
+   */
+  private getChildId(child: Class_LinkValue | Class_LinkValueTree) {
+    let id = undefined
+    Object.keys(this.children)
+      .forEach(tag_id => {
+        if (this.children[tag_id] === child) {
+          id = tag_id
+        }
+      })
+    return id
+  }
+
+
+  private removeAndReplaceChild(
+    child: Class_LinkValue | Class_LinkValueTree,
+    new_child: Class_LinkValue | Class_LinkValueTree
+  ) {
+    // Get current child id
+    const id = this.getChildId(child)
+    // Delete current child
+    if (id) {
+      this.removeTagId(id)
+      // Replace and update cross refs
+      this.children[id] = new_child
+      new_child.parent = this
+    }
+  }
+
+  private removeTagId(id: string) {
+    if (this.children[id]) {
+      this.children[id].delete()
+      delete this.children[id]
+    }
+  }
+
   // GETTERS / SETTERS ==================================================================
   public get link(): Class_LinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
@@ -2998,7 +3240,7 @@ export class Class_LinkValue {
 
   // PRIVATE ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | Class_LinkElement | null
+  public parent: Class_LinkValueTree | Class_LinkElement
   public data_value: number | null = null
   public text_value: string | null = null
 
@@ -3012,28 +3254,31 @@ export class Class_LinkValue {
   }
 
   delete() {
-    this.parent = null
+    // Unref from parent
+    if (this.parent instanceof Class_LinkValueTree)
+      this.parent.removeChild(this)
   }
 
   // PUBLIC METHODS =====================================================================
+
   public copyFrom(element: Class_LinkValue) {
     this.data_value = element.data_value
     this.text_value = element.text_value
   }
 
-  public addNewTagGroup(tag_group: Class_TagGroup) {
+  public addTagGroup(tag_group: Class_TagGroup) {
     const new_parent = new Class_LinkValueTree(this.parent, tag_group)
     // Copy values from child in grandchildren
     tag_group.tags_list.forEach(tag => {
-      const _ = new_parent.createNewChildAsValue(tag)
-      _?.copyFrom(this)
+      const _ = new_parent.addTag(tag)
+      if (_ instanceof Class_LinkValue) // Should always be the case here, but needed
+        _.copyFrom(this)
     })
     // Clean self
     this.delete()
     // Return new parent
     return new_parent
   }
-
 }
 
 function allPossibleCases(arr: string[][]): string[][] {
