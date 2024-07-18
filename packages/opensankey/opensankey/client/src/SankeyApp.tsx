@@ -427,7 +427,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         applicationData.new_data?.drawing_area?.reset();
   })
   /*************************************************************************************************/
-  console.trace('in sankey app')
   return <ChakraProvider theme={opensankey_theme}>
     <div id='sankey_app' style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >

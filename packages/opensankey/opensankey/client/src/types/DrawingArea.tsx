@@ -924,7 +924,6 @@ export class Class_DrawingArea {
         this.pointer_pos = [event.pageX, event.pageY]
   
         this.application_data.menu_configuration.updateComponentsMenuConfigLink()
-        console.log('rmb da')
         this.is_drawing_area_contextualised=true
         this.application_data.menu_configuration.update_components_menu_context_DA.current()
       }

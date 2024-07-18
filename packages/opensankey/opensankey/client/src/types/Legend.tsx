@@ -93,7 +93,9 @@ export class Class_Legend extends Class_Element {
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super('legend', menu_config, 'g_legend')
+
+    //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend 
+    super('legend', menu_config, 'grp_legend') 
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
@@ -541,9 +543,8 @@ export class Class_Legend extends Class_Element {
 
   public get is_visible(): boolean {
     return (
-      this._masked &&
-      this._is_visible
-    )
+      !this._masked 
+        )
   }
 
   public get masked(): boolean { return this._masked }
