@@ -3259,7 +3259,7 @@ export class Class_LinkValueTree {
  */
 export class Class_LinkValue {
 
-  // PRIVATE ATTRIBUTES ==================================================================
+  // PUBLIC ATTRIBUTES ==================================================================
 
   public parent: Class_LinkValueTree | Class_LinkElement
   public data_value: number | null = null
@@ -3280,6 +3280,8 @@ export class Class_LinkValue {
    */
   private _flux_tags: { [_: string]: Class_Tag } = {}
 
+  private _is_currently_deleted = false
+
   // CONSTRUCTOR ========================================================================
 
   constructor(parent: Class_LinkValueTree | Class_LinkElement) {
@@ -3293,12 +3295,16 @@ export class Class_LinkValue {
   }
 
   delete() {
-    // Unref from parent
-    if (this.parent instanceof Class_LinkValueTree)
-      this.parent.removeChild(this)
-    // Remove reference of self in related tags
-    this.flux_tags_list.forEach(tag => tag.removeReference(this))
-    this._flux_tags = {}
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Unref from parent
+      if (this.parent instanceof Class_LinkValueTree)
+        this.parent.removeChild(this)
+      // Remove reference of self in related tags
+      this.flux_tags_list.forEach(tag => tag.removeReference(this))
+      this._flux_tags = {}
+    }
   }
 
   // PUBLIC METHODS =====================================================================
