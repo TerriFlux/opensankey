@@ -175,22 +175,28 @@ export const initializeReinitialization : initializeReinitializationType = (
   applicationState : applicationStateType,
   contextMenu : contextMenuType
 ) => ()=>{
-  // TODO Revoir reinitilisation
-  const new_data = applicationData.get_default_data()
-  applicationState.multi_selected_nodes.current = []
-  applicationState.multi_selected_links.current = []
   localStorage.removeItem('diff')
   localStorage.removeItem('data')
   localStorage.removeItem('last_save')
   localStorage.removeItem('initial_data')
   localStorage.removeItem('icon_imported')
-  applicationState.ref_selected_style_node.current = 'default'
-  applicationState.ref_selected_style_link.current = 'default'
-  contextMenu.ref_setter_contextualised_node.current!(undefined)
-  contextMenu.ref_setter_contextualised_link.current!(undefined)
-  contextMenu.tagContext.current![0][1](undefined)
-  contextMenu.showContextZDDRef.current![1](false)
-  applicationData.set_data(new_data)
+
+  // Reset contextualised node
+  applicationData.new_data.drawing_area.node_contextualied = undefined
+  applicationData.new_data.menu_configuration.update_components_menu_context_node.current()
+
+  // Reset contextualised link
+  applicationData.new_data.drawing_area.link_contextualied = undefined
+  applicationData.new_data.menu_configuration.update_components_menu_context_link.current()
+
+  // Reset contextualised DA
+  applicationData.new_data.drawing_area.is_drawing_area_contextualised=false
+  applicationData.new_data.menu_configuration.update_components_menu_context_DA.current()
+
+  applicationData.new_data.reset()
+
+  // TODO : reset Class_ApplicationData instance
+
   sessionStorage.setItem('dismiss_warning_sankey_plus','0')
   sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
 }
@@ -201,8 +207,15 @@ export const initializeApplicationData : initializeApplicationDataType = (
   set_data,
   get_default_data,
   display_nodes,
-  display_links
-)=>{return {
+  display_links,
+  initial_data
+)=>{
+  const application_data= new Class_ApplicationData(window, false)
+if(initial_data!==undefined){
+  application_data.new_drawing_area_fromJSON(initial_data)
+  
+}
+  return {
   data : data,
   set_data : set_data,
   get_default_data : get_default_data,
@@ -213,7 +226,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
   min_link_thickness:2,
   dataVarToUpdate:useRef(['']),
   setDiagram:setDiagram,
-  new_data: new Class_ApplicationData(window, false)
+  new_data: application_data
 }
 }
 // General functions necessay to draw the diagram
@@ -233,25 +246,7 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
     AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
   }
   const reDrawLegend=()=>{
-    // DrawLegend(
-    //   applicationData,
-    //   applicationContext,
-    //   contextMenu,
-    //   GetLinkValue,
-    //   applicationState.legend_clicked,
-    //   ComponentUpdater,
-    //   reDrawLegend, //TODO why
-    //   resizeCanvas
-    // )
-    // //if(!windowSankey.SankeyToolsStatic){ TODO
-    // const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-    // g_legend.call( drag_legend(
-    //   resizeCanvas,
-    //   node_function,
-    //   link_function,
-    //   applicationData,
-    //   applicationState
-    // ))
+
   }
   return {
     GetSankeyMinWidthAndHeight,
@@ -689,7 +684,7 @@ export const initializeShowDialog : initializeShowDialogType = () => {return {
   ref_setter_show_modale_support : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_excel_dialog : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_save_json : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_getter_show_save_json : useRef(false), // TODO why not a set function
+  ref_getter_show_save_json : useRef(false),
   ref_setter_show_style_node : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_style_link : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
 

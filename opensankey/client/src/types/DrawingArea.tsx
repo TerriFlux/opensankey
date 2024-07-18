@@ -227,7 +227,15 @@ export class Class_DrawingArea {
   }
 
   // PUBLIC METHODS ====================================================================
+  public reinit(){
+    // TODO cut link between old _sankey with DA so garbage collector delete old instance
+    this._sankey=new Class_Sankey(this, this.application_data.menu_configuration)
 
+    // TODO cut link between old _legend with DA so garbage collector delete old instance
+    this._legend = new Class_Legend(this, this.application_data.menu_configuration)
+
+    this.reset()
+  }
   /**
    * Reset drawing area
    * @memberof Class_DrawingArea

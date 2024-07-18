@@ -534,6 +534,7 @@ export type initializeApplicationDataType = (
   get_default_data:OSGetDefaultData,
   display_nodes : {[_:string]:SankeyNode},
   display_links : {[_:string]:SankeyLink},
+  initial_data:JSON| undefined
 
 )=>applicationDataType
 
