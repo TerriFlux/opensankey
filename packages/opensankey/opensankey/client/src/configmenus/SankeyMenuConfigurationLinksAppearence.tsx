@@ -910,7 +910,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               const orth_pos = element.value_label_orthogonal_position
               element.value_label_pos_auto = evt.target.checked
               element.value_label_position = 'start'
-              element.value_label_orthogonal_position = (orth_pos === 'frozen') ? 'middle' : orth_pos
+              element.value_label_orthogonal_position = (orth_pos === 'dragged') ? 'middle' : orth_pos
             })
             selected_links.forEach(link => link.deleteRelativeLabelPos())
             refreshThisAndUpdateRelatedComponents()
@@ -952,7 +952,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                       elements.forEach(element => {
                         const orth_pos = element.value_label_orthogonal_position
                         element.value_label_position = 'start'
-                        element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                        element.value_label_orthogonal_position = (orth_pos == 'dragged') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
                       refreshThisAndUpdateRelatedComponents()
@@ -977,7 +977,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                       elements.forEach(element => {
                         const orth_pos = element.value_label_orthogonal_position
                         element.value_label_position = 'middle'
-                        element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                        element.value_label_orthogonal_position = (orth_pos == 'dragged') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
                       refreshThisAndUpdateRelatedComponents()
@@ -1001,7 +1001,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                       elements.forEach(element => {
                         const orth_pos = element.value_label_orthogonal_position
                         element.value_label_position = 'end'
-                        element.value_label_orthogonal_position = (orth_pos == 'frozen') ? 'middle' : orth_pos
+                        element.value_label_orthogonal_position = (orth_pos == 'dragged') ? 'middle' : orth_pos
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
                       refreshThisAndUpdateRelatedComponents()
@@ -1031,7 +1031,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                     elements.forEach(element => {
                       element.value_label_pos_auto = false
                       const lab_pos = element.value_label_position
-                      element.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+                      element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
                       element.value_label_orthogonal_position = 'below'
                     })
                     selected_links.forEach(link => link.deleteRelativeLabelPos())
@@ -1060,7 +1060,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                     elements.forEach(element => {
                       element.value_label_pos_auto = false
                       const lab_pos = element.value_label_position
-                      element.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+                      element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
                       element.value_label_orthogonal_position = 'middle'
                     })
                     selected_links.forEach(link => link.deleteRelativeLabelPos())
@@ -1090,7 +1090,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                       elements.forEach(element => {
                         element.value_label_pos_auto = false
                         const lab_pos = element.value_label_position
-                        element.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
+                        element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
                         element.value_label_orthogonal_position = 'above'
                       })
                       selected_links.forEach(link => link.deleteRelativeLabelPos())
@@ -1115,8 +1115,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             if (element.value_label_on_path) {
               const lab_pos = element.value_label_position
               const lab_orth_pos = element.value_label_orthogonal_position
-              element.value_label_position = (lab_pos == 'frozen') ? 'middle' : lab_pos
-              element.value_label_orthogonal_position = (lab_orth_pos == 'frozen' ? 'middle' : lab_orth_pos)
+              element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
+              element.value_label_orthogonal_position = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
             }
           })
           selected_links.forEach(link => link.deleteRelativeLabelPos())

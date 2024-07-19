@@ -36,8 +36,8 @@ import { truncate } from 'fs'
 
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
-export type Type_PathLabelHPosition = 'frozen' | 'start' | 'middle' | 'end'
-export type Type_PathLabelVPosition = 'frozen' | 'above' | 'middle' | 'below'
+export type Type_PathLabelHPosition = 'dragged' | 'start' | 'middle' | 'end'
+export type Type_PathLabelVPosition = 'dragged' | 'above' | 'middle' | 'below'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -133,6 +133,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     position_ending: Type_ElementPosition,
     style: Class_LinkStyle,
     attributes: Class_LinkAttribute
+    _x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    _y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    _offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -175,7 +178,6 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private _x_label?: number
 
   /**
    * TODO
@@ -183,7 +185,6 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @type {number}
    * @memberof Class_LinkElement
    */
-  private _y_label?: number
 
   private _control_points: {
     starting_curve_point: Class_Handler,
@@ -395,8 +396,8 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public deleteRelativeLabelPos() {
-    delete this._x_label
-    delete this._y_label
+    delete this._display._x_label
+    delete this._display._y_label
     this.drawLabel()
   }
 
@@ -757,25 +758,8 @@ export class Class_LinkElement extends Class_ProtoElement {
           // Compute text position
           if (this.value_label_on_path) {
             // Relative position from starting point of path
-            let label_anchor, label_hposition
-            if (this.value_label_position === 'start') {
-              label_anchor = 'start'
-              label_hposition = '1%'
-            }
-            else if (this.value_label_position === 'middle') {
-              label_anchor = 'middle'
-              label_hposition = '50%'
-            }
-            else if (this.value_label_position === 'end') {
-              label_anchor = 'end'
-              label_hposition = '99%'
-            }
-            else { // Frozen
-              label_anchor = 'start'
-              label_hposition = '10px'
-            }
-            d3_textpath_selection?.attr('startOffset', label_hposition)
-            d3_textpath_selection?.attr('text-anchor', label_anchor)
+            this.updateTextPathOffset()
+
             // Ortogonal position from path
             let label_ortho_position
             let label_dominant_baseline
@@ -791,16 +775,100 @@ export class Class_LinkElement extends Class_ProtoElement {
               label_ortho_position = this.thickness / 2 + this.value_label_font_size
               label_dominant_baseline = 'text-top'
             }
-            else { // Frozen
+            else { // dragged
               label_ortho_position = 0
               label_dominant_baseline = 'middle'
             }
             d3_text_selection?.attr('dy', label_ortho_position)
             d3_text_selection?.attr('dominant-baseline', label_dominant_baseline)
           }
+
+          if (!this.drawing_area.static) {
+            d3_textpath_selection?.call(d3.drag<SVGTextPathElement, this>()
+              .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+              .on('start', ev => this.dragTextStart(ev))
+              .on('drag', ev => this.dragTextMove(ev))
+              .on('end', ev => this.dragTextend(ev))
+            )
+          }
         }
       }
     }
+  }
+
+  /**
+ * Function triggered when we start dragging node name label, it initialise relative position if undefined
+ *
+ * @private
+ * @param {d3.D3DragEvent<SVGTextPathElement,Class_NodeElement,Class_NodeElement>} event
+ * @memberof Class_NodeElement
+ */
+  private dragTextStart(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+
+    //if _x_label is undefined init _x_label pos whith current fixed x position value
+    if (this._display._offset_label === undefined) {
+
+      let label_pos_offset = 1
+
+      if (this.value_label_position === 'middle') {
+        label_pos_offset = 50
+      }
+      else if (this.value_label_position === 'end') {
+        label_pos_offset = 99
+      }
+      this._display._offset_label = label_pos_offset
+      this.value_label_position = 'dragged'
+    }
+
+  }
+
+  /**
+   *Function triggered when we move the node name label, it update relative node position & redraw the name slabel
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextPathElement,Class_NodeElement,Class_NodeElement>} event
+   * @memberof Class_NodeElement
+   */
+  private dragTextMove(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+    this._display._offset_label = ((this._display._offset_label !== undefined) ? this._display._offset_label : 0) + event.dx
+    if (this._display._offset_label < 0) this._display._offset_label = 0
+    else if (this._display._offset_label > 100) this._display._offset_label = 100
+    this.updateTextPathOffset()
+  }
+
+  private dragTextend(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+    this.menu_config.updateComponentsMenuConfigLink()
+  }
+
+  /**
+   * Function used to set link label offset on DA
+   *
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private updateTextPathOffset() {
+    let label_anchor = 'start'
+    let label_position = 1
+
+    if (this._display._offset_label !== undefined) {
+      const offset = this._display._offset_label
+      label_anchor = offset > 50 ? 'end' : 'start'
+      label_position = offset
+    } else {
+
+      if (this.value_label_position === 'middle') {
+        label_anchor = 'middle'
+        label_position = 50
+      }
+      else if (this.value_label_position === 'end') {
+        label_anchor = 'end'
+        label_position = 99
+      }
+
+    }
+    this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
+    this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
+
   }
 
   private drawControlPoint() {
@@ -2082,6 +2150,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public set value_label_position(_: Type_PathLabelHPosition) {
+    if (_ !== 'dragged') delete this._display._offset_label
     this._display.attributes.value_label_position = _
     this.drawLabel()
   }
@@ -2983,7 +3052,7 @@ export class Class_LinkValueTree {
       // Delete ref to first child
       delete this.children[id]
       // Re-attach tree together
-      if (parent instanceof Class_LinkValueTree){
+      if (parent instanceof Class_LinkValueTree) {
         // When pruning this, first child is preserve because ref has been deleted from children table
         parent.removeAndReplaceChild(this, child)
         return parent
@@ -3513,8 +3582,7 @@ type JSONifiedLinkValue = {
  */
 function recursiveCallLinkValueJSON(
   path: string[],
-  JSONValue: { [x: string]: any }): JSONifiedLinkValue
-{
+  JSONValue: { [x: string]: any }): JSONifiedLinkValue {
   if (path.length > 0) {
     const next_tag = path.shift() as string
     if (next_tag in JSONValue)
