@@ -23,6 +23,7 @@ import {
   InputRightAddon,
   InputGroup,
   Input,
+  useBoolean,
 } from '@chakra-ui/react'
 
 // Local libs
@@ -324,7 +325,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
 /**
  * Component developped for number input of the config menu
  * @param {*} {
- *   default_value,
+ *   function_getValue,
  *   function_onChange,
  *   function_onBlur,
  *   menu_for_style = false,
@@ -337,7 +338,8 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
  * @return {*}
  */
 export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
-  default_value,
+  ref = useRef((_: number) => null),
+  function_getValue,
   function_onChange,
   function_onBlur,
   menu_for_style = false,
@@ -350,7 +352,8 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState(default_value)
+  const [value, setValue] = useState(function_getValue())
+  ref.current = setValue
 
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -400,6 +403,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
         function_onBlur()
         // UPdate value
         function_onChange(value)
+        setValue(function_getValue())
       }}
     />
       {stepperBtn}
@@ -409,7 +413,8 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
 }
 
 export type FCType_ConfigMenuNumberInput = {
-  default_value: number | null | undefined,
+  ref?: MutableRefObject<(_:number) => void>
+  function_getValue: () => number | null | undefined,
   function_onChange: (val: number | null | undefined) => void
   function_onBlur: () => void
   menu_for_style?: boolean

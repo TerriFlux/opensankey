@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useReducer, useRef, useState } from 'react'
 
 import {
   Box,
@@ -40,22 +40,28 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   const { t } = applicationContext
   // Sankey datas
   const { new_data } = applicationData
+
+  // Data tags and links ---------------------------------------------------------------
+  const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
+  const list_links_selected = new_data.drawing_area.selected_links_list
+  const [value, setValue] = useState(list_links_selected[0]?.value)
+
   // Boolean used to force this component to reload
-  const [ , refreshThis ] = useBoolean()
+  const refreshThis = () => {
+    setValue(new_data.drawing_area.selected_links_list[0]?.value)
+  }
+
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = refreshThis.toggle
+  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = refreshThis
 
   // Function used to reset menu UI -----------------------------------------------------
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis.toggle()
+    new_data.menu_configuration.updateComponentsMenuConfigLink()
   }
 
-  // Data tags and links ---------------------------------------------------------------
-  const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
-  const list_links_selected = new_data.drawing_area.selected_links_list
 
   // JSX -------------------------------------------------------------------------------
   const content = <Box
@@ -87,7 +93,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                     tag.setUnSelected()
                 })
                 // Update this menu
-                refreshThisAndUpdateRelatedComponents()
+                refreshThis()
               }}
             >
               {
@@ -114,7 +120,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           {t('Flux.data.vpp')}
         </Box>
         <ConfigMenuNumberInput
-          default_value={list_links_selected[0]?.data_value}
+          function_getValue={() => {return (value?.data_value ?? null) }}
           function_onChange={(_) => {
             list_links_selected.forEach(link => {
               link.data_value = (_ ?? null)
@@ -145,7 +151,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           {t('Flux.data.affichage')}
         </Box>
         <ConfigMenuTextInput
-          default_value={list_links_selected[0]?.text_value}
+          default_value={value?.text_value}
           function_onChange={(_) => {
             list_links_selected.forEach(link=>{
               link.text_value = (_ ?? '')
