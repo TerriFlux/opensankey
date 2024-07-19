@@ -58,7 +58,7 @@ import {
   applicationDataType,
   applicationDrawType
 } from '../types/Types'
-import { Class_TagGroup, Class_TagGroupNodeLevel } from '../types/Tag'
+import { Class_ProtoTagGroup, Class_TagGroup, Class_TagGroupNodeLevel } from '../types/Tag'
 import { Class_Sankey } from '../types/Sankey'
 import {
   ConvertDataFuncType
@@ -367,9 +367,8 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = ({
  */
 const handleSimpleDropdown = (
   evt: React.ChangeEvent<HTMLSelectElement>,
-  tags_group: Class_TagGroup,
+  tags_group: Class_ProtoTagGroup,
 ) => {
-  const val =
   tags_group.tags_list.forEach(tag => {
     if (tag.id === evt.target.value)
       tag.setSelected()
@@ -387,13 +386,16 @@ const handleSimpleDropdown = (
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: Class_TagGroup, sankey_data: Class_Sankey,
+const HandleMultiDropdown = (
+  selected: [{ label: string, value: string }],
+  tags_group: Class_ProtoTagGroup,
+  sankey_data: Class_Sankey,
 ) => {
   const tab_sel = selected.map((d) => {
     return d.value
   })
   tags_group.tags_list.forEach(tag => {
-    if (tab_sel.includes(tag.name))
+    if (tab_sel.includes(tag.id))
       tag.setSelected()
     else
       tag.setUnSelected()
@@ -403,7 +405,7 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
     tab_sel.length === 0 &&
     sankey_data.data_taggs_list.map(dt => dt.name).includes(tags_group.name)
   ) {
-    Object.entries(tags_group.tags_dict)[0][1].setSelected()
+    tags_group.tags_list[0]?.setSelected()
   }
 }
 
@@ -1004,97 +1006,100 @@ const AddAllDropDownFlux: AddAllDropDownFluxFType = (
 ) => {
   const [, setForceUpdate] = useBoolean()
   const { new_data } = applicationData
-  const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
-  const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
-  const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
-  const level_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('level_taggs')
-  const { linksColorMap, links_dict} = new_data.drawing_area.sankey
-  const banner_grouptag = Object.values(flux_taggs).filter(tags_group => { return ((tags_group.banner == 'one') || (tags_group.banner == 'multi')) })
-  const allDD = banner_grouptag.map(tags_group => {
-    const the_tags_group = tags_group
-    const tags_selected = Object.entries(flux_taggs).filter((k) => { return k[1] == the_tags_group })[0]
+  const flux_taggs_dict = new_data.drawing_area.sankey.flux_taggs_dict
+  const data_taggs_dict = new_data.drawing_area.sankey.data_taggs_dict
+  const flux_taggs_with_banner = Object.values(flux_taggs_dict)
+    .filter(flux_tagg => {
+      return ((flux_tagg.banner === 'one') || (flux_tagg.banner === 'multi')) })
+  // Create drop down
+  const allDD = flux_taggs_with_banner
+    .map(flux_tagg => {
+      // Create the tag selector
+      // It can either select one tag at the time or multiple at the time
+      let selector = <></>
+      if (flux_tagg.banner == 'one') {
+        selector = <Select
+          key={flux_tagg.name}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            handleSimpleDropdown(evt, flux_tagg)
+            setForceUpdate.toggle()
+          }}>{
+            flux_tagg.tags_list.map(tag => {
+              return (<option key={tag.id} value={tag.id}>{tag.name}</option>)
+            })}
+        </Select>
+      }
+      else {
+        const options = flux_tagg.tags_list
+          .map(tag => { return { 'label': tag.name, 'value': tag.id } })
+        const options_selected = flux_tagg.tags_list
+          .filter(tag => tag.is_selected)
+          .map(tag => { return { 'label': tag.name, 'value': tag.id } })
+        selector = <MultiSelect
+          className={'multidropdown_filter_node_link'}
+          valueRenderer={(options_selected: Type_MenuSelectionEntry[]) => {
+            return (
+              options_selected.length ?
+                options_selected.map(({ label }) => label + ', ') :
+                'Aucun tag sélectionné')
+          }}
+          labelledBy={'dropdown_node_filter'}
+          overrideStrings={{
+            'selectAll': 'Tout sélectionner', // TODO Mettre traduction ici
+          }}
+          value={options_selected}
+          options={options}
+          onChange={(options_selected: [{ label: string, value: string }]) => {
+            HandleMultiDropdown(options_selected, flux_tagg, new_data.drawing_area.sankey)
+            setForceUpdate.toggle()
+          }}
+        />
+      }
 
-    // Create the tag selector
-    // It can either select one tag at the time or multiple at the time
-    let selector = <></>
-    if (the_tags_group.banner == 'one') {
-      selector = <Select
-        key={the_tags_group.name}
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          handleSimpleDropdown(evt, the_tags_group)
-          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
-          setForceUpdate.toggle()
-        }}>{
-          Object.entries(the_tags_group.tags_dict).map(([tag_key, tag], i) => {
-            return (<option key={i} value={tag_key}>{tag.name}</option>)
-          })}
-      </Select>
-    } else {
-      const options = Object.entries(the_tags_group.tags_dict).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const selected = Object.entries(the_tags_group.tags_dict).filter(d => d[1].is_selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      selector = <MultiSelect
-        className={'multidropdown_filter_node_link'}
-        // style={{ color: 'black',width:'200px' }}
-        valueRenderer={(selected: Type_MenuSelectionEntry[]) => {
-          return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
-        }}
-        labelledBy={'dropdown_node_filter'}
-        overrideStrings={{
-          'selectAll': 'Tout sélectionner',
-        }}
-        value={selected}
-        options={options}
-        onChange={(selected: [{ label: string, value: string }]) => {
-          HandleMultiDropdown(selected, the_tags_group, new_data.drawing_area.sankey)
-          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
-          setForceUpdate.toggle()
-
-        }}
-      />
-    }
-
-    return (
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
+      return (
         <Box
-          layerStyle='menuconfigpanel_option_name'
+          layerStyle='menuconfigpanel_grid'
         >
-          {the_tags_group.name}
-        </Box>
-        <Box
-          as='span'
-          layerStyle='popover_sidebar_row_tag_filter'
-        >
-          <OSTooltip label={t('Banner.ndd_lst')}>
-            {selector}
-          </OSTooltip>
-          <OSTooltip label={t('Banner.ndd_chk')} >
-            <Box
-              justifySelf='end'
-              alignSelf='center'
-              height='1rem'
-            >
-              <Switch
-                isChecked={new_data.drawing_area.sankey.linksColorMap == tags_selected[0]}
-                onChange={evt => {
-                  Object.values(flux_taggs).forEach(tags_group => { tags_group.show_legend = false })
-                  Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
+          <Box
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {flux_tagg.name}
+          </Box>
+          <Box
+            as='span'
+            layerStyle='popover_sidebar_row_tag_filter'
+          >
+            <OSTooltip label={t('Banner.ndd_lst')}>
+              {selector}
+            </OSTooltip>
+            <OSTooltip label={t('Banner.ndd_chk')} >
+              <Box
+                justifySelf='end'
+                alignSelf='center'
+                height='1rem'
+              >
+                <Switch
+                  isChecked={new_data.drawing_area.sankey.linksColorMap === flux_tagg.id}
+                  onChange={evt => {
+                    Object.values(flux_taggs_dict)
+                      .forEach(flux_tagg => { flux_tagg.show_legend = false })
+                    Object.values(data_taggs_dict)
+                      .forEach(flux_tagg => flux_tagg.show_legend = false)
 
-                  new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
-                  if (evt.target.checked) {
-                    new_data.drawing_area.sankey.linksColorMap = tags_selected[0]
-                    flux_taggs[tags_selected[0]].show_legend = true
-                  }
-                  setForceUpdate.toggle()
-                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                }}
-              />
-            </Box>
-          </OSTooltip>
-        </Box>
-      </Box>)
-  })
+                    new_data.drawing_area.sankey.linksColorMap = 'no_colormap'
+                    if (evt.target.checked) {
+                      new_data.drawing_area.sankey.linksColorMap = flux_tagg.id
+                      flux_tagg.show_legend = true
+                    }
+                    setForceUpdate.toggle()
+                    redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+                  }}
+                />
+              </Box>
+            </OSTooltip>
+          </Box>
+        </Box>)
+    })
   return (<>{allDD.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}</>)
 }
 
@@ -1110,9 +1115,8 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 }) => {
   const { new_data } = applicationData
   const [, setForceUpdate] = useBoolean()
-  const data_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
-  const flux_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
-  const node_taggs = new_data.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
+  const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
+  const flux_taggs = new_data.drawing_area.sankey.flux_taggs_dict
   const banner_grouptag = Object.entries(data_taggs).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     let selector = <></>
@@ -1154,7 +1158,6 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
           //   data.linkZIndex = Object.keys(pureLinks)
           // }
           handleSimpleDropdown(evt, tags_group)
-          redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
           setForceUpdate.toggle()
           new_data.menu_configuration.updateComponentMenu.current()
         }}>

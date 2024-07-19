@@ -28,7 +28,7 @@ import {
 
 // Local types
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
-import { Class_Tag, Class_TagGroup, tag_banner_type } from '../types/Tag'
+import { Class_ProtoTag, Class_ProtoTagGroup, tag_banner_type } from '../types/Tag'
 
 // Local functions / components
 import { GetRandomInt, OSTooltip } from './SankeyUtils'
@@ -181,9 +181,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   /**
    * Button handler for tag deletion
-   * @param {Class_Tag} tag
+   * @param {Class_ProtoTag} tag
    */
-  const handleDelTag = (tag: Class_Tag) => {
+  const handleDelTag = (tag: Class_ProtoTag) => {
     // Delete given tag
     tag.delete()
     // Update menus
@@ -195,7 +195,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
    *
    * @param {Class_TagGroup} tagg
    */
-  const handleDelGroupTag = (tagg: Class_TagGroup) => {
+  const handleDelGroupTag = (tagg: Class_ProtoTagGroup) => {
     // Delete given tag group
     new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tagg)
     // Update menus
@@ -204,11 +204,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   /**
    * Button handler for tag group banner modification
-   * @param {string} tags_group_entry_id
+   * @param {Class_ProtoTagGroup} tag_group
    * @param {tag_banner_type} new_banner_type
    */
   const handleBanner = (
-    tag_group: Class_TagGroup,
+    tag_group: Class_ProtoTagGroup,
     new_banner_type: tag_banner_type
   ) => {
     // UPdate banner for given tag group

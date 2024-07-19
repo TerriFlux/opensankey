@@ -94,8 +94,8 @@ export class Class_Legend extends Class_Element {
   ) {
     // Init parent class attributes
 
-    //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend 
-    super('legend', menu_config, 'grp_legend') 
+    //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend
+    super('legend', menu_config, 'grp_legend')
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
@@ -245,9 +245,9 @@ export class Class_Legend extends Class_Element {
    * @memberof Class_Legend
    */
   private drawTagDisplayed() {
-    const node_taggs = this.drawing_area.sankey.getTagGroupsAsDict('node_taggs')
-    const flux_taggs = this.drawing_area.sankey.getTagGroupsAsDict('flux_taggs')
-    const data_taggs = this.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+    const node_taggs = this.drawing_area.sankey.node_taggs_dict
+    const flux_taggs = this.drawing_area.sankey.flux_taggs_dict
+    const data_taggs = this.drawing_area.sankey.data_taggs_dict
     // Get all grp tag insind one variable
     const all_tags = Object.assign({}, node_taggs, flux_taggs, data_taggs)
     Object.entries(all_tags)
@@ -543,7 +543,7 @@ export class Class_Legend extends Class_Element {
 
   public get is_visible(): boolean {
     return (
-      !this._masked 
+      !this._masked
         )
   }
 
