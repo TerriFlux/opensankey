@@ -71,6 +71,17 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
       // Définition des valeurs selon les paramètre dataTags
       list_data_taggs.map(data_tagg => {
         if (data_tagg.has_tags) {
+          // Only one dataTag / group can be selected
+          let selected_data_tags = data_tagg.selected_tags_list
+          if (selected_data_tags.length === 0) {
+            data_tagg.tags_list[0].setSelected()
+            selected_data_tags = data_tagg.selected_tags_list
+          }
+          else if (selected_data_tags.length > 1) {
+            const data_tags_to_unselect = selected_data_tags.splice(1)
+            data_tags_to_unselect.forEach(tag => tag.setUnSelected())
+          }
+          // Retrun selection box
           return (<>
             <Box
               as='span'
@@ -82,7 +93,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
               name={data_tagg.id}
               variant='menuconfigpanel_option_select'
               value={
-                data_tagg.selected_tags_list[0]?.id ?? data_tagg.tags_list[0].id // fallback to first tag
+                selected_data_tags[0].id
               }
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 // Update selected attributes for tags
