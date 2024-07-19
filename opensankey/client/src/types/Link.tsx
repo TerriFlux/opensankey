@@ -27,10 +27,11 @@ import {
   Class_NodeElement
 } from './Node'
 import {
+  Class_DataTag,
+  Class_DataTagGroup,
   Class_Tag,
-  Class_TagGroup
+  Class_TagGroup,
 } from './Tag'
-import { truncate } from 'fs'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -435,21 +436,21 @@ export class Class_LinkElement extends Class_ProtoElement {
       value.removeTag(tag)
   }
 
-  public addDataTagGroup(tagg: Class_TagGroup) {
+  public addDataTagGroup(tagg: Class_DataTagGroup) {
     this._values.expand(tagg)
   }
 
-  public removeDataTagGroup(tagg: Class_TagGroup) {
+  public removeDataTagGroup(tagg: Class_DataTagGroup) {
     if (this._values instanceof Class_LinkValueTree)
       this._values.prune(tagg)
   }
 
-  public addDataTag(tag: Class_Tag) {
+  public addDataTag(tag: Class_DataTag) {
     if (this._values instanceof Class_LinkValueTree)
       this._values.extend(tag)
   }
 
-  public removeDataTag(tag: Class_Tag) {
+  public removeDataTag(tag: Class_DataTag) {
     if (this._values instanceof Class_LinkValueTree)
       this._values.reduce(tag)
   }
@@ -602,11 +603,11 @@ export class Class_LinkElement extends Class_ProtoElement {
         const valForPath = recursiveCallLinkValueJSON(cpy_path, obj);
 
         if (valForPath.data_value !== undefined) {
-          (this._values as Class_LinkValueTree).setDataValue(list_tag, valForPath.data_value)
+          (this._values as Class_LinkValueTree).setDataValueForDataTags(list_tag, valForPath.data_value)
         }
 
         if (valForPath.text_value !== undefined) {
-          (this._values as Class_LinkValueTree).setTextValue(list_tag, valForPath.text_value)
+          (this._values as Class_LinkValueTree).setTextValueForDataTags(list_tag, valForPath.text_value)
         }
       })
     }
@@ -1643,6 +1644,20 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   /**
+   * Get value object.
+   * Either search correct current value with data_taggs,
+   * or return directly the value when there is no data_taggs
+   * @readonly
+   * @memberof Class_LinkElement
+   */
+  public get value() {
+    if (this._values instanceof Class_LinkValue)
+      return this._values
+    else
+      return this._values.getValueForDataTags(this.drawing_area.sankey.selected_data_tags_list)
+  }
+
+  /**
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
    * @memberof Class_LinkElement
@@ -2412,19 +2427,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel() }
 
-  // PRIVATE GETTER / SETTER ============================================================
-
-  /**
-   * Get value object.
-   * Either search correct current value with data_taggs,
-   * or return directly the value when there is no data_taggs
-   * @readonly
-   * @memberof Class_LinkElement
-   */
-  private get value() {
-    if (this._values instanceof Class_LinkValue) return this._values
-    else return this._values.getValue(this.drawing_area.sankey.selected_data_tags_list)
-  }
+  // PRIVATE GETTER / SETTER =============================================================
 
   /**
    * Compute lenght of link
@@ -2893,7 +2896,7 @@ export class Class_LinkValueTree {
   public parent: Class_LinkValueTree | Class_LinkElement
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
-  public tag_group: Class_TagGroup
+  public data_tag_group: Class_DataTagGroup
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -2904,20 +2907,20 @@ export class Class_LinkValueTree {
   /**
    * Creates an instance of Class_LinkValueTree.
    * @param {(Class_LinkValueTree | Class_LinkElement)} parent
-   * @param {Class_TagGroup} tag_group
+   * @param {Class_DataTagGroup} tag_group
    * @memberof Class_LinkValueTree
    */
   constructor(
     parent: Class_LinkValueTree | Class_LinkElement,
-    tag_group: Class_TagGroup
+    data_tag_group: Class_DataTagGroup
   ) {
     // Instanciate parent
     this.parent = parent
     // Instanciate taggroup
-    this.tag_group = tag_group
+    this.data_tag_group = data_tag_group
     // Instanciate children
     this.children = {}
-    tag_group.tags_list.forEach(tag => {
+    data_tag_group.tags_list.forEach(tag => {
       this.children[tag.id] = new Class_LinkValue(this)
     })
   }
@@ -2942,7 +2945,7 @@ export class Class_LinkValueTree {
       if (this.parent instanceof Class_LinkValueTree)
         this.parent.removeChild(this)
       // // Unref taggroup
-      // this.tag_group = null
+      // this.data_tag_group = null
     }
   }
 
@@ -2951,15 +2954,15 @@ export class Class_LinkValueTree {
   /**
    * Add new children related to new tagGroup
    * Always add in the bottom of the tree
-   * @param {Class_TagGroup} tag_group
+   * @param {Class_DataTagGroup} data_tag_group
    * @return {*}
    * @memberof Class_LinkValueTree
    */
-  public expand(tag_group: Class_TagGroup) {
-    if (this.tag_group !== tag_group) // Protection against tag group already present
+  public expand(data_tag_group: Class_DataTagGroup) {
+    if (this.data_tag_group !== data_tag_group) // Protection against tag group already present
       Object.keys(this.children)
         .forEach(id => {
-          this.children[id] = this.children[id].expand(tag_group)
+          this.children[id] = this.children[id].expand(data_tag_group)
         })
     return this
   }
@@ -2968,13 +2971,13 @@ export class Class_LinkValueTree {
    * Remove all children related to given tag group
    * - Either prune bottom of tree (simple case)
    * - Or slice tree to keep sub-combinations of tags
-   * @param {Class_TagGroup} tag_group
+   * @param {Class_DataTagGroup} data_tag_group
    * @return {*}
    * @memberof Class_LinkValueTree
    */
-  public prune(tag_group: Class_TagGroup) {
-    // If tag_group correspond to this tree's tag group - do the pruning process
-    if (this.tag_group === tag_group) {
+  public prune(data_tag_group: Class_DataTagGroup) {
+    // If data_tag_group correspond to this tree's tag group - do the pruning process
+    if (this.data_tag_group === data_tag_group) {
       // Keep parent ref in memory
       const parent = this.parent
       // Keep first child ref in memory
@@ -2993,58 +2996,58 @@ export class Class_LinkValueTree {
         return child
       }
     }
-    // If tag_group is different than the one used by
+    // If data_tag_group is different than the one used by
     else {
       // Recurse, only if children are also trees
       Object.keys(this.children)
         .forEach(id => {
           const child = this.children[id]
           if (child instanceof Class_LinkValueTree)
-            child.prune(tag_group)
+            child.prune(data_tag_group)
         })
       return this
     }
   }
 
   /**
-   * Add new child from given tag
-   * @param {Class_Tag} tag
+   * Add new child from given data_tag
+   * @param {Class_Tag} data_tag
    * @return {*}
    * @memberof Class_LinkValueTree
    */
-  public extend(tag: Class_Tag) {
+  public extend(data_tag: Class_DataTag) {
     // What kind of children
     const [allValues, allTrees] = this.kindOfChildren()
     // Case 1 : Last node tree before values
     if (allValues && (!allTrees)) {
-      // Tag must be from this tree's tag group
-      if (tag.group === this.tag_group) {
-        // If not already existing, create a new child // given tag
-        if (!this.children[tag.id]) {
+      // Tag must be from this tree's data_tag group
+      if (data_tag.group === this.data_tag_group) {
+        // If not already existing, create a new child // given data_tag
+        if (!this.children[data_tag.id]) {
           const _ = new Class_LinkValue(this)
-          this.children[tag.id] = _
+          this.children[data_tag.id] = _
         }
-        // Return child // given tag
-        return this.children[tag.id]
+        // Return child // given data_tag
+        return this.children[data_tag.id]
       }
     }
     // Case 2 : Current children's are also tree
     else if ((!allValues) && allTrees) {
-      // If tag's group correspond to this tree's tag group - add new child
-      if (tag.group === this.tag_group) {
-        // If not already existing, create a new child // given tag
-        if (!this.children[tag.id]) {
+      // If data_tag's group correspond to this tree's data_tag group - add new child
+      if (data_tag.group === this.data_tag_group) {
+        // If not already existing, create a new child // given data_tag
+        if (!this.children[data_tag.id]) {
           const ref_child = Object.values(this.children)[0] // Never undefined beacause of test on (!allValues && AllTrees)
           if (ref_child instanceof Class_LinkValueTree) {
             // Create and reference
-            const _ = new Class_LinkValueTree(this, ref_child.tag_group)
-            this.children[tag.id] = _
+            const _ = new Class_LinkValueTree(this, ref_child.data_tag_group)
+            this.children[data_tag.id] = _
             // Recursivly copy values / sub-trees
             _.copyFrom(ref_child)
           }
         }
-        // Return child // given tag
-        return this.children[tag.id]
+        // Return child // given data_tag
+        return this.children[data_tag.id]
       }
       // Tag group is different than the one used
       else {
@@ -3053,7 +3056,7 @@ export class Class_LinkValueTree {
         Object.values(this.children)
           .forEach(child => {
             // Child can only be Class_LinkValueTree because of test on (!allValues && AllTrees)
-            const _ = child.extend(tag)
+            const _ = child.extend(data_tag)
             // Return something not undefined if possible
             if (_ && (!output)) output = _
           })
@@ -3064,21 +3067,21 @@ export class Class_LinkValueTree {
   }
 
   /**
-   * Remove child related to given Tag
-   * @param {Class_Tag} tag
+   * Remove child related to given dataTag
+   * @param {Class_Tag} data_tag
    * @memberof Class_LinkValueTree
    */
-  public reduce(tag: Class_Tag) {
-    // Tag is from correct tag group
-    if (tag.group === this.tag_group) {
-      this.removeTagId(tag.id)
+  public reduce(data_tag: Class_DataTag) {
+    // Tag is from correct data_tag group
+    if (data_tag.group === this.data_tag_group) {
+      this.removeChildFromDataTagId(data_tag.id)
     }
     // Recursive call
     else {
       Object.values(this.children)
         .forEach(child => {
           if (child instanceof Class_LinkValueTree)
-            child.reduce(tag)
+            child.reduce(data_tag)
         })
     }
   }
@@ -3091,34 +3094,34 @@ export class Class_LinkValueTree {
    */
   public removeChild(child: Class_LinkValue | Class_LinkValueTree) {
     // Get child's id
-    const id = this.getChildId(child)
+    const id = this.getDataTagIdFromChild(child)
     // Remove it
-    if (id) this.removeTagId(id)
+    if (id) this.removeChildFromDataTagId(id)
   }
 
-  public getValue(tags: Class_Tag[]): Class_LinkValue | null {
+  public getValueForDataTags(data_tags: Class_DataTag[]): Class_LinkValue | null {
     // Failsafe
-    if (tags.length === 0) return null
+    if (data_tags.length === 0) return null
     // Get value recursively
-    const matching_tags = tags.filter(tag => (tag.group === this.tag_group))
-    const remaining_tags = tags.filter(tag => (tag.group !== this.tag_group))
+    const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
+    const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
     // Failsafe
     if (matching_tags.length !== 1) return null
     // Recursive
     const child = this.children[matching_tags[0].id]
     if (child instanceof Class_LinkValue) return child
-    else return child.getValue(remaining_tags)
+    else return child.getValueForDataTags(remaining_tags)
   }
 
-  public setDataValue(tags: Class_Tag[], val: number | null) {
-    const value = this.getValue(tags)
+  public setDataValueForDataTags(data_tags: Class_DataTag[], val: number | null) {
+    const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
       value.data_value = val
     }
   }
 
-  public getDataValue(tags: Class_Tag[]): number | null {
-    const value = this.getValue(tags)
+  public getDataValueForDataTags(data_tags: Class_DataTag[]): number | null {
+    const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
       return value.data_value
     }
@@ -3127,15 +3130,15 @@ export class Class_LinkValueTree {
     }
   }
 
-  public setTextValue(tags: Class_Tag[], val: string | null) {
-    const value = this.getValue(tags)
+  public setTextValueForDataTags(data_tags: Class_DataTag[], val: string | null) {
+    const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
       value.text_value = val
     }
   }
 
-  public getTextValue(tags: Class_Tag[]): string | null {
-    const value = this.getValue(tags)
+  public getTextValueForDataTags(data_tags: Class_DataTag[]): string | null {
+    const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
       return value.text_value
     }
@@ -3176,7 +3179,7 @@ export class Class_LinkValueTree {
       .forEach(tag_id => {
         const child_to_copy = element.children[tag_id]
         if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
-          const new_child = new Class_LinkValueTree(this, child_to_copy.tag_group)
+          const new_child = new Class_LinkValueTree(this, child_to_copy.data_tag_group)
           this.children[tag_id] = new_child
           new_child.copyFrom(child_to_copy)
         }
@@ -3194,7 +3197,7 @@ export class Class_LinkValueTree {
    * @param {(Class_LinkValue | Class_LinkValueTree)} child
    * @memberof Class_LinkValueTree
    */
-  private getChildId(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
+  private getDataTagIdFromChild(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
     let id = undefined
     Object.keys(this.children)
       .forEach(tag_id => {
@@ -3211,17 +3214,17 @@ export class Class_LinkValueTree {
     new_child: Class_LinkValue | Class_LinkValueTree
   ) {
     // Get current child id
-    const id = this.getChildId(child)
+    const id = this.getDataTagIdFromChild(child)
     // Delete current child
     if (id) {
-      this.removeTagId(id)
+      this.removeChildFromDataTagId(id)
       // Replace and update cross refs
       this.children[id] = new_child
       new_child.parent = this
     }
   }
 
-  private removeTagId(id: string) {
+  private removeChildFromDataTagId(id: string) {
     if (this.children[id]) {
       this.children[id].delete()
       delete this.children[id]
@@ -3229,7 +3232,7 @@ export class Class_LinkValueTree {
   }
 
   public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
-    const id = this.getChildId(child)
+    const id = this.getDataTagIdFromChild(child)
     if (id) {
       if (this.parent instanceof Class_LinkValueTree) {
         const prev_id = this.parent.getDataTagsIdCombination(this)
@@ -3322,7 +3325,7 @@ export class Class_LinkValue {
       })
   }
 
-  public expand(data_tag_group: Class_TagGroup) {
+  public expand(data_tag_group: Class_DataTagGroup) {
     const new_parent = new Class_LinkValueTree(this.parent, data_tag_group)
     // Copy values from child in grandchildren
     data_tag_group.tags_list.forEach(tag => {

@@ -387,7 +387,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
           <ConfigMenuNumberInput
-            default_value={shape_arrow_size}
+            function_getValue={() => {return shape_arrow_size}}
             menu_for_style={menu_for_style}
             minimum_value={1}
             stepper={true}
@@ -430,7 +430,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       </Box>
       <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
         <ConfigMenuNumberInput
-          default_value={shape_starting_curve*100}
+          function_getValue={() => {return shape_starting_curve*100}}
           menu_for_style={menu_for_style}
           minimum_value={0}
           maximum_value={shape_ending_curve*100}
@@ -461,7 +461,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       </Box>
       <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
         <ConfigMenuNumberInput
-          default_value={shape_ending_curve*100}
+          function_getValue={() => {return shape_ending_curve*100}}
           menu_for_style={menu_for_style}
           minimum_value={shape_starting_curve*100}
           maximum_value={100}
@@ -492,7 +492,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
           <ConfigMenuNumberInput
-            default_value={shape_starting_tangeant*100}
+            function_getValue={() => {return shape_starting_tangeant*100}}
             menu_for_style={menu_for_style}
             minimum_value={0}
             step={1}
@@ -523,7 +523,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
           <ConfigMenuNumberInput
-            default_value={shape_ending_tangeant*100}
+            function_getValue={() => {return shape_ending_tangeant*100}}
             menu_for_style={menu_for_style}
             minimum_value={0}
             step={1}
@@ -575,7 +575,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
           <ConfigMenuNumberInput
-            default_value={shape_opacity}
+            function_getValue={() => {return shape_opacity}}
             menu_for_style={menu_for_style}
             minimum_value={0}
             maximum_value={1}
@@ -651,7 +651,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </Box>
         <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
           <ConfigMenuNumberInput
-            default_value={value_label_scientific_precision}
+            function_getValue={() => {return value_label_scientific_precision}}
             menu_for_style={menu_for_style}
             minimum_value={0}
             stepper={true}
@@ -722,7 +722,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           </Box>
           <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
             <ConfigMenuNumberInput
-              default_value={value_label_nb_digit}
+              function_getValue={() => {return value_label_nb_digit}}
               menu_for_style={menu_for_style}
               minimum_value={0}
               stepper={true}
@@ -886,7 +886,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           </Select>
 
           <ConfigMenuNumberInput
-            default_value={value_label_font_size}
+            function_getValue={() => {return value_label_font_size}}
             menu_for_style={menu_for_style}
             minimum_value={11}
             stepper={true}
