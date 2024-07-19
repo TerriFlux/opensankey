@@ -37,7 +37,7 @@ export abstract class Class_ProtoTag {
   private _color: string = default_grey_color
 
   // Boolean
-  private _is_selected: boolean = true
+  private _is_selected: boolean = false
 
   /**
    * True if tag is currently on a deletion process
@@ -261,6 +261,9 @@ export class Class_DataTag extends Class_ProtoTag {
     super(name, id)
     this._group = group
     this._references = sankey.links_dict
+    // Update all links
+    Object.values(this._references)
+      .forEach(link => link.addDataTag(this))
   }
 
   // PUBLIC METHODS =====================================================================
@@ -279,6 +282,9 @@ export class Class_DataTag extends Class_ProtoTag {
    * @memberof Class_Tag
    */
   protected cleanForDeletion() {
+    // Update all links
+    Object.values(this._references)
+      .forEach(link => link.removeDataTag(this))
     // Unref references
     this._references = {}
   }
@@ -519,8 +525,9 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    */
   constructor(id: string, name: string) {
     super(id, name)
-    // Create a first default tag
-    this.addTag('Etiquette 0')
+    // Create and select a first default tag
+    const tag = this.addTag('Etiquette 0')
+    tag.setSelected()
   }
 
   // PROTECTED METHODS ==================================================================
@@ -583,8 +590,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   constructor(id: string, name: string, sankey: Class_Sankey) {
     super(id, name)
     this._sankey = sankey
-    // Create a first default tag
-    this.addTag('Etiquette 0')
+    // Create and select a first default tag
+    const tag = this.addTag('Etiquette 0')
+    tag.setSelected()
   }
 
   // PROTECTED METHODS ==================================================================
