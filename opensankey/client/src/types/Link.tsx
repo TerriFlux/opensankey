@@ -437,12 +437,12 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public addDataTagGroup(tagg: Class_DataTagGroup) {
-    this._values.expand(tagg)
+    this._values = this._values.expand(tagg)
   }
 
   public removeDataTagGroup(tagg: Class_DataTagGroup) {
     if (this._values instanceof Class_LinkValueTree)
-      this._values.prune(tagg)
+      this._values = this._values.prune(tagg)
   }
 
   public addDataTag(tag: Class_DataTag) {
