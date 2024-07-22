@@ -241,7 +241,8 @@ export class Class_LinkElement extends Class_ProtoElement {
         this,
         this.dragHandleStart(),
         this.startCurvePointDragEvent(),
-        this.dragHandleEnd()),
+        this.dragHandleEnd(),
+      {class:'cp_start'}),
       ending_curve_point: new Class_Handler(
         'cp_end_' + id,
         drawing_area,
@@ -249,7 +250,8 @@ export class Class_LinkElement extends Class_ProtoElement {
         this,
         this.dragHandleStart(),
         this.endCurvePointDragEvent(),
-        this.dragHandleEnd()),
+        this.dragHandleEnd(),
+      {class:'cp_end'}),
       starting_bezier_point: new Class_Handler(
         'bz_start_' + id,
         drawing_area,
@@ -257,7 +259,8 @@ export class Class_LinkElement extends Class_ProtoElement {
         this,
         this.dragHandleStart(),
         this.startTangeantDragEvent(),
-        this.dragHandleEnd()),
+        this.dragHandleEnd(),
+      {class:'bz_start'}),
       ending_bezier_point: new Class_Handler(
         'bz_end_' + id,
         drawing_area,
@@ -265,7 +268,8 @@ export class Class_LinkElement extends Class_ProtoElement {
         this,
         this.dragHandleStart(),
         this.endTangeantDragEvent(),
-        this.dragHandleEnd()),
+        this.dragHandleEnd(),
+      {class:'bz_end'}),
       middle_recycling_point: new Class_Handler(
         'recy_middle_' + id,
         drawing_area,
@@ -273,7 +277,8 @@ export class Class_LinkElement extends Class_ProtoElement {
         this,
         this.dragHandleStart(),
         this.middleRecyclingDragEvent(),
-        this.dragHandleEnd()),
+        this.dragHandleEnd(),
+      {class:'recy_middle'}),
       is_dragged: false
     }
     // Values
