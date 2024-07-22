@@ -79,9 +79,9 @@ export class Class_Sankey {
   private _level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // Variable determining if we apply tag color to elements
-  private _colorMap: string
-  private _nodesColorMap: string
-  private _linksColorMap: string
+  private _color_map: string
+  private _nodes_color_map: string
+  private _links_color_map: string
 
   // Variables to filter node & link multi selector to display only visible element in the selector
   private _filter_displayed_link_selector: boolean = false
@@ -112,9 +112,9 @@ export class Class_Sankey {
     this.menu_config = menu_config
     this._link_styles[default_style_id] = new Class_LinkStyle(default_style_id, default_style_name, false)
     this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
-    this._colorMap = 'no_colormap'
-    this._nodesColorMap = 'no_colormap'
-    this._linksColorMap = 'no_colormap'
+    this._color_map = 'no_colormap'
+    this._nodes_color_map = 'no_colormap'
+    this._links_color_map = 'no_colormap'
   }
 
   public delete(){
@@ -150,14 +150,14 @@ export class Class_Sankey {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get colorMap(): string { return this._colorMap }
-  public set colorMap(value: string) { this._colorMap = value }
+  public get color_map(): string { return this._color_map }
+  public set color_map(value: string) { this._color_map = value }
 
-  public get nodesColorMap(): string { return this._nodesColorMap }
-  public set nodesColorMap(value: string) { this._nodesColorMap = value }
+  public get nodes_color_map(): string { return this._nodes_color_map }
+  public set nodes_color_map(value: string) { this._nodes_color_map = value }
 
-  public get linksColorMap(): string { return this._linksColorMap }
-  public set linksColorMap(value: string) { this._linksColorMap = value }
+  public get links_color_map(): string { return this._links_color_map }
+  public set links_color_map(value: string) { this._links_color_map = value }
 
   public get filter_displayed_link_selector(): boolean { return this._filter_displayed_link_selector }
   public set filter_displayed_link_selector(value: boolean) { this._filter_displayed_link_selector = value }

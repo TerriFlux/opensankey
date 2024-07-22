@@ -941,8 +941,8 @@ export class Class_LinkElement extends Class_ProtoElement {
 
   private getPathColorToUse() {
     const tagg_dict = this.taggs_dict // Avoid recomputing
-    if (tagg_dict[this.drawing_area.sankey.linksColorMap]) {
-      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.linksColorMap]
+    if (tagg_dict[this.drawing_area.sankey.links_color_map]) {
+      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.links_color_map]
       const tag_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
       return tag_for_colormap[0].color

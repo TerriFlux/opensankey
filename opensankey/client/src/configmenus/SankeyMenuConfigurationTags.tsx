@@ -148,7 +148,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   const updateThisAndRelatedComponents = () => {
     // Update components related to tags in menu config or toolbar
-    new_data.menu_configuration.updateComponentsRelatedToTags()
+    new_data.menu_configuration.updateAllComponentsRelatedToTags()
     // Update the rest
     updateThisAndToggleSavingIndicator()
   }
@@ -174,7 +174,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update components related to tags in menu config or toolbar
-    new_data.menu_configuration.updateComponentsRelatedToTags()
+    new_data.menu_configuration.updateAllComponentsRelatedToTags()
     // Update this menu
     setTagsGroupEntryId(tag_group.id)
   }
