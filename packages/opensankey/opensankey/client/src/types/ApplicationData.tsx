@@ -259,7 +259,7 @@ export class Class_ApplicationData {
         // Update component
         app_ref.menu_configuration.ref_to_menu_config_node_updater.current()
         app_ref.menu_configuration.ref_to_menu_config_link_updater.current()
-      } else if (evt.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'input_label'].some(r => document.activeElement?.className.includes(r)))) {
+      } else if (evt.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'name_label_input'].some(r => document.activeElement?.className.includes(r)))) {
         // Event to blur the input we are currently focused on
         // (It's in adequation with event on input that update drawing area when we blur input)
         (document.activeElement as HTMLInputElement).blur()
