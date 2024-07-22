@@ -25,6 +25,9 @@ import {
   sortNodesElements
 } from './Node'
 import {
+  Class_DataTag,
+  Class_DataTagGroup,
+  Class_ProtoTagGroup,
   Class_Tag,
   Class_TagGroup,
   Class_TagGroupNodeLevel
@@ -72,7 +75,7 @@ export class Class_Sankey {
   // Tags
   private _node_taggs: { [_: string]: Class_TagGroup } = {}
   private _flux_taggs: { [_: string]: Class_TagGroup } = {}
-  private _data_taggs: { [_: string]: Class_TagGroup } = {}
+  private _data_taggs: { [_: string]: Class_DataTagGroup } = {}
   private _level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // Variable determining if we apply tag color to elements
@@ -141,7 +144,7 @@ export class Class_Sankey {
     this._data_taggs={}
     this._level_taggs={}
 
-    
+
 
   }
 
@@ -376,7 +379,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get selected_data_tags_list() {
-    const data_tags: Class_Tag[] = []
+    const data_tags: Class_DataTag[] = []
     this.data_taggs_list.forEach(data_tagg => {
       data_tags.push(...data_tagg.selected_tags_list)
     })
@@ -391,7 +394,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public get selected_data_tags_entries() {
-    const obj_data_tags_selected: { [x: string]: Class_Tag } = {}
+    const obj_data_tags_selected: { [x: string]: Class_DataTag } = {}
     this.data_taggs_list.forEach(data_tagg => {
       obj_data_tags_selected[data_tagg.id] = data_tagg.selected_tags_list[0]
     })
@@ -724,18 +727,18 @@ export class Class_Sankey {
     id: string,
     name: string,
     type_group: Type_MacroTagGroup
-  ): Class_TagGroup {
+  ): Class_TagGroup | Class_DataTagGroup {
     // Get dict of tag groups that is related to specifed type of group
     const dict_taggs = this.getTagGroupsAsDict(type_group)
     // Do not create a new tag group with the same id of another
     if (!dict_taggs[id]) {
       // Create
-      let tag_group: Class_TagGroup | Class_TagGroupNodeLevel
+      let tag_group: any
       if (type_group === 'level_taggs') {
         tag_group = new Class_TagGroupNodeLevel(id, name)
       }
       else if (type_group === 'data_taggs'){
-        tag_group = new Class_TagGroup(id, name)
+        tag_group = new Class_DataTagGroup(id, name, this)
         this.links_list.forEach(link => link.addDataTagGroup(tag_group)) // Update value tree
       }
       else {
@@ -774,11 +777,13 @@ export class Class_Sankey {
   public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
     const macro_tag_group = this.getTagGroupsAsDict(type_group)
     if (macro_tag_group[id] !== undefined) {
+      // Get Tag group
+      const tag_group = macro_tag_group[id]
       // Prune value tree for data tags
-      if (type_group === 'data_taggs')
-        this.links_list.forEach(link => link.removeDataTagGroup(macro_tag_group[id]))
+      if (tag_group instanceof Class_DataTagGroup)
+        this.links_list.forEach(link => link.removeDataTagGroup(tag_group))
       // Delete tag groupe properly
-      macro_tag_group[id].delete()
+      tag_group.delete()
       // Remove reference to tag group
       delete macro_tag_group[id]
     }
@@ -790,7 +795,7 @@ export class Class_Sankey {
    * @param {Class_TagGroup} _
    * @memberof Class_Sankey
    */
-  public removeTagGroup(type_group: Type_MacroTagGroup, _: Class_TagGroup) {
+  public removeTagGroup(type_group: Type_MacroTagGroup, _: Class_ProtoTagGroup) {
     this.removeTagGroupWithId(type_group, _.id)
   }
 
@@ -902,7 +907,7 @@ export class Class_Sankey {
       // Set data tag & tag group from json data
       Object.entries(json_object['dataTags']).forEach(ent_dt => {
         // Create a flux tag group
-        const new_grp = new Class_TagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name)
+        const new_grp = new Class_DataTagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name, this)
         new_grp.removeTag(new_grp.tags_list[0])
         // Set flux tag group value from JSON
         new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
