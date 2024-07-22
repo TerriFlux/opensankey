@@ -349,7 +349,7 @@ export class Class_MenuConfig {
   }
 
   public get ref_to_menu_config_link_data_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_link_apparence_updater
+    return this._ref_to_menu_config_link_data_updater
   }
 
   public get ref_to_menu_config_link_apparence_updater(): MutableRefObject<() => void> {
