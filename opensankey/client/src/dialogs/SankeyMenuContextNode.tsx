@@ -23,6 +23,10 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   const { t } = applicationContext
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  const closeContextMenu=()=>{
+    new_data.drawing_area.node_contextualied=undefined
+    setForceUpdate(!forceUpdate)
+  }
 
   const list_select_nodes = new_data.drawing_area.selected_nodes_list
 
@@ -94,13 +98,12 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const dropdown_c_n_apparence = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(true)
-    new_data.drawing_area.node_contextualied = undefined
+    closeContextMenu()
   }} variant='contextmenu_button'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
 
   const dropdown_c_n_tooltip = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(true)
-    new_data.drawing_area.node_contextualied = undefined
-    
+    closeContextMenu()
   }} variant='contextmenu_button'>{t('Noeud.IS')} {icon_open_modal}</Button>
 
   // Menu to change some pararmeter concerning the style of the node
@@ -142,8 +145,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const dropdown_c_n_io = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
-    new_data.drawing_area.node_contextualied = undefined
-    
+    closeContextMenu()
   }} variant='contextmenu_button'>{t('Noeud.PF.PF')}{icon_open_modal}</Button>
   const dropdown_c_n_align_h_min_ori = <Menu placement='end'>
     <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
@@ -274,6 +276,9 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       // document.getElementById('input_label_' + contextualised_node!.idNode)?.focus()
 
       // new_data.drawing_area.node_contextualied = undefined
+      contextualised_node?.setInputLabelVisible()
+      closeContextMenu()
+      
       // 
     }}
   >
@@ -387,10 +392,10 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const btn_c_n_show_tags_menu = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
-    new_data.drawing_area.node_contextualied = undefined
+    closeContextMenu()
     
   }} variant='contextmenu_button'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
-
+  
   // Pop over that serve as context menu
   return contextualised_node !== undefined ? <Box layerStyle='context_menu' id="context_node_pop_over"
     className={'context_popover ' + (is_top ? '' : 'at_bot')}
@@ -416,6 +421,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
           // Redraw sankey
           new_data.drawing_area.drawElements()
           indicateSankeyToSaveInCache()
+          closeContextMenu()
 
         }}>
         {t('Menu.suppr')}
