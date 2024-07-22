@@ -338,7 +338,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
  * @return {*}
  */
 export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
-  ref = useRef((_: number) => null),
+  ref_set_value = useRef((_:number | null | undefined) => null),
   function_getValue,
   function_onChange,
   function_onBlur,
@@ -353,7 +353,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
   const [value, setValue] = useState(function_getValue())
-  ref.current = setValue
+  ref_set_value.current = setValue
 
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -371,9 +371,9 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
       min={minimum_value}
       max={maximum_value}
       step={step}
-      value={(value === null) ? undefined : value}
-      onChange={(_, updated_value) => {
-        // Launch/reset timeout before the input auto blur (and update the updated_value in data)
+      value={value ?? ''}
+      onChange={(value_as_string, value_as_number) => {
+        // Launch/reset timeout before the input auto blur (and update the value in data)
         if (!menu_for_style) {
           // reset timeout if exist
           if (is_modifying.current) {
@@ -382,10 +382,10 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
           // launch timeout that automatically blur the input
           is_modifying.current = setTimeout(() => {
             ref_input.current?.blur()
-          }, 2000)
+          }, 3000)
         }
-        // Update displayed updated_value
-        setValue(updated_value)
+        // Update displayed value_as_number
+        setValue((value_as_string !== '') ? value_as_number : null)
       }}
       onKeyDown={e=> {
         if (e.key === 'Enter') {
@@ -403,7 +403,6 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
         function_onBlur()
         // UPdate value
         function_onChange(value)
-        setValue(function_getValue())
       }}
     />
       {stepperBtn}
@@ -413,7 +412,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
 }
 
 export type FCType_ConfigMenuNumberInput = {
-  ref?: MutableRefObject<(_:number) => void>
+  ref_set_value?: MutableRefObject<(_:number | null | undefined) => void>,
   function_getValue: () => number | null | undefined,
   function_onChange: (val: number | null | undefined) => void
   function_onBlur: () => void
@@ -436,20 +435,21 @@ export type FCType_ConfigMenuNumberInput = {
  * @return {*}
  */
 export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> = ({
-  default_value,
-  function_onChange,
-  function_onBlur,
+  ref_to_set_value,
+  function_get_value,
+  function_on_blur,
   menu_for_style = false
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
-  const [value, setValue] = useState(default_value)
+  const [value, setValue] = useState<string | null | undefined>(function_get_value())
+  ref_to_set_value.current = setValue
 
   return <InputGroup>
     <Input
       ref={ref_input}
       variant='menuconfigpanel_option_input'
-      value={(value === null) ? undefined : value}
+      value={value ?? ''}
       onChange={evt => {
         const updated_value = evt.target.value
         // Launch/reset timeout before the input auto blur (and update the updated_value in data)
@@ -464,7 +464,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
           }, 2000)
         }
         // Update displayed updated_value
-        setValue(updated_value)
+        setValue((updated_value !== '') ? updated_value : null)
       }}
       onKeyDown={e=> {
         if (e.key === 'Enter') {
@@ -476,16 +476,15 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
           clearTimeout(is_modifying.current)
         }
         // Update selected elements value
-        function_onBlur()
-        function_onChange(value)
+        function_on_blur(value)
       }}
     />
   </InputGroup>
 }
 
 export type FCType_ConfigMenuTextInput = {
-  default_value: string | null | undefined,
-  function_onChange: (_: string | null | undefined) => void
-  function_onBlur: () => void
+  ref_to_set_value: MutableRefObject<(_:string | null | undefined) => void>,
+  function_get_value: () => string | null | undefined,
+  function_on_blur: (_: string | null | undefined) => void,
   menu_for_style?: boolean
 }
