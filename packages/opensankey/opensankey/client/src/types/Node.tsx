@@ -1432,7 +1432,7 @@ export class Class_NodeElement extends Class_Element {
 
   private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
     const custom_id = input ? 'input' : 'output'
-    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD' })
+    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD',class:'node_io' })
     this._handle_links[link.id] = handle
   }
 
