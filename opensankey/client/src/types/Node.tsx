@@ -41,8 +41,8 @@ import {
 // SPECIFIC TYPES ***********************************************************************
 
 type Type_Shape = 'ellipse' | 'rect' | 'arrow'
-type Type_TextHPos = 'left' | 'middle' | 'right'
-type Type_TextVPos = 'top' | 'middle' | 'bottom'
+type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
+type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -115,6 +115,8 @@ export class Class_NodeElement extends Class_Element {
     position: Type_ElementPosition,
     style: Class_NodeStyle,
     attributes: Class_NodeAttribute
+    _x_label?: number// Relative x position of label when dragged (optionnal)  
+    _y_label?: number// Relative y position of label when dragged (optionnal)  
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -537,6 +539,9 @@ export class Class_NodeElement extends Class_Element {
     json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
     json_object['links_order'] = this._links_order.map(link => link.id)
     json_object['local'] = this._display.attributes.toJSON()
+    json_object['x_label'] = this._display._x_label
+    json_object['y_label'] = this._display._y_label
+
     json_object['tags'] = Object.fromEntries(
       this.taggs_list
         .map(tagg => [
@@ -561,6 +566,9 @@ export class Class_NodeElement extends Class_Element {
     this._display.position.type = json_node_object['position'] ?? default_element_position.type
     this._display.position.x = json_node_object['x'] ?? default_element_position.x
     this._display.position.y = json_node_object['y'] ?? default_element_position.y
+    this._display._x_label = json_node_object['x_label']
+    this._display._y_label = json_node_object['y_label']
+
     this.tooltip_text = json_node_object['tooltip_text'] ?? ''
 
     //  Input & output link should be automatically added when we create link from json
@@ -604,6 +612,28 @@ export class Class_NodeElement extends Class_Element {
     this._links_order = new_order
   }
 
+  /**
+   * Hide the name label of the node & set visible the input to modify it
+   *
+   * @memberof Class_NodeElement
+   */
+  public setInputLabelVisible() {
+    this.d3_selection?.select('.name_label_text').style('display', 'none')
+    this.d3_selection?.select('.name_label_fo_input').style('display', 'inline-block')
+    document.getElementById('name_label_input_' + this.id)?.focus()
+
+  }
+
+  /**
+   * Hide the input label of the node & set visible the name
+   *
+   * @memberof Class_NodeElement
+   */
+  public setInputLabelInvisible() {
+    this.d3_selection?.select('.name_label_fo_input').style('display', 'none')
+    this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
+    this.drawNameLabel()
+  }
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -676,7 +706,7 @@ export class Class_NodeElement extends Class_Element {
       drawing_area.application_data.closeAllMenus()
     }
     // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode() && event.button==0) {
+    else if (drawing_area.isInSelectionMode() && event.button == 0) {
       // ALT
       if (event.altKey) {
         // Purge selection list
@@ -785,7 +815,7 @@ export class Class_NodeElement extends Class_Element {
   ) {
     if (this.drawing_area.isInSelectionMode()) {
       event.preventDefault()
-      this.drawing_area.pointer_pos=[event.pageX,event.pageY]
+      this.drawing_area.pointer_pos = [event.pageX, event.pageY]
       if (!this.drawing_area.selected_nodes_list.includes(this)) {
         this.drawing_area.addNodeToSelection(this)
       } else {
@@ -861,36 +891,6 @@ export class Class_NodeElement extends Class_Element {
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
     if (this.name_label_visible) {
-      // Get variable property for node label
-      const shape_width = this.getShapeWidthToUse()
-      const shape_height = this.getShapeHeightToUse()
-      // Label X position is set by text relative position / shape + text anchor
-      let label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
-      let label_pos_x = shape_width + label_pos_dx
-      let label_anchor = 'start'
-      let label_align = 'start'
-      if (this.name_label_horiz === 'left') {
-        label_pos_x = -label_pos_dx
-        label_anchor = 'end'
-        label_align = 'end'
-      }
-      else if (this.name_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2
-        label_anchor = 'middle'
-        label_align = 'center'
-      }
-      // Label Y position is only set by text relative position / shape
-      let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
-      let label_pos_y = label_pos_dy + shape_height
-      let label_baseline = 'text-before-edge'
-      if (this.name_label_vert === 'top') {
-        label_pos_y = -label_pos_dy
-        label_baseline = 'text-after-edge'
-      }
-      else if (this.name_label_vert === 'middle') {
-        label_pos_y = shape_height / 2
-        label_baseline = 'middle'
-      }
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
       // - Shape : ref point if top-left corner
@@ -898,22 +898,13 @@ export class Class_NodeElement extends Class_Element {
         this.name_label.length * this.name_label_font_size,
         this.name_label_box_width)
       const box_height = this.name_label_font_size
-      const box_pos_y = label_pos_y - this.name_label_font_size
-      let box_pos_x = label_pos_x
-      if (label_anchor === 'end') {
-        box_pos_x = box_pos_x - box_width
-      }
-      else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width / 2
-      }
+
       // Add name label background
       if (this.name_label_background) {
         this.d3_selection?.append('rect')
           .classed('name_label', true)
           .classed('name_label_background', true)
           .attr('id', 'name_label_background_' + this.id)
-          .attr('x', box_pos_x)
-          .attr('y', box_pos_y)
           .attr('width', box_width)
           .attr('height', box_height)
           .attr('fill', 'white')
@@ -925,16 +916,12 @@ export class Class_NodeElement extends Class_Element {
       const wrapper = textwrap()
         .bounds({ height: 100, width: this.name_label_box_width })
         .method('tspans')
-      this.d3_selection?.append('text')
+
+      const label_text = this.d3_selection?.append('text')
         .classed('name_label', true)
         .classed('name_label_text', true)
         .attr('fill', this.name_label_color ? 'white' : 'black')
         .attr('id', 'name_label_text_' + this.id)
-        .attr('x', label_pos_x)
-        .attr('y', label_pos_y)
-        .attr('dominant-baseline', label_baseline)
-        .attr('text-anchor', label_anchor)
-        .style('text-align', label_align)
         .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
         .style('font-style', this.name_label_italic ? 'italic' : 'normal')
         .style('font-size', String(this.name_label_font_size) + 'px')
@@ -944,7 +931,25 @@ export class Class_NodeElement extends Class_Element {
         .text(this.name_label)
         .call(wrapper)
 
-      // TODO add text wrap -> .each(n => TextNodeWrap((n as SankeyNode),data))
+      // Position label & return it coord_x, coord_y & it text anchor for use in other element (label bg, label fo)
+      const [label_pos_x, label_pos_y, label_anchor] = this.updateNameLabelPos()
+
+      let box_pos_x = label_pos_x
+      const box_pos_y = label_pos_y - this.name_label_font_size
+      if (label_anchor === 'end') {
+        box_pos_x = box_pos_x - box_width
+      }
+      else if (label_anchor === 'middle') {
+        box_pos_x = box_pos_x - box_width / 2
+      }
+
+      if (this.name_label_background) {
+        // Update label bg with computed label size 
+        this.d3_selection?.select('.name_label_background')
+          .attr('x', box_pos_x)
+          .attr('y', box_pos_y)
+      }
+
       // Add an input to change the name of the node
       // The input appear when we double click on the label
       if (!this.drawing_area.static) {
@@ -954,7 +959,7 @@ export class Class_NodeElement extends Class_Element {
           .attr('x', box_pos_x)
           .attr('y', box_pos_y)
           .attr('width', box_width)
-          .attr('height', box_height)
+          .attr('height', box_height + 2)
           .style('display', 'none')
           .append('xhtml:div')
           .append('input')
@@ -964,8 +969,140 @@ export class Class_NodeElement extends Class_Element {
           .attr('type', 'text')
           .attr('value', this._name)
           .style('font-size', String(this.name_label_font_size) + 'px')
+          .on('input', (evt) => { this._name = evt.target.value })
+          .on('blur', () => this.setInputLabelInvisible())
+
+
+
+        label_text?.call(d3.drag<SVGTextElement, this>()
+          .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+          .on('start', ev => this.dragTextStart(ev))
+          .on('drag', ev => this.dragTextMove(ev))
+          .on('end', ev => this.dragTextend(ev))
+        )
+
       }
     }
+  }
+
+  /**
+   * Function triggered when we start dragging node name label, it initialise relative position if undefined
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextElement,Class_NodeElement,Class_NodeElement>} event
+   * @memberof Class_NodeElement
+   */
+  private dragTextStart(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
+
+    //if _x_label is undefined init _x_label pos whith current fixed x position value
+    if (this._display._x_label === undefined) {
+      const shape_width = this.getShapeWidthToUse()
+      const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
+
+      let label_pos_x = shape_width + label_pos_dx
+      if (this.name_label_horiz === 'left') { label_pos_x = -label_pos_dx }
+      else if (this.name_label_horiz === 'middle') { label_pos_x = shape_width / 2 }
+
+      this._display._x_label = label_pos_x
+    }
+
+    //if _y_label is undefined init _y_label pos whith current fixed y position value
+    if (this._display._y_label === undefined) {
+      const shape_height = this.getShapeHeightToUse()
+      const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+
+      let label_pos_y = label_pos_dy + shape_height
+      if (this.name_label_vert === 'top') { label_pos_y = -label_pos_dy }
+      else if (this.name_label_vert === 'middle') { label_pos_y = shape_height / 2 }
+
+      this._display._y_label = label_pos_y
+    }
+
+    this.name_label_horiz = 'dragged'
+    this.name_label_vert = 'dragged'
+
+  }
+
+  /**
+   *Function triggered when we move the node name label, it update relative node position & redraw the name slabel
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextElement,Class_NodeElement,Class_NodeElement>} event
+   * @memberof Class_NodeElement
+   */
+  private dragTextMove(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
+
+    this._display._x_label = ((this._display._x_label !== undefined) ? this._display._x_label : 0) + event.dx // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
+    this._display._y_label = ((this._display._y_label !== undefined) ? this._display._y_label : 0) + event.dy // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
+
+    this.updateNameLabelPos()
+  }
+
+  private dragTextend(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
+    this.drawNameLabel()
+    this.menu_config.updateComponentsMenuConfigNode()
+  }
+
+  /**
+   *  Function that update name label position & return var used for drawNameLabel() 
+   *
+   * @private
+   * @return {*}  {[number, number, string]}
+   * @memberof Class_NodeElement
+   */
+  private updateNameLabelPos(): [number, number, string] {
+    // x position
+    let label_anchor = 'start'
+    let label_align = 'start'
+    let label_pos_x = 0
+    if (this._display._x_label !== undefined) {
+      label_pos_x = (this._display._x_label !== undefined) ? this._display._x_label : 0
+      label_anchor = 'middle'
+      label_align = 'center'
+    } else {
+      const shape_width = this.getShapeWidthToUse()
+      let label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
+      label_pos_x = shape_width + label_pos_dx
+      if (this.name_label_horiz === 'left') {
+        label_pos_x = -label_pos_dx
+        label_anchor = 'end'
+        label_align = 'end'
+      }
+      else if (this.name_label_horiz === 'middle') {
+        label_pos_x = shape_width / 2
+        label_anchor = 'middle'
+        label_align = 'center'
+      }
+    }
+
+    // y position
+    let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+    const shape_height = this.getShapeHeightToUse()
+
+    let label_pos_y = label_pos_dy + shape_height
+    let label_baseline = 'text-before-edge'
+    if (this._display._y_label! != undefined) {
+      label_pos_y = (this._display._y_label !== undefined) ? this._display._y_label : 0
+      label_baseline = 'middle'
+    } else {
+      if (this.name_label_vert === 'top') {
+        label_pos_y = -label_pos_dy
+        label_baseline = 'text-after-edge'
+      }
+      else if (this.name_label_vert === 'middle') {
+        label_pos_y = shape_height / 2
+        label_baseline = 'middle'
+      }
+    }
+
+    this.d3_selection?.select('.name_label_text')
+      .attr('x', label_pos_x)
+      .attr('y', label_pos_y)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .style('text-align', label_align)
+
+    return [label_pos_x, label_pos_y, label_anchor]
   }
 
   /**
@@ -1938,6 +2075,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set name_label_vert(_: Type_TextVPos) {
+    if (_ !== 'dragged') delete this._display._y_label
     this._display.attributes.name_label_vert = _
     this.drawNameLabel()
   }
@@ -1960,6 +2098,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set name_label_horiz(_: Type_TextHPos) {
+    if (_ !== 'dragged') delete this._display._x_label
     this._display.attributes.name_label_horiz = _
     this.drawNameLabel()
   }

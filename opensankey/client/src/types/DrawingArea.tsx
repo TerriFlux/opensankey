@@ -932,9 +932,9 @@ export class Class_DrawingArea {
   private eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    event.preventDefault()
     if (this.eventsEnabled()) {
       if (this.isInSelectionMode()) {
-        event.preventDefault()
         this.pointer_pos = [event.pageX, event.pageY]
 
         this.application_data.menu_configuration.updateComponentsMenuConfigLink()
