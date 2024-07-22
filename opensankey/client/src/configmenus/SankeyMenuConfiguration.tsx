@@ -324,24 +324,22 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
 
 /**
  * Component developped for number input of the config menu
- * @param {*} {
- *   function_getValue,
- *   function_onChange,
- *   function_onBlur,
- *   menu_for_style = false,
- *   minimum_value = 0,
- *   maximum_value = 1e6,
- *   stepper = false,
- *   step = 1,
- *   unit_text = undefined,
- * }
- * @return {*}
- */
-export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
-  ref_set_value = useRef((_:number | null | undefined) => null),
-  function_getValue,
-  function_onChange,
-  function_onBlur,
+  * @param {*} {
+  *   ref_to_set_value,
+  *   function_on_blur,
+  *   menu_for_style = false,
+  *   minimum_value = Number.MIN_SAFE_INTEGER,
+  *   maximum_value = Number.MAX_SAFE_INTEGER,
+  *   stepper = false,
+  *   step = 1,
+  *   unit_text = undefined,
+  * }
+  * @return {*}
+  */
+ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
+  default_value,
+  ref_to_set_value,
+  function_on_blur,
   menu_for_style = false,
   minimum_value = Number.MIN_SAFE_INTEGER,
   maximum_value = Number.MAX_SAFE_INTEGER,
@@ -352,8 +350,8 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState(function_getValue())
-  ref_set_value.current = setValue
+  const [value, setValue] = useState<number | null | undefined>(default_value)
+  ref_to_set_value.current = setValue
 
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -400,9 +398,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
           clearTimeout(is_modifying.current)
         }
         // Update selected elements value
-        function_onBlur()
-        // UPdate value
-        function_onChange(value)
+        function_on_blur(value)
       }}
     />
       {stepperBtn}
@@ -412,15 +408,14 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
 }
 
 export type FCType_ConfigMenuNumberInput = {
-  ref_set_value?: MutableRefObject<(_:number | null | undefined) => void>,
-  function_getValue: () => number | null | undefined,
-  function_onChange: (val: number | null | undefined) => void
-  function_onBlur: () => void
-  menu_for_style?: boolean
-  minimum_value?: number
-  maximum_value?: number
-  stepper?: boolean
-  step?: number
+  default_value: number | null | undefined,
+  ref_to_set_value: MutableRefObject<(_:number | null | undefined) => void>,
+  function_on_blur: (val: number | null | undefined) => void,
+  menu_for_style?: boolean,
+  minimum_value?: number,
+  maximum_value?: number,
+  stepper?: boolean,
+  step?: number,
   unit_text?: string
 }
 
