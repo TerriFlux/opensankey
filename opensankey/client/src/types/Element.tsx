@@ -546,6 +546,7 @@ export class Class_Handler extends Class_Element {
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
+  private _custom_class: string|undefined 
   private _ref_element: Class_LinkElement | Class_NodeElement
   protected _display: {
     drawing_area: Class_DrawingArea,
@@ -560,7 +561,7 @@ export class Class_Handler extends Class_Element {
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
-    options?: { size?: number, color?: string, filled?: boolean }
+    options?: {class?:string, size?: number, color?: string, filled?: boolean }
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_handlers')
@@ -586,6 +587,9 @@ export class Class_Handler extends Class_Element {
       if (options.filled !== undefined) {
         this._filled = options.filled
       }
+      if (options.class !== undefined) {
+        this._custom_class= options.class
+      }
     }
 
   }
@@ -598,6 +602,9 @@ export class Class_Handler extends Class_Element {
 
   drawElements() {
     this.d3_selection?.attr('class', 'gg_handler')
+    if(this._custom_class!==undefined){
+      this.d3_selection?.attr('class', this._custom_class)
+    }
     // this.d3_selection?.style('display', this.getDisplayValue())
     this.d3_selection?.append('rect')
       .attr('x', -this._size / 2)
@@ -608,7 +615,6 @@ export class Class_Handler extends Class_Element {
       .attr('stroke-width', 1)
       .attr('fill', this._color)
       .attr('fill-opacity', this._filled ? 1 : 0)
-      .attr('cursor', 'move')
   }
 
   /**
