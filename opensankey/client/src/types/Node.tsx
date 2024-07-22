@@ -612,6 +612,28 @@ export class Class_NodeElement extends Class_Element {
     this._links_order = new_order
   }
 
+  /**
+   * Hide the name label of the node & set visible the input to modify it
+   *
+   * @memberof Class_NodeElement
+   */
+  public setInputLabelVisible() {
+    this.d3_selection?.select('.name_label_text').style('display', 'none')
+    this.d3_selection?.select('.name_label_fo_input').style('display', 'inline-block')
+    document.getElementById('name_label_input_' + this.id)?.focus()
+
+  }
+
+  /**
+   * Hide the input label of the node & set visible the name
+   *
+   * @memberof Class_NodeElement
+   */
+  public setInputLabelInvisible() {
+    this.d3_selection?.select('.name_label_fo_input').style('display', 'none')
+    this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
+    this.drawNameLabel()
+  }
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -937,7 +959,7 @@ export class Class_NodeElement extends Class_Element {
           .attr('x', box_pos_x)
           .attr('y', box_pos_y)
           .attr('width', box_width)
-          .attr('height', box_height)
+          .attr('height', box_height + 2)
           .style('display', 'none')
           .append('xhtml:div')
           .append('input')
@@ -946,7 +968,10 @@ export class Class_NodeElement extends Class_Element {
           .attr('id', 'name_label_input_' + this.id)
           .attr('type', 'text')
           .attr('value', this._name)
-          .style('font-size', String(this.name_label_font_size) + 'px');
+          .style('font-size', String(this.name_label_font_size) + 'px')
+          .on('input', (evt) => { this._name = evt.target.value })
+          .on('blur', () => this.setInputLabelInvisible())
+
 
 
         label_text?.call(d3.drag<SVGTextElement, this>()
@@ -1014,6 +1039,7 @@ export class Class_NodeElement extends Class_Element {
   }
 
   private dragTextend(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
+    this.drawNameLabel()
     this.menu_config.updateComponentsMenuConfigNode()
   }
 
