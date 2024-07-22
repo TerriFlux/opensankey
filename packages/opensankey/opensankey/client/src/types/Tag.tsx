@@ -381,6 +381,34 @@ export abstract class Class_ProtoTagGroup {
     }
   }
 
+  public selectTagsFromId(
+    id: string
+  ) {
+    this.tags_list
+      .forEach(tag => {
+        if (tag.id === id) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
+  }
+
+  public selectTagsFromIds(
+    ids: string[]
+  ) {
+    this.tags_list
+      .forEach(tag => {
+        if (ids.includes(tag.id)) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
+  }
+
   public updateTagsReferences() {
     Object.values(this._tags)
       .forEach(tag => tag.update())
@@ -595,6 +623,22 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     tag.setSelected()
   }
 
+  // PUBLIC METHODS =====================================================================
+
+  public selectTagsFromId(
+    id: string
+  ) {
+    super.selectTagsFromId(id)
+    this.checkSelectionCoherence()
+  }
+
+  public selectTagsFromIds(
+    ids: string[]
+  ) {
+    super.selectTagsFromIds(ids)
+    this.checkSelectionCoherence()
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected createTag(
@@ -602,6 +646,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     id: string | undefined = undefined
   ) {
     return new Class_DataTag(name, this, this._sankey, id)
+  }
+
+  // PRIVATE METHODES ===================================================================
+
+  /**
+   * Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
+   * @private
+   * @memberof Class_DataTagGroup
+   */
+  private checkSelectionCoherence() {
+    if (this.selected_tags_list.length === 0) {
+      this.tags_list[0]?.setSelected()
+    }
   }
 
   // GETTER =============================================================================

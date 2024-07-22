@@ -107,6 +107,19 @@ export class Class_MenuConfig {
   private _updateToolbar: MutableRefObject<(() => void)>
 
 
+  /* ========================================
+    Updater of filtering components
+  =========================================== */
+
+  // Update AddSimpleLevelDropDown
+  private _ref_to_leveltag_filter_updater: MutableRefObject<() => void>
+
+  // Update AddAllDropDownNode
+  private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
+
+  // TODO description
+  private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -123,7 +136,7 @@ export class Class_MenuConfig {
     this._btn_accordion_config_node = useRef<HTMLButtonElement>(null)
     this._btn_accordion_config_link = useRef<HTMLButtonElement>(null)
 
-    // Init component updater -----------------------------------------------------------
+    // Init menu component updater ------------------------------------------------------
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -154,9 +167,14 @@ export class Class_MenuConfig {
     this._updateComponentMenu = useRef(() => null)
     this._ref_to_toolbar_updater = useRef(() => null)
     this._updateToolbar = useRef(() => null)
+
+    // Init filtering components updater ------------------------------------------------
+    this._ref_to_leveltag_filter_updater = useRef(() => null)
+    this._ref_to_nodetag_filter_updater = useRef(() => null)
+    this._ref_to_datatag_filter_updater = useRef(() => null)
   }
 
-  // PUBLIC METHODS ====================================================================
+  // PUBLIC METHODS =====================================================================
 
   /**
    * Open menu configuration
@@ -175,12 +193,12 @@ export class Class_MenuConfig {
   }
 
   /**
- * Check if we linked the ref to the button to open elements accordion
- * and check if the accordion elements is open then click to the button
- * that _btn_accordion_config_elements ref to
- *
- * @memberof Class_MenuConfig
- */
+   * Check if we linked the ref to the button to open elements accordion
+   * and check if the accordion elements is open then click to the button
+   * that _btn_accordion_config_elements ref to
+   *
+   * @memberof Class_MenuConfig
+   */
   public OpenConfigMenuElements() {
     if (
       this._btn_accordion_config_elements.current &&
@@ -262,7 +280,13 @@ export class Class_MenuConfig {
     // this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
   }
 
-  public updateComponentsRelatedToTags() {
+  public updateAllMenuComponent() {
+    this.updateComponentsMenuConfigNode()
+    this.updateComponentsMenuConfigLink()
+    this._ref_to_menu_config_tags_updater.current()
+  }
+
+  public updateAllComponentsRelatedToTags() {
     this._ref_to_menu_config_node_updater.current()
     this._ref_to_menu_config_node_tags_updater.current()
     this._ref_to_menu_config_link_updater.current()
@@ -271,11 +295,22 @@ export class Class_MenuConfig {
     this.ref_to_toolbar_updater.current()
   }
 
-  public updateAllMenuComponent() {
-    this.updateComponentsMenuConfigNode()
-    this.updateComponentsMenuConfigLink()
-    this._ref_to_menu_config_tags_updater.current()
+  public updateAllComponentsRelatedToLevelTags() {
+    this._ref_to_leveltag_filter_updater.current()
   }
+
+  public updateAllComponentsRelatedToNodeTags() {
+    this._ref_to_nodetag_filter_updater.current()
+    this._ref_to_leveltag_filter_updater.current()
+    this._ref_to_menu_config_node_tags_updater.current()
+  }
+
+  public updateAllComponentsRelatedToDataTags() {
+    this._ref_to_datatag_filter_updater.current()
+    this._ref_to_menu_config_link_data_updater.current()
+    this._ref_to_menu_config_link_tags_updater.current()
+  }
+
 
   /**
    * Check if we linked the ref to the button to toggle the menu
@@ -389,8 +424,6 @@ export class Class_MenuConfig {
     return this._updateComponentMenu
   }
 
-
-
   public get updateComponentBtnUpdateLayout(): MutableRefObject<(() => void)> {
     return this._updateComponentBtnUpdateLayout
   }
@@ -403,6 +436,18 @@ export class Class_MenuConfig {
     return this._updateToolbar
   }
 
+  // Filtering components ---------------------------------------------------------------
 
+  public get ref_to_leveltag_filter_updater(): MutableRefObject<() => void> {
+    return this._ref_to_leveltag_filter_updater
+  }
+
+  public get ref_to_nodetag_filter_updater(): MutableRefObject<() => void> {
+    return this._ref_to_nodetag_filter_updater
+  }
+
+  public get ref_to_datatag_filter_updater(): MutableRefObject<() => void> {
+    return this._ref_to_datatag_filter_updater
+  }
 
 }
