@@ -5,8 +5,9 @@
 // ==================================================================================================
 
 // Local types
-import { Class_LinkValue } from './Link'
+import { Class_LinkElement, Class_LinkValue } from './Link'
 import { Class_NodeElement } from './Node'
+import { Class_Sankey } from './Sankey'
 import { default_grey_color, makeId } from './Utils'
 
 
@@ -15,14 +16,15 @@ import { default_grey_color, makeId } from './Utils'
 export type tag_banner_type= 'none' | 'one' | 'multi' | 'level'
 
 type Type_TagReference = Class_NodeElement | Class_LinkValue
+type Type_DataTagReference = Class_LinkElement
 
 
-// CLASS TAG ****************************************************************************
+// CLASS PROTO TAG ***********************************************************************
 /**
  * Class that define a Tag object
  * @class Class_Tag
  */
-export class Class_Tag {
+export abstract class Class_ProtoTag {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -31,17 +33,11 @@ export class Class_Tag {
 
   private _name: string
 
-  // Group where it belong
-  private _group: Class_TagGroup
-
-  // List of elements that relates to this tag
-  private _references: { [_: string]: Type_TagReference } = {}
-
   // Color of tag
   private _color: string = default_grey_color
 
   // Boolean
-  private _is_selected: boolean = true
+  private _is_selected: boolean = false
 
   /**
    * True if tag is currently on a deletion process
@@ -51,17 +47,19 @@ export class Class_Tag {
    */
   private _is_currently_deleted = false
 
-  // Constructor ========================================================================
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  // Group where it belong
+  protected abstract _group: any
+
+  // CONSTRUCTOR ========================================================================
 
   constructor(
     name: string,
-    group: Class_TagGroup,
     id: string | undefined = undefined
   ) {
     this._id = id ?? makeId(name)
     this._name = name
-    this._group = group
-    this._color
   }
 
   /**
@@ -74,62 +72,35 @@ export class Class_Tag {
       this._is_currently_deleted = true
       // Unref this from tag group
       this.group.removeTag(this)
-      // Unref this tag from all references
-      Object.values(this._references)
-        .forEach(element => {
-          element.removeTag(this)
-        })
-      this._references = {}
+      // Clean the rest
+      this.cleanForDeletion()
       // Garbage collection will do the rest
     }
   }
 
-  // PUBLIC METHODS =====================================================================
+  // PUBLIC METHODES ==================================================================
 
-  public hasGivenRef(_: Type_TagReference) {
-    return (this._references[_.id] !== undefined)
-  }
-
-  public addReference(_: Type_TagReference) {
-    if (!this.hasGivenRef(_)) {
-      this._references[_.id] = _
-      _.addTag(this)
-    }
-  }
-
-  public removeReference(_: Type_TagReference) {
-    if (this.hasGivenRef(_)) {
-      delete this._references[_.id]
-      _.removeTag(this)
-    }
-  }
-
-  public updateReferences() {
-    Object.values(this._references)
-      .forEach(element => {
-        element.draw()
-      })
-  }
+  public  abstract update(): void
 
   public setSelected() {
     // Set attributes
     this._is_selected = true
     // Redraw all related elements
-    this.updateReferences()
+    this.update()
   }
 
   public setUnSelected() {
     // Set attributes
     this._is_selected = false
     // Redraw all related elements
-    this.updateReferences()
+    this.update()
   }
 
   public toogleSelected() {
     // Set attributes
     this._is_selected = !this._is_selected
     // Redraw all related elements
-    this.updateReferences()
+    this.update()
   }
 
   public toJSON() {
@@ -153,6 +124,10 @@ export class Class_Tag {
     this._color = json_object['color'] ?? 'grey'
   }
 
+  // PROTECTED METHODS ==================================================================
+
+  protected abstract cleanForDeletion(): void
+
   // GETTERS / SETTERS ==================================================================
 
   public get id() { return this._id }
@@ -165,7 +140,7 @@ export class Class_Tag {
     // Set attributes
     this._color = value
     // Redraw all related elements
-    this.updateReferences()
+    this.update()
   }
 
   // Selection
@@ -174,21 +149,163 @@ export class Class_Tag {
   public get group() { return this._group }
 }
 
-// CLASS TAGGROUP ***********************************************************************
+// CLASS TAG ****************************************************************************
+/**
+ * Class that define a Tag object
+ * @class Class_Tag
+ */
+export class Class_Tag extends Class_ProtoTag {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // List of elements that relates to this tag
+  private _references: { [_: string]: Type_TagReference } = {}
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  // Group where it belong
+  protected _group: Class_TagGroup
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_Tag.
+   * @param {string} name
+   * @param {Class_TagGroup} group
+   * @param {(string | undefined)} [id=undefined]
+   * @memberof Class_DataTag
+   */
+  constructor(
+    name: string,
+    group: Class_TagGroup,
+    id: string | undefined = undefined
+  ) {
+    super(name, id)
+    this._group = group
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public update() {
+    Object.values(this._references)
+      .forEach(element => {
+        element.draw()
+      })
+  }
+
+  public hasGivenRef(_: Type_TagReference) {
+    return (this._references[_.id] !== undefined)
+  }
+
+  public addReference(_: Type_TagReference) {
+    if (!this.hasGivenRef(_)) {
+      this._references[_.id] = _
+      _.addTag(this)
+    }
+  }
+
+  public removeReference(_: Type_TagReference) {
+    if (this.hasGivenRef(_)) {
+      delete this._references[_.id]
+      _.removeTag(this)
+    }
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  protected cleanForDeletion() {
+    // Unref this tag from all references
+    Object.values(this._references)
+      .forEach(element => {
+        element.removeTag(this)
+      })
+    this._references = {}
+  }
+
+}
+
+// CLASS DATATAG ************************************************************************
+
+export class Class_DataTag extends Class_ProtoTag {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // List of elements that relates to this tag
+  private _references: { [_: string]: Type_DataTagReference } = {}
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  // Group where it belong
+  protected _group: Class_DataTagGroup
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_DataTag.
+   * @param {string} name
+   * @param {Class_TagGroup} group
+   * @param {Class_Sankey} sankey
+   * @param {(string | undefined)} [id=undefined]
+   * @memberof Class_DataTag
+   */
+  constructor(
+    name: string,
+    group: Class_DataTagGroup,
+    sankey: Class_Sankey,
+    id: string | undefined = undefined
+  ) {
+    super(name, id)
+    this._group = group
+    this._references = sankey.links_dict
+    // Update all links
+    Object.values(this._references)
+      .forEach(link => link.addDataTag(this))
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public update() {
+    Object.values(this._references)
+      .forEach(element => {
+        element.draw()
+      })
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  protected cleanForDeletion() {
+    // Update all links
+    Object.values(this._references)
+      .forEach(link => link.removeDataTag(this))
+    // Unref references
+    this._references = {}
+  }
+
+}
+
+// CLASS PROTO TAGGROUP ***********************************************************************
 /**
  * Class that define a TagGroup object
  * @export
  * @class Class_TagGroup
  */
-export class Class_TagGroup {
+export abstract class Class_ProtoTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
+
   // Name
   private _id: string
   private _name: string
 
   // List of tags
-  private _tags: { [_: string]: Class_Tag } = {}
   private _tag_count: number = 0
 
   // Display attributes
@@ -204,7 +321,12 @@ export class Class_TagGroup {
    */
   private _is_currently_deleted = false
 
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected abstract _tags: { [_: string]: Class_ProtoTag }
+
   // CONSTRUCTOR ========================================================================
+
   /**
    * Creates an instance of Class_TagGroup.
    * @param {string} id
@@ -214,13 +336,11 @@ export class Class_TagGroup {
   constructor(id: string, name: string) {
     this._id = id
     this._name = name
-    // Create a first default tag
-    this.addTag('Etiquette 0')
   }
 
   /**
    * Define deletion behavior
-   * @memberof Class_Tag
+   * @memberof Class_ProtoTagGroup
    */
   public delete() {
     if (!this._is_currently_deleted) {
@@ -242,7 +362,7 @@ export class Class_TagGroup {
     name: string,
     id: string | undefined = undefined
   ) {
-    const tag = new Class_Tag(name, this, id)
+    const tag = this.createTag(name, id)
     this._tags[tag.id] = tag
     this._tag_count = this._tag_count + 1
     return tag
@@ -254,7 +374,7 @@ export class Class_TagGroup {
     this.addTag(name)
   }
 
-  public removeTag(_: Class_Tag) {
+  public removeTag(_: Class_ProtoTag) {
     if (this._tags[_.id] !== undefined) {
       _.delete()
       delete this._tags[_.id]
@@ -263,7 +383,7 @@ export class Class_TagGroup {
 
   public updateTagsReferences() {
     Object.values(this._tags)
-      .forEach(tag => tag.updateReferences())
+      .forEach(tag => tag.update())
   }
 
   public toJSON() {
@@ -300,20 +420,27 @@ export class Class_TagGroup {
     this._activated = json_object['activated'] ?? true
   }
 
+  // PROTECTED METHODS ==================================================================
+
+  protected abstract createTag(
+    name: string,
+    id: string | undefined
+  ): Class_ProtoTag
+
   // GETTERS ============================================================================
 
   /**
    * Id of tag group
    * @readonly
    * @type {string}
-   * @memberof Class_TagGroup
+   * @memberof Class_ProtoTagGroup
    */
   public get id(): string { return this._id }
 
   /**
    * Name of tag group (!= id)
    * @type {string}
-   * @memberof Class_TagGroup
+   * @memberof Class_ProtoTagGroup
    */
   public get name(): string { return this._name }
 
@@ -321,36 +448,36 @@ export class Class_TagGroup {
 
   /**
    * Return dict tag from the current group
-   * @type {{ [_: string]: Class_Tag }}
-   * @memberof Class_TagGroup
+   * @type {{ [_: string]: Class_ProtoTag }}
+   * @memberof Class_ProtoTagGroup
    */
-  public get tags_dict(): { [_: string]: Class_Tag } { return this._tags }
+  public abstract get tags_dict() :  { [_: string]: Class_ProtoTag }
 
   /**
   * Return list tag from the current group
   * @readonly
-  * @memberof Class_TagGroup
+  * @memberof Class_ProtoTagGroup
   */
-  public get tags_list() { return Object.values(this._tags) }
+  public abstract get tags_list() : Class_ProtoTag[]
 
   /**
    * Return list of selected tag from the current group
    * @readonly
-   * @memberof Class_TagGroup
+   * @memberof Class_ProtoTagGroup
    */
-  public get selected_tags_list() { return Object.values(this._tags).filter(t => t.is_selected) }
+  public abstract get selected_tags_list() : Class_ProtoTag[]
 
   /**
    * True if tag group has tags
    * @readonly
-   * @memberof Class_TagGroup
+   * @memberof Class_ProtoTagGroup
    */
   public get has_tags() { return this.tags_list.length > 0 }
 
   /**
    * True if tag group has tags selected
    * @readonly
-   * @memberof Class_TagGroup
+   * @memberof Class_ProtoTagGroup
    */
   public get has_selected_tags() { return this.selected_tags_list.length > 0 }
 
@@ -374,6 +501,131 @@ export class Class_TagGroup {
 
   public set name(value: string) { this._name = value }
   public set activated(value: boolean) { this._activated = value }
+}
+
+// CLASS TAGGROUP ***********************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+export class Class_TagGroup extends Class_ProtoTagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _tags: { [_: string]: Class_Tag } = {}
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(id: string, name: string) {
+    super(id, name)
+    // Create and select a first default tag
+    const tag = this.addTag('Etiquette 0')
+    tag.setSelected()
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    return new Class_Tag(name, this, id)
+  }
+
+  // GETTER =============================================================================
+
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_Tag }}
+   * @memberof Class_TagGroup
+   */
+  public get tags_dict() { return this._tags }
+
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_Tag }}
+   * @memberof Class_TagGroup
+   */
+  public get tags_list() { return Object.values(this.tags_dict) }
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_TagGroup
+   */
+  public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
+}
+
+// CLASS DATATAGGROUP ***********************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+export class Class_DataTagGroup extends Class_ProtoTagGroup {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _sankey: Class_Sankey
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _tags: { [_: string]: Class_DataTag } = {}
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(id: string, name: string, sankey: Class_Sankey) {
+    super(id, name)
+    this._sankey = sankey
+    // Create and select a first default tag
+    const tag = this.addTag('Etiquette 0')
+    tag.setSelected()
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    return new Class_DataTag(name, this, this._sankey, id)
+  }
+
+  // GETTER =============================================================================
+
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_ProtoTag }}
+   * @memberof Class_DataTagGroup
+   */
+  public get tags_dict() { return this._tags }
+
+  /**
+   * Return dict tag from the current group
+   * @type {Class_ProtoTag[]}
+   * @memberof Class_DataTagGroup
+   */
+  public get tags_list() { return Object.values(this.tags_dict) }
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_DataTagGroup
+   */
+  public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
 }
 
 
