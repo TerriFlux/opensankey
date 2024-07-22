@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef } from 'react'
 import {
   FaAlignLeft,
   FaAlignCenter,
@@ -145,12 +145,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const { t } = applicationContext
   // Get data
   const { data, new_data } = applicationData
-  // State variable to trigger this menu refreshing
-  const [ , refreshThis ] = useBoolean()
-  // Link this menu's update function
-  if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = refreshThis.toggle
-  }
   const { ref_selected_style_link } = applicationState
   // Selected links
   let selected_links
@@ -172,22 +166,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   }
   else {
     elements = selected_links
-  }
-
-  // LOCAL FUNCTIONS ====================================================================
-
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Update menus for node's apparence in case we use this for style
-    if (menu_for_style) {
-      new_data.menu_configuration.updateComponentsMenuConfigLink()
-    }
-    // And update this menu also
-    refreshThis.toggle()
   }
 
   /**
@@ -244,6 +222,48 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       return default_style_id
     }
   }
+
+  // COMPONENTS UPDATERS  ==============================================================
+
+  // State variable to trigger this menu refreshing
+  const [ , refreshThis ] = useBoolean()
+
+  // Link this menu's update function
+  if (!menu_for_style) {
+    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = refreshThis.toggle
+  }
+
+  // Link to ConfigMenuNumberInput state variable
+  const number_of_input = 9
+  const ref_set_number_inputs: MutableRefObject<(_:number | null | undefined) => void>[] = []
+  for (let i=0; i<number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_:number | null | undefined) => null))
+
+  // Be sure that values are updated in inputs when refreshing this component
+  ref_set_number_inputs[0].current(shape_arrow_size)
+  ref_set_number_inputs[1].current(shape_starting_curve*100)
+  ref_set_number_inputs[2].current(shape_ending_curve*100)
+  ref_set_number_inputs[3].current(shape_starting_tangeant*100)
+  ref_set_number_inputs[4].current(shape_ending_tangeant*100)
+  ref_set_number_inputs[5].current(shape_opacity)
+  ref_set_number_inputs[6].current(value_label_scientific_precision)
+  ref_set_number_inputs[7].current(value_label_nb_digit)
+  ref_set_number_inputs[8].current(value_label_font_size)
+
+  /**
+   * Function used to reset menu UI
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Update menus for node's apparence in case we use this for style
+    if (menu_for_style) {
+      new_data.menu_configuration.updateComponentsMenuConfigLink()
+    }
+    // And update this menu also
+    refreshThis.toggle()
+  }
+
 
   const content_appearence = <Box
     layerStyle='menuconfigpanel_grid'
@@ -387,14 +407,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
           <ConfigMenuNumberInput
-            function_getValue={() => {return shape_arrow_size}}
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={shape_arrow_size}
             menu_for_style={menu_for_style}
             minimum_value={1}
             stepper={true}
-            function_onChange={(value) =>
+            function_on_blur={(value) => {
               elements.forEach(element => element.shape_arrow_size = value ?? undefined)
-            }
-            function_onBlur={refreshThisAndUpdateRelatedComponents}
+              refreshThisAndUpdateRelatedComponents()
+            }}
           />
         </OSTooltip>
       </InputGroup>
@@ -430,18 +451,19 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       </Box>
       <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
         <ConfigMenuNumberInput
-          function_getValue={() => {return shape_starting_curve*100}}
+          ref_to_set_value={ref_set_number_inputs[1]}
+          default_value={shape_starting_curve*100}
+          function_on_blur={(value) => {
+            elements.forEach(element =>
+              element.shape_starting_curve = (value ? value/100 : undefined))
+            refreshThisAndUpdateRelatedComponents()
+          }}
           menu_for_style={menu_for_style}
           minimum_value={0}
           maximum_value={shape_ending_curve*100}
           step={1}
           stepper={true}
           unit_text='%'
-          function_onChange={(value) => {
-            if (value)
-              elements.forEach(element => element.shape_starting_curve = value/100)
-          }}
-          function_onBlur={refreshThisAndUpdateRelatedComponents}
         />
       </OSTooltip>
     </Box>
@@ -461,18 +483,19 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       </Box>
       <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
         <ConfigMenuNumberInput
-          function_getValue={() => {return shape_ending_curve*100}}
+          ref_to_set_value={ref_set_number_inputs[2]}
+          default_value={shape_ending_curve*100}
           menu_for_style={menu_for_style}
           minimum_value={shape_starting_curve*100}
           maximum_value={100}
           step={1}
           stepper={true}
           unit_text='%'
-          function_onChange={(value) => {
-            if (value)
-              elements.forEach(element => element.shape_ending_curve = value/100)
+          function_on_blur={(value) => {
+            elements.forEach(element =>
+              element.shape_ending_curve = (value ? value/100 : undefined))
+            refreshThis.toggle()
           }}
-          function_onBlur={refreshThis.toggle}
         />
       </OSTooltip>
     </Box>
@@ -492,17 +515,20 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
           <ConfigMenuNumberInput
-            function_getValue={() => {return shape_starting_tangeant*100}}
+            ref_to_set_value={ref_set_number_inputs[3]}
+            default_value={shape_starting_tangeant*100}
             menu_for_style={menu_for_style}
             minimum_value={0}
             step={1}
             stepper={true}
             unit_text='%'
-            function_onChange={(value) => {
-              if (value)
-                elements.forEach(element => element.shape_starting_tangeant = value/100)
-            }}
-            function_onBlur={refreshThisAndUpdateRelatedComponents}
+            function_on_blur={(value) => {
+              elements.forEach(element =>
+                element.shape_starting_tangeant = (value ? value/100 : undefined))
+              refreshThisAndUpdateRelatedComponents()
+            }
+          }
+
           />
         </OSTooltip>
       </InputGroup>
@@ -523,17 +549,18 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
           <ConfigMenuNumberInput
-            function_getValue={() => {return shape_ending_tangeant*100}}
+            ref_to_set_value={ref_set_number_inputs[4]}
+            default_value={shape_ending_tangeant*100}
             menu_for_style={menu_for_style}
             minimum_value={0}
             step={1}
             stepper={true}
             unit_text='%'
-            function_onChange={(value) => {
-              if (value)
-                elements.forEach(element => element.shape_ending_tangeant = value/100)
-            }}
-            function_onBlur={refreshThisAndUpdateRelatedComponents}
+            function_on_blur={(value) => {
+              elements.forEach(element =>
+                element.shape_ending_tangeant = (value ? value/100 : undefined))
+              refreshThisAndUpdateRelatedComponents()  }
+            }
           />
         </OSTooltip>
       </InputGroup>
@@ -575,15 +602,18 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
           <ConfigMenuNumberInput
-            function_getValue={() => {return shape_opacity}}
+            ref_to_set_value={ref_set_number_inputs[5]}
+            default_value={shape_opacity}
             menu_for_style={menu_for_style}
             minimum_value={0}
             maximum_value={1}
             step={0.1}
             stepper={true}
-            function_onChange={(value) =>
-              elements.forEach(element => element.shape_opacity = value ?? undefined)}
-            function_onBlur={refreshThisAndUpdateRelatedComponents}
+            function_on_blur={(value) => {
+              elements.forEach(element =>
+                element.shape_opacity = value ?? undefined)
+              refreshThisAndUpdateRelatedComponents()
+            }}
           />
         </OSTooltip>
       </InputGroup>
@@ -651,13 +681,16 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </Box>
         <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
           <ConfigMenuNumberInput
-            function_getValue={() => {return value_label_scientific_precision}}
+            ref_to_set_value={ref_set_number_inputs[6]}
+            default_value={value_label_scientific_precision}
             menu_for_style={menu_for_style}
             minimum_value={0}
             stepper={true}
-            function_onChange={(value) =>
-              elements.forEach(element => element.value_label_scientific_precision = value ?? undefined)}
-            function_onBlur={refreshThisAndUpdateRelatedComponents}
+            function_on_blur={(value) => {
+              elements.forEach(element =>
+                element.value_label_scientific_precision = value ?? undefined)
+              refreshThisAndUpdateRelatedComponents()
+            }}
           />
         </OSTooltip>
       </Box>
@@ -722,13 +755,16 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           </Box>
           <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
             <ConfigMenuNumberInput
-              function_getValue={() => {return value_label_nb_digit}}
+              ref_to_set_value={ref_set_number_inputs[7]}
+              default_value={value_label_nb_digit}
               menu_for_style={menu_for_style}
               minimum_value={0}
               stepper={true}
-              function_onChange={(value) =>
-                elements.forEach(element => element.value_label_nb_digit = value ?? undefined)}
-              function_onBlur={refreshThisAndUpdateRelatedComponents}
+              function_on_blur={(value) =>{
+                elements.forEach(element =>
+                  element.value_label_nb_digit = value ?? undefined)
+                refreshThisAndUpdateRelatedComponents()
+              }}
             />
           </OSTooltip>
         </Box></> : <></>}
@@ -886,14 +922,17 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           </Select>
 
           <ConfigMenuNumberInput
-            function_getValue={() => {return value_label_font_size}}
+            ref_to_set_value={ref_set_number_inputs[8]}
+            default_value={value_label_font_size}
             menu_for_style={menu_for_style}
             minimum_value={11}
             stepper={true}
             unit_text='pixels'
-            function_onChange={(value) =>
-              elements.forEach(element => element.value_label_font_size = value ?? undefined)}
-            function_onBlur={refreshThisAndUpdateRelatedComponents}
+            function_on_blur={(value) =>{
+              elements.forEach(element =>
+                element.value_label_font_size = value ?? undefined)
+              refreshThisAndUpdateRelatedComponents()
+            }}
           />
         </Box>
 
@@ -1287,6 +1326,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       height: 2 }} />
     {content_label}
   </Box>
+
 
   /* Formattage de l'affichage du menu attribut de flux */
   return content

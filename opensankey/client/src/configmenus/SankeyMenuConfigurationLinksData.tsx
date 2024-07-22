@@ -44,32 +44,30 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   // Data tags and links ---------------------------------------------------------------
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
   const list_links_selected = new_data.drawing_area.selected_links_list
-  const [value, setValue] = useState(list_links_selected[0]?.value)
+  const value = list_links_selected[0]?.value
 
   // Components updaters ---------------------------------------------------------------
   const ref_set_data_value_input = useRef((_:number | null | undefined) => null)
   const ref_set_text_value_input = useRef((_:string | null | undefined) => null)
 
-  // Function used to force this component to reload
-  const refreshThis = () => {
-    // Get updated value // data tags selected
-    const new_value = new_data.drawing_area.selected_links_list[0]?.value
+  const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(new_value?.data_value ?? undefined)
+    ref_set_data_value_input.current(value?.data_value ?? null)
     // Update input text value
-    ref_set_text_value_input.current(new_value?.text_value ?? '')
-    // Refresh this menu
-    setValue(new_value)
+    ref_set_text_value_input.current(value?.text_value ?? null)
   }
 
+  // Function used to force this component to reload
+  const [ , refreshThis] = useBoolean()
+
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = refreshThis
+  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = refreshThis.toggle
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis()
+    refreshThis.toggle()
   }
 
 
@@ -141,9 +139,9 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           {t('Flux.data.vpp')}
         </Box>
         <ConfigMenuNumberInput
-          ref_set_value={ref_set_data_value_input}
-          function_getValue={() => {return (value?.data_value ?? null) }}
-          function_onChange={(_) => {
+          ref_to_set_value={ref_set_data_value_input}
+          default_value={value?.data_value ?? null}
+          function_on_blur={(_) => {
             // Update data for links
             list_links_selected.forEach(link => {
               link.data_value = (_ ?? null)
@@ -151,7 +149,6 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
             // Update this menu
             refreshThisAndUpdateRelatedComponents()
           }}
-          function_onBlur={() => {}}
           minimum_value={0}
           stepper={true}
           step={1}
@@ -194,6 +191,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
 
   </Box>
 
+  // Update input values
+  updateInputsValues()
+
+  // Return JSX component
   return content
 }
 
