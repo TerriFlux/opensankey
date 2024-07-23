@@ -725,14 +725,14 @@ export class Class_NodeElement extends Class_Element {
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsNodes()
         // Update components related to node edition
-        this.menu_config.updateComponentsMenuConfigNode()
+        this.menu_config.updateAllComponentsRelatedToNodes()
 
       } else if (event.ctrlKey) {
         // Add node to selection
         drawing_area.addNodeToSelection(this)
 
         // Update components related to node edition
-        this.menu_config.updateComponentsMenuConfigNode()
+        this.menu_config.updateAllComponentsRelatedToNodes()
       }
       // OTHERS
       else {
@@ -822,9 +822,9 @@ export class Class_NodeElement extends Class_Element {
       } else {
       }
 
-      this.menu_config.updateComponentsMenuConfigNode()
+      this.menu_config.updateAllComponentsRelatedToNodes()
       this.drawing_area.node_contextualied = this
-      this.menu_config.update_components_menu_context_node.current()
+      this.menu_config.ref_to_menu_context_nodes_updater.current()
     }
 
   }
@@ -1041,7 +1041,7 @@ export class Class_NodeElement extends Class_Element {
 
   private dragTextend(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
     this.drawNameLabel()
-    this.menu_config.updateComponentsMenuConfigNode()
+    this.menu_config.updateAllComponentsRelatedToNodes()
   }
 
   /**

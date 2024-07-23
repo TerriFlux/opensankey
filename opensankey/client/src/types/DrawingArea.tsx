@@ -611,8 +611,8 @@ export class Class_DrawingArea {
     // TODO Unselect other things
     // Reset selection
     // TODO reset config menu
-    this.application_data.menu_configuration.updateComponentsMenuConfigNode()
-    this.application_data.menu_configuration.updateComponentsMenuConfigLink()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     // Clean selection dict
     this._selection = {}
   }
@@ -937,9 +937,9 @@ export class Class_DrawingArea {
       if (this.isInSelectionMode()) {
         this.pointer_pos = [event.pageX, event.pageY]
 
-        this.application_data.menu_configuration.updateComponentsMenuConfigLink()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         this.is_drawing_area_contextualised = true
-        this.application_data.menu_configuration.update_components_menu_context_DA.current()
+        this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
       }
     }
 
@@ -979,20 +979,20 @@ export class Class_DrawingArea {
           source,
           target,
           this, this.application_data.menu_configuration)
-        this.application_data.menu_configuration.updateComponentsMenuConfigNode()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
         if (event.button == 0) {
           // Close context menus
           this.node_contextualied = undefined
-          this.application_data.menu_configuration.update_components_menu_context_node.current()
+          this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
           this.link_contextualied = undefined
-          this.application_data.menu_configuration.update_components_menu_context_link.current()
+          this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
           this.is_drawing_area_contextualised = false
-          this.application_data.menu_configuration.update_components_menu_context_DA.current()
+          this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
 
           // Display the selection zone & set it starting position
           const mouse_position = d3.pointer(event)
@@ -1053,8 +1053,8 @@ export class Class_DrawingArea {
         // In case we get there still deref ghost link
         this._ghost_link.delete()
         this._ghost_link = null
-        this.application_data.menu_configuration.updateComponentsMenuConfigNode()
-        this.application_data.menu_configuration.updateComponentsMenuConfigLink()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
       if (!event.shiftKey) {

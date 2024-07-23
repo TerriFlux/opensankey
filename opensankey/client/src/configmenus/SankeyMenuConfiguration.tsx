@@ -116,7 +116,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
         //MENU ITEMS
       }
       <AccordionButton
-        ref={config_object.btn_accordion_config_elements}
+        ref={config_object.ref_to_btn_accordion_config_elements}
       >
         <Box
           as='span'
@@ -135,7 +135,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               //MENU NODES
             }
             <AccordionButton
-              ref={config_object.btn_accordion_config_node}
+              ref={config_object.ref_to_btn_accordion_config_node}
             >
               <Box
                 as='span'
@@ -163,7 +163,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               //MENU LINKS
             }
             <AccordionButton
-              ref={config_object.btn_accordion_config_link}
+              ref={config_object.ref_to_btn_accordion_config_link}
             >
               <Box
                 as='span'

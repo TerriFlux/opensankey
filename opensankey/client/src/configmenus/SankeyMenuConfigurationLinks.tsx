@@ -99,7 +99,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Update values displayed in menus for link's configuration
-    new_data.menu_configuration.updateComponentsSubmenuConfigLink()
+    new_data.menu_configuration.updateAllComponentsRelatedToLinksConfig()
     // Update and update saving indicator
     refreshThisAndToggleSaving()
   }

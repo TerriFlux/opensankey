@@ -666,14 +666,14 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsLinks()
         // Update components related to link edition
-        this.menu_config.updateComponentsMenuConfigLink()
+        this.menu_config.updateAllComponentsRelatedToLinks()
 
       } else if (event.ctrlKey) {
         // Add link to selection
         drawing_area.addLinkToSelection(this)
 
         // Update components related to link edition
-        this.menu_config.updateComponentsMenuConfigLink()
+        this.menu_config.updateAllComponentsRelatedToLinks()
       }
       // OTHERS
       else {
@@ -697,10 +697,10 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.drawing_area.addLinkToSelection(this)
       } else {
       }
-      this.menu_config.updateComponentsMenuConfigLink()
+      this.menu_config.updateAllComponentsRelatedToLinks()
 
       this.drawing_area.link_contextualied = this
-      this.menu_config.update_components_menu_context_link.current()
+      this.menu_config.ref_to_menu_context_links_updater.current()
     }
 
   }
@@ -851,7 +851,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   private dragTextend(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
-    this.menu_config.updateComponentsMenuConfigLink()
+    this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
   /**
