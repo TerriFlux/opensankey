@@ -2370,7 +2370,6 @@ export class Class_NodeElement extends Class_Element {
     // Check if all node tags are selected = ok to display
     let to_display = true
     this.tags_list
-      .filter(tag => tag.group?.activated ?? false)
       .forEach(tag => to_display = (to_display && tag.is_selected))
     return to_display
   }

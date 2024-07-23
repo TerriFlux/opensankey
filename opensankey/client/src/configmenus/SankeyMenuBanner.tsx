@@ -607,10 +607,6 @@ export const AddAllDropDownFlux: FunctionComponent<AddAllDropDownFluxFType> = (
  */
 export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
   applicationData,
-  applicationDraw,
-  node_function,
-  link_function,
-  ComponentUpdater,
   in_popover
 }) => {
   // Data -------------------------------------------------------------------------------
@@ -697,17 +693,12 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
                   justifySelf='end'
                   alignSelf='center'
                   height='1rem'
-                  isChecked={show_legend_for_data_taggs}
+                  isChecked={tagg.show_legend}
                   onChange={evt => {
                     // Met à jour l'indicateur de legende pour tous les tags
                     Object.values(data_taggs_with_banner)
-                      .forEach(tagg => tagg.show_legend = evt.target.checked)
-                    new_data.drawing_area.sankey.links_color_map = 'no_colormap'
-                    // TODO Supprimer
-                    //Met le dernier dataTag en tant que couleur a suivre pour les flux
-                    // if (evt.target.checked) {
-                    //   new_data.drawing_area.sankey.links_color_map = 'dataTags_' + Object.keys(data_taggs).slice(data_taggs_with_banner.length - 1, data_taggs_with_banner.length)[0]
-                    // }
+                      .forEach(tagg => tagg.show_legend = false)
+                    tagg.show_legend = evt.target.checked
                     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                   }}
                 /> :
@@ -1054,10 +1045,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
         {legend_filter}
         <DataTagSelector
           applicationData={applicationData}
-          applicationDraw={applicationDraw}
-          node_function={node_function}
-          link_function={link_function}
-          ComponentUpdater={ComponentUpdater}
           in_popover={true}
         />
       </PopoverBody>

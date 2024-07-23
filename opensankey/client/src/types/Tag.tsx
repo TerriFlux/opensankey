@@ -83,17 +83,23 @@ export abstract class Class_ProtoTag {
   public  abstract update(): void
 
   public setSelected() {
-    // Set attributes
-    this._is_selected = true
-    // Redraw all related elements
-    this.update()
+    // Avoid useless update
+    if (this._is_selected === false) {
+      // Set attributes
+      this._is_selected = true
+      // Redraw all related elements
+      this.update()
+    }
   }
 
   public setUnSelected() {
-    // Set attributes
-    this._is_selected = false
-    // Redraw all related elements
-    this.update()
+    // Avoid useless update
+    if (this._is_selected === true) {
+      // Set attributes
+      this._is_selected = false
+      // Redraw all related elements
+      this.update()
+    }
   }
 
   public toogleSelected() {
@@ -137,10 +143,13 @@ export abstract class Class_ProtoTag {
 
   public get color() { return this._color }
   public set color(value: string) {
-    // Set attributes
-    this._color = value
-    // Redraw all related elements
-    this.update()
+    // Avoid useless updates
+    if (this._color !== value) {
+      // Set attributes
+      this._color = value
+      // Redraw all related elements
+      this.update()
+    }
   }
 
   // Selection
@@ -271,7 +280,7 @@ export class Class_DataTag extends Class_ProtoTag {
   public update() {
     Object.values(this._references)
       .forEach(element => {
-        element.draw()
+        element.drawWithNodes()
       })
   }
 
@@ -607,8 +616,11 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
   // SETTER ==============================================================================
 
   public set show_legend(value: boolean) {
-    this._show_legend = value
-    this.updateTagsReferences()
+    // Avoid useless updates
+    if (this._show_legend !== value) {
+      this._show_legend = value
+      this.updateTagsReferences()
+    }
   }
 }
 
@@ -730,8 +742,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // SETTER ==============================================================================
 
   public set show_legend(value: boolean) {
-    this._show_legend = value
-    this.updateTagsReferences()
+    // Avoid useless updates
+    if (this._show_legend !== value) {
+      this._show_legend = value
+      this.updateTagsReferences()
+    }
   }
 }
 
@@ -763,8 +778,11 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   public get activated(): boolean { return this._activated }
   public set activated(value: boolean) {
-    this._activated = value
-    this.updateTagsReferences()
+    // Avoid useless updates
+    if (this._activated !== value) {
+      this._activated = value
+      this.updateTagsReferences()
+    }
   }
 
   public get siblings(): string[] { return this._siblings }
