@@ -19,16 +19,51 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
 
 }
 
-.mode_add_flux,.link, .node {
-	cursor : url(cursor_ln.svg) 0 0, auto;
+/* Cursor when in selection mode */
+.selection_mode{
+	/* Hovering node & link in selection mode */
+	.node,.link{
+	cursor : url(cursor_n.svg) 0 0, auto;
+	}
+	/* Hovering background in selection mode */
+	#g_background{
+	cursor : url(cursor_n.svg) 0 0, auto;
+	}
+	/* Hovering link control points  in selection mode */
+	.cp_start,.cp_end,.bz_start,.bz_end,.recy_middle{
+	  cursor : url(cursor_n.svg) 0 0, auto;
+	}
+	/* Hovering link io handle in selection mode */
+	.node_io{
+		cursor : url(cursor_n.svg) 0 0, auto;
+	}
+
+	/* Hovering legend in selection mode */
+	.g_scale{
+		cursor :'move';
+
+	}
 }
 
-#g_background.selection_mode{
-	cursor : url(cursor_n.svg) 0 0, auto;
-}
-#g_background.edition_mode{
+/* Cursor when in edition mode */
+.edition_mode{
+	.node,.link{
 	cursor : url(cursor_ln.svg) 0 0, auto;
+	}
+
+	#g_background{
+	cursor : url(cursor_ln.svg) 0 0, auto;
+	}
+	
+	.cp_start,.cp_end,.bz_start,.bz_end,.recy_middle{
+	  cursor : url(cursor_ln.svg) 0 0, auto;
+	}
+
+	.node_io{
+		cursor : url(cursor_ln.svg) 0 0, auto;
+	}
 }
+
 
 
 
