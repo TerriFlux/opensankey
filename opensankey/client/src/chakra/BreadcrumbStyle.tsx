@@ -13,7 +13,7 @@ export const breadcrumb_base_style = definePartsStyle({
 export const pagination_welcome = definePartsStyle({
   container: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'start',
     borderRight: '2px solid',
     borderColor: 'primaire.2',
     width: '100%',

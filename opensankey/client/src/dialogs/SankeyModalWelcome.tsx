@@ -6,22 +6,22 @@ import React, {
 
 // Imported libs
 import {
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Box,
-  Heading,
-  ModalFooter,
-  Modal,
-  ModalContent,
-  ModalBody,
-  ModalCloseButton,
-  Checkbox,
   Breadcrumb,
   BreadcrumbItem,
+  Checkbox,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  Table,
+  Tbody,
+  Td,
   Text,
+  Th,
+  Thead,
+  Tr,
 } from '@chakra-ui/react'
 
 import { windowSankey } from '../configmenus/SankeyUtils'
@@ -39,68 +39,82 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
   const [show_wecome,set_show_welcome]=useState(!never_see_again.current)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
 
-  const content_rc_static=<>
-    <Heading variant='heading_welcome_style' >{t('Menu.rcc_titre_princ')}</Heading>
-    <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-    <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
+  const content_rc_static=<Table variant='table_welcome_buttons'>
+    <Thead>
+      <Tr>
+        {t('Menu.rcc_titre_princ')}
+      </Tr>
+    </Thead>
+    <Tbody>
+      <Tr>
+        <Td>{t('Menu.rcc_cdn_bold')}</Td>
+        <Td>{t('Menu.rcc_cdn')}</Td>
+      </Tr>
+      <Tr>
+        <Td>{t('Menu.rcc_ctrl_scrll_bold')}</Td>
+        <Td>{t('Menu.rcc_ctrl_scrll')}</Td>
+      </Tr>
+      <Tr>
+        <Td>{t('Menu.rcc_F7_bold')}</Td>
+        <Td>{t('Menu.rcc_F7')}</Td>
+      </Tr>
+      <Tr>
+        <Td>{t('Menu.rcc_F8_bold')}</Td>
+        <Td>{t('Menu.rcc_F8')}</Td>
+      </Tr>
+      <Tr>
+        <Td>{t('Menu.rcc_F9_bold')}</Td>
+        <Td>{t('Menu.rcc_F9')}</Td>
+      </Tr>
+    </Tbody>
+  </Table>
 
-    <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
-    <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
-    <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
-
-  </>
-
-  const content_rc_not_static=<Accordion
-    // className='accordion_new_welcome'
-    defaultIndex={0}
-    allowToggle
-  >
-    <AccordionItem
-      // eventKey='OS'
+  const content_rc_not_static=<>
+    <Box
+      display='grid'
+      gridTemplateColumns='50% 50%'
+      gridColumnGap='0.25rem'
+      width='100%'
+      justifySelf='center'
     >
-      <AccordionButton>
-        <Box
-          as='span'
-          layerStyle='menuconfig_entry'
-        >
-          {t('Menu.rcc_titre_princ')}
-        </Box>
-        <AccordionIcon/>
-      </AccordionButton>
-      <AccordionPanel>
-        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_select')}:</Heading>
-        <p><b>{t('Menu.rcc_cn_bold')}</b>{t('Menu.rcc_cn')}</p>
-        <p><b>{t('Menu.rcc_ctrl_cn_bold')}</b>{t('Menu.rcc_ctrl_cn')}</p>
-        <p><b>{t('Menu.rcc_cf_bold')}</b>{t('Menu.rcc_cf')}</p>
-        <p><b>{t('Menu.rcc_ctrl_cf_bold')}</b>{t('Menu.rcc_ctrl_cf')}</p>
-        <p><b>{t('Menu.rcc_cs_bold')}</b>{t('Menu.rcc_cs')}</p>
-        <p><b>{t('Menu.rcc_click_and_drag_bold')}</b>{t('Menu.rcc_click_and_drag')}</p>
-        <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-        <p><b>{t('Menu.rcc_ad_bold')}</b>{t('Menu.rcc_ad')}</p>
-
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_edi')} :</Heading>
-
-        <p><b>{t('Menu.rcc_e_cn_bold')}</b>{t('Menu.rcc_e_cn')}</p>
-        <p><b>{t('Menu.rcc_e_ds_bold')}</b>{t('Menu.rcc_e_ds')}</p>
-        <p><b>{t('Menu.rcc_e_dn_bold')}</b>{t('Menu.rcc_e_dn')}</p>
-
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_autre')} :</Heading>
-
-        <p><b>{t('Menu.rcc_a_s_bold')}</b>{t('Menu.rcc_a_s')}</p>
-        <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
-        <p><b>{t('Menu.rcc_a_dbm_bold')}</b>{t('Menu.rcc_a_dbm')}</p>
-        <p><b>{t('Menu.rcc_a_ech_bold')}</b>{t('Menu.rcc_a_ech')}</p>
-        <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      </AccordionPanel>
-    </AccordionItem>
+      <Table
+        variant='table_welcome_buttons'
+      >
+        <Thead><Th colSpan={2}>{t('Menu.rcc_titre_select')}</Th></Thead>
+        <Tbody>
+          <Tr><Td>{t('Menu.rcc_cn_bold')}</Td><Td>{t('Menu.rcc_cn')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_ctrl_cn_bold')}</Td><Td>{t('Menu.rcc_ctrl_cn')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_cf_bold')}</Td><Td>{t('Menu.rcc_cf')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_ctrl_cf_bold')}</Td><Td>{t('Menu.rcc_ctrl_cf')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_cs_bold')}</Td><Td>{t('Menu.rcc_cs')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_click_and_drag_bold')}</Td><Td>{t('Menu.rcc_click_and_drag')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_cdn_bold')}</Td><Td>{t('Menu.rcc_cdn')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_ad_bold')}</Td><Td>{t('Menu.rcc_ad')}</Td></Tr>
+        </Tbody>
+      </Table>
+      <Table
+        variant='table_welcome_buttons'
+      >
+        <Thead><Th colSpan={2}>{t('Menu.rcc_titre_edi')}</Th></Thead>
+        <Tbody>
+          <Tr><Td>{t('Menu.rcc_e_cn_bold')}</Td><Td>{t('Menu.rcc_e_cn')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_e_ds_bold')}</Td><Td>{t('Menu.rcc_e_ds')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_e_dn_bold')}</Td><Td>{t('Menu.rcc_e_dn')}</Td></Tr>
+        </Tbody>
+        <Thead><Th colSpan={2}>{t('Menu.rcc_titre_autre')}</Th></Thead>
+        <Tbody>
+          <Tr><Td>{t('Menu.rcc_a_s_bold')}</Td><Td>{t('Menu.rcc_a_s')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_a_fc_bold')}</Td><Td>{t('Menu.rcc_a_fc')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_a_dbm_bold')}</Td><Td>{t('Menu.rcc_a_dbm')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_a_ech_bold')}</Td><Td>{t('Menu.rcc_a_ech')}</Td></Tr>
+          <Tr><Td>{t('Menu.rcc_ctrl_scrll_bold')}</Td><Td>{t('Menu.rcc_ctrl_scrll')}</Td></Tr>
+        </Tbody>
+      </Table>
+    </Box>
 
     {additional_shortcut_item}
-  </Accordion>
+  </>
+
   external_content['rc'] = windowSankey.SankeyToolsStatic?content_rc_static:content_rc_not_static
 
   const content=<Modal
@@ -126,7 +140,8 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
             'gridRowGap': '1rem',
             'gridTemplateRows': 'repeat(auto, 1fr)',
             'alignItems': 'center',
-            'padding': '0.25rem'
+            'padding': '0.25rem',
+            'marginBlockStart': '30vh'
           }}
         >
           {
