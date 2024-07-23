@@ -5,34 +5,25 @@ import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from '.
 import { MutableRefObject } from 'react'
 
 export type setDiagramFuncType = (
-  the_diagram: string, 
-  set_data: (d: SankeyData) => void, 
-  convert_data: ConvertDataFuncType, 
+  the_diagram: string,
+  set_data: (d: SankeyData) => void,
+  convert_data: ConvertDataFuncType,
   DefaultSankeyData:DefaultSankeyDataFuncType
 ) => void
 
 export type addSimpleLevelDropDownFType = {
-  applicationData:applicationDataType,
-  applicationDraw:applicationDrawType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
+  applicationData:applicationDataType
 }
- 
+
 export type col_title_level_filterFType=(
   t:TFunction,
   data:SankeyData
 ) => JSX.Element
 
-
 export type addAllDropDownNodeFType = {
   applicationContext:applicationContextType,
-  ComponentUpdater:ComponentUpdaterType,
   applicationData:applicationDataType,
   level:boolean,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  applicationDraw:applicationDrawType
-
 }
 
 /**
