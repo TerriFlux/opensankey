@@ -84,7 +84,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     else
       setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
   }
-  new_data.menu_configuration.ref_to_menu_config_tags_updater.current = updateThis
+  new_data.menu_configuration.ref_to_menu_config_tags_updater[elementTagNameProp].current = updateThis
 
   // Chosen color palette used ----------------------------------------------------------
   // Couleur issues de : https://github.com/d3/d3-scale-chromatic
@@ -143,7 +143,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update this menu
-    updateThis()
+    new_data.menu_configuration.updateAllComponentsRelatedToTagsType(elementTagNameProp)
   }
 
   const updateThisAndRelatedComponents = () => {

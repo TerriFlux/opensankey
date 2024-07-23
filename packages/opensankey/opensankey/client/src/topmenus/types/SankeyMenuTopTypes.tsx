@@ -1,25 +1,7 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationDrawType, processFunctionsType } from '../../types/Types'
+import { ComponentUpdaterType,  SankeyData, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, processFunctionsType } from '../../types/Types'
 import {MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
-
-/**
- * Function that generate dropdown for each groupTag of linkTags
- *
- * @param {TagsCatalog} fluxTags
- * @param {SankeyData} data
- * @param {(data: SankeyData) => void} set_data
- * @returns {(void) => any}
- */
-export type AddAllDropDownFluxFType = (
-  t:TFunction,
-  applicationData:applicationDataType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  ComponenentUpdater:ComponentUpdaterType,
-  applicationDraw:applicationDrawType
-
-) => JSX.Element
 
 export type OpenSankeyMenusFType = (
   t:TFunction,
