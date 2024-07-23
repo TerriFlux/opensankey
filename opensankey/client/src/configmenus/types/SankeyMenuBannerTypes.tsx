@@ -27,6 +27,16 @@ export type addAllDropDownNodeFType = {
 }
 
 /**
+ * Function that generate dropdown for each groupTag of linkTags
+ * @param {applicationContextType} applicationContext
+ * @param {applicationDataType} applicationData
+ */
+export type AddAllDropDownFluxFType = {
+  applicationContext: applicationContextType,
+  applicationData: applicationDataType
+}
+
+/**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
 export type ToolbarBuilderFType = {

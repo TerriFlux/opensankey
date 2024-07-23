@@ -634,6 +634,7 @@ export class Class_NodeElement extends Class_Element {
     this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
     this.drawNameLabel()
   }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1344,20 +1345,30 @@ export class Class_NodeElement extends Class_Element {
       .html(this?.tooltip_text ?? '')
   }
 
+  /**
+   * Select the right color to use for this node (attribute / style / tags / ...)
+   * @private
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
   private getShapeColorToUse() {
-    const tagg_dict = this.taggs_dict // Avoid recomputing
+    // Default color
+    let shape_color = this.shape_color
+    // Is the color defined by tags
+    const taggs_activated = this.taggs_list
+      .filter(tagg => tagg.show_legend)
     if (
       (!this.shape_color_sustainable) &&
-      (tagg_dict[this.drawing_area.sankey.nodes_color_map])
+      (taggs_activated.length > 0)
     ) {
-      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.nodes_color_map]
-      const tag_for_colormap = this.tags_list
+      const tagg_for_colormap = taggs_activated[0]
+      const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
-      return tag_for_colormap[0].color
+        .filter(tag => tag.is_selected)
+      if (tags_for_colormap.length > 0)
+        shape_color = tags_for_colormap[0].color
     }
-    else {
-      return this.shape_color
-    }
+    return shape_color
   }
 
   // Get display value
@@ -2356,22 +2367,17 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private get are_related_tags_selected() {
-    // Existing node tags
-    const node_taggs = this.drawing_area.sankey.node_taggs_dict
     // Check if all node tags are selected = ok to display
     let to_display = true
     this.tags_list
-      .filter(tag => (
-        (tag.group.id in node_taggs) &&
-        (tag.group.activated)
-      ))
+      .filter(tag => tag.group?.activated ?? false)
       .forEach(tag => to_display = (to_display && tag.is_selected))
     return to_display
   }
 
   private get is_related_level_selected() {
     // Existing level tags
-    const level_taggs = this.drawing_area.sankey.node_taggs_dict
+    const level_taggs = this.drawing_area.sankey.level_taggs_dict
     // Check if there is other aggregation tags than 'Primaire',
     const opt_level_taggs = Object.values(level_taggs)
       .filter(tagg => tagg.id !== 'Primaire') // TODO id Or name ?
@@ -2382,7 +2388,7 @@ export class Class_NodeElement extends Class_Element {
     const only_one_activated = (activ_level_taggs.length === 1)
     // Is only primary level activated
     const only_primaire_activated = (
-      (this.drawing_area.sankey.node_taggs_dict['Primaire']?.activated ?? false) &&
+      (this.drawing_area.sankey.level_taggs_dict['Primaire']?.activated ?? false) &&
       only_one_activated)
     const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
     // Check if level tags are correctly selected = ok to display

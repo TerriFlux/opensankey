@@ -7,6 +7,7 @@
 // External imports
 import * as d3 from 'd3'
 import { MutableRefObject, RefObject, useRef } from 'react'
+import { Type_MacroTagGroup } from './Sankey'
 
 
 // CLASS MENU CONFIG ********************************************************************
@@ -58,14 +59,11 @@ export class Class_MenuConfig {
   // Update component SankeyMenuConfigurationNodesIO
   private _update_components_menu_config_node_io: MutableRefObject<(() => void)[]>
 
-
   private _update_components_menu_context_node: MutableRefObject<(() => void)>
-
 
   private _update_components_menu_context_link: MutableRefObject<(() => void)>
 
   private _update_components_menu_context_DA: MutableRefObject<(() => void)>
-
 
 
   // Update component SankeyMenuConfigurationLinks
@@ -83,10 +81,8 @@ export class Class_MenuConfig {
   // Update component MenuConfigurationLinksTooltip
   private _update_components_menu_config_link_tooltip: MutableRefObject<(() => void)[]>
 
-
   // Update component SankeySettingsEditionElementTags
-  private _ref_to_menu_config_tags_updater: MutableRefObject<() => void>
-
+  private _ref_to_menu_config_tags_updater: { [_: string] : MutableRefObject<() => void> } = {}
 
   // Update component ToolbarBuilder
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
@@ -96,9 +92,6 @@ export class Class_MenuConfig {
 
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
-
-
-
 
   // Update component OSPTransformationElements
   private _updateComponentBtnUpdateLayout: MutableRefObject<(() => void)>
@@ -118,6 +111,9 @@ export class Class_MenuConfig {
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
 
   // TODO description
+  private _ref_to_fluxtag_filter_updater: MutableRefObject<() => void>
+
+  // Update AddAllDropDownFlux
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
 
 
@@ -159,9 +155,11 @@ export class Class_MenuConfig {
     this._update_components_menu_config_link_tooltip = useRef([] as (() => void)[])
 
     // Tags
-    this._ref_to_menu_config_tags_updater = useRef(() => null)
+    this._ref_to_menu_config_tags_updater['node_taggs'] = useRef(() => null)
+    this._ref_to_menu_config_tags_updater['flux_taggs'] = useRef(() => null)
+    this._ref_to_menu_config_tags_updater['data_taggs'] = useRef(() => null)
 
-    // Toolbar
+    // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._updateComponentMenu = useRef(() => null)
@@ -171,6 +169,7 @@ export class Class_MenuConfig {
     // Init filtering components updater ------------------------------------------------
     this._ref_to_leveltag_filter_updater = useRef(() => null)
     this._ref_to_nodetag_filter_updater = useRef(() => null)
+    this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
   }
 
@@ -283,7 +282,8 @@ export class Class_MenuConfig {
   public updateAllMenuComponent() {
     this.updateComponentsMenuConfigNode()
     this.updateComponentsMenuConfigLink()
-    this._ref_to_menu_config_tags_updater.current()
+    Object.values(this._ref_to_menu_config_tags_updater)
+      .forEach(ref => ref.current())
   }
 
   public updateAllComponentsRelatedToTags() {
@@ -303,14 +303,32 @@ export class Class_MenuConfig {
     this._ref_to_nodetag_filter_updater.current()
     this._ref_to_leveltag_filter_updater.current()
     this._ref_to_menu_config_node_tags_updater.current()
+    this._ref_to_menu_config_tags_updater['node_taggs'].current()
+  }
+
+  public updateAllComponentsRelatedToFluxTags() {
+    this._ref_to_fluxtag_filter_updater.current()
+    this._ref_to_menu_config_link_tags_updater.current()
+    this._ref_to_menu_config_tags_updater['flux_taggs'].current()
   }
 
   public updateAllComponentsRelatedToDataTags() {
     this._ref_to_datatag_filter_updater.current()
     this._ref_to_menu_config_link_data_updater.current()
     this._ref_to_menu_config_link_tags_updater.current()
+    this._ref_to_menu_config_tags_updater['data_taggs'].current()
   }
 
+  public updateAllComponentsRelatedToTagsType(type: Type_MacroTagGroup) {
+    if (type === 'data_taggs')
+      this.updateAllComponentsRelatedToDataTags()
+    else if (type === 'flux_taggs')
+      this.updateAllComponentsRelatedToFluxTags()
+    else if (type === 'node_taggs')
+      this.updateAllComponentsRelatedToNodeTags()
+    else
+      this.updateAllComponentsRelatedToLevelTags()
+  }
 
   /**
    * Check if we linked the ref to the button to toggle the menu
@@ -406,7 +424,7 @@ export class Class_MenuConfig {
 
   // Tags menus -------------------------------------------------------------------------
 
-  public get ref_to_menu_config_tags_updater(): MutableRefObject<() => void> {
+  public get ref_to_menu_config_tags_updater(): {[_: string]: MutableRefObject<() => void>} {
     return this._ref_to_menu_config_tags_updater
   }
 
@@ -446,8 +464,11 @@ export class Class_MenuConfig {
     return this._ref_to_nodetag_filter_updater
   }
 
+  public get ref_to_fluxtag_filter_updater(): MutableRefObject<() => void> {
+    return this._ref_to_fluxtag_filter_updater
+  }
+
   public get ref_to_datatag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_datatag_filter_updater
   }
-
 }
