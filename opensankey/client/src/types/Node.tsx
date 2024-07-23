@@ -115,8 +115,8 @@ export class Class_NodeElement extends Class_Element {
     position: Type_ElementPosition,
     style: Class_NodeStyle,
     attributes: Class_NodeAttribute
-    _x_label?: number// Relative x position of label when dragged (optionnal)  
-    _y_label?: number// Relative y position of label when dragged (optionnal)  
+    _x_label?: number// Relative x position of label when dragged (optionnal)
+    _y_label?: number// Relative y position of label when dragged (optionnal)
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -944,7 +944,7 @@ export class Class_NodeElement extends Class_Element {
       }
 
       if (this.name_label_background) {
-        // Update label bg with computed label size 
+        // Update label bg with computed label size
         this.d3_selection?.select('.name_label_background')
           .attr('x', box_pos_x)
           .attr('y', box_pos_y)
@@ -1044,7 +1044,7 @@ export class Class_NodeElement extends Class_Element {
   }
 
   /**
-   *  Function that update name label position & return var used for drawNameLabel() 
+   *  Function that update name label position & return var used for drawNameLabel()
    *
    * @private
    * @return {*}  {[number, number, string]}
@@ -1348,9 +1348,9 @@ export class Class_NodeElement extends Class_Element {
     const tagg_dict = this.taggs_dict // Avoid recomputing
     if (
       (!this.shape_color_sustainable) &&
-      (tagg_dict[this.drawing_area.sankey.nodesColorMap])
+      (tagg_dict[this.drawing_area.sankey.nodes_color_map])
     ) {
-      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.nodesColorMap]
+      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.nodes_color_map]
       const tag_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
       return tag_for_colormap[0].color
