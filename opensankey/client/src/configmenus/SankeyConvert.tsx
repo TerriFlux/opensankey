@@ -1106,16 +1106,21 @@ export const convert_links:convert_linksFuncType = (
         } else {
           tmp = (v.display_value as string).split(' ')
         }
-        const free_mini = Number(tmp[0].substring(1))
-        const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
-        if (!v.extension) {
-          v.extension = {}
+        if (tmp.length === 2) {
+          const free_mini = Number(tmp[0].substring(1))
+          const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
+          if (!v.extension) {
+            v.extension = {}
+          }
+          if (v.extension) {
+            (v as SankeyLinkValue).extension.free_mini = free_mini as unknown as string
+            (v as SankeyLinkValue).extension.free_maxi = free_maxi as unknown as string
+          }
+          v.display_value = ''
         }
-        if (v.extension) {
-          (v as SankeyLinkValue).extension.free_mini = free_mini as unknown as string
-          (v as SankeyLinkValue).extension.free_maxi = free_maxi as unknown as string
-        }
-        v.display_value = ''
+      }
+      if (v.tags === undefined ) {
+        v.tags = {}
       }
       const col_tag = (v as unknown as ConvertSankeyValue).color_tag
       if ( col_tag) {
