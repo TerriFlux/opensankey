@@ -20,22 +20,24 @@ export class Class_MenuConfig {
 
   // PRIVATE ATTRIBUTES =================================================================
 
+  // Update component Menu
+  private _ref_to_menu_updater: MutableRefObject<() => void>
+
   /* ========================================
    Ref to button on the configuration menu in the app
    ========================================*/
 
   // Button that open the configuration menu
-  private _btn_toogle_menu: RefObject<HTMLButtonElement>
+  private _ref_to_btn_toogle_menu: RefObject<HTMLButtonElement>
 
   // Button that open the menu elements
-  private _btn_accordion_config_elements: RefObject<HTMLButtonElement>
+  private _ref_to_btn_accordion_config_elements: RefObject<HTMLButtonElement>
 
   // Button that open the sub menu node of elements
-  private _btn_accordion_config_node: RefObject<HTMLButtonElement>
+  private _ref_to_btn_accordion_config_node: RefObject<HTMLButtonElement>
 
   // Button that open the sub menu links of elements
-  private _btn_accordion_config_link: RefObject<HTMLButtonElement>
-
+  private _ref_to_btn_accordion_config_link: RefObject<HTMLButtonElement>
 
   /* ========================================
     Updater of component in the configuration menu
@@ -59,12 +61,11 @@ export class Class_MenuConfig {
   // Update component SankeyMenuConfigurationNodesIO
   private _update_components_menu_config_node_io: MutableRefObject<(() => void)[]>
 
-  private _update_components_menu_context_node: MutableRefObject<(() => void)>
+  private _ref_to_menu_context_nodes_updater: MutableRefObject<(() => void)>
 
-  private _update_components_menu_context_link: MutableRefObject<(() => void)>
+  private _ref_to_menu_context_links_updater: MutableRefObject<(() => void)>
 
-  private _update_components_menu_context_DA: MutableRefObject<(() => void)>
-
+  private _ref_to_menu_context_drawing_area_updater: MutableRefObject<(() => void)>
 
   // Update component SankeyMenuConfigurationLinks
   private _ref_to_menu_config_link_updater: MutableRefObject<() => void>
@@ -86,9 +87,6 @@ export class Class_MenuConfig {
 
   // Update component ToolbarBuilder
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
-
-  // Update component Menu
-  private _updateComponentMenu: MutableRefObject<() => void>
 
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
@@ -127,12 +125,14 @@ export class Class_MenuConfig {
 
     // Init button ref ------------------------------------------------------------------
 
-    this._btn_toogle_menu = useRef<HTMLButtonElement>(null)
-    this._btn_accordion_config_elements = useRef<HTMLButtonElement>(null)
-    this._btn_accordion_config_node = useRef<HTMLButtonElement>(null)
-    this._btn_accordion_config_link = useRef<HTMLButtonElement>(null)
+    this._ref_to_btn_toogle_menu = useRef<HTMLButtonElement>(null)
+    this._ref_to_btn_accordion_config_elements = useRef<HTMLButtonElement>(null)
+    this._ref_to_btn_accordion_config_node = useRef<HTMLButtonElement>(null)
+    this._ref_to_btn_accordion_config_link = useRef<HTMLButtonElement>(null)
 
     // Init menu component updater ------------------------------------------------------
+
+    this._ref_to_menu_updater = useRef(() => null)
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -143,9 +143,6 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_node_tags_updater = useRef(() => null)
     this._update_components_menu_config_node_io = useRef([] as (() => void)[])
     this._update_components_menu_config_node_tooltips = useRef([] as (() => void)[])
-    this._update_components_menu_context_node = useRef(() => null)
-    this._update_components_menu_context_link = useRef(() => null)
-    this._update_components_menu_context_DA = useRef(() => null)
 
     // Links
     this._ref_to_menu_config_link_updater = useRef(() => null)
@@ -162,11 +159,17 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._updateComponentBtnUpdateLayout = useRef(() => null)
-    this._updateComponentMenu = useRef(() => null)
     this._ref_to_toolbar_updater = useRef(() => null)
     this._updateToolbar = useRef(() => null)
 
+    // Init context menu components updater ---------------------------------------------
+
+    this._ref_to_menu_context_nodes_updater = useRef(() => null)
+    this._ref_to_menu_context_links_updater = useRef(() => null)
+    this._ref_to_menu_context_drawing_area_updater = useRef(() => null)
+
     // Init filtering components updater ------------------------------------------------
+
     this._ref_to_leveltag_filter_updater = useRef(() => null)
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
@@ -181,46 +184,53 @@ export class Class_MenuConfig {
    */
   public OpenConfigMenu() {
     // Check if we linked the ref to the button to toggle the menu
-    // and if _btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
+    // and if _ref_to_btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
     if (
-      this._btn_toogle_menu &&
-      this._btn_toogle_menu.current &&
-      this._btn_accordion_config_elements.current === null
+      this._ref_to_btn_toogle_menu &&
+      this._ref_to_btn_toogle_menu.current &&
+      this._ref_to_btn_accordion_config_elements.current === null
     ) {
-      this._btn_toogle_menu.current.click()
+      this._ref_to_btn_toogle_menu.current.click()
     }
   }
 
   /**
    * Check if we linked the ref to the button to open elements accordion
    * and check if the accordion elements is open then click to the button
-   * that _btn_accordion_config_elements ref to
+   * that _ref_to_btn_accordion_config_elements ref to
    *
    * @memberof Class_MenuConfig
    */
   public OpenConfigMenuElements() {
     if (
-      this._btn_accordion_config_elements.current &&
-      (d3.select(this._btn_accordion_config_elements.current).attr('aria-expanded') === 'false')
+      this._ref_to_btn_accordion_config_elements.current &&
+      (d3.select(this._ref_to_btn_accordion_config_elements.current).attr('aria-expanded') === 'false')
     ) {
-      this._btn_accordion_config_elements.current.click()
+      this._ref_to_btn_accordion_config_elements.current.click()
     }
   }
 
   /**
    * Check if we linked the ref to the button to toggle the menu
    * and check if the accordion nodes is open then click to the button
-   * _btn_accordion_config_node ref to
+   * _ref_to_btn_accordion_config_node ref to
    *
    * @memberof Class_MenuConfig
    */
   public OpenConfigMenuElementsNodes() {
     if (
-      this._btn_accordion_config_node.current &&
-      (d3.select(this._btn_accordion_config_node.current).attr('aria-expanded') === 'false')
+      this._ref_to_btn_accordion_config_node.current &&
+      (d3.select(this._ref_to_btn_accordion_config_node.current).attr('aria-expanded') === 'false')
     ) {
-      this._btn_accordion_config_node.current.click()
+      this._ref_to_btn_accordion_config_node.current.click()
     }
+  }
+
+  public updateAllMenuComponents() {
+    this.updateAllComponentsRelatedToNodes()
+    this.updateAllComponentsRelatedToLinks()
+    Object.values(this._ref_to_menu_config_tags_updater)
+      .forEach(ref => ref.current())
   }
 
   /**
@@ -232,9 +242,9 @@ export class Class_MenuConfig {
    * - SankeyMenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
-  public updateComponentsMenuConfigNode() {
+  public updateAllComponentsRelatedToNodes() {
     this._ref_to_menu_config_node_updater.current()
-    this.updateComponentsSubmenuConfigNode()
+    this.updateAllComponentsRelatedToNodesConfig()
   }
 
   /**
@@ -245,7 +255,7 @@ export class Class_MenuConfig {
    * - SankeyMenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
-  public updateComponentsSubmenuConfigNode() {
+  public updateAllComponentsRelatedToNodesConfig() {
     this._ref_to_menu_config_node_apparence_updater.current()
     this._ref_to_menu_config_node_tags_updater.current()
     this.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
@@ -260,9 +270,9 @@ export class Class_MenuConfig {
    * - MenuConfigurationLinksTags
    * @memberof Class_MenuConfig
    */
-  public updateComponentsMenuConfigLink() {
+  public updateAllComponentsRelatedToLinks() {
     this._ref_to_menu_config_link_updater.current()
-    this.updateComponentsSubmenuConfigLink()
+    this.updateAllComponentsRelatedToLinksConfig()
   }
 
   /**
@@ -272,18 +282,11 @@ export class Class_MenuConfig {
    * - MenuConfigurationLinksTags
    * @memberof Class_MenuConfig
    */
-  public updateComponentsSubmenuConfigLink() {
+  public updateAllComponentsRelatedToLinksConfig() {
     this._ref_to_menu_config_link_data_updater.current()
     this._ref_to_menu_config_link_apparence_updater.current()
     this._ref_to_menu_config_link_tags_updater.current()
     // this.updateMenuConfigTextLinkTooltip.current.forEach(f => f())
-  }
-
-  public updateAllMenuComponent() {
-    this.updateComponentsMenuConfigNode()
-    this.updateComponentsMenuConfigLink()
-    Object.values(this._ref_to_menu_config_tags_updater)
-      .forEach(ref => ref.current())
   }
 
   public updateAllComponentsRelatedToTags() {
@@ -333,39 +336,53 @@ export class Class_MenuConfig {
   /**
    * Check if we linked the ref to the button to toggle the menu
    * and check if the accordion nodes is open then click to the button
-   * _btn_accordion_config_link ref to
+   * _ref_to_btn_accordion_config_link ref to
    *
    * @memberof Class_MenuConfig
    */
   public OpenConfigMenuElementsLinks() {
     if (
-      this._btn_accordion_config_link.current &&
-      d3.select(this._btn_accordion_config_link.current).attr('aria-expanded') === 'false'
+      this._ref_to_btn_accordion_config_link.current &&
+      d3.select(this._ref_to_btn_accordion_config_link.current).attr('aria-expanded') === 'false'
     ) {
-      this._btn_accordion_config_link.current.click()
+      this._ref_to_btn_accordion_config_link.current.click()
     }
   }
 
   // GETTERS / SETTERS ==================================================================
 
-  public get btn_toogle_menu(): RefObject<HTMLButtonElement> {
-    return this._btn_toogle_menu
+  // Main menu component ----------------------------------------------------------------
+
+  public get ref_to_menu_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_updater
   }
 
-  public get btn_accordion_config_elements(): RefObject<HTMLButtonElement> {
-    return this._btn_accordion_config_elements
+  // Accordion menu openers -------------------------------------------------------------
+
+  public get ref_to_btn_toogle_menu(): RefObject<HTMLButtonElement> {
+    return this._ref_to_btn_toogle_menu
   }
 
-  public get btn_accordion_config_node(): RefObject<HTMLButtonElement> {
-    return this._btn_accordion_config_node
+  public get ref_to_btn_accordion_config_elements(): RefObject<HTMLButtonElement> {
+    return this._ref_to_btn_accordion_config_elements
   }
+
+  public get ref_to_btn_accordion_config_node(): RefObject<HTMLButtonElement> {
+    return this._ref_to_btn_accordion_config_node
+  }
+
+  public get ref_to_btn_accordion_config_link(): RefObject<HTMLButtonElement> {
+    return this._ref_to_btn_accordion_config_link
+  }
+
+  // Layout  menus ----------------------------------------------------------------------
 
   public get ref_to_menu_config_layout_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_layout_updater
   }
 
-  public get update_components_menu_context_DA(): MutableRefObject<(() => void)> {
-    return this._update_components_menu_context_DA
+  public get ref_to_menu_context_drawing_area_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_context_drawing_area_updater
   }
 
   // Nodes menus ------------------------------------------------------------------------
@@ -391,8 +408,9 @@ export class Class_MenuConfig {
   }
 
   // Nodes context menu
-  public get update_components_menu_context_node(): MutableRefObject<(() => void)> {
-    return this._update_components_menu_context_node
+
+  public get ref_to_menu_context_nodes_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_context_nodes_updater
   }
 
   // Links menus ------------------------------------------------------------------------
@@ -418,8 +436,9 @@ export class Class_MenuConfig {
   }
 
   // Link context menu
-  public get update_components_menu_context_link(): MutableRefObject<(() => void)> {
-    return this._update_components_menu_context_link
+
+  public get ref_to_menu_context_links_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_context_links_updater
   }
 
   // Tags menus -------------------------------------------------------------------------
@@ -429,6 +448,7 @@ export class Class_MenuConfig {
   }
 
   // Toolbar -----------------------------------------------------------------------------
+
   public get ref_to_save_in_cache_indicator(): MutableRefObject<(b: boolean) => void> {
     return this._ref_to_save_in_cache_indicator
   }
@@ -437,17 +457,8 @@ export class Class_MenuConfig {
     return this._ref_to_toolbar_updater
   }
 
-
-  public get updateComponentMenu(): MutableRefObject<() => void> {
-    return this._updateComponentMenu
-  }
-
   public get updateComponentBtnUpdateLayout(): MutableRefObject<(() => void)> {
     return this._updateComponentBtnUpdateLayout
-  }
-
-  public get btn_accordion_config_link(): RefObject<HTMLButtonElement> {
-    return this._btn_accordion_config_link
   }
 
   public get updateToolbar(): MutableRefObject<(() => void)> {

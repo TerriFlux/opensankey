@@ -183,15 +183,15 @@ export const initializeReinitialization : initializeReinitializationType = (
 
   // Reset contextualised node
   applicationData.new_data.drawing_area.node_contextualied = undefined
-  applicationData.new_data.menu_configuration.update_components_menu_context_node.current()
+  applicationData.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
   // Reset contextualised link
   applicationData.new_data.drawing_area.link_contextualied = undefined
-  applicationData.new_data.menu_configuration.update_components_menu_context_link.current()
+  applicationData.new_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
   // Reset contextualised DA
   applicationData.new_data.drawing_area.is_drawing_area_contextualised=false
-  applicationData.new_data.menu_configuration.update_components_menu_context_DA.current()
+  applicationData.new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
 
   applicationData.new_data.reset()
 

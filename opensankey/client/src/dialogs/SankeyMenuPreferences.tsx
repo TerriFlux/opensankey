@@ -1,21 +1,33 @@
+// External imports
 import React, { FunctionComponent } from 'react'
-
-import { SankeyData } from '../types/Types'
-import { TFunction, i18n } from 'i18next'
 import { Box, Button, Checkbox, Input, Select } from '@chakra-ui/react'
+
+// Internal types / classes
+import { SankeyData } from '../types/Types'
+import {
+  OpenSankeyDefaultModalePreferenceContentFType,
+  modalPreferenceTypes,
+  preferenceCheckFType
+} from './types/SankeyMenuPreferencesTypes'
+
+// Internal components / functions
 import { OSTooltip } from '../configmenus/SankeyUtils'
-import { OpenSankeyDefaultModalePreferenceContentFType, modalPreferenceTypes, preferenceCheckFType } from './types/SankeyMenuPreferencesTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 
+// COMPONENTS ===========================================================================
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
-  t:TFunction,
+  applicationContext,
   applicationData,
-  trad:i18n,
-  updateMenus,
+  trad,
   node_function
 )=>{
-  const {data,display_nodes}=applicationData
+  // Data -------------------------------------------------------------------------------
+  const { t } = applicationContext
+  const { new_data, data, display_nodes } = applicationData
+
+  // JSX Component ----------------------------------------------------------------------
+
   const ui={
     'lang':  <Box layerStyle='menuconfigpanel_row_2cols' >
 
@@ -44,20 +56,20 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
             onClick={() => {
               sessionStorage.removeItem('modepref')
               data.accordeonToShow = ['MEP']
-              // ComponentUpdater.updateComponentMenuConfig.current()
-              // ComponentUpdater.updatePreference.current()
-              updateMenus[1](!updateMenus[0])
+              new_data.menu_configuration.ref_to_menu_updater.current()
             }}
-          >Mode Simple</Button>
+          >
+            Mode Simple
+          </Button>
           <Button variant='menuconfigpanel_option_button_right'
             onClick={() => {
               sessionStorage.setItem('modepref','expert')
               data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-              // ComponentUpdater.updateComponentMenuConfig.current()
-              // ComponentUpdater.updatePreference.current()
-              updateMenus[1](!updateMenus[0])
+              new_data.menu_configuration.ref_to_menu_updater.current()
             }}
-          >Mode Expert</Button>
+          >
+            Mode Expert
+          </Button>
         </Box>
       </Box>,
 
@@ -66,9 +78,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('MEP')}
         onChange={() => {
           preferenceCheck('MEP',data)
-          // ComponentUpdater.updateComponentMenuConfig.current()
-          // ComponentUpdater.updatePreference.current()
-          updateMenus[1](!updateMenus[0])
+          new_data.menu_configuration.ref_to_menu_updater.current()
         }}>
         {t('Menu.MEP')}
       </Checkbox>,
@@ -86,9 +96,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('EN')}
         onChange={() => {
           preferenceCheck('EN',data)
-          // ComponentUpdater.updateComponentMenuConfig.current()
-          // ComponentUpdater.updatePreference.current()
-          updateMenus[1](!updateMenus[0])
+          new_data.menu_configuration.ref_to_menu_updater.current()
         }}>
         {t('Menu.EN')}
       </Checkbox>,
@@ -106,9 +114,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('EF')}
         onChange={() => {
           preferenceCheck('EF',data)
-          // ComponentUpdater.updateComponentMenuConfig.current()
-          // ComponentUpdater.updatePreference.current()
-          updateMenus[1](!updateMenus[0])
+          new_data.menu_configuration.ref_to_menu_updater.current()
         }}>
         {t('Menu.EF')}
       </Checkbox>,
@@ -118,9 +124,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('ED')}
         onChange={() => {
           preferenceCheck('ED',data)
-          // ComponentUpdater.updateComponentMenuConfig.current()
-          // ComponentUpdater.updatePreference.current()
-          updateMenus[1](!updateMenus[0])
+          new_data.menu_configuration.ref_to_menu_updater.current()
         }}>
         {t('Menu.ED')}
       </Checkbox>,
@@ -131,22 +135,16 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         <Input
           variant='menuconfigpanel_option_input' value={data.node_label_separator}
           onChange={evt=>{
-            data.node_label_separator=evt.target.value
-            // ComponentUpdater.updateComponentMenuConfig.current()
-            // ComponentUpdater.updatePreference.current()
-            updateMenus[1](!updateMenus[0])
+            data.node_label_separator = evt.target.value  // TODO passer dans new_data
+            new_data.menu_configuration.ref_to_menu_updater.current()
           }}
           onBlur={()=>node_function.RedrawNodes(Object.values(display_nodes))}
         />
       </Box></OSTooltip>,
-
-
-
-
   }
-
   return ui
 }
+
 export const preferenceCheck : preferenceCheckFType  = (str: string,data:SankeyData) => {
   sessionStorage.removeItem('modepref')
   if (!data.accordeonToShow.includes(str)) {
@@ -155,13 +153,16 @@ export const preferenceCheck : preferenceCheckFType  = (str: string,data:SankeyD
     const posElemt = data.accordeonToShow.indexOf(str)
     data.accordeonToShow.splice(posElemt, 1)
   }
-
 }
 
 export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
-  {dict_hook_ref_setter_show_dialog_components,ui,t,pointer_pos
-  })=>{
-  const content=<>
+  {
+    dict_hook_ref_setter_show_dialog_components,
+    ui,
+    t,
+    pointer_pos
+})=>{
+  const content = <>
     {Object.values(ui).map((d,i)=>{
       return <React.Fragment key={i}>{d}</React.Fragment>
     })}
@@ -174,6 +175,5 @@ export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
     pointer_pos={pointer_pos}
     title={t('Menu.title_pref')}
   />
-
 }
 
