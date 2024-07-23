@@ -334,6 +334,13 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.drawElements()
   }
 
+  public drawWithNodes() {
+    if(this.source && this.target) {
+      this.source.draw()
+      this.target.draw()
+    }
+  }
+
   public drawElements() {
     this.drawPath()
     this.drawLabel()
@@ -347,8 +354,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   public resetAttributes() {
     this._display.attributes = new Class_LinkAttribute()
     // Need to redraw from nodes
-    this.source.draw()
-    this.target.draw()
+    this.drawWithNodes()
   }
 
   /**
@@ -366,13 +372,13 @@ export class Class_LinkElement extends Class_ProtoElement {
   public setPosXYStartingPoint(x: number, y: number) {
     this._display.position_starting.x = x
     this._display.position_starting.y = y
-    this.drawElements()
+    this.draw()
   }
 
   public setPosXYEndingPoint(x: number, y: number) {
     this._display.position_ending.x = x
     this._display.position_ending.y = y
-    this.drawElements()
+    this.draw()
   }
 
   public increaseDisplayOrder() {
@@ -582,12 +588,15 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private setValueFromJSON(obj: { [x: string]: any }) {
     const list_dataTag_combinaison = this.drawing_area.sankey.list_combinatorial_data_taggs_path
-    if (list_dataTag_combinaison.length == 0) { // sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
+    // case 1: sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
+    if (list_dataTag_combinaison.length == 0) {
 
       (this._values as Class_LinkValue).data_value = obj.data_value;
       (this._values as Class_LinkValue).text_value = obj.text_value_value
 
-    } else { // if sankey has data_taggs
+    }
+    // case 2: sankey has data_taggs
+    else {
 
       const allPath = allPossibleCases(list_dataTag_combinaison)
 
@@ -954,10 +963,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     else {
       // Do we apply colors of data tags ?
-      const value = this.value // Avoid recomputing
-      if (value?.data_tagg?.show_legend ?? false) {
-        shape_color = value?.data_tag?.color ?? shape_color
-      }
+      this.drawing_area.sankey.selected_data_tags_list
+        .filter(tag => tag.group.show_legend)
+        .forEach(tag => shape_color = tag.color)
     }
     return shape_color
   }
@@ -1923,8 +1931,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   public set shape_orientation(_: Type_Orientation) {
     this._display.attributes.shape_orientation = _
     // Need to redraw from nodes
-    this.source.draw()
-    this.target.draw()
+    this.drawWithNodes()
   }
 
   // Orientation
@@ -2134,8 +2141,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   public set shape_is_recycling(_: boolean) {
     this._display.attributes.shape_is_recycling = _
     // Need to redraw from nodes
-    this.source.draw()
-    this.target.draw()
+    this.drawWithNodes()
   }
 
   /**
@@ -2548,7 +2554,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private get are_source_and_target_displayed() {
-    return (this._source.is_visible && this._target.is_visible)
+    return (
+      (this._source?.is_visible ?? false) &&
+      (this._target?.is_visible ?? false)
+    )
   }
 }
 
