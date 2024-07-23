@@ -174,19 +174,18 @@ export class Class_LinkElement extends Class_ProtoElement {
   private _tooltip_text: string = ''
 
   /**
-   * TODO
+   * Struct of all control points
    * @private
-   * @type {number}
+   * @type {{
+   *     starting_curve_point: Class_Handler,
+   *     ending_curve_point: Class_Handler,
+   *     starting_bezier_point: Class_Handler,
+   *     ending_bezier_point: Class_Handler,
+   *     middle_recycling_point: Class_Handler,
+   *     is_dragged: boolean
+   *   }}
    * @memberof Class_LinkElement
    */
-
-  /**
-   * TODO
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-
   private _control_points: {
     starting_curve_point: Class_Handler,
     ending_curve_point: Class_Handler,
@@ -940,16 +939,27 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   private getPathColorToUse() {
-    const tagg_dict = this.taggs_dict // Avoid recomputing
-    if (tagg_dict[this.drawing_area.sankey.links_color_map]) {
-      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.links_color_map]
-      const tag_for_colormap = this.tags_list
+    // Default color
+    let shape_color = this.shape_color
+    // Do we apply color of flux tags ?
+    const flux_taggs_activated = this.flux_taggs_list
+      .filter(tagg => tagg.show_legend)
+    if (flux_taggs_activated.length > 0) {
+      const tagg_for_colormap = flux_taggs_activated[0]
+      const tags_for_colormap = this.flux_tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
-      return tag_for_colormap[0].color
+        .filter(tag => tag.is_selected)
+      if (tags_for_colormap.length > 0)
+        shape_color = tags_for_colormap[0].color
     }
     else {
-      return this.shape_color
+      // Do we apply colors of data tags ?
+      const value = this.value // Avoid recomputing
+      if (value?.data_tagg?.show_legend ?? false) {
+        shape_color = value?.data_tag?.color ?? shape_color
+      }
     }
+    return shape_color
   }
 
   /**
@@ -1785,7 +1795,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get tags_dict() {
+  public get flux_tags_dict() {
     const value = this.value
     if (value)
       return this.value.flux_tags_dict
@@ -1797,7 +1807,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get tags_list() {
+  public get flux_tags_list() {
     const value = this.value
     if (value)
       return this.value.flux_tags_list
@@ -1809,7 +1819,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get taggs_dict() {
+  public get flux_taggs_dict() {
     const value = this.value
     if (value)
       return this.value.flux_taggs_dict
@@ -1821,8 +1831,8 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get taggs_list() {
-    return Object.values(this.taggs_dict)
+  public get flux_taggs_list() {
+    return Object.values(this.flux_taggs_dict)
   }
 
   /**
@@ -2526,7 +2536,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private get are_related_tags_selected() {
-    return this.tags_list.filter(t => !t.is_selected).length === 0
+    return this.flux_tags_list.filter(t => !t.is_selected).length === 0
   }
 
   /**
@@ -3216,6 +3226,41 @@ export class Class_LinkValueTree {
     }
   }
 
+  /**
+   * Find corresponding id for given child
+   * @param {(Class_LinkValue | Class_LinkValueTree)} child
+   * @memberof Class_LinkValueTree
+   */
+  public getDataTagIdFromChild(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
+    let id = undefined
+    Object.keys(this.children)
+      .forEach(tag_id => {
+        if (this.children[tag_id] === child) {
+          id = tag_id
+        }
+      })
+    return id
+  }
+
+  /**
+   * Return combinason of datatags if to reach given child
+   * @param {(Class_LinkValue | Class_LinkValueTree)} child
+   * @return {*}  {string[]}
+   * @memberof Class_LinkValueTree
+   */
+  public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
+    const id = this.getDataTagIdFromChild(child)
+    if (id) {
+      if (this.parent instanceof Class_LinkValueTree) {
+        const prev_id = this.parent.getDataTagsIdCombination(this)
+        prev_id.push(id)
+        return prev_id
+      }
+      else return [id]
+    }
+    return []
+  }
+
   public toJSON() {
     const tmp: { [x: string]: JSON } = {}
     Object.entries(this.children).forEach(ent_val => {
@@ -3260,22 +3305,6 @@ export class Class_LinkValueTree {
       })
   }
 
-  /**
-   * Find corresponding id for given child
-   * @private
-   * @param {(Class_LinkValue | Class_LinkValueTree)} child
-   * @memberof Class_LinkValueTree
-   */
-  private getDataTagIdFromChild(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
-    let id = undefined
-    Object.keys(this.children)
-      .forEach(tag_id => {
-        if (this.children[tag_id] === child) {
-          id = tag_id
-        }
-      })
-    return id
-  }
 
 
   private removeAndReplaceChild(
@@ -3300,18 +3329,6 @@ export class Class_LinkValueTree {
     }
   }
 
-  public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
-    const id = this.getDataTagIdFromChild(child)
-    if (id) {
-      if (this.parent instanceof Class_LinkValueTree) {
-        const prev_id = this.parent.getDataTagsIdCombination(this)
-        prev_id.push(id)
-        return prev_id
-      }
-      else return [id]
-    }
-    return []
-  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -3552,6 +3569,20 @@ export class Class_LinkValue {
       return this.parent.getDataTagsIdCombination(this)
     else
       return []
+  }
+
+  public get data_tagg() {
+    if (this.parent instanceof Class_LinkValueTree)
+      return this.parent.data_tag_group
+    else
+      return null
+  }
+
+  public get data_tag() {
+    if (this.parent instanceof Class_LinkValueTree)
+      return this.data_tagg?.tags_dict[this.parent.getDataTagIdFromChild(this) ?? ''] ?? null
+    else
+      return null
   }
 }
 

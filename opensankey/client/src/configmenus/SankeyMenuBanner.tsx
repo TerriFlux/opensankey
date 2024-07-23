@@ -57,23 +57,20 @@ import {
   applicationDrawType
 } from '../types/Types'
 import {
-  Class_ProtoTagGroup,
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from '../types/Tag'
-import {
-  Class_Sankey
-} from '../types/Sankey'
 import {
   ConvertDataFuncType
 } from './types/SankeyConvertTypes'
 import {
   addAllDropDownNodeFType,
+  AddAllDropDownFluxFType,
   addSimpleLevelDropDownFType,
   DataTagSelectorType,
   setDiagramFuncType,
   stretchButtonsFType,
-  ToolbarBuilderFType
+  ToolbarBuilderFType,
 } from './types/SankeyMenuBannerTypes'
 import {
   GetSankeyMinWidthAndHeightFuncType
@@ -81,17 +78,11 @@ import {
 
 // Internal functions / Components
 import {
-  AdjustSankeyZone,
-  RecursionDataTag,
-  FindMaxLinkValue,
   OSTooltip
 } from './SankeyUtils'
 import {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
-import {
-  AddAllDropDownFluxFType
-} from '../topmenus/types/SankeyMenuTopTypes'
 import {
   DeleteGNodes
 } from '../draw/SankeyDrawNodes'
@@ -270,7 +261,6 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
 
   // Tag group dicts
   const node_taggs = new_data.drawing_area.sankey.node_taggs_dict
-  const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
   const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
   // Component updater ------------------------------------------------------------------
@@ -311,7 +301,6 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
           // Reset values
           new_data.drawing_area.sankey.nodes_color_map = 'no_colormap'
           Object.values(node_taggs).forEach(tagg => tagg.show_legend = false)
-          Object.values(data_taggs).forEach(tagg => tagg.show_legend = false)
           // Update this tagg group value
           if (evt.target.checked) {
             new_data.drawing_area.sankey.nodes_color_map = tagg.id
@@ -469,6 +458,268 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
   return (<>{allDD}</>)
 }
 
+
+/**
+ * Function that generate dropdown for each groupTag of linkTags
+ * @param {TFunction} t
+ * @param {*} applicationData
+ * @param {*} node_function
+ * @param {*} link_function
+ * @param {*} ComponentUpdater
+ * @param {*} applicationDraw
+ * @return {*}
+ */
+export const AddAllDropDownFlux: FunctionComponent<AddAllDropDownFluxFType> = (
+  {
+    applicationContext,
+    applicationData
+  }
+) => {
+  // Data -------------------------------------------------------------------------------
+  const { t } = applicationContext
+  const { new_data } = applicationData
+
+  // Tag group dicts
+  const flux_taggs_dict = new_data.drawing_area.sankey.flux_taggs_dict
+  const flux_taggs_with_banner = Object.values(flux_taggs_dict)
+    .filter(flux_tagg => {
+      return ((flux_tagg.banner === 'one') || (flux_tagg.banner === 'multi')) })
+
+  // Component updater ------------------------------------------------------------------
+  const [, refreshThis] = useBoolean()
+  new_data.menu_configuration.ref_to_fluxtag_filter_updater.current = refreshThis.toggle
+
+  // JSX Components --------------------------------------------------------------------
+  // Create drop down
+  const allDD = flux_taggs_with_banner
+    .map(flux_tagg => {
+      // Create the tag selector
+      // It can either select one tag at the time or multiple at the time
+      let selector = <></>
+      if (flux_tagg.banner == 'one') {
+        selector = <Select
+          key={flux_tagg.name}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            // Set correct tag as selected
+            flux_tagg.selectTagsFromId(evt.target.value)
+            // Update related components (includes this)
+            new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+          }}
+        >
+          {
+            flux_tagg.tags_list.map(tag => {
+              return (
+                <option key={tag.id} value={tag.id}>{tag.name}</option>
+              )
+            })
+          }
+        </Select>
+      }
+      else {
+        const options = flux_tagg.tags_list
+          .map(tag => { return { 'label': tag.name, 'value': tag.id } })
+        const options_selected = flux_tagg.tags_list
+          .filter(tag => tag.is_selected)
+          .map(tag => { return { 'label': tag.name, 'value': tag.id } })
+        selector = <MultiSelect
+          className={'multidropdown_filter_node_link'}
+          valueRenderer={(options_selected: Type_MenuSelectionEntry[]) => {
+            return (
+              options_selected.length ?
+                options_selected.map(({ label }) => label + ', ') :
+                'Aucun tag sélectionné')
+          }}
+          labelledBy={'dropdown_node_filter'}
+          overrideStrings={{
+            'selectAll': 'Tout sélectionner', // TODO Mettre traduction ici
+          }}
+          value={options_selected}
+          options={options}
+          onChange={(options_selected: [{ label: string, value: string }]) => {
+            // Set correct tags as selected
+            flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
+            // Update related components (includes this)
+            new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+          }}
+        />
+      }
+
+      return (
+        <Box
+          layerStyle='menuconfigpanel_grid'
+        >
+          <Box
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {flux_tagg.name}
+          </Box>
+          <Box
+            as='span'
+            layerStyle='popover_sidebar_row_tag_filter'
+          >
+            <OSTooltip label={t('Banner.ndd_lst')}>
+              {selector}
+            </OSTooltip>
+            <OSTooltip label={t('Banner.ndd_chk')} >
+              <Box
+                justifySelf='end'
+                alignSelf='center'
+                height='1rem'
+              >
+                <Switch
+                  isChecked={new_data.drawing_area.sankey.links_color_map === flux_tagg.id}
+                  onChange={evt => {
+                    // Reset default colormap for all fluxtaggs
+                    Object.values(flux_taggs_dict)
+                      .forEach(flux_tagg => { flux_tagg.show_legend = false })
+                    new_data.drawing_area.sankey.links_color_map = 'no_colormap'
+                    // Update values for this fluxtagg
+                    if (evt.target.checked) {
+                      new_data.drawing_area.sankey.links_color_map = flux_tagg.id
+                      flux_tagg.show_legend = true
+                    }
+                    // Update related components (includes this)
+                    new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+                  }}
+                />
+              </Box>
+            </OSTooltip>
+          </Box>
+        </Box>)
+    })
+
+  // Output -----------------------------------------------------------------------------
+  return (<>{allDD.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}</>)
+}
+
+/**
+ * Function that return a simple or multiple dropdown of groupTag of data and links
+ * This allow us to choose wich grouptag to select and wich tag of these group to display
+ * @param {*} {
+ *   applicationData,
+ *   applicationDraw,
+ *   node_function,
+ *   link_function,
+ *   ComponentUpdater,
+ *   in_popover
+ * }
+ * @return {*}
+ */
+export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
+  applicationData,
+  applicationDraw,
+  node_function,
+  link_function,
+  ComponentUpdater,
+  in_popover
+}) => {
+  // Data -------------------------------------------------------------------------------
+  const { new_data } = applicationData
+  const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
+  const data_taggs_with_banner = Object.values(data_taggs)
+    .filter(tagg => { return (tagg.banner == 'one' || tagg.banner == 'multi') })
+  let show_legend_for_data_taggs = (data_taggs_with_banner.length > 0) // False if no data taggs
+  data_taggs_with_banner
+    .forEach(tagg => show_legend_for_data_taggs = show_legend_for_data_taggs && tagg.show_legend)
+
+  // Component updater ------------------------------------------------------------------
+  const [, refreshThis] = useBoolean()
+  new_data.menu_configuration.ref_to_datatag_filter_updater.current = refreshThis.toggle
+
+  // JSX Components --------------------------------------------------------------------
+  const allDD = data_taggs_with_banner
+    .map(tagg => {
+      let selector = <></>
+      if (tagg.banner == 'one') {
+        const selected_tag_id = tagg.selected_tags_list[0]?.id ?? ''
+        selector = <Select
+          key={tagg.id}
+          value={selected_tag_id}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            tagg.selectTagsFromId(evt.target.value)
+            new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+          }}
+        >
+          {
+            tagg.tags_list
+              .map(tag => {
+                return (
+                  <option key={tag.id} value={tag.id} >{tag.name}</option>
+                )
+            })
+          }
+        </Select>
+      }
+      else {
+        const selected_options = tagg.selected_tags_list
+          .map((tag) => { return { 'label': tag.name, 'value': tag.id } })
+        const options = tagg.tags_list
+          .map((tag) => { return {
+            'label': tag.name,
+            'value': tag.id,
+            'disabled': (
+              (selected_options.length < 2) &&
+              (tag.id == selected_options[0].value)
+            )}
+          })
+        selector = <MultiSelect
+          className={'multidropdown_filter_node_link'}
+          labelledBy={'dropdown_link_filter'}
+          overrideStrings={{
+            'selectAll': 'Tout sélectionner',
+          }}
+          value={selected_options}
+          options={options}
+          onChange={(curr_selected_options: [{ label: string, value: string }]) => {
+            tagg.selectTagsFromIds(curr_selected_options.map(_ => _.value))
+            new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+          }}
+        />
+      }
+
+      return (
+        <Box
+          layerStyle='menuconfigpanel_grid'
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {tagg.name}
+          </Box>
+          <Box
+            layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
+          >
+            {selector}
+            {
+              in_popover ?
+                <Switch
+                  justifySelf='end'
+                  alignSelf='center'
+                  height='1rem'
+                  isChecked={show_legend_for_data_taggs}
+                  onChange={evt => {
+                    // Met à jour l'indicateur de legende pour tous les tags
+                    Object.values(data_taggs_with_banner)
+                      .forEach(tagg => tagg.show_legend = evt.target.checked)
+                    new_data.drawing_area.sankey.links_color_map = 'no_colormap'
+                    // TODO Supprimer
+                    //Met le dernier dataTag en tant que couleur a suivre pour les flux
+                    // if (evt.target.checked) {
+                    //   new_data.drawing_area.sankey.links_color_map = 'dataTags_' + Object.keys(data_taggs).slice(data_taggs_with_banner.length - 1, data_taggs_with_banner.length)[0]
+                    // }
+                    new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+                  }}
+                /> :
+                <></>
+            }
+          </Box>
+        </Box>)
+    })
+
+  // Output -----------------------------------------------------------------------------
+  return <>{allDD}</>
+}
 
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
@@ -833,7 +1084,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       <PopoverHeader >{t('Banner.fdf')}</PopoverHeader>
       <PopoverBody>
         {legend_filter}
-        {AddAllDropDownFlux(t, applicationData, node_function, link_function, ComponentUpdater, applicationDraw)}
+        <AddAllDropDownFlux
+          applicationContext={applicationContext}
+          applicationData={applicationData}
+        />
       </PopoverBody>
     </PopoverContent>
   </Popover>
@@ -973,6 +1227,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     {button_fullscreen}
   </>
 }
+
 /**
  *  Function that return stretch buttons for the sideBar
  *
@@ -999,262 +1254,4 @@ const stretchButtons: stretchButtonsFType = (
 }
 
 
-/**
- * Function that generate dropdown for each groupTag of linkTags
- * @param {TFunction} t
- * @param {*} applicationData
- * @param {*} node_function
- * @param {*} link_function
- * @param {*} ComponentUpdater
- * @param {*} applicationDraw
- * @return {*}
- */
-const AddAllDropDownFlux: AddAllDropDownFluxFType = (
-  t: TFunction,
-  applicationData,
-  node_function,
-  link_function,
-  ComponentUpdater,
-  applicationDraw
-) => {
-  const [, setForceUpdate] = useBoolean()
-  const { new_data } = applicationData
-  const flux_taggs_dict = new_data.drawing_area.sankey.flux_taggs_dict
-  const data_taggs_dict = new_data.drawing_area.sankey.data_taggs_dict
-  const flux_taggs_with_banner = Object.values(flux_taggs_dict)
-    .filter(flux_tagg => {
-      return ((flux_tagg.banner === 'one') || (flux_tagg.banner === 'multi')) })
-  // Create drop down
-  const allDD = flux_taggs_with_banner
-    .map(flux_tagg => {
-      // Create the tag selector
-      // It can either select one tag at the time or multiple at the time
-      let selector = <></>
-      if (flux_tagg.banner == 'one') {
-        selector = <Select
-          key={flux_tagg.name}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            flux_tagg.selectTagsFromId(evt.target.value)
-            setForceUpdate.toggle()
-          }}>{
-            flux_tagg.tags_list.map(tag => {
-              return (<option key={tag.id} value={tag.id}>{tag.name}</option>)
-            })}
-        </Select>
-      }
-      else {
-        const options = flux_tagg.tags_list
-          .map(tag => { return { 'label': tag.name, 'value': tag.id } })
-        const options_selected = flux_tagg.tags_list
-          .filter(tag => tag.is_selected)
-          .map(tag => { return { 'label': tag.name, 'value': tag.id } })
-        selector = <MultiSelect
-          className={'multidropdown_filter_node_link'}
-          valueRenderer={(options_selected: Type_MenuSelectionEntry[]) => {
-            return (
-              options_selected.length ?
-                options_selected.map(({ label }) => label + ', ') :
-                'Aucun tag sélectionné')
-          }}
-          labelledBy={'dropdown_node_filter'}
-          overrideStrings={{
-            'selectAll': 'Tout sélectionner', // TODO Mettre traduction ici
-          }}
-          value={options_selected}
-          options={options}
-          onChange={(options_selected: [{ label: string, value: string }]) => {
-            flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
-            setForceUpdate.toggle()
-          }}
-        />
-      }
 
-      return (
-        <Box
-          layerStyle='menuconfigpanel_grid'
-        >
-          <Box
-            layerStyle='menuconfigpanel_option_name'
-          >
-            {flux_tagg.name}
-          </Box>
-          <Box
-            as='span'
-            layerStyle='popover_sidebar_row_tag_filter'
-          >
-            <OSTooltip label={t('Banner.ndd_lst')}>
-              {selector}
-            </OSTooltip>
-            <OSTooltip label={t('Banner.ndd_chk')} >
-              <Box
-                justifySelf='end'
-                alignSelf='center'
-                height='1rem'
-              >
-                <Switch
-                  isChecked={new_data.drawing_area.sankey.links_color_map === flux_tagg.id}
-                  onChange={evt => {
-                    Object.values(flux_taggs_dict)
-                      .forEach(flux_tagg => { flux_tagg.show_legend = false })
-                    Object.values(data_taggs_dict)
-                      .forEach(flux_tagg => flux_tagg.show_legend = false)
-
-                    new_data.drawing_area.sankey.links_color_map = 'no_colormap'
-                    if (evt.target.checked) {
-                      new_data.drawing_area.sankey.links_color_map = flux_tagg.id
-                      flux_tagg.show_legend = true
-                    }
-                    setForceUpdate.toggle()
-                    redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                  }}
-                />
-              </Box>
-            </OSTooltip>
-          </Box>
-        </Box>)
-    })
-  return (<>{allDD.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}</>)
-}
-
-/** Function that return a simple or multiple dropdown of groupTag of data and links
- This allow us to choose wich grouptag to select and wich tag of these group to display*/
-export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
-  applicationData,
-  applicationDraw,
-  node_function,
-  link_function,
-  ComponentUpdater,
-  in_popover
-}) => {
-  const { new_data } = applicationData
-  const [, setForceUpdate] = useBoolean()
-  const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
-  const flux_taggs = new_data.drawing_area.sankey.flux_taggs_dict
-  const banner_grouptag = Object.entries(data_taggs).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
-  const allDD = banner_grouptag.map(([, tags_group]) => {
-    let selector = <></>
-    if (tags_group.banner == 'one') {
-      let selected = ''
-      if (Object.entries(tags_group.tags_dict).filter(([, v]) => v.is_selected).length > 0) {
-        selected = Object.entries(tags_group.tags_dict).filter(([, v]) => v.is_selected)[0][0]
-      }
-      selector = <Select
-        key={tags_group.name}
-        value={selected}
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          tags_group.selectTagsFromId(evt.target.value)
-          setForceUpdate.toggle()
-          new_data.menu_configuration.updateComponentMenu.current()
-        }}>
-        {
-          Object.entries(tags_group.tags_dict).map(([tag_key, tag], i) => {
-            return (<option key={i} value={tag_key} >{tag.name}</option>)
-          })}
-      </Select>
-    }
-    else {
-      const selected = Object.entries(tags_group.tags_dict).filter(d => d[1].is_selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const options = Object.entries(tags_group.tags_dict).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name, 'disabled': ((selected.length < 2 && tag[1].name == selected[0].label)) } })
-      selector = <MultiSelect
-        className={'multidropdown_filter_node_link'}
-        labelledBy={'dropdown_link_filter'}
-        overrideStrings={{
-          'selectAll': 'Tout sélectionner',
-        }}
-        value={selected}
-        options={options}
-        onChange={(selected: [{ label: string, value: string }]) => {
-          tags_group.selectTagsFromIds(selected.map(_ => _.value))
-        }}
-      />
-    }
-
-    return (
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_option_name'
-        >
-          {tags_group.name}
-        </Box>
-        <Box
-          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
-        >
-          {selector}
-          {
-            in_popover ?
-              <Switch
-                justifySelf='end'
-                alignSelf='center'
-                height='1rem'
-                isChecked={(banner_grouptag.length > 0) ? (Object.values(data_taggs).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
-                onChange={evt => {
-                  //Déselecitonne tous les type de tag
-                  Object.values(flux_taggs).forEach(tags_group => tags_group.show_legend = false)
-                  Object.values(data_taggs).forEach(tags_group => tags_group.show_legend = false)
-                  // Object.values(new_data.drawing_area.sankey.links_dict).forEach(el => {
-                  //   el.colorTag = 'no_colormap'
-                  // })
-                  new_data.drawing_area.sankey.links_color_map = 'no_colormap'
-                  //Met le dernier dataTag en tant que couleur a suivre pour les flux
-                  if (evt.target.checked) {
-                    // Object.values(new_data.drawing_area.sankey.links_dict).forEach(el => {
-                    //   el.colorTag = 'no_colormap'
-                    // })
-                    new_data.drawing_area.sankey.links_color_map = 'dataTags_' + Object.keys(data_taggs).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
-
-                    Object.values(data_taggs).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
-                  }
-                  setForceUpdate.toggle()
-                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                }}
-              /> :
-              <></>
-          }
-        </Box>
-      </Box>)
-  })
-
-  return <>{allDD}</>
-}
-
-const redrawSankeyWithSelectedTag = (
-  applicationData: applicationDataType,
-  applicationDraw: applicationDrawType,
-  node_function: NodeFunctionTypes,
-  link_function: LinkFunctionTypes
-) => {
-  const { data, new_data } = applicationData
-  const { GetSankeyMinWidthAndHeight } = applicationDraw
-  const old_displayed_nodes = Object.values(applicationData.display_nodes).map(n => n.idNode)
-  const old_displayed_links = Object.values(applicationData.display_links).map(l => l.idLink)
-
-  node_function.recomputeDisplayedElement()
-
-  const new_displayed_nodes = Object.values(applicationData.display_nodes).map(n => n.idNode)
-  const new_displayed_links = Object.values(applicationData.display_links).map(l => l.idLink)
-
-  // Delete Nodes/Links no longer in displayed elements
-  DeleteGNodes(old_displayed_nodes.filter(nid => !new_displayed_nodes.includes(nid)).map(id => id))
-  DeleteGLinks(old_displayed_links.filter(lid => !new_displayed_links.includes(lid)).map(id => id))
-
-  // Create Nodes/Links that are now visually present with the new aggregation levels
-  const node_to_add_svg = new_displayed_nodes.filter(nid => !old_displayed_nodes.includes(nid)).map(id => applicationData.data.nodes[id])
-  node_function.CreateNodesOnSVG(node_to_add_svg)
-  const ll = new_displayed_links.filter(lid => !old_displayed_links.includes(lid))
-  node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-  link_function.RedrawLinks(Object.values(applicationData.display_links))
-
-  new_data.drawing_area.sankey.draw()
-  new_data.drawing_area.legend.draw()
-
-  if (ll.length != 0) {
-    link_function.CreateLinksOnSVG(ll.map(id => data.links[id]))
-    // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
-    //redrawNodeLinkLegend(applicationData,node_function,link_function,ComponentUpdater,applicationDraw)
-    actualizeDrawAreaFrame(applicationData, GetSankeyMinWidthAndHeight)
-  }
-  applicationDraw.reDrawLegend()
-}
