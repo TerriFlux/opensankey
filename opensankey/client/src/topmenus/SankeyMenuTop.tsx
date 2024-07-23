@@ -1172,10 +1172,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   if (show_data) {
     DDDT = <DataTagSelector
       applicationData={applicationData}
-      node_function={node_function}
-      link_function={link_function}
-      applicationDraw={applicationDraw}
-      ComponentUpdater={ComponentUpdater}
       in_popover={false}
     />
   }
@@ -1205,7 +1201,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
             new_data.drawing_area.is_drawing_area_contextualised=false
             new_data.menu_configuration.update_components_menu_context_DA.current()
-            
+
           }} >
 
           {
