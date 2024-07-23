@@ -213,7 +213,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
   const application_data= new Class_ApplicationData(window, false)
 if(initial_data!==undefined){
   application_data.new_drawing_area_fromJSON(initial_data)
-  
+
 }
   return {
   data : data,
@@ -873,10 +873,7 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
                 {
                   <AddSimpleLevelDropDown
                     applicationData={applicationData}
-                    applicationDraw={applicationDraw}
-                    node_function={node_function}
-                    link_function={link_function}
-                    />
+                  />
                 }
               </>) :
               (<>
