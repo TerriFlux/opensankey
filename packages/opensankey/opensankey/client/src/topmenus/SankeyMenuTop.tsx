@@ -1040,7 +1040,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ref_setter_show_modal_template.current = set_show_template
   const config_object=applicationData.new_data.menu_configuration
   const {new_data}=applicationData
-  new_data.menu_configuration.updateComponentMenu.current=setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_updater.current=setForceUpdate.toggle
   RepositionneSidebar(show_nav)
 
   const [update, setUpdate] = useState(false)
@@ -1194,13 +1194,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
           gridTemplateColumns={menutop_grid_template}
           onClick={() => {
             new_data.drawing_area.node_contextualied = undefined
-            new_data.menu_configuration.update_components_menu_context_node.current()
+            new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
             new_data.drawing_area.link_contextualied = undefined
-            new_data.menu_configuration.update_components_menu_context_link.current()
+            new_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
             new_data.drawing_area.is_drawing_area_contextualised=false
-            new_data.menu_configuration.update_components_menu_context_DA.current()
+            new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
 
           }} >
 
@@ -1369,7 +1369,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <Button
-            ref={new_data.menu_configuration.btn_toogle_menu}
+            ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
             id="toggle-check"
             className='openMenu'
             variant="toolbar_main_button"
