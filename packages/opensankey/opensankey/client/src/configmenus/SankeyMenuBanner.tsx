@@ -139,10 +139,10 @@ declare const window: Window &
 // FUNCTIONS ============================================================================
 
 export const setDiagram: setDiagramFuncType = (
-  the_diagram: string,
-  set_data: (d: SankeyData) => void,
-  convert_data: ConvertDataFuncType,
-  DefaultSankeyData: () => SankeyData,
+  the_diagram,
+  set_data,
+  convert_data,
+  DefaultSankeyData,
 ) => {
   const sous_filieres = window.sankey.sous_filieres
 
@@ -151,7 +151,7 @@ export const setDiagram: setDiagramFuncType = (
       window.sankey[sous_filieres[the_diagram]]
     )
   ) as SankeyData
-  convert_data(new_data, DefaultSankeyData)
+  convert_data({data: new_data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
 }
