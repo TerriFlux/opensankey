@@ -296,7 +296,7 @@ export class Class_ApplicationData {
         }
       }
       else if (evt.key == 'Tab') {
-        app_ref.menu_configuration.btn_toogle_menu.current?.click()
+        app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
       }
     }
 
@@ -314,6 +314,6 @@ export class Class_ApplicationData {
       initial_window_width,
       this)
 
-    this.menu_configuration.updateAllMenuComponent()
+    this.menu_configuration.updateAllMenuComponents()
   }
 }

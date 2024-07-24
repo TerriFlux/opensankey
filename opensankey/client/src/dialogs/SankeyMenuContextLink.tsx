@@ -26,7 +26,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const contextualised_link = new_data.drawing_area.link_contextualied
   const { t } = applicationContext
   const indicateSankeyToSaveInCache=()=>new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-  new_data.menu_configuration.update_components_menu_context_link.current=setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_context_links_updater.current=setForceUpdate.toggle
   const list_select_links = new_data.drawing_area.selected_links_list
 
 
@@ -116,7 +116,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
     </MenuList>
   </Menu> : <></>
 
-  // Selector of style (we can also reset local link attribute) 
+  // Selector of style (we can also reset local link attribute)
   const dropdown_c_l_style = contextualised_link !== undefined ? <Menu placement='end'>
     <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
       {t('Noeud.editStyle')}
@@ -224,7 +224,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   </Menu> : <></>
   const btn_inverse_io = <Button variant='contextmenu_button'
     onClick={() => {
-     
+
       list_select_links.forEach(l=>l.inverse())
       indicateSankeyToSaveInCache()
 

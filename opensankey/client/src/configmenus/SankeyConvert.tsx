@@ -1487,10 +1487,11 @@ export const convert_links:convert_linksFuncType = (
 
 }
 
-export const convert_data:ConvertDataFuncType = (
-  data: SankeyData,
-  DefaultSankeyData: ()=>SankeyData,
+export const convert_data: ConvertDataFuncType = (
+  applicationData,
+  DefaultSankeyData,
 ): void => {
+  const { data, new_data } = applicationData
   const data_to_convert = data as SankeyData & ConvertSankeyData
   const { display_style,units_names } = data_to_convert
 
@@ -1635,14 +1636,14 @@ export const convert_data:ConvertDataFuncType = (
   }
 
 
-  if(!data.accordeonToShow.includes('EN') && Object.keys(data.nodeTags).length>0){
-    data.accordeonToShow.push('EN')
+  if( Object.keys(data.nodeTags).length>0 ) {
+    new_data.menu_configuration.addToAccordionsToShow('EN')
   }
-  if(!data.accordeonToShow.includes('EF') && Object.keys(data.fluxTags).length>0){
-    data.accordeonToShow.push('EF')
+  if( Object.keys(data.fluxTags).length>0 ){
+    new_data.menu_configuration.addToAccordionsToShow('EF')
   }
-  if(!data.accordeonToShow.includes('ED') && Object.keys(data.dataTags).length>0){
-    data.accordeonToShow.push('ED')
+  if( Object.keys(data.dataTags).length>0 ){
+    new_data.menu_configuration.addToAccordionsToShow('ED')
   }
 
   if(data.node_label_separator===undefined || data.node_label_separator===null){

@@ -97,7 +97,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Update values displayed in menus for link's configuration
-    new_data.menu_configuration.updateComponentsSubmenuConfigNode()
+    new_data.menu_configuration.updateAllComponentsRelatedToNodesConfig()
     // Update and update saving indicator
     refreshThisAndToggleSaving()
   }

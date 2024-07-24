@@ -341,7 +341,7 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
     (cpy as unknown as {view:[]}).view=[]
   }
-  
+
   const str_data = JSON.stringify(cpy)
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   const dataAsSuite = (cpy as DataSuiteType)
@@ -364,7 +364,7 @@ export const ProcessExample: ProcessExampleFuncType = (
 ): SankeyData => {
   const {data}=applicationData
   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
-  convert_data(data, DefaultSankeyData)
+  convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
   if ((data as SankeyData & layout_type).layout === undefined) {
     // Compute node position of all node according to their level tags
     const lvl_tag_keys=Object.keys(data.levelTags)
@@ -403,8 +403,11 @@ export const ProcessExample: ProcessExampleFuncType = (
     // Set sector/product style to node only when it come from an excel file and without a layout
     SetNodeStyleToTypeNode(data)
   } else {
-    convert_data((data as SankeyData & layout_type).layout, DefaultSankeyData)
-    complete_sankey_data((data as SankeyData & layout_type).layout, DefaultSankeyData, DefaultNode, DefaultLink)
+    convert_data(
+      {data: (data as SankeyData & layout_type).layout} as applicationDataType, // FIXME when new_data ready for it
+      DefaultSankeyData
+    )
+    complete_sankey_data((data as SankeyData & layout_type).layout, DefaultSankeyData, DefaultNode, DefaultLink)// FIXME when new_data ready for it
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout

@@ -183,15 +183,15 @@ export const initializeReinitialization : initializeReinitializationType = (
 
   // Reset contextualised node
   applicationData.new_data.drawing_area.node_contextualied = undefined
-  applicationData.new_data.menu_configuration.update_components_menu_context_node.current()
+  applicationData.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
   // Reset contextualised link
   applicationData.new_data.drawing_area.link_contextualied = undefined
-  applicationData.new_data.menu_configuration.update_components_menu_context_link.current()
+  applicationData.new_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
   // Reset contextualised DA
   applicationData.new_data.drawing_area.is_drawing_area_contextualised=false
-  applicationData.new_data.menu_configuration.update_components_menu_context_DA.current()
+  applicationData.new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
 
   applicationData.new_data.reset()
 
@@ -210,24 +210,23 @@ export const initializeApplicationData : initializeApplicationDataType = (
   display_links,
   initial_data
 )=>{
-  const application_data= new Class_ApplicationData(window, false)
-if(initial_data!==undefined){
-  application_data.new_drawing_area_fromJSON(initial_data)
-
-}
+  const application_data = new Class_ApplicationData(window, false)
+  if(initial_data !== undefined){
+    application_data.new_drawing_area_fromJSON(initial_data)
+  }
   return {
-  data : data,
-  set_data : set_data,
-  get_default_data : get_default_data,
-  convert_data : SankeyConvert.convert_data,
-  display_nodes : display_nodes,
-  display_links : display_links,
-  function_on_wait:useRef(()=>null),
-  min_link_thickness:2,
-  dataVarToUpdate:useRef(['']),
-  setDiagram:setDiagram,
-  new_data: application_data
-}
+    data : data,
+    set_data : set_data,
+    get_default_data : get_default_data,
+    convert_data : SankeyConvert.convert_data,
+    display_nodes : display_nodes,
+    display_links : display_links,
+    function_on_wait:useRef(()=>null),
+    min_link_thickness:2,
+    dataVarToUpdate:useRef(['']),
+    setDiagram:setDiagram,
+    new_data: application_data
+  }
 }
 // General functions necessay to draw the diagram
 export const initializeApplicationDraw : initializeApplicationDrawType = (
@@ -801,49 +800,57 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   menu_configuration_nodes_attributes,
   additionalMenus,
   ref_alt_key_pressed
-)=>{
-  return OpenSankeyConfigurationsMenus(
-    applicationData,
-    applicationState,
-    applicationContext,
-    uiElementsRef,
-    dict_hook_ref_setter_show_dialog_components,
-    <OpenSankeyMenuConfigurationLayout
-      applicationData={applicationData}
-      applicationState={applicationState}
-      applicationContext={applicationContext}
-      extra_background_element={additional_menus.extra_background_element}
-      node_function={node_function}
-      reDrawLegend={applicationDraw.reDrawLegend}
-      link_function={link_function}
-      ComponentUpdater={ComponentUpdater}
-    />,
-    <SankeySettingsEditionElementTags
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      elementTagNameProp='node_taggs'
-    />,
-    <SankeySettingsEditionElementTags
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      elementTagNameProp='flux_taggs'
-    />,
-    <SankeySettingsEditionElementTags
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      elementTagNameProp='data_taggs'
-    />,
-    menu_configuration_nodes_attributes,
-    config_link_data,
-    config_link_attr,
-    additional_menus.additional_configuration_menus,
-    link_function,
-    ComponentUpdater,
-    contextMenu,
-    ref_alt_key_pressed,
-    node_function,
-    additionalMenus
-  )
+) => {
+  return <OpenSankeyConfigurationsMenus
+    applicationData = {applicationData}
+    applicationState = {applicationState}
+    applicationContext = {applicationContext}
+    uiElementsRef = {uiElementsRef}
+    dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
+    menu_configuration_layout = {
+      <OpenSankeyMenuConfigurationLayout
+        applicationData={applicationData}
+        applicationState={applicationState}
+        applicationContext={applicationContext}
+        extra_background_element={additional_menus.extra_background_element}
+        node_function={node_function}
+        reDrawLegend={applicationDraw.reDrawLegend}
+        link_function={link_function}
+        ComponentUpdater={ComponentUpdater}
+      />
+    }
+    menu_configuration_node_tags = {
+      <SankeySettingsEditionElementTags
+        applicationContext={applicationContext}
+        applicationData={applicationData}
+        elementTagNameProp='node_taggs'
+      />
+    }
+    menu_configuration_link_tags = {
+      <SankeySettingsEditionElementTags
+        applicationContext={applicationContext}
+        applicationData={applicationData}
+        elementTagNameProp='flux_taggs'
+      />
+    }
+    menu_configuration_data_tags = {
+      <SankeySettingsEditionElementTags
+        applicationContext={applicationContext}
+        applicationData={applicationData}
+        elementTagNameProp='data_taggs'
+      />
+    }
+    menu_configuration_nodes_attributes = {menu_configuration_nodes_attributes}
+    menu_config_link_data = {config_link_data}
+    menu_config_link_attr = {config_link_attr}
+    additional_accordion_edition_elements = {additional_menus.additional_configuration_menus}
+    link_function = {link_function}
+    ComponentUpdater = {ComponentUpdater}
+    contextMenu = {contextMenu}
+    alt_key_pressed = {ref_alt_key_pressed}
+    node_function = {node_function}
+    additionalMenus = {additionalMenus}
+  />
 }
 
 

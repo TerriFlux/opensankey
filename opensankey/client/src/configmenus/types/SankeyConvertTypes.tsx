@@ -1,4 +1,9 @@
-import { SankeyData, SankeyLink, SankeyNode } from '../../types/Types'
+import {
+  SankeyData,
+  SankeyLink,
+  SankeyNode,
+  applicationDataType
+} from '../../types/Types'
 
 export type compute_initial_colorsFType = (
   data: SankeyData
@@ -12,11 +17,14 @@ export type compute_flux_maxFType = (
   data: SankeyData
 ) => void
 
-export type ConvertDataFuncType = (data: SankeyData, DefaultSankeyData: () => SankeyData) => void
+export type ConvertDataFuncType = (
+  applicationData: applicationDataType,
+  DefaultSankeyData: () => SankeyData
+) => void
 
 export type complete_sankey_dataFunctType = (
-  data: SankeyData, DefaultSankeyData: () => SankeyData, 
-  DefaultNode: (data: SankeyData) => SankeyNode, 
+  data: SankeyData, DefaultSankeyData: () => SankeyData,
+  DefaultNode: (data: SankeyData) => SankeyNode,
   DefaultLink: (data: SankeyData) => SankeyLink
 ) => void
 

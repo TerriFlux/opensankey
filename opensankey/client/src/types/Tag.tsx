@@ -83,17 +83,23 @@ export abstract class Class_ProtoTag {
   public  abstract update(): void
 
   public setSelected() {
-    // Set attributes
-    this._is_selected = true
-    // Redraw all related elements
-    this.update()
+    // Avoid useless update
+    if (this._is_selected === false) {
+      // Set attributes
+      this._is_selected = true
+      // Redraw all related elements
+      this.update()
+    }
   }
 
   public setUnSelected() {
-    // Set attributes
-    this._is_selected = false
-    // Redraw all related elements
-    this.update()
+    // Avoid useless update
+    if (this._is_selected === true) {
+      // Set attributes
+      this._is_selected = false
+      // Redraw all related elements
+      this.update()
+    }
   }
 
   public toogleSelected() {
@@ -137,10 +143,13 @@ export abstract class Class_ProtoTag {
 
   public get color() { return this._color }
   public set color(value: string) {
-    // Set attributes
-    this._color = value
-    // Redraw all related elements
-    this.update()
+    // Avoid useless updates
+    if (this._color !== value) {
+      // Set attributes
+      this._color = value
+      // Redraw all related elements
+      this.update()
+    }
   }
 
   // Selection
@@ -271,7 +280,7 @@ export class Class_DataTag extends Class_ProtoTag {
   public update() {
     Object.values(this._references)
       .forEach(element => {
-        element.draw()
+        element.drawWithNodes()
       })
   }
 
@@ -308,14 +317,12 @@ export abstract class Class_ProtoTagGroup {
   // List of tags
   private _tag_count: number = 0
 
-  // Display attributes
-  private _activated: boolean = false
-  private _show_legend: boolean = false
+  // Type of banne
   private _banner: tag_banner_type = 'one'
 
   /**
    * True if tag is currently on a deletion process
-   * Avoid cross calls of delete() method
+   * Avoid infinite calls of delete() method
    * @private
    * @memberof Class_TagGroup
    */
@@ -416,16 +423,12 @@ export abstract class Class_ProtoTagGroup {
 
   public toJSON() {
     const json_object = {} as { [_: string]: any }
-
     json_object['group_name'] = this._name
-    json_object['show_legend'] = this._show_legend
     json_object['banner'] = this._banner
-
     json_object['tags'] = {}
     Object.entries(this._tags).forEach(ent_tags => {
       json_object['tags'][ent_tags[0]] = ent_tags[1].toJSON()
     })
-
     return json_object
   }
 
@@ -436,16 +439,12 @@ export abstract class Class_ProtoTagGroup {
    * @memberof Class_TagGroup
    */
   public fromJSON(json_object: { [_: string]: any }) {
-    this._show_legend = json_object['show_legend'] ?? false
+    this._name = json_object['group_name'] ?? this._name
     this._banner = json_object['banner'] ?? 'one'
-
     Object.entries(json_object['tags']).forEach(ent_tags => {
       const new_tag = this.addTag((ent_tags[1] as { name: string }).name, ent_tags[0])
       new_tag.fromJSON((ent_tags[1] as { [x: string]: any }))
     })
-
-    // Set level_taggs value from json
-    this._activated = json_object['activated'] ?? true
   }
 
   // PROTECTED METHODS ==================================================================
@@ -471,8 +470,6 @@ export abstract class Class_ProtoTagGroup {
    * @memberof Class_ProtoTagGroup
    */
   public get name(): string { return this._name }
-
-  public get activated(): boolean { return this._activated }
 
   /**
    * Return dict tag from the current group
@@ -520,15 +517,11 @@ export abstract class Class_ProtoTagGroup {
   }
 
   public get banner(): tag_banner_type { return this._banner }
-  public set banner(value: tag_banner_type) { this._banner = value }
-
-  public get show_legend(): boolean { return this._show_legend }
-  public set show_legend(value: boolean) { this._show_legend = value }
 
   // SETTERS ============================================================================
 
   public set name(value: string) { this._name = value }
-  public set activated(value: boolean) { this._activated = value }
+  public set banner(value: tag_banner_type) { this._banner = value }
 }
 
 // CLASS TAGGROUP ***********************************************************************
@@ -543,6 +536,11 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
 
   protected _tags: { [_: string]: Class_Tag } = {}
 
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Display attributes
+  private _show_legend: boolean = false
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -553,9 +551,30 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    */
   constructor(id: string, name: string) {
     super(id, name)
-    // Create and select a first default tag
-    const tag = this.addTag('Etiquette 0')
-    tag.setSelected()
+    // Default banner as multi
+    this.banner = 'multi'
+    // Create a first default tag
+    this.addTag('Etiquette 0')
+
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public toJSON() {
+    const json_object = super.toJSON()
+    json_object['show_legend'] = this._show_legend
+    return json_object
+  }
+
+  /**
+   *Set Tag_group value & substructur from JSON
+   *
+   * @param {{[_:string]:any}} json_object
+   * @memberof Class_TagGroup
+   */
+  public fromJSON(json_object: { [_: string]: any }) {
+    super.fromJSON(json_object)
+    this._show_legend = json_object['show_legend'] ?? false
   }
 
   // PROTECTED METHODS ==================================================================
@@ -564,7 +583,9 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     name: string,
     id: string | undefined = undefined
   ) {
-    return new Class_Tag(name, this, id)
+    const tag = new Class_Tag(name, this, id)
+    tag.setSelected()
+    return tag
   }
 
   // GETTER =============================================================================
@@ -589,6 +610,18 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    * @memberof Class_TagGroup
    */
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
+
+  public get show_legend(): boolean { return this._show_legend }
+
+  // SETTER ==============================================================================
+
+  public set show_legend(value: boolean) {
+    // Avoid useless updates
+    if (this._show_legend !== value) {
+      this._show_legend = value
+      this.updateTagsReferences()
+    }
+  }
 }
 
 // CLASS DATATAGGROUP ***********************************************************************
@@ -602,6 +635,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // PRIVATE ATTRIBUTES =================================================================
 
   private _sankey: Class_Sankey
+
+  // Display attributes
+  private _show_legend: boolean = false
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -637,6 +673,23 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   ) {
     super.selectTagsFromIds(ids)
     this.checkSelectionCoherence()
+  }
+
+  public toJSON() {
+    const json_object = super.toJSON()
+    json_object['show_legend'] = this._show_legend
+    return json_object
+  }
+
+  /**
+   *Set Tag_group value & substructur from JSON
+   *
+   * @param {{[_:string]:any}} json_object
+   * @memberof Class_TagGroup
+   */
+  public fromJSON(json_object: { [_: string]: any }) {
+    super.fromJSON(json_object)
+    this._show_legend = json_object['show_legend'] ?? false
   }
 
   // PROTECTED METHODS ==================================================================
@@ -683,6 +736,18 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * @memberof Class_DataTagGroup
    */
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
+
+  public get show_legend(): boolean { return this._show_legend }
+
+  // SETTER ==============================================================================
+
+  public set show_legend(value: boolean) {
+    // Avoid useless updates
+    if (this._show_legend !== value) {
+      this._show_legend = value
+      this.updateTagsReferences()
+    }
+  }
 }
 
 
@@ -691,19 +756,38 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   // PRIVATE ATTRIBUTES==================================================================
+  private _activated: boolean = false
   private _siblings: string[] = []
 
   // PUBLIC METHODS =====================================================================
 
-  public fromJSON(json_object: { [_: string]: any }) {
-    // Call fromJSON of  Class_TagGroup
-    super.fromJSON(json_object)
+  public toJSON() {
+    const json_object = super.toJSON()
+    json_object['activated'] = this._activated
+    json_object['sibling'] = this._siblings
+    return json_object
+  }
 
+  public fromJSON(json_object: { [_: string]: any }) {
+    super.fromJSON(json_object)
+    this._activated = json_object['activated'] ?? true
     this._siblings = json_object['sibling'] ?? []
   }
 
   // GETTERS / SETTERS ==================================================================
 
+  public get activated(): boolean { return this._activated }
+  public set activated(value: boolean) {
+    // Avoid useless updates
+    if (this._activated !== value) {
+      this._activated = value
+      this.updateTagsReferences()
+    }
+  }
+
   public get siblings(): string[] { return this._siblings }
-  public set siblings(value: string[]) { this._siblings = value }
+  public set siblings(value: string[]) {
+    this._siblings = value
+    this.updateTagsReferences()
+  }
 }
