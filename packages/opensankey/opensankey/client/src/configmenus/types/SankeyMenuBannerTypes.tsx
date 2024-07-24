@@ -27,6 +27,16 @@ export type addAllDropDownNodeFType = {
 }
 
 /**
+ * Function that generate dropdown for each groupTag of linkTags
+ * @param {applicationContextType} applicationContext
+ * @param {applicationDataType} applicationData
+ */
+export type AddAllDropDownFluxFType = {
+  applicationContext: applicationContextType,
+  applicationData: applicationDataType
+}
+
+/**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
 export type ToolbarBuilderFType = {
@@ -54,11 +64,7 @@ export type stretchButtonsFType=(
 )=>JSX.Element
 
 
-export type DataTagSelectorType={
+export type DataTagSelectorType = {
   applicationData:applicationDataType,
-  applicationDraw:applicationDrawType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
   in_popover:boolean
 }

@@ -19,7 +19,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   const { new_data } = applicationData
   const contextualised_node = new_data.drawing_area.node_contextualied
   const [forceUpdate, setForceUpdate] = useState(false)
-  new_data.menu_configuration.update_components_menu_context_node.current = () => setForceUpdate(!forceUpdate)
+  new_data.menu_configuration.ref_to_menu_context_nodes_updater.current = () => setForceUpdate(!forceUpdate)
   const { t } = applicationContext
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -263,7 +263,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   const button_edit_label_node = <Button variant='contextmenu_button'
     onClick={() => {
-      // TODO : when we can edit node label on DA re-instance this function 
+      // TODO : when we can edit node label on DA re-instance this function
 
       // const label_x = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().x ?? 0
       // const label_y = document.getElementById('text_' + contextualised_node!.idNode)?.getBoundingClientRect().y ?? 0
@@ -278,8 +278,8 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       // new_data.drawing_area.node_contextualied = undefined
       contextualised_node?.setInputLabelVisible()
       closeContextMenu()
-      
-      // 
+
+      //
     }}
   >
     {t('Noeud.labels.edit_node_label')}
@@ -327,7 +327,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Button>
 
 
-  // TODO : function to aggregate/deaggregate only 1 node 
+  // TODO : function to aggregate/deaggregate only 1 node
 
   // const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
   //   Aggregate(contextualised_node, data, agregation)
@@ -335,7 +335,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   //   node_function.recomputeDisplayedElement()
   //   set_data({ ...data })
   //   new_data.drawing_area.node_contextualied = undefined
-  //   
+  //
   //   indicateSankeyToSaveInCache()
 
   // }}>{t('Noeud.context_agregate')}</Button> : <></>
@@ -346,7 +346,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   //   node_function.recomputeDisplayedElement()
   //   set_data({ ...data })
   //   new_data.drawing_area.node_contextualied = undefined
-  //   
+  //
   //   indicateSankeyToSaveInCache()
 
   // }}>{t('Noeud.context_desagregate')}</Button> : <></>
@@ -393,9 +393,9 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   const btn_c_n_show_tags_menu = <Button onClick={() => {
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
     closeContextMenu()
-    
+
   }} variant='contextmenu_button'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
-  
+
   // Pop over that serve as context menu
   return contextualised_node !== undefined ? <Box layerStyle='context_menu' id="context_node_pop_over"
     className={'context_popover ' + (is_top ? '' : 'at_bot')}
@@ -417,7 +417,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
         onClick={() => {
           new_data.drawing_area.deleteSelectedNodes()
           new_data.drawing_area.node_contextualied = undefined
-          
+
           // Redraw sankey
           new_data.drawing_area.drawElements()
           indicateSankeyToSaveInCache()

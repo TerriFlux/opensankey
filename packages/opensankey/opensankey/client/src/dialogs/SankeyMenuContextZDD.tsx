@@ -25,7 +25,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
   const [forceUpdate, setForceUpdate] = useState(false)
 
-  new_data.menu_configuration.update_components_menu_context_DA.current=()=>setForceUpdate(!forceUpdate)
+  new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current=()=>setForceUpdate(!forceUpdate)
 
   const indicateSankeyToSaveInCache=()=>new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -72,7 +72,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   </>
   const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-   
+
     const size_color = new_data.drawing_area.sankey.nodes_list.length
 
     for (const i in d3.range(size_color)) {
@@ -152,7 +152,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
             // TODO re-implment function when computeautosankey is re-implemented with classes
             // ComputeAutoSankey(applicationData, node_hspace, false)
-            
+
             indicateSankeyToSaveInCache()
           }
           dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current({ success: 'Layout Updated' })
@@ -176,9 +176,9 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
     onClick={() => {
       // TODO re-implement arrange nodes with classes
       // arrangeNodes(data)
-    
+
       indicateSankeyToSaveInCache()
-    
+
     }}>
     {t('MEP.AN')}
   </Button>

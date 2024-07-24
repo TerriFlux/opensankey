@@ -18,6 +18,7 @@ import {
   default_element_color,
   default_element_position
 } from './Utils'
+import { Class_DataTagGroup, Class_TagGroup } from './Tag'
 
 
 // CLASS LEGEND *************************************************************************
@@ -245,32 +246,32 @@ export class Class_Legend extends Class_Element {
    * @memberof Class_Legend
    */
   private drawTagDisplayed() {
-    const node_taggs = this.drawing_area.sankey.node_taggs_dict
-    const flux_taggs = this.drawing_area.sankey.flux_taggs_dict
-    const data_taggs = this.drawing_area.sankey.data_taggs_dict
+    const node_taggs = this.drawing_area.sankey.node_taggs_list
+    const flux_taggs = this.drawing_area.sankey.flux_taggs_list
+    const data_taggs = this.drawing_area.sankey.data_taggs_list
     // Get all grp tag insind one variable
-    const all_tags = Object.assign({}, node_taggs, flux_taggs, data_taggs)
-    Object.entries(all_tags)
-      .filter(tag_group => tag_group[1].show_legend)
+    const all_tags = [... node_taggs, ... flux_taggs, ... data_taggs]
+    all_tags
+      .filter(tag_group => tag_group.show_legend)
       .forEach(tag_group => {
         // Ajout du tagGroup.name
         this.d3_selection?.append('text')
-          .attr('id', 'GrpTag_title_' + tag_group[0])
+          .attr('id', 'GrpTag_title_' + tag_group.id)
           .attr('transform', 'translate(' + this._dx + ',' + this._dy + ' )')
           .attr('x', 0)
           .attr('y', 5 + this._legend_police)
-          .text(tag_group[1].name)
+          .text(tag_group.name)
           .attr('style', 'font-weight:bold;font-size:' + this._legend_police + 'px')
           .call(this._wrapper)
 
-        if (document.getElementById('GrpTag_title_' + tag_group[0])?.getElementsByTagName('tspan')[0].innerHTML === '') {
-          document.getElementById('GrpTag_title_' + tag_group[0])?.setAttribute('y', '5')
+        if (document.getElementById('GrpTag_title_' + tag_group.id)?.getElementsByTagName('tspan')[0].innerHTML === '') {
+          document.getElementById('GrpTag_title_' + tag_group.id)?.setAttribute('y', '5')
         }
 
-        this._dy += document.getElementById('GrpTag_title_' + tag_group[0])?.getBoundingClientRect().height ?? 0
+        this._dy += document.getElementById('GrpTag_title_' + tag_group.id)?.getBoundingClientRect().height ?? 0
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
-        tag_group[1].selected_tags_list.map(t => t) // TODO netoyer code pour enlever ça
+        tag_group.selected_tags_list.map(t => t) // TODO netoyer code pour enlever ça
           // .filter(tag => {
           //     // Filter tag that have elements associated to them displayed (nodes,links)
           //     if ( Object.keys(flux_taggs).includes(linksColorMap) && Object.keys(flux_taggs).includes(tag_group[0]) ) {
