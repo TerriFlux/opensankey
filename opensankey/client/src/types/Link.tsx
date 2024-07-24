@@ -174,19 +174,18 @@ export class Class_LinkElement extends Class_ProtoElement {
   private _tooltip_text: string = ''
 
   /**
-   * TODO
+   * Struct of all control points
    * @private
-   * @type {number}
+   * @type {{
+   *     starting_curve_point: Class_Handler,
+   *     ending_curve_point: Class_Handler,
+   *     starting_bezier_point: Class_Handler,
+   *     ending_bezier_point: Class_Handler,
+   *     middle_recycling_point: Class_Handler,
+   *     is_dragged: boolean
+   *   }}
    * @memberof Class_LinkElement
    */
-
-  /**
-   * TODO
-   * @private
-   * @type {number}
-   * @memberof Class_LinkElement
-   */
-
   private _control_points: {
     starting_curve_point: Class_Handler,
     ending_curve_point: Class_Handler,
@@ -340,6 +339,13 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.drawElements()
   }
 
+  public drawWithNodes() {
+    if(this.source && this.target) {
+      this.source.draw()
+      this.target.draw()
+    }
+  }
+
   public drawElements() {
     this.drawPath()
     this.drawLabel()
@@ -353,8 +359,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   public resetAttributes() {
     this._display.attributes = new Class_LinkAttribute()
     // Need to redraw from nodes
-    this.source.draw()
-    this.target.draw()
+    this.drawWithNodes()
   }
 
   /**
@@ -372,13 +377,13 @@ export class Class_LinkElement extends Class_ProtoElement {
   public setPosXYStartingPoint(x: number, y: number) {
     this._display.position_starting.x = x
     this._display.position_starting.y = y
-    this.drawElements()
+    this.draw()
   }
 
   public setPosXYEndingPoint(x: number, y: number) {
     this._display.position_ending.x = x
     this._display.position_ending.y = y
-    this.drawElements()
+    this.draw()
   }
 
   public increaseDisplayOrder() {
@@ -588,12 +593,15 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private setValueFromJSON(obj: { [x: string]: any }) {
     const list_dataTag_combinaison = this.drawing_area.sankey.list_combinatorial_data_taggs_path
-    if (list_dataTag_combinaison.length == 0) { // sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
+    // case 1: sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
+    if (list_dataTag_combinaison.length == 0) {
 
       (this._values as Class_LinkValue).data_value = obj.data_value;
       (this._values as Class_LinkValue).text_value = obj.text_value_value
 
-    } else { // if sankey has data_taggs
+    }
+    // case 2: sankey has data_taggs
+    else {
 
       const allPath = allPossibleCases(list_dataTag_combinaison)
 
@@ -658,14 +666,14 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsLinks()
         // Update components related to link edition
-        this.menu_config.updateComponentsMenuConfigLink()
+        this.menu_config.updateAllComponentsRelatedToLinks()
 
       } else if (event.ctrlKey) {
         // Add link to selection
         drawing_area.addLinkToSelection(this)
 
         // Update components related to link edition
-        this.menu_config.updateComponentsMenuConfigLink()
+        this.menu_config.updateAllComponentsRelatedToLinks()
       }
       // OTHERS
       else {
@@ -689,10 +697,10 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.drawing_area.addLinkToSelection(this)
       } else {
       }
-      this.menu_config.updateComponentsMenuConfigLink()
+      this.menu_config.updateAllComponentsRelatedToLinks()
 
       this.drawing_area.link_contextualied = this
-      this.menu_config.update_components_menu_context_link.current()
+      this.menu_config.ref_to_menu_context_links_updater.current()
     }
 
   }
@@ -843,7 +851,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   private dragTextend(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
-    this.menu_config.updateComponentsMenuConfigLink()
+    this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
   /**
@@ -945,16 +953,26 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   private getPathColorToUse() {
-    const tagg_dict = this.taggs_dict // Avoid recomputing
-    if (tagg_dict[this.drawing_area.sankey.links_color_map]) {
-      const tagg_for_colormap = tagg_dict[this.drawing_area.sankey.links_color_map]
-      const tag_for_colormap = this.tags_list
+    // Default color
+    let shape_color = this.shape_color
+    // Do we apply color of flux tags ?
+    const flux_taggs_activated = this.flux_taggs_list
+      .filter(tagg => tagg.show_legend)
+    if (flux_taggs_activated.length > 0) {
+      const tagg_for_colormap = flux_taggs_activated[0]
+      const tags_for_colormap = this.flux_tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
-      return tag_for_colormap[0].color
+        .filter(tag => tag.is_selected)
+      if (tags_for_colormap.length > 0)
+        shape_color = tags_for_colormap[0].color
     }
     else {
-      return this.shape_color
+      // Do we apply colors of data tags ?
+      this.drawing_area.sankey.selected_data_tags_list
+        .filter(tag => tag.group.show_legend)
+        .forEach(tag => shape_color = tag.color)
     }
+    return shape_color
   }
 
   /**
@@ -1790,7 +1808,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get tags_dict() {
+  public get flux_tags_dict() {
     const value = this.value
     if (value)
       return this.value.flux_tags_dict
@@ -1802,7 +1820,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get tags_list() {
+  public get flux_tags_list() {
     const value = this.value
     if (value)
       return this.value.flux_tags_list
@@ -1814,7 +1832,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get taggs_dict() {
+  public get flux_taggs_dict() {
     const value = this.value
     if (value)
       return this.value.flux_taggs_dict
@@ -1826,8 +1844,8 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get taggs_list() {
-    return Object.values(this.taggs_dict)
+  public get flux_taggs_list() {
+    return Object.values(this.flux_taggs_dict)
   }
 
   /**
@@ -1918,8 +1936,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   public set shape_orientation(_: Type_Orientation) {
     this._display.attributes.shape_orientation = _
     // Need to redraw from nodes
-    this.source.draw()
-    this.target.draw()
+    this.drawWithNodes()
   }
 
   // Orientation
@@ -2129,8 +2146,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   public set shape_is_recycling(_: boolean) {
     this._display.attributes.shape_is_recycling = _
     // Need to redraw from nodes
-    this.source.draw()
-    this.target.draw()
+    this.drawWithNodes()
   }
 
   /**
@@ -2531,7 +2547,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private get are_related_tags_selected() {
-    return this.tags_list.filter(t => !t.is_selected).length === 0
+    return this.flux_tags_list.filter(t => !t.is_selected).length === 0
   }
 
   /**
@@ -2543,7 +2559,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private get are_source_and_target_displayed() {
-    return (this._source.is_visible && this._target.is_visible)
+    return (
+      (this._source?.is_visible ?? false) &&
+      (this._target?.is_visible ?? false)
+    )
   }
 }
 
@@ -3221,6 +3240,41 @@ export class Class_LinkValueTree {
     }
   }
 
+  /**
+   * Find corresponding id for given child
+   * @param {(Class_LinkValue | Class_LinkValueTree)} child
+   * @memberof Class_LinkValueTree
+   */
+  public getDataTagIdFromChild(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
+    let id = undefined
+    Object.keys(this.children)
+      .forEach(tag_id => {
+        if (this.children[tag_id] === child) {
+          id = tag_id
+        }
+      })
+    return id
+  }
+
+  /**
+   * Return combinason of datatags if to reach given child
+   * @param {(Class_LinkValue | Class_LinkValueTree)} child
+   * @return {*}  {string[]}
+   * @memberof Class_LinkValueTree
+   */
+  public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
+    const id = this.getDataTagIdFromChild(child)
+    if (id) {
+      if (this.parent instanceof Class_LinkValueTree) {
+        const prev_id = this.parent.getDataTagsIdCombination(this)
+        prev_id.push(id)
+        return prev_id
+      }
+      else return [id]
+    }
+    return []
+  }
+
   public toJSON() {
     const tmp: { [x: string]: JSON } = {}
     Object.entries(this.children).forEach(ent_val => {
@@ -3265,22 +3319,6 @@ export class Class_LinkValueTree {
       })
   }
 
-  /**
-   * Find corresponding id for given child
-   * @private
-   * @param {(Class_LinkValue | Class_LinkValueTree)} child
-   * @memberof Class_LinkValueTree
-   */
-  private getDataTagIdFromChild(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
-    let id = undefined
-    Object.keys(this.children)
-      .forEach(tag_id => {
-        if (this.children[tag_id] === child) {
-          id = tag_id
-        }
-      })
-    return id
-  }
 
 
   private removeAndReplaceChild(
@@ -3305,18 +3343,6 @@ export class Class_LinkValueTree {
     }
   }
 
-  public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
-    const id = this.getDataTagIdFromChild(child)
-    if (id) {
-      if (this.parent instanceof Class_LinkValueTree) {
-        const prev_id = this.parent.getDataTagsIdCombination(this)
-        prev_id.push(id)
-        return prev_id
-      }
-      else return [id]
-    }
-    return []
-  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -3557,6 +3583,20 @@ export class Class_LinkValue {
       return this.parent.getDataTagsIdCombination(this)
     else
       return []
+  }
+
+  public get data_tagg() {
+    if (this.parent instanceof Class_LinkValueTree)
+      return this.parent.data_tag_group
+    else
+      return null
+  }
+
+  public get data_tag() {
+    if (this.parent instanceof Class_LinkValueTree)
+      return this.data_tagg?.tags_dict[this.parent.getDataTagIdFromChild(this) ?? ''] ?? null
+    else
+      return null
   }
 }
 

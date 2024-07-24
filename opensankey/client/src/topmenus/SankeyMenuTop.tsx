@@ -285,7 +285,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       <Select style={{ width: '200px', color:'black' }}
         onChange={evt=> {
           sDiagram(evt.target.value)
-          setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+          setDiagram(evt.target.value, set_data, convert_data, get_default_data)
         }}
         value={s_diagram}>
         {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -303,7 +303,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             sDiagram(evt.target.value)
             const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, set_data,convert_data,get_default_data)
+            setDiagram(diagram_path, set_data, convert_data, get_default_data)
           }}
           value={s_diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -315,7 +315,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               sDiagram2(evt.target.value)
               const diagram_path = s_diagram+'/'+evt.target.value
-              setDiagram(diagram_path, set_data,convert_data,get_default_data)
+              setDiagram(diagram_path, set_data, convert_data, get_default_data)
             }}
             value={s_diagram_2}>
             {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
@@ -1040,7 +1040,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ref_setter_show_modal_template.current = set_show_template
   const config_object=applicationData.new_data.menu_configuration
   const {new_data}=applicationData
-  new_data.menu_configuration.updateComponentMenu.current=setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_updater.current=setForceUpdate.toggle
   RepositionneSidebar(show_nav)
 
   const [update, setUpdate] = useState(false)
@@ -1172,10 +1172,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   if (show_data) {
     DDDT = <DataTagSelector
       applicationData={applicationData}
-      node_function={node_function}
-      link_function={link_function}
-      applicationDraw={applicationDraw}
-      ComponentUpdater={ComponentUpdater}
       in_popover={false}
     />
   }
@@ -1198,14 +1194,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
           gridTemplateColumns={menutop_grid_template}
           onClick={() => {
             new_data.drawing_area.node_contextualied = undefined
-            new_data.menu_configuration.update_components_menu_context_node.current()
+            new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
             new_data.drawing_area.link_contextualied = undefined
-            new_data.menu_configuration.update_components_menu_context_link.current()
+            new_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
             new_data.drawing_area.is_drawing_area_contextualised=false
-            new_data.menu_configuration.update_components_menu_context_DA.current()
-            
+            new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+
           }} >
 
           {
@@ -1350,9 +1346,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
             }}
           >
             <DrawerBody zIndex={2}>
-              <SankeyConfigurationMenu
-                configuration_menus={configurations_menus}
-              />
+              {configurations_menus}
             </DrawerBody>
           </DrawerContent>
         </Drawer>
@@ -1373,7 +1367,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <Button
-            ref={new_data.menu_configuration.btn_toogle_menu}
+            ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
             id="toggle-check"
             className='openMenu'
             variant="toolbar_main_button"

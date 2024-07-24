@@ -84,7 +84,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     else
       setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
   }
-  new_data.menu_configuration.ref_to_menu_config_tags_updater.current = updateThis
+  new_data.menu_configuration.ref_to_menu_config_tags_updater[elementTagNameProp].current = updateThis
 
   // Chosen color palette used ----------------------------------------------------------
   // Couleur issues de : https://github.com/d3/d3-scale-chromatic
@@ -143,7 +143,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update this menu
-    updateThis()
+    new_data.menu_configuration.updateAllComponentsRelatedToTagsType(elementTagNameProp)
   }
 
   const updateThisAndRelatedComponents = () => {
@@ -217,39 +217,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     updateThisAndRelatedComponents()
   }
 
-  // --------------------------------------------
-  //add a tags to the selected groupTag
-  // Switch the position of the groupTag with the one before him on the list of grouptag
-  // const handleUpGrpTag = (i: string) => {
-
-  //   const listElmt = Object.keys(data[elementTagNameProp])
-  //   const posElemt = listElmt.indexOf(i)
-  //   listElmt.splice(posElemt, 1)
-  //   listElmt.splice(posElemt - 1, 0, i)
-  //   const new_cat: { [key: string]: TagsGroup } = {}
-  //   listElmt.forEach(elt => {
-  //     new_cat[elt] = data[elementTagNameProp][elt]
-  //   })
-  //   for (const member in data[elementTagNameProp]) delete data[elementTagNameProp][member]
-  //   Object.assign(data[elementTagNameProp], new_cat)
-  //   refreshThis.toggle()
-  // }
-  // // Switch the position of the groupTag with the one after him on the list of grouptag
-  // const handleDownGrpTag = (i: string) => {
-
-  //   const listElmt = Object.keys(data[elementTagNameProp])
-  //   const posElemt = listElmt.indexOf(i)
-  //   listElmt.splice(posElemt, 1)
-  //   listElmt.splice(posElemt + 1, 0, i)
-  //   const new_cat: { [key: string]: TagsGroup } = {}
-  //   listElmt.forEach(elt => {
-  //     new_cat[elt] = data[elementTagNameProp][elt]
-  //   })
-  //   for (const member in data[elementTagNameProp]) delete data[elementTagNameProp][member]
-  //   Object.assign(data[elementTagNameProp], new_cat)
-  //   refreshThis.toggle()
-  // }
-
   // Tags tables ------------------------------------------------------------------------
   let variant_table_edit_tag = 'table_edit_tag_node'
   if (elementTagNameProp == 'flux_taggs') variant_table_edit_tag = 'table_edit_tag_link'
@@ -287,9 +254,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         <Button
           variant='toolbar_button_3'
           height='100%'
-          // backgroundColor='#9E9CFB'
-          // value='rand'
-          // size='sm'
           onClick={() => {
             const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
             const nb_of_colors = tags_entry.length
@@ -309,9 +273,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         <Button
           variant='toolbar_button_4'
           height='100%'
-          // backgroundColor='#9CFBC5'
-          // value='alea'
-          // size='sm'
           onClick={() => {
             // Color swaping between tags
             const colors = tags_entry.map(tag => tag.color)
@@ -610,7 +571,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           variant='menuconfigpanel_option_select_table'
                           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
                             handleBanner(tag_group, (evt.target.value as tag_banner_type))}
-                          value={tags_group_entry.banner}
+                          value={tag_group.banner}
                         >
                           {
                             (elementTagNameProp != 'data_taggs') ?
@@ -619,7 +580,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                                 id='NoneBaner'
                                 value='none'
                               >
-                                {t('Menu.Aucun')}</option> :
+                                {t('Menu.Aucun')}
+                              </option> :
                               <></>
                           }
                           <option

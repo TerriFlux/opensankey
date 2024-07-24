@@ -32,6 +32,7 @@ import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurationTypes'
 
 
+// COMPONENTS ===========================================================================
 /**
  *  Define configuration menu
  *
@@ -50,40 +51,50 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
  * @param { TODO type } token - TODO description
  *
  */
-export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType = (
-  applicationData,
-  applicationState,
-  applicationContext,
-  uiElementsRef,
-  dict_hook_ref_setter_show_dialog_components,
-  menu_configuration_layout,
-  menu_configuration_node_tags,
-  menu_configuration_link_tags,
-  menu_configuration_data_tags,
-  menu_configuration_nodes_attributes,
-  menu_config_link_data,
-  menu_config_link_attr,
-  additional_accordion_edition_elements,
-  link_function,
-  ComponentUpdater,
-  contextMenu,
-  alt_key_pressed,
-  node_function,
-  additionalMenus
-
+export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigurationsMenusFType> = (
+  {
+    applicationData,
+    applicationState,
+    applicationContext,
+    uiElementsRef,
+    dict_hook_ref_setter_show_dialog_components,
+    menu_configuration_layout,
+    menu_configuration_node_tags,
+    menu_configuration_link_tags,
+    menu_configuration_data_tags,
+    menu_configuration_nodes_attributes,
+    menu_config_link_data,
+    menu_config_link_attr,
+    additional_accordion_edition_elements,
+    link_function,
+    ComponentUpdater,
+    contextMenu,
+    alt_key_pressed,
+    node_function,
+    additionalMenus
+  }
 ) => {
-  const { data, new_data } = applicationData
-  const config_object = new_data.menu_configuration
+  // Data -------------------------------------------------------------------------------
+
   const { t } = applicationContext
-  const { links_accordion_ref, nodes_accordion_ref, accordion_ref } = uiElementsRef
-  const { multi_selected_nodes } = applicationState
-  // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
+  const { new_data } = applicationData
+  const config_object = new_data.menu_configuration
+
+  // Component updater ------------------------------------------------------------------
+
+  const [ , refreshThis] = useBoolean()
+  config_object.ref_to_menu_config_updater.current = refreshThis.toggle
+
+  // JSX Component ----------------------------------------------------------------------
+
   const show_menu_config_tag = (
-    (data.accordeonToShow.includes('EN') ||
-      data.accordeonToShow.includes('EF') ||
-      data.accordeonToShow.includes('ED')))
-  return [
-    data.accordeonToShow.includes('MEP') ?
+    config_object.isGivenAccordionShowed('EN') ||
+    config_object.isGivenAccordionShowed('EF') ||
+    config_object.isGivenAccordionShowed('ED')
+  )
+
+  const menu_items = [
+    config_object.isGivenAccordionShowed('MEP') ?
       <AccordionItem>
         {
           //MENU PARAMETRE GENERAUX
@@ -116,7 +127,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
         //MENU ITEMS
       }
       <AccordionButton
-        ref={config_object.btn_accordion_config_elements}
+        ref={config_object.ref_to_btn_accordion_config_elements}
       >
         <Box
           as='span'
@@ -135,7 +146,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               //MENU NODES
             }
             <AccordionButton
-              ref={config_object.btn_accordion_config_node}
+              ref={config_object.ref_to_btn_accordion_config_node}
             >
               <Box
                 as='span'
@@ -163,7 +174,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
               //MENU LINKS
             }
             <AccordionButton
-              ref={config_object.btn_accordion_config_link}
+              ref={config_object.ref_to_btn_accordion_config_link}
             >
               <Box
                 as='span'
@@ -213,7 +224,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
             variant="accordion_sublevel_style"
           >
             <AccordionItem
-              style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'initial' : 'none' }}
+              style={{ 'display': (config_object.isGivenAccordionShowed('EN')) ? 'initial' : 'none' }}
             >
               {
                 //MENU ETIQUETTES DE NOEUDS
@@ -239,7 +250,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
             </AccordionItem>
 
             <AccordionItem
-              style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'initial' : 'none' }}
+              style={{ 'display': (config_object.isGivenAccordionShowed('EF')) ? 'initial' : 'none' }}
             >
               {
                 //MENU ETIQUETTES DE FLUX
@@ -266,7 +277,7 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
             </AccordionItem>
 
             <AccordionItem
-              style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'initial' : 'none' }}
+              style={{ 'display': (config_object.isGivenAccordionShowed('ED')) ? 'initial' : 'none' }}
             >
               {
                 //MENU ETIQUETTES DE DONNÉES
@@ -296,6 +307,14 @@ export const OpenSankeyConfigurationsMenus: OpenSankeyConfigurationsMenusFType =
       </AccordionItem> :
       <></>
   ]
+
+  return (
+    <Accordion allowToggle>
+      {menu_items.map((c: ReactElementLike, i: number) => {
+        return <React.Fragment key={i}>{c}</React.Fragment>
+      })}
+    </Accordion>
+  )
 }
 
 /**

@@ -99,7 +99,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Update values displayed in menus for link's configuration
-    new_data.menu_configuration.updateComponentsSubmenuConfigLink()
+    new_data.menu_configuration.updateAllComponentsRelatedToLinksConfig()
     // Update and update saving indicator
     refreshThisAndToggleSaving()
   }
@@ -125,7 +125,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   if (
     (new_data.drawing_area.sankey.flux_taggs_list.length > 0) &&
-    data.accordeonToShow.includes('EF')
+    (new_data.menu_configuration.isGivenAccordionShowed('EF'))
   ) {
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
       applicationContext={applicationContext}

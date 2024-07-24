@@ -258,7 +258,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update menus for node's apparence in case we use this for style
     if (menu_for_style) {
-      new_data.menu_configuration.updateComponentsMenuConfigLink()
+      new_data.menu_configuration.updateAllComponentsRelatedToLinks()
     }
     // And update this menu also
     refreshThis.toggle()
