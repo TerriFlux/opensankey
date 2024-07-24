@@ -1,7 +1,18 @@
-import { TFunction } from 'i18next'
-import { ComponentUpdaterType,  SankeyData, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, processFunctionsType } from '../../types/Types'
+
 import {MutableRefObject } from 'react'
+import { TFunction } from 'i18next'
+
+import {
+  ComponentUpdaterType,
+  SankeyData,
+  applicationContextType,
+  dict_hook_ref_setter_show_dialog_componentsType,
+  applicationDataType,
+  processFunctionsType
+} from '../../types/Types'
+
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
+import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 
 export type OpenSankeyMenusFType = (
   t:TFunction,
@@ -15,7 +26,7 @@ export type OpenSankeyMenusFType = (
   external_file_export_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   externale_navbar_item:{[_:string]:JSX.Element},
-  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
+  convert_data: ConvertDataFuncType,
   setDiagram: setDiagramFuncType,
 
 ) => {[s:string]:JSX.Element | JSX.Element[]}

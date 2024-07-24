@@ -125,7 +125,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   if (
     (new_data.drawing_area.sankey.flux_taggs_list.length > 0) &&
-    data.accordeonToShow.includes('EF')
+    (new_data.menu_configuration.isGivenAccordionShowed('EF'))
   ) {
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
       applicationContext={applicationContext}

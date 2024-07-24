@@ -54,7 +54,7 @@ test.each(the_tests)( 'tyty',(full_path) => {
   })
 
   const new_data = require(full_path)
-  convert_data(new_data as SankeyData,DefaultSankeyData)
+  convert_data({data: new_data as SankeyData} as applicationDataType, DefaultSankeyData)
   ComputeAutoSankey({data:new_data} as applicationDataType,200,true)
   const base_file_name = path.basename(full_path,'.json')
   const sankey_file_name = path.join(path.dirname(full_path),base_file_name+'_auto_layout.json')

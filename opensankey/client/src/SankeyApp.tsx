@@ -96,13 +96,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   // If there is, store the data in the sankey_data
   if (json_data !== null && json_data != '' && json_data != 'null') {
     const new_data = JSON.parse(json_data)
-
     inital_data = new_data
-
   }
 
   // Logo, names, licences
   const applicationContext = initializeApplicationContext()
+
   // Data, displayed data, default data
   const applicationData = initializeApplicationData(
     data,
@@ -112,7 +111,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     {},
     inital_data
   )
-  // applicationData.new_data = new Class_ApplicationData(window, false)
+  const { new_data } = applicationData
+
   const applicationState = initializeElementSelected()
   applicationState.userScaleRef.current = applicationData.data.user_scale // TODO
   const dict_hook_ref_setter_show_dialog_components = initializeShowDialog()
@@ -128,6 +128,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const processFunctions = initializeProcessFunctions(dict_hook_ref_setter_show_dialog_components)
   const uiElementsRef = initializeUIElementsRef()
+
   /*************************************************************************************************/
 
   const recomputeDisplayedElement=()=>{
@@ -195,19 +196,29 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       applicationData.data.levelTags['Primaire'].activated = false
     }
   }
+
   /*************************************************************************************************/
+
   const agregation : agregationType = {
     showAgregationRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([]),
     isAgregationRef : useRef<boolean>(true),
     agregationNode : useRef<SankeyNode>()
   }
+
   /*************************************************************************************************/
-  const accept_simple_click=useRef(true)
+
+  const accept_simple_click = useRef(true)
   const ref_alt_key_pressed = useRef(false) //TODO
+
   /*************************************************************************************************/
-  const mode_pref=sessionStorage.getItem('modepref')
-  if(mode_pref && mode_pref==='expert' && data.accordeonToShow.length!==6){
-    data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
+  const mode_pref = sessionStorage.getItem('modepref')
+  const menu_config = new_data.menu_configuration
+  if (
+    (mode_pref) &&
+    (mode_pref === 'expert') &&
+    menu_config.accordions_to_show.length !== 6
+  ){
+    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
   }
 
   const link_function = initializeLinkFunctions(
@@ -441,22 +452,24 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   return <ChakraProvider theme={opensankey_theme}>
     <div id='sankey_app' style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
-        {moduleDialogs(
-          applicationContext,
-          applicationData,
-          applicationState,
-          contextMenu,
-          applicationDraw,
-          uiElementsRef,
-          dict_hook_ref_setter_show_dialog_components,
-          node_function,
-          link_function,
-          ComponentUpdater,
-          additionalMenus,
-          menu_configuration_nodes_attributes,
-          applicationDraw.reDrawLegend,
-          processFunctions
-        ).map(e=>e)}
+        {
+          moduleDialogs(
+            applicationContext,
+            applicationData,
+            applicationState,
+            contextMenu,
+            applicationDraw,
+            uiElementsRef,
+            dict_hook_ref_setter_show_dialog_components,
+            node_function,
+            link_function,
+            ComponentUpdater,
+            additionalMenus,
+            menu_configuration_nodes_attributes,
+            applicationDraw.reDrawLegend,
+            processFunctions
+          ).map(e=>e)
+        }
         <>
           <Menu
             applicationContext={applicationContext}
@@ -500,15 +513,28 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                   />
                 }/>
               </React.Fragment>,
-              <React.Fragment key={'modale_preference'}><ModalPreference
-                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-                ui={Object.values(regular_ui).map(d=>{
-                  return <>{d}<hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} /></>
-                })}
-                t={applicationContext.t}
-                pointer_pos={contextMenu.pointer_pos}
+              <React.Fragment key={'modale_preference'}>
+                <ModalPreference
+                  dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+                  ui={Object.values(regular_ui).map(d=>{
+                    return <>
+                      {d}
+                      <hr
+                        style={{
+                          borderStyle: 'none',
+                          margin: '10px',
+                          color: 'grey',
+                          backgroundColor: 'grey',
+                          height: 1
+                        }}
+                      />
+                    </>
+                  })}
+                  t={applicationContext.t}
+                  pointer_pos={contextMenu.pointer_pos}
 
-              /></React.Fragment> ,
+                />
+              </React.Fragment>,
               <></>
             ]}
             Reinitialization={Reinitialization}

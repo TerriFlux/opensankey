@@ -43,6 +43,12 @@ export class Class_MenuConfig {
     Updater of component in the configuration menu
     ========================================*/
 
+  // List of accordions to show
+  private _accordions_to_show: string[] = []
+
+  // Update component OpenSankeyConfigurationsMenus
+  private _ref_to_menu_config_updater: MutableRefObject<() => void>
+
   // Update component OpenSankeyMenuConfigurationLayout
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
 
@@ -133,6 +139,7 @@ export class Class_MenuConfig {
     // Init menu component updater ------------------------------------------------------
 
     this._ref_to_menu_updater = useRef(() => null)
+    this._ref_to_menu_config_updater = useRef(() => null)
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -177,6 +184,32 @@ export class Class_MenuConfig {
   }
 
   // PUBLIC METHODS =====================================================================
+
+  public addToAccordionsToShow(_: string) {
+    if (!this.isGivenAccordionShowed(_)) {
+      this._accordions_to_show.push(_)
+      this._ref_to_menu_config_updater.current()
+    }
+  }
+
+  public removeFromAccordionsToShow(_: string) {
+    if (this.isGivenAccordionShowed(_)) {
+      this._accordions_to_show = this._accordions_to_show
+        .filter(to_show => to_show !== _)
+      this._ref_to_menu_config_updater.current()
+    }
+  }
+
+  public toggleGivenAccordion(_:string) {
+    if (this.isGivenAccordionShowed(_))
+      this.removeFromAccordionsToShow(_)
+    else
+      this.addToAccordionsToShow(_)
+  }
+
+  public isGivenAccordionShowed(_: string) {
+    return this._accordions_to_show.includes(_)
+  }
 
   /**
    * Open menu configuration
@@ -295,7 +328,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_link_updater.current()
     this._ref_to_menu_config_link_tags_updater.current()
     this._ref_to_menu_config_link_data_updater.current()
-    this.ref_to_toolbar_updater.current()
+    this._ref_to_toolbar_updater.current()
   }
 
   public updateAllComponentsRelatedToLevelTags() {
@@ -343,7 +376,8 @@ export class Class_MenuConfig {
   public OpenConfigMenuElementsLinks() {
     if (
       this._ref_to_btn_accordion_config_link.current &&
-      d3.select(this._ref_to_btn_accordion_config_link.current).attr('aria-expanded') === 'false'
+      d3.select(this._ref_to_btn_accordion_config_link.current)
+        .attr('aria-expanded') === 'false'
     ) {
       this._ref_to_btn_accordion_config_link.current.click()
     }
@@ -359,6 +393,15 @@ export class Class_MenuConfig {
 
   // Accordion menu openers -------------------------------------------------------------
 
+  public get accordions_to_show() {
+    return this._accordions_to_show
+  }
+
+  public set accordions_to_show(_: string[]) {
+    this._accordions_to_show = _
+    this._ref_to_menu_config_updater.current()
+  }
+
   public get ref_to_btn_toogle_menu(): RefObject<HTMLButtonElement> {
     return this._ref_to_btn_toogle_menu
   }
@@ -373,6 +416,10 @@ export class Class_MenuConfig {
 
   public get ref_to_btn_accordion_config_link(): RefObject<HTMLButtonElement> {
     return this._ref_to_btn_accordion_config_link
+  }
+
+  public get ref_to_menu_config_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_updater
   }
 
   // Layout  menus ----------------------------------------------------------------------
