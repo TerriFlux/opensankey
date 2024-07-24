@@ -30,9 +30,11 @@ export   const os_all_element_to_transform = [
  * @returns {*}
  */
 export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
-  t,dict_hook_ref_setter_show_dialog_components,
+  t,
+  dict_hook_ref_setter_show_dialog_components,
   applicationData,
-  applicationDraw,convert_data,
+  applicationDraw,
+  convert_data,
   diagramSelector,
   apply_transformation_additional_elements,
   DefaultSankeyData,

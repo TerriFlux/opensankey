@@ -285,7 +285,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       <Select style={{ width: '200px', color:'black' }}
         onChange={evt=> {
           sDiagram(evt.target.value)
-          setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+          setDiagram(evt.target.value, set_data, convert_data, get_default_data)
         }}
         value={s_diagram}>
         {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -303,7 +303,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             sDiagram(evt.target.value)
             const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, set_data,convert_data,get_default_data)
+            setDiagram(diagram_path, set_data, convert_data, get_default_data)
           }}
           value={s_diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -315,7 +315,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               sDiagram2(evt.target.value)
               const diagram_path = s_diagram+'/'+evt.target.value
-              setDiagram(diagram_path, set_data,convert_data,get_default_data)
+              setDiagram(diagram_path, set_data, convert_data, get_default_data)
             }}
             value={s_diagram_2}>
             {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
@@ -1346,9 +1346,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
             }}
           >
             <DrawerBody zIndex={2}>
-              <SankeyConfigurationMenu
-                configuration_menus={configurations_menus}
-              />
+              {configurations_menus}
             </DrawerBody>
           </DrawerContent>
         </Drawer>
