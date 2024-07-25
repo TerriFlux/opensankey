@@ -32,6 +32,7 @@ import {
   Class_Tag,
   Class_TagGroup,
 } from './Tag'
+import { default_style_id } from './Sankey'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -558,73 +559,36 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public toJSON() {
-    const json_object = {} as { [_: string]: unknown }
-
-    json_object['idLink'] = this.id
+    // Root attributes
+    const json_object = super.toJSON()
+    // Related nodes
     json_object['idSource'] = this._source.id
     json_object['idTarget'] = this._target.id
-
-    json_object['style'] = Object.entries(this.drawing_area.sankey.link_styles_dict).filter(stl => stl[1] === (this._display.style))[0][0]
-
+    // Fill style & local attributes
+    json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
-
+    // Values
     json_object['value'] = this._values.toJSON()
-
+    // Out
     return json_object
   }
 
   public fromJSON(json_object: { [x: string]: any }) {
-
-    this._display.style = this.drawing_area.sankey.link_styles_dict[json_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
-
+    // Root attributes
+    super.fromJSON(json_object)
+    // Related nodes
+    const source_node_id = json_object['idSource']
+    this.drawing_area.sankey.nodes_dict[source_node_id]?.addOutputLink(this)
+    const target_node_id = json_object['idTarget']
+    this.drawing_area.sankey.nodes_dict[target_node_id]?.addInputLink(this)
+    // Get style & local attributes
+    const style_id = json_object['style'] ?? default_style_id
+    this._display.style = this.drawing_area.sankey.link_styles_dict[style_id]
     if (json_object['local']) {
       this._display.attributes.fromJSON(json_object['local'])
     }
-
-    this.setValueFromJSON(json_object['value'])
-  }
-
-  /**
-   * Function that assign link value to correct path from JSON file
-   *
-   * @private
-   * @param {{[x:string]:any}} obj
-   * @memberof Class_LinkElement
-   */
-  private setValueFromJSON(obj: { [x: string]: any }) {
-    const list_dataTag_combinaison = this.drawing_area.sankey.list_combinatorial_data_taggs_path
-    // case 1: sankey doesn't have data_taggs (we assume it mean link value is just :{value:number,display_value:string,extensions:{}})
-    if (list_dataTag_combinaison.length == 0) {
-
-      (this._values as Class_LinkValue).data_value = obj.data_value;
-      (this._values as Class_LinkValue).text_value = obj.text_value_value
-
-    }
-    // case 2: sankey has data_taggs
-    else {
-
-      const allPath = allPossibleCases(list_dataTag_combinaison)
-
-      // Get all possible path with actual data_taggs
-      const list_data_taggs = this.drawing_area.sankey.data_taggs_list
-      // Get each value (if present, otherwise return null) of each path for this link
-      allPath.forEach(path => {
-        const cpy_path = structuredClone(path)
-        const list_tag = cpy_path.map((tag_id, idx) => {
-          return list_data_taggs[idx].tags_dict[tag_id]
-        })
-
-        const valForPath = recursiveCallLinkValueJSON(cpy_path, obj);
-
-        if (valForPath.data_value !== undefined) {
-          (this._values as Class_LinkValueTree).setDataValueForDataTags(list_tag, valForPath.data_value)
-        }
-
-        if (valForPath.text_value !== undefined) {
-          (this._values as Class_LinkValueTree).setTextValueForDataTags(list_tag, valForPath.text_value)
-        }
-      })
-    }
+    // Get value
+    this._values.fromJSON(json_object['value'])
   }
 
   // PROTECTED METHODS ==================================================================
@@ -2068,7 +2032,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.drawControlPoint()
   }
 
-
   /**
    * TODO Description
    * @memberof Class_LinkElement
@@ -2575,6 +2538,9 @@ export class Class_LinkElement extends Class_ProtoElement {
  * @class Class_LinkAttribute
  */
 export class Class_LinkAttribute {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
   // Shape type
   protected _shape_is_curved?: boolean
   protected _shape_curvature?: number
@@ -2617,6 +2583,7 @@ export class Class_LinkAttribute {
   protected _value_label_unit?: string
 
   // CONSTRUCTOR ========================================================================
+
   constructor() { }
 
   // PUBLIC METHODES ====================================================================
@@ -2752,7 +2719,10 @@ export class Class_LinkAttribute {
   public set shape_is_recycling(_: boolean | undefined) { this._shape_is_recycling = _; this.update() }
 
   // Shape orientation
-  public set shape_orientation(_: Type_Orientation | undefined) { this._shape_orientation = _; this.update() }
+  public set shape_orientation(_: Type_Orientation | undefined) {
+    this._shape_orientation = _
+    this.update()
+  }
   public set shape_starting_curve(_: number | undefined) {
     if (_ !== undefined) {
       if (
@@ -2808,6 +2778,7 @@ export class Class_LinkAttribute {
     this.update()
   }
 
+  // TODO remove
   public set shape_vert_shift(_: number | undefined) { this._shape_vert_shift = _; this.update() }
 
   // Shape's arrow attributes
@@ -2973,8 +2944,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   public set name(_: string) { this._name = _ }
 }
 
-
-// CLASS LINK TREE VALUE **********************************************************************
+// CLASS LINK TREE VALUE ****************************************************************
 
 /**
  * Define a node for value
@@ -3276,11 +3246,20 @@ export class Class_LinkValueTree {
   }
 
   public toJSON() {
-    const tmp: { [x: string]: JSON } = {}
-    Object.entries(this.children).forEach(ent_val => {
-      tmp[ent_val[0]] = ent_val[1].toJSON()
-    })
-    return tmp
+    const json_object: { [x: string]: JSON } = {}
+    Object.entries(this.children)
+      .forEach(([id, child]) => {
+        json_object[id] = child.toJSON()
+      })
+    return json_object
+  }
+
+  public fromJSON(json_object: { [x: string]: any }) {
+    // All parentality relations are sets via sankey struct with fromJSON + addDataTag
+    Object.entries(json_object)
+      .forEach(([id, sub_json_object]) => {
+        this.children[id]?.fromJSON(sub_json_object)
+      })
   }
 
   // PRIVATE METHODS ====================================================================
@@ -3319,8 +3298,6 @@ export class Class_LinkValueTree {
       })
   }
 
-
-
   private removeAndReplaceChild(
     child: Class_LinkValue | Class_LinkValueTree,
     new_child: Class_LinkValue | Class_LinkValueTree
@@ -3343,16 +3320,15 @@ export class Class_LinkValueTree {
     }
   }
 
-
   // GETTERS / SETTERS ==================================================================
 
   public get link(): Class_LinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
-
 }
 
+// CLASS LINK VALUE *********************************************************************
 /**
  * Define a link value object
  *
@@ -3475,6 +3451,12 @@ export class Class_LinkValue {
     }
   }
 
+  /**
+   * Extract this link value as JSON
+   *
+   * @return {*}
+   * @memberof Class_LinkValue
+   */
   public toJSON() {
     // Init output JSON
     const json_object: { [_: string]: unknown } = {}
@@ -3487,15 +3469,23 @@ export class Class_LinkValue {
           tagg.id,
           this.flux_tags_list
             .filter(tag => (tag.group === tagg))
+            .map(tag => tag.id)
         ]))
     // Output
     return json_object
   }
 
+  /**
+   * Read this link value from JSON
+   *
+   * @param {{ [x: string]: any }} json_object
+   * @memberof Class_LinkValue
+   */
   public fromJSON(json_object: { [x: string]: any }) {
+    // Update attributes
     this.data_value = json_object['data_value'] ?? null
     this.text_value = json_object['text_value'] ?? null
-
+    // Get Flux tags
     // In JSON here are how supposed tags var is :
     // tags: {key_grp_tag: [key_tag, ...] }
     // where 'key_grp_tag' represent the id of a flux tag group
@@ -3503,14 +3493,14 @@ export class Class_LinkValue {
     // for that flux tag group
     const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
-      .filter(tagg_ent =>
-        (tagg_ent[0] in flux_taggs_dict) &&
-        (tagg_ent[1] as string[]).length > 0)
-      .forEach(tagg_ent => {
-        const tagg = flux_taggs_dict[tagg_ent[0]]
-        Object.entries(tagg?.tags_dict ?? {})
-          .filter(tag_ent => tag_ent[0] in (tagg_ent[1] as string[]))
-          .forEach(tag_ent => this.addTag(tag_ent[1]))
+      .filter(([tagg_id, tag_ids]) =>
+        (tagg_id in flux_taggs_dict) &&
+        (tag_ids as string[]).length > 0)
+      .forEach(([tagg_id, tag_ids]) => {
+        const tagg = flux_taggs_dict[tagg_id]
+        tagg.tags_list
+          .filter(tag => tag.id in (tag_ids as string[]))
+          .forEach(tag => this.addTag(tag))
       })
   }
 
@@ -3600,60 +3590,6 @@ export class Class_LinkValue {
   }
 }
 
-function allPossibleCases(arr: string[][]): string[][] {
-  if (arr.length == 1) {
-    return arr[0] as any
-  } else {
-    const result = []
-    const allCasesOfRest = allPossibleCases(arr.slice(1)) // recur with the rest of array
-    for (let i = 0; i < allCasesOfRest.length; i++) {
-      for (let j = 0; j < arr[0].length; j++) {
-        const tmp = [arr[0][j], allCasesOfRest[i]]
-        result.push(tmp.flat())
-      }
-    }
-    return result as any
-  }
-}
-
-type JSONifiedLinkValue = {
-  data_value: number,
-  text_value: string
-  tags: { [_: string]: Class_Tag }
-}
-/**
- * function that get value for link from JSON with a given path
- *
- * @param {string[]} path
- * @param {{ [x: string]: any }} JSONValue
- * @return {*}  {(number | null)}
- */
-function recursiveCallLinkValueJSON(
-  path: string[],
-  JSONValue: { [x: string]: any }): JSONifiedLinkValue {
-  if (path.length > 0) {
-    const next_tag = path.shift() as string
-    if (next_tag in JSONValue)
-      return recursiveCallLinkValueJSON(path, JSONValue[next_tag]) // if JSON has next tag_id
-    else
-      return {} as JSONifiedLinkValue // if JSON doesn't have next tag_id that would mean an error in JSON file or it is not defined in JSON
-  }
-  else {
-    const val = {} as JSONifiedLinkValue
-    if (JSONValue.data_value) {
-      val['data_value'] = JSONValue.data_value
-    }
-
-    if (JSONValue.text_value) {
-      val['text_value'] = JSONValue.text_value
-    }
-
-    // TODO return flux_taggs associated to this link value
-
-    return val
-
-  }
-}
 
 // CLASS GHOST LINK *********************************************************************
 export class Class_GhostLinkElement extends Class_LinkElement {

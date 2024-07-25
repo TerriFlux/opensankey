@@ -35,6 +35,7 @@ import {
   Type_Side,
   Class_GhostLinkElement
 } from './Link'
+import { default_style_id } from './Sankey'
 
 
 
@@ -125,6 +126,7 @@ export class Class_NodeElement extends Class_Element {
   private _name: string
 
   // Name Labels
+  // TODO get from application data
   private _name_label_separator: string = ''
 
   // Related links
@@ -142,6 +144,7 @@ export class Class_NodeElement extends Class_Element {
 
   // Node tags
   private _tags: { [_: string]: Class_Tag } = {}
+  // TODO Create level tags
 
   // Level & Parent
   // Dimensions
@@ -153,7 +156,6 @@ export class Class_NodeElement extends Class_Element {
 
   // Reference to link dragged when we drag a handle
   private _link_dragged: Class_LinkElement | undefined
-
 
   // CONSTRUCTOR ========================================================================
 
@@ -444,6 +446,7 @@ export class Class_NodeElement extends Class_Element {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
+      link.target = this
       this.addLinkMoveOrderHandle(link, true)
       this.updateInputValue()
       this.drawLinks()
@@ -455,12 +458,12 @@ export class Class_NodeElement extends Class_Element {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
+      link.source = this
       this.addLinkMoveOrderHandle(link, false)
       this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
     }
-    //todo finir
   }
 
   /**
@@ -524,92 +527,111 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public toJSON() {
-    // Init output JSON
-    const json_object: { [_: string]: unknown } = {}
-    // Fill dara
-    json_object['idNode'] = this.id
-    json_object['name'] = this.name
+    // Extract root attributes
+    const json_object = super.toJSON()
+    json_object['name'] = this._name
+    // Fill displaying values
     json_object['position'] = this.position_type
     json_object['x'] = this.position_x
     json_object['y'] = this.position_y
-    json_object['tooltip_text'] = this.tooltip_text
-    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
-    json_object['style'] = Object.entries(this.drawing_area.sankey.node_styles_dict).filter(stl => stl[1] === (this.style))[0][0]
-    json_object['dimensions'] = Object.fromEntries(Object.entries(this.dimensions).map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
-    json_object['links_order'] = this._links_order.map(link => link.id)
-    json_object['local'] = this._display.attributes.toJSON()
     json_object['x_label'] = this._display._x_label
     json_object['y_label'] = this._display._y_label
-
-    json_object['tags'] = Object.fromEntries(
-      this.taggs_list
-        .map(tagg => [
-          tagg.id,
-          this.tags_list
-            .filter(tag => (tag.group === tagg))
-        ]))
+    // Fill style & local attributes
+    json_object['style'] = this.style.id
+    json_object['local'] = this._display.attributes.toJSON()
+    // Tooltip
+    json_object['tooltip_text'] = this.tooltip_text
+    // Tags
+    json_object['tags'] = this.taggs_list
+      .map(tagg => [
+        tagg.id,
+        this.tags_list
+          .filter(tag => (tag.group === tagg))
+          .map(tag => tag.id)
+      ])
+    // Dimension
+    // TODO Revoir avec leveltags
+    json_object['dimensions'] = Object.fromEntries(
+      Object.entries(this.dimensions)
+        .map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
+    // Links
+    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+    json_object['links_order'] = this._links_order.map(link => link.id)
     // Return
     return json_object
   }
 
   /**
    * Assign to node implementation values from json,
-   * json_node_object is a json of 1 node
-   *
+   * Does not assign links -> need to read links from JSON before
    *
    * @param {{ [x: string]: any }} json_node_object
    * @memberof Class_NodeElement
    */
   public fromJSON(json_node_object: { [x: string]: any }) {
-
+    // Get root attributes
+    super.fromJSON(json_node_object)
+    this._name = json_node_object['name'] ?? this._name
+    // Update displaying values
     this._display.position.type = json_node_object['position'] ?? default_element_position.type
     this._display.position.x = json_node_object['x'] ?? default_element_position.x
     this._display.position.y = json_node_object['y'] ?? default_element_position.y
     this._display._x_label = json_node_object['x_label']
     this._display._y_label = json_node_object['y_label']
-
-    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
-
-    //  Input & output link should be automatically added when we create link from json
-
-    this._display.style = this.drawing_area.sankey.node_styles_dict[json_node_object['style'] ?? 'default'] // if json_node_object['style'] is undefined assign default style
-
+    // Update style & local attributes
+    const style_id = json_node_object['style'] ?? default_style_id
+    this._display.style = this.drawing_area.sankey.node_styles_dict[style_id]
     if (json_node_object['local']) {
       this._display.attributes.fromJSON(json_node_object['local'])
     }
-
-    // In JSON here are how supposed tags var is :
-    // tags:{key_grp_tag:string[] (key_tag_selected) }
-    // where 'key_grp_tag' represent the id of a node_taggs group
-    // &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
+    // Tooltip
+    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
+    // Node Tags
+    //   In JSON here are how supposed tags var is :
+    //   tags:{key_grp_tag:string[] (key_tag_selected) }
+    //   where 'key_grp_tag' represent the id of a node_taggs group
+    //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
     Object.entries(json_node_object['tags'] ?? {})
-      .filter(tagg_ent =>
-        (tagg_ent[0] in this.drawing_area.sankey.node_taggs_dict) &&
-        (tagg_ent[1] as string[]).length > 0)
-      .forEach(tagg_ent => {
-        const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_ent[0]]
-        Object.entries(tagg.tags_dict)
-          .filter(tag_ent => tag_ent[0] in (tagg_ent[1] as string[]))
-          .forEach(tag_ent => this.addTag(tag_ent[1]))
+      .filter(([tagg_id, tag_ids]) =>
+        (tagg_id in this.drawing_area.sankey.node_taggs_dict) &&
+        (tag_ids as string[]).length > 0)
+      .forEach(([tagg_id, tag_ids]) => {
+        const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_id]
+        tagg.tags_list
+          .filter(tag => tag.id in (tag_ids as string[]))
+          .forEach(tag => this.addTag(tag))
       })
-
     // Same thing but for level tag
-    Object.entries(json_node_object['tags'] ?? {})
-      .filter(tagg_ent =>
-        (tagg_ent[0] in this.drawing_area.sankey.level_taggs_dict) &&
-        (tagg_ent[1] as string[]).length > 0)
-      .forEach(tagg_ent => {
-        const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_ent[0]]
-        Object.entries(tagg.tags_dict)
-          .filter(tag_ent => tag_ent[0] in (tagg_ent[1] as string[]))
-          .forEach(tag_ent => this.addTag(tag_ent[1]))
-      })
+    // TODO Revoir
+    // Object.entries(json_node_object['tags'] ?? {})
+    //   .filter(([tagg_id, tag_ids])  =>
+    //     (tagg_id in this.drawing_area.sankey.level_taggs_dict) &&
+    //     (tag_ids as string[]).length > 0)
+    //   .forEach(([tagg_id, tag_ids])  => {
+    //     const tagg = this.drawing_area.sankey.level_taggs_dict[tagg_id]
+    //     tagg.tags_list
+    //       .filter(tag => tag.id in (tag_ids as string[]))
+    //       .forEach(tag => this.addTag(tag))
+    //   })
   }
 
-  public fromJSONLinksOrder(json_node_object: { [x: string]: any }) {
-    const new_order: Class_LinkElement[] = json_node_object['links_order'].map((lid: string) => { return this.drawing_area.sankey.links_dict[lid] })
-    this._links_order = new_order
+  public linksFromJSON(json_node_object: { [x: string]: any }) {
+    // Input links
+    const input_link_ids: string[] = json_node_object['inputLinksId'] ?? []
+    input_link_ids.forEach(link_id => {
+      this.addInputLink(this.drawing_area.sankey.links_dict[link_id])
+    })
+    // Output links
+    const output_link_ids: string[] = json_node_object['outputLinksId'] ?? []
+    output_link_ids.forEach(link_id => {
+      this.addOutputLink(this.drawing_area.sankey.links_dict[link_id])
+    })
+    // Ordering
+    const ordered_link_ids: string[] = json_node_object['links_order'] ?? []
+    this._links_order = ordered_link_ids.map(link_id => {
+      return this.drawing_area.sankey.links_dict[link_id]
+    })
   }
 
   /**
@@ -845,10 +867,6 @@ export class Class_NodeElement extends Class_Element {
       const width = this.getShapeWidthToUse()
       const height = this.getShapeHeightToUse()
       const color = this.getShapeColorToUse()
-      // Get drawing scale
-      const scale = d3.scaleLinear()
-        .range([0, 100])
-        .domain([0, this.drawing_area.scale])
       // Apply shape value
       if (this.shape_type === 'rect') {
         this.d3_selection?.append('rect')

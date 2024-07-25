@@ -17,6 +17,7 @@ import {
   Class_LinkElement,
   Class_LinkStyle,
   defaultLinkId,
+  sortDisplayedLinksElements,
   sortLinksElements
 } from './Link'
 import {
@@ -79,6 +80,7 @@ export class Class_Sankey {
   private _level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
 
   // Variable determining if we apply tag color to elements
+  // TODO inutile desormais -> a supprimer
   private _color_map: string
   private _nodes_color_map: string
   private _links_color_map: string
@@ -118,409 +120,31 @@ export class Class_Sankey {
   }
 
   public delete(){
+    // Properly delete all nodes & link
     this.nodes_list.forEach(n=>{
-      n.delete()
+      n.delete() // Will also trigger delete() on links
     })
     this._nodes={}
     this._links={}
-
+    // Properly delete all node styles
     this.node_styles_list.forEach(sn=>{
       sn.delete()
     })
     this._node_styles={}
-
+    // Properly delete all link styles
     this.link_styles_list.forEach(sl=>{
       sl.delete()
     })
     this._link_styles={}
-
-    this.getTagGroupsAsList('node_taggs').forEach(grp=>grp.delete())
-    this.getTagGroupsAsList('flux_taggs').forEach(grp=>grp.delete())
-    this.getTagGroupsAsList('data_taggs').forEach(grp=>grp.delete())
-    this.getTagGroupsAsList('level_taggs').forEach(grp=>grp.delete())
-
+    // Properly delete all tags groups -> will delete related tags also
+    this.node_taggs_list.forEach(grp=>grp.delete())
+    this.flux_taggs_list.forEach(grp=>grp.delete())
+    this.data_taggs_list.forEach(grp=>grp.delete())
+    this.level_taggs_list.forEach(grp=>grp.delete())
     this._node_taggs={}
     this._flux_taggs={}
     this._data_taggs={}
     this._level_taggs={}
-
-
-
-  }
-
-  // GETTERS / SETTERS ==================================================================
-
-  public get color_map(): string { return this._color_map }
-  public set color_map(value: string) { this._color_map = value }
-
-  public get nodes_color_map(): string { return this._nodes_color_map }
-  public set nodes_color_map(value: string) { this._nodes_color_map = value }
-
-  public get links_color_map(): string { return this._links_color_map }
-  public set links_color_map(value: string) { this._links_color_map = value }
-
-  public get filter_displayed_link_selector(): boolean { return this._filter_displayed_link_selector }
-  public set filter_displayed_link_selector(value: boolean) { this._filter_displayed_link_selector = value }
-
-  public get filter_displayed_node_selector(): boolean { return this._filter_displayed_node_selector }
-  public set filter_displayed_node_selector(value: boolean) { this._filter_displayed_node_selector = value }
-
-
-  // Nodes related ----------------------------------------------------------------------
-
-  /**
-   * Get all nodes as dict
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get nodes_dict() {
-    return this._nodes
-  }
-
-  /**
-   * Get all nodes as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get nodes_list() {
-    return Object.values(this._nodes)
-  }
-
-  /**
-   * Get all nodes sorted by their names as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get nodes_list_sorted() {
-    return this.nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
-  /**
-   * Get all visible nodes as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get visible_nodes_list() {
-    return Object.values(this._nodes)
-      .filter(node => node.is_visible)
-  }
-
-  /**
-   * Get all nodes sorted by their names as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get visible_nodes_list_sorted() {
-    return this.visible_nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
-  // Links related ----------------------------------------------------------------------
-
-  /**
-   * Return a dict with all the links of the sankey
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get links_dict() {
-    return this._links
-  }
-
-  /**
-   * Return a list with all the links of the sankey
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get links_list() {
-    return Object.values(this._links)
-  }
-
-  /**
-   * Get all nodes sorted by their names as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get links_list_sorted() {
-    return this.links_list
-      .sort((a, b) => sortLinksElements(a, b))
-  }
-
-  /**
-   * Get all visible links as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get visible_links_list() {
-    return Object.values(this._links)
-      .filter(node => node.is_visible)
-  }
-
-  /**
-   * Get all links sorted by their names as a list
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get visible_links_list_sorted() {
-    return this.visible_links_list
-      .sort((a, b) => sortLinksElements(a, b))
-  }
-
-  // Styles related ---------------------------------------------------------------------
-
-  /**
-   * Return the object containing all the style
-   * @readonly
-   * @memberof Class_ApplicationData
-   */
-  public get node_styles_dict() {
-    return this._node_styles
-  }
-
-  /**
-   * Return default style for nodes
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get default_node_style() {
-    return this._node_styles[default_style_id]
-  }
-
-  /**
-   * Return all the style as a list
-   * @readonly
-   * @memberof Class_ApplicationData
-   */
-  public get node_styles_list() {
-    return Object.values(this._node_styles)
-  }
-
-  /**
-   * Return all the style as a sorted list
-   * @readonly
-   * @memberof Class_ApplicationData
-   */
-  public get node_styles_list_sorted() {
-    return this.node_styles_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
-  /**
-   * Return the object containing all the style
-   * @readonly
-   * @memberof Class_ApplicationData
-   */
-  public get link_styles_dict() {
-    return this._link_styles
-  }
-
-  /**
-   * Return default link style
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get default_link_style() {
-    return this._link_styles[default_style_id]
-  }
-
-  /**
-   * Return all the style as a list
-   * @readonly
-   * @memberof Class_ApplicationData
-   */
-  public get link_styles_list() {
-    return Object.values(this._link_styles)
-  }
-
-  /**
-   * Return all the style as a sorted list
-   * @readonly
-   * @memberof Class_ApplicationData
-   */
-  public get link_styles_list_sorted() {
-    return this.link_styles_list
-      .sort((a, b) => sortLinksElements(a, b))
-  }
-
-  // Tags related -----------------------------------------------------------------------
-
-  public get node_taggs_dict() {
-    return this._node_taggs
-  }
-
-  public get node_taggs_list() {
-    return Object.values(this._node_taggs)
-  }
-
-  public get flux_taggs_dict() {
-    return this._flux_taggs
-  }
-
-  public get flux_taggs_list() {
-    return Object.values(this._flux_taggs)
-  }
-
-  public get data_taggs_dict() {
-    return this._data_taggs
-  }
-
-  public get data_taggs_list() {
-    return Object.values(this._data_taggs)
-  }
-
-  public get data_taggs_entries() {
-    return Object.entries(this._data_taggs)
-  }
-
-  /**
-   * Return an array  of id of tag selected of that data_taggs
-   *
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get selected_data_tags_list() {
-    const data_tags: Class_DataTag[] = []
-    this.data_taggs_list.forEach(data_tagg => {
-      data_tags.push(...data_tagg.selected_tags_list)
-    })
-    return data_tags
-  }
-
-  /**
-   * Return an object wherekey are data_taggs id ,
-   * and value an array of id of tag selected of that data_taggs
-   *
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get selected_data_tags_entries() {
-    const obj_data_tags_selected: { [x: string]: Class_DataTag } = {}
-    this.data_taggs_list.forEach(data_tagg => {
-      obj_data_tags_selected[data_tagg.id] = data_tagg.selected_tags_list[0]
-    })
-    return obj_data_tags_selected
-  }
-
-  /**
-   * Return an array of possible path to link value,
-   * it use the combinitation of all tags from different data_taggs
-   *
-   * Exemple :
-   * [
-   *
-   * [grp1_key1,grp2_key1],
-   *
-   * [grp1_key1,grp2_key2],
-   *
-   * [grp1_key2,grp2_key1],
-   *
-   * [grp1_key2,grp2_key2],
-   * ...
-   * ]
-   * *
-   * @readonly
-   * @memberof Class_Sankey
-   */
-  public get list_combinatorial_data_taggs_path() {
-    const list_tag_by_grp: string[][] = []
-    this.data_taggs_list.forEach(data_tagg => {
-      list_tag_by_grp.push(data_tagg.tags_list.map(tag => tag.id))
-    })
-    return list_tag_by_grp
-  }
-
-  public get level_taggs_dict() {
-    return this._level_taggs
-  }
-
-  public get level_taggs_list() {
-    return Object.values(this._level_taggs)
-  }
-
-  // PRIVATE METHODS ====================================================================
-
-  // Nodes related ----------------------------------------------------------------------
-
-  /**
-   * Add a given node to Sankey
-   * @param {Class_Node} node
-   * @memberof Class_Sankey
-   */
-  private _addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
-
-  // Links related ----------------------------------------------------------------------
-
-  /**
-   * Add a given link to Sankey
-   * @param {Class_LinkElement} link
-   * @memberof Class_Sankey
-   */
-  private _addLink(link: Class_LinkElement) {
-    this._links[link.id] = link
-  }
-
-  /**
-   * Create a new link from source to target.
-   * Check that we always have unique id
-   *
-   * @private
-   * @param {string} id
-   * @param {Class_NodeElement} source
-   * @param {Class_NodeElement} target
-   * @return {*}  {Class_LinkElement}
-   * @memberof Class_Sankey
-   */
-  private _addNewLink(
-    id: string,
-    source: Class_NodeElement,
-    target: Class_NodeElement,
-  ): Class_LinkElement {
-    if (!this._links[id]) {
-      const link = new Class_LinkElement(
-        id,
-        source,
-        target,
-        this.drawing_area,
-        this.menu_config)
-      this._addLink(link)
-      return link
-    }
-    else {
-      return this._addNewLink(
-        id + ' (dup)',
-        source,
-        target)
-    }
-  }
-
-  // Style related ----------------------------------------------------------------------
-
-  private _addNewNodeStyle(
-    id: string,
-    name: string
-  ): Class_NodeStyle {
-    if (!this._node_styles[id]) {
-      const style = new Class_NodeStyle(id, name, true)
-      this._node_styles[id] = style
-      return style
-    }
-    else {
-      return this._addNewNodeStyle(id + ' (dup)', name)
-    }
-  }
-
-  private _addNewLinkStyle(
-    id: string,
-    name: string
-  ): Class_LinkStyle {
-    if (!this._link_styles[id]) {
-      const style = new Class_LinkStyle(id, name, true)
-      this._link_styles[id] = style
-      return style
-    }
-    else {
-      return this._addNewLinkStyle(id + ' (dup)', name)
-    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -830,6 +454,51 @@ export class Class_Sankey {
     }
   }
 
+  public toJSON() {
+    // Create json struct
+    const json_object = {} as { [_: string]: any }
+    // Add tag groups
+    json_object['levelTags'] = {}
+    this.level_taggs_list.forEach(tagg => {
+      json_object['levelTags'][tagg.id] = tagg.toJSON()
+    })
+    json_object['nodeTags'] = {}
+    this.node_taggs_list.forEach(tagg => {
+      json_object['nodeTags'][tagg.id] = tagg.toJSON()
+    })
+    json_object['fluxTags'] = {}
+    this.flux_taggs_list.forEach(tagg => {
+      json_object['fluxTags'][tagg.id] = tagg.toJSON()
+    })
+    json_object['dataTags'] = {}
+    this.data_taggs_list.forEach(tagg => {
+      json_object['dataTags'][tagg.id] = tagg.toJSON()
+    })
+    // Add Styles
+    json_object['style_node'] = {}
+    this.node_styles_list.forEach(style => {
+      json_object['style_node'][style.id] = style.toJSON()
+    })
+    json_object['style_link'] = {}
+    this.link_styles_list.forEach(style => {
+      json_object['style_link'][style.id] = style.toJSON()
+    })
+    // Add nodes
+    json_object['nodes'] = {}
+    this.nodes_list.forEach(node => {
+      json_object['nodes'][node.id] = node.toJSON()
+    })
+    // Add links
+    json_object['links'] = {}
+    this.links_list
+      .sort((a, b) => sortDisplayedLinksElements(a, b))
+      .forEach(link => {
+        json_object['links'][link.id] = link.toJSON()
+    })
+    // Out
+    return json_object
+  }
+
   /**
    * Setting value of sankey and substructur from JSON
    *
@@ -838,7 +507,7 @@ export class Class_Sankey {
   */
   public fromJSON(json_object: { [_: string]: any }) {
     // TODO : define default value in case data is not in JSON
-
+    // First read styles
     if (json_object['style_node'] !== undefined) {
       // Set node styles from json data
       Object.entries(json_object['style_node']).forEach(ent_style_node => {
@@ -849,9 +518,7 @@ export class Class_Sankey {
         // Add node style to sankey
         this._node_styles[ent_style_node[0]] = new_style
       })
-
     }
-
     if (json_object['style_link'] !== undefined) {
       // Set link styles from json data
       Object.entries(json_object['style_link']).forEach(ent_style_link => {
@@ -862,74 +529,61 @@ export class Class_Sankey {
         // Add link style to sankey
         this._link_styles[ent_style_link[0]] = new_style
       })
-
     }
-
-    if (json_object['nodeTags'] !== undefined) {
-      // Set node tag & tag group from json data
-      Object.entries(json_object['nodeTags']).filter(ent_nt => ent_nt[1]).forEach(ent_nt => {
-        // Create a node tag group
-        const new_grp = new Class_TagGroup(ent_nt[0], (ent_nt[1] as { group_name: string }).group_name)
-        new_grp.removeTag(new_grp.tags_list[0])
-        // Set node tag group value from JSON
-        new_grp.fromJSON(ent_nt[1] as { [x: string]: any })
-        // Add node tag group to sankey
-        this._node_taggs[ent_nt[0]] = new_grp
-      })
-    }
-
-    if (json_object['fluxTags'] !== undefined) {
-      // Set flux tag & tag group from json data
-      Object.entries(json_object['fluxTags']).forEach(ent_ft => {
-        // Create a flux tag group
-        const new_grp = new Class_TagGroup(ent_ft[0], (ent_ft[1] as { group_name: string }).group_name)
-        new_grp.removeTag(new_grp.tags_list[0])
-        // Set flux tag group value from JSON
-        new_grp.fromJSON(ent_ft[1] as { [x: string]: any })
-        // Add flux tag group to sankey
-        this._flux_taggs[ent_ft[0]] = new_grp
-      })
-    }
+    // Then read tag groups
     if (json_object['levelTags'] !== undefined) {
       // Set level tag & tag group from json data
-      Object.entries(json_object['levelTags']).forEach(ent_lvl_tag => {
-        // Create a flux tag group
-        const new_grp = new Class_TagGroupNodeLevel(ent_lvl_tag[0], (ent_lvl_tag[1] as { group_name: string }).group_name)
-        new_grp.removeTag(new_grp.tags_list[0])
-        // Set flux tag group value from JSON
-        new_grp.fromJSON(ent_lvl_tag[1] as { [x: string]: any })
-        // Add flux tag group to sankey
-        this._level_taggs[ent_lvl_tag[0]] = new_grp
-      })
+      Object.entries(json_object['levelTags'])
+        .forEach(([tagg_id, tagg_json]) => {
+          // Create a level tag group
+          const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'level_taggs')  // Will be renamed in fromJSON()
+          // Set level tag group value from JSON
+          new_grp.fromJSON(tagg_json as { [x: string]: any })
+        })
     }
-
+    if (json_object['nodeTags'] !== undefined) {
+      // Set node tag & tag group from json data
+      Object.entries(json_object['nodeTags'])
+        .forEach(([tagg_id, tagg_json]) => {
+          // Create a node tag group
+          const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'node_taggs')  // Will be renamed in fromJSON()
+          // Set node tag group value from JSON
+          new_grp.fromJSON(tagg_json as { [x: string]: any })
+        })
+    }
+    if (json_object['fluxTags'] !== undefined) {
+      // Set flux tag & tag group from json data
+      Object.entries(json_object['fluxTags'])
+        .forEach(([tagg_id, tagg_json]) => {
+          // Create a flux tag group
+          const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'flux_taggs')  // Will be renamed in fromJSON()
+          // Set flux tag group value from JSON
+          new_grp.fromJSON(tagg_json as { [x: string]: any })
+        })
+    }
     if (json_object['dataTags'] !== undefined) {
       // Set data tag & tag group from json data
-      Object.entries(json_object['dataTags']).forEach(ent_dt => {
-        // Create a flux tag group
-        const new_grp = new Class_DataTagGroup(ent_dt[0], (ent_dt[1] as { group_name: string }).group_name, this)
-        new_grp.removeTag(new_grp.tags_list[0])
-        // Set flux tag group value from JSON
-        new_grp.fromJSON(ent_dt[1] as { [x: string]: any })
-        // Add flux tag group to sankey
-        this._data_taggs[ent_dt[0]] = new_grp
-      })
+      Object.entries(json_object['dataTags'])
+        .forEach(([tagg_id, tagg_json]) => {
+          // Create a flux tag group
+          const new_grp = this.addTagGroup(tagg_id, tagg_id, 'data_taggs') // Will be renamed in fromJSON()
+          // Set flux tag group value from JSON
+          new_grp.fromJSON(tagg_json as { [x: string]: any })
+        })
     }
-
-    Object.entries(json_object['nodes']).forEach(ent_node => {
-      // Create a node
-      const node = new Class_NodeElement(ent_node[0], (ent_node[1] as { name: string }).name, this.drawing_area, this.menu_config)
-      // Set node value to node from JSON
-      node.fromJSON(ent_node[1] as { [x: string]: any })
-      // Add node to sankey
-      this._addNode(node)
-    })
-
+    // Then read nodes
+    Object.entries(json_object['nodes'])
+      .forEach(([node_id, node_json]) => {
+        // Create a node
+        const node = this.addNewNode(node_id, node_id)
+        // Set node value to node from JSON
+        node.fromJSON(node_json as { [x: string]: any })
+      })
     // Redo a go throught, but this time create nodes dimension
+    // TODO revoir avec level de noeuds
     this.nodes_list.forEach(n => {
       // get dimensions in json
       const dim = json_object['nodes'][n.id].dimensions
-
       /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like :
       dimensions :{...,
           keyGrpLevelTag:{}  // dimensions have an object but it doesn't have parent
@@ -941,24 +595,397 @@ export class Class_Sankey {
           .forEach(ent_dim => n.dimensions[ent_dim[0]] = { parent_name: this.nodes_dict[((ent_dim)[1] as { parent_name: string }).parent_name] })
       }
     })
-
-
-    Object.entries(json_object['links']).forEach(ent_link => {
-      const obj = ent_link[1] as { [x: string]: any }
-      const source = this.nodes_dict[obj['idSource']]
-      const target = this.nodes_dict[obj['idTarget']]
-      // Create a link
-      const link = new Class_LinkElement(ent_link[0], source, target, this.drawing_area, this.menu_config)
-      // Set link value to link from JSON
-      link.fromJSON(obj)
-      // Add link to sankey
-      this._addLink(link)
-    })
-
+    // Then read links
+    Object.entries(json_object['links'])
+      .forEach(([link_id, link_json]) => {
+        // Create a default link
+        const source = this.nodes_list[0] // default
+        const target = this.nodes_list[1] // default
+        const link = this._addNewLink(link_id, source, target)
+        // Set link value to link from JSON
+        link.fromJSON(link_json as { [x: string]: any })
+      })
     // Order links io position in each nodes
     // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement
-    this.nodes_list.filter(n => json_object['nodes'][n.id]['links_order'] !== undefined).forEach(n => {
-      n.fromJSONLinksOrder(json_object['nodes'][n.id])
+    this.nodes_list
+      .filter(n => json_object['nodes'][n.id]['links_order'] !== undefined)
+      .forEach(n => {
+        n.linksFromJSON(json_object['nodes'][n.id])
     })
+
+  }
+
+  // PRIVATE METHODS ====================================================================
+
+  // Nodes related ----------------------------------------------------------------------
+
+  /**
+   * Add a given node to Sankey
+   * @param {Class_Node} node
+   * @memberof Class_Sankey
+   */
+  private _addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
+
+  // Links related ----------------------------------------------------------------------
+
+  /**
+   * Add a given link to Sankey
+   * @param {Class_LinkElement} link
+   * @memberof Class_Sankey
+   */
+  private _addLink(link: Class_LinkElement) {
+    this._links[link.id] = link
+  }
+
+  /**
+   * Create a new link from source to target.
+   * Check that we always have unique id
+   *
+   * @private
+   * @param {string} id
+   * @param {Class_NodeElement} source
+   * @param {Class_NodeElement} target
+   * @return {*}  {Class_LinkElement}
+   * @memberof Class_Sankey
+   */
+  private _addNewLink(
+    id: string,
+    source: Class_NodeElement,
+    target: Class_NodeElement,
+  ): Class_LinkElement {
+    if (!this._links[id]) {
+      const link = new Class_LinkElement(
+        id,
+        source,
+        target,
+        this.drawing_area,
+        this.menu_config)
+      this._addLink(link)
+      return link
+    }
+    else {
+      return this._addNewLink(
+        id + ' (dup)',
+        source,
+        target)
+    }
+  }
+
+  // Style related ----------------------------------------------------------------------
+
+  private _addNewNodeStyle(
+    id: string,
+    name: string
+  ): Class_NodeStyle {
+    if (!this._node_styles[id]) {
+      const style = new Class_NodeStyle(id, name, true)
+      this._node_styles[id] = style
+      return style
+    }
+    else {
+      return this._addNewNodeStyle(id + ' (dup)', name)
+    }
+  }
+
+  private _addNewLinkStyle(
+    id: string,
+    name: string
+  ): Class_LinkStyle {
+    if (!this._link_styles[id]) {
+      const style = new Class_LinkStyle(id, name, true)
+      this._link_styles[id] = style
+      return style
+    }
+    else {
+      return this._addNewLinkStyle(id + ' (dup)', name)
+    }
+  }
+
+  // GETTERS / SETTERS ==================================================================
+
+  public get color_map(): string { return this._color_map }
+  public set color_map(value: string) { this._color_map = value }
+
+  public get nodes_color_map(): string { return this._nodes_color_map }
+  public set nodes_color_map(value: string) { this._nodes_color_map = value }
+
+  public get links_color_map(): string { return this._links_color_map }
+  public set links_color_map(value: string) { this._links_color_map = value }
+
+  public get filter_displayed_link_selector(): boolean { return this._filter_displayed_link_selector }
+  public set filter_displayed_link_selector(value: boolean) { this._filter_displayed_link_selector = value }
+
+  public get filter_displayed_node_selector(): boolean { return this._filter_displayed_node_selector }
+  public set filter_displayed_node_selector(value: boolean) { this._filter_displayed_node_selector = value }
+
+  // Nodes related ----------------------------------------------------------------------
+
+  /**
+   * Get all nodes as dict
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get nodes_dict() {
+    return this._nodes
+  }
+
+  /**
+   * Get all nodes as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get nodes_list() {
+    return Object.values(this._nodes)
+  }
+
+  /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get nodes_list_sorted() {
+    return this.nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  /**
+   * Get all visible nodes as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_nodes_list() {
+    return Object.values(this._nodes)
+      .filter(node => node.is_visible)
+  }
+
+  /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_nodes_list_sorted() {
+    return this.visible_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  // Links related ----------------------------------------------------------------------
+
+  /**
+   * Return a dict with all the links of the sankey
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get links_dict() {
+    return this._links
+  }
+
+  /**
+   * Return a list with all the links of the sankey
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get links_list() {
+    return Object.values(this._links)
+  }
+
+  /**
+   * Get all nodes sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get links_list_sorted() {
+    return this.links_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+
+  /**
+   * Get all visible links as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_links_list() {
+    return Object.values(this._links)
+      .filter(node => node.is_visible)
+  }
+
+  /**
+   * Get all links sorted by their names as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get visible_links_list_sorted() {
+    return this.visible_links_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+
+  // Styles related ---------------------------------------------------------------------
+
+  /**
+   * Return the object containing all the style
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get node_styles_dict() {
+    return this._node_styles
+  }
+
+  /**
+   * Return default style for nodes
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get default_node_style() {
+    return this._node_styles[default_style_id]
+  }
+
+  /**
+   * Return all the style as a list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get node_styles_list() {
+    return Object.values(this._node_styles)
+  }
+
+  /**
+   * Return all the style as a sorted list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get node_styles_list_sorted() {
+    return this.node_styles_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  /**
+   * Return the object containing all the style
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_dict() {
+    return this._link_styles
+  }
+
+  /**
+   * Return default link style
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get default_link_style() {
+    return this._link_styles[default_style_id]
+  }
+
+  /**
+   * Return all the style as a list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_list() {
+    return Object.values(this._link_styles)
+  }
+
+  /**
+   * Return all the style as a sorted list
+   * @readonly
+   * @memberof Class_ApplicationData
+   */
+  public get link_styles_list_sorted() {
+    return this.link_styles_list
+      .sort((a, b) => sortLinksElements(a, b))
+  }
+
+  // Tags related -----------------------------------------------------------------------
+
+  public get node_taggs_dict() {
+    return this._node_taggs
+  }
+
+  public get node_taggs_list() {
+    return Object.values(this._node_taggs)
+  }
+
+  public get flux_taggs_dict() {
+    return this._flux_taggs
+  }
+
+  public get flux_taggs_list() {
+    return Object.values(this._flux_taggs)
+  }
+
+  public get data_taggs_dict() {
+    return this._data_taggs
+  }
+
+  public get data_taggs_list() {
+    return Object.values(this._data_taggs)
+  }
+
+  public get data_taggs_entries() {
+    return Object.entries(this._data_taggs)
+  }
+
+  /**
+   * Return an array  of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get selected_data_tags_list() {
+    const data_tags: Class_DataTag[] = []
+    this.data_taggs_list.forEach(data_tagg => {
+      data_tags.push(...data_tagg.selected_tags_list)
+    })
+    return data_tags
+  }
+
+  /**
+   * Return an object wherekey are data_taggs id ,
+   * and value an array of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get selected_data_tags_entries() {
+    const obj_data_tags_selected: { [x: string]: Class_DataTag } = {}
+    this.data_taggs_list.forEach(data_tagg => {
+      obj_data_tags_selected[data_tagg.id] = data_tagg.selected_tags_list[0]
+    })
+    return obj_data_tags_selected
+  }
+
+  /**
+   * Return an array of possible path to link value,
+   * it use the combinitation of all tags from different data_taggs
+   *
+   * Exemple :
+   * [
+   *
+   * [grp1_key1,grp2_key1],
+   *
+   * [grp1_key1,grp2_key2],
+   *
+   * [grp1_key2,grp2_key1],
+   *
+   * [grp1_key2,grp2_key2],
+   * ...
+   * ]
+   * *
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get list_combinatorial_data_taggs_path() {
+    const list_tag_by_grp: string[][] = []
+    this.data_taggs_list.forEach(data_tagg => {
+      list_tag_by_grp.push(data_tagg.tags_list.map(tag => tag.id))
+    })
+    return list_tag_by_grp
+  }
+
+  public get level_taggs_dict() {
+    return this._level_taggs
+  }
+
+  public get level_taggs_list() {
+    return Object.values(this._level_taggs)
   }
 }
