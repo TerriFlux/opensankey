@@ -30,7 +30,13 @@ export default [
         rules: {
             "linebreak-style": 0,
             "@typescript-eslint/explicit-module-boundary-types": "off",
-            "@typescript-eslint/no-unused-vars": "warn",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                {
+                    "argsIgnorePattern": "^_",
+                    "varsIgnorePattern": "^_",
+                }
+            ],
             "@typescript-eslint/no-explicit-any": 2,
             "@typescript-eslint/no-var-requires": 2,
             indent: [

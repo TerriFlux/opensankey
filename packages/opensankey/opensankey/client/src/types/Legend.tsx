@@ -174,18 +174,18 @@ export class Class_Legend extends Class_Element {
   }
 
   // PROTECTED METHODS ==================================================================
-  protected eventMouseOver(event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
+  protected eventMouseOver(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
     this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
     this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
   }
 
-  protected eventMouseOut(event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
+  protected eventMouseOut(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
     this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', 'unherit')
     this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
   }
 
   protected eventMouseDragStart(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
   }
 
@@ -198,7 +198,7 @@ export class Class_Legend extends Class_Element {
   }
 
   protected eventMouseDragEnd(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     this.draw()
   }

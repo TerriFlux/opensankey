@@ -38,7 +38,6 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
 
   // Currently selected links
   const selected_links = new_data.drawing_area.selected_links_list
-  const reference_link = selected_links[0] // Used for value displaying in this menu
 
   // Menu updaters ----------------------------------------------------------------------
 
@@ -60,7 +59,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis.toggle()
+    new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
   }
 
   // Utils functions --------------------------------------------------------------------
@@ -90,7 +89,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
     {
       (
         has_flux_taggs &&
-      selected_links.length !== 0
+        selected_links.length !== 0
       ) ?
         <Box
           layerStyle='menuconfigpanel_grid'
@@ -99,7 +98,8 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
             as='span'
             layerStyle='menuconfigpanel_part_title_1'
           >
-            {t('Menu.EF')}</Box>
+            {t('Menu.EF')}
+          </Box>
 
           {/* Groupe d'étiquettes  */}
           <Select
@@ -146,7 +146,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                               data_tag.setUnSelected()
                           })
                         // Update only this menu
-                        refreshThis.toggle()
+                        new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                       }
                     }
                   >
@@ -173,10 +173,12 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
             {
               flux_tagg_entry.tags_list
                 .map(flux_tag => {
+                  const [allTrue, allFalse] = haveAllSelectedLinksGivenTag(flux_tag)
                   return (
                     <Checkbox
                       variant='menuconfigpanel_option_checkbox'
-                      isChecked={reference_link.hasGivenTag(flux_tag)}
+                      isChecked={allTrue}
+                      isIndeterminate={!allTrue && !allFalse}
                       onChange={(evt) => {
                         const visible = evt.target.checked
                         selected_links.forEach(link=>{

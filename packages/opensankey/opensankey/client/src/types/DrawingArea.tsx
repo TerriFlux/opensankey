@@ -10,9 +10,13 @@ import { MouseEvent } from 'react'
 
 // Local types
 import {
+  Type_JSON,
   default_background_color,
   default_black_color,
-  default_grid_color
+  default_grid_color,
+  getBooleanFromJSON,
+  getNumberFromJSON,
+  getStringFromJSON
 } from './Utils'
 import {
   Class_Sankey
@@ -734,19 +738,19 @@ export class Class_DrawingArea {
   /**
    * Export current drawing area & its contents as json struct
    *
-   * @param {{ [_: string]: any }} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_DrawingArea
    */
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     // Update direct attributes
-    this._height = json_object['height'] ?? this._height
-    this._width = json_object['width'] ?? this._width
-    this._grid_size = json_object['grid_square_size'] ?? this._grid_size
-    this._grid_visible = json_object['grid_visible'] ?? this._grid_visible
-    this._horizontal_spacing = json_object['h_space'] ?? this._horizontal_spacing
-    this._vertical_spacing = json_object['v_space'] ?? this._vertical_spacing
-    this._scale = json_object['user_scale'] ?? this._scale
-    this._color = json_object['couleur_fond_sankey'] ?? this._color
+    this._height = getNumberFromJSON(json_object, 'height', this._height)
+    this._width = getNumberFromJSON(json_object, 'width', this._width)
+    this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
+    this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
+    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
+    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
+    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
+    this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
     // Update legend
     this._legend.fromJSON(json_object)
     // Update Sankey
@@ -758,13 +762,13 @@ export class Class_DrawingArea {
   /**
    * Convert current drawing area & all substructure as JSON data
    *
-   * @param {{ [_: string]: any }} json_object
+   * @param {Type_JSON} json_object
    * @return {*}
    * @memberof Class_DrawingArea
    */
   public toJSON() {
     // Create json struct
-    const json_object = {} as { [_: string]: any }
+    const json_object = {} as Type_JSON
     // Dump direct attributes
     json_object['height'] = this._height
     json_object['width'] = this._width
@@ -908,7 +912,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventSimpleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
 
   }
@@ -920,7 +924,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventDoubleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Ajouter déclemenchement editeur nom de noeud
   }
@@ -1075,7 +1079,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventMouseOver(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Definir
   }
@@ -1087,7 +1091,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventMouseOut(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO definir
   }
@@ -1151,10 +1155,10 @@ export class Class_DrawingArea {
    * @param {*} e
    * @memberof Class_DrawingArea
    */
-  private eventZoom(e: any) {
+  private eventZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
     d3.select('#g_drawing')
       .transition()
-      .attr('transform', e.transform)
+      .attr('transform', event.transform.toString)
   }
 }
 
