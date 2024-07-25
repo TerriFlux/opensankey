@@ -56,8 +56,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
     applicationData,
     applicationState,
     applicationContext,
-    uiElementsRef,
-    dict_hook_ref_setter_show_dialog_components,
     menu_configuration_layout,
     menu_configuration_node_tags,
     menu_configuration_link_tags,
@@ -68,8 +66,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
     additional_accordion_edition_elements,
     link_function,
     ComponentUpdater,
-    contextMenu,
-    alt_key_pressed,
     node_function,
     additionalMenus
   }

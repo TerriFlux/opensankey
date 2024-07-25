@@ -32,7 +32,11 @@ import {
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
-import { Type_JSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getStringListOrUndefinedFromJSON } from './Utils'
+import {
+  Type_JSON,
+  getJSONFromJSON,
+  getJSONOrUndefinedFromJSON
+} from './Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -339,43 +343,81 @@ export class Class_Sankey {
 
   // Tags related ------------------------------------------------------------------------
 
-  /**
-   * Add a tagGroup to Sankey
-   * @param {string} id
-   * @param {string} name
-   * @param {Type_MacroTagGroup} type_group
-   * @return {*}  {Class_TagGroup}
-   * @memberof Class_Sankey
-   */
-  public addTagGroup(
+  public addLevelTagGroup(
     id: string,
-    name: string,
-    type_group: Type_MacroTagGroup
-  ): Class_TagGroup | Class_DataTagGroup {
-    // Get dict of tag groups that is related to specifed type of group
-    const dict_taggs = this.getTagGroupsAsDict(type_group)
-    // Do not create a new tag group with the same id of another
-    if (!dict_taggs[id]) {
+    name: string
+  ): Class_TagGroupNodeLevel
+  {
+    if (!this._level_taggs[id]) {
       // Create
-      let tag_group: any
-      if (type_group === 'level_taggs') {
-        tag_group = new Class_TagGroupNodeLevel(id, name)
-      }
-      else if (type_group === 'data_taggs'){
-        tag_group = new Class_DataTagGroup(id, name, this)
-        this.links_list.forEach(link => link.addDataTagGroup(tag_group)) // Update value tree
-      }
-      else {
-        tag_group = new Class_TagGroup(id, name)
-      }
-      // Update reference
-      dict_taggs[id] = tag_group
+      const tag_group = new Class_TagGroupNodeLevel(id, name)
+      // Update
+      this._level_taggs[id] = tag_group
       // Return
       return tag_group
     }
     // Recursive to avoid id duplicates
     else {
-      return this.addTagGroup(id + '_0', name + '_0', type_group)
+      return this.addLevelTagGroup(id + '_0', name + '_0')
+    }
+  }
+
+  public addNodeTagGroup(
+    id: string,
+    name: string
+  ): Class_TagGroup
+  {
+    if (!this._node_taggs[id]) {
+      // Create
+      const tag_group = new Class_TagGroup(id, name)
+      // Update
+      this._node_taggs[id] = tag_group
+      // Return
+      return tag_group
+    }
+    // Recursive to avoid id duplicates
+    else {
+      return this.addNodeTagGroup(id + '_0', name + '_0')
+    }
+  }
+
+  public addFluxTagGroup(
+    id: string,
+    name: string
+  ): Class_TagGroup
+  {
+    if (!this._flux_taggs[id]) {
+      // Create
+      const tag_group = new Class_TagGroup(id, name)
+      // Update
+      this._flux_taggs[id] = tag_group
+      // Return
+      return tag_group
+    }
+    // Recursive to avoid id duplicates
+    else {
+      return this.addFluxTagGroup(id + '_0', name + '_0')
+    }
+  }
+
+  public addDataTagGroup(
+    id: string,
+    name: string
+  ): Class_DataTagGroup
+  {
+    if (!this._data_taggs[id]) {
+      // Create
+      const tag_group = new Class_DataTagGroup(id, name, this)
+      // Update value tree
+      this.links_list.forEach(link => link.addDataTagGroup(tag_group))
+      // Update
+      this._data_taggs[id] = tag_group
+      // Return
+      return tag_group
+    }
+    // Recursive to avoid id duplicates
+    else {
+      return this.addDataTagGroup(id + '_0', name + '_0')
     }
   }
 
@@ -386,10 +428,23 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public createTagGroup(type_group: Type_MacroTagGroup) {
+    // Get a new id
     const n = Object.values(this.getTagGroupsAsDict(type_group)).length
     const id = type_group + n
     const name = 'Tag Group ' + n
-    return this.addTagGroup(id, name, type_group)
+    // Create
+    if (type_group === 'level_taggs') {
+      return this.addLevelTagGroup(id, name)
+    }
+    else if (type_group === 'node_taggs'){
+      return this.addNodeTagGroup(id, name)
+    }
+    else if (type_group === 'flux_taggs'){
+      return this.addFluxTagGroup(id, name)
+    }
+    else {
+      return this.addDataTagGroup(id, name)
+    }
   }
 
   /**
@@ -546,7 +601,7 @@ export class Class_Sankey {
       Object.entries(json_object['levelTags'])
         .forEach(([tagg_id, tagg_json]) => {
           // Create a level tag group
-          const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'level_taggs')  // Will be renamed in fromJSON()
+          const new_grp =  this.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
           // Set level tag group value from JSON
           new_grp.fromJSON(tagg_json as Type_JSON)
         })
@@ -556,7 +611,7 @@ export class Class_Sankey {
       Object.entries(json_object['nodeTags'])
         .forEach(([tagg_id, tagg_json]) => {
           // Create a node tag group
-          const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'node_taggs')  // Will be renamed in fromJSON()
+          const new_grp =  this.addNodeTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
           // Set node tag group value from JSON
           new_grp.fromJSON(tagg_json as Type_JSON)
         })
@@ -566,7 +621,7 @@ export class Class_Sankey {
       Object.entries(json_object['fluxTags'])
         .forEach(([tagg_id, tagg_json]) => {
           // Create a flux tag group
-          const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'flux_taggs')  // Will be renamed in fromJSON()
+          const new_grp =  this.addFluxTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
           new_grp.fromJSON(tagg_json as Type_JSON)
         })
@@ -576,7 +631,7 @@ export class Class_Sankey {
       Object.entries(json_object['dataTags'])
         .forEach(([tagg_id, tagg_json]) => {
           // Create a flux tag group
-          const new_grp = this.addTagGroup(tagg_id, tagg_id, 'data_taggs') // Will be renamed in fromJSON()
+          const new_grp = this.addDataTagGroup(tagg_id, tagg_id) // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
           new_grp.fromJSON(tagg_json as Type_JSON)
         })

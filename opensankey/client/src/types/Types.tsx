@@ -14,6 +14,7 @@ import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
 import { opposing_DragElementsFuncType } from '../draw/types/SankeyDragTypes'
 import { Class_ApplicationData } from './ApplicationData'
+import { Type_JSON } from './Utils'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -515,6 +516,7 @@ export type initializeReinitializationType = (
 /*****************************************************************************/
 // Data
 export type OSGetDefaultData=()=>SankeyData
+
 export type applicationDataType = {
   data: SankeyData,
   set_data: (_: SankeyData)=>void,
@@ -528,14 +530,14 @@ export type applicationDataType = {
   setDiagram: setDiagramFuncType,
   new_data: Class_ApplicationData
 }
+
 export type initializeApplicationDataType = (
   data: SankeyData,
   set_data: (_: SankeyData)=>void,
   get_default_data: OSGetDefaultData,
   display_nodes: {[_: string]: SankeyNode},
   display_links: {[_: string]: SankeyLink},
-  initial_data: JSON| undefined
-
+  initial_data: Type_JSON | undefined
 )=>applicationDataType
 
 /*****************************************************************************/

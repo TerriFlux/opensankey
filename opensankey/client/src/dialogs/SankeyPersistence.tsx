@@ -307,15 +307,13 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight)
   }, 100)
 }
+
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
   ApplicationClass,
   options
 ): void => {
-  // const data_to_save = { ...applicationData.data }
-  // const str_data = JSON.stringify(data_to_save)
   // Crée une copie pour d'abord enregitrer avec les changements
-  // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-  const cpy:SankeyData=ApplicationClass.drawing_area.toJSON() as SankeyData
+  const cpy = ApplicationClass.drawing_area.toJSON()
   if(!options.mode_save){
     Object.values(cpy.links).forEach(d=>{
       (d as SankeyLink).value={}
@@ -332,8 +330,8 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
         delete n[1].tags[klt]
       })
       n[1].dimensions={}
-      n[1].inputLinksId=n[1].inputLinksId.filter(lid=>link_present.includes(lid))
-      n[1].outputLinksId=n[1].outputLinksId.filter(lid=>link_present.includes(lid))
+      n[1].inputLinksId=n[1].inputLinksId.filter((lid: string) => link_present.includes(lid))
+      n[1].outputLinksId=n[1].outputLinksId.filter((lid: string) => link_present.includes(lid))
       return n
     }))
     cpy.levelTags={}
@@ -418,6 +416,7 @@ export const ProcessExample: ProcessExampleFuncType = (
 
   return data
 }
+
 /**
  * Download examples from server
  *
@@ -466,6 +465,7 @@ export const UploadExcelImpl: UploadExcelImplFuncType = (
   fetch(url, fetchData)
   set_show_excel_dialog(false)
 }
+
 /**
  *
  * @param {string} file_name
@@ -474,8 +474,6 @@ export const UploadExcelImpl: UploadExcelImplFuncType = (
  * @param {(data: SankeyData) => void} set_data
  * @returns {void) => void}
  */
-
-
 export const UploadExemple: UploadExempleFuncType = (
   file_name: string,
   the_url_prefix: string,

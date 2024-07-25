@@ -11,7 +11,7 @@ import LZString from 'lz-string'
 // Local types
 import { openRemoteUIElement } from '../functions/application/Menus'
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_Structure } from './Utils'
+import { Type_JSON, Type_Structure } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { uiElementsRefType } from './Types'
 import { Class_LinkElement } from './Link'
@@ -119,10 +119,10 @@ export class Class_ApplicationData {
    * Reset value of drawing_area and substructur with data from JSON
    * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
    *
-   * @param {{ [_: string]: any }} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     // Reset everything
     this.reset()
     // TODO read application data attributes
@@ -132,7 +132,7 @@ export class Class_ApplicationData {
 
   public toJSON() {
     // Create json struct
-    const json_object = {} as { [_: string]: any }
+    const json_object = {} as Type_JSON
     // TODO dump application data attributes
     json_object['node_label_separator'] = '' // TODO get node label separator when implemented in class
     // Dump with drawing area & its content in json struct
