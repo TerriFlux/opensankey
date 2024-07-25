@@ -42,7 +42,6 @@ import {
   Class_TagGroup,
 } from './Tag'
 import { default_style_id } from './Sankey'
-import { type } from 'os'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -692,13 +691,10 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (this.drawing_area.isInSelectionMode()) {
       event.preventDefault()
       this.drawing_area.pointer_pos = [event.pageX, event.pageY]
-
       if (!this.drawing_area.selected_links_list.includes(this)) {
         this.drawing_area.addLinkToSelection(this)
-      } else {
       }
       this.menu_config.updateAllComponentsRelatedToLinks()
-
       this.drawing_area.link_contextualied = this
       this.menu_config.ref_to_menu_context_links_updater.current()
     }
@@ -802,7 +798,7 @@ export class Class_LinkElement extends Class_ProtoElement {
               .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
               .on('start', ev => this.dragTextStart(ev))
               .on('drag', ev => this.dragTextMove(ev))
-              .on('end', ev => this.dragTextend(ev))
+              .on('end', ev => this.dragTextEnd(ev))
             )
           }
         }
@@ -811,13 +807,13 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   /**
- * Function triggered when we start dragging node name label, it initialise relative position if undefined
- *
- * @private
- * @param {d3.D3DragEvent<SVGTextPathElement,Class_NodeElement,Class_NodeElement>} event
- * @memberof Class_NodeElement
- */
-  private dragTextStart(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+   * Function triggered when we start dragging node name label, it initialise relative position if undefined
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextPathElement,Class_NodeElement,Class_NodeElement>} event
+   * @memberof Class_NodeElement
+   */
+  private dragTextStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
 
     //if _x_label is undefined init _x_label pos whith current fixed x position value
     if (this._display._offset_label === undefined) {
@@ -850,7 +846,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.updateTextPathOffset()
   }
 
-  private dragTextend(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+  private dragTextEnd(_event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
@@ -882,7 +878,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
     this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
-
   }
 
   private drawControlPoint() {

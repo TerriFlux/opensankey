@@ -17,7 +17,6 @@ import {
   default_element_position,
   default_font,
   getBooleanFromJSON,
-  getJSONFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
@@ -885,9 +884,7 @@ export class Class_NodeElement extends Class_Element {
       this.drawing_area.pointer_pos = [event.pageX, event.pageY]
       if (!this.drawing_area.selected_nodes_list.includes(this)) {
         this.drawing_area.addNodeToSelection(this)
-      } else {
       }
-
       this.menu_config.updateAllComponentsRelatedToNodes()
       this.drawing_area.node_contextualied = this
       this.menu_config.ref_to_menu_context_nodes_updater.current()
@@ -1055,7 +1052,7 @@ export class Class_NodeElement extends Class_Element {
    * @param {d3.D3DragEvent<SVGTextElement,Class_NodeElement,Class_NodeElement>} event
    * @memberof Class_NodeElement
    */
-  private dragTextStart(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
+  private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
 
     //if _x_label is undefined init _x_label pos whith current fixed x position value
     if (this._display._x_label === undefined) {
@@ -1101,7 +1098,7 @@ export class Class_NodeElement extends Class_Element {
     this.updateNameLabelPos()
   }
 
-  private dragTextend(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
+  private dragTextend(_event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
     this.drawNameLabel()
     this.menu_config.updateAllComponentsRelatedToNodes()
   }
@@ -1280,7 +1277,7 @@ export class Class_NodeElement extends Class_Element {
     const node_height = this.getShapeHeightToUse() // height of node taking into account link size in/out
     const node_width = this.getShapeWidthToUse() // width of node taking into account link size in/out
     const node_shape = this.shape_type
-    const is_exportation_node = false // Maybe useful when MFA will be implemented
+    // const is_exportation_node = false // TODO Maybe useful when MFA will be implemented
 
     const sumLinkLeft = this.getSumOfLinksThickness('left')
     const sumLinkRight = this.getSumOfLinksThickness('right')
@@ -1549,14 +1546,14 @@ export class Class_NodeElement extends Class_Element {
   // Display tooltip
   private drawTooltip() {
     const sankeyTooltip = d3.select('.sankey-tooltip')
-    const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
+    // const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
     const pos_tooltip_y = this.position_y
-    const size_browser = window.innerHeight
+    // const size_browser = window.innerHeight
     // pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
 
-    const w_tooltip = Number(sankeyTooltip.style('width').replace('px', ''))
+    // const w_tooltip = Number(sankeyTooltip.style('width').replace('px', ''))
     const pos_tooltip_x = this.position_x
-    const size_browser_w = window.innerWidth
+    // const size_browser_w = window.innerWidth
     // pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
     sankeyTooltip
       .style('top', pos_tooltip_y + 'px')
@@ -1751,7 +1748,7 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  private dragStartHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+  private dragStartHandlerMoveLink(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     const handler = this as unknown as Class_Handler
     const node_ref_handler = handler.ref_element as Class_NodeElement
     const link_ref = (handler.ref_element as Class_NodeElement).getLinkFromHandler(handler)
@@ -1760,7 +1757,7 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  private dragEndHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+  private dragEndHandlerMoveLink(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     const handler = this as unknown as Class_Handler
     const node_ref_handler = handler.ref_element as Class_NodeElement
     node_ref_handler.link_dragged = undefined
@@ -2706,10 +2703,9 @@ export class Class_NodeAttribute {
   // PUBLIC METHODS =====================================================================
 
   public toJSON() {
-    const json_object = {} as { [_: string]: any }
+    const json_object = {} as Type_JSON
 
     // One line 'if' to add local attribute to json object if they're not undefined
-
     // TODO delete code as comment when saved variable name will be defined (old vs new)
 
     // Parameters for shape

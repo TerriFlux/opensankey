@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 
 import {
@@ -50,16 +50,10 @@ import {
 } from '../types/Types'
 
 import {
-  complete_sankey_data
-} from '../configmenus/SankeyConvert'
-import {
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
 } from 'react-icons/fa'
 import SankeyLoad from '../dialogs/SankeyPersistence'
-import {
-  SankeyConfigurationMenu
-} from '../configmenus/SankeyMenuConfiguration'
 import {
   ExcelModal,
   ApplyLayoutDialog
@@ -95,8 +89,6 @@ import {
   OpenSankeySaveButtonFType
 } from './types/SankeyMenuTopTypes'
 import {
-  DefaultNode,
-  DefaultLink,
   FindMaxLinkValue,
   OSTooltip
 } from '../configmenus/SankeyUtils'
@@ -116,15 +108,9 @@ import {
   RepositionneSidebar
 } from '../draw/SankeyDrawFunction'
 import {
-  actualizeDrawAreaFrame
-} from '../draw/SankeyDrawEventFunction'
-import {
   faFileExport
 } from '@fortawesome/free-solid-svg-icons'
 import FileSaver from 'file-saver'
-import {
-  AddDrawNodesEvent
-} from '../draw/SankeyDrawNodes'
 import {
   Drawer,
   DrawerBody,
@@ -133,6 +119,7 @@ import {
 import {
   DataTagSelector
 } from '../configmenus/SankeyMenuBanner'
+import { Type_JSON } from '../types/Utils'
 
 
 declare const window: Window &
@@ -235,7 +222,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   convert_data,
   setDiagram
 ) => {
-  const {data,set_data,new_data}=applicationData
+  const { data, set_data, new_data } = applicationData
   const _load_json = useRef<HTMLInputElement>(null)
 
   const { ref_setter_show_style_node, ref_setter_show_style_link } = dict_hook_ref_setter_show_dialog_components
@@ -459,9 +446,9 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                   return (e: ProgressEvent<FileReader>) => {
                     // Reinitialization()
                     const result = String((e.target as FileReader).result)
-                    const default_data = get_default_data()
+                    // const default_data = get_default_data()
                     const result_data = JSON.parse(result)
-                    Object.assign(default_data, result_data)
+                    // Object.assign(default_data, result_data)
                     // if (result_data.version === undefined) {
                     //   (new_data.version as unknown as undefined) = undefined
                     // }
@@ -475,7 +462,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                     //   margin_top = test[0].getBoundingClientRect().height
                     //   d3.select(' .opensankey #svg-container').style('margin-top', margin_top + 'px')
                     // }
-                    new_data.fromJSON(default_data)
+                    new_data.fromJSON(result_data as Type_JSON)
                     new_data.drawing_area.reset()
                   }
                 })()

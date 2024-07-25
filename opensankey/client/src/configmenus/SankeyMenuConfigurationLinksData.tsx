@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, MutableRefObject, useReducer, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import {
   Box,

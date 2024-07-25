@@ -314,7 +314,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventSimpleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO do something
   }
@@ -326,7 +326,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventDoubleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Ajouter déclemenchement editeur nom de noeud
   }
@@ -338,7 +338,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventSimpleRMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
   }
@@ -350,7 +350,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMaintainedClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir clique gauche sur element */
     this._is_mouse_grabbed = true
@@ -363,7 +363,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventReleasedClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir clique gauche sur element */
     this._is_mouse_grabbed = false
@@ -376,7 +376,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMouseOver(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Update mouse over indicator for element
     this.setMouseOver()
@@ -389,7 +389,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMouseOut(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Update mouse left indicator for element
     this.unsetMouseOver()
@@ -402,7 +402,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMouseMove(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir  */
   }
@@ -414,7 +414,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMouseDragStart(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
@@ -426,7 +426,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMouseDrag(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
@@ -438,7 +438,7 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   protected eventMouseDragEnd(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }

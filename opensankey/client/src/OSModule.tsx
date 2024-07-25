@@ -805,8 +805,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     applicationData = {applicationData}
     applicationState = {applicationState}
     applicationContext = {applicationContext}
-    uiElementsRef = {uiElementsRef}
-    dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
     menu_configuration_layout = {
       <OpenSankeyMenuConfigurationLayout
         applicationData={applicationData}
@@ -846,8 +844,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     additional_accordion_edition_elements = {additional_menus.additional_configuration_menus}
     link_function = {link_function}
     ComponentUpdater = {ComponentUpdater}
-    contextMenu = {contextMenu}
-    alt_key_pressed = {ref_alt_key_pressed}
     node_function = {node_function}
     additionalMenus = {additionalMenus}
   />

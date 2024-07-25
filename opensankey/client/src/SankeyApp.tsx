@@ -49,6 +49,7 @@ import {
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
 import { DeleteGNodes } from './draw/SankeyDrawNodes'
+import { Type_JSON } from './types/Utils'
 
 
 declare const window: Window &
@@ -92,7 +93,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
-  let inital_data: JSON | undefined = undefined
+  let inital_data: Type_JSON | undefined = undefined
   // If there is, store the data in the sankey_data
   if (json_data !== null && json_data != '' && json_data != 'null') {
     const new_data = JSON.parse(json_data)
