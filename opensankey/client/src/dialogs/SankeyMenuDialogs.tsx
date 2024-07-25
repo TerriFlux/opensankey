@@ -693,11 +693,11 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
     </Box>
   </Box>
   return <MenuDraggable
-   dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-   dialog_name={'ref_setter_show_excel_dialog'}
-   content={content}
-   pointer_pos={pointer_pos}
-   title={t('Menu.open_excel_file')}
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dialog_name={'ref_setter_show_excel_dialog'}
+    content={content}
+    pointer_pos={pointer_pos}
+    title={t('Menu.open_excel_file')}
   />
 
 }

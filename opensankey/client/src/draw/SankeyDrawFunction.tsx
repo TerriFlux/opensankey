@@ -219,7 +219,7 @@ export const TextNodeWrap : TextNodeWrapFType = (
   let nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   if (d.name.split(' ').length == 1 && nb_tspan>1) {
     const el = d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-    el.select("tspan:first-child").remove()
+    el.select('tspan:first-child').remove()
     d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dy',0)
   }
   nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length

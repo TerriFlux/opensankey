@@ -87,119 +87,119 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   // JSX content ------------------------------------------------------------------------
 
   const content = <>
-  {
-    (
-      has_flux_taggs &&
+    {
+      (
+        has_flux_taggs &&
       selected_links.length !== 0
-    ) ?
-    <Box
-      layerStyle='menuconfigpanel_grid'
-    >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_1'
-      >
-        {t('Menu.EF')}</Box>
+      ) ?
+        <Box
+          layerStyle='menuconfigpanel_grid'
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_part_title_1'
+          >
+            {t('Menu.EF')}</Box>
 
-      {/* Groupe d'étiquettes  */}
-      <Select
-        variant='menuconfigpanel_option_select'
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          setFluxTaggEntryIndex(Number(evt.target.value))
-        }}
-        value={flux_tagg_entry_index}
-      >
-        {
-          list_flux_taggs.map((flux_tagg, flux_tagg_index) =>
-            <option
-              key={flux_tagg.id}
-              value={flux_tagg_index}
-            >
-              {flux_tagg.name}
-            </option>)
-        }
-      </Select>
+          {/* Groupe d'étiquettes  */}
+          <Select
+            variant='menuconfigpanel_option_select'
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              setFluxTaggEntryIndex(Number(evt.target.value))
+            }}
+            value={flux_tagg_entry_index}
+          >
+            {
+              list_flux_taggs.map((flux_tagg, flux_tagg_index) =>
+                <option
+                  key={flux_tagg.id}
+                  value={flux_tagg_index}
+                >
+                  {flux_tagg.name}
+                </option>)
+            }
+          </Select>
 
-      {/* Définition des valeurs selon les paramètre dataTags */}
-      {
-        data_taggs
-          .filter(data_tagg => data_tagg.has_tags) // Secu
-          .map(data_tagg => {
-            return (<>
-              <Box
-                as='span'
-                layerStyle='menuconfigpanel_part_title_3'
-              >
-                {data_tagg.name}
-              </Box>
-              <Select
-                variant='menuconfigpanel_option_select'
-                name={data_tagg.id}
-                value={data_tagg.first_selected_tags?.id ?? '-'}
-                onChange={
-                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    data_tagg.tags_list
-                      .forEach(data_tag => {
-                        if (data_tag.id === evt.target.value)
-                          data_tag.setSelected()
-                        else
-                          data_tag.setUnSelected()
-                      })
-                    // Update only this menu
-                    refreshThis.toggle()
-                  }
-                }
-              >
-                {
-                  data_tagg.tags_list
-                    .map(data_tag => {
-                    return (
-                      <option
-                        key={data_tag.id}
-                        value={data_tag.id}
-                      >
-                        {data_tag.name}
-                      </option>
-                    )
-                })}
-              </Select></>
-            )
-          })
-      }
-
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
-        {
-          flux_tagg_entry.tags_list
-            .map(flux_tag => {
-              return (
-                <Checkbox
-                  variant='menuconfigpanel_option_checkbox'
-                  isChecked={reference_link.hasGivenTag(flux_tag)}
-                  onChange={(evt) => {
-                    const visible = evt.target.checked
-                    selected_links.forEach(link=>{
-                      if (visible) {
-                        link.addTag(flux_tag)
+          {/* Définition des valeurs selon les paramètre dataTags */}
+          {
+            data_taggs
+              .filter(data_tagg => data_tagg.has_tags) // Secu
+              .map(data_tagg => {
+                return (<>
+                  <Box
+                    as='span'
+                    layerStyle='menuconfigpanel_part_title_3'
+                  >
+                    {data_tagg.name}
+                  </Box>
+                  <Select
+                    variant='menuconfigpanel_option_select'
+                    name={data_tagg.id}
+                    value={data_tagg.first_selected_tags?.id ?? '-'}
+                    onChange={
+                      (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                        data_tagg.tags_list
+                          .forEach(data_tag => {
+                            if (data_tag.id === evt.target.value)
+                              data_tag.setSelected()
+                            else
+                              data_tag.setUnSelected()
+                          })
+                        // Update only this menu
+                        refreshThis.toggle()
                       }
-                      else {
-                        link.removeTag(flux_tag)
-                      }
-                    })
-                    // Full update
-                    refreshThisAndUpdateRelatedComponents()
-                  }}>
-                  {flux_tag.name}
-                </Checkbox>
-              )
-            })
-        }
-      </Box>
-    </Box>
-    :
-    <></>
-  }</>
+                    }
+                  >
+                    {
+                      data_tagg.tags_list
+                        .map(data_tag => {
+                          return (
+                            <option
+                              key={data_tag.id}
+                              value={data_tag.id}
+                            >
+                              {data_tag.name}
+                            </option>
+                          )
+                        })}
+                  </Select></>
+                )
+              })
+          }
+
+          <Box
+            layerStyle='menuconfigpanel_grid'
+          >
+            {
+              flux_tagg_entry.tags_list
+                .map(flux_tag => {
+                  return (
+                    <Checkbox
+                      variant='menuconfigpanel_option_checkbox'
+                      isChecked={reference_link.hasGivenTag(flux_tag)}
+                      onChange={(evt) => {
+                        const visible = evt.target.checked
+                        selected_links.forEach(link=>{
+                          if (visible) {
+                            link.addTag(flux_tag)
+                          }
+                          else {
+                            link.removeTag(flux_tag)
+                          }
+                        })
+                        // Full update
+                        refreshThisAndUpdateRelatedComponents()
+                      }}>
+                      {flux_tag.name}
+                    </Checkbox>
+                  )
+                })
+            }
+          </Box>
+        </Box>
+        :
+        <></>
+    }</>
 
 
 

@@ -29,10 +29,10 @@ import {
   Class_DataTag,
   Class_DataTagGroup,
   Class_ProtoTagGroup,
-  Class_Tag,
   Class_TagGroup,
   Class_TagGroupNodeLevel
 } from './Tag'
+import { Type_JSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getStringListOrUndefinedFromJSON } from './Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -456,45 +456,53 @@ export class Class_Sankey {
 
   public toJSON() {
     // Create json struct
-    const json_object = {} as { [_: string]: any }
+    const json_object = {} as Type_JSON
+    const json_object_levelTags = {} as Type_JSON
+    const json_object_nodeTags = {} as Type_JSON
+    const json_object_fluxTags = {} as Type_JSON
+    const json_object_dataTags = {} as Type_JSON
+    const json_object_styles_nodes = {} as Type_JSON
+    const json_object_styles_links = {} as Type_JSON
+    const json_object_nodes = {} as Type_JSON
+    const json_object_links = {} as Type_JSON
     // Add tag groups
-    json_object['levelTags'] = {}
+    json_object['levelTags'] = json_object_levelTags
     this.level_taggs_list.forEach(tagg => {
-      json_object['levelTags'][tagg.id] = tagg.toJSON()
+      json_object_levelTags[tagg.id] = tagg.toJSON()
     })
-    json_object['nodeTags'] = {}
+    json_object['nodeTags'] = json_object_nodeTags
     this.node_taggs_list.forEach(tagg => {
-      json_object['nodeTags'][tagg.id] = tagg.toJSON()
+      json_object_nodeTags[tagg.id] = tagg.toJSON()
     })
-    json_object['fluxTags'] = {}
+    json_object['fluxTags'] = json_object_fluxTags
     this.flux_taggs_list.forEach(tagg => {
-      json_object['fluxTags'][tagg.id] = tagg.toJSON()
+      json_object_fluxTags[tagg.id] = tagg.toJSON()
     })
-    json_object['dataTags'] = {}
+    json_object['dataTags'] = json_object_dataTags
     this.data_taggs_list.forEach(tagg => {
-      json_object['dataTags'][tagg.id] = tagg.toJSON()
+      json_object_dataTags[tagg.id] = tagg.toJSON()
     })
     // Add Styles
-    json_object['style_node'] = {}
+    json_object['style_node'] = json_object_styles_nodes
     this.node_styles_list.forEach(style => {
-      json_object['style_node'][style.id] = style.toJSON()
+      json_object_styles_nodes[style.id] = style.toJSON()
     })
-    json_object['style_link'] = {}
+    json_object['style_link'] = json_object_styles_links
     this.link_styles_list.forEach(style => {
-      json_object['style_link'][style.id] = style.toJSON()
+      json_object_styles_links[style.id] = style.toJSON()
     })
     // Add nodes
-    json_object['nodes'] = {}
+    json_object['nodes'] = json_object_nodes
     this.nodes_list.forEach(node => {
-      json_object['nodes'][node.id] = node.toJSON()
+      json_object_nodes[node.id] = node.toJSON()
     })
     // Add links
-    json_object['links'] = {}
+    json_object['links'] = json_object_links
     this.links_list
       .sort((a, b) => sortDisplayedLinksElements(a, b))
       .forEach(link => {
-        json_object['links'][link.id] = link.toJSON()
-    })
+        json_object_links[link.id] = link.toJSON()
+      })
     // Out
     return json_object
   }
@@ -505,30 +513,32 @@ export class Class_Sankey {
    * @param {{[_:string]:any} json_object
    * @memberof Class_Legend
   */
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object:Type_JSON) {
     // TODO : define default value in case data is not in JSON
     // First read styles
     if (json_object['style_node'] !== undefined) {
       // Set node styles from json data
-      Object.entries(json_object['style_node']).forEach(ent_style_node => {
-        // Create a node style
-        const new_style = new Class_NodeStyle(ent_style_node[0], ent_style_node[0], true)
-        // Set node style value to node from JSON
-        new_style.fromJSON(ent_style_node[1] as { [x: string]: any })
-        // Add node style to sankey
-        this._node_styles[ent_style_node[0]] = new_style
-      })
+      Object.entries(json_object['style_node'])
+        .forEach(([style_id, style_json]) => {
+          // Create a node style
+          const new_style = new Class_NodeStyle(style_id, style_id, true)
+          // Set node style value to node from JSON
+          new_style.fromJSON(style_json as Type_JSON)
+          // Add node style to sankey
+          this._node_styles[style_id] = new_style
+        })
     }
     if (json_object['style_link'] !== undefined) {
       // Set link styles from json data
-      Object.entries(json_object['style_link']).forEach(ent_style_link => {
-        // Create a link style
-        const new_style = new Class_LinkStyle(ent_style_link[0], ent_style_link[0], true)
-        // Set link style value to link style from JSON
-        new_style.fromJSON(ent_style_link[1] as { [x: string]: any })
-        // Add link style to sankey
-        this._link_styles[ent_style_link[0]] = new_style
-      })
+      Object.entries(json_object['style_link'])
+        .forEach(([style_id, style_json]) => {
+          // Create a link style
+          const new_style = new Class_LinkStyle(style_id, style_id, true)
+          // Set link style value to link style from JSON
+          new_style.fromJSON(style_json as Type_JSON)
+          // Add link style to sankey
+          this._link_styles[style_id] = new_style
+        })
     }
     // Then read tag groups
     if (json_object['levelTags'] !== undefined) {
@@ -538,7 +548,7 @@ export class Class_Sankey {
           // Create a level tag group
           const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'level_taggs')  // Will be renamed in fromJSON()
           // Set level tag group value from JSON
-          new_grp.fromJSON(tagg_json as { [x: string]: any })
+          new_grp.fromJSON(tagg_json as Type_JSON)
         })
     }
     if (json_object['nodeTags'] !== undefined) {
@@ -548,7 +558,7 @@ export class Class_Sankey {
           // Create a node tag group
           const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'node_taggs')  // Will be renamed in fromJSON()
           // Set node tag group value from JSON
-          new_grp.fromJSON(tagg_json as { [x: string]: any })
+          new_grp.fromJSON(tagg_json as Type_JSON)
         })
     }
     if (json_object['fluxTags'] !== undefined) {
@@ -558,7 +568,7 @@ export class Class_Sankey {
           // Create a flux tag group
           const new_grp =  this.addTagGroup(tagg_id, tagg_id, 'flux_taggs')  // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
-          new_grp.fromJSON(tagg_json as { [x: string]: any })
+          new_grp.fromJSON(tagg_json as Type_JSON)
         })
     }
     if (json_object['dataTags'] !== undefined) {
@@ -568,22 +578,23 @@ export class Class_Sankey {
           // Create a flux tag group
           const new_grp = this.addTagGroup(tagg_id, tagg_id, 'data_taggs') // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
-          new_grp.fromJSON(tagg_json as { [x: string]: any })
+          new_grp.fromJSON(tagg_json as Type_JSON)
         })
     }
     // Then read nodes
-    Object.entries(json_object['nodes'])
+    const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
+    Object.entries(json_node_object)
       .forEach(([node_id, node_json]) => {
         // Create a node
         const node = this.addNewNode(node_id, node_id)
         // Set node value to node from JSON
-        node.fromJSON(node_json as { [x: string]: any })
+        node.fromJSON(node_json as Type_JSON)
       })
     // Redo a go throught, but this time create nodes dimension
     // TODO revoir avec level de noeuds
     this.nodes_list.forEach(n => {
       // get dimensions in json
-      const dim = json_object['nodes'][n.id].dimensions
+      const dim = getJSONOrUndefinedFromJSON(getJSONFromJSON(json_node_object, n.id, {}), 'dimensions')
       /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like :
       dimensions :{...,
           keyGrpLevelTag:{}  // dimensions have an object but it doesn't have parent
@@ -603,15 +614,15 @@ export class Class_Sankey {
         const target = this.nodes_list[1] // default
         const link = this._addNewLink(link_id, source, target)
         // Set link value to link from JSON
-        link.fromJSON(link_json as { [x: string]: any })
+        link.fromJSON(link_json as Type_JSON)
       })
     // Order links io position in each nodes
     // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement
-    this.nodes_list
-      .filter(n => json_object['nodes'][n.id]['links_order'] !== undefined)
-      .forEach(n => {
-        n.linksFromJSON(json_object['nodes'][n.id])
-    })
+    if (json_node_object)
+      this.nodes_list
+        .forEach(n => {
+          n.linksFromJSON(getJSONFromJSON(json_node_object, n.id, {}))
+        })
 
   }
 

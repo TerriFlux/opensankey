@@ -11,9 +11,18 @@ import * as SankeyShapes from '../draw/SankeyDrawShapes'
 // Local types
 import {
   Type_ElementPosition,
+  Type_JSON,
+  Type_Position,
   default_element_color,
   default_element_position,
   default_font,
+  getBooleanFromJSON,
+  getJSONFromJSON,
+  getJSONOrUndefinedFromJSON,
+  getNumberFromJSON,
+  getNumberOrUndefinedFromJSON,
+  getStringFromJSON,
+  getStringListFromJSON,
 } from './Utils'
 import {
   Class_MenuConfig
@@ -386,8 +395,8 @@ export class Class_NodeElement extends Class_Element {
    */
   public getShapeWidthToUse() {
     // Compute sum of thickness on each sides
-    let sum_of_top_thickness = this.getSumOfLinksThickness('top')
-    let sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
+    const sum_of_top_thickness = this.getSumOfLinksThickness('top')
+    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
     // Return max thickness
     return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
   }
@@ -399,8 +408,8 @@ export class Class_NodeElement extends Class_Element {
    */
   public getShapeHeightToUse() {
     // Compute sum of thickness on each sides
-    let sum_of_left_thickness = this.getSumOfLinksThickness('left')
-    let sum_of_right_thickness = this.getSumOfLinksThickness('right')
+    const sum_of_left_thickness = this.getSumOfLinksThickness('left')
+    const sum_of_right_thickness = this.getSumOfLinksThickness('right')
     // Return max thickness
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
@@ -539,21 +548,23 @@ export class Class_NodeElement extends Class_Element {
     json_object['position'] = this.position_type
     json_object['x'] = this.position_x
     json_object['y'] = this.position_y
-    json_object['x_label'] = this._display._x_label
-    json_object['y_label'] = this._display._y_label
+    if (this._display._x_label) json_object['x_label'] = this._display._x_label
+    if (this._display._y_label) json_object['y_label'] = this._display._y_label
     // Fill style & local attributes
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
     // Tooltip
-    json_object['tooltip_text'] = this.tooltip_text
+    if (this.tooltip_text) json_object['tooltip_text'] = this.tooltip_text
     // Tags
-    json_object['tags'] = this.taggs_list
-      .map(tagg => [
-        tagg.id,
-        this.tags_list
-          .filter(tag => (tag.group === tagg))
-          .map(tag => tag.id)
-      ])
+    json_object['tags'] = Object.fromEntries(
+      this.taggs_list
+        .map(tagg => [
+          tagg.id,
+          this.tags_list
+            .filter(tag => (tag.group === tagg))
+            .map(tag => tag.id)
+        ])
+    )
     // Dimension
     // TODO Revoir avec leveltags
     json_object['dimensions'] = Object.fromEntries(
@@ -571,27 +582,28 @@ export class Class_NodeElement extends Class_Element {
    * Assign to node implementation values from json,
    * Does not assign links -> need to read links from JSON before
    *
-   * @param {{ [x: string]: any }} json_node_object
+   * @param {Type_JSON} json_node_object
    * @memberof Class_NodeElement
    */
-  public fromJSON(json_node_object: { [x: string]: any }) {
+  public fromJSON(json_node_object: Type_JSON) {
     // Get root attributes
     super.fromJSON(json_node_object)
-    this._name = json_node_object['name'] ?? this._name
+    this._name = getStringFromJSON(json_node_object, 'name', this._name)
     // Update displaying values
-    this._display.position.type = json_node_object['position'] ?? default_element_position.type
-    this._display.position.x = json_node_object['x'] ?? default_element_position.x
-    this._display.position.y = json_node_object['y'] ?? default_element_position.y
-    this._display._x_label = json_node_object['x_label']
-    this._display._y_label = json_node_object['y_label']
+    this._display.position.type = getStringFromJSON(json_node_object, 'position', this._display.position.type) as Type_Position
+    this._display.position.x = getNumberFromJSON(json_node_object, 'x', this._display.position.x)
+    this._display.position.y = getNumberFromJSON(json_node_object, 'y', this._display.position.y)
+    this._display._x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
+    this._display._y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
-    const style_id = json_node_object['style'] ?? default_style_id
+    const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
     this._display.style = this.drawing_area.sankey.node_styles_dict[style_id]
-    if (json_node_object['local']) {
-      this._display.attributes.fromJSON(json_node_object['local'])
+    const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
+    if (json_local_object) {
+      this._display.attributes.fromJSON(json_local_object)
     }
     // Tooltip
-    this.tooltip_text = json_node_object['tooltip_text'] ?? ''
+    this.tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
     // Node Tags
     //   In JSON here are how supposed tags var is :
     //   tags:{key_grp_tag:string[] (key_tag_selected) }
@@ -621,19 +633,19 @@ export class Class_NodeElement extends Class_Element {
     //   })
   }
 
-  public linksFromJSON(json_node_object: { [x: string]: any }) {
+  public linksFromJSON(json_node_object: Type_JSON) {
     // Input links
-    const input_link_ids: string[] = json_node_object['inputLinksId'] ?? []
+    const input_link_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
     input_link_ids.forEach(link_id => {
       this.addInputLink(this.drawing_area.sankey.links_dict[link_id])
     })
     // Output links
-    const output_link_ids: string[] = json_node_object['outputLinksId'] ?? []
+    const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
     output_link_ids.forEach(link_id => {
       this.addOutputLink(this.drawing_area.sankey.links_dict[link_id])
     })
     // Ordering
-    const ordered_link_ids: string[] = json_node_object['links_order'] ?? []
+    const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
     this._links_order = ordered_link_ids.map(link_id => {
       return this.drawing_area.sankey.links_dict[link_id]
     })
@@ -1112,7 +1124,7 @@ export class Class_NodeElement extends Class_Element {
       label_align = 'center'
     } else {
       const shape_width = this.getShapeWidthToUse()
-      let label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
+      const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
       label_pos_x = shape_width + label_pos_dx
       if (this.name_label_horiz === 'left') {
         label_pos_x = -label_pos_dx
@@ -1127,7 +1139,7 @@ export class Class_NodeElement extends Class_Element {
     }
 
     // y position
-    let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+    const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
     const shape_height = this.getShapeHeightToUse()
 
     let label_pos_y = label_pos_dy + shape_height
@@ -1184,7 +1196,7 @@ export class Class_NodeElement extends Class_Element {
         label_align = 'center'
       }
       // Label Y position is only set by text relative position / shape
-      let label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+      const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
       let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size
       if (this.value_label_vert === 'top') {
         label_pos_y = -label_pos_dy
@@ -1278,7 +1290,7 @@ export class Class_NodeElement extends Class_Element {
 
     list_link_to_add_arrow.forEach(link => {
 
-      // Some variable parameters for arrow 
+      // Some variable parameters for arrow
       const arrow_length = link.shape_arrow_size
       const link_color = link.getPathColorToUse()
       let node_arrow_shift = 0
@@ -1303,29 +1315,29 @@ export class Class_NodeElement extends Class_Element {
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+          case 'left':
+            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+            break
+          case 'top':
+            node_face_size = sumLinkBottom
+            break
+          case 'bottom':
+            node_face_size = sumLinkTop
+            break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+          case 'left':
+            node_face_size2 = sumLinkRight
+            break
+          case 'top':
+            node_face_size2 = sumLinkBottom
+            break
+          case 'bottom':
+            node_face_size2 = sumLinkTop
+            break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -1338,8 +1350,8 @@ export class Class_NodeElement extends Class_Element {
 
           let xt: number = 0 // x coord where link path end
           let yt: number = 0 // y coord where link path end
-          let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node 
-          let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node 
+          let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
+          let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
 
           if (link_arrow_side_left) {
             xt = +this.position_x
@@ -2761,42 +2773,42 @@ export class Class_NodeAttribute {
     return json_object
   }
 
-  public fromJSON(json_local_object: { [x: string]: any }) {
+  public fromJSON(json_local_object: Type_JSON) {
     // if attribute object has these variable then add it to local
     // this function is also called when creating style from json and should trigger all if, because in style all attribute are defined
 
-    if (json_local_object['shape_visible'] !== undefined) this._shape_visible = json_local_object['shape_visible']
-    if (json_local_object['shape'] !== undefined) this._shape_type = json_local_object['shape']
-    if (json_local_object['node_width'] !== undefined) this._shape_min_width = json_local_object['node_width']
-    if (json_local_object['node_height'] !== undefined) this._shape_min_height = json_local_object['node_height']
-    if (json_local_object['color'] !== undefined) this._shape_color = json_local_object['color']
-    if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = json_local_object['colorSustainable']
-    if (json_local_object['node_arrow_angle_factor'] !== undefined) this._shape_arrow_angle_factor = json_local_object['node_arrow_angle_factor']
-    if (json_local_object['node_arrow_angle_direction'] !== undefined) this._shape_arrow_angle_direction = json_local_object['node_arrow_angle_direction']
+    if (json_local_object['shape_visible'] !== undefined) this._shape_visible = getBooleanFromJSON(json_local_object, 'shape_visible', default_shape_visible)
+    if (json_local_object['shape'] !== undefined) this._shape_type = getStringFromJSON(json_local_object, 'shape', default_shape_type) as Type_Shape
+    if (json_local_object['node_width'] !== undefined) this._shape_min_width = getNumberFromJSON(json_local_object, 'node_width', default_shape_min_width)
+    if (json_local_object['node_height'] !== undefined) this._shape_min_height = getNumberFromJSON(json_local_object, 'node_height', default_shape_min_height)
+    if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
+    if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = getBooleanFromJSON(json_local_object, 'colorSustainable', default_shape_color_sustainable)
+    if (json_local_object['node_arrow_angle_factor'] !== undefined) this._shape_arrow_angle_factor = getNumberFromJSON(json_local_object, 'node_arrow_angle_factor', default_shape_arrow_angle_factor)
+    if (json_local_object['node_arrow_angle_direction'] !== undefined) this._shape_arrow_angle_direction = getStringFromJSON(json_local_object, 'node_arrow_angle_direction', default_shape_arrow_angle_direction) as Type_Side
 
-    if (json_local_object['label_visible'] !== undefined) this._name_label_visible = json_local_object['label_visible']
-    if (json_local_object['font_family'] !== undefined) this._name_label_font_family = json_local_object['font_family']
-    if (json_local_object['font_size'] !== undefined) this._name_label_font_size = json_local_object['font_size']
-    if (json_local_object['uppercase'] !== undefined) this._name_label_uppercase = json_local_object['uppercase']
-    if (json_local_object['bold'] !== undefined) this._name_label_bold = json_local_object['bold']
-    if (json_local_object['italic'] !== undefined) this._name_label_italic = json_local_object['italic']
-    if (json_local_object['label_box_width'] !== undefined) this._name_label_box_width = json_local_object['label_box_width']
-    if (json_local_object['label_color'] !== undefined) this._name_label_color = json_local_object['label_color']
-    if (json_local_object['label_vert'] !== undefined) this._name_label_vert = json_local_object['label_vert']
-    if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = json_local_object['label_horiz']
-    if (json_local_object['label_background'] !== undefined) this._name_label_background = json_local_object['label_background']
+    if (json_local_object['label_visible'] !== undefined) this._name_label_visible = getBooleanFromJSON(json_local_object, 'label_visible', default_name_label_visible)
+    if (json_local_object['font_family'] !== undefined) this._name_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_label_font_family)
+    if (json_local_object['font_size'] !== undefined) this._name_label_font_size = getNumberFromJSON(json_local_object, 'font_size', default_label_font_size)
+    if (json_local_object['uppercase'] !== undefined) this._name_label_uppercase = getBooleanFromJSON(json_local_object, 'uppercase', default_label_uppercase)
+    if (json_local_object['bold'] !== undefined) this._name_label_bold = getBooleanFromJSON(json_local_object, 'bold', default_label_bold)
+    if (json_local_object['italic'] !== undefined) this._name_label_italic = getBooleanFromJSON(json_local_object, 'italic', default_label_italic)
+    if (json_local_object['label_box_width'] !== undefined) this._name_label_box_width = getNumberFromJSON(json_local_object, 'label_box_width', default_label_box_width)
+    if (json_local_object['label_color'] !== undefined) this._name_label_color = getBooleanFromJSON(json_local_object, 'label_color', default_label_color)
+    if (json_local_object['label_vert'] !== undefined) this._name_label_vert = getStringFromJSON(json_local_object, 'label_vert', default_name_label_vert) as Type_TextVPos
+    if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = getStringFromJSON(json_local_object, 'label_horiz', default_name_label_horiz) as Type_TextHPos
+    if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
 
-    if (json_local_object['show_value'] !== undefined) this._value_label_visible = json_local_object['show_value']
-    if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = json_local_object['value_label_font_family']
-    if (json_local_object['value_font_size'] !== undefined) this._value_label_font_size = json_local_object['value_font_size']
-    if (json_local_object['value_label_uppercase'] !== undefined) this._value_label_uppercase = json_local_object['value_label_uppercase']
-    if (json_local_object['value_label_bold'] !== undefined) this._value_label_bold = json_local_object['value_label_bold']
-    if (json_local_object['value_label_italic'] !== undefined) this._value_label_italic = json_local_object['value_label_italic']
-    if (json_local_object['value_label_box_width'] !== undefined) this._value_label_box_width = json_local_object['value_label_box_width']
-    if (json_local_object['value_label_color'] !== undefined) this._value_label_color = json_local_object['value_label_color']
-    if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = json_local_object['label_vert_valeur']
-    if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = json_local_object['label_horiz_valeur']
-    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = json_local_object['value_label_background']
+    if (json_local_object['show_value'] !== undefined) this._value_label_visible = getBooleanFromJSON(json_local_object, 'show_value', default_value_label_visible)
+    if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'value_label_font_family', default_label_font_family)
+    if (json_local_object['value_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'value_font_size', default_label_font_size)
+    if (json_local_object['value_label_uppercase'] !== undefined) this._value_label_uppercase = getBooleanFromJSON(json_local_object, 'value_label_uppercase', default_label_uppercase)
+    if (json_local_object['value_label_bold'] !== undefined) this._value_label_bold = getBooleanFromJSON(json_local_object, 'value_label_bold', default_label_bold)
+    if (json_local_object['value_label_italic'] !== undefined) this._value_label_italic = getBooleanFromJSON(json_local_object, 'value_label_italic', default_label_italic)
+    if (json_local_object['value_label_box_width'] !== undefined) this._value_label_box_width = getNumberFromJSON(json_local_object, 'value_label_box_width', default_label_box_width)
+    if (json_local_object['value_label_color'] !== undefined) this._value_label_color = getBooleanFromJSON(json_local_object, 'value_label_color', default_label_color)
+    if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = getStringFromJSON(json_local_object, 'label_vert_valeur', default_value_label_vert) as Type_TextVPos
+    if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'label_horiz_valeur', default_value_label_horiz) as Type_TextHPos
+    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', default_label_background)
   }
 
   // PROTECTED METHODS ==================================================================

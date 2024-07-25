@@ -1157,7 +1157,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     content={content_support}
     pointer_pos={contextMenu.pointer_pos}
     title={applicationContext.t('Menu.c_support')}
-    />
+  />
 
   const data_tags = Object.assign({}, applicationData.data.dataTags)
   const show_data = Object.values(data_tags).length > 0
