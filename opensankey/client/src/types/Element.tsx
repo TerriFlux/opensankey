@@ -169,33 +169,34 @@ export abstract class Class_ProtoElement {
     // Does nothing here
   }
 
-  // GETTERS / SETTERS ==================================================================
-  // Name
-  public get id() { return this._id }
+  // PUBLIC METHODS ====================================================================
 
-  // DrawingArea
-  public get drawing_area() { return this._display.drawing_area }
+  /**
+   * Convert element to JSON
+   *
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public toJSON() {
+    // Init output JSON
+    const json_object: { [_: string]: unknown } = {}
+    // Fill data
+    json_object['is_visible'] = this._is_visible
+    json_object['is_selected'] = this._is_selected
+    // Return
+    return json_object
+  }
 
-  // Svg Group
-  public get svg_group() { return this._svg_group }
-
-  // Selection
-  public setSelected() { this._is_selected = true; this.draw() }
-  public setUnSelected() { this._is_selected = false; this.draw() }
-  public get is_selected() { return this._is_selected }
-
-  // Visible
-  public setVisible() { this._is_visible = true; this.draw() }
-  public setInvisible() { this._is_visible = false; this.draw() }
-  public get is_visible() { return this._is_visible }
-
-  // Mouse is over element
-  public isMouseOver() { return this._is_mouse_over }
-  public setMouseOver() { this._is_mouse_over = true }
-  public unsetMouseOver() { this._is_mouse_over = false }
-
-  // Get application config menu
-  protected get menu_config(): Class_MenuConfig { return this._menu_config }
+  /**
+   * Apply json to element
+   *
+   * @param {{ [x: string]: any }} json_object
+   * @memberof Class_NodeElement
+   */
+  public fromJSON(json_object: { [x: string]: any }) {
+    this._is_visible = json_object['is_visible'] ?? this._is_visible
+    this._is_selected = json_object['is_selected'] ?? this._is_selected
+  }
 
   // PROTECTED METHODES =================================================================
 
@@ -299,7 +300,6 @@ export abstract class Class_ProtoElement {
                 this.eventMouseDragEnd(event))
         )
       }
-
     }
   }
 
@@ -438,8 +438,37 @@ export abstract class Class_ProtoElement {
   ) {
     /* TODO définir  */
   }
+
+  // GETTERS / SETTERS ==================================================================
+  // Name
+  public get id() { return this._id }
+
+  // DrawingArea
+  public get drawing_area() { return this._display.drawing_area }
+
+  // Svg Group
+  public get svg_group() { return this._svg_group }
+
+  // Selection
+  public setSelected() { this._is_selected = true; this.draw() }
+  public setUnSelected() { this._is_selected = false; this.draw() }
+  public get is_selected() { return this._is_selected }
+
+  // Visible
+  public setVisible() { this._is_visible = true; this.draw() }
+  public setInvisible() { this._is_visible = false; this.draw() }
+  public get is_visible() { return this._is_visible }
+
+  // Mouse is over element
+  public isMouseOver() { return this._is_mouse_over }
+  public setMouseOver() { this._is_mouse_over = true }
+  public unsetMouseOver() { this._is_mouse_over = false }
+
+  // Get application config menu
+  protected get menu_config(): Class_MenuConfig { return this._menu_config }
 }
 
+// CLASS ELEMENT ************************************************************************
 
 /**
  * Class that define a meta element to display on drawing area
@@ -501,16 +530,6 @@ export abstract class Class_Element extends Class_ProtoElement {
   public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.draw() }
   public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
 
-  // GETTERS / SETTERS ==================================================================
-
-  // Position
-  public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
-  public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
-  public get position_type() { return this._display.position.type }
-  public set position_type(_: Type_Position) { this._display.position.type = _; this.applyPosition() }
-
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -539,20 +558,56 @@ export abstract class Class_Element extends Class_ProtoElement {
     }
   }
 
+  // GETTERS / SETTERS ==================================================================
+
+  // Position
+  public get position_x() { return this._display.position.x }
+  public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
+  public get position_y() { return this._display.position.y }
+  public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
+  public get position_type() { return this._display.position.type }
+  public set position_type(_: Type_Position) { this._display.position.type = _; this.applyPosition() }
 }
 
+// CLASS HANDLER ************************************************************************
+
+/**
+ * Class that define a handler used to manipulate a element
+ * @export
+ * @class Class_Handler
+ * @extends {Class_Element}
+ */
 export class Class_Handler extends Class_Element {
 
-  private _size: number = 5
-  private _color: string = 'black'
-  private _filled: boolean = true
-  private _custom_class: string|undefined 
-  private _ref_element: Class_LinkElement | Class_NodeElement
+  // PROTECTED ATTRIBUTES ===============================================================
+
   protected _display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
   }
 
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _size: number = 5
+  private _color: string = 'black'
+  private _filled: boolean = true
+  private _custom_class: string|undefined
+  private _ref_element: Class_LinkElement | Class_NodeElement
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_Handler.
+   * @param {string} id
+   * @param {Class_DrawingArea} drawing_area
+   * @param {Class_MenuConfig} menu_config
+   * @param {(Class_LinkElement | Class_NodeElement)} ref_link
+   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragStart_function
+   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} drag_function
+   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragEnd_function
+   * @param {{class?:string, size?: number, color?: string, filled?: boolean }} [options]
+   * @memberof Class_Handler
+   */
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
@@ -571,11 +626,10 @@ export class Class_Handler extends Class_Element {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
     }
-
+    // Drag handling functions -> defined by parent element
     this.eventMouseDragStart = dragStart_function
     this.eventMouseDrag = drag_function
     this.eventMouseDragEnd = dragEnd_function
-
     // Set optional variable value
     if (options) {
       if (options.size !== undefined) {
@@ -591,16 +645,16 @@ export class Class_Handler extends Class_Element {
         this._custom_class= options.class
       }
     }
-
   }
 
-  draw() {
+  // PUBLIC METHODS =====================================================================
+
+  public draw() {
     super.draw()
     this.drawElements()
   }
 
-
-  drawElements() {
+  public drawElements() {
     this.d3_selection?.attr('class', 'gg_handler')
     if(this._custom_class!==undefined){
       this.d3_selection?.attr('class', this._custom_class)
@@ -617,12 +671,14 @@ export class Class_Handler extends Class_Element {
       .attr('fill-opacity', this._filled ? 1 : 0)
   }
 
+  // GETTERS / SETTERS ==================================================================
+
   /**
- * Getter used to display or not the handler (called in draw of Class_Element)
- *
- * @readonly
- * @memberof Class_Handler
- */
+   * Getter used to display or not the handler (called in draw of Class_Element)
+   *
+   * @readonly
+   * @memberof Class_Handler
+   */
   public get is_visible() {
     return (this._ref_element.is_selected && this._is_visible)
   }

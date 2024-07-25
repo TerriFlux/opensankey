@@ -36,6 +36,13 @@ import { Class_Legend } from './Legend'
 import { Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
 
+// CONSTANTS ****************************************************************************
+
+const default_grid_size = 50
+const default_grid_visible = true
+const default_horizontal_spacing = 200
+const default_vertical_spacing = 50
+const default_scale = 50
 
 // CLASS DRAWING AREA *******************************************************************
 /**
@@ -126,6 +133,8 @@ export class Class_DrawingArea {
 
   // PRIVATE ATTRIBUTES =================================================================
 
+  // Attributes that describe drawing area ----------------------------------------------
+
   /**
    * Height in px of drawing area in application
    * @private
@@ -142,6 +151,31 @@ export class Class_DrawingArea {
    */
   private _width: number
 
+  // Color
+  private _color: string = default_background_color
+
+  // Grid
+  private _grid_color: string = default_grid_color
+  private _grid_visible: boolean = default_grid_visible
+  private _grid_size: number = default_grid_size
+
+  // Scale
+  private _scale: number = default_scale
+
+  // Positionning
+  private _horizontal_spacing: number = default_horizontal_spacing
+  private _vertical_spacing: number = default_vertical_spacing
+
+  // Objects containeds in drawing area -------------------------------------------------
+
+  // Elements that are contained in this area
+  private _sankey: Class_Sankey
+  private _legend: Class_Legend
+  private _selection_zone: Class_ZoneSelection
+  private _number_of_elements: number = 0
+
+  // Context attributes for drawing area ------------------------------------------------
+
   /**
    * Interaction mode with drawing area
    * @private
@@ -149,8 +183,6 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private _mode: 'edition' | 'selection' = 'edition'
-
-  private _number_of_elements: number = 0
 
   /**
    * Boolean to know if we are creating a link & another node at the release of the LMB
@@ -161,47 +193,27 @@ export class Class_DrawingArea {
    */
   private _ghost_link: Class_GhostLinkElement | null = null
 
-  // Elements that are contained in this area
-  private _sankey: Class_Sankey
-  private _legend: Class_Legend
-  private _selection_zone: Class_ZoneSelection
 
   // Elements that are selected in this area
   private _selection: { [id: string]: Class_ProtoElement } = {}
 
-  // Color
-  private _color: string = default_background_color
-
-  // Grid
-  private _grid_color: string = default_grid_color
-  private _grid_visible: boolean = true
-  private _grid_size: number = 100
-
-  // Scale
-  private _scale: number = 20
-
-  // Positionning
-  private _horizontal_spacing: number = 200
-  private _vertical_spacing: number = 50
-
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
-
   private _node_contextualied: Class_NodeElement | undefined = undefined
   private _link_contextualied: Class_LinkElement | undefined = undefined
-
   private _is_drawing_area_contextualised: boolean = false
-
-
-
 
   // Zoom & positioning of drawing_area
   // if we want to move manually the drawing_area, we should use this variable (see areaFitHorizontally && areaFitVertically)
   private zoomListener = d3.zoom<SVGSVGElement, unknown>()
-    .filter(evt => (evt.which == 2 || evt.which == 0))//only trigger zoom event when we scroll (which == 0) && and drag mouse middle button (which == 2)
-    .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))// change cursor to 'move' to show we can shift drawing area
+    // only trigger zoom event when we scroll (which == 0) &&
+    // and drag mouse middle button (which == 2)
+    .filter(evt => (evt.which == 2 || evt.which == 0))
+    // Change cursor in teh beginning to 'move' to show we can shift drawing area
+    .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', this.eventZoom)
-    .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))// reset cursor
+    // Reset cursor in the end
+    .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
   // CONSTRUCTOR ========================================================================
 
@@ -230,9 +242,7 @@ export class Class_DrawingArea {
   public reinit() {
     this._sankey.delete()
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
-
     this._legend = new Class_Legend(this, this.application_data.menu_configuration)
-
     this.reset()
   }
   /**
@@ -295,7 +305,7 @@ export class Class_DrawingArea {
     // Draw all nodes
     this._sankey.draw()
     // Draw legend
-    this.legend.draw()
+    this._legend.draw()
   }
 
   public drawSelected() {
@@ -470,64 +480,6 @@ export class Class_DrawingArea {
     // TODO if necessary
     // Update number of elements
     this._number_of_elements = new_order
-  }
-
-  /**
-   * Convert current drawing area & all substructure as JSON data
-   *
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  public toJSON() {
-    let json_object = {} as { [_: string]: any }
-    json_object['grid_visible'] = this._grid_visible
-    json_object['grid_square_size'] = this._grid_size
-    json_object['width'] = this._width
-    json_object['height'] = this._height
-    json_object['h_space'] = this._horizontal_spacing
-    json_object['v_space'] = this._vertical_spacing
-    json_object['user_scale'] = this._scale
-    json_object['couleur_fond_sankey'] = this._color
-    json_object['node_label_separator'] = '' // TODO get node label separator when implemented in class
-    json_object = { ...json_object, ...this._legend.toJSON() }
-
-    json_object['nodes'] = {}
-
-    Object.entries(this.sankey.nodes_dict).forEach(ent_node => {
-      json_object['nodes'][ent_node[0]] = ent_node[1].toJSON()
-    })
-
-    json_object['links'] = {}
-    Object.entries(this.sankey.links_dict).forEach(ent_link => {
-      json_object['links'][ent_link[0]] = ent_link[1].toJSON()
-    })
-
-    json_object['style_node'] = {}
-    Object.entries(this.sankey.node_styles_dict).forEach(ent_style_node => {
-      json_object['style_node'][ent_style_node[0]] = ent_style_node[1].toJSON()
-    })
-
-    json_object['style_link'] = {}
-    Object.entries(this.sankey.link_styles_dict).forEach(ent_style_link => {
-      json_object['style_link'][ent_style_link[0]] = ent_style_link[1].toJSON()
-    })
-
-    json_object['nodeTags'] = {}
-    Object.entries(this.sankey.node_taggs_dict).forEach(ent_nt => {
-      json_object['nodeTags'][ent_nt[0]] = ent_nt[1].toJSON()
-    })
-
-    json_object['fluxTags'] = {}
-    Object.entries(this.sankey.flux_taggs_dict).forEach(ent_ft => {
-      json_object['fluxTags'][ent_ft[0]] = ent_ft[1].toJSON()
-    })
-
-    json_object['dataTags'] = {}
-    Object.entries(this.sankey.data_taggs_dict).forEach(ent_dt => {
-      json_object['dataTags'][ent_dt[0]] = ent_dt[1].toJSON()
-    })
-
-    return json_object
   }
 
   /**
@@ -764,12 +716,12 @@ export class Class_DrawingArea {
   }
 
   /**
- * Recenter drawing area & make it fit the screen vertically,
- *
- * (not recommended for horizontal sankey)
- *
- * @memberof Class_DrawingArea
- */
+   * Recenter drawing area & make it fit the screen vertically,
+   *
+   * (not recommended for horizontal sankey)
+   *
+   * @memberof Class_DrawingArea
+   */
   public areaFitVertically() {
     if (this.d3_selection_zoom_area) {
       const navbar_height = this.getNavBarHeight()
@@ -779,6 +731,56 @@ export class Class_DrawingArea {
     }
   }
 
+  /**
+   * Export current drawing area & its contents as json struct
+   *
+   * @param {{ [_: string]: any }} json_object
+   * @memberof Class_DrawingArea
+   */
+  public fromJSON(json_object: { [_: string]: any }) {
+    // Update direct attributes
+    this._height = json_object['height'] ?? this._height
+    this._width = json_object['width'] ?? this._width
+    this._grid_size = json_object['grid_square_size'] ?? this._grid_size
+    this._grid_visible = json_object['grid_visible'] ?? this._grid_visible
+    this._horizontal_spacing = json_object['h_space'] ?? this._horizontal_spacing
+    this._vertical_spacing = json_object['v_space'] ?? this._vertical_spacing
+    this._scale = json_object['user_scale'] ?? this._scale
+    this._color = json_object['couleur_fond_sankey'] ?? this._color
+    // Update legend
+    this._legend.fromJSON(json_object)
+    // Update Sankey
+    this._sankey.fromJSON(json_object)
+    // Draw
+    this.reset()
+  }
+
+  /**
+   * Convert current drawing area & all substructure as JSON data
+   *
+   * @param {{ [_: string]: any }} json_object
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public toJSON() {
+    // Create json struct
+    const json_object = {} as { [_: string]: any }
+    // Dump direct attributes
+    json_object['height'] = this._height
+    json_object['width'] = this._width
+    json_object['grid_visible'] = this._grid_visible
+    json_object['grid_square_size'] = this._grid_size
+    json_object['h_space'] = this._horizontal_spacing
+    json_object['v_space'] = this._vertical_spacing
+    json_object['user_scale'] = this._scale
+    json_object['couleur_fond_sankey'] = this._color
+    // Dump with json of contained elements
+    return {
+      ...json_object,
+      ...this._legend.toJSON(),
+      ...this._sankey.toJSON()
+    }
+  }
 
   // PRIVATE METHODS ==================================================================
 

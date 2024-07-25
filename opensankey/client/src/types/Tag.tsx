@@ -50,6 +50,7 @@ export abstract class Class_ProtoTag {
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Group where it belong
+
   protected abstract _group: any
 
   // CONSTRUCTOR ========================================================================
@@ -111,11 +112,9 @@ export abstract class Class_ProtoTag {
 
   public toJSON() {
     const json_object = {} as { [_: string]: any }
-    json_object['id'] = this._id
     json_object['name'] = this._name
     json_object['selected'] = this._is_selected
     json_object['color'] = this._color
-
     return json_object
   }
 
@@ -126,6 +125,7 @@ export abstract class Class_ProtoTag {
    * @memberof Class_Tag
    */
   public fromJSON(json_object: { [_: string]: any }) {
+    this._name = json_object['name'] ?? this._name
     this._is_selected = json_object['selected'] ?? false
     this._color = json_object['color'] ?? 'grey'
   }
@@ -234,7 +234,6 @@ export class Class_Tag extends Class_ProtoTag {
       })
     this._references = {}
   }
-
 }
 
 // CLASS DATATAG ************************************************************************
@@ -422,13 +421,18 @@ export abstract class Class_ProtoTagGroup {
   }
 
   public toJSON() {
+    // Create empty struct
     const json_object = {} as { [_: string]: any }
-    json_object['group_name'] = this._name
+    // Fill group attributes
+    json_object['name'] = this._name
     json_object['banner'] = this._banner
     json_object['tags'] = {}
-    Object.entries(this._tags).forEach(ent_tags => {
-      json_object['tags'][ent_tags[0]] = ent_tags[1].toJSON()
-    })
+    // Update tags infos
+    this.tags_list
+      .forEach(tag => {
+        json_object['tags'][tag.id] = tag.toJSON()
+      })
+    // Out
     return json_object
   }
 
@@ -439,12 +443,25 @@ export abstract class Class_ProtoTagGroup {
    * @memberof Class_TagGroup
    */
   public fromJSON(json_object: { [_: string]: any }) {
-    this._name = json_object['group_name'] ?? this._name
-    this._banner = json_object['banner'] ?? 'one'
-    Object.entries(json_object['tags']).forEach(ent_tags => {
-      const new_tag = this.addTag((ent_tags[1] as { name: string }).name, ent_tags[0])
-      new_tag.fromJSON((ent_tags[1] as { [x: string]: any }))
+    // Read legacy JSON
+    this.fromLegacyJSON(json_object)
+    // Read group attributes
+    this._name = json_object['name'] ?? this._name
+    this._banner = json_object['banner'] ?? this._banner
+    // Clean existing tags - always at least one on construction
+    const _ = this.tags_list
+    _.forEach(tag => this.removeTag(tag))
+    // Create new tags & read their attributes
+    Object.entries(json_object['tags'])
+      .forEach(([tag_id, tag_json]) => {
+        const new_tag = this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
+        new_tag.fromJSON(tag_json as { [x: string]: any })
     })
+  }
+
+  private fromLegacyJSON(json_object: { [_: string]: any }) {
+    // TODO fill with legacy json entries
+    this._name = json_object['group_name'] ?? this._name
   }
 
   // PROTECTED METHODS ==================================================================
@@ -574,7 +591,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    */
   public fromJSON(json_object: { [_: string]: any }) {
     super.fromJSON(json_object)
-    this._show_legend = json_object['show_legend'] ?? false
+    this._show_legend = json_object['show_legend'] ?? this._show_legend
   }
 
   // PROTECTED METHODS ==================================================================
@@ -689,7 +706,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    */
   public fromJSON(json_object: { [_: string]: any }) {
     super.fromJSON(json_object)
-    this._show_legend = json_object['show_legend'] ?? false
+    this._show_legend = json_object['show_legend'] ?? this._show_legend
   }
 
   // PROTECTED METHODS ==================================================================
@@ -750,9 +767,14 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 }
 
-
 // CLASS TAGGROUP FOR NODES LEVELS ******************************************************
-
+/**
+ * Tag group for node level
+ * TODO fonctionnement à completer // dimension dans nodes
+ * @export
+ * @class Class_TagGroupNodeLevel
+ * @extends {Class_TagGroup}
+ */
 export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   // PRIVATE ATTRIBUTES==================================================================
@@ -770,8 +792,8 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   public fromJSON(json_object: { [_: string]: any }) {
     super.fromJSON(json_object)
-    this._activated = json_object['activated'] ?? true
-    this._siblings = json_object['sibling'] ?? []
+    this._activated = json_object['activated'] ?? this._activated
+    this._siblings = json_object['sibling'] ?? this._siblings
   }
 
   // GETTERS / SETTERS ==================================================================
