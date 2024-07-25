@@ -15,8 +15,12 @@ import { Class_Element } from './Element'
 import { Class_MenuConfig } from './MenuConfig'
 import {
   Type_ElementPosition,
+  Type_JSON,
   default_element_color,
-  default_element_position
+  default_element_position,
+  getBooleanFromJSON,
+  getNumberFromJSON,
+  getStringFromJSON
 } from './Utils'
 
 
@@ -88,6 +92,7 @@ export class Class_Legend extends Class_Element {
   }
 
   // CONSTRUCTOR ========================================================================
+
   constructor(
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
@@ -137,35 +142,35 @@ export class Class_Legend extends Class_Element {
     this.updateLegendHeight()
   }
 
-  public toJSON(){
-    const json_object={} as {[_:string]:unknown}
-    json_object['mask_legend']=this._masked
-    json_object['legend_width']=this.width
-    json_object['display_legend_scale']=this._display_legend_scale
-    json_object['legend_police']=this._legend_police
-    json_object['legend_bg_border']=this._legend_bg_border
-    json_object['legend_bg_color']=this._legend_bg_color
-    json_object['legend_bg_opacity']=this._legend_bg_opacity
-    json_object['legend_show_dataTags']=this._legend_show_dataTags
+  public toJSON() {
+    const json_object = super.toJSON()
+    json_object['mask_legend'] = this._masked
+    json_object['legend_width'] = this._width
+    json_object['display_legend_scale'] = this._display_legend_scale
+    json_object['legend_police'] = this._legend_police
+    json_object['legend_bg_border'] = this._legend_bg_border
+    json_object['legend_bg_color'] = this._legend_bg_color
+    json_object['legend_bg_opacity'] = this._legend_bg_opacity
+    json_object['legend_show_dataTags'] = this._legend_show_dataTags
     return json_object
   }
 
   /**
    * Setting value of legend from JSON
    *
-   * @param {{[_:string]:any} json_object
+   * @param {Type_JSON json_object
    * @memberof Class_Legend
    */
-  public fromJSON(json_object:{[_:string]:any}){
+  public fromJSON(json_object: Type_JSON) {
     // TODO : define default value in case data is not in JSON
-    this._masked=json_object['mask_legend']??true
-    this.width=json_object['legend_width']??180
-    this._display_legend_scale=json_object['display_legend_scale']??false
-    this._legend_police=json_object['legend_police']?? 12
-    this._legend_bg_border=json_object['legend_bg_border']?? false
-    this._legend_bg_color=json_object['legend_bg_color']?? 'grey'
-    this._legend_bg_opacity=json_object['legend_bg_opacity']?? 0
-    this._legend_show_dataTags=json_object['legend_show_dataTags']?? false
+    this._masked = getBooleanFromJSON(json_object, 'mask_legend', this._masked)
+    this._width = getNumberFromJSON(json_object, 'legend_width', this._width)
+    this._display_legend_scale = getBooleanFromJSON(json_object, 'display_legend_scale', this._display_legend_scale)
+    this._legend_police = getNumberFromJSON(json_object, 'legend_police', this._legend_police)
+    this._legend_bg_border = getBooleanFromJSON(json_object, 'legend_bg_border', this._legend_bg_border)
+    this._legend_bg_color = getStringFromJSON(json_object, 'legend_bg_color', this._legend_bg_color)
+    this._legend_bg_opacity = getNumberFromJSON(json_object, 'legend_bg_opacity', this._legend_bg_opacity)
+    this._legend_show_dataTags = getBooleanFromJSON(json_object, 'legend_show_dataTags', this._legend_show_dataTags)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -544,7 +549,7 @@ export class Class_Legend extends Class_Element {
   public get is_visible(): boolean {
     return (
       !this._masked
-        )
+    )
   }
 
   public get masked(): boolean { return this._masked }

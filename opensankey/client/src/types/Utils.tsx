@@ -82,7 +82,6 @@ export const default_font = 'Arial,sans-serif'
  */
 export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
 
-
 /**
  * Define necessary properties for a position
  *
@@ -100,6 +99,10 @@ export const default_element_position: Type_ElementPosition = {
   y: 10,
 }
 
+export type Type_JSON = {[_: string] : boolean | number |  string | string[] | Type_JSON}
+
+// DEDICATED FUNCTIONS *******************************************************************
+
 /**
  * Create random id
  * from https://stackoverflow.com/a/1349426
@@ -107,15 +110,15 @@ export const default_element_position: Type_ElementPosition = {
  * @return {*}
  */
 export function randomId(length: number = 5) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  let counter = 0;
+  let result = ''
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const charactersLength = characters.length
+  let counter = 0
   while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    counter += 1
   }
-  return result;
+  return result
 }
 
 export function makeId(name: string) {
@@ -124,4 +127,140 @@ export function makeId(name: string) {
   return  std_name + '_' + randomId()
 }
 
+export function getBooleanFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: boolean
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'boolean') {
+      return json_object[key] as boolean
+    }
+  }
+  return fallback_value
+}
+
+export function getNumberFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: number
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'number') {
+      return json_object[key] as number
+    }
+  }
+  return fallback_value
+}
+
+export function getNumberOrUndefinedFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'number') {
+      return json_object[key] as number
+    }
+  }
+  return undefined
+}
+
+export function getNumberOrNullFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'number') {
+      return json_object[key] as number
+    }
+  }
+  return null
+}
+
+export function getStringFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: string
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'string') {
+      return json_object[key] as string
+    }
+  }
+  return fallback_value
+}
+
+export function getStringOrUndefinedFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'string') {
+      return json_object[key] as string
+    }
+  }
+  return undefined
+}
+
+export function getStringOrNullFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === 'string') {
+      return json_object[key] as string
+    }
+  }
+  return null
+}
+
+export function getStringListFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: string[]
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === typeof fallback_value) {
+      return json_object[key] as string[]
+    }
+  }
+  return fallback_value
+}
+
+export function getStringListOrUndefinedFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    const _ = getStringListFromJSON(json_object, key, [])
+    if (_.length > 0)
+      return _
+  }
+  return undefined
+}
+
+export function getJSONFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: Type_JSON
+) {
+  if (json_object[key]) {
+    if (typeof json_object[key] === typeof fallback_value) {
+      return json_object[key] as Type_JSON
+    }
+  }
+  return fallback_value
+}
+
+export function getJSONOrUndefinedFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    const _ = getJSONFromJSON(json_object, key, {})
+    if (Object.keys(_).length > 0)
+      return _
+  }
+  return undefined
+}
 

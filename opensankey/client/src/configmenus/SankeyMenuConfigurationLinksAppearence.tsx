@@ -350,8 +350,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                 'menuconfigpanel_option_button_center'
             }
             onClick={() => {
-                elements.forEach(element => element.shape_orientation = 'vh')
-                refreshThisAndUpdateRelatedComponents()
+              elements.forEach(element => element.shape_orientation = 'vh')
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {logo_vh}
@@ -527,7 +527,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                 element.shape_starting_tangeant = (value ? value/100 : undefined))
               refreshThisAndUpdateRelatedComponents()
             }
-          }
+            }
 
           />
         </OSTooltip>
@@ -634,8 +634,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       {
         (!menu_for_style) &&
         isAttributeOverloaded(selected_links, 'shape_is_dashed') ?
-        TooltipValueSurcharge('link_var_', t) :
-        <></>
+          TooltipValueSurcharge('link_var_', t) :
+          <></>
       }
     </Checkbox>
 
@@ -666,8 +666,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {
           (!menu_for_style) &&
           isAttributeOverloaded(selected_links, 'value_label_is_visible') ?
-          TooltipValueSurcharge('link_var_', t) :
-          <></>
+            TooltipValueSurcharge('link_var_', t) :
+            <></>
         }
       </Checkbox>
     </Box>
@@ -720,8 +720,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
       {
         value_label_to_precision ?
-        <></> :
-        <></>
+          <></> :
+          <></>
       }
 
       {/* Choix d'affichage du nombre de chiffre après la virgule  */}
@@ -799,8 +799,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                 {
                   (!menu_for_style) &&
                   isAttributeOverloaded(selected_links, 'value_label_unit') ?
-                  <>{TooltipValueSurcharge('link_var_', t)}</> :
-                  <></>
+                    <>{TooltipValueSurcharge('link_var_', t)}</> :
+                    <></>
                 }
               </Box>
               <OSTooltip label={t('Flux.label.tooltips.l_u')}>
@@ -856,8 +856,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             <Button
               variant={
                 (!is_indeterminate && (value_label_color === 'white')) ?
-                'menuconfigpanel_option_button_activated_center' :
-                'menuconfigpanel_option_button_center'
+                  'menuconfigpanel_option_button_activated_center' :
+                  'menuconfigpanel_option_button_center'
               }
               onClick={() => {
                 elements.forEach(element => element.value_label_color = 'white')
@@ -910,7 +910,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 elements.forEach(element => element.value_label_font_family = evt.target.value)
                 refreshThisAndUpdateRelatedComponents()
-            }}
+              }}
           >
             {data.display_style.font_family.map((d) => {
               return <option
@@ -1197,22 +1197,22 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <MenuList>
           {
             new_data.drawing_area.sankey.link_styles_list_sorted
-            .map(style => {
-              return (
-                <MenuItem
-                  key={style.id}
-                  onClick={() => {
-                    ref_selected_style_link.current = style.id
-                    selected_links.map(link => {
-                      link.style = style
-                    })
-                    refreshThisAndUpdateRelatedComponents()
-                  }}
-                >
-                  {style.id}
-                </MenuItem>
-              )
-            })
+              .map(style => {
+                return (
+                  <MenuItem
+                    key={style.id}
+                    onClick={() => {
+                      ref_selected_style_link.current = style.id
+                      selected_links.map(link => {
+                        link.style = style
+                      })
+                      refreshThisAndUpdateRelatedComponents()
+                    }}
+                  >
+                    {style.id}
+                  </MenuItem>
+                )
+              })
           }
         </MenuList>
       </Menu>

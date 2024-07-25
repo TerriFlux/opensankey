@@ -1,7 +1,7 @@
-import { Class_DrawingArea } from "./DrawingArea"
-import { Class_Element } from "./Element"
-import { Class_MenuConfig } from "./MenuConfig"
-import { Type_ElementPosition, default_element_position } from "./Utils"
+import { Class_DrawingArea } from './DrawingArea'
+import { Class_Element } from './Element'
+import { Class_MenuConfig } from './MenuConfig'
+import { Type_ElementPosition, default_element_position } from './Utils'
 
 export class Class_ZoneSelection extends Class_Element {
   private _width: number = 0

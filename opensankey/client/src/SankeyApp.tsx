@@ -445,8 +445,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*************************************************************************************************/
   useEffect(() => {
-     // Test
-        applicationData.new_data?.drawing_area?.reset();
+    // Test
+    applicationData.new_data?.drawing_area?.reset()
   })
   /*************************************************************************************************/
   return <ChakraProvider theme={opensankey_theme}>
