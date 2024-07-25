@@ -242,7 +242,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.dragHandleStart(),
         this.startCurvePointDragEvent(),
         this.dragHandleEnd(),
-      {class:'cp_start'}),
+        { class: 'cp_start' }),
       ending_curve_point: new Class_Handler(
         'cp_end_' + id,
         drawing_area,
@@ -251,7 +251,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.dragHandleStart(),
         this.endCurvePointDragEvent(),
         this.dragHandleEnd(),
-      {class:'cp_end'}),
+        { class: 'cp_end' }),
       starting_bezier_point: new Class_Handler(
         'bz_start_' + id,
         drawing_area,
@@ -260,7 +260,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.dragHandleStart(),
         this.startTangeantDragEvent(),
         this.dragHandleEnd(),
-      {class:'bz_start'}),
+        { class: 'bz_start' }),
       ending_bezier_point: new Class_Handler(
         'bz_end_' + id,
         drawing_area,
@@ -269,7 +269,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.dragHandleStart(),
         this.endTangeantDragEvent(),
         this.dragHandleEnd(),
-      {class:'bz_end'}),
+        { class: 'bz_end' }),
       middle_recycling_point: new Class_Handler(
         'recy_middle_' + id,
         drawing_area,
@@ -278,7 +278,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.dragHandleStart(),
         this.middleRecyclingDragEvent(),
         this.dragHandleEnd(),
-      {class:'recy_middle'}),
+        { class: 'recy_middle' }),
       is_dragged: false
     }
     // Values
@@ -341,16 +341,18 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public drawWithNodes() {
-    if(this.source && this.target) {
+    if (this.source && this.target) {
       this.source.draw()
       this.target.draw()
     }
+  }
+  public drawAsSelected() {
+    this.drawControlPoint()
   }
 
   public drawElements() {
     this.drawPath()
     this.drawLabel()
-    this.drawControlPoint()
   }
 
   /**
@@ -589,6 +591,29 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     // Get value
     this._values.fromJSON(json_object['value'])
+  }
+
+  public getPathColorToUse() {
+    // Default color
+    let shape_color = this.shape_color
+    // Do we apply color of flux tags ?
+    const flux_taggs_activated = this.flux_taggs_list
+      .filter(tagg => tagg.show_legend)
+    if (flux_taggs_activated.length > 0) {
+      const tagg_for_colormap = flux_taggs_activated[0]
+      const tags_for_colormap = this.flux_tags_list
+        .filter(tag => (tag.group === tagg_for_colormap))
+        .filter(tag => tag.is_selected)
+      if (tags_for_colormap.length > 0)
+        shape_color = tags_for_colormap[0].color
+    }
+    else {
+      // Do we apply colors of data tags ?
+      this.drawing_area.sankey.selected_data_tags_list
+        .filter(tag => tag.group.show_legend)
+        .forEach(tag => shape_color = tag.color)
+    }
+    return shape_color
   }
 
   // PROTECTED METHODS ==================================================================
@@ -916,28 +941,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
-  private getPathColorToUse() {
-    // Default color
-    let shape_color = this.shape_color
-    // Do we apply color of flux tags ?
-    const flux_taggs_activated = this.flux_taggs_list
-      .filter(tagg => tagg.show_legend)
-    if (flux_taggs_activated.length > 0) {
-      const tagg_for_colormap = flux_taggs_activated[0]
-      const tags_for_colormap = this.flux_tags_list
-        .filter(tag => (tag.group === tagg_for_colormap))
-        .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length > 0)
-        shape_color = tags_for_colormap[0].color
-    }
-    else {
-      // Do we apply colors of data tags ?
-      this.drawing_area.sankey.selected_data_tags_list
-        .filter(tag => tag.group.show_legend)
-        .forEach(tag => shape_color = tag.color)
-    }
-    return shape_color
-  }
+
 
   /**
    * Return a svg path for link path drawing
@@ -948,6 +952,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   private getBezierPath() {
     // Update control points
     this.computeControlPoints()
+
 
     // Normal mode
     if (!this.shape_is_recycling) {
@@ -1194,7 +1199,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     const y0 = this.position_y_start  // ...
     const x6 = this.position_x_end
     const y6 = this.position_y_end
-
     // Shifts
     const ending_shift = this.lenght * (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
@@ -1873,11 +1877,27 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public get position_x_end() {
-    return this._display.position_ending.x
+    // If we draw an arrow for the link then we need to create a space between the node and the end of the link path (this space correspond to the size of the arrow)
+    let shifting_end_point_x = 0
+    if (this.shape_is_arrow) {
+      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
+      const sign_shifting_end_point = (is_revert) ? -1 : 1;
+      shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
+    }
+    return this._display.position_ending.x - shifting_end_point_x
   }
 
   public get position_y_end() {
-    return this._display.position_ending.y
+    // If we draw an arrow for the link then we need to create a space between the node and the end of the link path (this space correspond to the size of the arrow)
+    let shifting_end_point_y = 0
+    if (this.shape_is_arrow) {
+      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
+      const sign_shifting_end_point = (is_revert) ? -1 : 1;
+      shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
+    }
+    return this._display.position_ending.y - shifting_end_point_y
   }
 
   /**
