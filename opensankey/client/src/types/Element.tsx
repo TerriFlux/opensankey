@@ -180,8 +180,8 @@ export abstract class Class_ProtoElement {
   public get svg_group() { return this._svg_group }
 
   // Selection
-  public setSelected() { this._is_selected = true; this.draw() }
-  public setUnSelected() { this._is_selected = false; this.draw() }
+  public setSelected() { this._is_selected = true; this.drawAsSelected() }
+  public setUnSelected() { this._is_selected = false; this.drawAsSelected() }
   public get is_selected() { return this._is_selected }
 
   // Visible
@@ -235,6 +235,8 @@ export abstract class Class_ProtoElement {
       this.d3_selection = null
     }
   }
+
+  protected abstract drawAsSelected():void
 
   /**
    * Set up events related to element d3_element
@@ -524,6 +526,8 @@ export abstract class Class_Element extends Class_ProtoElement {
       this.d3_selection = null
     }
   }
+
+  protected drawAsSelected(){}
 
   /**
    * Apply node position to it shape in d3
