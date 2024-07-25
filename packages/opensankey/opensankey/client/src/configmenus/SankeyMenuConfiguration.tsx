@@ -355,7 +355,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
   * }
   * @return {*}
   */
- export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
+export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
   default_value,
   ref_to_set_value,
   function_on_blur,
@@ -410,16 +410,16 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
         }
       }}
     >
-    <NumberInputField
-      ref={ref_input}
-      onBlur={() => {
-        if (!menu_for_style) {
-          clearTimeout(is_modifying.current)
-        }
-        // Update selected elements value
-        function_on_blur(value)
-      }}
-    />
+      <NumberInputField
+        ref={ref_input}
+        onBlur={() => {
+          if (!menu_for_style) {
+            clearTimeout(is_modifying.current)
+          }
+          // Update selected elements value
+          function_on_blur(value)
+        }}
+      />
       {stepperBtn}
     </NumberInput>
     {input_unit}

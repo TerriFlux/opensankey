@@ -17,7 +17,9 @@ import {
 } from './MenuConfig'
 import {
   default_element_position,
+  getBooleanFromJSON,
   Type_ElementPosition,
+  Type_JSON,
   Type_Position
 } from './Utils'
 import { Class_LinkElement } from './Link'
@@ -179,7 +181,7 @@ export abstract class Class_ProtoElement {
    */
   public toJSON() {
     // Init output JSON
-    const json_object: { [_: string]: unknown } = {}
+    const json_object: Type_JSON = {}
     // Fill data
     json_object['is_visible'] = this._is_visible
     json_object['is_selected'] = this._is_selected
@@ -190,12 +192,12 @@ export abstract class Class_ProtoElement {
   /**
    * Apply json to element
    *
-   * @param {{ [x: string]: any }} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_NodeElement
    */
-  public fromJSON(json_object: { [x: string]: any }) {
-    this._is_visible = json_object['is_visible'] ?? this._is_visible
-    this._is_selected = json_object['is_selected'] ?? this._is_selected
+  public fromJSON(json_object: Type_JSON) {
+    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
+    this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
   }
 
   // PROTECTED METHODES =================================================================

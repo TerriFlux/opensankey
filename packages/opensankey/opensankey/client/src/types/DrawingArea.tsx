@@ -328,7 +328,7 @@ export class Class_DrawingArea {
   }
 
   public changeCursor(is_edition: boolean) {
-    this.d3_selection?.classed('edition_mode', is_edition);
+    this.d3_selection?.classed('edition_mode', is_edition)
     this.d3_selection?.classed('selection_mode', !is_edition)
   }
   // Sankey

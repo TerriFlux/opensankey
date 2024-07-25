@@ -218,9 +218,9 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
                         key={tag.id}
                         value={tag.id}
                       >
-                          {tag.name}
+                        {tag.name}
                       </option>)
-                })
+                  })
               }
             </Select>
           }
@@ -641,7 +641,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
                 return (
                   <option key={tag.id} value={tag.id} >{tag.name}</option>
                 )
-            })
+              })
           }
         </Select>
       }

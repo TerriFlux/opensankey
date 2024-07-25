@@ -10,7 +10,16 @@ import * as d3 from 'd3'
 // Local types
 import {
   Type_ElementPosition,
+  Type_JSON,
   default_element_color,
+  getBooleanFromJSON,
+  getJSONFromJSON,
+  getJSONOrUndefinedFromJSON,
+  getNumberFromJSON,
+  getNumberOrNullFromJSON,
+  getStringFromJSON,
+  getStringOrNullFromJSON,
+  getStringOrUndefinedFromJSON,
   makeId,
 } from './Utils'
 import {
@@ -33,6 +42,7 @@ import {
   Class_TagGroup,
 } from './Tag'
 import { default_style_id } from './Sankey'
+import { type } from 'os'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -575,22 +585,23 @@ export class Class_LinkElement extends Class_ProtoElement {
     return json_object
   }
 
-  public fromJSON(json_object: { [x: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     // Root attributes
     super.fromJSON(json_object)
     // Related nodes
-    const source_node_id = json_object['idSource']
-    this.drawing_area.sankey.nodes_dict[source_node_id]?.addOutputLink(this)
-    const target_node_id = json_object['idTarget']
-    this.drawing_area.sankey.nodes_dict[target_node_id]?.addInputLink(this)
+    const source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
+    if (source_node_id) this.drawing_area.sankey.nodes_dict[source_node_id]?.addOutputLink(this)
+    const target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
+    if (target_node_id) this.drawing_area.sankey.nodes_dict[target_node_id]?.addInputLink(this)
     // Get style & local attributes
-    const style_id = json_object['style'] ?? default_style_id
+    const style_id = getStringFromJSON(json_object, 'style', default_style_id)
     this._display.style = this.drawing_area.sankey.link_styles_dict[style_id]
-    if (json_object['local']) {
-      this._display.attributes.fromJSON(json_object['local'])
+    const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
+    if (json_local_object) {
+      this._display.attributes.fromJSON(json_local_object)
     }
     // Get value
-    this._values.fromJSON(json_object['value'])
+    this._values.fromJSON(getJSONFromJSON(json_object,'value', {}))
   }
 
   public getPathColorToUse() {
@@ -1882,7 +1893,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
-      const sign_shifting_end_point = (is_revert) ? -1 : 1;
+      const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
     return this._display.position_ending.x - shifting_end_point_x
@@ -1894,7 +1905,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
-      const sign_shifting_end_point = (is_revert) ? -1 : 1;
+      const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
     return this._display.position_ending.y - shifting_end_point_y
@@ -2609,79 +2620,79 @@ export class Class_LinkAttribute {
   // PUBLIC METHODES ====================================================================
 
   public toJSON() {
-    const json_object = {} as { [_: string]: unknown }
+    const json_object = {} as Type_JSON
 
     // Geometry link
-    if (this.shape_orientation !== undefined) json_object['orientation'] = this.shape_orientation
-    if (this.shape_starting_curve !== undefined) json_object['left_horiz_shift'] = this.shape_starting_curve
-    if (this.shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this.shape_ending_curve
-    if (this.shape_vert_shift !== undefined) json_object['vert_shift'] = this.shape_vert_shift
-    if (this.shape_curvature !== undefined) json_object['curvature'] = this.shape_curvature
-    if (this.shape_is_curved !== undefined) json_object['curved'] = this.shape_is_curved
-    if (this.shape_is_recycling !== undefined) json_object['recycling'] = this.shape_is_recycling
-    if (this.shape_arrow_size !== undefined) json_object['arrow_size'] = this.shape_arrow_size
+    if (this._shape_orientation !== undefined) json_object['orientation'] = this._shape_orientation
+    if (this._shape_starting_curve !== undefined) json_object['left_horiz_shift'] = this._shape_starting_curve
+    if (this._shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this._shape_ending_curve
+    if (this._shape_vert_shift !== undefined) json_object['vert_shift'] = this._shape_vert_shift
+    if (this._shape_curvature !== undefined) json_object['curvature'] = this._shape_curvature
+    if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
+    if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
+    if (this._shape_arrow_size !== undefined) json_object['arrow_size'] = this._shape_arrow_size
 
     // Geometry link labels
-    if (this.value_label_position !== undefined) json_object['label_position'] = this.value_label_position
-    if (this.value_label_orthogonal_position !== undefined) json_object['orthogonal_label_position'] = this.value_label_orthogonal_position
-    if (this.value_label_on_path !== undefined) json_object['label_on_path'] = this.value_label_on_path
-    if (this.value_label_pos_auto !== undefined) json_object['label_pos_auto'] = this.value_label_pos_auto
+    if (this._value_label_position !== undefined) json_object['label_position'] = this._value_label_position
+    if (this._value_label_orthogonal_position !== undefined) json_object['orthogonal_label_position'] = this._value_label_orthogonal_position
+    if (this._value_label_on_path !== undefined) json_object['label_on_path'] = this._value_label_on_path
+    if (this._value_label_pos_auto !== undefined) json_object['label_pos_auto'] = this._value_label_pos_auto
 
     //Attributes link
-    if (this.shape_is_arrow !== undefined) json_object['arrow'] = this.shape_is_arrow
-    if (this.shape_color !== undefined) json_object['color'] = this.shape_color
-    if (this.shape_opacity !== undefined) json_object['opacity'] = this.shape_opacity
-    if (this.shape_is_dashed !== undefined) json_object['dashed'] = this.shape_is_dashed
+    if (this._shape_is_arrow !== undefined) json_object['arrow'] = this._shape_is_arrow
+    if (this._shape_color !== undefined) json_object['color'] = this._shape_color
+    if (this._shape_opacity !== undefined) json_object['opacity'] = this._shape_opacity
+    if (this._shape_is_dashed !== undefined) json_object['dashed'] = this._shape_is_dashed
 
     //Attributes link labels
-    if (this.value_label_is_visible !== undefined) json_object['label_visible'] = this.value_label_is_visible
-    if (this.value_label_font_size !== undefined) json_object['label_font_size'] = this.value_label_font_size
-    if (this.value_label_color !== undefined) json_object['text_color'] = this.value_label_color
-    if (this.value_label_to_precision !== undefined) json_object['to_precision'] = this.value_label_to_precision
-    if (this.value_label_scientific_precision !== undefined) json_object['scientific_precision'] = this.value_label_scientific_precision
-    if (this.value_label_font_family !== undefined) json_object['font_family'] = this.value_label_font_family
-    if (this.value_label_unit_visible !== undefined) json_object['label_unit_visible'] = this.value_label_unit_visible
-    if (this.value_label_unit !== undefined) json_object['label_unit'] = this.value_label_unit
-    if (this.value_label_custom_digit !== undefined) json_object['custom_digit'] = this.value_label_custom_digit
-    if (this.value_label_nb_digit !== undefined) json_object['nb_digit'] = this.value_label_nb_digit
+    if (this._value_label_is_visible !== undefined) json_object['label_visible'] = this._value_label_is_visible
+    if (this._value_label_font_size !== undefined) json_object['label_font_size'] = this._value_label_font_size
+    if (this._value_label_color !== undefined) json_object['text_color'] = this._value_label_color
+    if (this._value_label_to_precision !== undefined) json_object['to_precision'] = this._value_label_to_precision
+    if (this._value_label_scientific_precision !== undefined) json_object['scientific_precision'] = this._value_label_scientific_precision
+    if (this._value_label_font_family !== undefined) json_object['font_family'] = this._value_label_font_family
+    if (this._value_label_unit_visible !== undefined) json_object['label_unit_visible'] = this._value_label_unit_visible
+    if (this._value_label_unit !== undefined) json_object['label_unit'] = this._value_label_unit
+    if (this._value_label_custom_digit !== undefined) json_object['custom_digit'] = this._value_label_custom_digit
+    if (this._value_label_nb_digit !== undefined) json_object['nb_digit'] = this._value_label_nb_digit
 
     return json_object
   }
 
-  public fromJSON(json_local_object: { [x: string]: any }) {
+  public fromJSON(json_local_object: Type_JSON) {
     // Geometry link
-    if (json_local_object['orientation'] !== undefined) this.shape_orientation = json_local_object['orientation']
-    if (json_local_object['left_horiz_shift'] !== undefined) this.shape_starting_curve = json_local_object['left_horiz_shift']
-    if (json_local_object['right_horiz_shift'] !== undefined) this.shape_ending_curve = json_local_object['right_horiz_shift']
-    if (json_local_object['vert_shift'] !== undefined) this.shape_vert_shift = json_local_object['vert_shift']
-    if (json_local_object['curvature'] !== undefined) this.shape_curvature = json_local_object['curvature']
-    if (json_local_object['curved'] !== undefined) this.shape_is_curved = json_local_object['curved']
-    if (json_local_object['recycling'] !== undefined) this.shape_is_recycling = json_local_object['recycling']
-    if (json_local_object['arrow_size'] !== undefined) this.shape_arrow_size = json_local_object['arrow_size']
+    if (json_local_object['orientation'] !== undefined) this._shape_orientation = getStringFromJSON(json_local_object, 'orientation', default_shape_orientation) as Type_Orientation
+    if (json_local_object['left_horiz_shift'] !== undefined) this._shape_starting_curve = getNumberFromJSON(json_local_object, 'left_horiz_shift', default_shape_starting_curve)
+    if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
+    if (json_local_object['vert_shift'] !== undefined) this._shape_vert_shift = getNumberFromJSON(json_local_object, 'vert_shift', default_shape_vert_shift)
+    if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
+    if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
+    if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
+    if (json_local_object['arrow_size'] !== undefined) this._shape_arrow_size = getNumberFromJSON(json_local_object, 'arrow_size', default_shape_arrow_size)
 
     // Geometry link labels
-    if (json_local_object['label_position'] !== undefined) this.value_label_position = json_local_object['label_position']
-    if (json_local_object['orthogonal_label_position'] !== undefined) this.value_label_orthogonal_position = json_local_object['orthogonal_label_position']
-    if (json_local_object['label_on_path'] !== undefined) this.value_label_on_path = json_local_object['label_on_path']
-    if (json_local_object['label_pos_auto'] !== undefined) this.value_label_pos_auto = json_local_object['label_pos_auto']
+    if (json_local_object['label_position'] !== undefined) this._value_label_position = getStringFromJSON(json_local_object, 'label_position', default_value_label_position) as Type_PathLabelHPosition
+    if (json_local_object['orthogonal_label_position'] !== undefined) this._value_label_orthogonal_position = getStringFromJSON(json_local_object, 'orthogonal_label_position', default_value_label_orthogonal_position) as Type_PathLabelVPosition
+    if (json_local_object['label_on_path'] !== undefined) this._value_label_on_path = getBooleanFromJSON(json_local_object, 'label_on_path', default_value_label_on_path)
+    if (json_local_object['label_pos_auto'] !== undefined) this._value_label_pos_auto = getBooleanFromJSON(json_local_object, 'label_pos_auto', default_value_label_pos_auto)
 
     //Attributes link
-    if (json_local_object['arrow'] !== undefined) this.shape_is_arrow = json_local_object['arrow']
-    if (json_local_object['color'] !== undefined) this.shape_color = json_local_object['color']
-    if (json_local_object['opacity'] !== undefined) this.shape_opacity = json_local_object['opacity']
-    if (json_local_object['dashed'] !== undefined) this.shape_is_dashed = json_local_object['dashed']
+    if (json_local_object['arrow'] !== undefined) this._shape_is_arrow = getBooleanFromJSON(json_local_object, 'arrow', default_shape_is_arrow)
+    if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
+    if (json_local_object['opacity'] !== undefined) this._shape_opacity = getNumberFromJSON(json_local_object, 'opacity', default_shape_opacity)
+    if (json_local_object['dashed'] !== undefined) this._shape_is_dashed = getBooleanFromJSON(json_local_object, 'dashed', default_shape_is_dashed)
 
     //Attributes link labels
-    if (json_local_object['label_visible'] !== undefined) this.value_label_is_visible = json_local_object['label_visible']
-    if (json_local_object['label_font_size'] !== undefined) this.value_label_font_size = json_local_object['label_font_size']
-    if (json_local_object['text_color'] !== undefined) this.value_label_color = json_local_object['text_color']
-    if (json_local_object['to_precision'] !== undefined) this.value_label_to_precision = json_local_object['to_precision']
-    if (json_local_object['scientific_precision'] !== undefined) this.value_label_scientific_precision = json_local_object['scientific_precision']
-    if (json_local_object['font_family'] !== undefined) this.value_label_font_family = json_local_object['font_family']
-    if (json_local_object['label_unit_visible'] !== undefined) this.value_label_unit_visible = json_local_object['label_unit_visible']
-    if (json_local_object['label_unit'] !== undefined) this.value_label_unit = json_local_object['label_unit']
-    if (json_local_object['custom_digit'] !== undefined) this.value_label_custom_digit = json_local_object['custom_digit']
-    if (json_local_object['nb_digit'] !== undefined) this.value_label_nb_digit = json_local_object['nb_digit']
+    if (json_local_object['label_visible'] !== undefined) this._value_label_is_visible = getBooleanFromJSON(json_local_object, 'label_visible', default_value_label_is_visible)
+    if (json_local_object['label_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'label_font_size', default_value_label_font_size)
+    if (json_local_object['text_color'] !== undefined) this._value_label_color = getStringFromJSON(json_local_object, 'text_color', default_value_label_color)
+    if (json_local_object['to_precision'] !== undefined) this._value_label_to_precision = getBooleanFromJSON(json_local_object, 'to_precision', default_value_label_to_precision)
+    if (json_local_object['scientific_precision'] !== undefined) this._value_label_scientific_precision = getNumberFromJSON(json_local_object, 'scientific_precision', default_value_label_scientific_precision)
+    if (json_local_object['font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_value_label_font_family)
+    if (json_local_object['label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_local_object, 'label_unit_visible', default_value_label_unit_visible)
+    if (json_local_object['label_unit'] !== undefined) this._value_label_unit = getStringFromJSON(json_local_object, 'label_unit', default_value_label_unit)
+    if (json_local_object['custom_digit'] !== undefined) this._value_label_custom_digit = getBooleanFromJSON(json_local_object, 'custom_digit', default_value_label_custom_digit)
+    if (json_local_object['nb_digit'] !== undefined) this._value_label_nb_digit = getNumberFromJSON(json_local_object, 'nb_digit', default_value_label_nb_digit)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -3266,7 +3277,7 @@ export class Class_LinkValueTree {
   }
 
   public toJSON() {
-    const json_object: { [x: string]: JSON } = {}
+    const json_object: Type_JSON = {}
     Object.entries(this.children)
       .forEach(([id, child]) => {
         json_object[id] = child.toJSON()
@@ -3274,11 +3285,12 @@ export class Class_LinkValueTree {
     return json_object
   }
 
-  public fromJSON(json_object: { [x: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
     Object.entries(json_object)
       .forEach(([id, sub_json_object]) => {
-        this.children[id]?.fromJSON(sub_json_object)
+        if (typeof sub_json_object === 'object')
+          this.children[id]?.fromJSON(sub_json_object as Type_JSON)
       })
   }
 
@@ -3479,10 +3491,10 @@ export class Class_LinkValue {
    */
   public toJSON() {
     // Init output JSON
-    const json_object: { [_: string]: unknown } = {}
+    const json_object: Type_JSON = {}
     // Fill data
-    json_object['data_value'] = this.data_value
-    json_object['text_value'] = this.text_value
+    if (this.data_value) json_object['data_value'] = this.data_value
+    if (this.text_value) json_object['text_value'] = this.text_value
     json_object['tags'] = Object.fromEntries(
       this.flux_taggs_list
         .map(tagg => [
@@ -3498,13 +3510,13 @@ export class Class_LinkValue {
   /**
    * Read this link value from JSON
    *
-   * @param {{ [x: string]: any }} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_LinkValue
    */
-  public fromJSON(json_object: { [x: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     // Update attributes
-    this.data_value = json_object['data_value'] ?? null
-    this.text_value = json_object['text_value'] ?? null
+    this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+    this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
     // Get Flux tags
     // In JSON here are how supposed tags var is :
     // tags: {key_grp_tag: [key_tag, ...] }
@@ -3610,8 +3622,8 @@ export class Class_LinkValue {
   }
 }
 
-
 // CLASS GHOST LINK *********************************************************************
+
 export class Class_GhostLinkElement extends Class_LinkElement {
 
   // GETTER / SETTER ====================================================================

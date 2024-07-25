@@ -8,7 +8,7 @@
 import { Class_LinkElement, Class_LinkValue } from './Link'
 import { Class_NodeElement } from './Node'
 import { Class_Sankey } from './Sankey'
-import { default_grey_color, makeId } from './Utils'
+import { Type_JSON, default_grey_color, getBooleanFromJSON, getStringFromJSON, getStringListFromJSON, makeId } from './Utils'
 
 
 // SPECIFIC TYPES ***********************************************************************
@@ -51,7 +51,7 @@ export abstract class Class_ProtoTag {
 
   // Group where it belong
 
-  protected abstract _group: any
+  protected abstract _group: Class_ProtoTagGroup
 
   // CONSTRUCTOR ========================================================================
 
@@ -111,7 +111,7 @@ export abstract class Class_ProtoTag {
   }
 
   public toJSON() {
-    const json_object = {} as { [_: string]: any }
+    const json_object = {} as Type_JSON
     json_object['name'] = this._name
     json_object['selected'] = this._is_selected
     json_object['color'] = this._color
@@ -121,13 +121,13 @@ export abstract class Class_ProtoTag {
   /**
    *Set Tag value from JSON
    *
-   * @param {{[_:string]:any}} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_Tag
    */
-  public fromJSON(json_object: { [_: string]: any }) {
-    this._name = json_object['name'] ?? this._name
-    this._is_selected = json_object['selected'] ?? false
-    this._color = json_object['color'] ?? 'grey'
+  public fromJSON(json_object: Type_JSON) {
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
+    this._color = getStringFromJSON(json_object, 'color', this._color)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -155,7 +155,8 @@ export abstract class Class_ProtoTag {
   // Selection
   public get is_selected() { return this._is_selected }
 
-  public get group() { return this._group }
+  // Group
+  public abstract get group() : Class_ProtoTagGroup
 }
 
 // CLASS TAG ****************************************************************************
@@ -234,6 +235,10 @@ export class Class_Tag extends Class_ProtoTag {
       })
     this._references = {}
   }
+
+  // GETTERS ============================================================================
+
+  public get group() { return this._group }
 }
 
 // CLASS DATATAG ************************************************************************
@@ -297,6 +302,9 @@ export class Class_DataTag extends Class_ProtoTag {
     this._references = {}
   }
 
+  // GETTERS ============================================================================
+
+  public get group() { return this._group }
 }
 
 // CLASS PROTO TAGGROUP ***********************************************************************
@@ -421,17 +429,18 @@ export abstract class Class_ProtoTagGroup {
   }
 
   public toJSON() {
-    // Create empty struct
-    const json_object = {} as { [_: string]: any }
+    // Create empty structs
+    const json_object = {} as Type_JSON
+    const json_object_tags = {} as Type_JSON
     // Fill group attributes
     json_object['name'] = this._name
     json_object['banner'] = this._banner
-    json_object['tags'] = {}
     // Update tags infos
     this.tags_list
       .forEach(tag => {
-        json_object['tags'][tag.id] = tag.toJSON()
+        json_object_tags[tag.id] = tag.toJSON()
       })
+    json_object['tags'] = json_object_tags
     // Out
     return json_object
   }
@@ -439,15 +448,15 @@ export abstract class Class_ProtoTagGroup {
   /**
    *Set Tag_group value & substructur from JSON
    *
-   * @param {{[_:string]:any}} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_TagGroup
    */
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
     // Read group attributes
-    this._name = json_object['name'] ?? this._name
-    this._banner = json_object['banner'] ?? this._banner
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     // Clean existing tags - always at least one on construction
     const _ = this.tags_list
     _.forEach(tag => this.removeTag(tag))
@@ -455,13 +464,13 @@ export abstract class Class_ProtoTagGroup {
     Object.entries(json_object['tags'])
       .forEach(([tag_id, tag_json]) => {
         const new_tag = this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
-        new_tag.fromJSON(tag_json as { [x: string]: any })
-    })
+        new_tag.fromJSON(tag_json as Type_JSON)
+      })
   }
 
-  private fromLegacyJSON(json_object: { [_: string]: any }) {
+  private fromLegacyJSON(json_object: Type_JSON) {
     // TODO fill with legacy json entries
-    this._name = json_object['group_name'] ?? this._name
+    this._name = getStringFromJSON(json_object, 'group_name', this._name)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -586,12 +595,12 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
   /**
    *Set Tag_group value & substructur from JSON
    *
-   * @param {{[_:string]:any}} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_TagGroup
    */
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     super.fromJSON(json_object)
-    this._show_legend = json_object['show_legend'] ?? this._show_legend
+    this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -701,12 +710,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   /**
    *Set Tag_group value & substructur from JSON
    *
-   * @param {{[_:string]:any}} json_object
+   * @param {Type_JSON} json_object
    * @memberof Class_TagGroup
    */
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     super.fromJSON(json_object)
-    this._show_legend = json_object['show_legend'] ?? this._show_legend
+    this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -790,10 +799,10 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
     return json_object
   }
 
-  public fromJSON(json_object: { [_: string]: any }) {
+  public fromJSON(json_object: Type_JSON) {
     super.fromJSON(json_object)
-    this._activated = json_object['activated'] ?? this._activated
-    this._siblings = json_object['sibling'] ?? this._siblings
+    this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
+    this._siblings = getStringListFromJSON(json_object, 'sibling', this._siblings)
   }
 
   // GETTERS / SETTERS ==================================================================

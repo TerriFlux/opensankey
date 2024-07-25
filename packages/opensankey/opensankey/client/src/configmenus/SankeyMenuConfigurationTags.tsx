@@ -244,7 +244,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               >
                 {tags_group.name}
               </option>
-        )}
+          )}
       </Select>
 
       {/* Boutons des palettes de couleur  -------------------------------------------- */}
