@@ -18,7 +18,6 @@ import {
   default_element_color,
   default_element_position
 } from './Utils'
-import { Class_DataTagGroup, Class_TagGroup } from './Tag'
 
 
 // CLASS LEGEND *************************************************************************

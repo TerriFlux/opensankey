@@ -210,9 +210,9 @@ export const initializeApplicationData : initializeApplicationDataType = (
   display_links,
   initial_data
 )=>{
-  const application_data = new Class_ApplicationData(window, false)
+  const application_data = new Class_ApplicationData(false)
   if(initial_data !== undefined){
-    application_data.new_drawing_area_fromJSON(initial_data)
+    application_data.fromJSON(initial_data)
   }
   return {
     data : data,
