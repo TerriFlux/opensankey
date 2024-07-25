@@ -7,7 +7,7 @@
 // External imports
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-
+import * as SankeyShapes from '../draw/SankeyDrawShapes'
 // Local types
 import {
   Type_ElementPosition,
@@ -265,6 +265,11 @@ export class Class_NodeElement extends Class_Element {
     // Draw label
     this.drawNameLabel()
     this.drawValueLabel()
+    //Draw arrows attached to it
+    this.drawLinksArrow()
+  }
+  public drawAsSelected() {
+    this.draw()
   }
 
   public useDefaultStyle() {
@@ -800,6 +805,33 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  protected eventMouseDragEnd(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+
+    // Only trigger the drag if we drag a selected node
+    if (nodes_selected.includes(this)) {
+
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // redraw node on target of output links
+        nodes_selected
+          .forEach(n => {
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            n.output_links_list.forEach(link => {
+              link.target.applyPosition()
+            })
+          })
+        this.drawing_area.checkAndUpdateAreaSize()
+      }
+    }
+  }
+
   /**
    *
    *
@@ -1218,6 +1250,161 @@ export class Class_NodeElement extends Class_Element {
     this.applyPositionOnLinks()  // Links positions can be modified by link's changes
   }
 
+  /**
+   * Function that draw all the arrow of link visible linked to this node (if the link have shape_is_arrow at true)
+   *
+   * @private
+   * @memberof Class_NodeElement
+   */
+  private drawLinksArrow() {
+    this.input_links_list.forEach(link => {
+      link.d3_selection?.select('.link_arrow').remove()
+    })
+    const list_link_to_add_arrow = this._links_order.filter(link => this.input_links_list.includes(link) && link.is_visible && link.shape_is_arrow && link.d3_selection !== undefined)
+    let cum_v_left = 0
+    let cum_h_top = 0
+    let cum_v_right = 0
+    let cum_h_bottom = 0
+    const node_height = this.getShapeHeightToUse() // height of node taking into account link size in/out
+    const node_width = this.getShapeWidthToUse() // width of node taking into account link size in/out
+    const node_shape = this.shape_type
+    const is_exportation_node = false // Maybe useful when MFA will be implemented
+
+    const sumLinkLeft = this.getSumOfLinksThickness('left')
+    const sumLinkRight = this.getSumOfLinksThickness('right')
+    const sumLinkTop = this.getSumOfLinksThickness('top')
+    const sumLinkBottom = this.getSumOfLinksThickness('bottom')
+
+
+    list_link_to_add_arrow.forEach(link => {
+
+      // Some variable parameters for arrow 
+      const arrow_length = link.shape_arrow_size
+      const link_color = link.getPathColorToUse()
+      let node_arrow_shift = 0
+      let arrows_adjustment = 0
+
+      // Get side of target node from which arrow as to be drawn
+      const link_arrow_side_right = link.target_side == 'right'
+      const link_arrow_side_left = link.target_side == 'left'
+      const link_arrow_side_top = link.target_side == 'top'
+      const link_arrow_side_bottom = link.target_side == 'bottom'
+
+      const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
+
+      // Thicknen of the link influence arrow size
+      const link_value = link.thickness
+
+      // If the node target is in arrow shape then we have to modify some variable beforehand
+      if (node_shape === 'arrow') {
+        const node_angle_direction = this.shape_arrow_angle_direction
+        const node_angle_factor = this.shape_arrow_angle_factor
+        if (link_direction_same_as_node_arrow) {
+          // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+          let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+          switch (node_angle_direction) {
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
+          }
+          node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
+
+          let node_face_size2 = sumLinkLeft
+          switch (node_angle_direction) {
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
+          }
+          arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
+          arrows_adjustment = node_arrow_shift - arrows_adjustment
+        }
+      }
+
+      link.d3_selection?.append('path')
+        .attr('class', 'link_arrow')
+        .attr('d', () => {
+
+          let xt: number = 0 // x coord where link path end
+          let yt: number = 0 // y coord where link path end
+          let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node 
+          let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node 
+
+          if (link_arrow_side_left) {
+            xt = +this.position_x
+            yt = +this.position_y + node_height / 2
+            current_cumul_of_side = cum_v_left
+            total_cumul_of_side = sumLinkLeft
+
+          } else if (link_arrow_side_right) {
+            xt = +this.position_x + node_width
+            yt = +this.position_y + node_height / 2
+            current_cumul_of_side = cum_v_right
+            total_cumul_of_side = sumLinkRight
+
+          } else if (link_arrow_side_top) {
+            xt = +this.position_x + node_width / 2
+            yt = +this.position_y
+            current_cumul_of_side = cum_h_top
+            total_cumul_of_side = sumLinkTop
+
+          } else if (link_arrow_side_bottom) {
+            xt = +this.position_x + node_width / 2
+            yt = +this.position_y + node_height
+            current_cumul_of_side = cum_h_bottom
+            total_cumul_of_side = sumLinkBottom
+          }
+
+          const p5 = [xt, yt] // Starting point of arrow
+
+          // Some variables parameters influencing arrow shape processing
+          const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
+          const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
+
+          return SankeyShapes.draw_arrow_part(
+            total_cumul_of_side / 2,
+            p5,
+            +link_value,
+            current_cumul_of_side,
+            is_horizontal_at_target,
+            is_revert,
+            arrow_length,
+            node_arrow_shift,
+            arrows_adjustment,
+            node_shape === 'arrow'
+          )
+
+        })
+        .attr('fill', link_color)
+        .attr('fill-opacity', link.shape_opacity)
+        .attr('stroke', link_color)
+        .attr('stroke-width', 0.1)
+
+      // Increment side cumul of drawn arrow to influence next arrow starting position
+      if (link_arrow_side_left) {
+        cum_v_left += link_value
+      } else if (link_arrow_side_right) {
+        cum_v_right += link_value
+      } else if (link_arrow_side_top) {
+        cum_h_top += link_value
+      } else if (link_arrow_side_bottom) {
+        cum_h_bottom += link_value
+      }
+    })
+
+  }
+
   private getArrowPath() {
     // Compute height & width
     const width = this.getShapeWidthToUse()
@@ -1341,6 +1528,10 @@ export class Class_NodeElement extends Class_Element {
         }
       }
     })
+    this.drawLinksArrow()
+    this.output_links_list.filter(link => link.target !== undefined).forEach(link => {
+      link.target.drawLinksArrow()
+    })
   }
 
   // Display tooltip
@@ -1461,7 +1652,7 @@ export class Class_NodeElement extends Class_Element {
 
   private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
     const custom_id = input ? 'input' : 'output'
-    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD',class:'node_io' })
+    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD', class: 'node_io' })
     this._handle_links[link.id] = handle
   }
 
