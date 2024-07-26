@@ -82,6 +82,13 @@ export const default_value_label_to_precision = false
 export const default_value_label_unit = ''
 export const default_value_label_unit_visible = false
 
+const side_order: {[_ in Type_Side]: number} = {
+  'right': 0,
+  'bottom': 1,
+  'left': 2,
+  'top': 3
+}
+
 // SPECIFIC FUNCTIONS ********************************************************************
 
 export function defaultLinkId(source: Class_NodeElement, target: Class_NodeElement) {
@@ -104,6 +111,73 @@ export function sortDisplayedLinksElements(
   if (a.displaying_order > b.displaying_order) return 1
   else if (a.displaying_order < b.displaying_order) return -1
   else return 0
+}
+
+export function sortLinksElementsWithNodesPosition(
+  link_a: Class_LinkElement,
+  link_b: Class_LinkElement,
+  node: Class_NodeElement
+) {
+  // Check relation between reference node and the two links
+  const is_node_source_for_link_a = (link_a.source === node)
+  const is_node_target_for_link_a = (link_a.target === node)
+  const is_node_source_for_link_b = (link_b.source === node)
+  const is_node_target_for_link_b = (link_b.target === node)
+  // Failsafe
+  if (
+    (!is_node_source_for_link_a && !is_node_target_for_link_a) ||
+    (!is_node_source_for_link_b && !is_node_target_for_link_b)
+  )
+    return 0 // Dont move - somethings is wrong
+  // Get nodes that we need to compare
+  let node_a: Class_NodeElement
+  let node_b: Class_NodeElement
+  let side_a: Type_Side
+  let side_b: Type_Side
+  if (is_node_source_for_link_a) {
+    node_a = link_a.target
+    side_a = link_a.source_side
+  }
+  else {
+    node_a = link_a.source
+    side_a = link_a.target_side
+  }
+  if (is_node_source_for_link_b) {
+    node_b = link_b.target
+    side_b = link_b.source_side
+  }
+  else {
+    node_b = link_b.source
+    side_b = link_b.target_side
+  }
+  // Side check : Node position comparaison if links are on the same side
+  if (side_a === side_b) {
+    // For "horizontal" sides
+    if (side_a === 'right' || side_a === 'left') {
+      if (node_a.position_y > node_b.position_y)
+        return 1
+      else if (node_a.position_y < node_b.position_y)
+        return -1
+      else
+        return 0
+    }
+    // For "vertical" sides
+    else {
+      if (node_a.position_x > node_b.position_x)
+        return 1
+      else if (node_a.position_x < node_b.position_x)
+        return -1
+      else
+        return 0
+    }
+  }
+  // Use side "priority"
+  else {
+    if (side_order[side_a] < side_order[side_b])
+      return -1
+    else
+      return 1
+  }
 }
 
 export function isAttributeOverloaded(

@@ -41,7 +41,8 @@ import {
 import {
   Class_LinkElement,
   Type_Side,
-  Class_GhostLinkElement
+  Class_GhostLinkElement,
+  sortLinksElementsWithNodesPosition
 } from './Link'
 import { default_style_id } from './Sankey'
 
@@ -230,7 +231,7 @@ export class Class_NodeElement extends Class_Element {
       this._handle_links[link.id].delete()
       delete this._handle_links[link.id]
       delete this._input_links[link.id]
-      this.deleteOrderedLink(link)
+      this.removeLinkFromOrderingLinksList(link)
       link.delete()
       this.draw()
     }
@@ -246,7 +247,7 @@ export class Class_NodeElement extends Class_Element {
       this._handle_links[link.id].delete()
       delete this._handle_links[link.id]
       delete this._output_links[link.id]
-      this.deleteOrderedLink(link)
+      this.removeLinkFromOrderingLinksList(link)
       link.delete()
       this.draw()
     }
@@ -276,6 +277,7 @@ export class Class_NodeElement extends Class_Element {
     //Draw arrows attached to it
     this.drawLinksArrow()
   }
+
   public drawAsSelected() {
     this.draw()
   }
@@ -460,7 +462,7 @@ export class Class_NodeElement extends Class_Element {
       this._input_links[link.id] = link
       this._links_order.push(link)
       link.target = this
-      this.addLinkMoveOrderHandle(link, true)
+      this.addMovingHandleForGivenLink(link, true)
       this.updateInputValue()
       this.drawLinks()
       this.drawValueLabel()
@@ -472,7 +474,7 @@ export class Class_NodeElement extends Class_Element {
       this._output_links[link.id] = link
       this._links_order.push(link)
       link.source = this
-      this.addLinkMoveOrderHandle(link, false)
+      this.addMovingHandleForGivenLink(link, false)
       this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
@@ -528,8 +530,9 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public reorganizeIOLinks() {
-
-    // S'aider des fonctions reorganize_node_inputLinksId, reorganize_node_outputLinksId
+    this._links_order = this._links_order
+      .sort((link_a, link_b) => sortLinksElementsWithNodesPosition(link_a, link_b, this))
+    this.draw()
   }
 
   /**
@@ -1476,7 +1479,6 @@ export class Class_NodeElement extends Class_Element {
     // Reference position
     const x0 = this.position_x
     const y0 = this.position_y
-
     // Compute width & Height (based on links values)
     const width = this.getShapeWidthToUse()
     const height = this.getShapeHeightToUse()
@@ -1488,28 +1490,27 @@ export class Class_NodeElement extends Class_Element {
     // Loop on all links
     this._links_order.forEach(link => {
       const thickness = link.thickness
+      const handle_position_shift = 5
       // Current node is link's source
-      const shift = 5
-
       if (link.source === this) {
         if (link.source_side === 'right') {
           link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_start + shift, link.position_y_start)
+          this._handle_links[link.id].initPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
           dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
           link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_start - shift, link.position_y_start)
+          this._handle_links[link.id].initPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
           dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
           link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
-          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start - shift)
+          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
           dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
           link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start + shift)
+          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -1517,22 +1518,22 @@ export class Class_NodeElement extends Class_Element {
       else if (link.target === this) {
         if (link.target_side === 'right') {
           link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_end + shift, link.position_y_end)
+          this._handle_links[link.id].initPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
           dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
           link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_end - shift, link.position_y_end)
+          this._handle_links[link.id].initPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
           dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
           link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
-          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end - shift)
+          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
           dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
           link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end + shift)
+          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -1543,7 +1544,12 @@ export class Class_NodeElement extends Class_Element {
     })
   }
 
-  // Display tooltip
+  /**
+   * Display the tooltip on drawing area
+   *
+   * @private
+   * @memberof Class_NodeElement
+   */
   private drawTooltip() {
     const sankeyTooltip = d3.select('.sankey-tooltip')
     // const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
@@ -1649,7 +1655,13 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  private deleteOrderedLink(link: Class_LinkElement) {
+  /**
+   * Remove link from ordering list
+   * @private
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  private removeLinkFromOrderingLinksList(link: Class_LinkElement) {
     let i = 0
     for (i; i <= this._links_order.length; i++) {
       if (this._links_order[i] === link) {
@@ -1659,21 +1671,53 @@ export class Class_NodeElement extends Class_Element {
     this._links_order.splice(i, 1)
   }
 
-  private addLinkMoveOrderHandle(link: Class_LinkElement, input: boolean) {
+  /**
+   * Create a handler element able to drag position of link
+   * @private
+   * @param {Class_LinkElement} link
+   * @param {boolean} input
+   * @memberof Class_NodeElement
+   */
+  private addMovingHandleForGivenLink(
+    link: Class_LinkElement,
+    input: boolean
+  ) {
     const custom_id = input ? 'input' : 'output'
-    const handle = new Class_Handler(('handle_' + this.id + custom_id + '_' + link.id), this.drawing_area, this.menu_config, this, this.dragStartHandlerMoveLink, this.dragHandlerMoveLink, this.dragEndHandlerMoveLink, { filled: false, color: '#78C2AD', class: 'node_io' })
+    const handle = new Class_Handler(
+      ('handle_' + this.id + custom_id + '_' + link.id),
+      this.drawing_area,
+      this.menu_config,
+      this,
+      this.dragStartHandlerMoveLink,
+      this.dragHandlerMoveLink,
+      this.dragEndHandlerMoveLink,
+      {
+        filled: false,
+        color: '#78C2AD',
+        class: 'node_io'
+      }
+    )
     this._handle_links[link.id] = handle
   }
 
+  /**
+   * Event listener for drag start on link moving handler
+   * This method will not be called inside a Class_NodeElement object,
+   * but instead inside Class_Handler object
+   * @private
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElement
+   */
   private dragHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Since we pass this func to a Class_Handler (without executing it)
     // 'this' take the scope of the handler so we have to cast it here for compilation
     const handler = this as unknown as Class_Handler
-
     // Get node from the handler
     const node_ref = handler.ref_element as Class_NodeElement
-
-    if (node_ref.link_dragged && (event.dy !== 0 || event.dx !== 0)) {
+    if (
+      (node_ref.link_dragged) &&
+      (event.dy !== 0 || event.dx !== 0)
+    ) {
       // Get link currently dragged
       const link_dragged = (node_ref.link_dragged as Class_LinkElement)
       // Search if handler is for a link incoming or outcoming from the node
@@ -1682,10 +1726,11 @@ export class Class_NodeElement extends Class_Element {
       const node_ref_io = (handle_src_or_trgt === 'target') ? node_ref.input_links_list : node_ref.output_links_list
 
       // Create an array from links_order with only the links in or out the same side of the dragged link
-      const list_links_node_side = node_ref._links_order.filter(link => {
-        const curr_link_side = handle_src_or_trgt === 'source' ? link.source_side : link.target_side
-        return node_ref_io.includes(link) && (curr_link_side == dragged_side)
-      })
+      const list_links_node_side = node_ref._links_order
+        .filter(link => {
+          const curr_link_side = (handle_src_or_trgt === 'source') ? link.source_side : link.target_side
+          return node_ref_io.includes(link) && (curr_link_side == dragged_side)
+        })
 
       // Get index of dragged link in this filtered array
       const idx_drgd_link = list_links_node_side.indexOf(link_dragged)
@@ -1696,37 +1741,62 @@ export class Class_NodeElement extends Class_Element {
 
       // If we move the mouse vertically then this variable should be true,
       // it will allow to swap dragged link with previous/next link coming/going on the same side (left/right) to the node_ref
-      const is_handler_on_horiz_side = (handle_src_or_trgt === 'target' && ['hh', 'vh'].includes(link_dragged.shape_orientation)) ||
-        handle_src_or_trgt === 'source' && ['hh', 'hv'].includes(link_dragged.shape_orientation)
+      const is_handler_on_horiz_side = (
+        ((handle_src_or_trgt === 'target') && (link_dragged.is_horizontal || link_dragged.is_vertical_horizontal)) ||
+        ((handle_src_or_trgt === 'source') && (link_dragged.is_horizontal || link_dragged.is_horizontal_vertical)) )
 
       // If we move the mouse horizontally then this variable should be true ,
       // it will allow to swap dragged link with previous/next link coming/going on the same side (bottom/top) to the node_ref
-      const is_handler_on_vert_side = (handle_src_or_trgt === 'target' && ['vv', 'hv'].includes(link_dragged.shape_orientation)) ||
-        handle_src_or_trgt === 'source' && ['vv', 'vh'].includes(link_dragged.shape_orientation)
+      const is_handler_on_vert_side = (
+        ((handle_src_or_trgt === 'target') && (link_dragged.is_vertical || link_dragged.is_horizontal_vertical)) ||
+        ((handle_src_or_trgt === 'source') && (link_dragged.is_vertical || link_dragged.is_vertical_horizontal)) )
 
-      if (((move_to_the_top && is_handler_on_horiz_side) || (move_to_the_left && is_handler_on_vert_side)) && idx_drgd_link > 0) {
+      // Move link to the top / left
+      if ((
+        (move_to_the_top && is_handler_on_horiz_side) ||
+        (move_to_the_left && is_handler_on_vert_side)) &&
+        idx_drgd_link > 0
+      ) {
         // Move dragged link before the previous link coming/going th the node
         const prev_link = list_links_node_side[idx_drgd_link - 1]
         node_ref.moveLinkToPositionInOrderBefore(link_dragged, prev_link)
-      } else if (((!move_to_the_top && is_handler_on_horiz_side) || (!move_to_the_left && is_handler_on_vert_side)) && (idx_drgd_link < list_links_node_side.length - 1)) {
+      }
+      // Move link to the bottom / right
+      else if ((
+        (!move_to_the_top && is_handler_on_horiz_side) ||
+        (!move_to_the_left && is_handler_on_vert_side)) &&
+        (idx_drgd_link < list_links_node_side.length - 1)
+      ) {
         // Move dragged link after the next link coming/going th the node
         const next_link = list_links_node_side[idx_drgd_link + 1]
         node_ref.moveLinkToPositionInOrderAfter(link_dragged, next_link)
       }
 
+      // Redraw node ref + links
       node_ref.drawLinks()
     }
-
   }
 
-  private moveLinkToPositionInOrderBefore(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
+  /**
+   * Place first link just before target link
+   *
+   * @private
+   * @param {Class_LinkElement} link_to_move
+   * @param {Class_LinkElement} link_target_pos
+   * @memberof Class_NodeElement
+   */
+  private moveLinkToPositionInOrderBefore(
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
+  ) {
     // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
-
+    if (
+      this._links_order.includes(link_to_move) &&
+      this._links_order.includes(link_target_pos)
+    ) {
       // Remove link to move from the array of link order
       const idx_link_to_move = this._links_order.indexOf(link_to_move)
       this._links_order.splice(idx_link_to_move, 1)
-
       // Get the position in link order of the link we want the first link to move to
       const idx_link_trgt = this._links_order.indexOf(link_target_pos)
       // Add the link before the link target in the order array
@@ -1734,13 +1804,26 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  private moveLinkToPositionInOrderAfter(link_to_move: Class_LinkElement, link_target_pos: Class_LinkElement) {
+  /**
+   * Place first link just after target link
+   *
+   * @private
+   * @param {Class_LinkElement} link_to_move
+   * @param {Class_LinkElement} link_target_pos
+   * @memberof Class_NodeElement
+   */
+  private moveLinkToPositionInOrderAfter(
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
+  ) {
     // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (this._links_order.includes(link_to_move) && this._links_order.includes(link_target_pos)) {
+    if (
+      this._links_order.includes(link_to_move) &&
+      this._links_order.includes(link_target_pos)
+    ) {
       // Remove link to move from the array of link order
       const idx_link_to_move = this._links_order.indexOf(link_to_move)
       this._links_order.splice(idx_link_to_move, 1)
-
       // Get the position in link order of the link we want the first link to move to
       const idx_link_trgt = this._links_order.indexOf(link_target_pos)
       // Add the link after the link target in the order array
@@ -1764,23 +1847,20 @@ export class Class_NodeElement extends Class_Element {
   }
 
   private getLinkFromHandler(handler: Class_Handler) {
-    const list_id = Object.entries(this._handle_links).filter(ent_handle => {
-      return ent_handle[1] === handler
-    })
-
+    const list_id = Object.entries(this._handle_links)
+      .filter(ent_handle => {
+        return ent_handle[1] === handler
+      })
     if (list_id.length === 1) {
-      let link_referenced: Class_LinkElement
       if (list_id[0][0] in this.input_links_dict) {
-        link_referenced = this.input_links_dict[list_id[0][0]]
-      } else if (list_id[0][0] in this.output_links_dict) {
-        link_referenced = this.output_links_dict[list_id[0][0]]
-      } else {
-        return
+        return this.input_links_dict[list_id[0][0]]
       }
-      return link_referenced
-
+      else if (list_id[0][0] in this.output_links_dict) {
+        return this.output_links_dict[list_id[0][0]]
+      }
     }
   }
+
   // GETTERS / SETTERS ==================================================================
 
   public get is_visible() {

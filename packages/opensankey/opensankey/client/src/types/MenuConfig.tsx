@@ -65,7 +65,7 @@ export class Class_MenuConfig {
   private _update_components_menu_config_node_tooltips: MutableRefObject<(() => void)[]>
 
   // Update component SankeyMenuConfigurationNodesIO
-  private _update_components_menu_config_node_io: MutableRefObject<(() => void)[]>
+  private _ref_to_menu_config_node_io_updater: MutableRefObject<(() => void)>
 
   private _ref_to_menu_context_nodes_updater: MutableRefObject<(() => void)>
 
@@ -148,7 +148,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_node_updater = useRef(() => null)
     this._ref_to_menu_config_node_apparence_updater = useRef(() => null)
     this._ref_to_menu_config_node_tags_updater = useRef(() => null)
-    this._update_components_menu_config_node_io = useRef([] as (() => void)[])
+    this._ref_to_menu_config_node_io_updater = useRef(() => null)
     this._update_components_menu_config_node_tooltips = useRef([] as (() => void)[])
 
     // Links
@@ -291,7 +291,7 @@ export class Class_MenuConfig {
   public updateAllComponentsRelatedToNodesConfig() {
     this._ref_to_menu_config_node_apparence_updater.current()
     this._ref_to_menu_config_node_tags_updater.current()
-    this.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+    this._ref_to_menu_config_node_io_updater.current()
     this.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
   }
 
@@ -446,8 +446,8 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_node_tags_updater
   }
 
-  public get updateComponentMenuNodeIOSelectSideNode(): MutableRefObject<(() => void)[]> {
-    return this._update_components_menu_config_node_io
+  public get ref_to_menu_config_node_io_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_config_node_io_updater
   }
 
   public get updateMenuConfigTextNodeTooltip(): MutableRefObject<(() => void)[]> {
