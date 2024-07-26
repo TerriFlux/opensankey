@@ -139,7 +139,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   additional_link_appearence_items,
   menu_for_style
 }) => {
-  // CONSTANTS ==========================================================================
+  // DATAS ==============================================================================
 
   // Get traduction function
   const { t } = applicationContext

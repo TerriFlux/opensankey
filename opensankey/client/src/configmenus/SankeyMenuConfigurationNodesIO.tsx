@@ -183,7 +183,7 @@ const handleUpLinkIOPos=(
   io:string,
   GetLinkValue:GetLinkValueFuncType,
   link_function:LinkFunctionTypes,
-  setForceUpdate:{ on: () => void; off: () => void; toggle: () => void; },
+  refreshThis:{ on: () => void; off: () => void; toggle: () => void; },
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
@@ -265,7 +265,7 @@ const handleUpLinkIOPos=(
     }
   }
   link_function.RedrawLinks(link_io.map(lid=>data.links[lid]))
-  setForceUpdate.toggle()
+  refreshThis.toggle()
 }
 
 
@@ -285,7 +285,7 @@ const handleDownLinkIOPos=(
   io:string,
   GetLinkValue:GetLinkValueFuncType,
   link_function:LinkFunctionTypes,
-  setForceUpdate:{ on: () => void; off: () => void; toggle: () => void; },
+  refreshThis:{ on: () => void; off: () => void; toggle: () => void; },
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
@@ -369,7 +369,7 @@ const handleDownLinkIOPos=(
   }
 
   link_function.RedrawLinks(link_io.map(lid=>data.links[lid]))
-  setForceUpdate.toggle()
+  refreshThis.toggle()
 }
 
 
@@ -462,15 +462,38 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   ComponentUpdater,
   menu_for_modal
 }) => {
+
+  // Data -------------------------------------------------------------------------------
+
   const { t } = applicationContext
   const { data, display_nodes, display_links, new_data } = applicationData
+
+  const list_nodes_selected = new_data.drawing_area.selected_nodes_list
+
   const { multi_selected_nodes, multi_selected_links } = applicationState
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const { GetLinkValue }=link_function
   const [ link_io, set_link_io ] = useState('output')
   const [ link_pos, set_link_pos ] = useState('right')
   const [ tab_colored, set_tab_colored ] = useState(false)
-  const [ , setForceUpdate ] = useBoolean()
+
+  // Components updaters ---------------------------------------------------------------
+
+  // Function used to force this component to reload
+  const [ , refreshThis ] = useBoolean()
+
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_node_io_updater.current = refreshThis.toggle
+
+  /**
+   * Local refresh function
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    refreshThis.toggle()
+  }
 
   let IOLink=[] as string[]
   if (multi_selected_nodes.current.length===1) {
@@ -499,7 +522,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   //   const [pos,io] = updateDefaultNodeIO(data,applicationData.display_nodes,display_links,multi_selected_nodes)
   //   applicationState.link_io.current = io
   //   applicationState.link_pos.current = pos
-  //   setForceUpdate.toggle()
+  //   refreshThis.toggle()
   // }
 
   const content_reorg=<Box
@@ -516,17 +539,8 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
       <Button
         variant='menuconfigpanel_option_button'
         onClick={() => {
-          Object
-            .values(data.nodes)
-            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-            .map(d => {
-              reorganize_node_inputLinksId(data,d, data.nodes, data.links)
-              reorganize_node_outputLinksId(data,d, data.nodes, data.links)
-            })
-          node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-          link_function.RedrawLinks(Object.values(applicationData.display_links))
-          ComponentUpdater.updateComponenSaveInCache.current(false)
-          setForceUpdate.toggle()
+          list_nodes_selected.forEach(node => node.reorganizeIOLinks())
+          refreshThisAndUpdateRelatedComponents()
         }}
       >
         {t('Noeud.Reorg')}
@@ -568,7 +582,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
             else {
               applicationState.link_pos.current = 'bottom'
             }
-            setForceUpdate.toggle()
+            refreshThis.toggle()
           }}
         >
           {
@@ -602,7 +616,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           value={applicationState.link_pos.current}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             applicationState.link_pos.current = evt.target.value
-            setForceUpdate.toggle()
+            refreshThis.toggle()
           }}
         >
           {
@@ -683,7 +697,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
                                 applicationState.link_io.current,
                                 GetLinkValue,
                                 link_function,
-                                setForceUpdate
+                                refreshThis
                               )
                             }
                           >
@@ -702,7 +716,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
                                 applicationState.link_io.current,
                                 GetLinkValue,
                                 link_function,
-                                setForceUpdate
+                                refreshThis
                               )
                             }
                           >

@@ -36,20 +36,25 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   applicationContext,
   additional_data_element,
 }) => {
+
+  // Application data ------------------------------------------------------------------
+
   // Traduction
   const { t } = applicationContext
   // Sankey datas
   const { new_data } = applicationData
 
   // Data tags and links ---------------------------------------------------------------
+
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
   const list_links_selected = new_data.drawing_area.selected_links_list
   const value = list_links_selected[0]?.value
 
   // Components updaters ---------------------------------------------------------------
+
+  // Refs used to trigger refreshing of number & text inputs
   const ref_set_data_value_input = useRef((_:number | null | undefined) => null)
   const ref_set_text_value_input = useRef((_:string | null | undefined) => null)
-
   const updateInputsValues = () => {
     // Update input data value
     ref_set_data_value_input.current(value?.data_value ?? null)
@@ -69,7 +74,6 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
     // And update this menu also
     refreshThis.toggle()
   }
-
 
   // JSX -------------------------------------------------------------------------------
   const content = <Box

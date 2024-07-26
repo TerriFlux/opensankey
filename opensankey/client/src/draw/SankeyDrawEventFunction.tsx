@@ -146,10 +146,7 @@ export const EventNodeClick: EventNodeClickFType = (
       })
     multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
   }
-  new_data.menu_configuration.ref_to_menu_config_node_updater.current
-  new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
-  new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
-  new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.forEach(f => f())
+  new_data.menu_configuration.updateAllComponentsRelatedToNodes()
 }
 
 export const EventNodeContextMenu: EventNodeContextMenuFType = (
@@ -530,10 +527,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     d3.selectAll('.selection_zone').remove()
     multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
     multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
-    new_data.menu_configuration.ref_to_menu_config_node_updater.current
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
-    new_data.menu_configuration.ref_to_menu_config_link_updater.current()
-    new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+    new_data.menu_configuration.updateAllComponentsRelatedToNodes()
     updateComponenSaveInCache.current(true)
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
@@ -603,7 +597,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       node_function.CreateNodesOnSVG([new_node1])
       link_function.CreateLinksOnSVG([new_link])
       // update link congig panel
-      new_data.menu_configuration.ref_to_menu_config_link_updater.current()
+      new_data.menu_configuration.updateAllComponentsRelatedToLinks()
     } else if ((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class') != 'node node_shape') {
 
       const n_link = DefaultLink(data)
@@ -845,63 +839,6 @@ export const actualizeDrawAreaFrame: actualizeDrawAreaFrameFType = (applicationD
 
   d3.select('#svg').style('width', applicationData.data.width + 'px')
   d3.select('#svg').style('height', applicationData.data.height + 'px')
-}
-
-
-export const selectOpenSankeyElementsInSelectionZone: selectOpenSankeyElementsInSelectionZoneFType = (
-  applicationData,
-  applicationState,
-  ComponentUpdater,
-  evt,
-  start_point
-) => {
-  const { data, display_links, new_data } = applicationData
-  const { multi_selected_nodes, multi_selected_links } = applicationState
-  const {
-    updateComponenSaveInCache } = ComponentUpdater
-  NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
-  Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
-  const scale_svg = returnScaleOfDrawArea()
-  const z_x = Number(d3.select('.selection_zone rect').attr('x'))
-  const z_y = Number(d3.select('.selection_zone rect').attr('y'))
-  const z_w = Number(d3.select('.selection_zone rect').attr('width'))
-  const z_h = Number(d3.select('.selection_zone rect').attr('height'))
-  const node_visible = NodeVisibleOnsSvg()
-  const link_visible_svg = LinkVisibleOnSvg()
-  if (evt.shiftKey) {
-    Object.values(data.nodes).filter(n => {
-      const width_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().width ?? 0) / scale_svg
-      const height_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().height ?? 0) / scale_svg
-
-      return !multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x >= z_x && n.x <= (z_x + z_w) && n.y >= z_y && n.y <= (z_y + z_h) && n.x + width_n >= z_x && n.x + width_n <= (z_x + z_w) && n.y + height_n >= z_y && n.y + height_n <= (z_y + z_h)
-    }
-    ).forEach(n => multi_selected_nodes.current.push(n))
-    const id_node_selected = multi_selected_nodes.current.map(n => n.idNode)
-    const id_link_selected = multi_selected_links.current.map(l => l.idLink)
-    // Select links who have both nodeSource and nodeTarget selected
-    link_visible_svg.filter(lid => id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach(lid => multi_selected_links.current.push(data.links[lid]))
-
-  } else {
-    multi_selected_nodes.current = Object.values(data.nodes).filter(n => {
-      const width_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().width ?? 0) / scale_svg
-      const height_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().height ?? 0) / scale_svg
-      return node_visible.includes(n.idNode) && n.x >= z_x && n.x <= (z_x + z_w) && n.y >= z_y && n.y <= (z_y + z_h) && n.x + width_n >= z_x && n.x + width_n <= (z_x + z_w) && n.y + height_n >= z_y && n.y + height_n <= (z_y + z_h)
-
-    })
-    const id_node_selected = multi_selected_nodes.current.map(n => n.idNode)
-    // Select links who have both nodeSource and nodeTarget selected
-    multi_selected_links.current = link_visible_svg.filter(lid => id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget)).map(lid => data.links[lid])
-  }
-  start_point.current = [0, 0]
-
-  d3.selectAll('.selection_zone').remove()
-  multi_selected_nodes.current.forEach(n => SelectVisualyNodes(n))
-  multi_selected_links.current.forEach(l => SelectVisualyLinks(l))
-  new_data.menu_configuration.ref_to_menu_config_node_updater.current()
-  new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
-  new_data.menu_configuration.ref_to_menu_config_link_updater.current()
-  new_data.menu_configuration.updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
-  updateComponenSaveInCache.current(true)
 }
 
 export const applyZoomEvent: applyZoomEventFType = (applicationData, GetSankeyMinWidthAndHeight) => {
