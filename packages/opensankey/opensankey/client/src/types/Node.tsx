@@ -42,7 +42,7 @@ import {
   Class_LinkElement,
   Type_Side,
   Class_GhostLinkElement,
-  sortLinksElementsWithNodesPosition
+  sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { default_style_id } from './Sankey'
 
@@ -524,6 +524,20 @@ export class Class_NodeElement extends Class_Element {
     else return undefined
   }
 
+  public getInputLinksForGivenSide(_: Type_Side) {
+    const links_for_side = this.getLinksOrdered(_)
+    const input_links_for_side = links_for_side
+      .filter(link => link.id in this._input_links)
+    return input_links_for_side
+  }
+
+  public getOutputLinksForGivenSide(_: Type_Side) {
+    const links_for_side = this.getLinksOrdered(_)
+    const output_links_for_side = links_for_side
+      .filter(link => link.id in this._output_links)
+    return output_links_for_side
+  }
+
   /**
    * Function to reorganize links_order depending of source/target position
    *
@@ -531,8 +545,65 @@ export class Class_NodeElement extends Class_Element {
    */
   public reorganizeIOLinks() {
     this._links_order = this._links_order
-      .sort((link_a, link_b) => sortLinksElementsWithNodesPosition(link_a, link_b, this))
+      .sort((link_a, link_b) =>
+        sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
     this.draw()
+  }
+
+  /**
+   * Place first link just before target link
+   *
+   * @param {Class_LinkElement} link_to_move
+   * @param {Class_LinkElement} link_target_pos
+   * @memberof Class_NodeElement
+   */
+  public moveLinkToPositionInOrderBefore(
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
+  ) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (
+      this._links_order.includes(link_to_move) &&
+      this._links_order.includes(link_target_pos)
+    ) {
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link before the link target in the order array
+      this._links_order.splice(idx_link_trgt, 0, link_to_move)
+      // Redraw
+      this.draw()
+    }
+  }
+
+  /**
+   * Place first link just after target link
+   *
+   * @param {Class_LinkElement} link_to_move
+   * @param {Class_LinkElement} link_target_pos
+   * @memberof Class_NodeElement
+   */
+  public moveLinkToPositionInOrderAfter(
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
+  ) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (
+      this._links_order.includes(link_to_move) &&
+      this._links_order.includes(link_target_pos)
+    ) {
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link after the link target in the order array
+      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
+      // Redraw
+      this.draw()
+    }
   }
 
   /**
@@ -1771,63 +1842,6 @@ export class Class_NodeElement extends Class_Element {
         const next_link = list_links_node_side[idx_drgd_link + 1]
         node_ref.moveLinkToPositionInOrderAfter(link_dragged, next_link)
       }
-
-      // Redraw node ref + links
-      node_ref.drawLinks()
-    }
-  }
-
-  /**
-   * Place first link just before target link
-   *
-   * @private
-   * @param {Class_LinkElement} link_to_move
-   * @param {Class_LinkElement} link_target_pos
-   * @memberof Class_NodeElement
-   */
-  private moveLinkToPositionInOrderBefore(
-    link_to_move: Class_LinkElement,
-    link_target_pos: Class_LinkElement
-  ) {
-    // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (
-      this._links_order.includes(link_to_move) &&
-      this._links_order.includes(link_target_pos)
-    ) {
-      // Remove link to move from the array of link order
-      const idx_link_to_move = this._links_order.indexOf(link_to_move)
-      this._links_order.splice(idx_link_to_move, 1)
-      // Get the position in link order of the link we want the first link to move to
-      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
-      // Add the link before the link target in the order array
-      this._links_order.splice(idx_link_trgt, 0, link_to_move)
-    }
-  }
-
-  /**
-   * Place first link just after target link
-   *
-   * @private
-   * @param {Class_LinkElement} link_to_move
-   * @param {Class_LinkElement} link_target_pos
-   * @memberof Class_NodeElement
-   */
-  private moveLinkToPositionInOrderAfter(
-    link_to_move: Class_LinkElement,
-    link_target_pos: Class_LinkElement
-  ) {
-    // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (
-      this._links_order.includes(link_to_move) &&
-      this._links_order.includes(link_target_pos)
-    ) {
-      // Remove link to move from the array of link order
-      const idx_link_to_move = this._links_order.indexOf(link_to_move)
-      this._links_order.splice(idx_link_to_move, 1)
-      // Get the position in link order of the link we want the first link to move to
-      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
-      // Add the link after the link target in the order array
-      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
     }
   }
 
