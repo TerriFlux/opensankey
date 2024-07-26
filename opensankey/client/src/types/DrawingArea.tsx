@@ -28,8 +28,8 @@ import {
 import {
   Class_GhostLinkElement,
   Class_LinkElement,
-  sortDisplayedLinksElements,
-  sortLinksElements
+  sortLinksElementsByDisplayingOrders,
+  sortLinksElementsByIds
 } from './Link'
 import {
   Class_ApplicationData,
@@ -371,7 +371,7 @@ export class Class_DrawingArea {
 
   public get selected_links_list_sorted() {
     return this.selected_links_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   public get visible_and_selected_links_list() {
@@ -381,7 +381,7 @@ export class Class_DrawingArea {
 
   public get visible_and_selected_links_list_sorted() {
     return this.visible_and_selected_links_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   // Size
@@ -471,7 +471,7 @@ export class Class_DrawingArea {
     // Sort links
     let new_order = 0
     this.sankey.links_list
-      .sort((a, b) => sortDisplayedLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
         if (link.is_visible) {
           link.d3_selection?.raise()
@@ -571,6 +571,21 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     // Clean selection dict
     this._selection = {}
+  }
+
+  /**
+   * Remove all link selected
+   * @memberof Class_DrawingArea
+   */
+  public purgeSelectionOfLinks() {
+    // Unselect elements
+    this.selected_links_list
+      .forEach(link => {
+        link.setUnSelected()
+        delete this._selection[link.id]
+      })
+    // Reset config menu
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
   /**

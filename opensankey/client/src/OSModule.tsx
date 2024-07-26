@@ -572,10 +572,6 @@ export const moduleDialogs : module_dialogsType = (
     content={<SankeyMenuConfigurationNodesIO
       applicationContext={applicationContext}
       applicationData={applicationData}
-      applicationState={applicationState}
-      node_function={node_function}
-      link_function={link_function}
-      ComponentUpdater={ComponentUpdater}
       menu_for_modal={true}
     />}
     pointer_pos={contextMenu.pointer_pos}

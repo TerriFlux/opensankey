@@ -17,8 +17,8 @@ import {
   Class_LinkElement,
   Class_LinkStyle,
   defaultLinkId,
-  sortDisplayedLinksElements,
-  sortLinksElements
+  sortLinksElementsByDisplayingOrders,
+  sortLinksElementsByIds
 } from './Link'
 import {
   Class_NodeElement,
@@ -554,7 +554,7 @@ export class Class_Sankey {
     // Add links
     json_object['links'] = json_object_links
     this.links_list
-      .sort((a, b) => sortDisplayedLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
         json_object_links[link.id] = link.toJSON()
       })
@@ -861,7 +861,7 @@ export class Class_Sankey {
    */
   public get links_list_sorted() {
     return this.links_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   /**
@@ -881,7 +881,7 @@ export class Class_Sankey {
    */
   public get visible_links_list_sorted() {
     return this.visible_links_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   // Styles related ---------------------------------------------------------------------
@@ -957,7 +957,7 @@ export class Class_Sankey {
    */
   public get link_styles_list_sorted() {
     return this.link_styles_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   // Tags related -----------------------------------------------------------------------

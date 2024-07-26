@@ -95,7 +95,7 @@ export function defaultLinkId(source: Class_NodeElement, target: Class_NodeEleme
   return source.name + ' --> ' + target.name
 }
 
-export function sortLinksElements(
+export function sortLinksElementsByIds(
   a: Class_LinkElement | Class_LinkStyle,
   b: Class_LinkElement | Class_LinkStyle
 ) {
@@ -104,7 +104,7 @@ export function sortLinksElements(
   else return 0
 }
 
-export function sortDisplayedLinksElements(
+export function sortLinksElementsByDisplayingOrders(
   a: Class_LinkElement,
   b: Class_LinkElement
 ) {
@@ -113,7 +113,7 @@ export function sortDisplayedLinksElements(
   else return 0
 }
 
-export function sortLinksElementsWithNodesPosition(
+export function sortLinksElementsByRelativeNodesPositions(
   link_a: Class_LinkElement,
   link_b: Class_LinkElement,
   node: Class_NodeElement
@@ -150,7 +150,7 @@ export function sortLinksElementsWithNodesPosition(
     node_b = link_b.source
     side_b = link_b.target_side
   }
-  // Side check : Node position comparaison if links are on the same side
+  // Side check : Node position comparaison if links are on the same side ?
   if (side_a === side_b) {
     // For "horizontal" sides
     if (side_a === 'right' || side_a === 'left') {
@@ -171,7 +171,7 @@ export function sortLinksElementsWithNodesPosition(
         return 0
     }
   }
-  // Use side "priority"
+  // Otherwise, use side "priority"
   else {
     if (side_order[side_a] < side_order[side_b])
       return -1
