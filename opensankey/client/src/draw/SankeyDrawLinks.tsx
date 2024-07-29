@@ -287,8 +287,8 @@ const eventLinkClick=(
     }else{
       displayedInputLinkValueSetterRef.current.forEach(setter=>setter(''))
     }
-    new_data.menu_configuration.ref_to_menu_config_link_updater.current()
-    new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.forEach(f=>f())  }
+    new_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  }
 }
 
 export const AddDrawLinksEvent : AddDrawLinksEventsFType = (

@@ -911,7 +911,6 @@ export class Class_DrawingArea {
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleRMBCLick(event))
-
       // Zoom behavior(but can also drag drawing area in scroll zone)
       this.d3_selection_zoom_area?.call(
         this.zoomListener
@@ -927,9 +926,13 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventSimpleLMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+    }
   }
 
   /**
@@ -955,15 +958,16 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
     if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+      // SELECTION MODE ===========================================================
       if (this.isInSelectionMode()) {
         this.pointer_pos = [event.pageX, event.pageY]
-
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         this.is_drawing_area_contextualised = true
         this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
       }
     }
-
   }
 
   /**
@@ -976,8 +980,9 @@ export class Class_DrawingArea {
     event: MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
-
     if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
       // EDITION MODE =============================================================
       // event.button==0 check if we use LMB
       if (this.isInEditionMode() && event.button == 0) {
@@ -1004,7 +1009,7 @@ export class Class_DrawingArea {
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
-        if (event.button == 0) {
+        if (event.button === 0) {
           // Close context menus
           this.node_contextualied = undefined
           this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
