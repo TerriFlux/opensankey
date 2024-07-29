@@ -22,18 +22,14 @@ import { Class_LinkElement, Type_Side } from '../types/Link'
 
 /**
  * Define IO selection menu for nodes
- *
- * @param {*} {
- *   applicationContext,
- *   applicationData,
- *   applicationState,
- *   node_function,
- *   link_function,
- *   ComponentUpdater,
- *   menu_for_modal
- * }
- * @return {*}
- */
+  *
+  * @param {*} {
+  *   applicationContext,
+  *   applicationData,
+  *   menu_for_modal
+  * }
+  * @return {*}
+  */
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
   applicationData,
