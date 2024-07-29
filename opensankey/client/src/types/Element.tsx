@@ -316,6 +316,8 @@ export abstract class Class_ProtoElement {
   protected eventSimpleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Clear tooltips presents
+    d3.selectAll('.sankey-tooltip').remove()
     // TODO do something
   }
 
@@ -340,6 +342,8 @@ export abstract class Class_ProtoElement {
   protected eventSimpleRMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Clear tooltips presents
+    d3.selectAll('.sankey-tooltip').remove()
     // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
   }
 
