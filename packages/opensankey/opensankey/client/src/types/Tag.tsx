@@ -7,13 +7,13 @@
 // Local types
 import { Class_LinkElement, Class_LinkValue } from './Link'
 import { Class_NodeElement } from './Node'
-import { Class_Sankey } from './Sankey'
+import { Class_Sankey, Type_MacroTagGroup } from './Sankey'
 import { Type_JSON, default_grey_color, getBooleanFromJSON, getStringFromJSON, getStringListFromJSON, makeId } from './Utils'
 
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type tag_banner_type= 'none' | 'one' | 'multi' | 'level'
+export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
 
 type Type_TagReference = Class_NodeElement | Class_LinkValue
 type Type_DataTagReference = Class_LinkElement
@@ -47,6 +47,8 @@ export abstract class Class_ProtoTag {
    */
   private _is_currently_deleted = false
 
+  protected _ref_sankey: Class_Sankey
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Group where it belong
@@ -57,10 +59,12 @@ export abstract class Class_ProtoTag {
 
   constructor(
     name: string,
-    id: string | undefined = undefined
+    id: string | undefined = undefined,
+    sankey: Class_Sankey
   ) {
     this._id = id ?? makeId(name)
     this._name = name
+    this._ref_sankey = sankey
   }
 
   /**
@@ -81,7 +85,7 @@ export abstract class Class_ProtoTag {
 
   // PUBLIC METHODES ==================================================================
 
-  public  abstract update(): void
+  public abstract update(): void
 
   public setSelected() {
     // Avoid useless update
@@ -154,9 +158,10 @@ export abstract class Class_ProtoTag {
 
   // Selection
   public get is_selected() { return this._is_selected }
+  public set is_selected(_: boolean) { this._is_selected = _ }
 
   // Group
-  public abstract get group() : Class_ProtoTagGroup
+  public abstract get group(): Class_ProtoTagGroup
 }
 
 // CLASS TAG ****************************************************************************
@@ -188,9 +193,10 @@ export class Class_Tag extends Class_ProtoTag {
   constructor(
     name: string,
     group: Class_TagGroup,
-    id: string | undefined = undefined
+    id: string | undefined = undefined,
+    sankey: Class_Sankey
   ) {
-    super(name, id)
+    super(name, id, sankey)
     this._group = group
   }
 
@@ -219,6 +225,12 @@ export class Class_Tag extends Class_ProtoTag {
       delete this._references[_.id]
       _.removeTag(this)
     }
+  }
+
+  public copyFrom(element: Class_Tag) {
+    this.name = element.name
+    this.color = element.color
+    this.is_selected = element.is_selected
   }
 
   // PROTECTED METHODS ==================================================================
@@ -271,7 +283,7 @@ export class Class_DataTag extends Class_ProtoTag {
     sankey: Class_Sankey,
     id: string | undefined = undefined
   ) {
-    super(name, id)
+    super(name, id, sankey)
     this._group = group
     this._references = sankey.links_dict
     // Update all links
@@ -286,6 +298,12 @@ export class Class_DataTag extends Class_ProtoTag {
       .forEach(element => {
         element.drawWithNodes()
       })
+  }
+
+  public copyFrom(element:Class_DataTag){
+    this.name = element.name
+    this.color = element.color
+    this.is_selected = element.is_selected
   }
 
   // PROTECTED METHODS ==================================================================
@@ -335,6 +353,8 @@ export abstract class Class_ProtoTagGroup {
    */
   private _is_currently_deleted = false
 
+  protected _ref_sankey: Class_Sankey
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected abstract _tags: { [_: string]: Class_ProtoTag }
@@ -347,9 +367,10 @@ export abstract class Class_ProtoTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string) {
+  constructor(id: string, name: string, sankey: Class_Sankey) {
     this._id = id
     this._name = name
+    this._ref_sankey = sankey
   }
 
   /**
@@ -376,7 +397,7 @@ export abstract class Class_ProtoTagGroup {
     name: string,
     id: string | undefined = undefined
   ) {
-    const tag = this.createTag(name, id)
+    const tag = this.createTag(name, id, this._ref_sankey)
     this._tags[tag.id] = tag
     this._tag_count = this._tag_count + 1
     return tag
@@ -473,11 +494,13 @@ export abstract class Class_ProtoTagGroup {
     this._name = getStringFromJSON(json_object, 'group_name', this._name)
   }
 
+  public abstract copyFrom(elment: Class_ProtoTagGroup,type:Type_MacroTagGroup): void
   // PROTECTED METHODS ==================================================================
 
   protected abstract createTag(
     name: string,
-    id: string | undefined
+    id: string | undefined,
+    sankey: Class_Sankey
   ): Class_ProtoTag
 
   // GETTERS ============================================================================
@@ -502,21 +525,21 @@ export abstract class Class_ProtoTagGroup {
    * @type {{ [_: string]: Class_ProtoTag }}
    * @memberof Class_ProtoTagGroup
    */
-  public abstract get tags_dict() :  { [_: string]: Class_ProtoTag }
+  public abstract get tags_dict(): { [_: string]: Class_ProtoTag }
 
   /**
   * Return list tag from the current group
   * @readonly
   * @memberof Class_ProtoTagGroup
   */
-  public abstract get tags_list() : Class_ProtoTag[]
+  public abstract get tags_list(): Class_ProtoTag[]
 
   /**
    * Return list of selected tag from the current group
    * @readonly
    * @memberof Class_ProtoTagGroup
    */
-  public abstract get selected_tags_list() : Class_ProtoTag[]
+  public abstract get selected_tags_list(): Class_ProtoTag[]
 
   /**
    * True if tag group has tags
@@ -575,8 +598,8 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string) {
-    super(id, name)
+  constructor(id: string, name: string, sankey: Class_Sankey) {
+    super(id, name, sankey)
     // Default banner as multi
     this.banner = 'multi'
     // Create a first default tag
@@ -603,13 +626,48 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
+  public copyFrom(element: Class_TagGroup) {
+    this._show_legend = element.show_legend
+    this.banner = element.banner
+
+    const curr_taggs_list = this.tags_list
+    const curr_taggs_list_id = curr_taggs_list.map(nt => nt.id)
+    const new_taggs_list = element.tags_list
+    const new_taggs_list_id = new_taggs_list.map(nt => nt.id)
+    const dict_tag_grp_element=element.tags_dict
+
+    // Add tag present in element but not this
+    new_taggs_list_id.filter(id_tag => {
+      !curr_taggs_list_id.includes(id_tag)
+    }).forEach(id_tag => {
+      this.addTag(element._ref_sankey.node_taggs_dict[id_tag].name,id_tag)
+      this.tags_dict[id_tag].copyFrom(dict_tag_grp_element[id_tag])
+    })
+
+    // Delete tags not present in new layout but present in curr
+    curr_taggs_list_id.filter(id_nt => {
+      !new_taggs_list_id.includes(id_nt)
+    }).forEach(id_nt => {
+      this.tags_dict[id_nt].delete()
+    })
+
+    // Transfer tags attr present in new layout and in curr
+    curr_taggs_list_id.filter(id_nt => {
+      new_taggs_list_id.includes(id_nt)
+    }).forEach(id_nt => {
+      this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
+    })
+
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected createTag(
     name: string,
-    id: string | undefined = undefined
+    id: string | undefined = undefined,
+    sankey: Class_Sankey
   ) {
-    const tag = new Class_Tag(name, this, id)
+    const tag = new Class_Tag(name, this, id, sankey)
     tag.setSelected()
     return tag
   }
@@ -660,8 +718,6 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _sankey: Class_Sankey
-
   // Display attributes
   private _show_legend: boolean = false
 
@@ -678,8 +734,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * @memberof Class_TagGroup
    */
   constructor(id: string, name: string, sankey: Class_Sankey) {
-    super(id, name)
-    this._sankey = sankey
+    super(id, name, sankey)
     // Create and select a first default tag
     const tag = this.addTag('Etiquette 0')
     tag.setSelected()
@@ -718,13 +773,47 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
+  public copyFrom(element: Class_DataTagGroup) {
+    this._show_legend = element.show_legend
+    this.banner = element.banner
+
+    const curr_taggs_list = this.tags_list
+    const curr_taggs_list_id = curr_taggs_list.map(nt => nt.id)
+    const new_taggs_list = element.tags_list
+    const new_taggs_list_id = new_taggs_list.map(nt => nt.id)
+    const dict_tag_grp_element=element.tags_dict
+
+    // Add tag present in element but not this
+    new_taggs_list_id.filter(id_tag => {
+      !curr_taggs_list_id.includes(id_tag)
+    }).forEach(id_tag => {
+      this.addTag(element._ref_sankey.node_taggs_dict[id_tag].name,id_tag)
+      this.tags_dict[id_tag].copyFrom(dict_tag_grp_element[id_tag])
+    })
+
+    // Delete tags not present in new layout but present in curr
+    curr_taggs_list_id.filter(id_nt => {
+      !new_taggs_list_id.includes(id_nt)
+    }).forEach(id_nt => {
+      this.tags_dict[id_nt].delete()
+    })
+
+    // Transfer tags attr present in new layout and in curr
+    curr_taggs_list_id.filter(id_nt => {
+      new_taggs_list_id.includes(id_nt)
+    }).forEach(id_nt => {
+      this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
+    })
+    
+
+  }
   // PROTECTED METHODS ==================================================================
 
   protected createTag(
     name: string,
     id: string | undefined = undefined
   ) {
-    return new Class_DataTag(name, this, this._sankey, id)
+    return new Class_DataTag(name, this, this._ref_sankey, id)
   }
 
   // PRIVATE METHODES ===================================================================
@@ -803,6 +892,12 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
     super.fromJSON(json_object)
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'sibling', this._siblings)
+  }
+
+  public copyFrom(element: Class_TagGroupNodeLevel) {
+    super.copyFrom(element)
+    this._activated=element._activated
+    this._siblings=element._siblings
   }
 
   // GETTERS / SETTERS ==================================================================

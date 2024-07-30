@@ -17,7 +17,7 @@ import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/
 
 export   const os_all_element_to_transform = [
   'addNode', 'addFlux', 'removeNode', 'removeFlux',
-  'posNode', 'posFlux',
+  'posNode', 
   'Values',
   'attrNode', 'attrFlux',
   'tagNode', 'tagFlux', 'tagData', 'tagLevel',
@@ -57,12 +57,12 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   }
   const node_visible=NodeVisibleOnsSvg()
   const simple_element_to_transform = [
-    'posNode', 'posFlux',
+    'posNode',
     'attrNode', 'attrFlux',
     'attrGeneral'
   ]
   const default_element_to_transform = [
-    'posNode', 'posFlux',
+    'posNode',
     'attrNode', 'attrFlux',
     'attrGeneral'
   ]
@@ -226,17 +226,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                       setForceUpdate(!forceUpdate)
                     }}
                   }>{t('Menu.Transformation.PosNoeud')}</Button>
-                <Button
-                  variant={ dataVarToUpdate.current.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if(!dataVarToUpdate.current.includes('posFlux')){
-                      dataVarToUpdate.current.push('posFlux')
-                      setForceUpdate(!forceUpdate)
-                    }else{
-                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('posFlux'),1)
-                      setForceUpdate(!forceUpdate)
-                    }}
-                  }> {t('Menu.Transformation.posFlux')}</Button>
+                
               </Box>
 
             </Box>
@@ -730,6 +720,7 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
             if (file_layout === undefined) {
               return
             }
+            
             const reader = new FileReader()
             reader.onload = (() => {
               return (
