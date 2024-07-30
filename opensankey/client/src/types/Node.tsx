@@ -42,7 +42,7 @@ import {
   Class_LinkElement,
   Type_Side,
   Class_GhostLinkElement,
-  sortLinksElementsWithNodesPosition
+  sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { default_style_id } from './Sankey'
 
@@ -113,9 +113,6 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  // Tooltips
-  tooltip?: Class_Element
-  tooltip_text?: string
 
   // PROTECTED ATTRIBUTE ================================================================
 
@@ -165,6 +162,9 @@ export class Class_NodeElement extends Class_Element {
 
   // Reference to link dragged when we drag a handle
   private _link_dragged: Class_LinkElement | undefined
+
+  // Tooltips
+  private _tooltip_text?: string
 
   // CONSTRUCTOR ========================================================================
 
@@ -553,6 +553,20 @@ export class Class_NodeElement extends Class_Element {
     else return undefined
   }
 
+  public getInputLinksForGivenSide(_: Type_Side) {
+    const links_for_side = this.getLinksOrdered(_)
+    const input_links_for_side = links_for_side
+      .filter(link => link.id in this._input_links)
+    return input_links_for_side
+  }
+
+  public getOutputLinksForGivenSide(_: Type_Side) {
+    const links_for_side = this.getLinksOrdered(_)
+    const output_links_for_side = links_for_side
+      .filter(link => link.id in this._output_links)
+    return output_links_for_side
+  }
+
   /**
    * Function to reorganize links_order depending of source/target position
    *
@@ -560,8 +574,65 @@ export class Class_NodeElement extends Class_Element {
    */
   public reorganizeIOLinks() {
     this._links_order = this._links_order
-      .sort((link_a, link_b) => sortLinksElementsWithNodesPosition(link_a, link_b, this))
+      .sort((link_a, link_b) =>
+        sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
     this.draw()
+  }
+
+  /**
+   * Place first link just before target link
+   *
+   * @param {Class_LinkElement} link_to_move
+   * @param {Class_LinkElement} link_target_pos
+   * @memberof Class_NodeElement
+   */
+  public moveLinkToPositionInOrderBefore(
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
+  ) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (
+      this._links_order.includes(link_to_move) &&
+      this._links_order.includes(link_target_pos)
+    ) {
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link before the link target in the order array
+      this._links_order.splice(idx_link_trgt, 0, link_to_move)
+      // Redraw
+      this.draw()
+    }
+  }
+
+  /**
+   * Place first link just after target link
+   *
+   * @param {Class_LinkElement} link_to_move
+   * @param {Class_LinkElement} link_target_pos
+   * @memberof Class_NodeElement
+   */
+  public moveLinkToPositionInOrderAfter(
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
+  ) {
+    // Check we don't try to swap 2 links that aren"t connected to the same node
+    if (
+      this._links_order.includes(link_to_move) &&
+      this._links_order.includes(link_target_pos)
+    ) {
+      // Remove link to move from the array of link order
+      const idx_link_to_move = this._links_order.indexOf(link_to_move)
+      this._links_order.splice(idx_link_to_move, 1)
+      // Get the position in link order of the link we want the first link to move to
+      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
+      // Add the link after the link target in the order array
+      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
+      // Redraw
+      this.draw()
+    }
   }
 
   /**
@@ -585,7 +656,7 @@ export class Class_NodeElement extends Class_Element {
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
     // Tooltip
-    if (this.tooltip_text) json_object['tooltip_text'] = this.tooltip_text
+    if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
     // Tags
     json_object['tags'] = Object.fromEntries(
       this.taggs_list
@@ -634,7 +705,7 @@ export class Class_NodeElement extends Class_Element {
       this._display.attributes.fromJSON(json_local_object)
     }
     // Tooltip
-    this.tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
+    this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
     // Node Tags
     //   In JSON here are how supposed tags var is :
     //   tags:{key_grp_tag:string[] (key_tag_selected) }
@@ -767,6 +838,8 @@ export class Class_NodeElement extends Class_Element {
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Apply parent behavior first
+    super.eventSimpleLMBCLick(event)
     // Get related drawing area
     const drawing_area = this.drawing_area
     // EDITION MODE ===========================================================
@@ -774,33 +847,23 @@ export class Class_NodeElement extends Class_Element {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
-      drawing_area.application_data.closeAllMenus()
+      drawing_area.application_data.menu_configuration.CloseConfigMenu()
     }
     // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode() && event.button == 0) {
-      // ALT
-      if (event.altKey) {
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Show tooltip
-        this.drawTooltip()
-      }
+    else if (drawing_area.isInSelectionMode() && event.button === 0) {
       // SHIFT
-      else if (event.shiftKey) {
+      if (event.shiftKey) {
         // Add node to selection
         drawing_area.addNodeToSelection(this)
-
         // Open related menu
-        this.menu_config.OpenConfigMenu()
-        this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsNodes()
         // Update components related to node edition
         this.menu_config.updateAllComponentsRelatedToNodes()
-
-      } else if (event.ctrlKey) {
+      }
+      // CTRL
+      else if (event.ctrlKey) {
         // Add node to selection
         drawing_area.addNodeToSelection(this)
-
         // Update components related to node edition
         this.menu_config.updateAllComponentsRelatedToNodes()
       }
@@ -824,13 +887,13 @@ export class Class_NodeElement extends Class_Element {
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
+    // Apply parent behavior first
+    super.eventMouseDrag(event)
     // Get related drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
-
     // Only trigger the drag if we drag a selected node
     if (nodes_selected.includes(this)) {
-
       // EDITION MODE ===========================================================
       if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
         // /* TODO définir  */
@@ -850,12 +913,13 @@ export class Class_NodeElement extends Class_Element {
 
   protected eventMouseDragEnd(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Apply parent behavior first
+    super.eventMouseDragEnd(event)
+    // Get related elements in drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
-
     // Only trigger the drag if we drag a selected node
     if (nodes_selected.includes(this)) {
-
       // EDITION MODE ===========================================================
       if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
         // /* TODO définir  */
@@ -885,11 +949,11 @@ export class Class_NodeElement extends Class_Element {
   protected eventMaintainedClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-
+    // Apply parent behavior first
+    super.eventMaintainedClick(event)
     // EDITION MODE =============================================================
     // event.button==0 check if we use LMB
     if (this.drawing_area.isInEditionMode() && event.button == 0) {
-
       // Get mouse position
       // Create default source node
       // Position center of source node to pointer pos
@@ -905,12 +969,14 @@ export class Class_NodeElement extends Class_Element {
         target,
         this.drawing_area, this.menu_config)
     }
-
   }
 
   protected eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Apply parent behavior first
+    super.eventSimpleRMBCLick(event)
+    // SELECTION MODE =========================================================
     if (this.drawing_area.isInSelectionMode()) {
       event.preventDefault()
       this.drawing_area.pointer_pos = [event.pageX, event.pageY]
@@ -921,7 +987,24 @@ export class Class_NodeElement extends Class_Element {
       this.drawing_area.node_contextualied = this
       this.menu_config.ref_to_menu_context_nodes_updater.current()
     }
+  }
 
+  /**
+   * Define event when mouse moves over element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseOver(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseOver(event)
+    // ALT
+    if (event.altKey) {
+      // Show tooltip
+      this.drawTooltip()
+    }
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1580,22 +1663,15 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   private drawTooltip() {
-    const sankeyTooltip = d3.select('.sankey-tooltip')
-    // const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
-    const pos_tooltip_y = this.position_y
-    // const size_browser = window.innerHeight
-    // pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
-
-    // const w_tooltip = Number(sankeyTooltip.style('width').replace('px', ''))
-    const pos_tooltip_x = this.position_x
-    // const size_browser_w = window.innerWidth
-    // pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
-    sankeyTooltip
-      .style('top', pos_tooltip_y + 'px')
-      .style('left', pos_tooltip_x + 'px')
-    sankeyTooltip
+    // Clean previous label
+    d3.selectAll('.sankey-tooltip').remove()
+    d3.select('body')
+      .append('div')
+      .attr('class', 'sankey-tooltip')
       .style('opacity', 1)
-      .html(this?.tooltip_text ?? '')
+      .style('top', this.position_y + 'px')
+      .style('left', this.position_x + 'px')
+      .html(this.tooltip_html)
   }
 
   /**
@@ -1800,63 +1876,6 @@ export class Class_NodeElement extends Class_Element {
         const next_link = list_links_node_side[idx_drgd_link + 1]
         node_ref.moveLinkToPositionInOrderAfter(link_dragged, next_link)
       }
-
-      // Redraw node ref + links
-      node_ref.drawLinks()
-    }
-  }
-
-  /**
-   * Place first link just before target link
-   *
-   * @private
-   * @param {Class_LinkElement} link_to_move
-   * @param {Class_LinkElement} link_target_pos
-   * @memberof Class_NodeElement
-   */
-  private moveLinkToPositionInOrderBefore(
-    link_to_move: Class_LinkElement,
-    link_target_pos: Class_LinkElement
-  ) {
-    // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (
-      this._links_order.includes(link_to_move) &&
-      this._links_order.includes(link_target_pos)
-    ) {
-      // Remove link to move from the array of link order
-      const idx_link_to_move = this._links_order.indexOf(link_to_move)
-      this._links_order.splice(idx_link_to_move, 1)
-      // Get the position in link order of the link we want the first link to move to
-      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
-      // Add the link before the link target in the order array
-      this._links_order.splice(idx_link_trgt, 0, link_to_move)
-    }
-  }
-
-  /**
-   * Place first link just after target link
-   *
-   * @private
-   * @param {Class_LinkElement} link_to_move
-   * @param {Class_LinkElement} link_target_pos
-   * @memberof Class_NodeElement
-   */
-  private moveLinkToPositionInOrderAfter(
-    link_to_move: Class_LinkElement,
-    link_target_pos: Class_LinkElement
-  ) {
-    // Check we don't try to swap 2 links that aren"t connected to the same node
-    if (
-      this._links_order.includes(link_to_move) &&
-      this._links_order.includes(link_target_pos)
-    ) {
-      // Remove link to move from the array of link order
-      const idx_link_to_move = this._links_order.indexOf(link_to_move)
-      this._links_order.splice(idx_link_to_move, 1)
-      // Get the position in link order of the link we want the first link to move to
-      const idx_link_trgt = this._links_order.indexOf(link_target_pos)
-      // Add the link after the link target in the order array
-      this._links_order.splice(idx_link_trgt + 1, 0, link_to_move)
     }
   }
 
@@ -2021,6 +2040,19 @@ export class Class_NodeElement extends Class_Element {
   public get output_links_list() {
     return Object.values(this._output_links)
   }
+
+  /**
+   * Get current link element that is dragged through a link handler
+   * @type {(Class_LinkElement | undefined)}
+   * @memberof Class_NodeElement
+   */
+  public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
+
+  /**
+   * Indicate that a given link element is dragged through a link handler
+   * @memberof Class_NodeElement
+   */
+  public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
 
   /**
    * Get style key of node
@@ -2683,6 +2715,14 @@ export class Class_NodeElement extends Class_Element {
     this.drawValueLabel()
   }
 
+  public get tooltip_text() {
+    return this._tooltip_text
+  }
+
+  public set tooltip_text(_: string | undefined) {
+    this._tooltip_text = _
+  }
+
   // PRIVATE GETTER / SETTER ============================================================
 
   /**
@@ -2754,8 +2794,113 @@ export class Class_NodeElement extends Class_Element {
     return to_display
   }
 
-  public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
-  public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
+  private get tooltip_html() {
+    // Title
+    let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
+      this.name.split('\\n').join(' ') +
+      '</p>'
+    // Subtitle
+    if (this._tooltip_text)
+      tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
+    tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
+    // Input links
+    if ( this.hasInputLinks() ) {
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">'+'Entrées'+'</p>' // TODO traduction manquante sur "entrées"
+      tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
+      tooltip_html += '  <thead>'
+      tooltip_html += '    <tr>'
+      tooltip_html += '      <th>'+'Provenances'+'</th>' // TODO traduction manquante
+      tooltip_html += '      <th>'+'Valeurs'+'</th>' // TODO traduction manquante
+      tooltip_html += '      <th>'+'Ratios'+'</th>' // TODO traduction manquante
+      this.drawing_area.sankey.flux_taggs_list
+        .forEach(tagg =>
+          tooltip_html += '      <th>' + tagg.name + '</th>')
+      tooltip_html += '    </tr>'
+      tooltip_html += '  </thead>'
+      tooltip_html += '  </tbody>'
+      // Fill input link table
+      this.input_links_list
+        .filter(link => link.is_visible)
+        .forEach(link => {
+          // Source
+          tooltip_html += '    <tr>'
+          tooltip_html += '      <td style="white-space: nowrap;">' + link.source.name + '</td>'
+          // With values
+          tooltip_html += '      <td>' + link.data_label + '</td>'
+          if (this._input_data_value > 0)  // avoid div / 0
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0)/this._input_data_value)*100).toPrecision(3) + '%</td>'
+          else
+            tooltip_html += '      <td></td>'
+          // And flux tag for each values
+          this.drawing_area.sankey.flux_taggs_list
+            .forEach(tagg => {
+              const _: string[] = []
+              link.flux_tags_list
+                .forEach(tag => {
+                  if (tag.group === tagg)
+                    _.push(tag.name)
+                })
+              tooltip_html += '      <td style="white-space: nowrap;">' + _.join() + '</td>'
+            })
+          tooltip_html += '   </tr>'
+        })
+      tooltip_html += '    <tr>'
+      tooltip_html += '       <th>'+'Total'+'</th>'
+      tooltip_html += '       <td>' + this._input_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
+      tooltip_html += '    </tr>'
+      tooltip_html += '  </tbody>'
+      tooltip_html += '</table>'
+    }
+    // Output links
+    if ( this.hasOutputLinks() ) {
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">'+'Sortie'+'</p>' // TODO traduction manquante sur "sorties"
+      tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
+      tooltip_html += '  <thead>'
+      tooltip_html += '    <tr>'
+      tooltip_html += '      <th>'+'Destinations'+'</th>' // TODO traduction manquante
+      tooltip_html += '      <th>'+'Valeurs'+'</th>' // TODO traduction manquante
+      tooltip_html += '      <th>'+'Ratios'+'</th>' // TODO traduction manquante
+      this.drawing_area.sankey.flux_taggs_list
+        .forEach(tagg =>
+          tooltip_html += '      <th>' + tagg.name + '</th>')
+      tooltip_html += '    </tr>'
+      tooltip_html += '  </thead>'
+      // Fill input link table
+      this.output_links_list
+        .filter(link => link.is_visible)
+        .forEach(link => {
+          // Source
+          tooltip_html += '    <tr>'
+          tooltip_html += '      <td style="white-space: nowrap;">' + link.target.name + '</td>'
+          // With values
+          tooltip_html += '      <td>' + link.data_label + '</td>'
+          if (this._output_data_value > 0)  // avoid div / 0
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0)/this._output_data_value)*100).toPrecision(3) + '%</td>'
+          else
+            tooltip_html += '      <td></td>'
+          // And flux tag for each values
+          this.drawing_area.sankey.flux_taggs_list
+            .forEach(tagg => {
+              const _: string[] = []
+              link.flux_tags_list
+                .forEach(tag => {
+                  if (tag.group === tagg)
+                    _.push(tag.name)
+                })
+              tooltip_html += '      <td style="white-space: nowrap;">' + _.join() + '</td>'
+            })
+          tooltip_html += '    </tr>'
+        })
+      tooltip_html += '    <tr>'
+      tooltip_html += '      <th>'+'Total'+'</th>'
+      tooltip_html += '      <td>' + this._output_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
+      tooltip_html += '    </tr>'
+      tooltip_html += '  </tbody>'
+      tooltip_html += '</table>'
+    }
+    tooltip_html += '</div>'
+    return tooltip_html
+  }
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************

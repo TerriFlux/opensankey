@@ -9,12 +9,9 @@ import * as d3 from 'd3'
 import LZString from 'lz-string'
 
 // Local types
-import { openRemoteUIElement } from '../functions/application/Menus'
 import { Class_DrawingArea } from './DrawingArea'
 import { Type_JSON, Type_Structure } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
-import { uiElementsRefType } from './Types'
-import { Class_LinkElement } from './Link'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 
 
@@ -29,7 +26,36 @@ const initial_show_structure = 'reconciled'
  */
 export class Class_ApplicationData {
 
+  // PUBLIC ATTRIBUTES =================================================================
+
+  // App
+  public version: string = '0.8'
+  public fit_screen: boolean
+
+  // Drawing area
+  drawing_area: Class_DrawingArea
+
+  // Configuration Menu
+  menu_configuration: Class_MenuConfig
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Display
+  private _show_structure: Type_Structure = initial_show_structure
+
+  // Limitations
+  private _maximum_flux?: number
+  private _minimum_flux?: number
+
+  private _filter_label: number = 0
+
+  // OPTIONNAL ATTRIBUTES ===============================================================
+
+  // File name
+  file_name?: string
+
   // CONSTRUCTOR ========================================================================
+
   /**
     * Creates an instance of Class_ApplicationData.
     * @param {boolean} published_mode
@@ -50,70 +76,7 @@ export class Class_ApplicationData {
     this.fit_screen = published_mode
   }
 
-  // DEFAULT ATTRIBUTES =================================================================
-  // App version
-  version: string = '0.8'
-
-  // Dealing with menus
-  accordeon_to_show: string[] = ['MEP']
-  ui_elements: uiElementsRefType | null = null
-
-  // Drawing area
-  drawing_area: Class_DrawingArea
-
-  // Configuration Menu
-  menu_configuration: Class_MenuConfig
-
-  // Display
-  private _show_structure: Type_Structure = initial_show_structure
-
-  fit_screen: boolean
-
-  // Limitations
-  private _maximum_flux?: number
-  private _minimum_flux?: number
-
-  private _filter_label: number = 0
-
-
-  // OPTIONNAL ATTRIBUTES ===============================================================
-
-  // File name
-  file_name?: string
-
   // PUBLIC METHODS =====================================================================
-
-  // Deal with menus
-  public closeAllMenus() { /* TODO */ }
-
-  // Open accordion menu
-  public openMenu() {
-    if (this.ui_elements !== null)
-      openRemoteUIElement(this.ui_elements.accordion_ref)
-  }
-
-  // GETTERS / SETTERS ==================================================================
-  // TODO getter / setters for application data
-
-  public get maximum_flux(): number | undefined { return this._maximum_flux }
-  public set maximum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._maximum_flux = value
-    }
-  }
-
-  public get minimum_flux(): number | undefined { return this._minimum_flux }
-  public set minimum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._minimum_flux = value
-    }
-  }
-
-  public get show_structure(): Type_Structure { return this._show_structure }
-  public set show_structure(value: Type_Structure) { this._show_structure = value }
-
-  public get filter_label(): number { return this._filter_label }
-  public set filter_label(value: number) { this._filter_label = value }
 
   /**
    * Reset value of drawing_area and substructur with data from JSON
@@ -142,6 +105,23 @@ export class Class_ApplicationData {
     }
   }
 
+  public reset() {
+    this._show_structure = initial_show_structure
+    delete this._maximum_flux
+    delete this._minimum_flux
+    this._filter_label = 0
+
+    this.drawing_area.reinit()
+    this.drawing_area = new Class_DrawingArea(
+      initial_window_height,
+      initial_window_width,
+      this)
+
+    this.menu_configuration.updateAllMenuComponents()
+  }
+
+  // PRIVATE METHODS =====================================================================
+
   /**
    * Function to create custom application behavior when we press a key,
    *
@@ -156,10 +136,14 @@ export class Class_ApplicationData {
     return (evt: KeyboardEvent) => {
       if (
         ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
-        (((document.activeElement?.tagName === 'INPUT') ?
-          d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
-          true) &&
-          (!document.activeElement?.className.includes('ql-editor')))
+        (
+          (
+            (document.activeElement?.tagName === 'INPUT') ?
+              d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
+              true
+          ) &&
+          (!document.activeElement?.className.includes('ql-editor'))
+        )
       ) {
         // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
         // (exemples : le input de la largeur minimal d'un noeud)
@@ -181,15 +165,6 @@ export class Class_ApplicationData {
           })
         }
 
-        let link_to_update: Class_LinkElement[] = []
-        app_ref.drawing_area.selected_nodes_list.forEach(n => {
-          link_to_update = link_to_update.concat(n.output_links_list)
-          link_to_update = link_to_update.concat(n.input_links_list)
-          n.draw()
-        })
-        link_to_update = [...new Set(link_to_update)]
-        link_to_update.forEach(link => link.draw())
-
         this.drawing_area.checkAndUpdateAreaSize()
       }
       else if (evt.key == 'Escape') {
@@ -200,10 +175,10 @@ export class Class_ApplicationData {
         app_ref.drawing_area.purgeSelection()
 
         // Close all menus
-        app_ref.closeAllMenus()
-
-      } else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
-        // Event to delete all selected elements
+        // app_ref.menu_configuration.closeAllMenus() // TODO
+      }
+      // Event to delete all selected elements --------------------------------------------------------------
+      else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
 
         // Check if we are not in an input so we don't modify the value of it
         if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
@@ -221,6 +196,10 @@ export class Class_ApplicationData {
           app_ref.menu_configuration.ref_to_menu_config_link_updater.current()
         }
       }
+      else if (evt.altKey) {
+        // Prevent default event
+        // evt.preventDefault()
+      }
       else if (evt.key == 'a' && evt.ctrlKey) {
         // Event to select all elements
 
@@ -234,33 +213,46 @@ export class Class_ApplicationData {
         // Update component
         app_ref.menu_configuration.ref_to_menu_config_node_updater.current()
         app_ref.menu_configuration.ref_to_menu_config_link_updater.current()
-      } else if (evt.key == 'Enter' && document.activeElement?.tagName == 'INPUT' && (['form-control', 'chakra-numberinput__field', 'chakra-input', 'name_label_input'].some(r => document.activeElement?.className.includes(r)))) {
-        // Event to blur the input we are currently focused on
-        // (It's in adequation with event on input that update drawing area when we blur input)
+      }
+      // Event to blur the input we are currently focused on
+      // (It's in adequation with event on input that update drawing area when we blur input)
+      // TODO surement à supprimer lorsque les inputs se feront avec menuConfigurationTextInput && menuConfigurationNumberInput
+      else if (
+        (evt.key == 'Enter') &&
+        (document.activeElement?.tagName == 'INPUT') &&
+        (['form-control', 'chakra-numberinput__field', 'chakra-input', 'name_label_input'].some(r => document.activeElement?.className.includes(r)))
+      ) {
         (document.activeElement as HTMLInputElement).blur()
-
-      } else if (evt.key == 's' && evt.ctrlKey && !evt.shiftKey) {
-        // Event to save current diagram in cache
-
+      }
+      // Event to save current diagram in cache
+      else if (
+        (evt.key == 's') &&
+        (evt.ctrlKey) &&
+        (!evt.shiftKey)
+      ) {
         // Prevent default event on ctrl + s
         evt.preventDefault()
-
         // Save in cache
         localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
         localStorage.setItem('last_save', 'true')
-
         // Update logo save in cache
         app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       }
-      else if ((evt.key == 's' && evt.ctrlKey && evt.shiftKey) || (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)) {
-        // event to download current sankey in JSON
-
+      // event to download current sankey in JSON
+      else if (
+        (evt.key == 's' && evt.ctrlKey && evt.shiftKey) ||
+        (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)
+      ) {
         // Prevent default event on ctrl + shift + s
         evt.preventDefault()
-
         ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
       }
-      else if ((evt.key === 'f') && !evt.ctrlKey && document.activeElement?.tagName !== 'INPUT') {
+      // Fullscreen
+      else if (
+        (evt.key === 'f') &&
+        (!evt.ctrlKey) &&
+        (document.activeElement?.tagName !== 'INPUT')
+      ) {
         if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
           evt.preventDefault()
           if (!document.fullscreenElement) {
@@ -270,25 +262,32 @@ export class Class_ApplicationData {
           }
         }
       }
+      // Open config menu
       else if (evt.key == 'Tab') {
         app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
       }
     }
-
   }
 
-  public reset() {
-    this._show_structure = initial_show_structure
-    delete this._maximum_flux
-    delete this._minimum_flux
-    this._filter_label = 0
+  // GETTERS / SETTERS ==================================================================
 
-    this.drawing_area.reinit()
-    this.drawing_area = new Class_DrawingArea(
-      initial_window_height,
-      initial_window_width,
-      this)
-
-    this.menu_configuration.updateAllMenuComponents()
+  public get maximum_flux(): number | undefined { return this._maximum_flux }
+  public set maximum_flux(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._maximum_flux = value
+    }
   }
+
+  public get minimum_flux(): number | undefined { return this._minimum_flux }
+  public set minimum_flux(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._minimum_flux = value
+    }
+  }
+
+  public get show_structure(): Type_Structure { return this._show_structure }
+  public set show_structure(value: Type_Structure) { this._show_structure = value }
+
+  public get filter_label(): number { return this._filter_label }
+  public set filter_label(value: number) { this._filter_label = value }
 }

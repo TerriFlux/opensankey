@@ -91,11 +91,21 @@ const side_order: {[_ in Type_Side]: number} = {
 
 // SPECIFIC FUNCTIONS ********************************************************************
 
-export function defaultLinkId(source: Class_NodeElement, target: Class_NodeElement) {
+export function defaultLinkId(
+  source: Class_NodeElement,
+  target: Class_NodeElement
+) {
+  // TODO ajouter makeID pour crer id unique
   return source.name + ' --> ' + target.name
 }
-
-export function sortLinksElements(
+/**
+ * Allows to sort links alphabethically per id
+ * @export
+ * @param {(Class_LinkElement | Class_LinkStyle)} a
+ * @param {(Class_LinkElement | Class_LinkStyle)} b
+ * @return {*}
+ */
+export function sortLinksElementsByIds(
   a: Class_LinkElement | Class_LinkStyle,
   b: Class_LinkElement | Class_LinkStyle
 ) {
@@ -104,7 +114,14 @@ export function sortLinksElements(
   else return 0
 }
 
-export function sortDisplayedLinksElements(
+/**
+ * Allow to sort links by their z-ordre on the drawing area
+ * @export
+ * @param {Class_LinkElement} a
+ * @param {Class_LinkElement} b
+ * @return {*}
+ */
+export function sortLinksElementsByDisplayingOrders(
   a: Class_LinkElement,
   b: Class_LinkElement
 ) {
@@ -113,7 +130,15 @@ export function sortDisplayedLinksElements(
   else return 0
 }
 
-export function sortLinksElementsWithNodesPosition(
+/**
+ * Allows to sort links of a given node by comparing their source / target relatives positions
+ * @export
+ * @param {Class_LinkElement} link_a
+ * @param {Class_LinkElement} link_b
+ * @param {Class_NodeElement} node
+ * @return {*}
+ */
+export function sortLinksElementsByRelativeNodesPositions(
   link_a: Class_LinkElement,
   link_b: Class_LinkElement,
   node: Class_NodeElement
@@ -150,7 +175,7 @@ export function sortLinksElementsWithNodesPosition(
     node_b = link_b.source
     side_b = link_b.target_side
   }
-  // Side check : Node position comparaison if links are on the same side
+  // Side check : Node position comparaison if links are on the same side ?
   if (side_a === side_b) {
     // For "horizontal" sides
     if (side_a === 'right' || side_a === 'left') {
@@ -171,7 +196,7 @@ export function sortLinksElementsWithNodesPosition(
         return 0
     }
   }
-  // Use side "priority"
+  // Otherwise, use side "priority"
   else {
     if (side_order[side_a] < side_order[side_b])
       return -1
@@ -180,6 +205,13 @@ export function sortLinksElementsWithNodesPosition(
   }
 }
 
+/**
+ * Check if given attribute is overloaded in at least one link
+ * @export
+ * @param {Class_LinkElement[]} links
+ * @param {keyof Class_LinkAttribute} attr
+ * @return {*}
+ */
 export function isAttributeOverloaded(
   links: Class_LinkElement[],
   attr: keyof Class_LinkAttribute
@@ -739,6 +771,8 @@ export class Class_LinkElement extends Class_ProtoElement {
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Apply parent behavior first
+    super.eventSimpleLMBCLick(event)
     // Get related drawing area
     const drawing_area = this.drawing_area
     // EDITION MODE ===========================================================
@@ -746,39 +780,29 @@ export class Class_LinkElement extends Class_ProtoElement {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
-      drawing_area.application_data.closeAllMenus()
+      drawing_area.application_data.menu_configuration.CloseConfigMenu()
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode()) {
-      // ALT
-      if (event.altKey) {
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Show tooltip
-        // this.showTooltip()
-      }
       // SHIFT
-      else if (event.shiftKey) {
+      if (event.shiftKey) {
         // Add link to selection
         drawing_area.addLinkToSelection(this)
-
         // Open related menu
-        this.menu_config.OpenConfigMenu()
-        this.menu_config.OpenConfigMenuElements()
         this.menu_config.OpenConfigMenuElementsLinks()
         // Update components related to link edition
         this.menu_config.updateAllComponentsRelatedToLinks()
-
-      } else if (event.ctrlKey) {
+      }
+      // CTRL
+      else if (event.ctrlKey) {
         // Add link to selection
         drawing_area.addLinkToSelection(this)
-
         // Update components related to link edition
         this.menu_config.updateAllComponentsRelatedToLinks()
       }
       // OTHERS
       else {
-        // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
+        // If we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
         // Purge selection list
         drawing_area.purgeSelection()
         // Add link to selection
@@ -790,6 +814,9 @@ export class Class_LinkElement extends Class_ProtoElement {
   protected eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Apply parent behavior first
+    super.eventSimpleRMBCLick(event)
+    // SELECTION MODE =========================================================
     if (this.drawing_area.isInSelectionMode()) {
       event.preventDefault()
       this.drawing_area.pointer_pos = [event.pageX, event.pageY]
@@ -800,8 +827,28 @@ export class Class_LinkElement extends Class_ProtoElement {
       this.drawing_area.link_contextualied = this
       this.menu_config.ref_to_menu_context_links_updater.current()
     }
-
   }
+
+  /**
+   * Define event when mouse moves over element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseOver(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseOver(event)
+    // ALT
+    if (event.altKey) {
+      // // Purge selection list
+      // this.drawing_area.purgeSelection()
+      // Show tooltip
+      this.drawTooltip()
+    }
+  }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -909,19 +956,34 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   /**
+   * Display the tooltip on drawing area
+   *
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private drawTooltip() {
+    // Clean previous label
+    d3.selectAll('.sankey-tooltip').remove()
+    d3.select('body')
+      .append('div')
+      .attr('class', 'sankey-tooltip')
+      .style('opacity', 1)
+      .style('top', (this.source.position_y + this.target.position_y)/2 + 'px')
+      .style('left', (this.source.position_x + this.target.position_x)/2 + 'px')
+      .html(this.tooltip_html)
+  }
+
+  /**
    * Function triggered when we start dragging node name label, it initialise relative position if undefined
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextPathElement,Class_NodeElement,Class_NodeElement>} event
-   * @memberof Class_NodeElement
+   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
    */
-  private dragTextStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
-
+  private dragTextStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
     //if _x_label is undefined init _x_label pos whith current fixed x position value
     if (this._display._offset_label === undefined) {
-
       let label_pos_offset = 1
-
       if (this.value_label_position === 'middle') {
         label_pos_offset = 50
       }
@@ -935,20 +997,20 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   /**
-   *Function triggered when we move the node name label, it update relative node position & redraw the name slabel
+   * Function triggered when we move the node name label, it update relative node position & redraw the name slabel
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextPathElement,Class_NodeElement,Class_NodeElement>} event
-   * @memberof Class_NodeElement
+   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
    */
-  private dragTextMove(event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+  private dragTextMove(event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
     this._display._offset_label = ((this._display._offset_label !== undefined) ? this._display._offset_label : 0) + event.dx
     if (this._display._offset_label < 0) this._display._offset_label = 0
     else if (this._display._offset_label > 100) this._display._offset_label = 100
     this.updateTextPathOffset()
   }
 
-  private dragTextEnd(_event: d3.D3DragEvent<SVGTextPathElement, Class_NodeElement, Class_NodeElement>) {
+  private dragTextEnd(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
@@ -1244,10 +1306,10 @@ export class Class_LinkElement extends Class_ProtoElement {
       else if (this.value_label_custom_digit) {
         text_value = data_value.toFixed(this.value_label_nb_digit)
       }
+      // Add unit suffix
+      if (text_value && this.value_label_unit_visible)
+        text_value = text_value + this.value_label_unit
     }
-    // Add unit suffix
-    if (text_value && this.value_label_unit_visible)
-      text_value = text_value + this.value_label_unit
     // Output
     return text_value
   }
@@ -1877,6 +1939,36 @@ export class Class_LinkElement extends Class_ProtoElement {
       value.text_value = _
       this.drawLabel()
     }
+  }
+
+  public get data_label() {
+    // Init
+    let data_value = this.data_value
+    let text_value = '-'
+    // Create data label
+    if (data_value) {
+      // Do we need to keep only N significant numbers ?
+      if (this.value_label_scientific_precision > 0) {
+        // 12345.67 avec nb_sign = 4 devient 12340
+        text_value = data_value.toPrecision(this.value_label_scientific_precision)
+        data_value = parseFloat(text_value)
+      }
+      // Convert
+      if (this.value_label_to_precision) {
+        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+        text_value = data_value.toPrecision()
+      }
+      else if (this.value_label_custom_digit) {
+        text_value = data_value.toFixed(this.value_label_nb_digit)
+      }
+      else {
+        text_value = String(data_value)
+      }
+      // Add unit suffix
+      if (text_value && this.value_label_unit_visible)
+        text_value = text_value + this.value_label_unit
+    }
+    return text_value
   }
 
   /**
@@ -2654,6 +2746,46 @@ export class Class_LinkElement extends Class_ProtoElement {
       (this._source?.is_visible ?? false) &&
       (this._target?.is_visible ?? false)
     )
+  }
+
+  private get tooltip_html() {
+    // Title
+    let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
+      this.source.name.split('\\n').join(' ') +
+      ' → ' +
+      this.target.name.split('\\n').join(' ') +
+      '</p>'
+    // Subtitle
+    if (this.tooltip_text) {
+      tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' +
+        this.tooltip_text.split('\n').join('</br>') +
+        '</p>'
+    }
+    // Create table
+    tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
+    tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
+    tooltip_html += '  <tbody>'
+    // Show data
+    tooltip_html += '    <tr>'
+    tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction
+    tooltip_html += '      <td>' + this.data_label + '</td>'
+    tooltip_html += '    </tr>'
+    // Show flux tags
+    const flux_tags = this.flux_tags_list // avoid hidden recomputing
+    this.flux_taggs_list
+      .forEach(tagg => {
+        const flux_tags_names = flux_tags
+          .filter(tag => tag.group === tagg)
+          .map(tag => tag.name)
+        tooltip_html += '    <tr>'
+        tooltip_html += '      <th> ' + tagg.name + ' </th>'
+        tooltip_html += '      <td>' + flux_tags_names.join() + '</td>'
+        tooltip_html += '    </tr>'
+      })
+    tooltip_html += '  </tbody>'
+    tooltip_html += '</table>'
+    tooltip_html += '</div>'
+    return tooltip_html
   }
 }
 

@@ -1,40 +1,83 @@
+// External imports
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import {
+  Box,
+  Button,
+  TabPanel,
+  Textarea,
+  useBoolean
+} from '@chakra-ui/react'
+
+// Local types
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
-import { Box, Button, TabPanel, Textarea, useBoolean } from '@chakra-ui/react'
+
+// Local functions
 import { OSTooltip } from './SankeyUtils'
 
+// MENU COMPONENT ***********************************************************************
+
+/**
+ * Create tootltip modification menu
+ *
+ * @param {*} {
+ *   applicationData,
+ *   applicationContext,
+ *   menu_for_modal
+ * }
+ * @return {*}
+ */
 export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
   applicationData,
   applicationContext,
   menu_for_modal
 }) => {
+
+  // Data -------------------------------------------------------------------------------
+
+  // Get necessary infos
   const { t } = applicationContext
-  // const { multi_selected_nodes } = applicationState
-  const [ , setForceUpdate ]=useBoolean()
-  const {new_data}=applicationData
+  const { new_data, data } = applicationData
+
+  // Get selected nodes
+  let selected_nodes
+  if (data.displayed_link_selector) {
+    // All availables links
+    selected_nodes = new_data.drawing_area.selected_nodes_list
+  }
+  else {
+    // Only visible links
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
+  }
+
+  // State & refs for text input
+  const [editor_content_tooltip, setEditorContentTooltip] = useState('')
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
-  const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
   let tmp_editor_content_tooltip = editor_content_tooltip
-  const new_nodes_sorted = new_data.drawing_area.selected_nodes_list_sorted
-  const new_nodes_sorted_selected = new_nodes_sorted.filter(n => n.is_selected)
+
+  // Check if there is difference between text in editor and link tooltips
   let s_tmp_editor_content_changed = false
-  if (new_nodes_sorted_selected.length>0) {
-    if (new_nodes_sorted_selected[0].tooltip_text !== editor_content_tooltip) {
+  if (selected_nodes.length>0) {
+    if (selected_nodes[0].tooltip_text !== editor_content_tooltip) {
       s_tmp_editor_content_changed = true
     }
   }
+
+  // Components updaters ---------------------------------------------------------------
+
+  // Update what is displayed in text editor
   const resetTextEditor=()=>{
-    if (new_nodes_sorted_selected.length>0) {
-      if ( typeof new_nodes_sorted_selected[0].tooltip_text !== 'undefined' ) {
+    if (selected_nodes.length>0) {
+      if ( typeof selected_nodes[0].tooltip_text !== 'undefined' ) {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
-            inputRef.current.value = new_nodes_sorted_selected[0].tooltip_text
+            inputRef.current.value = selected_nodes[0].tooltip_text
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip(new_nodes_sorted_selected[0].tooltip_text)
-      }else {
+        setEditorContentTooltip(selected_nodes[0].tooltip_text)
+      }
+      else {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
@@ -42,7 +85,7 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip('')
+        setEditorContentTooltip('')
       }
     }
     else {
@@ -53,12 +96,16 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
         }
       }
       // Reset state value
-      sEditorContentNodeTooltip('')
+      setEditorContentTooltip('')
     }
-    setForceUpdate.toggle()
-
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
-  new_data.menu_configuration.updateMenuConfigTextNodeTooltip.current.push(resetTextEditor)
+
+  // Link with new_data components updater
+  new_data.menu_configuration.ref_to_menu_config_node_tooltips_updater.current = resetTextEditor
+
+  // JSX Components ---------------------------------------------------------------------
 
   const content = <Box
     layerStyle='menuconfigpanel_grid'
@@ -78,11 +125,11 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
         onChange={(evt) => {
           tmp_editor_content_tooltip = evt.target.value
           if (!s_tmp_editor_content_changed) {
-            sEditorContentNodeTooltip(tmp_editor_content_tooltip)
+            setEditorContentTooltip(tmp_editor_content_tooltip)
           }
         }}
         onBlur={()=>{
-          sEditorContentNodeTooltip(tmp_editor_content_tooltip)
+          setEditorContentTooltip(tmp_editor_content_tooltip)
         }}
       />
     </OSTooltip>
@@ -104,8 +151,8 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
         variant='menuconfigpanel_option_button_right'
         isDisabled={!s_tmp_editor_content_changed}
         onClick={() => {
-          new_nodes_sorted_selected.map(node => node.tooltip_text = tmp_editor_content_tooltip)
-          sEditorContentNodeTooltip(tmp_editor_content_tooltip)
+          selected_nodes.map(node => node.tooltip_text = tmp_editor_content_tooltip)
+          setEditorContentTooltip(tmp_editor_content_tooltip)
         }}
       >
         {t('Menu.submit')}
@@ -113,16 +160,9 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
     </Box>
   </Box>
 
-  return menu_for_modal?
+  return menu_for_modal ?
     content
     :
-  // <Tab>
-  //   <Box
-  //     layerStyle='submenuconfig_tab'
-  //   >
-  //     {t('Noeud.tabs.infos')}
-  //   </Box>
-  // </Tab>,
     <TabPanel>
       {content}
     </TabPanel>
