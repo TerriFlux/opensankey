@@ -28,8 +28,8 @@ import {
 import {
   Class_GhostLinkElement,
   Class_LinkElement,
-  sortDisplayedLinksElements,
-  sortLinksElements
+  sortLinksElementsByDisplayingOrders,
+  sortLinksElementsByIds
 } from './Link'
 import {
   Class_ApplicationData,
@@ -371,7 +371,7 @@ export class Class_DrawingArea {
 
   public get selected_links_list_sorted() {
     return this.selected_links_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   public get visible_and_selected_links_list() {
@@ -381,7 +381,7 @@ export class Class_DrawingArea {
 
   public get visible_and_selected_links_list_sorted() {
     return this.visible_and_selected_links_list
-      .sort((a, b) => sortLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
   // Size
@@ -471,7 +471,7 @@ export class Class_DrawingArea {
     // Sort links
     let new_order = 0
     this.sankey.links_list
-      .sort((a, b) => sortDisplayedLinksElements(a, b))
+      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
         if (link.is_visible) {
           link.d3_selection?.raise()
@@ -571,6 +571,21 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     // Clean selection dict
     this._selection = {}
+  }
+
+  /**
+   * Remove all link selected
+   * @memberof Class_DrawingArea
+   */
+  public purgeSelectionOfLinks() {
+    // Unselect elements
+    this.selected_links_list
+      .forEach(link => {
+        link.setUnSelected()
+        delete this._selection[link.id]
+      })
+    // Reset config menu
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
   /**
@@ -896,7 +911,6 @@ export class Class_DrawingArea {
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleRMBCLick(event))
-
       // Zoom behavior(but can also drag drawing area in scroll zone)
       this.d3_selection_zoom_area?.call(
         this.zoomListener
@@ -912,9 +926,13 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventSimpleLMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+    }
   }
 
   /**
@@ -940,15 +958,16 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
     if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+      // SELECTION MODE ===========================================================
       if (this.isInSelectionMode()) {
         this.pointer_pos = [event.pageX, event.pageY]
-
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         this.is_drawing_area_contextualised = true
         this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
       }
     }
-
   }
 
   /**
@@ -961,8 +980,9 @@ export class Class_DrawingArea {
     event: MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
-
     if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
       // EDITION MODE =============================================================
       // event.button==0 check if we use LMB
       if (this.isInEditionMode() && event.button == 0) {
@@ -989,7 +1009,7 @@ export class Class_DrawingArea {
       }
       // SELECTION MODE ===========================================================
       else if (this.isInSelectionMode()) {
-        if (event.button == 0) {
+        if (event.button === 0) {
           // Close context menus
           this.node_contextualied = undefined
           this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
