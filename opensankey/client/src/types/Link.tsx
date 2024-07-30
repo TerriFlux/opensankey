@@ -9,6 +9,30 @@ import * as d3 from 'd3'
 
 // Local types
 import {
+  Class_ProtoElement
+} from './Element'
+import {
+  Class_MenuConfig
+} from './MenuConfig'
+import {
+  Class_DrawingArea
+} from './DrawingArea'
+import {
+  default_style_id
+} from './Sankey'
+import {
+  Class_NodeElement
+} from './Node'
+import {
+  Class_DataTag,
+  Class_DataTagGroup,
+  Class_Tag,
+  Class_TagGroup,
+} from './Tag'
+import {
+  Class_Handler
+} from './Handler'
+import {
   Type_ElementPosition,
   Type_JSON,
   default_element_color,
@@ -22,26 +46,6 @@ import {
   getStringOrUndefinedFromJSON,
   makeId,
 } from './Utils'
-import {
-  Class_MenuConfig
-} from './MenuConfig'
-import {
-  Class_DrawingArea
-} from './DrawingArea'
-import {
-  Class_Handler,
-  Class_ProtoElement,
-} from './Element'
-import {
-  Class_NodeElement
-} from './Node'
-import {
-  Class_DataTag,
-  Class_DataTagGroup,
-  Class_Tag,
-  Class_TagGroup,
-} from './Tag'
-import { default_style_id } from './Sankey'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -250,9 +254,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     position_ending: Type_ElementPosition,
     style: Class_LinkStyle,
     attributes: Class_LinkAttribute
-    _x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-    _y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-    _offset_label?: number // optional var used when label is dragged (if label follow link path)
+    position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -525,8 +529,8 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public deleteRelativeLabelPos() {
-    delete this._display._x_label
-    delete this._display._y_label
+    delete this._display.position_x_label
+    delete this._display.position_y_label
     this.drawLabel()
   }
 
@@ -585,7 +589,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public useDefaultStyle() {
-    this.style = this.drawing_area.sankey.default_link_style
+    this.style = this.main_sankey.default_link_style
     this.drawElements()
   }
 
@@ -695,12 +699,12 @@ export class Class_LinkElement extends Class_ProtoElement {
     super.fromJSON(json_object)
     // Related nodes
     const source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
-    if (source_node_id) this.drawing_area.sankey.nodes_dict[source_node_id]?.addOutputLink(this)
+    if (source_node_id) this.main_sankey.nodes_dict[source_node_id]?.addOutputLink(this)
     const target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
-    if (target_node_id) this.drawing_area.sankey.nodes_dict[target_node_id]?.addInputLink(this)
+    if (target_node_id) this.main_sankey.nodes_dict[target_node_id]?.addInputLink(this)
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-    this._display.style = this.drawing_area.sankey.link_styles_dict[style_id]
+    this._display.style = this.main_sankey.link_styles_dict[style_id]
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -725,7 +729,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     else {
       // Do we apply colors of data tags ?
-      this.drawing_area.sankey.selected_data_tags_list
+      this.main_sankey.selected_data_tags_list
         .filter(tag => tag.group.show_legend)
         .forEach(tag => shape_color = tag.color)
     }
@@ -953,8 +957,8 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private dragTextStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
-    //if _x_label is undefined init _x_label pos whith current fixed x position value
-    if (this._display._offset_label === undefined) {
+    //if position_x_label is undefined init position_x_label pos whith current fixed x position value
+    if (this._display.position_offset_label === undefined) {
       let label_pos_offset = 1
       if (this.value_label_position === 'middle') {
         label_pos_offset = 50
@@ -962,7 +966,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       else if (this.value_label_position === 'end') {
         label_pos_offset = 99
       }
-      this._display._offset_label = label_pos_offset
+      this._display.position_offset_label = label_pos_offset
       this.value_label_position = 'dragged'
     }
 
@@ -976,9 +980,9 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private dragTextMove(event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
-    this._display._offset_label = ((this._display._offset_label !== undefined) ? this._display._offset_label : 0) + event.dx
-    if (this._display._offset_label < 0) this._display._offset_label = 0
-    else if (this._display._offset_label > 100) this._display._offset_label = 100
+    this._display.position_offset_label = ((this._display.position_offset_label !== undefined) ? this._display.position_offset_label : 0) + event.dx
+    if (this._display.position_offset_label < 0) this._display.position_offset_label = 0
+    else if (this._display.position_offset_label > 100) this._display.position_offset_label = 100
     this.updateTextPathOffset()
   }
 
@@ -996,8 +1000,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     let label_anchor = 'start'
     let label_position = 1
 
-    if (this._display._offset_label !== undefined) {
-      const offset = this._display._offset_label
+    if (this._display.position_offset_label !== undefined) {
+      const offset = this._display.position_offset_label
       label_anchor = offset > 50 ? 'end' : 'start'
       label_position = offset
     } else {
@@ -1855,7 +1859,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(this.drawing_area.sankey.selected_data_tags_list)
+      return this._values.getValueForDataTags(this.main_sankey.selected_data_tags_list)
   }
 
   /**
@@ -2341,7 +2345,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public set value_label_position(_: Type_PathLabelHPosition) {
-    if (_ !== 'dragged') delete this._display._offset_label
+    if (_ !== 'dragged') delete this._display.position_offset_label
     this._display.attributes.value_label_position = _
     this.drawLabel()
   }

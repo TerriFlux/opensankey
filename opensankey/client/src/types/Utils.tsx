@@ -123,7 +123,7 @@ export function randomId(length: number = 5) {
 
 export function makeId(name: string) {
   const std_name = name.toLowerCase()
-    .replace(/[^a-z0-9]/gi, '')
+    .replace(/[^a-z0-9_]/gi, '')
   return  std_name + '_' + randomId()
 }
 
