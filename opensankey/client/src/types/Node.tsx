@@ -253,6 +253,35 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  public copyFrom(element: Class_NodeElement) {
+    this._name = element.name
+    this._name_label_separator = element._name_label_separator
+    this._display.position = structuredClone(element._display.position)
+    this._display._x_label = element._display._x_label
+    this._display._y_label = element._display._y_label
+    const list_links_id=Object.keys(this.drawing_area.sankey.links_dict)
+    this._input_links=Object.fromEntries(Object.entries(element._input_links).filter(il=>list_links_id.includes(il[0])))
+    this._output_links=Object.fromEntries(Object.entries(element._output_links).filter(il=>list_links_id.includes(il[0])))
+    // Get new link order but only keeping link present in current link order
+    this._links_order = element._links_order.filter(link => this.drawing_area.sankey.links_list.includes(link))
+    // this._tags=Object.entries(element._tags).filter(ent_tag=>{
+    //     return this.drawing_area.sankey.ta ent_tag[0]
+    // })
+
+    // Copy local attributes
+    this._display.attributes.copyFrom(element._display.attributes)
+
+    // Copy dimensions
+    const list_id_lvl_tag=this.drawing_area.sankey.level_taggs_list.map(lt=>lt.id)
+    this._dimensions=Object.fromEntries(Object.entries(element._dimensions).filter(dim=>list_id_lvl_tag.includes(dim[0])))
+
+    // Set node style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function) 
+    if(this.drawing_area.sankey.node_styles_list.map(ns=>ns.id).includes(element._display.style.id)){
+      const new_style_id=this.drawing_area.sankey.node_styles_list.map(ns=>ns.id).filter(ns=>ns.includes(element._display.style.id))[0]
+      this._display.style=this.drawing_area.sankey.node_styles_dict[new_style_id]
+      this._display.style.addReference(this)
+    }
+  }
   // PUBLIC METHODS =====================================================================
 
   /**
@@ -1743,13 +1772,13 @@ export class Class_NodeElement extends Class_Element {
       // it will allow to swap dragged link with previous/next link coming/going on the same side (left/right) to the node_ref
       const is_handler_on_horiz_side = (
         ((handle_src_or_trgt === 'target') && (link_dragged.is_horizontal || link_dragged.is_vertical_horizontal)) ||
-        ((handle_src_or_trgt === 'source') && (link_dragged.is_horizontal || link_dragged.is_horizontal_vertical)) )
+        ((handle_src_or_trgt === 'source') && (link_dragged.is_horizontal || link_dragged.is_horizontal_vertical)))
 
       // If we move the mouse horizontally then this variable should be true ,
       // it will allow to swap dragged link with previous/next link coming/going on the same side (bottom/top) to the node_ref
       const is_handler_on_vert_side = (
         ((handle_src_or_trgt === 'target') && (link_dragged.is_vertical || link_dragged.is_horizontal_vertical)) ||
-        ((handle_src_or_trgt === 'source') && (link_dragged.is_vertical || link_dragged.is_vertical_horizontal)) )
+        ((handle_src_or_trgt === 'source') && (link_dragged.is_vertical || link_dragged.is_vertical_horizontal)))
 
       // Move link to the top / left
       if ((
@@ -2885,6 +2914,39 @@ export class Class_NodeAttribute {
     if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = getStringFromJSON(json_local_object, 'label_vert_valeur', default_value_label_vert) as Type_TextVPos
     if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'label_horiz_valeur', default_value_label_horiz) as Type_TextHPos
     if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', default_label_background)
+  }
+
+  public copyFrom(element: Class_NodeAttribute) {
+    this._shape_visible = element._shape_visible
+    this._shape_type = element._shape_type
+    this._shape_min_width = element._shape_min_width
+    this._shape_min_height = element._shape_min_height
+    this._shape_color = element._shape_color
+    this._shape_color_sustainable = element._shape_color_sustainable
+    this._shape_arrow_angle_factor = element._shape_arrow_angle_factor
+    this._shape_arrow_angle_direction = element._shape_arrow_angle_direction
+    this._name_label_visible = element._name_label_visible
+    this._name_label_font_family = element._name_label_font_family
+    this._name_label_font_size = element._name_label_font_size
+    this._name_label_uppercase = element._name_label_uppercase
+    this._name_label_bold = element._name_label_bold
+    this._name_label_italic = element._name_label_italic
+    this._name_label_box_width = element._name_label_box_width
+    this._name_label_color = element._name_label_color
+    this._name_label_vert = element._name_label_vert
+    this._name_label_horiz = element._name_label_horiz
+    this._name_label_background = element._name_label_background
+    this._value_label_visible = element._value_label_visible
+    this._value_label_font_family = element._value_label_font_family
+    this._value_label_font_size = element._value_label_font_size
+    this._value_label_uppercase = element._value_label_uppercase
+    this._value_label_bold = element._value_label_bold
+    this._value_label_italic = element._value_label_italic
+    this._value_label_box_width = element._value_label_box_width
+    this._value_label_color = element._value_label_color
+    this._value_label_vert = element._value_label_vert
+    this._value_label_horiz = element._value_label_horiz
+    this._value_label_background = element._value_label_background
   }
 
   // PROTECTED METHODS ==================================================================
