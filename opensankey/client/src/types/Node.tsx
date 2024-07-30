@@ -22,6 +22,8 @@ import {
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringListFromJSON,
+  getStringOrUndefinedFromJSON,
+  makeId,
 } from './Utils'
 import {
   Class_MenuConfig
@@ -30,13 +32,17 @@ import {
   Class_DrawingArea
 } from './DrawingArea'
 import {
-  Class_Element,
-  Class_Handler,
+  default_main_sankey_id,
+  default_style_id
+} from './Sankey'
+import {
+  Class_Element
 } from './Element'
 import {
   Class_Tag,
   Class_TagGroup,
-  Class_TagGroupNodeLevel
+  Class_LevelTagGroup,
+  Class_LevelTag
 } from './Tag'
 import {
   Class_LinkElement,
@@ -44,7 +50,9 @@ import {
   Class_GhostLinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
-import { default_style_id } from './Sankey'
+import {
+  Class_Handler
+} from './Handler'
 
 
 
@@ -113,6 +121,7 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
+  // Nothing ...
 
   // PROTECTED ATTRIBUTE ================================================================
 
@@ -122,8 +131,8 @@ export class Class_NodeElement extends Class_Element {
     position: Type_ElementPosition,
     style: Class_NodeStyle,
     attributes: Class_NodeAttribute
-    _x_label?: number// Relative x position of label when dragged (optionnal)
-    _y_label?: number// Relative y position of label when dragged (optionnal)
+    position_x_label?: number// Relative x position of label when dragged (optionnal)
+    position_y_label?: number// Relative y position of label when dragged (optionnal)
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -135,30 +144,26 @@ export class Class_NodeElement extends Class_Element {
   // TODO get from application data
   private _name_label_separator: string = ''
 
-  // Related links
-  private _input_links: { [_: string]: Class_LinkElement } = {}
-  private _output_links: { [_: string]: Class_LinkElement } = {}
+  // Related IO links
+  private _input_links: { [id: string]: Class_LinkElement } = {}
+  private _output_links: { [id: string]: Class_LinkElement } = {}
 
-  private _handle_links: { [x: string]: Class_Handler } = {}
-
-  // Links orderings
+  // Ordering for related IO Links
   private _links_order: Class_LinkElement[] = []
 
   // Value of node
   private _input_data_value: number = 0
   private _output_data_value: number = 0
 
-  // Node tags
-  private _tags: { [_: string]: Class_Tag } = {}
-  // TODO Create level tags
+  // Handles used to move related IO links relativly to eachother
+  private _handle_links: { [x: string]: Class_Handler } = {}
 
-  // Level & Parent
-  // Dimensions
-  private _dimensions: {
-    [_: string]: {
-      parent_name: Class_NodeElement
-    }
-  } = {}
+  // Node tags
+  private _tags: { [id: string]: Class_Tag } = {}
+
+  // Dimensions (level tags)
+  private _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
+  private _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
 
   // Reference to link dragged when we drag a handle
   private _link_dragged: Class_LinkElement | undefined
@@ -255,6 +260,8 @@ export class Class_NodeElement extends Class_Element {
 
   // PUBLIC METHODS =====================================================================
 
+  // Drawing methods --------------------------------------------------------------------
+
   /**
    * Draw given node on drawing area
    *
@@ -282,28 +289,10 @@ export class Class_NodeElement extends Class_Element {
     this.draw()
   }
 
+  // Styles / attributes related methods ------------------------------------------------
+
   public useDefaultStyle() {
-    this.style = this.drawing_area.sankey.default_node_style
-  }
-
-  public updateInputValue() {
-    this._input_data_value = 0
-    this.input_links_list.forEach(link => {
-      const data_value = link.data_value
-      if (data_value !== null)
-        this._input_data_value = this._input_data_value + data_value
-    })
-    this.draw()
-  }
-
-  public updateOutputValue() {
-    this._output_data_value = 0
-    this.output_links_list.forEach(link => {
-      const data_value = link.data_value
-      if (data_value !== null)
-        this._output_data_value = this._output_data_value + data_value
-    })
-    this.draw()
+    this.style = this.main_sankey.default_node_style
   }
 
   public resetAttributes() {
@@ -415,6 +404,8 @@ export class Class_NodeElement extends Class_Element {
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
 
+  // Nodes tags related methods ----------------------------------------------------------
+
   /**
    * Check if given tag is referenced by node
    * @param {Class_Tag} tag
@@ -452,11 +443,64 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  // Level tags related methods ---------------------------------------------------------
+
+  /**
+   * Check if given level tag is referenced by node
+   * @param {Class_Tag} tag
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
+  public hasGivenLevelTag(tag: Class_LevelTag) {
+    return (this.level_tags_dict[tag.id] !== undefined)
+  }
+
+  public addNewDimensionAsParent(_: Class_NodeDimension) {
+    if (
+      (_.parent === this) &&
+      (!this._dimensions_as_parent[_.id])
+    ) {
+      this._dimensions_as_parent[_.id] = _
+    }
+  }
+
+  public addNewDimensionAsChild(_: Class_NodeDimension) {
+    if (
+      (_.parent !== this) &&
+      (!this._dimensions_as_child[_.id])
+    ) {
+      // If this not in dimension as child -> add it
+      if (!_.children.includes(this))
+        _.addNodeAsChildren(this)
+      this._dimensions_as_child[_.id] = _
+    }
+  }
+
+  public removeDimensionAsParent(_: Class_NodeDimension) {
+    if (this._dimensions_as_parent[_.id]) {
+      delete this._dimensions_as_parent[_.id]
+      _.delete() // Dimension cannot exist with no parent
+    }
+  }
+
+  public removeDimensionAsChild(_: Class_NodeDimension) {
+    if (this._dimensions_as_child[_.id]) {
+      delete this._dimensions_as_child[_.id]
+      _.removeNodeFromChildren(this)
+    }
+  }
+
+  // Links related methods --------------------------------------------------------------
+
   // Check links
   public hasInputLinks() { return (this.input_links_list.length > 0) }
   public hasOutputLinks() { return (this.output_links_list.length > 0) }
 
-  // Add links
+  /**
+   * Add given link as input
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
@@ -469,6 +513,11 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  /**
+   * Add given link as output
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
@@ -606,6 +655,59 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  // Values related methods -------------------------------------------------------------
+
+  /**
+   * Recompute the sum of all input links' value
+   * @memberof Class_NodeElement
+   */
+  public updateInputValue() {
+    this._input_data_value = 0
+    this.input_links_list.forEach(link => {
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._input_data_value = this._input_data_value + data_value
+    })
+    this.draw()
+  }
+
+  /**
+   * Recompute the sum of all output links' value
+   * @memberof Class_NodeElement
+   */
+  public updateOutputValue() {
+    this._output_data_value = 0
+    this.output_links_list.forEach(link => {
+      const data_value = link.data_value
+      if (data_value !== null)
+        this._output_data_value = this._output_data_value + data_value
+    })
+    this.draw()
+  }
+
+  /**
+   * Hide the name label of the node & set visible the input to modify it
+   * @memberof Class_NodeElement
+   */
+  public setInputLabelVisible() {
+    this.d3_selection?.select('.name_label_text').style('display', 'none')
+    this.d3_selection?.select('.name_label_fo_input').style('display', 'inline-block')
+    document.getElementById('name_label_input_' + this.id)?.focus()
+
+  }
+
+  /**
+   * Hide the input label of the node & set visible the name
+   * @memberof Class_NodeElement
+   */
+  public setInputLabelInvisible() {
+    this.d3_selection?.select('.name_label_fo_input').style('display', 'none')
+    this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
+    this.drawNameLabel()
+  }
+
+  // JSON files read / write related methods --------------------------------------------
+
   /**
    * Convert node to JSON
    *
@@ -621,8 +723,8 @@ export class Class_NodeElement extends Class_Element {
     json_object['position'] = this.position_type
     json_object['x'] = this.position_x
     json_object['y'] = this.position_y
-    if (this._display._x_label) json_object['x_label'] = this._display._x_label
-    if (this._display._y_label) json_object['y_label'] = this._display._y_label
+    if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
+    if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
     // Fill style & local attributes
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
@@ -639,10 +741,17 @@ export class Class_NodeElement extends Class_Element {
         ])
     )
     // Dimension
-    // TODO Revoir avec leveltags
     json_object['dimensions'] = Object.fromEntries(
-      Object.entries(this.dimensions)
-        .map(ent_dim => [ent_dim[0], ent_dim[1].parent_name?.id]))
+      Object.values(this._dimensions_as_child)
+        .map(dimension => [
+          dimension.children_level_tag.group.id,
+          {
+            'parent_name': dimension.parent.id,
+            'tag': dimension.children_level_tag.id,
+            'level': dimension.getLevel()
+          }
+        ])
+    )
     // Links
     json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
     json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
@@ -666,11 +775,11 @@ export class Class_NodeElement extends Class_Element {
     this._display.position.type = getStringFromJSON(json_node_object, 'position', this._display.position.type) as Type_Position
     this._display.position.x = getNumberFromJSON(json_node_object, 'x', this._display.position.x)
     this._display.position.y = getNumberFromJSON(json_node_object, 'y', this._display.position.y)
-    this._display._x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
-    this._display._y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
+    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
+    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
     const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-    this._display.style = this.drawing_area.sankey.node_styles_dict[style_id]
+    this._display.style = this.main_sankey.node_styles_dict[style_id]
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -684,67 +793,95 @@ export class Class_NodeElement extends Class_Element {
     //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
     Object.entries(json_node_object['tags'] ?? {})
       .filter(([tagg_id, tag_ids]) =>
-        (tagg_id in this.drawing_area.sankey.node_taggs_dict) &&
+        (tagg_id in this.main_sankey.node_taggs_dict) &&
         (tag_ids as string[]).length > 0)
       .forEach(([tagg_id, tag_ids]) => {
-        const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_id]
+        const tagg = this.main_sankey.node_taggs_dict[tagg_id]
         tagg.tags_list
           .filter(tag => tag.id in (tag_ids as string[]))
           .forEach(tag => this.addTag(tag))
       })
-    // Same thing but for level tag
-    // TODO Revoir
-    // Object.entries(json_node_object['tags'] ?? {})
-    //   .filter(([tagg_id, tag_ids])  =>
-    //     (tagg_id in this.drawing_area.sankey.level_taggs_dict) &&
-    //     (tag_ids as string[]).length > 0)
-    //   .forEach(([tagg_id, tag_ids])  => {
-    //     const tagg = this.drawing_area.sankey.level_taggs_dict[tagg_id]
-    //     tagg.tags_list
-    //       .filter(tag => tag.id in (tag_ids as string[]))
-    //       .forEach(tag => this.addTag(tag))
-    //   })
   }
 
+  /**
+   * When reading JSON, we must wait for all links to be created in ordre
+   * to correctly set input & output link for each nodes
+   * @param {Type_JSON} json_node_object
+   * @memberof Class_NodeElement
+   */
   public linksFromJSON(json_node_object: Type_JSON) {
     // Input links
     const input_link_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
     input_link_ids.forEach(link_id => {
-      this.addInputLink(this.drawing_area.sankey.links_dict[link_id])
+      this.addInputLink(this.main_sankey.links_dict[link_id])
     })
     // Output links
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
     output_link_ids.forEach(link_id => {
-      this.addOutputLink(this.drawing_area.sankey.links_dict[link_id])
+      this.addOutputLink(this.main_sankey.links_dict[link_id])
     })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
     this._links_order = ordered_link_ids.map(link_id => {
-      return this.drawing_area.sankey.links_dict[link_id]
+      return this.main_sankey.links_dict[link_id]
     })
   }
 
   /**
-   * Hide the name label of the node & set visible the input to modify it
-   *
+   * When reading JSON, we must wait for all nodes to be created in order
+   * to correctly set dimensions for each nodes
+   * @param {Type_JSON} json_node_object
    * @memberof Class_NodeElement
    */
-  public setInputLabelVisible() {
-    this.d3_selection?.select('.name_label_text').style('display', 'none')
-    this.d3_selection?.select('.name_label_fo_input').style('display', 'inline-block')
-    document.getElementById('name_label_input_' + this.id)?.focus()
+  public dimensionsFromJSON(json_node_object: Type_JSON) {
+    // Extract dimensions JSON struct from node JSON Struct
+    const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
+    // For each dimension in dimensions JSON Struct, create the parent / child relation
+    if (dimensions_as_JSON) {
+      Object.keys(dimensions_as_JSON)
+        .forEach(tagg_id => {
+          const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, tagg_id)
+          if (dimension_as_json) {
+            // Get level tag group from id
+            const tagg = this.main_sankey.level_taggs_dict[tagg_id]
+            // Continue only in level tag group exists
+            if (tagg) {
+              // Continue only if we can find related parent
+              const parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
+              if (parent_id){
+                const parent =  this.main_sankey.nodes_dict[parent_id]
+                if (parent) {
+                  // Read infos from dimension json struct
+                  // Get child & parent tags
+                  let child_tag: Class_LevelTag | undefined
+                  let parent_tag: Class_LevelTag | undefined
+                  // Use tags id in priority if existing
+                  const child_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'child_tag')
+                  const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
+                  if (child_tag_id && parent_tag_id ) {
+                    child_tag = tagg.tags_dict[child_tag_id]
+                    parent_tag = tagg.tags_dict[parent_tag_id]
+                  }
+                  // If no tags ids - use level to find matchin tags
+                  else {
+                    const level = getNumberOrUndefinedFromJSON(dimension_as_json, 'level')
+                    if (level && level > 1) {
+                      child_tag = tagg.tags_list[level]
+                      parent_tag = tagg.tags_list[level-1]
+                    }
+                  }
+                  // If tags has been found,
+                  // create a new dimension OR add parent & child relation to an existing dimension
+                  if (child_tag && parent_tag) {
+                    parent_tag.getOrCreateLowerDimension(parent, this, child_tag)
+                  }
+                }
+              }
+            }
 
-  }
-
-  /**
-   * Hide the input label of the node & set visible the name
-   *
-   * @memberof Class_NodeElement
-   */
-  public setInputLabelInvisible() {
-    this.d3_selection?.select('.name_label_fo_input').style('display', 'none')
-    this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
-    this.drawNameLabel()
+          }
+        })
+    }
   }
 
   // PROTECTED METHODS ==================================================================
@@ -929,7 +1066,7 @@ export class Class_NodeElement extends Class_Element {
       // Create default source node
       // Position center of source node to pointer pos
       // Create default target node
-      const target = this.drawing_area.sankey.addNewDefaultNode()
+      const target = this.main_sankey.addNewDefaultNode()
       target.setPosXY(this.position_x, this.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
@@ -1140,8 +1277,8 @@ export class Class_NodeElement extends Class_Element {
    */
   private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
 
-    //if _x_label is undefined init _x_label pos whith current fixed x position value
-    if (this._display._x_label === undefined) {
+    //if position_x_label is undefined init position_x_label pos whith current fixed x position value
+    if (this._display.position_x_label === undefined) {
       const shape_width = this.getShapeWidthToUse()
       const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
 
@@ -1149,11 +1286,11 @@ export class Class_NodeElement extends Class_Element {
       if (this.name_label_horiz === 'left') { label_pos_x = -label_pos_dx }
       else if (this.name_label_horiz === 'middle') { label_pos_x = shape_width / 2 }
 
-      this._display._x_label = label_pos_x
+      this._display.position_x_label = label_pos_x
     }
 
-    //if _y_label is undefined init _y_label pos whith current fixed y position value
-    if (this._display._y_label === undefined) {
+    //if position_y_label is undefined init position_y_label pos whith current fixed y position value
+    if (this._display.position_y_label === undefined) {
       const shape_height = this.getShapeHeightToUse()
       const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
 
@@ -1161,7 +1298,7 @@ export class Class_NodeElement extends Class_Element {
       if (this.name_label_vert === 'top') { label_pos_y = -label_pos_dy }
       else if (this.name_label_vert === 'middle') { label_pos_y = shape_height / 2 }
 
-      this._display._y_label = label_pos_y
+      this._display.position_y_label = label_pos_y
     }
 
     this.name_label_horiz = 'dragged'
@@ -1178,8 +1315,8 @@ export class Class_NodeElement extends Class_Element {
    */
   private dragTextMove(event: d3.D3DragEvent<SVGTextElement, Class_NodeElement, Class_NodeElement>) {
 
-    this._display._x_label = ((this._display._x_label !== undefined) ? this._display._x_label : 0) + event.dx // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
-    this._display._y_label = ((this._display._y_label !== undefined) ? this._display._y_label : 0) + event.dy // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
+    this._display.position_x_label = ((this._display.position_x_label !== undefined) ? this._display.position_x_label : 0) + event.dx // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
+    this._display.position_y_label = ((this._display.position_y_label !== undefined) ? this._display.position_y_label : 0) + event.dy // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
 
     this.updateNameLabelPos()
   }
@@ -1201,8 +1338,8 @@ export class Class_NodeElement extends Class_Element {
     let label_anchor = 'start'
     let label_align = 'start'
     let label_pos_x = 0
-    if (this._display._x_label !== undefined) {
-      label_pos_x = (this._display._x_label !== undefined) ? this._display._x_label : 0
+    if (this._display.position_x_label !== undefined) {
+      label_pos_x = (this._display.position_x_label !== undefined) ? this._display.position_x_label : 0
       label_anchor = 'middle'
       label_align = 'center'
     } else {
@@ -1227,8 +1364,8 @@ export class Class_NodeElement extends Class_Element {
 
     let label_pos_y = label_pos_dy + shape_height
     let label_baseline = 'text-before-edge'
-    if (this._display._y_label! != undefined) {
-      label_pos_y = (this._display._y_label !== undefined) ? this._display._y_label : 0
+    if (this._display.position_y_label! != undefined) {
+      label_pos_y = (this._display.position_y_label !== undefined) ? this._display.position_y_label : 0
       label_baseline = 'middle'
     } else {
       if (this.name_label_vert === 'top') {
@@ -1890,10 +2027,6 @@ export class Class_NodeElement extends Class_Element {
     )
   }
 
-  public get dimensions(): { [_: string]: { parent_name: Class_NodeElement } } {
-    return this._dimensions
-  }
-
   /**
    * Get node name
    * @memberof Class_NodeElement
@@ -1964,6 +2097,54 @@ export class Class_NodeElement extends Class_Element {
    */
   public get taggs_list() {
     return Object.values(this.taggs_dict)
+  }
+
+  /**
+   * Dict of level tags related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get level_tags_dict() {
+    const level_tags_dict: {[id: string]: Class_LevelTag} = {}
+    Object.values(this._dimensions_as_parent)
+      .forEach(dimension => {
+        level_tags_dict[dimension.parent_level_tag.id] = dimension.parent_level_tag
+      })
+    Object.values(this._dimensions_as_child)
+      .forEach(dimension => {
+        level_tags_dict[dimension.children_level_tag.id] = dimension.children_level_tag
+      })
+    return level_tags_dict
+  }
+
+  /**
+   * List of level tags related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get level_tags_list() {
+    return Object.values(this.level_tags_dict)
+  }
+
+  /**
+   * Dict of level taggs related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get level_taggs_dict() {
+    const level_taggs_dict: {[id: string]: Class_LevelTagGroup} = {}
+    this.level_tags_list
+      .forEach(tag => {level_taggs_dict[tag.group.id] = tag.group})
+    return level_taggs_dict
+  }
+
+  /**
+   * List of level taggs related to node
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get level_taggs_list() {
+    return Object.values(this.level_taggs_dict)
   }
 
   /**
@@ -2416,7 +2597,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set name_label_vert(_: Type_TextVPos) {
-    if (_ !== 'dragged') delete this._display._y_label
+    if (_ !== 'dragged') delete this._display.position_y_label
     this._display.attributes.name_label_vert = _
     this.drawNameLabel()
   }
@@ -2439,7 +2620,7 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set name_label_horiz(_: Type_TextHPos) {
-    if (_ !== 'dragged') delete this._display._x_label
+    if (_ !== 'dragged') delete this._display.position_x_label
     this._display.attributes.name_label_horiz = _
     this.drawNameLabel()
   }
@@ -2697,8 +2878,8 @@ export class Class_NodeElement extends Class_Element {
   // PRIVATE GETTER / SETTER ============================================================
 
   /**
-   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected at false,
-   * if that the case then we don't draw the node
+   * Function used in element_displayed tho check if at least one of the tag associated to the node is selected,
+   * We draw the node only if this is the case
    *
    * @private
    * @return {*}
@@ -2712,20 +2893,31 @@ export class Class_NodeElement extends Class_Element {
     return to_display
   }
 
+  /**
+   * Function used in element_displayed tho check if at least one of the level tag associated to the node is selected,
+   * We draw the node only if this is the case
+   *
+   * @readonly
+   * @private
+   * @memberof Class_NodeElement
+   */
   private get is_related_level_selected() {
-    // Existing level tags
-    const level_taggs = this.drawing_area.sankey.level_taggs_dict
+    // Existing level tags group
+    const all_level_taggs = this.main_sankey.level_taggs_list
+    // Nodes related level tag group
+    const level_tags = this.level_tags_list // Avoid hidden recomputing
+    const level_taggs = this.level_taggs_list // Avoid hidden recomputing
     // Check if there is other aggregation tags than 'Primaire',
-    const opt_level_taggs = Object.values(level_taggs)
+    const opt_level_taggs = all_level_taggs
       .filter(tagg => tagg.id !== 'Primaire') // TODO id Or name ?
     const multi_level_taggs = (opt_level_taggs.length > 0)
     // Activated level taggs
-    const activ_level_taggs = Object.values(level_taggs)
+    const activ_level_taggs = all_level_taggs
       .filter(tagg => tagg.activated)
     const only_one_activated = (activ_level_taggs.length === 1)
     // Is only primary level activated
     const only_primaire_activated = (
-      (this.drawing_area.sankey.level_taggs_dict['Primaire']?.activated ?? false) &&
+      (this.main_sankey.level_taggs_dict['Primaire']?.activated ?? false) &&
       only_one_activated)
     const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
     // Check if level tags are correctly selected = ok to display
@@ -2737,29 +2929,26 @@ export class Class_NodeElement extends Class_Element {
     // - The node grp tag is activated (variable is set false if we activate
     //   another grp tag that has this grp tag in variable sibling)
     // - The node has the grp tag name in his tags
-    Object.entries(level_taggs)
-      .filter(ent => (
+    all_level_taggs
+      .filter(tagg => (
         (
           (
             (multi_level_taggs) &&
             (!multi_but_only_primaire)
           ) ?
-            ent[0] !== 'Primaire' :
+            tagg.id !== 'Primaire' :
             true
         ) &&
-        ent[1].activated &&
-        Object.keys(this.taggs_dict).includes(ent[0])
+        (tagg.activated) &&
+        (level_taggs.includes(tagg))
       ))
-      .forEach(ent => {
-        // Check tags from the group attribued to the node
-        // If the node don't have tag attribued from the group then it
-        // is not affected by filter and we display it
-        let tmp_to_display = false;
-        (ent[1] as Class_TagGroupNodeLevel).tags_list
-          .forEach(tag => {
-            if (this.hasGivenTag(tag))
-              tmp_to_display = true
-          })
+      .forEach(tagg_activated => {
+        // Check selected tags from the activated level tag group
+        // If the node don't have a least one matching tag, we dont display it
+        let tmp_to_display = false
+        tagg_activated.tags_list
+          .filter(tag => tag.is_selected)
+          .forEach(tag => tmp_to_display = (tmp_to_display || level_tags.includes(tag)))
         to_display = to_display && tmp_to_display
       })
     return to_display
@@ -2783,7 +2972,7 @@ export class Class_NodeElement extends Class_Element {
       tooltip_html += '      <th>'+'Provenances'+'</th>' // TODO traduction manquante
       tooltip_html += '      <th>'+'Valeurs'+'</th>' // TODO traduction manquante
       tooltip_html += '      <th>'+'Ratios'+'</th>' // TODO traduction manquante
-      this.drawing_area.sankey.flux_taggs_list
+      this.main_sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
       tooltip_html += '    </tr>'
@@ -2803,7 +2992,7 @@ export class Class_NodeElement extends Class_Element {
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
-          this.drawing_area.sankey.flux_taggs_list
+          this.main_sankey.flux_taggs_list
             .forEach(tagg => {
               const _: string[] = []
               link.flux_tags_list
@@ -2831,7 +3020,7 @@ export class Class_NodeElement extends Class_Element {
       tooltip_html += '      <th>'+'Destinations'+'</th>' // TODO traduction manquante
       tooltip_html += '      <th>'+'Valeurs'+'</th>' // TODO traduction manquante
       tooltip_html += '      <th>'+'Ratios'+'</th>' // TODO traduction manquante
-      this.drawing_area.sankey.flux_taggs_list
+      this.main_sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
       tooltip_html += '    </tr>'
@@ -2850,7 +3039,7 @@ export class Class_NodeElement extends Class_Element {
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
-          this.drawing_area.sankey.flux_taggs_list
+          this.main_sankey.flux_taggs_list
             .forEach(tagg => {
               const _: string[] = []
               link.flux_tags_list
@@ -3250,4 +3439,161 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    * @memberof Class_NodeStyle
    */
   public set name(_: string) { this._name = _ }
+}
+
+// CLASS NODE DIMENSION *****************************************************************
+
+export class Class_NodeDimension {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Unique id
+  private _id: string
+
+  // Structure
+  private _parent: Class_NodeElement
+  private _children: Class_NodeElement[]
+
+  // Tags relations
+  private _parent_level_tag: Class_LevelTag
+  private _children_level_tag: Class_LevelTag
+
+  /**
+   * True if element is currently on a deletion process
+   * Avoid cross calls of delete() method
+   * @private
+   * @memberof Class_Element
+   */
+  private _is_currently_deleted = false
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_NodeDimension.
+   * @param {Class_NodeElement} parent
+   * @param {Class_NodeElement[]} children
+   * @param {Class_LevelTag} parent_level_tag
+   * @param {Class_LevelTag} children_level_tag
+   * @memberof Class_NodeDimension
+   */
+  constructor(
+    parent: Class_NodeElement,
+    children: Class_NodeElement[],
+    parent_level_tag: Class_LevelTag,
+    children_level_tag: Class_LevelTag,
+    id?: string
+  ) {
+    // Create unique id
+    if (id)
+      this._id = id
+    else
+      this._id = makeId(parent_level_tag.id+'_'+children_level_tag.id)
+    // Set parenthood reference
+    this._parent = parent
+    this._parent.addNewDimensionAsParent(this)
+    this._children = children
+    this._children
+      .forEach(_ => _.addNewDimensionAsChild(this))
+    // Set leveltags references
+    this._parent_level_tag = parent_level_tag
+    this._parent_level_tag.addAsParentLevel(this)
+    this._children_level_tag = children_level_tag
+    this._children_level_tag.addAsChildrenLevel(this)
+    // Sanity checks
+    // Immediatly delete for any of this conditions :
+    // - Parent is in children list
+    // - Parent & children tags groups are not the same
+    // - Children list is empty
+    if (
+      (children.includes(parent)) ||
+      (parent_level_tag.group !== children_level_tag.group) ||
+      (!this.has_children)
+    ) {
+      this.delete()
+    }
+  }
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_NodeDimension
+   */
+  public delete() {
+    // Cross-calls protection
+    if (!this._is_currently_deleted) {
+      this._is_currently_deleted = true
+      // Remove cross references with nodes
+      this._parent.removeDimensionAsParent(this)
+      this._children
+        .forEach(_ => _.removeDimensionAsChild(this))
+      this._children = []
+      // Remove cross references with leveltags
+      this._parent_level_tag.removeParentLevel(this)
+      this._children_level_tag.removeChildrenLevel(this)
+      // Garbage collector will do the rest ...
+    }
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public addNodeAsChildren(_: Class_NodeElement) {
+    if (!this._children.includes(_)) {
+      this._children.push(_)
+      _.addNewDimensionAsChild(this)
+    }
+  }
+
+  public removeNodeFromChildren(_: Class_NodeElement) {
+    const idx = this._children.indexOf(_)
+    if (idx) {
+      this._children.splice(idx, 1)
+      // If all children has been deleted, clear this
+      if (!this.has_children)
+        this.delete()
+    }
+  }
+
+  public getLevel() {
+    if (!this._parent_level_tag.has_upper_dimensions) {
+      return 1
+    }
+    else {
+      let level = 2
+      this._parent_level_tag.dimensions_list_as_tag_for_children
+        .forEach(upper_dimension => level = Math.max(level, upper_dimension.getLevel() + 1))
+      return level
+    }
+  }
+
+  // GETTERS / SETTERS ==================================================================
+
+  public get id() { return this._id }
+
+  public get parent_level_tag() { return this._parent_level_tag}
+  public set parent_level_tag(_: Class_LevelTag) {
+    // Do modification only if there is a change & if parent/children tag group are matching
+    if (
+      (_ !== this._parent_level_tag) &&
+      (this._children_level_tag?.group === _.group)
+    ) {
+      this._parent_level_tag = _
+      _.addAsParentLevel(this)
+    }
+  }
+
+  public get children_level_tag() { return this._children_level_tag }
+  public set children_level_tag(_: Class_LevelTag) {
+    // Do modification only if there is a change & if parent/children tag group are matching
+    if (
+      (_ !== this._children_level_tag) &&
+      (this._parent_level_tag?.group === _.group)
+    ) {
+      this._parent_level_tag = _
+      _.addAsChildrenLevel(this)
+    }
+  }
+
+  public get parent() { return this._parent }
+
+  public get has_children() { return (this._children.length > 0) }
+  public get children() { return this._children }
 }

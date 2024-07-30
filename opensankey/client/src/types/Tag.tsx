@@ -6,7 +6,7 @@
 
 // Local types
 import { Class_LinkElement, Class_LinkValue } from './Link'
-import { Class_NodeElement } from './Node'
+import { Class_NodeDimension, Class_NodeElement } from './Node'
 import { Class_Sankey } from './Sankey'
 import { Type_JSON, default_grey_color, getBooleanFromJSON, getStringFromJSON, getStringListFromJSON, makeId } from './Utils'
 
@@ -55,6 +55,12 @@ export abstract class Class_ProtoTag {
 
   // CONSTRUCTOR ========================================================================
 
+  /**
+   * Creates an instance of Class_ProtoTag.
+   * @param {string} name
+   * @param {(string | undefined)} [id=undefined]
+   * @memberof Class_ProtoTag
+   */
   constructor(
     name: string,
     id: string | undefined = undefined
@@ -203,19 +209,19 @@ export class Class_Tag extends Class_ProtoTag {
       })
   }
 
-  public hasGivenRef(_: Type_TagReference) {
+  public hasGivenReference(_: Type_TagReference) {
     return (this._references[_.id] !== undefined)
   }
 
   public addReference(_: Type_TagReference) {
-    if (!this.hasGivenRef(_)) {
+    if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       _.addTag(this)
     }
   }
 
   public removeReference(_: Type_TagReference) {
-    if (this.hasGivenRef(_)) {
+    if (this.hasGivenReference(_)) {
       delete this._references[_.id]
       _.removeTag(this)
     }
@@ -307,7 +313,156 @@ export class Class_DataTag extends Class_ProtoTag {
   public get group() { return this._group }
 }
 
-// CLASS PROTO TAGGROUP ***********************************************************************
+
+// CLASS LEVELTAG ***********************************************************************
+
+export class Class_LevelTag extends Class_ProtoTag {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  // Group where it belong
+
+  protected _group: Class_LevelTagGroup
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // List of elements that relates to this tag
+  private _references_parents: { [_: string]: Class_NodeDimension } = {}
+  private _references_children: { [_: string]: Class_NodeDimension } = {}
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_LevelTag.
+   * @param {string} name
+   * @param {Class_LevelTagGroup} group
+   * @param {(string | undefined)} [id=undefined]
+   * @memberof Class_LevelTag
+   */
+  constructor(
+    name: string,
+    group: Class_LevelTagGroup,
+    id: string | undefined = undefined
+  ) {
+    super(name, id)
+    this._group = group
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  protected cleanForDeletion() {
+    // TODO
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public update() {
+    // TODO
+  }
+
+  public getOrCreateLowerDimension(
+    parent: Class_NodeElement,
+    child: Class_NodeElement,
+    child_tag: Class_LevelTag
+  ) {
+    // First check if tags are from the same groupe
+    if (this.group === child_tag.group) {
+      // Try to find matching dimension with :
+      // - this as parent tag
+      // - input child_tag as children tag
+      // - parent node as parent
+      let dimension_found: Class_NodeDimension | undefined
+      this.dimensions_list_as_tag_for_parent
+        .forEach(dimension => {
+          if (
+            (dimension.parent_level_tag === this) &&
+            (dimension.children_level_tag === child_tag) &&
+            (dimension.parent === parent)
+          ) {
+            dimension_found = dimension
+          }
+        })
+      // If found - just add child
+      if (dimension_found) {
+        dimension_found.addNodeAsChildren(child)
+      }
+      // If no dimension has been found, create a new one
+      else  {
+        dimension_found = new Class_NodeDimension(
+          parent,
+          [child],
+          this,
+          child_tag
+        )
+      }
+      // Return
+      return dimension_found
+    }
+    return null
+  }
+
+  public isLevelForChildren(_: Class_NodeDimension) {
+    return (this._references_children[_.id] !== undefined)
+  }
+
+  public isLevelForParent(_: Class_NodeDimension) {
+    return (this._references_parents[_.id] !== undefined)
+  }
+
+  public addAsChildrenLevel(_: Class_NodeDimension) {
+    if (!this.isLevelForChildren(_)) {
+      this._references_children[_.id] = _
+      _.children_level_tag = this
+    }
+  }
+
+  public addAsParentLevel(_: Class_NodeDimension) {
+    if (!this.isLevelForParent(_)) {
+      this._references_parents[_.id] = _
+      _.parent_level_tag = this
+    }
+  }
+
+  public removeChildrenLevel(_: Class_NodeDimension) {
+    if (this.isLevelForChildren(_)) {
+      delete this._references_children[_.id]
+      _.delete()
+    }
+  }
+
+  public removeParentLevel(_: Class_NodeDimension) {
+    if (this.isLevelForParent(_)) {
+      delete this._references_parents[_.id]
+      _.delete()
+    }
+  }
+
+  // GETTERS ============================================================================
+
+  public get group() { return this._group }
+
+  public get has_upper_dimensions() {
+    return (this.dimensions_list_as_tag_for_children.length > 0)
+  }
+
+  public get has_lower_dimensions() {
+    return (this.dimensions_list_as_tag_for_parent.length > 0)
+  }
+
+  public get dimensions_list_as_tag_for_parent() {
+    return Object.values(this._references_parents)
+  }
+
+  public get dimensions_list_as_tag_for_children() {
+    return Object.values(this._references_children)
+  }
+}
+
+// CLASS PROTO TAGGROUP *****************************************************************
 /**
  * Class that define a TagGroup object
  * @export
@@ -650,7 +805,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
   }
 }
 
-// CLASS DATATAGGROUP ***********************************************************************
+// CLASS DATATAGGROUP *******************************************************************
 /**
  * Class that define a TagGroup object
  * @export
@@ -744,14 +899,14 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   /**
    * Return dict tag from the current group
-   * @type {{ [_: string]: Class_ProtoTag }}
+   * @type {{ [_: string]: Class_DataTag }}
    * @memberof Class_DataTagGroup
    */
   public get tags_dict() { return this._tags }
 
   /**
    * Return dict tag from the current group
-   * @type {Class_ProtoTag[]}
+   * @type {Class_DataTag[]}
    * @memberof Class_DataTagGroup
    */
   public get tags_list() { return Object.values(this.tags_dict) }
@@ -776,17 +931,22 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 }
 
-// CLASS TAGGROUP FOR NODES LEVELS ******************************************************
+// CLASS LEVEL TAGGROUP *****************************************************************
 /**
  * Tag group for node level
  * TODO fonctionnement à completer // dimension dans nodes
  * @export
- * @class Class_TagGroupNodeLevel
+ * @class Class_LevelTagGroup
  * @extends {Class_TagGroup}
  */
-export class Class_TagGroupNodeLevel extends Class_TagGroup {
+export class Class_LevelTagGroup extends Class_ProtoTagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _tags: { [_: string]: Class_LevelTag } = {}
 
   // PRIVATE ATTRIBUTES==================================================================
+
   private _activated: boolean = false
   private _siblings: string[] = []
 
@@ -805,6 +965,17 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
     this._siblings = getStringListFromJSON(json_object, 'sibling', this._siblings)
   }
 
+  // PROTECTED METHODS ==================================================================
+
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = new Class_LevelTag(name, this, id)
+    tag.setUnSelected()
+    return tag
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   public get activated(): boolean { return this._activated }
@@ -821,4 +992,25 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
     this._siblings = value
     this.updateTagsReferences()
   }
+
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_DataTag }}
+   * @memberof Class_DataTagGroup
+   */
+  public get tags_dict() { return this._tags }
+
+  /**
+   * Return dict tag from the current group
+   * @type {Class_DataTag[]}
+   * @memberof Class_DataTagGroup
+   */
+  public get tags_list() { return Object.values(this.tags_dict) }
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_DataTagGroup
+   */
+  public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
 }
