@@ -4,8 +4,7 @@ import {
   Box,
   Button,
   TabPanel,
-  Textarea,
-  useBoolean
+  Textarea
 } from '@chakra-ui/react'
 
 // Local types
@@ -14,23 +13,29 @@ import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurat
 // Local functions
 import { OSTooltip } from './SankeyUtils'
 
-
 // MENU COMPONENT ***********************************************************************
 
+/**
+ * Create tootltip modification menu
+ *
+ * @param {*} {
+ *   applicationData,
+ *   applicationContext,
+ *   menu_for_modal
+ * }
+ * @return {*}
+ */
 export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
   applicationData,
   applicationContext,
   menu_for_modal
 })=>{
+
+  // Data -------------------------------------------------------------------------------
+
   // Get necessary infos
   const { new_data, data } = applicationData
   const { t } = applicationContext
-
-  // Set state & Ref for UI update
-  const [ , setForceUpdate ] = useBoolean()
-  const [editor_content_tooltip, sEditorContentNodeTooltip] = useState('')
-  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
-  let tmp_editor_content_tooltip = editor_content_tooltip
 
   // Get selected links
   let selected_links
@@ -43,6 +48,11 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
     selected_links = new_data.drawing_area.visible_and_selected_links_list
   }
 
+  // State & refs for text input
+  const [editor_content_tooltip, setEditorContentTooltip] = useState('')
+  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
+  let tmp_editor_content_tooltip = editor_content_tooltip
+
   // Check if there is difference between text in editor and link tooltips
   let s_tmp_editor_content_changed = false
   if ( selected_links.length > 0 ) {
@@ -51,8 +61,10 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
     }
   }
 
-  // TODO a checker
-  const resetTextEditor=()=>{
+  // Components updaters ---------------------------------------------------------------
+
+  // Update what is displayed in text editor
+  const resetTextEditor = () => {
     if (selected_links.length>0) {
       if ( typeof selected_links[0].tooltip_text !== 'undefined' ) {
       // Reset textaera
@@ -62,8 +74,9 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip(selected_links[0].tooltip_text)
-      }else {
+        setEditorContentTooltip(selected_links[0].tooltip_text)
+      }
+      else {
       // Reset textaera
         if ( typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
@@ -71,7 +84,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
           }
         }
         // Reset state value
-        sEditorContentNodeTooltip('')
+        setEditorContentTooltip('')
       }
     }
     else {
@@ -82,11 +95,16 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
         }
       }
       // Reset state value
-      sEditorContentNodeTooltip('')
+      setEditorContentTooltip('')
     }
-    setForceUpdate.toggle()
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
-  new_data.menu_configuration.updateMenuConfigTextLinkTooltip.current.push(resetTextEditor)
+
+  // Link with new_data components updater
+  new_data.menu_configuration.ref_to_menu_config_link_tooltips_updater.current = resetTextEditor
+
+  // JSX Components ---------------------------------------------------------------------
 
   const content = <>
     <Box
@@ -103,11 +121,11 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
         onChange={(evt) => {
           tmp_editor_content_tooltip = evt.target.value
           if (!s_tmp_editor_content_changed) {
-            sEditorContentNodeTooltip(tmp_editor_content_tooltip)
+            setEditorContentTooltip(tmp_editor_content_tooltip)
           }
         }}
         onBlur={()=>{
-          sEditorContentNodeTooltip(tmp_editor_content_tooltip)
+          setEditorContentTooltip(tmp_editor_content_tooltip)
         }}
       />
     </OSTooltip>
@@ -130,7 +148,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
         isDisabled={!s_tmp_editor_content_changed}
         onClick={() => {
           selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
-          sEditorContentNodeTooltip(tmp_editor_content_tooltip)
+          setEditorContentTooltip(tmp_editor_content_tooltip)
         }}
       >
         {t('Menu.submit')}
@@ -138,7 +156,9 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
     </Box>
   </>
 
-  return menu_for_modal?content:
+  return menu_for_modal ?
+    content
+    :
     <TabPanel >
       {content}
     </TabPanel>
