@@ -1080,11 +1080,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 }) => {
   const { data } = applicationData
   const [forceUpdate, setForceUpdate] = useState(false)
-  let [playing,set_playing] = useState(window.SankeyToolsStatic ? true : false)
-  // let [filiere,set_filiere] = useState(window.sankey.filiere)
-  // if ( filiere !== window.sankey.filiere) {
-  //   set_filiere(window.sankey.filiere)
-  // }
+  let [playing,set_playing] = useState(false)
 
   const banner_grouptag = Object.entries(data.dataTags)
 
