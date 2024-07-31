@@ -728,7 +728,6 @@ export class Class_NodeElement extends Class_Element {
     this.d3_selection?.select('.name_label_text').style('display', 'none')
     this.d3_selection?.select('.name_label_fo_input').style('display', 'inline-block')
     document.getElementById('name_label_input_' + this.id)?.focus()
-
   }
 
   /**
@@ -1127,7 +1126,7 @@ export class Class_NodeElement extends Class_Element {
         this.drawing_area.addNodeToSelection(this)
       }
       this.menu_config.updateAllComponentsRelatedToNodes()
-      this.drawing_area.node_contextualied = this
+      this.drawing_area.node_contextualised = this
       this.menu_config.ref_to_menu_context_nodes_updater.current()
     }
   }

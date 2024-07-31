@@ -385,11 +385,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           display_style.filter = +new_current_filter
           applicationData.set_data({ ...applicationData.data })
         }}
-      detail_level={InitalizeSelectorDetailNodes(  applicationContext,
-        applicationData,
-        applicationDraw,
-        node_function,
-        link_function,ComponentUpdater)}
+      detail_level={
+        InitalizeSelectorDetailNodes(
+          applicationContext,
+          applicationData,
+        )}
       url_prefix={applicationContext.url_prefix}
       first_selected_node={applicationState.first_selected_node}
       dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
@@ -413,24 +413,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
   regular_ui['form'] = [...regular_ui['form'],...additionalMenus.additional_preferences]
 
-  const menu_configuration=initializeMenuConfiguration(
+  const menu_configuration = initializeMenuConfiguration(
     applicationData,
-    applicationState,
     applicationContext,
-    uiElementsRef,
-    dict_hook_ref_setter_show_dialog_components,
     additionalMenus,
-    node_function,
-    link_function,
-    applicationDraw,
-    ComponentUpdater,
-    updateMenus,
     config_link_data,
     config_link_attr,
-    contextMenu,
     menu_configuration_nodes_attributes,
-    additionalMenus,
-    ref_alt_key_pressed
   )
 
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing

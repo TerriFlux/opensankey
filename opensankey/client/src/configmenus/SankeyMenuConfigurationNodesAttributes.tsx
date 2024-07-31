@@ -74,6 +74,9 @@ import {
   isAttributeOverloaded
 } from '../types/Node'
 import {
+  font_families
+} from '../types/Utils'
+import {
   OpenSankeyConfigurationNodesAttributesFType,
   SankeyWrapperConfigInModalOrMenuType
 } from './types/SankeyMenuConfigurationNodesAttributesTypes'
@@ -82,10 +85,11 @@ import {
 import {
   CutName,
   OSTooltip,
-  ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
 import { default_style_id } from '../types/Sankey'
+
+/*************************************************************************************************/
 
 /**
  * Define the menu that allows to modifiy appararence for nodes / properties for a node style
@@ -113,26 +117,17 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   advanced_label_value_content,
 }) => {
 
-  // CONSTANTS ==========================================================================
+  // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
   const { t } = applicationContext
   // Get data
-  const { data, new_data } = applicationData
+  const { new_data } = applicationData
 
-  // Trigger reloading of this component ------------------------------------------------
+  // Elements on which this menu applies ------------------------------------------------
 
-  // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
-  // Link this menu's update function
-  if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = refreshThis.toggle
-  }
-
-  // Get list of selected nodes ---------------------------------------------------------
-
-  let selected_nodes
-  if (data.displayed_node_selector) {
+  let selected_nodes: Class_NodeElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
   }
@@ -140,8 +135,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     // Only visible nodes
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
-
-  // VARIABLES ==========================================================================
 
   // Elements on which menu modification applies
   let elements: Class_NodeStyle[] | Class_NodeElement[]
@@ -152,41 +145,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     elements = selected_nodes
   }
 
-  // LOCAL FUNCTIONS ====================================================================
-
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Update menus for node's apparence in case we use this for style
-    if (menu_for_style) {
-      new_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    }
-    // And update this menu also
-    refreshThis.toggle()
-  }
-
-  /**
-   * Get style name to display for style selector
-   * @return {*}
-   */
-  const style_of_selected_nodes = () => {
-    if (selected_nodes.length !== 0) {
-      const style = selected_nodes[0].style
-      let inchangee = true
-      selected_nodes.map(node => {
-        inchangee = (node.style.id === style.id) ? inchangee : false
-      })
-      return (inchangee) ?
-        CutName(style.id, 20) :
-        t('Noeud.multi_style')
-    }
-    else {
-      return default_style_id
-    }
-  }
+  // Elements attributes ----------------------------------------------------------------
 
   /**
    *
@@ -225,6 +184,51 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const value_label_vert = (elements[0]?.value_label_vert ?? default_value_label_vert)
   const value_label_horiz = (elements[0]?.value_label_horiz ?? default_value_label_horiz)
   const value_label_font_size = (elements[0]?.value_label_font_size ?? default_label_font_size)
+
+  /**
+   * Get style name to display for style selector
+   * @return {*}
+   */
+  const style_of_selected_nodes = () => {
+    if (selected_nodes.length !== 0) {
+      const style = selected_nodes[0].style
+      let inchangee = true
+      selected_nodes.map(node => {
+        inchangee = (node.style.id === style.id) ? inchangee : false
+      })
+      return (inchangee) ?
+        CutName(style.id, 20) :
+        t('Noeud.multi_style')
+    }
+    else {
+      return default_style_id
+    }
+  }
+
+  // Components updaters ----------------------------------------------------------------
+
+  // Boolean used to force this component to reload
+  const [, refreshThis] = useBoolean()
+  // Link this menu's update function
+  if (!menu_for_style) {
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = refreshThis.toggle
+  }
+
+  /**
+   * Function used to reset menu UI
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Update menus for node's apparence in case we use this for style
+    if (menu_for_style) {
+      new_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+    // And update this menu also
+    refreshThis.toggle()
+  }
+
+  // JSX menu components ---------------------------------------------------------------
 
   const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
   const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -673,9 +677,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               }}
             >
               {
-                data
-                  .display_style
-                  .font_family
+                font_families
                   .map((d) => {
                     return <option
                       style={{ fontFamily: d }}

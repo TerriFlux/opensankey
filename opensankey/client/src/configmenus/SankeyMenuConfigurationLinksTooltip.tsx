@@ -12,6 +12,7 @@ import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurat
 
 // Local functions
 import { OSTooltip } from './SankeyUtils'
+import { Class_LinkElement } from '../types/Link'
 
 // MENU COMPONENT ***********************************************************************
 
@@ -34,19 +35,22 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
   // Data -------------------------------------------------------------------------------
 
   // Get necessary infos
-  const { new_data, data } = applicationData
+  const { new_data } = applicationData
   const { t } = applicationContext
 
-  // Get selected links
-  let selected_links
-  if (data.displayed_link_selector) {
+  // Selected links ---------------------------------------------------------------------
+
+  let selected_links: Class_LinkElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
-    selected_links = new_data.drawing_area.selected_links_list
+    selected_links = new_data.drawing_area.selected_links_list_sorted
   }
   else {
     // Only visible links
-    selected_links = new_data.drawing_area.visible_and_selected_links_list
+    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
   }
+
+  // Editor state ----------------------------------------------------------------------
 
   // State & refs for text input
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')

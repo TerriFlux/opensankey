@@ -1141,11 +1141,11 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     <OSTooltip
       placement='left'
       label={t('Banner.hlp_1_txt_2')}>
-      {InitalizeSelectorDetailNodes(applicationContext,
-        applicationData,
-        applicationDraw,
-        node_function,
-        link_function,ComponentUpdater)}
+      {
+        InitalizeSelectorDetailNodes(
+          applicationContext,
+          applicationData)
+      }
     </OSTooltip>
   </>:
     <></>

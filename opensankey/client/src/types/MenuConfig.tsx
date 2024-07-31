@@ -106,7 +106,6 @@ export class Class_MenuConfig {
   // Update component ToolbarBuilder
   private _updateToolbar: MutableRefObject<(() => void)>
 
-
   /* ========================================
     Updater of filtering components
   =========================================== */
@@ -123,6 +122,12 @@ export class Class_MenuConfig {
   // Update AddAllDropDownFlux
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
 
+  /* ========================================
+    Visible Nodes / Links selectors
+  =========================================== */
+
+  private _selector_only_visible_nodes: boolean = false
+  private _selector_only_visible_links: boolean = false
 
   // CONSTRUCTOR ========================================================================
 
@@ -423,6 +428,16 @@ export class Class_MenuConfig {
       this.updateAllComponentsRelatedToLevelTags()
   }
 
+  public toggle_selector_on_visible_nodes() {
+    this._selector_only_visible_nodes = !this._selector_only_visible_nodes
+    this.updateAllComponentsRelatedToNodes()
+  }
+
+  public toggle_selector_on_visible_links() {
+    this._selector_only_visible_links = !this._selector_only_visible_links
+    this.updateAllComponentsRelatedToLinks()
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   // Main menu component ----------------------------------------------------------------
@@ -568,5 +583,15 @@ export class Class_MenuConfig {
 
   public get ref_to_datatag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_datatag_filter_updater
+  }
+
+  // Nodes / links selectors ------------------------------------------------------------
+
+  public get is_selector_only_for_visible_nodes() {
+    return this._selector_only_visible_nodes
+  }
+
+  public get is_selector_only_for_visible_links() {
+    return this._selector_only_visible_links
   }
 }

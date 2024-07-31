@@ -182,7 +182,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   localStorage.removeItem('icon_imported')
 
   // Reset contextualised node
-  applicationData.new_data.drawing_area.node_contextualied = undefined
+  applicationData.new_data.drawing_area.node_contextualised = undefined
   applicationData.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
   // Reset contextualised link
@@ -606,13 +606,8 @@ export const moduleDialogs : module_dialogsType = (
     dialog_name={'ref_setter_show_menu_layout'}
     content={<OpenSankeyMenuConfigurationLayout
       applicationData={applicationData}
-      applicationState={applicationState}
       applicationContext={applicationContext}
       extra_background_element={additional_menus.extra_background_element}
-      node_function={node_function}
-      reDrawLegend={reDrawLegend}
-      link_function={link_function}
-      ComponentUpdater={ComponentUpdater}
     />}
     pointer_pos={contextMenu.pointer_pos}
     title={applicationContext.t('Menu.MEP')}
@@ -778,39 +773,24 @@ export const initializeProcessFunctions : (
     }
     return _
   }
+
+/***************************************************************************************/
 export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   applicationData,
-  applicationState,
   applicationContext,
-  uiElementsRef,
-  dict_hook_ref_setter_show_dialog_components,
   additional_menus,
-  node_function,
-  link_function,
-  applicationDraw,
-  ComponentUpdater,
-  updateMenus,
   config_link_data,
   config_link_attr,
-  contextMenu,
   menu_configuration_nodes_attributes,
-  additionalMenus,
-  ref_alt_key_pressed
 ) => {
   return <OpenSankeyConfigurationsMenus
     applicationData = {applicationData}
-    applicationState = {applicationState}
     applicationContext = {applicationContext}
     menu_configuration_layout = {
       <OpenSankeyMenuConfigurationLayout
         applicationData={applicationData}
-        applicationState={applicationState}
         applicationContext={applicationContext}
         extra_background_element={additional_menus.extra_background_element}
-        node_function={node_function}
-        reDrawLegend={applicationDraw.reDrawLegend}
-        link_function={link_function}
-        ComponentUpdater={ComponentUpdater}
       />
     }
     menu_configuration_node_tags = {
@@ -838,22 +818,21 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     menu_config_link_data = {config_link_data}
     menu_config_link_attr = {config_link_attr}
     additional_accordion_edition_elements = {additional_menus.additional_configuration_menus}
-    link_function = {link_function}
-    ComponentUpdater = {ComponentUpdater}
-    node_function = {node_function}
-    additionalMenus = {additionalMenus}
   />
 }
 
+/***************************************************************************************/
 
+/**
+ * TODO Description
+ * @param {*} applicationContext
+ * @param {*} applicationData
+ * @return {*}
+ */
 export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
   applicationContext,
-  applicationData,
-  applicationDraw,
-  node_function,
-  link_function)=>{
-  // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-  // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
+  applicationData
+)=>{
   return <Popover placement='left' id='popover_details_level'>
     <PopoverTrigger>
       <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>

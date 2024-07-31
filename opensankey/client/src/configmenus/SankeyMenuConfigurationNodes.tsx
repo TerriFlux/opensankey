@@ -16,17 +16,15 @@ import {
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
+
 import {
-  AdditionalMenusType,
-  ComponentUpdaterType,
-  LinkFunctionTypes,
-  NodeFunctionTypes,
   applicationContextType,
   applicationDataType,
-  applicationStateType
 } from '../types/Types'
+import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 
 /*************************************************************************************************/
+
 import {
   OSTooltip
 } from './SankeyUtils'
@@ -34,46 +32,39 @@ import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
+import { Class_NodeElement } from '../types/Node'
 
 
 /*************************************************************************************************/
+
 type SankeyEditionTypes = {
   applicationContext: applicationContextType,
   applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  menu_configuration_nodes_attributes:JSX.Element,
-  link_function: LinkFunctionTypes,
-  ComponentUpdater: ComponentUpdaterType,
-  node_function: NodeFunctionTypes,
-  additionalMenus:AdditionalMenusType
+  menu_configuration_nodes_attributes:JSX.Element
 }
 
 /*************************************************************************************************/
+
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
     applicationContext,
     applicationData,
-    applicationState,
     menu_configuration_nodes_attributes,
-    link_function,
-    ComponentUpdater,
-    node_function
   }
 ) => {
+
+  // Datas ------------------------------------------------------------------------------
+
   // Traduction
   const { t } = applicationContext
   // Data class
   const { new_data } = applicationData
-  // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
-  // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_node_updater.current = refreshThis.toggle
 
-  // Data to display in this menu ------------------------------------------------------
+  // Nodes to select --------------------------------------------------------------------
 
-  let nodes, selected_nodes
-  if (new_data.drawing_area.sankey.filter_displayed_node_selector) {
+  let nodes: Class_NodeElement[]
+  let selected_nodes: Class_NodeElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
@@ -85,6 +76,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
   const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
   const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
+
+  // Menu updaters ----------------------------------------------------------------------
+
+  // Boolean used to force this component to reload
+  const [, refreshThis] = useBoolean()
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current = refreshThis.toggle
 
   // Function used to reset menu UI -----------------------------------------------------
 
@@ -101,6 +99,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     // Update and update saving indicator
     refreshThisAndToggleSaving()
   }
+
+  // JSX Components ---------------------------------------------------------------------
 
   const ui: { [s: string]: JSX.Element } = {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
@@ -166,7 +166,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       </Box>)
     return DD
   }
-
 
   // Commented for now awaiting the redesign of nodes tree structur
   // const overlayNodeSlector= <Overlay
@@ -325,11 +324,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onClick={
               () => {
                 // Update indicator (only visible nodes / all nodes)
-                new_data.drawing_area.sankey.filter_displayed_node_selector = !new_data.drawing_area.sankey.filter_displayed_node_selector
-                // Simple refresh of this menu
-                refreshThis.toggle()
+                new_data.menu_configuration.toggle_selector_on_visible_nodes()
               }}>
-            {new_data.drawing_area.sankey.filter_displayed_node_selector ? <FaEye /> : <FaEyeSlash />}
+            {new_data.menu_configuration.is_selector_only_for_visible_nodes ? <FaEye /> : <FaEyeSlash />}
           </Button>
         </OSTooltip>
       </Box>

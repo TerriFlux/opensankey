@@ -9,9 +9,11 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigurationNodesTagsTypes'
 import { Class_Tag } from '../types/Tag'
-
+import { Class_NodeElement } from '../types/Node'
+import {
+  SankeyMenuConfigurationNodesTagsFType
+} from './types/SankeyMenuConfigurationNodesTagsTypes'
 
 // Component definition =================================================================
 
@@ -33,14 +35,24 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   const { t } = applicationContext
   const { new_data} = applicationData
 
-  // Node tags groups
+  // Node tags groups ------------------------------------------------------------------
+
   const list_node_taggs = new_data.drawing_area.sankey.node_taggs_list
   const has_node_taggs = list_node_taggs.length > 0
   const [node_tagg_entry_index, setNodeTaggEntryIndex] = useState(0)
   const node_tagg_entry = list_node_taggs[node_tagg_entry_index]
 
-  // Selected nodes
-  const nodes_selected = new_data.drawing_area.selected_nodes_list
+  // Selected nodes ---------------------------------------------------------------------
+
+  let selected_nodes: Class_NodeElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+    // All availables nodes
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  }
+  else {
+    // Only visible nodes
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+  }
 
   // Menu updaters ----------------------------------------------------------------------
 
@@ -77,7 +89,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   ) => {
     let allTrue = true
     let allFalse = true
-    nodes_selected
+    selected_nodes
       .forEach(node => {
         const test = node.hasGivenTag(tag)
         allTrue = allTrue && (test === true)
@@ -87,10 +99,11 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   }
 
   // JSX content ------------------------------------------------------------------------
+
   const content = <> {
     (
       has_node_taggs &&
-      nodes_selected.length > 0
+      selected_nodes.length > 0
     ) ?
       <Box
         layerStyle='menuconfigpanel_grid'
@@ -133,14 +146,14 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                 return <Checkbox
                   variant='menuconfigpanel_tag_checkbox'
                   isIndeterminate = {
-                    (nodes_selected.length > 1) &&
+                    (selected_nodes.length > 1) &&
                     (!allTrue) &&
                     (!allFalse)
                   }
                   isChecked={allTrue}
                   onChange={(evt) => {
                     const visible = evt.target.checked
-                    nodes_selected.forEach(node => {
+                    selected_nodes.forEach(node => {
                       if (visible) {
                         node.addTag(node_tag)
                       }
@@ -161,7 +174,6 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
       :
       <></>
   } </>
-
 
   return menu_for_modal ?
     content:
