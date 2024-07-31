@@ -508,7 +508,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
   if(e.key==='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {
-      deleteGLabel(updateMenus,multi_selected_label.current,applicationState)
+      deleteGLabel(updateMenus,multi_selected_label.current)
       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
       multi_selected_label.current=[]
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
