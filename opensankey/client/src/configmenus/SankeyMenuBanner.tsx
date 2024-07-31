@@ -33,7 +33,9 @@ import {
   faSliders,
   faExpand,
   faCompress,
-  faDatabase
+  faDatabase,
+  faCaretSquareRight,
+  faCircleStop
 } from '@fortawesome/free-solid-svg-icons'
 import {
   selected_type
@@ -81,7 +83,7 @@ import {
 } from '@chakra-ui/react'
 import {
   FaEye,
-  FaEyeSlash
+  FaEyeSlash,
 } from 'react-icons/fa'
 import {
   DeleteGNodes
@@ -390,6 +392,7 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
+      diagram: string,
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
@@ -412,6 +415,7 @@ export const setDiagram: setDiagramFuncType = (
       window.sankey[sous_filieres[the_diagram]]
     )
   ) as SankeyData
+  window.sankey.diagram = the_diagram
   convert_data(new_data, DefaultSankeyData)
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
@@ -1076,10 +1080,44 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 }) => {
   const { data } = applicationData
   const [forceUpdate, setForceUpdate] = useState(false)
-  const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  let [playing,set_playing] = useState(window.SankeyToolsStatic ? true : false)
+  // let [filiere,set_filiere] = useState(window.sankey.filiere)
+  // if ( filiere !== window.sankey.filiere) {
+  //   set_filiere(window.sankey.filiere)
+  // }
+
+  const banner_grouptag = Object.entries(data.dataTags)
+
   const allDD = banner_grouptag.map(([, tags_group]) => {
     let selecteor = <></>
-    if (tags_group.banner == 'one') {
+    let play = <></>
+    if (tags_group.banner == 'one' || tags_group.banner == 'movie' ) {
+      const play_movie = ()=>{
+        if (!playing) {
+          return
+        }
+
+        let idx = 0
+        Object.entries(tags_group.tags).forEach((tag,i) => {if(tag[1].selected) idx = i})
+        idx = idx == Object.entries(tags_group.tags).length -1 ? 0 : idx+1
+        Object.entries(tags_group.tags).forEach((tag,i) => {
+          tag[1].selected= false
+          if(i===idx) {tag[1].selected= true }
+        })
+        applicationData.set_data(JSON.parse(JSON.stringify(applicationData.data)))  
+      }
+      if (tags_group.banner == 'movie' ) {
+        const current_diagram = window.sankey.diagram
+        setTimeout(() => {
+          console.log(current_diagram)
+          console.log(window.sankey.diagram)          
+          if (current_diagram && current_diagram !== window.sankey.diagram) {
+            return
+          }
+          play_movie()
+        }, 3000)  
+      }
+
       let selected = ''
       if (Object.entries(tags_group.tags).filter(([, v]) => v.selected).length > 0) {
         selected = Object.entries(tags_group.tags).filter(([, v]) => v.selected)[0][0]
@@ -1124,6 +1162,28 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             return (<option key={i} value={tag_key} >{tag.name}</option>)
           })}
       </Select>
+      play = <Button
+        variant='menutop_button'
+        onClick={() => {
+          if (playing) {
+            set_playing(false)
+          } else {
+            set_playing(true)
+          }
+        }}
+      >
+        <Box
+          layerStyle='menuplay_button_style'
+        >
+
+      <FontAwesomeIcon
+        style={{
+          'height': '2rem',
+          'width': '3rem',
+          // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
+        }}
+        icon={playing ? faCircleStop : faCaretSquareRight }
+      /></Box></Button>
     }
     else {
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
@@ -1171,7 +1231,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 
     return (
       <Box
-        as='span' layerStyle='menuconfigpanel_row_2cols'
+        as='span' layerStyle='menuconfigpanel_row_3cols'
       >
         <Box
           as='span'
@@ -1179,10 +1239,11 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
         >
           {tags_group.group_name}
         </Box>
-        <Box
-          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
-        >
+        {/* <Box
+          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : 'menuconfigpanel_row_2cols'}
+        > */}
           {selecteor}
+          {in_popover || tags_group.banner !== 'movie' ? <></> : play}
           {
             in_popover ?
               <Switch
@@ -1214,7 +1275,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
               <></>
           }
         </Box>
-      </Box>)
+      )
   })
   return <>{allDD}</>
 }

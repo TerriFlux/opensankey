@@ -466,6 +466,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           >
                             {(type_tag_name!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option>:<></>}
                             <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
+                            {(type_tag_name=='dataTags')?<option key={'movie' + i} id='MovieBaner'  value='movie'>{t('Movie')}</option>:<></>}
                             <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
                           </Select>
                         </OSTooltip>
