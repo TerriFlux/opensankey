@@ -906,7 +906,8 @@ export const desagregation : desagregationFType = (
   cur_dimension: string
 ) => {
   const {data}=applicationData
-  const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
+  const node = data.nodes[idNode]
+  const dim_desagregate_nodes = getDesagregationNodes(cur_dimension, data, node)
   if (dim_desagregate_nodes.length == 0) {
     return
   }
@@ -1128,14 +1129,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
       return false
     })
     if ( dim_name === '') {
-      const the_child_names: string[] = []
-      Object.values(data.nodes).filter(n=>n.position!=='relative' && (!('Type de noeud' in n.tags) ||  n.tags['Type de noeud'][0] !== 'echange'))
-        .forEach(n2 => {
-        if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
-          the_child_names.push(n2.name)
-        }
-      }
-      )
+      const the_child_names = getDesagregationNodes(dim_names[0] , data, n).map(n=>n.name)
       set_dim_name(dim_names[0])
       set_child_names(the_child_names)
     }
@@ -1160,15 +1154,8 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
               <Select
                 onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
                   set_dim_name(evt.target.value)
-                  const the_child_names: string[] = []
-                  Object.values(data.nodes).filter(n=>n.position!=='relative' && (!('Type de noeud' in n.tags) ||  n.tags['Type de noeud'][0] !== 'echange'))
-                    .forEach(n2 => {
+                  const the_child_names = getDesagregationNodes(evt.target.value, data, n).map(n=>n.name)
 
-                    if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
-                      the_child_names.push(n2.name)
-                    }
-                  }
-                  )
                   set_child_names(the_child_names)
                 }}
                 value={dim_name}
@@ -1917,5 +1904,49 @@ export const Desaggregate: DesaggregateFuncType = (
   } else {
     desagregation(applicationData, n.idNode, dim_names[0])
   }
+}
+
+const  getDesagregationNodes = (
+  cur_dimension: string, 
+  data: SankeyData, 
+  node: SankeyNode
+) => {
+  let all_dim_desagregate_nodes = Object.values(data.nodes).filter(n =>
+    n.dimensions[cur_dimension] &&
+    n.dimensions[cur_dimension].parent_name === node.idNode &&
+    (!('Type de noeud' in n.tags) ||  n.tags['Type de noeud'][0] !== 'echange')
+  )
+  let to_remove : SankeyNode[] = []
+
+  //const level_tags_to_skip = [cur_dimension]
+  Object.values(data.levelTags).filter(
+    tagg => tagg.group_name !== 'Primaire' &&
+      tagg.activated &&
+      tagg.group_name !== cur_dimension
+  ).forEach(tagg => {
+    const tags_from_grp_to_display = Object.values(tagg.tags).filter(t => t.selected).map(t => t.name)
+    let node_tags_attr : string[]|undefined = undefined
+    let all_same = true
+    let tagg_to_remove : SankeyNode[] = []
+    all_dim_desagregate_nodes.filter((n,i)=> {
+      if (node_tags_attr && n.tags[tagg.group_name] && JSON.stringify(node_tags_attr) !== JSON.stringify(n.tags[tagg.group_name])) {
+        all_same = false
+      }
+      node_tags_attr = n.tags[tagg.group_name]
+      if (node_tags_attr === undefined) {
+        return
+      }
+      if ( node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length == 0) {
+        tagg_to_remove.push(n)
+      }
+
+    })
+    if (all_same) {
+      tagg_to_remove = []
+    }
+    to_remove = [...new Set([...to_remove, ...tagg_to_remove])]
+  })
+  const dim_desagregate_nodes = all_dim_desagregate_nodes.filter(n=>!to_remove.includes(n))
+  return dim_desagregate_nodes
 }
 

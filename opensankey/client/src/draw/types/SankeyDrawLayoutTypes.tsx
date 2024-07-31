@@ -150,8 +150,7 @@ export type reorganize_all_input_outputLinksIdFType = (
 export type desagregationFType = (
   applicationData:applicationDataType,
   idNode: string,
-  cur_dimension: string,
-  to_compute_auto_sankey:boolean
+  cur_dimension: string
 ) => void
 
 /**
