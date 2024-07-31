@@ -106,9 +106,9 @@ export const  LinkTooltipsContent = (
     const names : string[]= []
     tags.forEach(link_info_tag=> {
       if (link_info_tag!== null) {
-        names.push(data.fluxTags[tag_group_key].tags[link_info_tag].name)}
+        names.push(data.fluxTags[tag_group_key].tags[link_info_tag].name)
       }
-    )
+    })
     t+='<tr><th>'+data.fluxTags[tag_group_key].group_name+'</th><td>'+names.join()+'</td><tr>'
   })
   t += '</tbody></table>'
