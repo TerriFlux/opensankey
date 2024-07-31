@@ -69,6 +69,7 @@ import {
 } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeEndPoints } from './SankeyDrawShapes'
 import { TFunction } from 'i18next'
+import { nodeHeight } from './SankeyDrawLayout'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10
@@ -147,10 +148,18 @@ export const LinkStroke : LinkStrokeFType = (
 
 // Function to place the node on the draw zone
 export const nodeTransform : nodeTransformFType = (
-  d:SankeyNode,
-  display_nodes:{[node_id:string]:SankeyNode},
-  display_links:{[ink_id:string]:SankeyLink}
+  applicationData,
+  d,
+  link_function,
+  drag
 )=>{
+  const {data, display_nodes, display_links} = applicationData
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   if (d.position === 'relative') {
     if (d.inputLinksId.length > 0) {
       if ( !display_links[d.inputLinksId[0]]) {
@@ -176,7 +185,26 @@ export const nodeTransform : nodeTransformFType = (
       return 'translate(' + x + ', ' + y + ')'
     }
     return 'translate(' + 10 + ', ' + 10 + ')'
+  } else if (d.position == 'absolute' || drag || !data.parametric_mode) {
+    return 'translate(' + d.x + ', ' + d.y + ')'
   } else {
+    const same_u = Object.values(display_nodes)
+      .filter(
+        n=>!n.tags['Type de noeud'] || !n.tags['Type de noeud'].includes('echange')
+      )
+      .filter(n=>n.u === d.u)
+    same_u.sort((n1,n2)=>n1.v-n2.v)
+
+    if (d.v == 0) {
+      return 'translate(' + d.x + ', ' + d.y + ')'
+    }
+    const nodes_above = same_u.filter(n=>n.v<d.v)
+    const node_above = nodes_above.pop()
+    if (node_above) {
+      d.y = node_above.y + nodeHeight(node_above, applicationData, inv_scale, scale,link_function.GetLinkValue) + + data.v_space + d.dy
+    } else {
+      d.y = Object.values(data.nodes).filter(n=>n.u===d.u && n.v===0)[0].y
+    }
     return 'translate(' + d.x + ', ' + d.y + ')'
   }
 }

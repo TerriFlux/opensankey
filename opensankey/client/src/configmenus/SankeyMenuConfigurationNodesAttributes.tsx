@@ -517,6 +517,20 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         />
       </Box>
     </OSTooltip>
+    {/* Positionnement vertical automatique */}
+    <Box as='span' >
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={multi_selected_nodes.current.length > 0 && multi_selected_nodes.current[0].position === 'parametric'}
+        onChange={(evt) => {
+          multi_selected_nodes.current[0].position = evt.target.checked ? 'parametric' : 'absolute'
+          setForceUpdate(!forceUpdate)
+        }}>
+        <OSTooltip label={t('Noeud.apparence.parametric')}>
+        {t('Noeud.apparence.parametric')}
+        </OSTooltip>
+      </Checkbox>
+    </Box>
     {advanced_appearence_content}
   </Box>
 

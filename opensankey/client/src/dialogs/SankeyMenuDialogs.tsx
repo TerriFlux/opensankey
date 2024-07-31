@@ -4,7 +4,7 @@ import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, a
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
-import { arrangeNodes, ComputeAutoSankey } from '../draw/SankeyDrawLayout'
+import { arrangeNodes, ComputeAutoSankey, ComputeParametrization } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -391,6 +391,42 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
       {/* Geometry */}
       <TabPanel>
         <Box layerStyle='menuconfigpanel_grid' >
+          {/* Positionnement vertical automatique */}
+          <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              isChecked={data.parametric_mode}
+              onChange={(evt) => {
+                data.parametric_mode = evt.target.checked
+                setForceUpdate(!forceUpdate)
+              }}
+            >
+              <OSTooltip label={'Positionnement vertical ajusté'}>
+                {'Positionnement vertical ajusté'}
+              </OSTooltip>
+            </Checkbox>
+            <Button
+              variant='menuconfigpanel_option_button'
+              onClick={()=>{
+                ComputeParametrization(applicationData)
+                Object.values(applicationData.data.nodes)
+                .filter(n=> n.position !== 'relative' )
+                .forEach(n=> n.position = 'parametric' )
+                applicationData.set_data(JSON.parse(JSON.stringify(data)))
+              }}>
+              {t('MEP.defaultParametric')}
+            </Button>
+            <Button
+              variant='menuconfigpanel_option_button'
+              onClick={()=>{
+                Object.values(applicationData.data.nodes)
+                .filter(n=> n.position !== 'relative' )
+                .forEach(n=> n.dy = 0 )
+                applicationData.set_data(JSON.parse(JSON.stringify(data)))
+              }}>
+              {t('MEP.resetVerticalIntervals')}
+            </Button>
+          </Box>
           {/* Ecart horizontal */}
           <OSTooltip label={t('MEP.tooltips.EEN_h')} >
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
@@ -404,6 +440,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 onChange={evt => {
                   set_node_hspace(+evt)
                   data.h_space = +evt
+                  set_data({ ...data })
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -428,6 +465,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 onChange={evt => {
                   set_node_vspace(+evt)
                   data.v_space = +evt
+                  set_data({ ...data })
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>

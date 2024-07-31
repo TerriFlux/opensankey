@@ -99,7 +99,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     })
 
     multi_selected_nodes.current.forEach(n => {
-      d3.select('#ggg_' + n.idNode).attr('transform', nodeTransform(n, applicationData.display_nodes, applicationData.display_links))
+      d3.select('#ggg_' + n.idNode).attr('transform', nodeTransform(applicationData, n, link_function,false))
     })
     let link_to_update: string[] = []
     multi_selected_nodes.current.forEach(n => {

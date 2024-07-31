@@ -868,10 +868,10 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
   const delta_t_width_top = Math.max(0, (node_size_t_width - t_total_offset_width_top) / 2)
   const delta_t_height_right = Math.max(0, (node_size_t_height - t_total_offset_height_right) / 2)
   const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
-  const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
-  const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
-  const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
-  const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  const source_node_x = source_node.position !== 'relative' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const source_node_y = source_node.position !== 'relative' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  const target_node_x = target_node.position !== 'relative' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const target_node_y = target_node.position !== 'relative' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
   let xs = source_node_x
   let ys = source_node_y
   let xt = target_node_x

@@ -104,7 +104,11 @@ export const  LinkTooltipsContent = (
   t += '</tr>'
   Object.entries(link_info.tags).forEach(([tag_group_key,tags])=> {
     const names : string[]= []
-    tags.forEach(link_info_tag=> names.push(data.fluxTags[tag_group_key].tags[link_info_tag].name))
+    tags.forEach(link_info_tag=> {
+      if (link_info_tag!== null) {
+        names.push(data.fluxTags[tag_group_key].tags[link_info_tag].name)}
+      }
+    )
     t+='<tr><th>'+data.fluxTags[tag_group_key].group_name+'</th><td>'+names.join()+'</td><tr>'
   })
   t += '</tbody></table>'
@@ -182,6 +186,8 @@ export const NodeTooltipsContent = (
 
   t += '<div style="padding-left :5px;padding-right :5px">'
 
+  t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.u + ' ' +n.v + ' ' +n.dy + '</p>'
+
   if (n.tooltip_text) {
     t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>'
   }
@@ -242,9 +248,12 @@ export const NodeTooltipsContent = (
           t += '<td>'+ percent + '%</td>'
           Object.keys(data.fluxTags).forEach(tag_group_key=> {
             const names : string[]= []
-            link_info.tags[tag_group_key].forEach(tag=>
+            link_info.tags[tag_group_key].forEach(tag=>{
+              if (tag==null) {
+                return
+              }
               names.push(data.fluxTags[tag_group_key].tags[tag].name)
-            )
+          })
             t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
           })
         } else {
@@ -311,11 +320,15 @@ export const NodeTooltipsContent = (
             t += '<td>'+ percent + '%</td>'
             Object.keys(data.fluxTags).forEach(tag_group_key=> {
               const names : string[]= []
-              link_info.tags[tag_group_key].forEach(tag=>
+              link_info.tags[tag_group_key].forEach(tag=>{
+                if (tag==null) {
+                  return
+                }
                 names.push(data.fluxTags[tag_group_key].tags[tag].name)
-              )
-              t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
+                t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
             })
+          })
+
           } else {
             t += '<td></td></tr>'
           }

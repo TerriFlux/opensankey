@@ -2,10 +2,11 @@ import * as d3 from 'd3'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { applicationDataType, applicationStateType, SankeyNode, SankeyData } from '../types/Types'
-import { RemoveAnimate, DrawArrows, drawCurveFunction, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid } from './SankeyDrawFunction'
+import { RemoveAnimate, DrawArrows, drawCurveFunction, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid, nodeTransform } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { shiftAllArrowPath, shiftAllLinkPath } from './SankeyDrawEventFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
+import { nodeHeight } from './SankeyDrawLayout'
 
 declare const window: Window &
   typeof globalThis & {
@@ -42,6 +43,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   GetSankeyMinWidthAndHeight,
   resizeCanvas
 ) => {
+  const {data} = applicationData
   const { ref_getter_mode_selection } = applicationState
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
@@ -80,7 +82,40 @@ export const DragGNodeEvent: DragGNodeEventFType = (
       setTimeout(() => {
         if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // Update all links displayed
-          node_function.RedrawNodes([node])
+          if (data.parametric_mode && node.position === 'parametric') {
+            const same_u = Object.values(applicationData.display_nodes)
+              .filter(
+                n=>!n.tags['Type de noeud'] || !n.tags['Type de noeud'].includes('echange')
+              )
+              .filter(n=>n.position === 'parametric')
+              .filter(n=>n.u === node.u)
+            same_u.sort((n1,n2)=>n1.v-n2.v)
+            const nodes_below = same_u.filter(n=>n.v>node.v).reverse()
+            const node_below= nodes_below.pop()
+            if (node_below) {
+              if (node.y > node_below.y) {
+                const tmp = node_below.v
+                node_below.v = node.v
+                node.v = tmp
+              } else {
+                node_below.dy = node_below.y - node.y - data.v_space - nodeHeight(node,applicationData,inv_scale,scale,GetLinkValue)
+              }
+            }
+            const nodes_above = same_u.filter(n=>n.v<node.v)
+            const node_above = nodes_above.pop()
+            if (node_above) {
+              if (node.y < node_above.y) {
+                const tmp = node_above.v
+                node_above.v = node.v
+                node.v = tmp
+              }
+              node.dy = node.y - node_above.y - data.v_space - nodeHeight(node_above,applicationData,inv_scale,scale,GetLinkValue)
+            }
+
+            node_function.RedrawNodes(same_u)
+          } else {
+            node_function.RedrawNodes([node])
+          }
           link_function.RedrawLinks(Object.values(applicationData.display_links))
           ComponentUpdater.updateComponenSaveInCache.current(false)
           resizeCanvas(applicationData)
@@ -363,7 +398,7 @@ export const DragElements: DragElementsFuncType = (
       applicationData.data.height = pos_n[1] + margin
       DrawGrid(data)
     }
-    return 'translate(' + n.x + ',' + n.y + ')'
+    return nodeTransform(applicationData,n,link_function,true)//'translate(' + n.x + ',' + n.y + ')'
   })
 
 

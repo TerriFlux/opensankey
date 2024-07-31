@@ -19,6 +19,7 @@ import {
 } from '../types/Types'
 import {
   AggregateFuncType,
+  ComputeParametrizationType,
   DesaggregateFuncType,
   computeHorizontalIndexFuncType,
   hasAggregationLinkToNodeFuncType,
@@ -161,10 +162,12 @@ export const computeHorizontalIndex:computeHorizontalIndexFuncType = (
   // Update node index
   if (!horizontal_indexes_per_nodes_ids[node.idNode]) {
     horizontal_indexes_per_nodes_ids[node.idNode] = starting_index
+    node.u = starting_index
   }
   else {
     if (starting_index > horizontal_indexes_per_nodes_ids[node.idNode]) {
       horizontal_indexes_per_nodes_ids[node.idNode] = starting_index
+      node.u = starting_index
     }
   }
   // From current node, use output links to
@@ -372,6 +375,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   launched_from_process
 ) => {
   const {data}=applicationData
+  data.parametric_mode = true
   const display_nodes = Object.keys(data.nodes)
     .filter((key) => NodeDisplayed(data,data.nodes[key]))
     .reduce((obj, key) => {
@@ -380,6 +384,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
       })
     }, {}) as {[idNode:string]:SankeyNode}
   applicationData.display_nodes=display_nodes
+  Object.values(display_nodes).forEach(n=>n.position='parametric')
   const display_links=Object.keys(data.links)
     .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
     .reduce((obj, key) => {
@@ -581,6 +586,8 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         height_per_nodes_ids[node.idNode] = node_height
         sortcoef_per_nodes_ids[node.idNode] = node_sortcoef
         vertical_indexes_per_node_id[node.idNode] = max_vertical_index
+        node.v = max_vertical_index
+        node.dy = 0
         nodes_ids_per_vertical_index.push(node.idNode)
         if (max_vertical_index > 0) {
           // Bubble sort algo
@@ -593,6 +600,8 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
               // Update referencing for bubble node
               vertical_indexes_per_node_id[node.idNode] = prev_v_index
               nodes_ids_per_vertical_index[prev_v_index] = node.idNode
+              //node.v = prev_v_index
+              //node.dy = 0
               // Update referencing for prev node
               vertical_indexes_per_node_id[prev_node_id] = v_index
               nodes_ids_per_vertical_index[v_index] = prev_node_id
@@ -737,6 +746,130 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   data.height = v_margin*2 + max_height_cumul
 
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
+
+  const columns : {[_:number]:SankeyNode[]} = {}
+  Object.values(display_nodes).forEach(n=>{
+    if (columns[n.u]) {
+      columns[n.u].push(n)
+    } else {
+      columns[n.u] = [n]
+    }
+  })
+
+  Object.values(columns).forEach(column=>{
+    column.sort((n1,n2)=>n1.y-n2.y)
+    let current_v = 0
+    column.forEach(n=>current_v = apply_v(data,n,current_v))}
+  )
+  Object.values(columns).forEach(column=>column.forEach(n=>apply_v_agregate(data,n,n.v)))
+}
+
+export const ComputeParametrization:ComputeParametrizationType = (
+  applicationData
+) => {
+  const { display_nodes,data } = applicationData
+  const columns : {[_:number]:SankeyNode[]} = {}
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
+  let smaller_x : number
+  Object.values(display_nodes).forEach(n=>{
+    if (smaller_x === undefined) {
+      smaller_x = n.x
+    }
+    if (n.x < smaller_x) {
+      smaller_x = n.x
+    }
+  })
+  Object.values(display_nodes).forEach(n=>{
+    if ('Type de noeud' in n.tags &&  n.tags['Type de noeud'][0] === 'echange') {
+      return
+    }
+    n.u = Math.floor((n.x-smaller_x/2)/data.h_space)
+    if (!(n.u in columns)) {
+      columns[n.u] = [n]
+    } else {
+      columns[n.u].push(n)
+    }
+  })
+  Object.values(columns).forEach(column=>{
+    column.sort((n1,n2)=>n1.y-n2.y)
+    column.forEach((n,i)=>{
+      if (i==0) {
+        return
+      }
+      n.dy = n.y - column[i-1].y - data.v_space - nodeHeight(column[i-1],applicationData,inv_scale,scale,GetLinkValue)
+  })
+  })
+  Object.values(columns).forEach(column=>{
+    column.sort((n1,n2)=>n1.y-n2.y)
+    let current_v = 0
+    column.forEach(n=>current_v = apply_v(data,n,current_v))
+    column.forEach(n=>apply_v_agregate(data,n,n.v))
+  })
+}
+
+const apply_v = (
+  data:SankeyData,
+  node:SankeyNode,
+  current_v:number 
+) => {
+  node.position = 'parametric'
+  node.v = current_v
+  //node.y == undefined
+  const dim_desagregate_nodes = Object.values(data.nodes).filter( 
+    nn => {
+      if ('Type de noeud' in nn.tags &&  nn.tags['Type de noeud'][0] === 'echange') {
+        return
+      }
+      let is_children = false
+      Object.values(data.levelTags).forEach( tagGroup=> {
+        if (nn.dimensions[tagGroup.group_name] && nn.dimensions[tagGroup.group_name].parent_name === node.idNode) {
+          is_children = true
+        }
+      })
+      return is_children
+    }
+  )
+  let new_current_v = current_v
+  dim_desagregate_nodes.forEach(nn=>{
+    nn.x = node.x
+    nn.u = node.u
+    nn.dy = 0
+    new_current_v = apply_v(data,nn,new_current_v)
+  })
+  return new_current_v+1
+}
+
+const apply_v_agregate = (
+  data:SankeyData,
+  node:SankeyNode,
+  current_v:number 
+) => {
+  node.position = 'parametric'
+  node.v = current_v
+  // node.dy = 0
+  //node.y == undefined
+  const dim_agregate_nodes = Object.values(data.nodes).filter( 
+    nn => {
+      let is_parent = false
+      Object.values(data.levelTags).forEach( tagGroup=> {
+        if (node.dimensions[tagGroup.group_name] && node.dimensions[tagGroup.group_name].parent_name === nn.idNode) {
+          is_parent = true
+        }
+      })
+      return is_parent
+    }
+  )
+  dim_agregate_nodes.forEach((nn,i)=>{
+    nn.x = node.x
+    nn.u = node.u
+    current_v = apply_v_agregate(data,nn,current_v+i)
+  })
+  return current_v
 }
 
 /**
@@ -770,8 +903,7 @@ export const reorganize_all_input_outputLinksId : reorganize_all_input_outputLin
 export const desagregation : desagregationFType = (
   applicationData,
   idNode: string,
-  cur_dimension: string,
-  to_compute_auto_sankey=false
+  cur_dimension: string
 ) => {
   const {data}=applicationData
   const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
@@ -787,41 +919,33 @@ export const desagregation : desagregationFType = (
   const nb_desagregated = dim_desagregate_nodes.length
   let nodes_heights = 0
   dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue))
-  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],applicationData,inv_scale,scale,GetLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
-  let delta_y = 0
   dim_desagregate_nodes.forEach(n => {
-    if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
-      n.x = data.nodes[idNode].x
-      n.y = start_point + delta_y
-    }
-    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue)
-
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
     }
     setLocalAgregation(n, data, true)
-    if (to_compute_auto_sankey) {
-      if (n.outputLinksId.length === 0) {
-        AssignNodeLocalAttribute(n,'label_horiz', 'right')
-        AssignNodeLocalAttribute(n,'label_vert', 'middle')
-      } else if (n.inputLinksId.length === 0) {
-        AssignNodeLocalAttribute(n,'label_horiz', 'left')
-        AssignNodeLocalAttribute(n,'label_vert', 'middle')
-      } else {
-        AssignNodeLocalAttribute(n,'label_horiz', 'left')
-        AssignNodeLocalAttribute(n,'label_vert', 'middle')
-        AssignNodeLocalAttribute(n,'label_background', true)
-      }
-    }
+    // if (to_compute_auto_sankey) {
+    //   if (n.outputLinksId.length === 0) {
+    //     AssignNodeLocalAttribute(n,'label_horiz', 'right')
+    //     AssignNodeLocalAttribute(n,'label_vert', 'middle')
+    //   } else if (n.inputLinksId.length === 0) {
+    //     AssignNodeLocalAttribute(n,'label_horiz', 'left')
+    //     AssignNodeLocalAttribute(n,'label_vert', 'middle')
+    //   } else {
+    //     AssignNodeLocalAttribute(n,'label_horiz', 'left')
+    //     AssignNodeLocalAttribute(n,'label_vert', 'middle')
+    //     AssignNodeLocalAttribute(n,'label_background', true)
+    //   }
+    // }
   })
   const clicked_node=data.nodes[idNode]
   if(clicked_node.local==undefined || clicked_node.local==null) {
     clicked_node.local = {} as SankeyNodeAttrLocal
   }
   setLocalAgregation(clicked_node, data, false)
-  if (to_compute_auto_sankey && nb_desagregated > 0) {
-    agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
-  }
+  // if (to_compute_auto_sankey && nb_desagregated > 0) {
+  //   agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
+  // }
 }
 
 const hasAggregationLinkToNode:hasAggregationLinkToNodeFuncType=(data : SankeyData,
@@ -878,25 +1002,25 @@ export const agregation : agregationFType = (
     return
   }
 
-  let mean_x = 0
-  let mean_y = 0
+  // let mean_x = 0
+  // let mean_y = 0
   dim_desagregated_nodes.forEach(n => {
-    if (n.x) {
-      mean_x += n.x
-      mean_y += n.y
-    }
+    // if (n.x) {
+    //   mean_x += n.x
+    //   mean_y += n.y
+    // }
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
     }
     setLocalAgregation(n, data, false)
   })
-  mean_x = mean_x/dim_desagregated_nodes.length
-  mean_y = mean_y/dim_desagregated_nodes.length
+  // mean_x = mean_x/dim_desagregated_nodes.length
+  // mean_y = mean_y/dim_desagregated_nodes.length
 
-  if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0) ) {
-    parent_node.x = mean_x
-    parent_node.y = mean_y
-  }
+  // if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0) ) {
+  //   parent_node.x = mean_x
+  //   parent_node.y = mean_y
+  // }
   if(parent_node.local==undefined || parent_node.local==null){
     parent_node.local={} as SankeyNodeAttrLocal
   }
@@ -1005,7 +1129,8 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
     })
     if ( dim_name === '') {
       const the_child_names: string[] = []
-      Object.values(data.nodes).forEach(n2 => {
+      Object.values(data.nodes).filter(n=>n.position!=='relative' && (!('Type de noeud' in n.tags) ||  n.tags['Type de noeud'][0] !== 'echange'))
+        .forEach(n2 => {
         if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
           the_child_names.push(n2.name)
         }
@@ -1036,7 +1161,9 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                 onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
                   set_dim_name(evt.target.value)
                   const the_child_names: string[] = []
-                  Object.values(data.nodes).forEach(n2 => {
+                  Object.values(data.nodes).filter(n=>n.position!=='relative' && (!('Type de noeud' in n.tags) ||  n.tags['Type de noeud'][0] !== 'echange'))
+                    .forEach(n2 => {
+
                     if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
                       the_child_names.push(n2.name)
                     }
@@ -1057,7 +1184,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
             <Button
               variant="menuconfigpanel_option_button_secondary"
               onClick={()=> {
-                desagregation(applicationData,n.idNode,dim_name,false)
+                desagregation(applicationData,n.idNode,dim_name)
                 set_data({...data})
                 set_show_agregation(false)
                 set_dim_name('')
@@ -1788,7 +1915,7 @@ export const Desaggregate: DesaggregateFuncType = (
     agregationRef.isAgregationRef.current = false
     agregationRef.showAgregationRef.current![0][1](true)
   } else {
-    desagregation(applicationData, n.idNode, dim_names[0], false)
+    desagregation(applicationData, n.idNode, dim_names[0])
   }
 }
 

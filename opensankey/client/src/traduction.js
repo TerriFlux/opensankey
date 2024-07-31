@@ -963,6 +963,8 @@ export const open_resources = {
         factExpV:'Facteur d\'expansion verticale',
         stretchH:'Appliquer',
         stretchV:'Appliquer',
+        defaultParametric: 'Calculer paramétrisation',
+        resetVerticalIntervals: 'Réinitialiser intervals verticaux',
         show_legend_free_value:'Valeur contenue dans un intervalle',
         legend_dashed_links:'Flux existant',
         hide_leg:'Masquer la légende',
@@ -1070,6 +1072,7 @@ export const open_resources = {
           io:'Flux E/S',
         },
         apparence:{
+          parametric:'Positionnement vertical automatique',
           apparence:'Apparence',
           Visibilité:'Forme',
           Couleur:'Couleur',
@@ -1206,6 +1209,7 @@ export const open_resources = {
           }
         },
         apparence:{
+          parametric:'Automatic vertical positionning',
           apparence:'Apparence',
           couleur:'Couleur',
           grad:'Gradient',

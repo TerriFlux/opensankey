@@ -238,10 +238,10 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
           return
         }
 
-        const node_x = node.position === 'absolute' ? +node.x : +target_node.x + +node.x
-        const node_y = node.position === 'absolute' ? +node.y : +target_node.y + +node.y
-        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x + +target_node.x
-        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y + +target_node.y
+        const node_x = node.position !== 'relative' ? +node.x : +target_node.x + +node.x
+        const node_y = node.position !== 'relative' ? +node.y : +target_node.y + +node.y
+        const target_node_x = target_node.position !== 'relative' ? +target_node.x : +node.x + +target_node.x
+        const target_node_y = target_node.position !== 'relative' ? +target_node.y : +node.y + +target_node.y
         if (ReturnValueLink(data,link,'orientation') === 'hh') {
           if (target_node_x > node_x && !ReturnValueLink(data,link,'recycling') || target_node_x <= node_x && ReturnValueLink(data,link,'recycling')) {
             right_flux.push(idLink)
@@ -285,10 +285,10 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         } catch {
           return
         }
-        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x + +source_node.x
-        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
-        const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
-        const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
+        const source_node_x = source_node.position !== 'relative' ? +source_node.x : +node.x + +source_node.x
+        const source_node_y = source_node.position !== 'relative' ? +source_node.y : +node.y + +source_node.y
+        const node_x = node.position !== 'relative' ? +node.x : +source_node.x + +node.x
+        const node_y = node.position !== 'relative' ? +node.y : +source_node.y + +node.y
         const ori_link = ReturnValueLink(data,link,'orientation')
         if (ori_link === 'vv') {
           if (source_node_y < node_y) {
@@ -682,8 +682,9 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_color:defaultElementColor,
     legend_bg_opacity:0,
     legend_show_dataTags:false,
-    node_label_separator:' - '
+    node_label_separator:' - ',
 
+    parametric_mode : false
   }
   const node_style_sect=DefaultNodeSectorStyle()
   const node_style_prod=DefaultNodeProductStyle()
@@ -879,6 +880,9 @@ export const DefaultNode:DefaultNodeFuncType = (
     position: 'absolute',
     x: 100,
     y: 100,
+    u:0,
+    v:0,
+    dy:0,
     inputLinksId: [],
     outputLinksId: [],
     tags: {},

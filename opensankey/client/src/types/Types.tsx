@@ -101,11 +101,15 @@ export type SankeyNode = {
   colorTag: string,
 
   // geometry
-  position: 'absolute' | 'relative',
+  position: 'absolute' | 'relative' | 'parametric',
   x: number,
   y: number,
   x_label?: number,
   y_label?: number,
+  u: number,
+  v: number,
+  dy:number,
+
 
   tooltip_text?: string,
 
@@ -299,6 +303,8 @@ export type SankeyData = {
 
   legend_width:number,
   node_label_separator:string
+
+  parametric_mode: boolean
 }
 
 export interface SankeyMenuState {
