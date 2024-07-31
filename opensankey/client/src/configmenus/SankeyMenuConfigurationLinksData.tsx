@@ -1,32 +1,23 @@
 // External imports
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FunctionComponent, useRef } from 'react'
 
 import {
   Box,
-  InputGroup,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   Select,
   useBoolean
 } from '@chakra-ui/react'
 
 // Local types
 import {
+  MenuContextLinksDataType,
   MenuConfigurationLinksDataFType
 } from './types/SankeyMenuConfigurationLinksDataTypes'
-import {
-  ComponentUpdaterType,
-  applicationDataType
-} from '../types/Types'
 
 // Local components or functions
 import {
   OSTooltip
 } from './SankeyUtils'
-import { default_value_label_unit } from '../types/Link'
+import { Class_LinkElement, default_value_label_unit } from '../types/Link'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
@@ -41,14 +32,26 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
 
   // Traduction
   const { t } = applicationContext
+
   // Sankey datas
   const { new_data } = applicationData
 
-  // Data tags and links ---------------------------------------------------------------
+  // Selected links --------------------------------------------------------------------
+
+  let selected_links: Class_LinkElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    selected_links = new_data.drawing_area.selected_links_list_sorted
+  }
+  else {
+    // Only visible links
+    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
+  }
+
+  // Data tags and values --------------------------------------------------------------
 
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
-  const list_links_selected = new_data.drawing_area.selected_links_list
-  const value = list_links_selected[0]?.value
+  const value = selected_links[0]?.value
 
   // Components updaters ---------------------------------------------------------------
 
@@ -76,6 +79,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   }
 
   // JSX -------------------------------------------------------------------------------
+
   const content = <Box
     layerStyle='menuconfigpanel_grid'
   >
@@ -147,7 +151,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           default_value={value?.data_value ?? null}
           function_on_blur={(_) => {
             // Update data for links
-            list_links_selected.forEach(link => {
+            selected_links.forEach(link => {
               link.data_value = (_ ?? null)
             })
             // Update this menu
@@ -158,10 +162,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           step={1}
           unit_text={
             (
-              list_links_selected[0]?.value_label_unit_visible &&
-              list_links_selected[0]?.value_label_unit !== default_value_label_unit
+              selected_links[0]?.value_label_unit_visible &&
+              selected_links[0]?.value_label_unit !== default_value_label_unit
             ) ?
-              list_links_selected[0]?.value_label_unit :
+              selected_links[0]?.value_label_unit :
               undefined
           }
         />
@@ -181,7 +185,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           function_get_value={() => {return value?.text_value}}
           function_on_blur={(_) => {
             // Update text for links
-            list_links_selected.forEach(link=>{
+            selected_links.forEach(link=>{
               link.text_value = (_ ?? '')
             })
             // Update this menu
@@ -202,70 +206,80 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   return content
 }
 
+/*************************************************************************************************/
 
-type ConfigLinkDataNumberInputType={
-  applicationData:applicationDataType
-  ComponentUpdater:ComponentUpdaterType
-}
 /**
- * TODO A supprimer apres passe sur menus contextuels
  * Component developped for number input of the link data config menu
  * @param {applicationData} TODO
- * @param {ComponentUpdater} TODO
  * @return {JSX.Elmement}
  */
-export const ConfigLinkDataNumberInput: FunctionComponent<ConfigLinkDataNumberInputType>=({
+export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType>=({
   applicationData,
-  ComponentUpdater,
 })=>{
+
+  // Application data ------------------------------------------------------------------
+
+  // Sankey datas
   const { new_data } = applicationData
-  const list_links_selected = new_data.drawing_area.selected_links_list
-  const ref_input = useRef<HTMLInputElement>(null)
-  const variantOfInput = 'menuconfigpanel_option_numberinput'
-  const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
 
-  // Initialise hook with first link selected value
-  const [ displayed_value, setDisplayedValue ] = useState(
-    () => list_links_selected[0]?.data_value)
+  // Selected links --------------------------------------------------------------------
 
-  const f_onBlur=()=>{
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+  let selected_links: Class_LinkElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    selected_links = new_data.drawing_area.selected_links_list_sorted
+  }
+  else {
+    // Only visible links
+    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
+  }
+  const value = selected_links[0]?.value
+
+  // Components updaters ---------------------------------------------------------------
+
+  // Refs used to trigger refreshing of number & text inputs
+  const ref_set_data_value_input = useRef((_:number | null | undefined) => null)
+  const updateInputsValues = () => {
+    // Update input data value
+    ref_set_data_value_input.current(value?.data_value ?? null)
   }
 
-  // Add stepper addon if specified
-  const stepperBtn=<NumberInputStepper>
-    <NumberIncrementStepper/>
-    <NumberDecrementStepper/>
-  </NumberInputStepper>
+  // Function used to force this component to reload
+  const [ , refreshThis] = useBoolean()
 
-  return <InputGroup variant='menuconfigpanel_option_input' >
-    <NumberInput allowMouseWheel
-      variant={variantOfInput}
-      step={1}
-      value={ (displayed_value === null) ? undefined : displayed_value }
-      onChange={(_,val)=>{
-        // Launch/reset timeout before the input auto blur (and update the value in data)
-        if(isModifying.current){
-          clearTimeout(isModifying.current)
-        }
-        // launch timeout that automatically blur the input
-        isModifying.current=setTimeout(()=>{
-          f_onBlur()
-          ref_input.current?.blur()
-        },2000)
-        // Update only displayed value
-        setDisplayedValue(val)
-      }}
-      onBlur={()=>{
-        clearTimeout(isModifying.current)
-        list_links_selected.forEach(l=>{
-          l.data_value = displayed_value
-        })
-        f_onBlur()
-      }}
-    >
-      <NumberInputField ref={ref_input}/>
-      {stepperBtn}
-    </NumberInput>
-  </InputGroup>
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Update data menu for link
+    new_data.menu_configuration.ref_to_menu_config_link_data_updater.current()
+    // And update this menu also
+    refreshThis.toggle()
+    updateInputsValues()
+  }
+
+  const content = <ConfigMenuNumberInput
+    ref_to_set_value={ref_set_data_value_input}
+    default_value={value?.data_value ?? null}
+    function_on_blur={(_) => {
+      // Update data for links
+      selected_links.forEach(link => {
+        link.data_value = (_ ?? null)
+      })
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }}
+    minimum_value={0}
+    stepper={true}
+    step={1}
+    unit_text={
+      (
+        selected_links[0]?.value_label_unit_visible &&
+        selected_links[0]?.value_label_unit !== default_value_label_unit
+      ) ?
+        selected_links[0]?.value_label_unit :
+        undefined
+    }
+  />
+
+  return content
 }

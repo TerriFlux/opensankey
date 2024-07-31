@@ -110,10 +110,6 @@ export class Class_Sankey {
   private _nodes_color_map: string
   private _links_color_map: string
 
-  // Variables to filter node & link multi selector to display only visible element in the selector
-  private _filter_displayed_link_selector: boolean = false
-  private _filter_displayed_node_selector: boolean = false
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -225,13 +221,15 @@ export class Class_Sankey {
   }
 
   /**
-   * Remove a given node from Sankey -> node may still exist somewhere
+   * Delete a given node from Sankey -> node may still exist somewhere
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public removeNode(node: Class_NodeElement) {
+  public deleteNode(node: Class_NodeElement) {
     if (this._nodes[node.id] !== undefined) {
+      const _ = this._nodes[node.id]
       delete this._nodes[node.id]
+      _.delete()
     }
   }
 
@@ -1117,12 +1115,6 @@ export class Class_Sankey {
 
   public get links_color_map(): string { return this._links_color_map }
   public set links_color_map(value: string) { this._links_color_map = value }
-
-  public get filter_displayed_link_selector(): boolean { return this._filter_displayed_link_selector }
-  public set filter_displayed_link_selector(value: boolean) { this._filter_displayed_link_selector = value }
-
-  public get filter_displayed_node_selector(): boolean { return this._filter_displayed_node_selector }
-  public set filter_displayed_node_selector(value: boolean) { this._filter_displayed_node_selector = value }
 
   // Nodes related ----------------------------------------------------------------------
 
