@@ -1180,7 +1180,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           layerStyle='menutop_layout_style'
           gridTemplateColumns={menutop_grid_template}
           onClick={() => {
-            new_data.drawing_area.node_contextualied = undefined
+            new_data.drawing_area.node_contextualised = undefined
             new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
             new_data.drawing_area.link_contextualied = undefined

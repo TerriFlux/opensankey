@@ -1,10 +1,23 @@
 import React, { FunctionComponent } from 'react'
-import { ContextMenuLinkFType } from './types/SankeyMenuContextLinkTypes'
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
+
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList
+} from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { ConfigLinkDataNumberInput } from '../configmenus/SankeyMenuConfigurationLinksData'
+
+/*************************************************************************************************/
+
+import { ContextMenuLinkFType } from './types/SankeyMenuContextLinkTypes'
+import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { useBoolean } from '@chakra-ui/react'
 
 
@@ -216,9 +229,8 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const btn_edit_value = contextualised_link !== undefined ? <Menu placement='end'>
     <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">{t('Flux.data.edit_value')}</MenuButton>
     <MenuList>
-      <ConfigLinkDataNumberInput
+      <MenuContextLinksData
         applicationData={applicationData}
-        ComponentUpdater={ComponentUpdater}
       />
     </MenuList>
   </Menu> : <></>

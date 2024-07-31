@@ -335,6 +335,7 @@ export class Class_DrawingArea {
     this.d3_selection?.classed('edition_mode', is_edition)
     this.d3_selection?.classed('selection_mode', !is_edition)
   }
+
   // Sankey
   public get sankey() { return this._sankey }
 
@@ -350,14 +351,17 @@ export class Class_DrawingArea {
       .filter(element => element instanceof Class_NodeElement)
       .map(element => element as Class_NodeElement)
   }
+
   public get selected_nodes_list_sorted() {
     return this.selected_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
+
   public get visible_and_selected_nodes_list() {
     return this.selected_nodes_list
       .filter(node => node.is_visible)
   }
+
   public get visible_and_selected_nodes_list_sorted() {
     return this.visible_and_selected_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
@@ -414,6 +418,7 @@ export class Class_DrawingArea {
   public set scale(value: number) {
     if (value > 0) {
       this._scale = value
+      this.drawElements()
     }
   }
 
@@ -440,8 +445,8 @@ export class Class_DrawingArea {
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
   // Node Context menu
-  public get node_contextualied(): Class_NodeElement | undefined { return this._node_contextualied }
-  public set node_contextualied(value: Class_NodeElement | undefined) { this._node_contextualied = value }
+  public get node_contextualised(): Class_NodeElement | undefined { return this._node_contextualied }
+  public set node_contextualised(value: Class_NodeElement | undefined) { this._node_contextualied = value }
 
   // Link Context menu
   public get link_contextualied(): Class_LinkElement | undefined { return this._link_contextualied }
@@ -619,7 +624,7 @@ export class Class_DrawingArea {
     // Remove from selection if necessary
     this.removeNodeFromSelection(node)
     // Remove node from sankey
-    this.sankey.removeNode(node)
+    this.sankey.deleteNode(node)
     // Self delete node
     node.delete()
   }
@@ -1011,7 +1016,7 @@ export class Class_DrawingArea {
       else if (this.isInSelectionMode()) {
         if (event.button === 0) {
           // Close context menus
-          this.node_contextualied = undefined
+          this.node_contextualised = undefined
           this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
           this.link_contextualied = undefined
