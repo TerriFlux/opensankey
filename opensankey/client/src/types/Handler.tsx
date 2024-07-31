@@ -124,6 +124,14 @@ export class Class_Handler extends Class_Element {
         .attr('fill-opacity', this._filled ? 1 : 0)
     }
 
+    public copyFrom(element: Class_Handler) {
+        this._size = element._size
+        this._color = element._color
+        this._filled = element._filled
+        this._custom_class = element._custom_class
+        this.setPosXY(element.position_x, element.position_y)
+    }
+
     // GETTERS / SETTERS ==================================================================
 
     /**

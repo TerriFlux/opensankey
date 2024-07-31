@@ -736,6 +736,34 @@ export class Class_LinkElement extends Class_ProtoElement {
     return shape_color
   }
 
+  public copyFrom(element: Class_LinkElement) {
+
+    // this._display.position = structuredClone(element._display.position)
+    this._display.position_x_label = element._display.position_x_label
+    this._display.position_y_label = element._display.position_y_label
+    this._tooltip_text=element._tooltip_text
+    // Copy local attributes
+    this._display.attributes.copyFrom(element._display.attributes)
+
+    // Copy control points attributes from new layout
+    this._control_points.starting_curve_point.copyFrom(element._control_points.starting_curve_point)
+    this._control_points.ending_curve_point.copyFrom(element._control_points.ending_curve_point)
+    this._control_points.starting_bezier_point.copyFrom(element._control_points.starting_bezier_point)
+    this._control_points.ending_bezier_point.copyFrom(element._control_points.ending_bezier_point)
+    this._control_points.middle_recycling_point.copyFrom(element._control_points.middle_recycling_point)
+
+    // Set link style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
+    if(this.drawing_area.sankey.link_styles_list.map(ls=>ls.id).includes(element._display.style.id)){
+      const new_style_id=this.drawing_area.sankey.link_styles_list.map(ls=>ls.id).filter(ls=>ls.includes(element._display.style.id))[0]
+      this._display.style=this.drawing_area.sankey.link_styles_dict[new_style_id]
+      this._display.style.addReference(this)
+    }
+  }
+
+  public getAllValues(){
+    return this._values.getAllValues()
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -2900,6 +2928,50 @@ export class Class_LinkAttribute {
     if (json_local_object['nb_digit'] !== undefined) this._value_label_nb_digit = getNumberFromJSON(json_local_object, 'nb_digit', default_value_label_nb_digit)
   }
 
+  public copyFrom(element: Class_LinkAttribute) {
+
+    // Shape type
+    this._shape_is_curved=element._shape_is_curved
+    this._shape_curvature=element._shape_curvature
+    this._shape_is_recycling=element._shape_is_recycling
+
+    // Shape orientation
+    this._shape_orientation=element._shape_orientation
+    this._shape_starting_curve=element._shape_starting_curve
+    this._shape_ending_curve=element._shape_ending_curve
+    this._shape_starting_tangeant=element._shape_starting_tangeant
+    this._shape_ending_tangeant=element._shape_ending_tangeant
+    this._shape_middle_recycling=element._shape_middle_recycling
+    this._shape_vert_shift=element._shape_vert_shift
+
+    // Shape's arrow attributes
+    this._shape_is_arrow=element._shape_is_arrow
+    this._shape_arrow_size=element._shape_arrow_size
+
+    // Shape's Filling attributes
+    this._shape_is_dashed=element._shape_is_dashed
+    this._shape_color=element._shape_color
+    this._shape_opacity=element._shape_opacity
+
+    // Geometry link labels
+    this._value_label_position=element._value_label_position
+    this._value_label_orthogonal_position=element._value_label_orthogonal_position
+    this._value_label_on_path=element._value_label_on_path
+    this._value_label_pos_auto=element._value_label_pos_auto
+
+    // Value label display
+    this._value_label_is_visible=element._value_label_is_visible
+    this._value_label_font_family=element._value_label_font_family
+    this._value_label_font_size=element._value_label_font_size
+    this._value_label_color=element._value_label_color
+    this._value_label_to_precision=element._value_label_to_precision
+    this._value_label_scientific_precision=element._value_label_scientific_precision
+    this._value_label_custom_digit=element._value_label_custom_digit
+    this._value_label_nb_digit=element._value_label_nb_digit
+    this._value_label_unit_visible=element._value_label_unit_visible
+    this._value_label_unit=element._value_label_unit
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected update() { }
@@ -3499,6 +3571,23 @@ export class Class_LinkValueTree {
       })
   }
 
+  public getAllValues(){
+    let out: {[_: string]: [Class_LinkValue, Class_DataTag[] | undefined]} = {}
+    Object.values(this.children)
+      .forEach(child => {
+        const _ = child.getAllValues()
+        out = {
+          ... _
+        }
+      })
+    Object.values(out)
+      .forEach(_ => {
+        if (_[1] && this.data_tag)
+          _[1].push(this.data_tag)
+      })
+    return out
+  }
+
   // PRIVATE METHODS ====================================================================
 
   private kindOfChildren() {
@@ -3562,6 +3651,13 @@ export class Class_LinkValueTree {
   public get link(): Class_LinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
+  }
+
+  public get data_tag() {
+    if (this.parent instanceof Class_LinkValueTree)
+      return this.parent.data_tag_group.tags_dict[this.parent.getDataTagIdFromChild(this) ?? ''] ?? null
+    else
+      return null
   }
 }
 
@@ -3686,6 +3782,15 @@ export class Class_LinkValue {
       tag.removeReference(this)
       this.draw()
     }
+  }
+
+  public getAllValues() {
+    const tmp: {[_:string]:[Class_LinkValue, Class_DataTag[] | undefined]} = {}
+    if (this.data_tag)
+      tmp[this.id] = [this, [this.data_tag]]
+    else
+      tmp[this.id] = [this, undefined]
+    return tmp
   }
 
   /**

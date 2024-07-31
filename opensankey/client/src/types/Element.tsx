@@ -250,7 +250,7 @@ export abstract class Class_ProtoElement {
     }
   }
 
-  protected abstract drawAsSelected():void
+  protected abstract drawAsSelected(): void
 
   /**
    * Set up events related to element d3_element
@@ -572,7 +572,7 @@ export abstract class Class_Element extends Class_ProtoElement {
     }
   }
 
-  protected drawAsSelected(){}
+  protected drawAsSelected() { }
 
   /**
    * Apply node position to it shape in d3
