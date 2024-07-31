@@ -1103,15 +1103,13 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
         applicationData.set_data(JSON.parse(JSON.stringify(applicationData.data)))  
       }
       if (tags_group.banner == 'movie' ) {
-        const current_diagram = window.sankey.diagram
-        setTimeout(() => {
-          console.log(current_diagram)
-          console.log(window.sankey.diagram)          
-          if (current_diagram && current_diagram !== window.sankey.diagram) {
+        const current_diagram = window.sankey ? window.sankey.diagram : undefined
+        setTimeout(() => {         
+          if (current_diagram && window.sankey && current_diagram !== window.sankey.diagram) {
             return
           }
           play_movie()
-        }, 3000)  
+        }, 1000)  
       }
 
       let selected = ''
