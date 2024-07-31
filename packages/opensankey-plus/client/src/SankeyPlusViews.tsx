@@ -96,6 +96,7 @@ export const getSetDiagramFunc : getSetDiagramFType = (
       )
     ) as OSPData
     convert_data(new_data,DefaultSankeyData)
+    window.sankey.diagram = the_diagram
     d3.select(' .opensankey #svg').on('.zoom', null)
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_master_data(new_data)
@@ -860,6 +861,7 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
+      diagram: string,
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
