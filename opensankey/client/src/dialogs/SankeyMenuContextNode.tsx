@@ -517,7 +517,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
   </Button>
 
   const btn_mask_label = <Button
-  variant='contextmenu_button'
+    variant='contextmenu_button'
     onClick={() => {
       selected_nodes.forEach(n => {
         n.name_label_visible = !contextualised_node_label_visible
