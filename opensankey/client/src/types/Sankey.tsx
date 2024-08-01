@@ -30,12 +30,12 @@ import {
   Class_DataTagGroup,
   Class_ProtoTagGroup,
   Class_TagGroup,
-  Class_TagGroupNodeLevel
+  Class_LevelTagGroup
 } from './Tag'
 import {
   Type_JSON,
   getJSONFromJSON,
-  getJSONOrUndefinedFromJSON
+  getStringFromJSON
 } from './Utils'
 import { Class_ApplicationData } from './ApplicationData'
 
@@ -45,6 +45,7 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
 
 // SPECIFIC CONSTANTS *******************************************************************
 
+export const default_main_sankey_id = 'sankey_maitre'
 export const default_style_id = 'default'
 export const default_style_name = 'Style par default'
 
@@ -66,7 +67,26 @@ export class Class_Sankey {
    */
   public drawing_area: Class_DrawingArea
 
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  /**
+   * Config menu ref to html element & function to update it
+   * @protected
+   * @type {Class_MenuConfig}
+   * @memberof Class_Sankey
+   */
+  protected _menu_config: Class_MenuConfig
+
   // PRIVATE ATTRIBUTES =================================================================
+
+  /**
+   * Unique id for sankey
+   *
+   * @private
+   * @type {string}
+   * @memberof Class_Sankey
+   */
+  private _id: string
 
   // Nodes
   private _nodes: { [_: string]: Class_NodeElement } = {}
@@ -82,27 +102,13 @@ export class Class_Sankey {
   private _node_taggs: { [_: string]: Class_TagGroup } = {}
   private _flux_taggs: { [_: string]: Class_TagGroup } = {}
   private _data_taggs: { [_: string]: Class_DataTagGroup } = {}
-  private _level_taggs: { [_: string]: Class_TagGroupNodeLevel } = {}
+  private _level_taggs: { [_: string]: Class_LevelTagGroup } = {}
 
   // Variable determining if we apply tag color to elements
   // TODO inutile desormais -> a supprimer
   private _color_map: string
   private _nodes_color_map: string
   private _links_color_map: string
-
-  // Variables to filter node & link multi selector to display only visible element in the selector
-  private _filter_displayed_link_selector: boolean = false
-  private _filter_displayed_node_selector: boolean = false
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  /**
-   * Config menu ref to html element & function to update it
-   * @protected
-   * @type {string}
-   * @memberof Class_Element
-   */
-  protected menu_config: Class_MenuConfig
 
   // CONSTRUCTOR ========================================================================
 
@@ -114,11 +120,13 @@ export class Class_Sankey {
   constructor(
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
+    id: string = default_main_sankey_id
   ) {
     this.drawing_area = drawing_area
-    this.menu_config = menu_config
-    this._link_styles[default_style_id] = new Class_LinkStyle(default_style_id, default_style_name, false)
+    this._menu_config = menu_config
+    this._id = id
     this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
+    this._link_styles[default_style_id] = new Class_LinkStyle(default_style_id, default_style_name, false)
     this._color_map = 'no_colormap'
     this._nodes_color_map = 'no_colormap'
     this._links_color_map = 'no_colormap'
@@ -175,7 +183,7 @@ export class Class_Sankey {
   public addNewNode(id: string, name: string): Class_NodeElement {
     if (!this._nodes[id]) {
       // Create node
-      const node = new Class_NodeElement(id, name, this.drawing_area, this.menu_config)
+      const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)
       // Set node to default position
       node.initDefaultPosXY()
       // Update registry of nodes
@@ -213,13 +221,15 @@ export class Class_Sankey {
   }
 
   /**
-   * Remove a given node from Sankey -> node may still exist somewhere
+   * Delete a given node from Sankey -> node may still exist somewhere
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public removeNode(node: Class_NodeElement) {
+  public deleteNode(node: Class_NodeElement) {
     if (this._nodes[node.id] !== undefined) {
+      const _ = this._nodes[node.id]
       delete this._nodes[node.id]
+      _.delete()
     }
   }
 
@@ -347,10 +357,11 @@ export class Class_Sankey {
   public addLevelTagGroup(
     id: string,
     name: string
-  ): Class_TagGroupNodeLevel {
+  ): Class_LevelTagGroup
+  {
     if (!this._level_taggs[id]) {
       // Create
-      const tag_group = new Class_TagGroupNodeLevel(id, name, this)
+      const tag_group = new Class_LevelTagGroup(id, name, this)
       // Update
       this._level_taggs[id] = tag_group
       // Return
@@ -517,6 +528,8 @@ export class Class_Sankey {
     const json_object_styles_links = {} as Type_JSON
     const json_object_nodes = {} as Type_JSON
     const json_object_links = {} as Type_JSON
+    // Id
+    json_object['id'] = this._id
     // Add tag groups
     json_object['levelTags'] = json_object_levelTags
     this.level_taggs_list.forEach(tagg => {
@@ -566,7 +579,8 @@ export class Class_Sankey {
    * @memberof Class_Legend
   */
   public fromJSON(json_object: Type_JSON) {
-    // TODO : define default value in case data is not in JSON
+    // Id
+    this._id = getStringFromJSON(json_object, 'id', this._id)
     // First read styles
     if (json_object['style_node'] !== undefined) {
       // Set node styles from json data
@@ -643,21 +657,10 @@ export class Class_Sankey {
         node.fromJSON(node_json as Type_JSON)
       })
     // Redo a go throught, but this time create nodes dimension
-    // TODO revoir avec level de noeuds
-    this.nodes_list.forEach(n => {
-      // get dimensions in json
-      const dim = getJSONOrUndefinedFromJSON(getJSONFromJSON(json_node_object, n.id, {}), 'dimensions')
-      /* Check if node has dimensions in json and if dimensions have parents (basically filter out dimensions that are like :
-      dimensions :{...,
-          keyGrpLevelTag:{}  // dimensions have an object but it doesn't have parent
-        }
-      )*/
-      if (dim) {
-        Object.entries(dim)
-          .filter(ent_dim => ((ent_dim)[1] as { parent_name?: string }).parent_name !== undefined)
-          .forEach(ent_dim => n.dimensions[ent_dim[0]] = { parent_name: this.nodes_dict[((ent_dim)[1] as { parent_name: string }).parent_name] })
-      }
-    })
+    Object.entries(json_node_object)
+      .forEach(([node_id, node_json]) => {
+        this._nodes[node_id].dimensionsFromJSON(node_json as Type_JSON)
+      })
     // Then read links
     Object.entries(json_object['links'])
       .forEach(([link_id, link_json]) => {
@@ -1065,7 +1068,7 @@ export class Class_Sankey {
         source,
         target,
         this.drawing_area,
-        this.menu_config)
+        this._menu_config)
       this._addLink(link)
       return link
     }
@@ -1109,6 +1112,8 @@ export class Class_Sankey {
 
   // GETTERS / SETTERS ==================================================================
 
+  public get id(): string { return this._id }
+
   public get color_map(): string { return this._color_map }
   public set color_map(value: string) { this._color_map = value }
 
@@ -1117,12 +1122,6 @@ export class Class_Sankey {
 
   public get links_color_map(): string { return this._links_color_map }
   public set links_color_map(value: string) { this._links_color_map = value }
-
-  public get filter_displayed_link_selector(): boolean { return this._filter_displayed_link_selector }
-  public set filter_displayed_link_selector(value: boolean) { this._filter_displayed_link_selector = value }
-
-  public get filter_displayed_node_selector(): boolean { return this._filter_displayed_node_selector }
-  public set filter_displayed_node_selector(value: boolean) { this._filter_displayed_node_selector = value }
 
   // Nodes related ----------------------------------------------------------------------
 

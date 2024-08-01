@@ -5,11 +5,13 @@ import {
   Button,
   TabPanel,
   Textarea,
-  useBoolean
 } from '@chakra-ui/react'
 
 // Local types
-import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
+import { Class_NodeElement } from '../types/Node'
+import {
+  SankeyMenuConfigurationNodesTooltipFType
+} from './types/SankeyMenuConfigurationNodesTooltipTypes'
 
 // Local functions
 import { OSTooltip } from './SankeyUtils'
@@ -38,18 +40,20 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
   const { t } = applicationContext
   const { new_data, data } = applicationData
 
-  // Get selected nodes
-  let selected_nodes
-  if (data.displayed_link_selector) {
-    // All availables links
-    selected_nodes = new_data.drawing_area.selected_nodes_list
+  // Selected nodes ---------------------------------------------------------------------
+
+  let selected_nodes: Class_NodeElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+    // All availables nodes
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
   }
   else {
-    // Only visible links
-    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
+    // Only visible nodes
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
 
-  // State & refs for text input
+  // Editor state ----------------------------------------------------------------------
+
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   let tmp_editor_content_tooltip = editor_content_tooltip

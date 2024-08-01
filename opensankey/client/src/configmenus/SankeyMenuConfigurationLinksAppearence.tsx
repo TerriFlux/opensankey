@@ -29,9 +29,8 @@ import {
   useBoolean,
 } from '@chakra-ui/react'
 
-import {
-  SankeyData
-} from '../types/Types'
+/*************************************************************************************************/
+
 import {
   Class_LinkElement,
   Class_LinkStyle,
@@ -67,10 +66,13 @@ import {
   default_style_id
 } from '../types/Sankey'
 import {
+  font_families
+} from '../types/Utils'
+import {
   MenuConfigurationLinksAppearenceFType,
-  handleDownLinkFType,
-  handleUpLinkFType
 } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
+
+/*************************************************************************************************/
 
 import {
   TooltipValueSurcharge,
@@ -78,6 +80,8 @@ import {
   CutName
 } from './SankeyUtils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+
+/*************************************************************************************************/
 
 const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
   width="16"
@@ -131,6 +135,7 @@ const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24
 const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z" /></svg>
 
+/*************************************************************************************************/
 
 export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurationLinksAppearenceFType> = ({
   applicationData,
@@ -139,16 +144,21 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   additional_link_appearence_items,
   menu_for_style
 }) => {
-  // DATAS ==============================================================================
+
+  // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
   const { t } = applicationContext
+
   // Get data
-  const { data, new_data } = applicationData
+  const { new_data } = applicationData
   const { ref_selected_style_link } = applicationState
+
+  // Elements on which this menu applies ------------------------------------------------
+
   // Selected links
   let selected_links
-  if (data.displayed_link_selector) {
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted
   }
@@ -156,8 +166,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     // Only visible links
     selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
   }
-
-  // VARIABLES ==========================================================================
 
   // Elements on which menu modification applies
   let elements: Class_LinkStyle[] | Class_LinkElement[]
@@ -167,6 +175,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   else {
     elements = selected_links
   }
+
+  // Elements attributes ----------------------------------------------------------------
 
   /**
    * function that go throught all links of an array & check if they're all equals
@@ -223,7 +233,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     }
   }
 
-  // COMPONENTS UPDATERS  ==============================================================
+  // Components updaters ----------------------------------------------------------------
 
   // State variable to trigger this menu refreshing
   const [ , refreshThis ] = useBoolean()
@@ -264,6 +274,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     refreshThis.toggle()
   }
 
+
+  // JSX menu components ---------------------------------------------------------------
 
   const content_appearence = <Box
     layerStyle='menuconfigpanel_grid'
@@ -912,13 +924,18 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                 refreshThisAndUpdateRelatedComponents()
               }}
           >
-            {data.display_style.font_family.map((d) => {
-              return <option
-                style={{ fontFamily: d }}
-                key={'ff-' + d}
-                value={d}
-              >{d}</option>
-            })}
+            {
+              font_families
+                .map((d) => {
+                  return <option
+                    style={{ fontFamily: d }}
+                    key={'ff-' + d}
+                    value={d}
+                  >
+                    {d}
+                  </option>
+                })
+            }
           </Select>
 
           <ConfigMenuNumberInput
@@ -1237,7 +1254,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     />
   </Box> : <></>
 
-
   const content_zIndex_and_direction = (!menu_for_style) ? <Box layerStyle='menuconfigpanel_grid' >
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Flux.FS')}
@@ -1327,28 +1343,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     {content_label}
   </Box>
 
-
   /* Formattage de l'affichage du menu attribut de flux */
   return content
-}
-
-// TODO faire le menage apres modif menu context
-//Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
-//Permet donc de les déssiner avant
-export const handleUpLink: handleUpLinkFType = (
-  data: SankeyData, i: string
-) => {
-  const posElemt = data.linkZIndex.indexOf(i)
-  data.linkZIndex.splice(posElemt, 1)
-  data.linkZIndex.splice(posElemt - 1, 0, i)
-}
-
-//Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
-//Permet donc de les déssiner après
-export const handleDownLink: handleDownLinkFType = (
-  data: SankeyData, i: string
-) => {
-  const posElemt = data.linkZIndex.indexOf(i)
-  data.linkZIndex.splice(posElemt, 1)
-  data.linkZIndex.splice(posElemt + 1, 0, i)
 }
