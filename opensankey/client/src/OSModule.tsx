@@ -186,7 +186,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   applicationData.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
   // Reset contextualised link
-  applicationData.new_data.drawing_area.link_contextualied = undefined
+  applicationData.new_data.drawing_area.link_contextualised = undefined
   applicationData.new_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
   // Reset contextualised DA
