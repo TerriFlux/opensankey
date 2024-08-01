@@ -1,46 +1,71 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Date : 29/05/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
+// Local types
 import { Class_DrawingArea } from './DrawingArea'
 import { Class_Element } from './Element'
 import { Class_MenuConfig } from './MenuConfig'
 import { Type_ElementPosition, default_element_position } from './Utils'
 
+// CLASS ZONE SELECTION *****************************************************************
+
+/**
+ * Class that helps to create a selection zone for elements on the drawing area
+ * @export
+ * @class Class_ZoneSelection
+ * @extends {Class_Element}
+ */
 export class Class_ZoneSelection extends Class_Element {
-  private _width: number = 0
-  private _height: number = 0
 
-  private _starting_x_point: number = 0
-
-  private _starting_y_point: number = 0
-
+  // PROTECTED ATTRIBUTES ===============================================================
 
   protected _display: {
     drawing_area: Class_DrawingArea,
     position: Type_ElementPosition,
   }
 
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _width: number = 0
+  private _height: number = 0
+  private _starting_x_point: number = 0
+  private _starting_y_point: number = 0
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_ZoneSelection.
+   * @param {Class_DrawingArea} drawing_area
+   * @param {Class_MenuConfig} menu_config
+   * @memberof Class_ZoneSelection
+   */
   constructor(
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
   ) {
-
     // Init parent class attributes
     super('selection_zone', menu_config, 'g_select_zone')
-    this._is_visible = false
-
+    this._is_visible = false  // Invisible by default
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
     }
-
   }
 
-  // public set is_visible(_:boolean){this._is_visible=_}
+  // PUBLIC METHODS =====================================================================
 
-  // ================= METHOD ==================
-
+  /**
+   * Draw the element if visible
+   * @memberof Class_ZoneSelection
+   */
   public draw() {
+    // Heritance
     super.draw()
-
+    // Draw shape
     this.d3_selection?.append('rect')
       .attr('class', 'zone_selection')
       .attr('width', this._width)
@@ -50,6 +75,7 @@ export class Class_ZoneSelection extends Class_Element {
       .attr('stroke-width', '2px')
       .attr('stroke-dasharray', '5,5')
   }
+
   /**
    * Set the width & height of the selection zone
    *
@@ -58,7 +84,6 @@ export class Class_ZoneSelection extends Class_Element {
    * @memberof Class_ZoneSelection
    */
   public setSize() {
-
     this.d3_selection
       ?.select('.zone_selection')
       .attr('width', this._width)
@@ -66,21 +91,28 @@ export class Class_ZoneSelection extends Class_Element {
   }
 
   /**
-   * Function to select elements present in the selection zone,
-   * 
+   * Function to select elements present in the selection zone
    * (nodes has to be fully inside the zone to be selected)
-   *
    * @memberof Class_ZoneSelection
    */
   public selectElementsInside() {
-    this.drawing_area.sankey.visible_nodes_list.filter(n => {
-      // Check if node is horizontally in selection zone
-      const is_node_horizontally_in_zone = (n.position_x >= this.position_x) && (n.position_x <= (this.position_x + this._width)) && ((n.position_x + n.getShapeWidthToUse()) <= (this.position_x + this._width))
-
-      // Check if node is vertically in selection zone
-      const is_node_vertically_in_zone = (n.position_y >= this.position_y) && (n.position_y <= (this.position_y + this._height)) && ((n.position_y + n.getShapeHeightToUse()) <= (this.position_y + this._height))
-      return is_node_horizontally_in_zone && is_node_vertically_in_zone
-    })
+    this.drawing_area.sankey.visible_nodes_list
+      .filter(n => {
+        // Check if node is horizontally in selection zone
+        const is_node_horizontally_in_zone = (
+          (n.position_x >= this.position_x) &&
+          (n.position_x <= (this.position_x + this._width)) &&
+          ((n.position_x + n.getShapeWidthToUse()) <= (this.position_x + this._width))
+        )
+        // Check if node is vertically in selection zone
+        const is_node_vertically_in_zone = (
+          (n.position_y >= this.position_y) &&
+          (n.position_y <= (this.position_y + this._height)) &&
+          ((n.position_y + n.getShapeHeightToUse()) <= (this.position_y + this._height))
+        )
+        // Must be verticalt & horizontaly in selection zone
+        return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
+      })
       .forEach(n => {
         this.drawing_area.addNodeToSelection(n)
       })
@@ -88,7 +120,6 @@ export class Class_ZoneSelection extends Class_Element {
 
   /**
    * Reset selection zone by invisibilizing it and resetting it position & size
-   *
    * @memberof Class_ZoneSelection
    */
   public reset() {
@@ -100,7 +131,8 @@ export class Class_ZoneSelection extends Class_Element {
     this._is_visible = false
     this.draw()
   }
-  // ===================GETTER & SETTERS=====================
+
+  // GETTERS / SETTERS ==================================================================
 
   public get width(): number { return this._width }
   public set width(value: number) { this._width = value }
