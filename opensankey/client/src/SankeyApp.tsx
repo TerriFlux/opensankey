@@ -566,7 +566,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         applicationContext = {applicationContext}
         applicationData = {applicationData}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
-        ComponentUpdater={ComponentUpdater}
       />
       <ContextMenuZdd
         applicationContext = {applicationContext}

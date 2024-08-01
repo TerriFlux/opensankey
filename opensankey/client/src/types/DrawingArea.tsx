@@ -449,8 +449,8 @@ export class Class_DrawingArea {
   public set node_contextualised(value: Class_NodeElement | undefined) { this._node_contextualied = value }
 
   // Link Context menu
-  public get link_contextualied(): Class_LinkElement | undefined { return this._link_contextualied }
-  public set link_contextualied(value: Class_LinkElement | undefined) { this._link_contextualied = value }
+  public get link_contextualised(): Class_LinkElement | undefined { return this._link_contextualied }
+  public set link_contextualised(value: Class_LinkElement | undefined) { this._link_contextualied = value }
 
   // Mouve pos when we right click an element
   public get pointer_pos(): [number, number] { return this._pointer_pos }
@@ -1019,7 +1019,7 @@ export class Class_DrawingArea {
           this.node_contextualised = undefined
           this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
 
-          this.link_contextualied = undefined
+          this.link_contextualised = undefined
           this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
 
           this.is_drawing_area_contextualised = false

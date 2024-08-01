@@ -828,7 +828,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         this.drawing_area.addLinkToSelection(this)
       }
       this.menu_config.updateAllComponentsRelatedToLinks()
-      this.drawing_area.link_contextualied = this
+      this.drawing_area.link_contextualised = this
       this.menu_config.ref_to_menu_context_links_updater.current()
     }
   }
