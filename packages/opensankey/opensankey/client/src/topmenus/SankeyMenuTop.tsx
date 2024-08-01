@@ -1,7 +1,40 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
 
+import {
+  TFunction
+} from 'i18next'
+
+import {
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+} from 'react-icons/fa'
+
+import FileSaver from 'file-saver'
+import {
+  faCheck,
+  faCloudArrowUp,
+  faDownload,
+  faExclamation,
+  faFile,
+  faFileExport,
+  faFileInvoice,
+  faFolderOpen,
+  faGears,
+  faImage,
+  faPenToSquare,
+  faPlus,
+  faShapes,
+  faShareNodes,
+  faTable,
+} from '@fortawesome/free-solid-svg-icons'
+import {
+  FontAwesomeIcon
+} from '@fortawesome/react-fontawesome'
+
+import Draggable from 'react-draggable'
+
+import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   Badge,
   Box,
@@ -12,6 +45,10 @@ import {
   CardFooter,
   CloseButton,
   CreateToastFnReturn,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  FormControl,
   Heading,
   Image,
   Input,
@@ -30,57 +67,26 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  Select,
   Stack,
   Tab,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
-  Toast,
   Text,
-  FormControl,
-  Select,
+  Toast,
   useBoolean,
 } from '@chakra-ui/react'
+
+/*************************************************************************************************/
+
 import {
   SankeyData,
   MenuTypes,
   applicationDataType,
   textForToastPromiseType
 } from '../types/Types'
-
-import {
-  FaAngleDoubleLeft,
-  FaAngleDoubleRight,
-} from 'react-icons/fa'
-import SankeyLoad from '../dialogs/SankeyPersistence'
-import {
-  ExcelModal,
-  ApplyLayoutDialog
-} from '../dialogs/SankeyMenuDialogs'
-import {
-  TFunction
-} from 'i18next'
-import {
-  faFolderOpen,
-  faDownload,
-  faFileInvoice,
-  faPenToSquare,
-  faFile,
-  faPlus,
-  faCloudArrowUp,
-  faExclamation,
-  faCheck,
-  faGears,
-  faTable,
-  faImage,
-  faShareNodes,
-  faShapes
-} from '@fortawesome/free-solid-svg-icons'
-import {
-  FontAwesomeIcon
-} from '@fortawesome/react-fontawesome'
-import Draggable from 'react-draggable'
 import {
   MenuDraggableFType,
   ModalTutoType,
@@ -89,9 +95,20 @@ import {
   OpenSankeySaveButtonFType
 } from './types/SankeyMenuTopTypes'
 import {
+  Type_JSON
+} from '../types/Utils'
+
+/*************************************************************************************************/
+
+import {
   FindMaxLinkValue,
   OSTooltip
 } from '../configmenus/SankeyUtils'
+import SankeyLoad from '../dialogs/SankeyPersistence'
+import {
+  ExcelModal,
+  ApplyLayoutDialog
+} from '../dialogs/SankeyMenuDialogs'
 import {
   ClickSaveExcel
 } from '../dialogs/SankeyPersistence'
@@ -108,19 +125,11 @@ import {
   RepositionneSidebar
 } from '../draw/SankeyDrawFunction'
 import {
-  faFileExport
-} from '@fortawesome/free-solid-svg-icons'
-import FileSaver from 'file-saver'
-import {
-  Drawer,
-  DrawerBody,
-  DrawerContent
-} from '@chakra-ui/react'
-import {
   DataTagSelector
 } from '../configmenus/SankeyMenuBanner'
-import { Type_JSON } from '../types/Utils'
 
+
+/*************************************************************************************************/
 
 declare const window: Window &
   typeof globalThis & {
@@ -134,21 +143,15 @@ declare const window: Window &
       advanced: boolean
     } & { [key: string]: SankeyData }
   }
-/**
- * Description placeholder
- *
- * @export
- * @typedef {Type_MenuSelectionEntry}
- */
+
+
+/*************************************************************************************************/
+
 export type Type_MenuSelectionEntry = {'label':string; 'value':string}
+
 export const menu_config_width = 450
-/**
- * Variable that define the Menu element, it's variable and function
- *
- * @type {{ data: any; set_data: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
- */
 
-
+/*************************************************************************************************/
 
 const GoToUserDoc = () => {
   const path = window.location.href
@@ -207,6 +210,8 @@ const logo_contact = <svg
   />
 </svg>
 
+/*************************************************************************************************/
+
 export const OpenSankeyMenus: OpenSankeyMenusFType = (
   t: TFunction,
   Reinitialization,
@@ -264,20 +269,25 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui: { [s: string]: JSX.Element[] } = {}
-  let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Box
-    margin='0.25rem'
-    alignSelf='center'
-    justifySelf='center'
-  ><FormControl key={'1'} >
-      <Select style={{ width: '200px', color:'black' }}
-        onChange={evt=> {
-          sDiagram(evt.target.value)
-          setDiagram(evt.target.value, set_data, convert_data, get_default_data)
-        }}
-        value={s_diagram}>
-        {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-      </Select>
-    </FormControl></Box> : <React.Fragment key={'1'} />
+
+  let diagrams_element = (window.SankeyToolsStatic && sous_filieres && !is_split) ?
+    <Box
+      margin='0.25rem'
+      alignSelf='center'
+      justifySelf='center'
+    >
+      <FormControl key={'1'} >
+        <Select style={{ width: '200px', color:'black' }}
+          onChange={evt=> {
+            sDiagram(evt.target.value)
+            setDiagram(evt.target.value, set_data, convert_data, get_default_data)
+          }}
+          value={s_diagram}>
+          {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Select>
+      </FormControl>
+    </Box> :
+    <React.Fragment key={'1'} />
 
   if (window.SankeyToolsStatic && sous_filieres && is_split) {
     diagrams_element =<Box
@@ -979,7 +989,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
     applicationContext,
     applicationData,
     applicationState,
-    uiElementsRef,
     contextMenu,
     processFunctions,
     dict_hook_ref_setter_show_dialog_components,
@@ -988,30 +997,23 @@ export const Menu: FunctionComponent<MenuTypes> = (
     menus,
     cardsTemplate,
     external_modal,
-    Reinitialization,
+    reinitialization,
     additional_nav_item,
     convert_data,
     apply_transformation_additional_elements,
     DiagramSelector,
     formations_menu,
     postProcessLoadExcel,
-    ref_alt_key_pressed,
-    accept_simple_click,
-    link_function,
-    NodeTooltipsContent,
     ComponentUpdater,
-    node_function
   }
 ) => {
   const { ref_setter_show_modale_tuto, ref_setter_show_modal_template } = dict_hook_ref_setter_show_dialog_components
-  const { ref_setter_mode_selection } = applicationState
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
   const [show_template, set_show_template] = useState(false)
   const [, setForceUpdate] = useBoolean()
   ref_setter_show_modale_tuto.current = set_show_tuto
   ref_setter_show_modal_template.current = set_show_template
-  const config_object=applicationData.new_data.menu_configuration
   const {new_data}=applicationData
   new_data.menu_configuration.ref_to_menu_updater.current=setForceUpdate.toggle
   RepositionneSidebar(show_nav)
@@ -1066,7 +1068,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     formations_menu={formations_menu}
     show_tuto={show_tuto}
     set_show_tuto={set_show_tuto}
-    Reinitialization={Reinitialization}
+    Reinitialization={reinitialization}
   />
 
   // Create the menu nav that can be slightly different if it in static
@@ -1375,7 +1377,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         UploadExcelImpl={UploadExcelImpl}
         url_prefix={applicationContext.url_prefix}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-        Reinitialization={Reinitialization}
+        Reinitialization={reinitialization}
         pointer_pos={contextMenu.pointer_pos}
       />
 

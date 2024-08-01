@@ -90,6 +90,7 @@ export class Class_ApplicationData {
       initial_window_height,
       initial_window_width,
       this)
+    this.drawing_area.reset()
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
