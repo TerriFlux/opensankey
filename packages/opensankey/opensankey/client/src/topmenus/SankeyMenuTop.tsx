@@ -444,26 +444,12 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                 const reader = new FileReader()
                 reader.onload = (() => {
                   return (e: ProgressEvent<FileReader>) => {
-                    // Reinitialization()
-                    const result = String((e.target as FileReader).result)
-                    // const default_data = get_default_data()
-                    const result_data = JSON.parse(result)
-                    // Object.assign(default_data, result_data)
-                    // if (result_data.version === undefined) {
-                    //   (new_data.version as unknown as undefined) = undefined
-                    // }
-                    // convert_data(default_data, get_default_data)
-                    // complete_sankey_data(default_data, get_default_data, DefaultNode, DefaultLink)
-
-                    // set_data(new_data)
-                    // const test = document.getElementsByClassName('navbar')
-                    // let margin_top = 0
-                    // if (test && test.length > 0) {
-                    //   margin_top = test[0].getBoundingClientRect().height
-                    //   d3.select(' .opensankey #svg-container').style('margin-top', margin_top + 'px')
-                    // }
-                    new_data.fromJSON(result_data as Type_JSON)
+                    // Get JSON Data
+                    const file_content = String((e.target as FileReader).result)
+                    const JSON_data = JSON.parse(file_content)
+                    // Clear datas & apply read datas
                     new_data.drawing_area.reset()
+                    new_data.fromJSON(JSON_data as Type_JSON)
                   }
                 })()
                 reader.readAsText(files[0])

@@ -679,7 +679,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     return true
   }
 
-  public toJSON() {
+  public toJSON(
+    with_values: boolean = true
+  ) {
     // Root attributes
     const json_object = super.toJSON()
     // Related nodes
@@ -689,7 +691,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
     // Values
-    json_object['value'] = this._values.toJSON()
+    if (with_values)
+      json_object['value'] = this._values.toJSON()
     // Out
     return json_object
   }

@@ -517,7 +517,18 @@ export class Class_Sankey {
     }
   }
 
-  public toJSON() {
+  /**
+   * Extract sankey as a JSON struct
+   *
+   * @param {boolean} [only_visible_elements=false]
+   * @param {boolean} [with_values=true]
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public toJSON(
+    only_visible_elements: boolean = false,
+    with_values: boolean = true
+  ) {
     // Create json struct
     const json_object = {} as Type_JSON
     const json_object_levelTags = {} as Type_JSON
@@ -558,15 +569,18 @@ export class Class_Sankey {
     })
     // Add nodes
     json_object['nodes'] = json_object_nodes
-    this.nodes_list.forEach(node => {
-      json_object_nodes[node.id] = node.toJSON()
-    })
+    const nodes_list = (only_visible_elements ? this.visible_nodes_list : this.nodes_list)
+    nodes_list
+      .forEach(node => {
+        json_object_nodes[node.id] = node.toJSON()
+      })
     // Add links
     json_object['links'] = json_object_links
-    this.links_list
+    const links_list = (only_visible_elements ? this.visible_links_list : this.links_list)
+    links_list
       .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
-        json_object_links[link.id] = link.toJSON()
+        json_object_links[link.id] = link.toJSON(with_values)
       })
     // Out
     return json_object

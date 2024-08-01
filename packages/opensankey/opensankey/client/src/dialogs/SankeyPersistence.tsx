@@ -1,17 +1,76 @@
 import React,{ FunctionComponent, useEffect, useState, } from 'react'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, postProcessLoadExcelFuncType, SankeyLink } from '../types/Types'
-import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
-import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, CounterType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
-import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
-import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink, DefaultNode, DefaultSankeyData, GetRandomInt, SetNodeStyleToTypeNode, layout_type, list_palette_color } from '../configmenus/SankeyUtils'
-import FileSaver from 'file-saver'
-import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { ComputeAutoSankey, compute_default_input_outputLinksId } from '../draw/SankeyDrawLayout'
-import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
-import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Spinner } from '@chakra-ui/react'
 
+import {
+  Box,
+  Button,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  Spinner
+} from '@chakra-ui/react'
+
+import FileSaver from 'file-saver'
+
+/*************************************************************************************************/
+
+import {
+  processFunctionsType,
+  dict_hook_ref_setter_show_dialog_componentsType,
+  applicationContextType,
+  applicationDrawType,
+  applicationDataType,
+  SankeyData,
+  postProcessLoadExcelFuncType,
+} from '../types/Types'
+import {
+  ClickSaveDiagramFuncType,
+  ClickSaveExcelFuncType,
+  CounterType,
+  DownloadExamplesFuncType,
+  ProcessExampleFuncType,
+  RetrieveExcelResultsFuncType,
+  UploadExcelImplFuncType,
+  UploadExempleFuncType
+} from './types/SankeyPersistenceTypes'
+
+import {
+  ConvertDataFuncType
+} from '../configmenus/types/SankeyConvertTypes'
+import {
+  DefaultSankeyDataFuncType
+} from '../configmenus/types/SankeyUtilsTypes'
+import {
+  updateLayoutFuncType
+} from '../draw/types/SankeyDrawLayoutTypes'
+
+/*************************************************************************************************/
+
+import {
+  AdjustSankeyZone,
+  AssignNodeLocalAttribute,
+  DataSuiteType,
+  DefaultLink,
+  DefaultNode,
+  DefaultSankeyData,
+  GetRandomInt,
+  SetNodeStyleToTypeNode,
+  layout_type,
+  list_palette_color
+} from '../configmenus/SankeyUtils'
+import {
+  complete_sankey_data
+} from '../configmenus/SankeyConvert'
+import {
+  ComputeAutoSankey,
+  compute_default_input_outputLinksId
+} from '../draw/SankeyDrawLayout'
+
+
+/* FILE LOADING COMPONENTS *************************************************************/
 
 interface SankeyLoadProdTypes {
   applicationContext: applicationContextType,
@@ -24,6 +83,20 @@ interface SankeyLoadProdTypes {
   postProcessLoadExcel:postProcessLoadExcelFuncType
 }
 
+/**
+ * Loading modal
+ * @param {*} {
+ *   applicationContext,
+ *   applicationDraw,
+ *   applicationData,
+ *   successAction,
+ *   processFunctions,
+ *   dict_hook_ref_setter_show_dialog_components,
+ *   convert_data,
+ *   postProcessLoadExcel
+ * }
+ * @return {*}
+ */
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   applicationContext,
   applicationDraw,
@@ -34,8 +107,8 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   convert_data,
   postProcessLoadExcel
 }) => {
-  const { t,url_prefix } = applicationContext
-  const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
+  const { t, url_prefix } = applicationContext
+  const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults } = processFunctions
 
   const [value,setValue] = useState([1,2])
   const [show_load_dialog,set_show_load_dialog] = useState(false)
@@ -193,14 +266,18 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   )
 }
 
-
 /**
- * Description placeholder
+ * TODO Description
  *
- * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
- * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
+ * @param {*} {
+ *   url_prefix,
+ *   finishReconciliation,
+ *   value,
+ *   result,
+ *   set_result
+ * }
+ * @return {*}
  */
-
 export const Counter:FunctionComponent<CounterType> = ({
   url_prefix,
   finishReconciliation,
@@ -255,6 +332,43 @@ export const Counter:FunctionComponent<CounterType> = ({
 }
 export default SankeyLoad
 
+/* EXCEL FILE SAVING PROCESSES *********************************************************/
+
+export const ClickSaveExcel: ClickSaveExcelFuncType = (
+  url_prefix: string,
+  data: SankeyData,
+  file_name='sankey'
+) => {
+  let root = window.location.href
+  if (root.includes('dashboard')) {
+    root = root.replace('dashboard', '')
+  }
+  let url = root + url_prefix + 'sankey/save_excel'
+
+  const fetchData = {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    FileSaver.saveAs(newBlob, file_name+'.xlsx')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = root + url_prefix + 'sankey/clean_excel'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+
 export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
@@ -308,50 +422,66 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }, 100)
 }
 
+export const UploadExcelImpl: UploadExcelImplFuncType = (
+  set_show_excel_dialog: (b: boolean) => void,
+  input_file: Blob,
+  the_url_prefix: string
+): void => {
+  const root = window.location.href
+  const url = root + the_url_prefix + 'sankey/upload_excel'
+  const form_data = new FormData()
+  form_data.append(
+    'file', input_file
+  )
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+  fetch(url, fetchData)
+  set_show_excel_dialog(false)
+}
+
+
+/* JSON FILE SAVING PROCESSES **********************************************************/
+
+/**
+ * Convert and download application data as a JSON file
+ *
+ * @param {*} ApplicationClass
+ * @param {*} options
+ */
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
   ApplicationClass,
   options
 ): void => {
-  // Crée une copie pour d'abord enregitrer avec les changements
-  const cpy = ApplicationClass.drawing_area.toJSON()
-  if(!options.mode_save){
-    Object.values(cpy.links).forEach(d=>{
-      (d as SankeyLink).value={}
-    })
-  }
-  if(options.mode_visible_element){
-  // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
-    const link_present=LinkVisibleOnSvg()
-    const node_visible=NodeVisibleOnsSvg()
-    cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
-    const key_level_tags=Object.keys(cpy.levelTags)
-    cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
-      key_level_tags.forEach(klt=>{
-        delete n[1].tags[klt]
-      })
-      n[1].dimensions={}
-      n[1].inputLinksId=n[1].inputLinksId.filter((lid: string) => link_present.includes(lid))
-      n[1].outputLinksId=n[1].outputLinksId.filter((lid: string) => link_present.includes(lid))
-      return n
-    }))
-    cpy.levelTags={}
-    cpy.linkZIndex=link_present;
-
-    (cpy as unknown as {view:[]}).view=[]
-  }
-
-  const str_data = JSON.stringify(cpy)
-  const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
-  const dataAsSuite = (cpy as DataSuiteType)
+  // Convert all datas as JSON
+  const json_data = ApplicationClass.drawing_area.toJSON(
+    options.mode_visible_element,
+    options.mode_save
+  )
+  // Prepare JSON for saving
+  const json_data_str = JSON.stringify(json_data)
+  const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
+  // Set name for file to download
+  const dataAsSuite = (json_data as DataSuiteType)
   let name = 'Diagramme de Sankey'
-  if (dataAsSuite.view && dataAsSuite.view.length > 0 && !dataAsSuite.is_catalog) {
+  if (
+    dataAsSuite.view &&
+    dataAsSuite.view.length > 0 &&
+    !dataAsSuite.is_catalog
+  ) {
     name = 'Diagramme de Sankey avec vues'
-  } else if (dataAsSuite.is_catalog === true) {
+  }
+  else if (dataAsSuite.is_catalog === true) {
     name = 'Catalogue de vues de diagrammes de Sankey'
   }
+  // Trigger file download
   FileSaver.saveAs(blob, name + '.json')
 }
 
+/* EXAMPLES PROCESSING *****************************************************************/
+
+// TODO s'en occuper
 export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
   updateLayout: updateLayoutFuncType,
@@ -447,24 +577,6 @@ export const DownloadExamples: DownloadExamplesFuncType = (
       }
     })
 }
-export const UploadExcelImpl: UploadExcelImplFuncType = (
-  set_show_excel_dialog: (b: boolean) => void,
-  input_file: Blob,
-  the_url_prefix: string
-): void => {
-  const root = window.location.href
-  const url = root + the_url_prefix + 'sankey/upload_excel'
-  const form_data = new FormData()
-  form_data.append(
-    'file', input_file
-  )
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-  fetch(url, fetchData)
-  set_show_excel_dialog(false)
-}
 
 /**
  *
@@ -513,34 +625,4 @@ export const UploadExemple: UploadExempleFuncType = (
   })
 }
 
-export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData,file_name='sankey') => {
-  let root = window.location.href
-  if (root.includes('dashboard')) {
-    root = root.replace('dashboard', '')
-  }
-  let url = root + url_prefix + 'sankey/save_excel'
-
-  const fetchData = {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, file_name+'.xlsx')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = root + url_prefix + 'sankey/clean_excel'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
 
