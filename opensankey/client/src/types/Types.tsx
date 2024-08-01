@@ -439,12 +439,11 @@ export type MenuTypes = {
   applicationContext: applicationContextType,
   applicationData: applicationDataType,
   applicationState: applicationStateType,
-  uiElementsRef: uiElementsRefType,
   contextMenu: contextMenuType,
   processFunctions: processFunctionsType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationDraw: applicationDrawType,
-  Reinitialization: () => void,
+  reinitialization: () => void,
   convert_data: ConvertDataFuncType,
   DiagramSelector: OpenSankeyDiagramSelectorFType,
   configurations_menus: JSX.Element,
@@ -455,14 +454,7 @@ export type MenuTypes = {
   additional_nav_item: JSX.Element[],
   formations_menu: object,
   postProcessLoadExcel: postProcessLoadExcelFuncType,
-  ref_alt_key_pressed: MutableRefObject<boolean>,
-  accept_simple_click: {current: boolean},
-  link_function: LinkFunctionTypes,
-  NodeTooltipsContent: NodeTooltipsContentFType,
-  ComponentUpdater: ComponentUpdaterType,
-  node_function: NodeFunctionTypes
-
-
+  ComponentUpdater: ComponentUpdaterType
 }
 
 export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
@@ -509,10 +501,9 @@ export type applicationStateType = {
 export type initializeElementSelectedType = ()=>applicationStateType
 
 export type initializeReinitializationType = (
-  applicationData : applicationDataType,
-  applicationState: applicationStateType,
-  contextMenu: contextMenuType
+  applicationData : applicationDataType
 ) => ()=>void
+
 /*****************************************************************************/
 // Data
 export type OSGetDefaultData=()=>SankeyData
