@@ -31,6 +31,7 @@ import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
+import { Class_LinkElement } from '../types/Link'
 
 
 /*************************************************************************************************/
@@ -42,18 +43,18 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     menu_config_link_attr,
   }
 ) => {
+  // Data -------------------------------------------------------------------------------
+
   // Traduction
   const { t } = applicationContext
-  // Old TODO menage
-  const { data, new_data } = applicationData
-  // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
-  // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_link_updater.current = refreshThis.toggle
+  // Data
+  const { new_data } = applicationData
 
   // Links to display in selection menus ------------------------------------------------
-  let links, selected_links
-  if (data.displayed_link_selector) {
+
+  let links: Class_LinkElement[]
+  let selected_links: Class_LinkElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     links = new_data.drawing_area.sankey.links_list
     selected_links = new_data.drawing_area.selected_links_list
@@ -67,6 +68,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const entries_for_selected_links = selected_links.map((d) => { return { 'label': d.name, 'value': d.id } })
 
   // Nodes to display in selection menus ------------------------------------------------
+
   const nodes = new_data.drawing_area.sankey.nodes_list
   const addDropSource = () => {
     if (nodes.length >= 2) {
@@ -89,7 +91,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     }
   }
 
+  // Components updaters ----------------------------------------------------------------
+
+  // Boolean used to force this component to reload
+  const [, refreshThis] = useBoolean()
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_link_updater.current = refreshThis.toggle
+
   // Function used to reset menu UI -----------------------------------------------------
+
   const refreshThisAndToggleSaving = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -105,6 +115,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 
   // Sub-menus --------------------------------------------------------------------------
+
   const ui: { [s: string]: JSX.Element } = {
     'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
       menu_to_wrap={menu_config_link_data}
@@ -135,7 +146,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 
   // Selection menu for links -----------------------------------------------------------
-  //Renvoie le menue déroulant pour la sélection des flux
+
+  // Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
     const DD = (
       <Box
@@ -227,11 +239,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               // Update UI with only visible links / all links
-              data.displayed_link_selector = !data.displayed_link_selector
-              // Simple refresh of this menu - No need to save
-              refreshThis.toggle()
+              new_data.menu_configuration.toggle_selector_on_visible_links()
             }}>
-          {new_data.drawing_area.sankey.filter_displayed_link_selector ? <FaEye /> : <FaEyeSlash />}
+          {new_data.menu_configuration.is_selector_only_for_visible_links ? <FaEye /> : <FaEyeSlash />}
         </Button>
       </OSTooltip>
     </Box>

@@ -58,7 +58,7 @@ import {
 } from '../types/Types'
 import {
   Class_TagGroup,
-  Class_TagGroupNodeLevel
+  Class_LevelTagGroup
 } from '../types/Tag'
 import {
   ConvertDataFuncType
@@ -266,7 +266,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
   const [, refreshThis] = useBoolean()
   new_data.menu_configuration.ref_to_nodetag_filter_updater.current = refreshThis.toggle
 
-  let taggs_in_banner: Class_TagGroup[] | Class_TagGroupNodeLevel[]
+  let taggs_in_banner: Class_TagGroup[] | Class_LevelTagGroup[]
   if (level) {
     const nb_of_level_taggs = Object.values(level_taggs).filter(tagg => tagg.has_tags).length
     if (nb_of_level_taggs > 1) {
@@ -288,9 +288,12 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
   // JSX Components --------------------------------------------------------------------
   const allDD = taggs_in_banner.map(tagg => {
     // Create a btn that can either be a switch to activate tag color palette
-    // or in some case for level tag activating or deactivating antagonazing tags
+    // or in some case for level tag activating or deactivating antagonists tags
     let btn_switch = <></>
-    if (tagg.banner !== 'level') {
+    if (
+      (tagg instanceof Class_TagGroup) &&
+      (tagg.banner !== 'level')
+    ) {
       btn_switch = <Switch
         justifySelf='end'
         alignSelf='center'
@@ -310,9 +313,13 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
         }}
       />
     }
-    else if (level && tagg.has_tags) {
+    else if (
+      (level) &&
+      (tagg instanceof Class_LevelTagGroup) &&
+      (tagg.has_tags)
+    ) {
       // Cast type to exclude Class_TagGroup
-      const level_tagg = tagg as Class_TagGroupNodeLevel
+      const level_tagg = tagg as Class_LevelTagGroup
       // Create swith button
       btn_switch = (
         (level_tagg.siblings !== undefined) &&
@@ -1134,11 +1141,11 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     <OSTooltip
       placement='left'
       label={t('Banner.hlp_1_txt_2')}>
-      {InitalizeSelectorDetailNodes(applicationContext,
-        applicationData,
-        applicationDraw,
-        node_function,
-        link_function,ComponentUpdater)}
+      {
+        InitalizeSelectorDetailNodes(
+          applicationContext,
+          applicationData)
+      }
     </OSTooltip>
   </>:
     <></>

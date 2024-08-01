@@ -733,7 +733,9 @@ export type initializeContextMenuType = ()=> contextMenuType
 export type initializeProcessFunctionsType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType
 ) => processFunctionsType
+
 /*****************************************************************************/
+
 export type SankeyAppTypes = {
   initial_sankey_data: SankeyData
   get_default_data: OSGetDefaultData,
@@ -766,22 +768,11 @@ export type SankeyAppTypes = {
 
 export type initializeMenuConfigurationFuncType=(
   applicationData: applicationDataType,
-applicationState: applicationStateType,
-applicationContext: applicationContextType,
-uiElementsRef: uiElementsRefType,
-dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-additional_menus: AdditionalMenusType,
-node_function: NodeFunctionTypes,
-link_function: LinkFunctionTypes,
-applicationDraw: applicationDrawType,
-ComponentUpdater: ComponentUpdaterType,
-updateMenus: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
-config_link_data: JSX.Element,
-config_link_attr: JSX.Element,
-contextMenu: contextMenuType,
-menu_configuration_nodes_attributes: JSX.Element,
-additionalMenus: AdditionalMenusType,
-ref_alt_key_pressed: React.MutableRefObject<boolean>
+  applicationContext: applicationContextType,
+  additional_menus: AdditionalMenusType,
+  config_link_data: JSX.Element,
+  config_link_attr: JSX.Element,
+  menu_configuration_nodes_attributes: JSX.Element,
 ) => JSX.Element
 
 export type initializeKeyHandlerType=(
@@ -807,8 +798,4 @@ export type initializeKeyHandlerType=(
 export type InitalizeSelectorDetailNodesType=(
   applicationContext: applicationContextType,
   applicationData: applicationDataType,
-  applicationDraw: applicationDrawType,
-  node_function: NodeFunctionTypes,
-  link_function: LinkFunctionTypes,
-  ComponentUpdater: ComponentUpdaterType
 )=>JSX.Element

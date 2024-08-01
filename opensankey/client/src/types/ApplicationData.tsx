@@ -274,6 +274,7 @@ export class Class_ApplicationData {
   public set maximum_flux(value: number | undefined) {
     if (value === undefined || value > 0) {
       this._maximum_flux = value
+      this.drawing_area.drawElements()
     }
   }
 
@@ -281,6 +282,7 @@ export class Class_ApplicationData {
   public set minimum_flux(value: number | undefined) {
     if (value === undefined || value > 0) {
       this._minimum_flux = value
+      this.drawing_area.drawElements()
     }
   }
 

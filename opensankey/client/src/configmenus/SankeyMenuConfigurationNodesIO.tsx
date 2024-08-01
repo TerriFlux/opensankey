@@ -15,10 +15,17 @@ import {
   useBoolean,
 } from '@chakra-ui/react'
 
-import { OSTooltip } from './SankeyUtils'
-import { SankeyMenuConfigurationNodesIOFType } from './types/SankeyMenuConfigurationNodesIOTypes'
-import { Class_LinkElement, Type_Side } from '../types/Link'
+/*************************************************************************************************/
 
+import { Class_LinkElement, Type_Side } from '../types/Link'
+import { SankeyMenuConfigurationNodesIOFType } from './types/SankeyMenuConfigurationNodesIOTypes'
+
+/*************************************************************************************************/
+
+import { OSTooltip } from './SankeyUtils'
+import { Class_NodeElement } from '../types/Node'
+
+/*************************************************************************************************/
 
 /**
  * Define IO selection menu for nodes
@@ -41,24 +48,38 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   const { t } = applicationContext
   const { new_data } = applicationData
 
-  const list_nodes_selected = new_data.drawing_area.selected_nodes_list
+  // Nodes to modify --------------------------------------------------------------------
+
+  let selected_nodes: Class_NodeElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+    // All availables nodes
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  }
+  else {
+    // Only visible nodes
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+  }
+  const unique_node_selected = (selected_nodes.length === 1) ? selected_nodes[0] : undefined
+
+  // Related Links ----------------------------------------------------------------------
+
   let has_at_least_one_input_link = false
   let has_at_least_one_output_link = false
-  list_nodes_selected.forEach(node => {
+  selected_nodes.forEach(node => {
     has_at_least_one_input_link = (has_at_least_one_input_link || node.hasOutputLinks())
     has_at_least_one_output_link = (has_at_least_one_output_link || node.hasOutputLinks())
   })
 
-  const unique_node_selected = (list_nodes_selected.length === 1) ? list_nodes_selected[0] : undefined
   const has_input_links = unique_node_selected?.hasInputLinks() ?? false
   const has_output_links = unique_node_selected?.hasOutputLinks() ?? false
+
+
+  // Set direction state ----------------------------------------------------------------
 
   const output_direction = 'o'
   const input_direction = 'i'
   const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
-  const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
 
-  // Set direction state
   if (!direction_selected) {
     if (has_input_links)
       setSelectedDirection(input_direction)
@@ -72,7 +93,10 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
       setSelectedDirection(undefined)
   }
 
-  // Set selected side
+  // Set selected side ------------------------------------------------------------------
+
+  const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
+
   if (direction_selected && !side_selected) {
     if (direction_selected === input_direction)
       setSelectedSide(unique_node_selected?.input_links_list[0]?.target_side ?? undefined)
@@ -83,8 +107,11 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     setSelectedSide(undefined)  // reset selected side
   }
 
-  // Set list of links to reorganize
-  const links_to_reorganize: {[_ in Type_Side]:Class_LinkElement[]} = {'right': [], 'left': [], 'top': [], 'bottom': []}
+  // Set list of links to reorganize ----------------------------------------------------
+
+  let links_to_reorganize: {[_ in Type_Side]:Class_LinkElement[]} = {
+    'right': [], 'left': [], 'top': [], 'bottom': []
+  }
   if ( unique_node_selected && direction_selected && side_selected )  {
     Object.keys(links_to_reorganize)
       .forEach((_) => {
@@ -98,7 +125,8 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
       })
   }
 
-  // Boolean to color or not link table
+  // Boolean to color or not link table ------------------------------------------------
+
   const [ tab_colored, setTabColored ] = useState(false)
 
   // Components updaters ---------------------------------------------------------------
@@ -136,7 +164,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         variant='menuconfigpanel_option_button'
         isDisabled= {!has_at_least_one_input_link && !has_at_least_one_output_link}
         onClick={() => {
-          list_nodes_selected.forEach(node => node.reorganizeIOLinks())
+          selected_nodes.forEach(node => node.reorganizeIOLinks())
           refreshThisAndUpdateRelatedComponents()
         }}
       >
@@ -344,7 +372,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           isDisabled= {!has_at_least_one_output_link}
           onClick={() => {
             new_data.drawing_area.purgeSelectionOfLinks()
-            list_nodes_selected
+            selected_nodes
               .forEach(node => {
                 node.output_links_list
                   .forEach(link => new_data.drawing_area.addLinkToSelection(link))
@@ -361,7 +389,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           isDisabled= {!has_at_least_one_input_link}
           onClick={() => {
             new_data.drawing_area.purgeSelectionOfLinks()
-            list_nodes_selected
+            selected_nodes
               .forEach(node => {
                 node.input_links_list
                   .forEach(link => new_data.drawing_area.addLinkToSelection(link))

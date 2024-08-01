@@ -31,30 +31,28 @@ import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurationTypes'
 
-
 // COMPONENTS ===========================================================================
+
 /**
  *  Define configuration menu
- *
- * @param { TODO type } applicationData - TODO description
- * @param { TODO type } applicationState - TODO description
- * @param { TODO type } applicationContext - TODO description
- * @param { TODO type } uiElementsRef - TODO description
- * @param { TODO type } dict_hook_ref_setter_show_dialog_components - TODO description
- * @param { TODO type } menu_configuration_layout - TODO description
- * @param { TODO type } menu_configuration_node_tags - TODO description
- * @param { TODO type } menu_configuration_link_tags - TODO description
- * @param { TODO type } menu_configuration_data_tags - TODO description
- * @param { TODO type } menu_configuration_nodes - TODO description
- * @param { TODO type } menu_configuration_links - TODO description
- * @param { TODO type } additional_accordion_edition_elements - TODO description
- * @param { TODO type } token - TODO description
- *
- */
+  *
+  * @param {*} {
+  *     applicationData,
+  *     applicationContext,
+  *     menu_configuration_layout,
+  *     menu_configuration_node_tags,
+  *     menu_configuration_link_tags,
+  *     menu_configuration_data_tags,
+  *     menu_configuration_nodes_attributes,
+  *     menu_config_link_data,
+  *     menu_config_link_attr,
+  *     additional_accordion_edition_elements,
+  *   }
+  * @return {*}
+  */
 export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigurationsMenusFType> = (
   {
     applicationData,
-    applicationState,
     applicationContext,
     menu_configuration_layout,
     menu_configuration_node_tags,
@@ -64,12 +62,9 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
     menu_config_link_data,
     menu_config_link_attr,
     additional_accordion_edition_elements,
-    link_function,
-    ComponentUpdater,
-    node_function,
-    additionalMenus
   }
 ) => {
+
   // Data -------------------------------------------------------------------------------
 
   const { t } = applicationContext
@@ -155,12 +150,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
               <SankeyNodeEdition
                 applicationContext={applicationContext}
                 applicationData={applicationData}
-                applicationState={applicationState}
                 menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
-                link_function={link_function}
-                ComponentUpdater={ComponentUpdater}
-                node_function={node_function}
-                additionalMenus={additionalMenus}
               />
             </AccordionPanel>
           </AccordionItem>

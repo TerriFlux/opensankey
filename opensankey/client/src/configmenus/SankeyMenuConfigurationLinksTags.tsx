@@ -9,12 +9,13 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
+import { Class_Tag } from '../types/Tag'
+import { Class_LinkElement } from '../types/Link'
 import {
   MenuConfigurationLinksTagsFType
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
-import { Class_Tag } from '../types/Tag'
 
-// Component definition =================================================================
+/*************************************************************************************************/
 
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   applicationData,
@@ -27,6 +28,8 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   const { t } = applicationContext
   const { new_data } = applicationData
 
+  // Tags -------------------------------------------------------------------------------
+
   // Flux tag groups
   const list_flux_taggs = new_data.drawing_area.sankey.flux_taggs_list
   const has_flux_taggs = list_flux_taggs.length > 0
@@ -36,8 +39,17 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   // Data tag groups
   const data_taggs = new_data.drawing_area.sankey.data_taggs_list
 
-  // Currently selected links
-  const selected_links = new_data.drawing_area.selected_links_list
+  // Selected links ---------------------------------------------------------------------
+
+  let selected_links: Class_LinkElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    selected_links = new_data.drawing_area.selected_links_list_sorted
+  }
+  else {
+    // Only visible links
+    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
+  }
 
   // Menu updaters ----------------------------------------------------------------------
 
@@ -202,7 +214,6 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
         :
         <></>
     }</>
-
 
 
   return menu_for_modal ?
