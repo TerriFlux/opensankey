@@ -198,10 +198,6 @@ export class Class_ApplicationData {
           app_ref.menu_configuration.ref_to_menu_config_link_updater.current()
         }
       }
-      else if (evt.altKey) {
-        // Prevent default event
-        // evt.preventDefault()
-      }
       else if (evt.key == 'a' && evt.ctrlKey) {
         // Event to select all elements
 

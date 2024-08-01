@@ -68,6 +68,7 @@ import {
   ComputeAutoSankey,
   compute_default_input_outputLinksId
 } from '../draw/SankeyDrawLayout'
+import { Type_JSON } from '../types/Utils'
 
 
 /* FILE LOADING COMPONENTS *************************************************************/
@@ -150,23 +151,26 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
       body: form_data
     }
     fetch(url, fetchData).then(response => {
-      response.text().then(text => {
-        try {
-          RetrieveExcelResults(
-            applicationData,
-            text,
-            applicationDraw.updateLayout,
-            postProcessLoadExcel,
-            applicationDraw.GetSankeyMinWidthAndHeight,
-            convert_data,
-            applicationData.get_default_data
-          )
-        } catch(err) {
-          alert(err)
-        }
-      }).then(()=>{
-        set_is_computing(false)
-      })
+      response.text()
+        .then(text => {
+          try {
+            RetrieveExcelResults(
+              applicationData,
+              text,
+              applicationDraw.updateLayout,
+              postProcessLoadExcel,
+              applicationDraw.GetSankeyMinWidthAndHeight,
+              convert_data,
+              applicationData.get_default_data
+            )
+          }
+          catch(err) {
+            alert(err)
+          }
+        })
+        .then(()=>{
+          set_is_computing(false)
+        })
     })
     set_processing(false)
     ref_processing.current = false
@@ -265,6 +269,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
     </Modal>
   )
 }
+export default SankeyLoad
 
 /**
  * TODO Description
@@ -330,13 +335,18 @@ export const Counter:FunctionComponent<CounterType> = ({
     </Box>
   )
 }
-export default SankeyLoad
 
 /* EXCEL FILE SAVING PROCESSES *********************************************************/
 
+/**
+ * Triggers server side conversion as Excel
+ * @param {string} url_prefix
+ * @param {Type_JSON} data
+ * @param {string} [file_name='sankey']
+ */
 export const ClickSaveExcel: ClickSaveExcelFuncType = (
-  url_prefix: string,
-  data: SankeyData,
+  url_prefix,
+  data_as_JSON,
   file_name='sankey'
 ) => {
   let root = window.location.href
@@ -347,7 +357,7 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (
 
   const fetchData = {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(data_as_JSON)
   }
 
   const showFile = (blob: BlobPart) => {
@@ -363,9 +373,8 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (
     fetch(url, fetchData)
   }
 
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
+  fetch(url, fetchData)
+    .then(r => r.blob())
     .then(showFile).then(cleanFile)
 }
 

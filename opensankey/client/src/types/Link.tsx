@@ -3558,6 +3558,7 @@ export class Class_LinkValueTree {
 
   public toJSON() {
     const json_object: Type_JSON = {}
+    json_object['datatag_group'] = this.data_tag_group.id
     Object.entries(this.children)
       .forEach(([id, child]) => {
         json_object[id] = child.toJSON()
@@ -3567,11 +3568,17 @@ export class Class_LinkValueTree {
 
   public fromJSON(json_object: Type_JSON) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
-    Object.entries(json_object)
-      .forEach(([id, sub_json_object]) => {
-        if (typeof sub_json_object === 'object')
-          this.children[id]?.fromJSON(sub_json_object as Type_JSON)
-      })
+    // So it is not necessary to read datatag group -> it should be the same as in JSON
+    if (this.data_tag_group.id !== json_object['datatag_group'])
+      console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
+    else {
+      Object.entries(json_object)
+        .filter(([id, ]) => id !== 'datatag_group') // Skip this entry in JSON
+        .forEach(([id, sub_json_object]) => {
+          if (typeof sub_json_object === 'object')
+            this.children[id]?.fromJSON(sub_json_object as Type_JSON)
+        })
+    }
   }
 
   public getAllValues(){

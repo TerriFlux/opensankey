@@ -524,7 +524,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             {t('Menu.open_json')}
           </MenuItem>
           <MenuItem
-            onClick={() => ClickSaveExcel('/opensankey/', data)}
+            onClick={() => ClickSaveExcel('/opensankey/', new_data.toJSON())}
           >
             <FontAwesomeIcon
               style={{'height':'1rem', 'width':'1rem'}}

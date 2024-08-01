@@ -1,10 +1,12 @@
-import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
-import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
-import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, postProcessLoadExcelFuncType, applicationDataType, applicationStateType } from '../../types/Types'
-import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { SankeyData, postProcessLoadExcelFuncType, applicationDataType } from '../../types/Types'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_JSON } from '../../types/Utils'
+
+import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
+import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
 
 /**
  * Description placeholder
@@ -53,7 +55,9 @@ export type UploadExcelImplFuncType = (set_show_excel_dialog: (b: boolean) => vo
 
 export type UploadExempleFuncType = (file_name: string, the_url_prefix: string, data: SankeyData, set_data: (data: SankeyData) => void, Reinitialization: () => void, convert_data: ConvertDataFuncType, DefaultSankeyData: DefaultSankeyDataFuncType) => void
 
+export type ClickSaveExcelFuncType = (
+  url_prefix: string,
+  data_as_JSON: Type_JSON,
+  file_name?: string
+) => void
 
-export type ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData,file_name?:string) => void
-
-//export default SankeyLoad

@@ -339,7 +339,6 @@ export class Class_DataTag extends Class_ProtoTag {
   public get group() { return this._group }
 }
 
-
 // CLASS LEVELTAG ***********************************************************************
 
 export class Class_LevelTag extends Class_ProtoTag {
