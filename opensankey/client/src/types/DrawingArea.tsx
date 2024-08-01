@@ -272,6 +272,7 @@ export class Class_DrawingArea {
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend = new Class_Legend(this, this.application_data.menu_configuration)
     this._selection_zone = new Class_ZoneSelection(this, this.application_data.menu_configuration)
+    // Redraw
     this.reset()
   }
 

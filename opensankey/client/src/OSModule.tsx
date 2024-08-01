@@ -169,11 +169,12 @@ export const initializeElementSelected : initializeElementSelectedType = ()=> {
   return elementsSelected
 }
 
-// Réinitialise data et vide les noeud/liens sélectionnés
+/**
+ * Réinitialise data et vide les noeud/liens sélectionnés
+ * @param {applicationDataType} applicationData
+ */
 export const initializeReinitialization : initializeReinitializationType = (
   applicationData :applicationDataType,
-  applicationState : applicationStateType,
-  contextMenu : contextMenuType
 ) => ()=>{
   localStorage.removeItem('diff')
   localStorage.removeItem('data')
@@ -181,21 +182,8 @@ export const initializeReinitialization : initializeReinitializationType = (
   localStorage.removeItem('initial_data')
   localStorage.removeItem('icon_imported')
 
-  // Reset contextualised node
-  applicationData.new_data.drawing_area.node_contextualised = undefined
-  applicationData.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-
-  // Reset contextualised link
-  applicationData.new_data.drawing_area.link_contextualised = undefined
-  applicationData.new_data.menu_configuration.ref_to_menu_context_links_updater.current()
-
-  // Reset contextualised DA
-  applicationData.new_data.drawing_area.is_drawing_area_contextualised=false
-  applicationData.new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-
+  // Reset Class_ApplicationData instance
   applicationData.new_data.reset()
-
-  // TODO : reset Class_ApplicationData instance
 
   sessionStorage.setItem('dismiss_warning_sankey_plus','0')
   sessionStorage.setItem('dismiss_warning_sankey_mfa','0')

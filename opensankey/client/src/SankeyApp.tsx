@@ -271,14 +271,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*******************************************************************************/
 
-  const Reinitialization = initializeReinitialization(
-    applicationData,
-    applicationState,
-    contextMenu
-  )
+  const reinitialization = initializeReinitialization(applicationData)
 
   const additionalMenus : AdditionalMenusType = {
-  // Top Menu
+
+    // Top Menu
     external_edition_item: [],
     external_file_item: [],
     external_file_export_item: [],
@@ -288,6 +285,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     // Mise en page
     extra_background_element: <></>,
     apply_transformation_additional_elements:[<></>],
+
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
@@ -344,7 +342,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const sankey_menus = OpenSankeyMenus(
     applicationContext.t,
-    Reinitialization,
+    reinitialization,
     applicationData.get_default_data,
     dict_hook_ref_setter_show_dialog_components,
     applicationState.never_see_again,
@@ -373,7 +371,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const {filter}=applicationData.data.display_style
 
-  if (window.sankey === undefined || window.sankey.toolbar === undefined || window.sankey.toolbar === true) {
+  if (
+    (window.sankey === undefined) ||
+    (window.sankey.toolbar === undefined) ||
+    (window.sankey.toolbar === true)
+  ) {
     sankey_menus['toolbar']= <ToolbarBuilder
       applicationContext={applicationContext}
       applicationData={applicationData}
@@ -404,7 +406,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   Object.assign(sankey_menus,additionalMenus.sankey_menus)
 
-
   const regular_ui = OpenSankeyDefaultModalePreferenceContent(
     applicationContext,
     applicationData,
@@ -425,19 +426,19 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
 
   useEffect(() => {
-
     // Setup logic here
     return () => {
       localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
     }
-
   }, [])
 
   /*************************************************************************************************/
+
   useEffect(() => {
     // Test
     applicationData.new_data?.drawing_area?.reset()
   })
+
   /*************************************************************************************************/
   return <ChakraProvider theme={opensankey_theme}>
     <div id='sankey_app' style={{ 'backgroundColor' : 'WhiteSmoke' }}>
@@ -465,7 +466,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             applicationContext={applicationContext}
             applicationState={applicationState}
             applicationData={applicationData}
-            uiElementsRef={uiElementsRef}
             contextMenu={contextMenu}
             processFunctions={processFunctions}
             dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
@@ -527,7 +527,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               </React.Fragment>,
               <></>
             ]}
-            Reinitialization={Reinitialization}
+            reinitialization={reinitialization}
             formations_menu={additionalMenus.formations_menu}
             additional_nav_item={
               additionalMenus.additional_nav_item
@@ -536,12 +536,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
             DiagramSelector={initializeDiagrammSelector(applicationData)}
             postProcessLoadExcel={node_function.postProcessLoadExcel}
-            ref_alt_key_pressed={ref_alt_key_pressed}
-            accept_simple_click={accept_simple_click}
-            link_function={link_function}
-            NodeTooltipsContent={NodeTooltipsContent}
             ComponentUpdater={ComponentUpdater}
-            node_function={node_function}
           />
         </>
         <ApplySaveJSONDialog
