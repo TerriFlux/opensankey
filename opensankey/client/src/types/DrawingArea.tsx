@@ -756,7 +756,7 @@ export class Class_DrawingArea {
    * @param {Type_JSON} json_object
    * @memberof Class_DrawingArea
    */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(json_object: Type_JSON,redraw:boolean) {
     // Update direct attributes
     this._height = getNumberFromJSON(json_object, 'height', this._height)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
@@ -770,8 +770,11 @@ export class Class_DrawingArea {
     this._legend.fromJSON(json_object)
     // Update Sankey
     this._sankey.fromJSON(json_object)
-    // Draw
-    this.reset()
+    if(redraw){
+      // Draw
+      this.reset()  
+    }
+
   }
 
   /**

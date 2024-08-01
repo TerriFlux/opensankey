@@ -680,7 +680,12 @@ export class Class_Handler extends Class_Element {
       .attr('fill', this._color)
       .attr('fill-opacity', this._filled ? 1 : 0)
   }
-
+  /**
+   * Copy attributes from element handler
+   *
+   * @param {Class_Handler} element
+   * @memberof Class_Handler
+   */
   public copyFrom(element: Class_Handler) {
     this._size = element._size
     this._color = element._color

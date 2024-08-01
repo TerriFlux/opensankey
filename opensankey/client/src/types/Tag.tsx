@@ -226,7 +226,12 @@ export class Class_Tag extends Class_ProtoTag {
       _.removeTag(this)
     }
   }
-
+  /**
+   * Copy attributes from element tag
+   *
+   * @param {Class_Tag} element
+   * @memberof Class_Tag
+   */
   public copyFrom(element: Class_Tag) {
     this.name = element.name
     this.color = element.color
@@ -300,7 +305,7 @@ export class Class_DataTag extends Class_ProtoTag {
       })
   }
 
-  public copyFrom(element:Class_DataTag){
+  public copyFrom(element: Class_DataTag) {
     this.name = element.name
     this.color = element.color
     this.is_selected = element.is_selected
@@ -494,7 +499,7 @@ export abstract class Class_ProtoTagGroup {
     this._name = getStringFromJSON(json_object, 'group_name', this._name)
   }
 
-  public abstract copyFrom(elment: Class_ProtoTagGroup,type:Type_MacroTagGroup): void
+  public abstract copyFrom(elment: Class_ProtoTagGroup, type: Type_MacroTagGroup): void
   // PROTECTED METHODS ==================================================================
 
   protected abstract createTag(
@@ -626,6 +631,12 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
+  /**
+   * Copy tags group attributes from element to current & copy tags 
+   *
+   * @param {Class_TagGroup} element
+   * @memberof Class_TagGroup
+   */
   public copyFrom(element: Class_TagGroup) {
     this._show_legend = element.show_legend
     this.banner = element.banner
@@ -634,29 +645,29 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     const curr_taggs_list_id = curr_taggs_list.map(nt => nt.id)
     const new_taggs_list = element.tags_list
     const new_taggs_list_id = new_taggs_list.map(nt => nt.id)
-    const dict_tag_grp_element=element.tags_dict
+    const dict_tag_grp_element = element.tags_dict
 
     // Add tag present in element but not this
-    new_taggs_list_id.filter(id_tag => {
-      !curr_taggs_list_id.includes(id_tag)
-    }).forEach(id_tag => {
-      this.addTag(element._ref_sankey.node_taggs_dict[id_tag].name,id_tag)
-      this.tags_dict[id_tag].copyFrom(dict_tag_grp_element[id_tag])
-    })
+    new_taggs_list_id
+      .filter(id_tag => !curr_taggs_list_id.includes(id_tag))
+      .forEach(id_tag => {
+        this.addTag(element.tags_dict[id_tag].name, id_tag)
+        this.tags_dict[id_tag].copyFrom(dict_tag_grp_element[id_tag])
+      })
 
     // Delete tags not present in new layout but present in curr
-    curr_taggs_list_id.filter(id_nt => {
-      !new_taggs_list_id.includes(id_nt)
-    }).forEach(id_nt => {
-      this.tags_dict[id_nt].delete()
-    })
+    curr_taggs_list_id
+      .filter(id_nt => !new_taggs_list_id.includes(id_nt))
+      .forEach(id_nt => {
+        this.tags_dict[id_nt].delete()
+      })
 
     // Transfer tags attr present in new layout and in curr
-    curr_taggs_list_id.filter(id_nt => {
-      new_taggs_list_id.includes(id_nt)
-    }).forEach(id_nt => {
-      this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
-    })
+    curr_taggs_list_id
+      .filter(id_nt => new_taggs_list_id.includes(id_nt))
+      .forEach(id_nt => {
+        this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
+      })
 
   }
 
@@ -781,30 +792,30 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     const curr_taggs_list_id = curr_taggs_list.map(nt => nt.id)
     const new_taggs_list = element.tags_list
     const new_taggs_list_id = new_taggs_list.map(nt => nt.id)
-    const dict_tag_grp_element=element.tags_dict
+    const dict_tag_grp_element = element.tags_dict
 
     // Add tag present in element but not this
-    new_taggs_list_id.filter(id_tag => {
-      !curr_taggs_list_id.includes(id_tag)
-    }).forEach(id_tag => {
-      this.addTag(element._ref_sankey.node_taggs_dict[id_tag].name,id_tag)
-      this.tags_dict[id_tag].copyFrom(dict_tag_grp_element[id_tag])
-    })
+    new_taggs_list_id
+      .filter(id_tag => !curr_taggs_list_id.includes(id_tag))
+      .forEach(id_tag => {
+        this.addTag(element._ref_sankey.node_taggs_dict[id_tag].name, id_tag)
+        this.tags_dict[id_tag].copyFrom(dict_tag_grp_element[id_tag])
+      })
 
     // Delete tags not present in new layout but present in curr
-    curr_taggs_list_id.filter(id_nt => {
-      !new_taggs_list_id.includes(id_nt)
-    }).forEach(id_nt => {
-      this.tags_dict[id_nt].delete()
-    })
+    curr_taggs_list_id
+      .filter(id_nt => !new_taggs_list_id.includes(id_nt))
+      .forEach(id_nt => {
+        this.tags_dict[id_nt].delete()
+      })
 
     // Transfer tags attr present in new layout and in curr
-    curr_taggs_list_id.filter(id_nt => {
-      new_taggs_list_id.includes(id_nt)
-    }).forEach(id_nt => {
-      this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
-    })
-    
+    curr_taggs_list_id
+      .filter(id_nt => new_taggs_list_id.includes(id_nt))
+      .forEach(id_nt => {
+        this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
+      })
+
 
   }
   // PROTECTED METHODS ==================================================================
@@ -896,8 +907,8 @@ export class Class_TagGroupNodeLevel extends Class_TagGroup {
 
   public copyFrom(element: Class_TagGroupNodeLevel) {
     super.copyFrom(element)
-    this._activated=element._activated
-    this._siblings=element._siblings
+    this._activated = element._activated
+    this._siblings = element._siblings
   }
 
   // GETTERS / SETTERS ==================================================================

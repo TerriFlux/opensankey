@@ -253,32 +253,37 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  /**
+   * Copy attributes from element & create/copy ref to current sankey (ref to node_taggs & style)
+   *
+   * @param {Class_NodeElement} element
+   * @memberof Class_NodeElement
+   */
   public copyFrom(element: Class_NodeElement) {
     this._name = element.name
     this._name_label_separator = element._name_label_separator
     this._display.position = structuredClone(element._display.position)
     this._display._x_label = element._display._x_label
     this._display._y_label = element._display._y_label
-    const list_links_id=Object.keys(this.drawing_area.sankey.links_dict)
-    this._input_links=Object.fromEntries(Object.entries(element._input_links).filter(il=>list_links_id.includes(il[0])))
-    this._output_links=Object.fromEntries(Object.entries(element._output_links).filter(il=>list_links_id.includes(il[0])))
+
+    this._input_links = Object.fromEntries(Object.entries(this.drawing_area.sankey.links_dict).filter(il => il[0] in element._input_links))
+    this._output_links = Object.fromEntries(Object.entries(this.drawing_area.sankey.links_dict).filter(ol => ol[0] in element._output_links))
+
     // Get new link order but only keeping link present in current link order
-    this._links_order = element._links_order.filter(link => this.drawing_area.sankey.links_list.includes(link))
-    // this._tags=Object.entries(element._tags).filter(ent_tag=>{
-    //     return this.drawing_area.sankey.ta ent_tag[0]
-    // })
+    const new_link_order_id = element._links_order.map(new_link => new_link.id)
+    this._links_order = new_link_order_id.filter(link_id => link_id in this.drawing_area.sankey.links_dict).map(link_id => this.drawing_area.sankey.links_dict[link_id])
 
     // Copy local attributes
     this._display.attributes.copyFrom(element._display.attributes)
 
     // Copy dimensions
-    const list_id_lvl_tag=this.drawing_area.sankey.level_taggs_list.map(lt=>lt.id)
-    this._dimensions=Object.fromEntries(Object.entries(element._dimensions).filter(dim=>list_id_lvl_tag.includes(dim[0])))
+    const list_id_lvl_tag = this.drawing_area.sankey.level_taggs_list.map(lt => lt.id)
+    this._dimensions = Object.fromEntries(Object.entries(element._dimensions).filter(dim => list_id_lvl_tag.includes(dim[0])))
 
     // Set node style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function) 
-    if(this.drawing_area.sankey.node_styles_list.map(ns=>ns.id).includes(element._display.style.id)){
-      const new_style_id=this.drawing_area.sankey.node_styles_list.map(ns=>ns.id).filter(ns=>ns.includes(element._display.style.id))[0]
-      this._display.style=this.drawing_area.sankey.node_styles_dict[new_style_id]
+    if (this.drawing_area.sankey.node_styles_list.map(ns => ns.id).includes(element._display.style.id)) {
+      const new_style_id = this.drawing_area.sankey.node_styles_list.map(ns => ns.id).filter(ns => ns.includes(element._display.style.id))[0]
+      this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id]
       this._display.style.addReference(this)
     }
   }
@@ -718,8 +723,10 @@ export class Class_NodeElement extends Class_Element {
       .forEach(([tagg_id, tag_ids]) => {
         const tagg = this.drawing_area.sankey.node_taggs_dict[tagg_id]
         tagg.tags_list
-          .filter(tag => tag.id in (tag_ids as string[]))
-          .forEach(tag => this.addTag(tag))
+          .filter(tag => tag_ids.includes(tag.id))
+          .forEach(tag => {
+            this.addTag(tag)
+          })
       })
     // Same thing but for level tag
     // TODO Revoir
@@ -2804,14 +2811,14 @@ export class Class_NodeElement extends Class_Element {
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
     // Input links
-    if ( this.hasInputLinks() ) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">'+'Entrées'+'</p>' // TODO traduction manquante sur "entrées"
+    if (this.hasInputLinks()) {
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + 'Entrées' + '</p>' // TODO traduction manquante sur "entrées"
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>'+'Provenances'+'</th>' // TODO traduction manquante
-      tooltip_html += '      <th>'+'Valeurs'+'</th>' // TODO traduction manquante
-      tooltip_html += '      <th>'+'Ratios'+'</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + 'Provenances' + '</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + 'Ratios' + '</th>' // TODO traduction manquante
       this.drawing_area.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
@@ -2828,7 +2835,7 @@ export class Class_NodeElement extends Class_Element {
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (this._input_data_value > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0)/this._input_data_value)*100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / this._input_data_value) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -2845,21 +2852,21 @@ export class Class_NodeElement extends Class_Element {
           tooltip_html += '   </tr>'
         })
       tooltip_html += '    <tr>'
-      tooltip_html += '       <th>'+'Total'+'</th>'
+      tooltip_html += '       <th>' + 'Total' + '</th>'
       tooltip_html += '       <td>' + this._input_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
       tooltip_html += '    </tr>'
       tooltip_html += '  </tbody>'
       tooltip_html += '</table>'
     }
     // Output links
-    if ( this.hasOutputLinks() ) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">'+'Sortie'+'</p>' // TODO traduction manquante sur "sorties"
+    if (this.hasOutputLinks()) {
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + 'Sortie' + '</p>' // TODO traduction manquante sur "sorties"
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>'+'Destinations'+'</th>' // TODO traduction manquante
-      tooltip_html += '      <th>'+'Valeurs'+'</th>' // TODO traduction manquante
-      tooltip_html += '      <th>'+'Ratios'+'</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + 'Destinations' + '</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + 'Ratios' + '</th>' // TODO traduction manquante
       this.drawing_area.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
@@ -2875,7 +2882,7 @@ export class Class_NodeElement extends Class_Element {
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (this._output_data_value > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0)/this._output_data_value)*100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / this._output_data_value) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -2892,7 +2899,7 @@ export class Class_NodeElement extends Class_Element {
           tooltip_html += '    </tr>'
         })
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>'+'Total'+'</th>'
+      tooltip_html += '      <th>' + 'Total' + '</th>'
       tooltip_html += '      <td>' + this._output_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
       tooltip_html += '    </tr>'
       tooltip_html += '  </tbody>'

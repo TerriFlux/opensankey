@@ -409,7 +409,7 @@ export const ProcessExample: ProcessExampleFuncType = (
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
-    updateLayout(data, data_layout, ['posNode', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
+    updateLayout(data, data_layout, ['posNode', 'attrNode', 'attrFlux', 'attrDrawingArea', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
     postProcessLoadExcel(data)
   }
   d3.select('.loading_auto_compute').remove()

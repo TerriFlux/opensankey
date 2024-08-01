@@ -6,15 +6,11 @@ import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
 import { MutableRefObject } from 'react'
 
 export type OpenSankeyDiagramSelectorFType = (
-  t: TFunction, 
-  convert_data: ConvertDataFuncType,
-  sankey_data: SankeyData,
-  set_sankey_data: (s:SankeyData)=>void,
-  prev_sankey_data: SankeyData,
-  set_prev_sankey_data: (s:SankeyData)=>void, 
+  applicationData:applicationDataType,
+  applicationContext:applicationContextType,
   updateLayout: updateLayoutFuncType, 
   elementToDispose : MutableRefObject<string[]>,
-  DefaultSankeyData: ()=>SankeyData
+
 ) => JSX.Element
 
 export type initializeDiagrammSelectorFType=(applicationData:applicationDataType)=>OpenSankeyDiagramSelectorFType
@@ -25,7 +21,7 @@ export type initializeDiagrammSelectorFType=(applicationData:applicationDataType
  * @type {{ ref_setter_show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
 export type ApplyLayoutDialogTypes = {
-  t:TFunction,
+  applicationContext:applicationContextType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
