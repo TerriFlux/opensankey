@@ -1,6 +1,6 @@
 // External imports
-import React, { FunctionComponent, createRef, useRef, MutableRefObject, RefObject } from 'react'
-import { Box, Button, Checkbox, Input, Select, useBoolean } from '@chakra-ui/react'
+import React, { FunctionComponent, useRef, RefObject } from 'react'
+import { Box, Button, Checkbox, Input, Select } from '@chakra-ui/react'
 
 // Internal types / classes
 import {
@@ -14,6 +14,7 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 
 // COMPONENTS ===========================================================================
+
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
   applicationContext,
   applicationData,

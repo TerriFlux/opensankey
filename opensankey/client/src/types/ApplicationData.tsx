@@ -78,6 +78,22 @@ export class Class_ApplicationData {
 
   // PUBLIC METHODS =====================================================================
 
+  public reset() {
+    // Reset values of attributes
+    this._show_structure = initial_show_structure
+    delete this._maximum_flux
+    delete this._minimum_flux
+    this._filter_label = 0
+    // Recreate drawing area
+    this.drawing_area.delete()
+    this.drawing_area = new Class_DrawingArea(
+      initial_window_height,
+      initial_window_width,
+      this)
+    // Update menus
+    this.menu_configuration.updateAllMenuComponents()
+  }
+
   /**
    * Reset value of drawing_area and substructur with data from JSON
    * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
@@ -103,21 +119,6 @@ export class Class_ApplicationData {
       ...json_object,
       ...this.drawing_area.toJSON()
     }
-  }
-
-  public reset() {
-    this._show_structure = initial_show_structure
-    delete this._maximum_flux
-    delete this._minimum_flux
-    this._filter_label = 0
-
-    this.drawing_area.reinit()
-    this.drawing_area = new Class_DrawingArea(
-      initial_window_height,
-      initial_window_width,
-      this)
-
-    this.menu_configuration.updateAllMenuComponents()
   }
 
   // PRIVATE METHODS =====================================================================
