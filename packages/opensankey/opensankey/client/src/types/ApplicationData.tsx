@@ -85,12 +85,11 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(json_object: Type_JSON,redraw:boolean) {
     // Reset everything
-    this.reset()
-    // TODO read application data attributes
     // Update drawing area
-    this.drawing_area.fromJSON(json_object)
+    this.drawing_area.fromJSON(json_object,redraw)
+    this.menu_configuration.updateAllMenuComponents()
   }
 
   public toJSON() {

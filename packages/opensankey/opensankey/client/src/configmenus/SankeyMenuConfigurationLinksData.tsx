@@ -66,14 +66,17 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   const [ , refreshThis] = useBoolean()
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = refreshThis.toggle
-
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
     refreshThis.toggle()
   }
+
+  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current =()=>{
+    updateInputsValues()
+    refreshThis.toggle()
+  } 
 
   // JSX -------------------------------------------------------------------------------
   const content = <Box
