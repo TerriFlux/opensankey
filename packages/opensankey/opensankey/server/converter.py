@@ -1137,9 +1137,9 @@ class JsonToSankey(object):
             for (level_tagg_id, level_attr) in node_json['dimensions'].items():
                 # Get corresponding tagg group
                 if level_tagg_id in DEFAULT_LEVEL_TAGGS:
-                    level_tagg = level_tagg_name
+                    level_tagg = level_tagg_id
                 else:
-                    level_tagg = _self._leveltaggs_corresp[level_tagg_id]
+                    level_tagg = self._leveltaggs_corresp[level_tagg_id]
                     # Check if we had this level registered in taggroups
                     if level_tagg not in parent_children_per_levels.keys():
                         parent_children_per_levels[level_tagg] = {}
@@ -1286,7 +1286,7 @@ class JsonToSankey(object):
         :type datatags_list: list[Tags]
         """
         # Check if we reach the bottom of datas_json
-        if "value" in datas_json.keys():
+        if 'data_value' in datas_json.keys():
             # Get corresponding data / datatags
             data = flux.get_corresponding_datas_from_tags(datatags_list)[0]
             # Get all fluxtags
@@ -1324,15 +1324,16 @@ class JsonToSankey(object):
                     data.add_tag(tag)
             return
         # Otherwise we have to go deeper
-        curr_datatagg_id = datas_json['datatag_group']
-        # Recursive calls on all datatags
-        for datatag_id, datatag in self._datatags_corresp[curr_datatagg_id].items():
-            # Temporary copy of datatags_list
-            new_datatags_list = datatags_list.copy()
-            new_datatags_list.append(datatag)
-            # Recurse
-            self._extract_data(
-                datas_json[datatag_id],
-                flux,
-                new_datatags_list)
+        elif 'datatag_group' in datas_json.keys():
+            curr_datatagg_id = datas_json['datatag_group']
+            # Recursive calls on all datatags
+            for datatag_id, datatag in self._datatags_corresp[curr_datatagg_id].items():
+                # Temporary copy of datatags_list
+                new_datatags_list = datatags_list.copy()
+                new_datatags_list.append(datatag)
+                # Recurse
+                self._extract_data(
+                    datas_json[datatag_id],
+                    flux,
+                    new_datatags_list)
         return
