@@ -154,7 +154,7 @@ class SankeyToJson(object):
 
         Struct for tagg_json :
         {
-            'group_name': str,
+            'name': str,
             'show_legend': bool,
             'tags': {
                 '<tag name>': tag_json,
@@ -210,7 +210,7 @@ class SankeyToJson(object):
 
         Struct for tagg_json :
         {
-            'group_name': str,
+            'name': str,
             'show_legend': bool,
             'tags': {
                 '<tag name>': tags_json,
@@ -238,14 +238,14 @@ class SankeyToJson(object):
         """
         for tagg in taggs.values():
             # tags dict
-            tags = {tag.name_unformatted: {
+            tags = {tag.name: {
                 'name': tag.name_unformatted,
                 'selected': False,
                 'color': tag.color_in_hex} for tag in tagg.tags.values()}
             next(iter(tags.values()))['selected'] = True  # by default select first tag
             # tag group dict
-            data_tags_json[tagg.name_unformatted] = {
-                'group_name': tagg.name_unformatted,
+            data_tags_json[tagg.name] = {
+                'name': tagg.name_unformatted,
                 'show_legend': tagg.has_palette,
                 'tags': tags,
                 'banner': 'one',
@@ -265,7 +265,7 @@ class SankeyToJson(object):
 
         Struct for tagg_json :
         {
-            'group_name': str,
+            'name': str,
             'show_legend': bool,
             'tags': {
                 '<tag name>': tags_json,
@@ -296,7 +296,7 @@ class SankeyToJson(object):
         """
         for tagg in taggs.values():
             # tags dict
-            tags = {tag.name_unformatted: {
+            tags = {tag.name: {
                 'name': tag.name_unformatted,
                 'selected': True,
                 'color': tag.color_in_hex} for tag in tagg.tags.values()}
@@ -315,18 +315,18 @@ class SankeyToJson(object):
             # if there are antagonists_taggs only one can be selected
             activated = True
             for antagonists_tagg in tagg.antagonists_taggs:
-                if antagonists_tagg.name_unformatted in node_tags_json:
-                    if node_tags_json[antagonists_tagg.name_unformatted]['activated']:
+                if antagonists_tagg.name in node_tags_json:
+                    if node_tags_json[antagonists_tagg.name]['activated']:
                         activated = False
                         break
-            node_tags_json[tagg.name_unformatted] = {
-                'group_name': tagg.name_unformatted,
+            node_tags_json[tagg.name] = {
+                'name': tagg.name_unformatted,
                 'show_legend': tagg.has_palette,
                 'tags': tags,
                 'banner': banner,
                 'activated': activated,
                 'siblings': [
-                    anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
+                    anta_tagg.name for anta_tagg in tagg.antagonists_taggs]
             }
             # Specific case for tag 'échange'
             # Why ? Julien
@@ -346,7 +346,7 @@ class SankeyToJson(object):
 
         Struct for tagg_json :
         {
-            'group_name': str,
+            'name': str,
             'show_legend': bool,
             'tags': {
                 '<tag name>': tags_json,
@@ -374,20 +374,20 @@ class SankeyToJson(object):
         """
         for tagg in taggs.values():
             # tags dict
-            tags = {tag.name_unformatted: {
+            tags = {tag.name: {
                 'name': tag.name_unformatted,
                 'selected': True,
                 'color': tag.color_in_hex} for tag in tagg.tags.values()}
             # Specific tags for reconcillation
             # TODO remove ?
-            tagg_name = tagg.name_unformatted
+            tagg_name = tagg.name
             if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
                 tagg_name = 'flux_types'
                 tags['initial_data'] = tags.pop(CONST_IO_XL.DATA_COLLECTED)
                 tags['computed_data'] = tags.pop(CONST_IO_XL.DATA_COMPUTED)
             # tag group dict
             flux_tags_json[tagg_name] = {
-                'group_name': tagg.name_unformatted,
+                'name': tagg.name_unformatted,
                 'show_legend': tagg.has_palette,
                 'tags': tags,
                 'banner': 'multi',
@@ -427,7 +427,7 @@ class SankeyToJson(object):
         # Add flux tag groups to default data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # Replace specific names
-            tagg_name = tagg.name_unformatted
+            tagg_name = tagg.name
             if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
                 tagg_name = "flux_types"
             # Update fluxtags struct
@@ -504,7 +504,7 @@ class SankeyToJson(object):
         for tagg in reversed(sankey.taggs[CONST_IO_XL.TAG_TYPE_DATA].values()):
             next_datas_strct = {}
             for tag in tagg.tags.values():
-                next_datas_strct[tag.name_unformatted] = copy.deepcopy(datas_json)
+                next_datas_strct[tag.name] = copy.deepcopy(datas_json)
             datas_json = next_datas_strct
         # We use result data if present instead of simple data
         self._parse_datas_or_results(
@@ -518,7 +518,6 @@ class SankeyToJson(object):
         #     color = flux.dest.color_in_hex
         # Then create link struct
         return {
-            'idLink': flux.id,
             'idSource': flux.orig.id,
             'idTarget': flux.dest.id,
             'value': datas_json
@@ -555,8 +554,8 @@ class SankeyToJson(object):
 
         Struct for *data_json* :
         {
-            'value': <float>,
-            'display_value': <str>,
+            'data_value': <float>,
+            'text_value': <str>,
             'tags': {
                 'fluxTagGroup1': ['fluxTagX1_fluxTagGroup1','fluxTagY1_fluxTagGroup1'],
                 'fluxTagGroup2': ['fluxTagY1_fluxTagGroup2'],
@@ -631,8 +630,8 @@ class SankeyToJson(object):
 
         Struct for *data_json* :
         {
-            'value': <float>,
-            'display_value': <str>,
+            'data_value': <float>,
+            'text_value': <str>,
             'tags': {
                 'fluxTagGroup1': ['fluxTagX1_fluxTagGroup1','fluxTagY1_fluxTagGroup1'],
                 'fluxTagGroup2': ['fluxTagY1_fluxTagGroup2'],
@@ -663,11 +662,11 @@ class SankeyToJson(object):
                 return
             # Otherwise we have a reccurence
             for tag in tags:
-                if tag.name_unformatted in datas_json.keys():
+                if tag.name in datas_json.keys():
                     tags.remove(tag)
                     add_data_to_datas(
                         tags,
-                        datas_json[tag.name_unformatted],
+                        datas_json[tag.name],
                         data_json)
                     return
             # TODO : Mettre gestion erreur aucun tag trouvé ?
@@ -683,8 +682,8 @@ class SankeyToJson(object):
 
         Struct for *data_json* :
         {
-            'value': <float>,
-            'display_value': <str>,
+            'data_value': <float>,
+            'text_value': <str>,
             'tags': {
                 'fluxTagGroup1': ['fluxTagX1_fluxTagGroup1','fluxTagY1_fluxTagGroup1'],
                 'fluxTagGroup2': ['fluxTagY1_fluxTagGroup2'],
@@ -710,17 +709,17 @@ class SankeyToJson(object):
         :rtype: dict
         """
         data_json = copy.deepcopy(default_data_strct)
-        data_json["value"] = data.value if (data.value is not None) else ""
-        data_json["display_value"] = ""
+        data_json["data_value"] = data.value if (data.value is not None) else ""
+        data_json["text_value"] = ""
         # Update flux tags to data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
             tags = data.get_tags_from_taggroup(tagg)
             if tags is not None:
                 # Replace specific names for tags and tagggroup
-                tagg_name = tagg.name_unformatted
+                tagg_name = tagg.name
                 for tag in tags:
-                    tag_name = tag.name_unformatted
+                    tag_name = tag.name
                     if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
                         tagg_name = "flux_types"
                         tag_name = tag_name \
@@ -761,7 +760,7 @@ class SankeyToJson(object):
         # Create primary level tag if necessary
         if (sankey.max_nodes_level > 1):
             nodeTags['Primaire'] = {
-                'group_name': 'Primaire',
+                'name': 'Primaire',
                 'show_legend': False,
                 'tags': {},
                 'banner': 'level',
@@ -858,30 +857,23 @@ class SankeyToJson(object):
         }
         # Update tags
         for tag in node.tags:
-            tag_group_name = tag.group.name_unformatted
+            tag_group_name = tag.group.name
             # Create group entry if not already the case
             if tag_group_name not in node_json['tags'].keys():
                 node_json['tags'][tag_group_name] = []
             # Add the tag
-            node_json['tags'][tag_group_name].append(tag.name_unformatted)
-            # node_json['tags'][tag_group_name].sort()
+            node_json['tags'][tag_group_name].append(tag.name)
         # Parents relations -> TODO duplicate node for each parent
         if (node.has_parents()):
             node_json['dimensions']['Primaire']['parent_name'] = node.parents[0].id
-        # Child relations
-        if (node.has_at_least_one_child()):
-            # The node has children : Primary tag is only the node's level
-            node_json['tags']['Primaire'] = [str(node.level)]
-        else:
-            # The node does not have child : Primary tags are all level
-            # starting from the nod's level
-            node_json['tags']['Primaire'] = \
-                [str(_) for _ in range(node.level, sankey.max_nodes_level+1)]
+            node_json['dimensions']['Primaire']['parent_tag'] = str(node.parents[0].level)
+            node_json['dimensions']['Primaire']['child_tag'] = str(node.level)
+            node_json['dimensions']['Primaire']['level'] = node.level
         # Level tag parent relations
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
             # Check all current node level tags groups
             if tagg in node.taggs:
-                node_json['dimensions'][tagg.name_unformatted] = {}
+                node_json['dimensions'][tagg.name] = {}
                 # For each node level tag group, get associated tags
                 tags = node.get_tags_from_taggroup(tagg)
                 if tags is not None:
@@ -912,9 +904,12 @@ class SankeyToJson(object):
                                 # TODO : if more than 1 parent_node_for_leveltagg -> we have a problem in input file
                                 # I do a sort here to be sure that we always have the same id
                                 # if multiple parent nodes are found
+                                dimension = {}
                                 parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
-                                node_json['dimensions'][tagg.name_unformatted]['parent_name'] = \
-                                    parent_nodes_ids_for_leveltagg[0]
+                                dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
+                                dimension['child_tags'] = [tag.name for tag in tags]
+                                dimension['parent_name'] = upper_tag.name
+                                node_json['dimensions'][tagg.name] = dimension
                                 # Break the loop
                                 break
                             else:
@@ -1213,8 +1208,8 @@ class JsonToSankey(object):
 
         Struct for *data_json*:
         {
-            'value': str,
-            'display_value': str,
+            'data_value': str,
+            'text_value': str,
             'tags': {
                 '<flux_taggroup1>': ['<tag name 1>', ...],
                 ...
@@ -1265,8 +1260,8 @@ class JsonToSankey(object):
 
         Struct for *data_json*:
         {
-            'value': str,
-            'display_value': str,
+            'data_value': str,
+            'text_value': str,
             'tags': {
                 '<flux_taggroup1>': ['<tag name 1>', ...],
                 ...
