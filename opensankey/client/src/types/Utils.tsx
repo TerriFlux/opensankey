@@ -401,7 +401,7 @@ export type ConvertDataLegacyFuncType = (
 
 /**
  * Permet de convertir les fichier de sauvegarde JSON pré-classes vers un standard attendu.
- * 
+ *
  * (Code repris de convert_data du fichier SankeyConvert.tsx)
  *
  * @param {Type_JSON} json_object
@@ -1255,7 +1255,7 @@ export const convert_nodes:convert_nodesFuncType = (
 
 }
 
-export const convert_links:convert_linksFuncType = (
+export const convert_links: convert_linksFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
