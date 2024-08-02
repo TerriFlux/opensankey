@@ -1324,7 +1324,7 @@ export const updateLayout: updateLayoutFuncType = (
   if (synchronize) {
     synchronizeNodesandLinksId(data, new_layout)
   }
-  if (mode.includes('attrGeneral')) {
+  if (mode.includes('attrDrawingArea')) {
     let differences = getDiff(data, new_layout)
     if (differences) {
       const legend_pos = differences.filter( difference=>difference.path![0] == 'legend_position')

@@ -1360,7 +1360,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
             </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
-        t={applicationContext.t}
+        applicationContext={applicationContext}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         applicationData={applicationData}
         applicationDraw={applicationDraw}

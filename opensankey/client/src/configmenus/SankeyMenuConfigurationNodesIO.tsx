@@ -109,7 +109,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
 
   // Set list of links to reorganize ----------------------------------------------------
 
-  let links_to_reorganize: {[_ in Type_Side]:Class_LinkElement[]} = {
+  const links_to_reorganize: {[_ in Type_Side]:Class_LinkElement[]} = {
     'right': [], 'left': [], 'top': [], 'bottom': []
   }
   if ( unique_node_selected && direction_selected && side_selected )  {
