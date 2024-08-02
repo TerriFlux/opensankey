@@ -14,6 +14,8 @@ import { Box, Checkbox, Button, NumberInput, Input, NumberDecrementStepper, Numb
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
+import { Class_ApplicationData } from '../types/ApplicationData'
+import { Class_DrawingArea } from '../types/DrawingArea'
 
 export   const os_all_element_to_transform = [
   'addNode', 'addFlux', 'removeNode', 'removeFlux',
@@ -21,7 +23,7 @@ export   const os_all_element_to_transform = [
   'Values',
   'attrNode', 'attrFlux',
   'tagNode', 'tagFlux', 'tagData', 'tagLevel',
-  'attrGeneral'
+  'attrDrawingArea'
 ]
 
 /**
@@ -30,7 +32,7 @@ export   const os_all_element_to_transform = [
  * @returns {*}
  */
 export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
-  t,
+  applicationContext,
   dict_hook_ref_setter_show_dialog_components,
   applicationData,
   applicationDraw,
@@ -41,6 +43,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   ComponentUpdater
 }) => {
   const {updateLayout,all_element_UpdateLayout}=applicationDraw
+  const {t}=applicationContext
   const {data,set_data,dataVarToUpdate}=applicationData
   const [prev_sankey_data,set_prev_sankey_data] = useState(data)
   const [forceUpdate,setForceUpdate] = useState(true)
@@ -59,12 +62,12 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   const simple_element_to_transform = [
     'posNode',
     'attrNode', 'attrFlux',
-    'attrGeneral'
+    'attrDrawingArea'
   ]
   const default_element_to_transform = [
     'posNode',
     'attrNode', 'attrFlux',
-    'attrGeneral'
+    'attrDrawingArea'
   ]
 
   const applyStretch=(param:string)=>{
@@ -100,8 +103,8 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
         <Box layerStyle='menuconfigpanel_grid' >
 
           {diagramSelector(
-            t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data,
-            updateLayout, dataVarToUpdate,DefaultSankeyData
+            applicationData,applicationContext,
+            updateLayout, dataVarToUpdate,
           )}
 
           <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -356,22 +359,22 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 </Box>
               </Box></OSTooltip>:<></>}
 
-          <OSTooltip label={t('Menu.Transformation.tooltips.attrGeneral')} >
+          <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')} >
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrDrawingArea')}</Box>
               <Box layerStyle='options_4cols' >
                 <Button
-                  variant={dataVarToUpdate.current.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                  variant={dataVarToUpdate.current.includes('attrDrawingArea')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
                   onClick={() =>{
-                    if(!dataVarToUpdate.current.includes('attrGeneral')){
-                      dataVarToUpdate.current.push('attrGeneral')
+                    if(!dataVarToUpdate.current.includes('attrDrawingArea')){
+                      dataVarToUpdate.current.push('attrDrawingArea')
                       setForceUpdate(!forceUpdate)
                     }else{
-                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrGeneral'),1)
+                      dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('attrDrawingArea'),1)
                       setForceUpdate(!forceUpdate)
                     }}
                   }
-                >{dataVarToUpdate.current.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+                >{dataVarToUpdate.current.includes('attrDrawingArea')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
               </Box>
             </Box></OSTooltip>
           {mode_trans=='expert'? apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
@@ -693,17 +696,14 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
 }
 
 export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
-  t,
-  convert_data,
-  sankey_data,
-  set_sankey_data,
-  prev_sankey_data,
-  set_prev_sankey_data,
+  applicationData,
+  applicationContext,
   updateLayout,
   dataVarToUpdate,
-  defaultData
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
+  const {t}=applicationContext
+  const {new_data}=applicationData
   return <Box>
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Menu.Transformation.fmep')}
@@ -729,11 +729,12 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
                   if (result) {
                     result = String(result)
                     const new_layout = JSON.parse(result)
-                    convert_data(new_layout,defaultData)
-                    complete_sankey_data(new_layout, defaultData, DefaultNode, DefaultLink)
-                    set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                    updateLayout(sankey_data, new_layout, dataVarToUpdate.current, true)
-                    set_sankey_data({ ...sankey_data })
+                    const tmp_DA=new Class_DrawingArea(0,0,new_data)
+                    tmp_DA.fromJSON(new_layout,false)
+                    new_data.drawing_area.sankey.updateLayoutFromJSON(tmp_DA,dataVarToUpdate.current)
+                    new_data.drawing_area.drawElements()
+                    new_data.menu_configuration.updateAllMenuComponents()
+                    
                   }
                 }
               )
@@ -744,7 +745,7 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
         <Button
           variant='menuconfigpanel_option_button'
           onClick={() => {
-            set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
+            // set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
           } }>{t('Menu.Transformation.undo')}
         </Button>
       </Box>
