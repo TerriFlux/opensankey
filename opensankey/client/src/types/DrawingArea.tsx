@@ -789,7 +789,7 @@ export class Class_DrawingArea {
 
     // Only legacy convert old sankey
     if (!(version && Number(version) > 0.9)) {
-      convert_data_legacy(json_object)
+      // convert_data_legacy(json_object)
     }
     // Update direct attributes
     this._height = getNumberFromJSON(json_object, 'height', this._height)
