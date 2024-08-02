@@ -339,7 +339,8 @@ export const Counter:FunctionComponent<CounterType> = ({
 /* EXCEL FILE SAVING PROCESSES *********************************************************/
 
 /**
- * Triggers server side conversion as Excel
+ * Triggers server side conversion JSON -> Excel
+ * + launch download
  * @param {string} url_prefix
  * @param {Type_JSON} data
  * @param {string} [file_name='sankey']
@@ -375,62 +376,16 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (
 
   fetch(url, fetchData)
     .then(r => r.blob())
-    .then(showFile).then(cleanFile)
+    .then(showFile)
+    .then(cleanFile)
 }
 
-export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
-  applicationData,
-  text: string,
-  updateLayout: updateLayoutFuncType,
-  postProcessLoadExcel: (server_data: SankeyData) => void,
-  GetSankeyMinWidthAndHeight,
-  convert_data: ConvertDataFuncType,
-  defaultData: () => SankeyData
-) => {
-  const {set_data}=applicationData
-  const default_data = defaultData()
-  const server_data = JSON.parse(text)
-  let default_nstyle = default_data.style_node['default']
-  let default_lstyle = default_data.style_link['default']
-  server_data.h_space = default_data.h_space
-  server_data.v_space = default_data.v_space
-  if ((default_data as SankeyData & { layout?: SankeyData} ).layout) {
-    server_data.layout = (default_data as SankeyData & { layout?: SankeyData} ).layout
-  } else {
-    default_nstyle = JSON.parse(JSON.stringify(default_data.style_node['default']))
-    default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
-  }
-  const new_data = Object.assign(default_data, server_data) as SankeyData
-  applicationData.data=new_data
-  ProcessExample(applicationData, updateLayout, convert_data, postProcessLoadExcel, DefaultSankeyData)
-  new_data.style_node['default'] = default_nstyle
-  new_data.style_link['default'] = default_lstyle
-  delete (new_data as SankeyData & { layout?: SankeyData} ).layout
-  if (Object.values(new_data.nodeTags).filter(tagg => tagg.show_legend).length > 0) {
-    new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg => tagg[1].show_legend)[0][0]
-    Object.values(new_data.nodes).forEach(el => {
-      el.colorParameter = 'groupTag'
-      el.colorTag = new_data.colorMap
-    })
-  }
-  if (Object.keys(new_data.nodeTags).filter(t => new_data.nodeTags[t].show_legend).length == 0 &&
-    Object.keys(new_data.fluxTags).filter(tag => tag === 'flux_type').length == 0 &&
-    Object.values(new_data.nodes).filter(n => n.local && n.local.color).length == 0 &&
-    Object.values(new_data.links).filter(l => l.local && l.local.color).length == 0) {
-    const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-    const n_keys = Object.keys(new_data.nodes)
-    const size_color = n_keys.length
-
-    for (const i in d3.range(size_color)) {
-      AssignNodeLocalAttribute(new_data.nodes[n_keys[i]], 'color', (d3.color(color_selected(+i / size_color))?.formatHex() as string))
-    }
-  }
-  set_data({ ...new_data })
-  setTimeout(() => {
-    AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight)
-  }, 100)
-}
-
+/**
+ * Trigger server side conversion Excel -> JSON
+ * @param {(b: boolean) => void} set_show_excel_dialog
+ * @param {Blob} input_file
+ * @param {string} the_url_prefix
+ */
 export const UploadExcelImpl: UploadExcelImplFuncType = (
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
@@ -448,6 +403,67 @@ export const UploadExcelImpl: UploadExcelImplFuncType = (
   }
   fetch(url, fetchData)
   set_show_excel_dialog(false)
+}
+
+export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
+  applicationData,
+  text: string,
+  updateLayout: updateLayoutFuncType,
+  postProcessLoadExcel: (server_data: SankeyData) => void,
+  GetSankeyMinWidthAndHeight,
+  convert_data: ConvertDataFuncType,
+  defaultData: () => SankeyData
+) => {
+  // Get data & reinit
+  const { new_data } = applicationData
+  new_data.reset()
+  new_data.fromJSON(JSON.parse(text) as Type_JSON)
+
+  // TODO autocompute sankey
+  // TODO adjust sankey zone
+
+  // const { set_data } = applicationData
+  // const default_data = defaultData()
+  // const server_data = JSON.parse(text)
+  // let default_nstyle = default_data.style_node['default']
+  // let default_lstyle = default_data.style_link['default']
+  // server_data.h_space = default_data.h_space
+  // server_data.v_space = default_data.v_space
+  // if ((default_data as SankeyData & { layout?: SankeyData} ).layout) {
+  //   server_data.layout = (default_data as SankeyData & { layout?: SankeyData} ).layout
+  // } else {
+  //   default_nstyle = JSON.parse(JSON.stringify(default_data.style_node['default']))
+  //   default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
+  // }
+  // const new_data = Object.assign(default_data, server_data) as SankeyData
+  // applicationData.data=new_data
+  // ProcessExample(applicationData, updateLayout, convert_data, postProcessLoadExcel, DefaultSankeyData)
+  // new_data.style_node['default'] = default_nstyle
+  // new_data.style_link['default'] = default_lstyle
+  // delete (new_data as SankeyData & { layout?: SankeyData} ).layout
+  // if (Object.values(new_data.nodeTags).filter(tagg => tagg.show_legend).length > 0) {
+  //   new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg => tagg[1].show_legend)[0][0]
+  //   Object.values(new_data.nodes).forEach(el => {
+  //     el.colorParameter = 'groupTag'
+  //     el.colorTag = new_data.colorMap
+  //   })
+  // }
+  // if (Object.keys(new_data.nodeTags).filter(t => new_data.nodeTags[t].show_legend).length == 0 &&
+  //   Object.keys(new_data.fluxTags).filter(tag => tag === 'flux_type').length == 0 &&
+  //   Object.values(new_data.nodes).filter(n => n.local && n.local.color).length == 0 &&
+  //   Object.values(new_data.links).filter(l => l.local && l.local.color).length == 0) {
+  //   const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+  //   const n_keys = Object.keys(new_data.nodes)
+  //   const size_color = n_keys.length
+
+  //   for (const i in d3.range(size_color)) {
+  //     AssignNodeLocalAttribute(new_data.nodes[n_keys[i]], 'color', (d3.color(color_selected(+i / size_color))?.formatHex() as string))
+  //   }
+  // }
+  // set_data({ ...new_data })
+  // setTimeout(() => {
+  //   AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight)
+  // }, 100)
 }
 
 
