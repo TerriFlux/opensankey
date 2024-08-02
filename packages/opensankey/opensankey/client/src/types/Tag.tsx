@@ -674,36 +674,26 @@ export abstract class Class_ProtoTagGroup {
 
     // Synchronize tags
     if(tags_synchro) {
-      // Get ids of tags
-      const cur_tags_list_id = Object.keys(this._tags)
-      const new_tags_list_id =  Object.keys(element._tags)
-
-      // Add tag present in element but not this
-      new_tags_list_id
-        .filter(id_tag => {
-          !cur_tags_list_id.includes(id_tag)
-        })
-        .forEach(id_tag => {
-          this.addTag(element._ref_sankey.node_taggs_dict[id_tag].name,id_tag)
-          this.tags_dict[id_tag].copyFrom(element._tags[id_tag])
-        })
 
       // Delete tags not present in new layout but present in curr
-      cur_tags_list_id
-        .filter(id_nt => {
-          !new_tags_list_id.includes(id_nt)
-        })
-        .forEach(id_nt => {
-          this.tags_dict[id_nt].delete()
+      this.tags_list
+        .filter(tag => !(tag.id in element.tags_dict))
+        .forEach(tag => {
+          this.removeTag(tag)
         })
 
       // Transfer tags attr present in new layout and in curr
-      cur_tags_list_id
-        .filter(id_nt => {
-          new_tags_list_id.includes(id_nt)
+      this.tags_list
+        .filter(tag => (tag.id in element.tags_dict))
+        .forEach(tag => {
+          tag.copyFrom(element.tags_dict[tag.id])
         })
-        .forEach(id_nt => {
-          this.tags_dict[id_nt].copyFrom(element.tags_dict[id_nt])
+
+      // Add tag present in element but not this
+      element.tags_list
+        .filter(tag => !(tag.id in this.tags_dict))
+        .forEach(tag => {
+          this.addTag(tag.name, tag.id).copyFrom(tag)
         })
     }
   }
@@ -968,7 +958,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public copyFrom(element: Class_DataTagGroup) {
-    super.copyFrom(element, false) // FIXME Dont synchronize tags, dont know how to do it properly yet
+    super.copyFrom(element, true)
     this._show_legend = element.show_legend
   }
 
