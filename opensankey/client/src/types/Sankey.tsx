@@ -698,76 +698,76 @@ export class Class_Sankey {
 
 
   public updateLayoutFromJSON(
-    new_layout: Class_ApplicationData,
+    new_layout: Class_DrawingArea,
     mode: string[],
-    // synchronize = false
   ) {
 
     const list_curr_nodes = this.nodes_list
     const list_curr_nodes_id = list_curr_nodes.map(n => n.id)
-    const list_new_nodes = new_layout.drawing_area.sankey.nodes_list
+    const list_new_nodes = new_layout.sankey.nodes_list
     const list_new_nodes_id = list_new_nodes.map(n => n.id)
 
     const list_curr_links = this.links_list
-    const list_curr_links_id = list_curr_links.map(n => n.id)
-    const list_new_links = new_layout.drawing_area.sankey.links_list
+    const list_new_links = new_layout.sankey.links_list
     const list_new_links_id = list_new_links.map(n => n.id)
 
-    if (mode.includes('attrGeneral')) {
+    // Transfer DA attribut from new layout to current (+ nodes/links style)
+    if (mode.includes('attrDrawingArea')) {
 
       // Transfer node style from new_layout style node  to corresponding style in current
       const list_curr_nodes_style = this.node_styles_list
-      const list_new_nodes_style = new_layout.drawing_area.sankey.node_styles_list
+      const list_new_nodes_style = new_layout.sankey.node_styles_list
       const list_new_nodes_style_id = list_new_nodes_style.map(ns => ns.id)
 
-      list_curr_nodes_style.filter(n => {
-        list_new_nodes_id.includes(n.id)
-      }).forEach(n => {
-        const similar_new_layout_node = list_new_nodes_style.filter(new_n => new_n.id == n.id)[0]
-        n.copyFrom(similar_new_layout_node)
-      })
+      list_curr_nodes_style
+        .filter(n => list_new_nodes_id.includes(n.id))
+        .forEach(n => {
+          const similar_new_layout_node = list_new_nodes_style
+            .filter(new_n => new_n.id == n.id)[0]
+          n.copyFrom(similar_new_layout_node)
+        })
       // Create style present in new layout but not current
-      list_new_nodes_style.filter(n => {
-        !list_new_nodes_style_id.includes(n.id)
-      }).forEach(n => {
-        this._addNewNodeStyle(n.id, n.name)
-        this._node_styles[n.id].copyFrom(n)
-      })
+      list_new_nodes_style
+        .filter(n => !list_new_nodes_style_id.includes(n.id))
+        .forEach(n => {
+          this._addNewNodeStyle(n.id, n.name)
+          this._node_styles[n.id].copyFrom(n)
+        })
 
       // Transfer link style from new_layout style link  to corresponding style in current
       const list_curr_links_style = this.link_styles_list
-      const list_new_links_style = new_layout.drawing_area.sankey.link_styles_list
+      const list_new_links_style = new_layout.sankey.link_styles_list
       const list_new_links_style_id = list_new_links_style.map(ns => ns.id)
 
-      list_curr_links_style.filter(n => {
-        list_new_links_id.includes(n.id)
-      }).forEach(n => {
-        const similar_new_layout_link = list_new_links_style.filter(new_n => new_n.id == n.id)[0]
-        n.copyFrom(similar_new_layout_link)
-      })
+      list_curr_links_style
+        .filter(n => list_new_links_id.includes(n.id))
+        .forEach(n => {
+          const similar_new_layout_link = list_new_links_style.filter(new_n => new_n.id == n.id)[0]
+          n.copyFrom(similar_new_layout_link)
+        })
       // Create style present in new layout but not current
-      list_new_links_style.filter(n => {
-        !list_new_links_style_id.includes(n.id)
-      }).forEach(n => {
-        this._addNewLinkStyle(n.id, n.name)
-        this._link_styles[n.id].copyFrom(n)
-      })
+      list_new_links_style
+        .filter(n => !list_new_links_style_id.includes(n.id))
+        .forEach(n => {
+          this._addNewLinkStyle(n.id, n.name)
+          this._link_styles[n.id].copyFrom(n)
+        })
 
       // Transfer DA attribute from new layout
-      this.drawing_area.color = new_layout.drawing_area.color
-      this.drawing_area.grid_size = new_layout.drawing_area.grid_size
-      this.drawing_area.grid_visible = new_layout.drawing_area.grid_visible
+      this.drawing_area.color = new_layout.color
+      this.drawing_area.grid_size = new_layout.grid_size
+      this.drawing_area.grid_visible = new_layout.grid_visible
 
       // Transfer legend attribute from new layout
-      this.drawing_area.legend.masked = new_layout.drawing_area.legend.masked
-      this.drawing_area.legend.display_legend_scale = new_layout.drawing_area.legend.display_legend_scale
-      this.drawing_area.legend.legend_police = new_layout.drawing_area.legend.legend_police
-      this.drawing_area.legend.legend_bg_border = new_layout.drawing_area.legend.legend_bg_border
-      this.drawing_area.legend.legend_bg_color = new_layout.drawing_area.legend.legend_bg_color
-      this.drawing_area.legend.legend_bg_opacity = new_layout.drawing_area.legend.legend_bg_opacity
-      this.drawing_area.legend.legend_show_dataTags = new_layout.drawing_area.legend.legend_show_dataTags
-      this.drawing_area.legend.node_label_separator = new_layout.drawing_area.legend.node_label_separator
-      this.drawing_area.legend.width = new_layout.drawing_area.legend.width
+      this.drawing_area.legend.masked = new_layout.legend.masked
+      this.drawing_area.legend.display_legend_scale = new_layout.legend.display_legend_scale
+      this.drawing_area.legend.legend_police = new_layout.legend.legend_police
+      this.drawing_area.legend.legend_bg_border = new_layout.legend.legend_bg_border
+      this.drawing_area.legend.legend_bg_color = new_layout.legend.legend_bg_color
+      this.drawing_area.legend.legend_bg_opacity = new_layout.legend.legend_bg_opacity
+      this.drawing_area.legend.legend_show_dataTags = new_layout.legend.legend_show_dataTags
+      this.drawing_area.legend.node_label_separator = new_layout.legend.node_label_separator
+      this.drawing_area.legend.width = new_layout.legend.width
 
 
     }
@@ -778,23 +778,23 @@ export class Class_Sankey {
       // activate, show_legend and selected.
       const curr_level_taggs_list = this.level_taggs_list
       const curr_level_taggs_list_id = curr_level_taggs_list.map(nt => nt.id)
-      const new_level_taggs_list = new_layout.drawing_area.sankey.level_taggs_list
+      const new_level_taggs_list = new_layout.sankey.level_taggs_list
       const new_level_taggs_list_id = new_level_taggs_list.map(nt => nt.id)
 
       // Delete level_taggs group not present in new layout
-      curr_level_taggs_list_id.filter(id_nt => {
-        !new_level_taggs_list_id.includes(id_nt)
-      }).forEach(id_nt => {
-        this.removeTagGroupWithId('level_taggs', id_nt)
-      })
+      curr_level_taggs_list_id
+        .filter(id_nt => !new_level_taggs_list_id.includes(id_nt))
+        .forEach(id_nt => {
+          this.removeTagGroupWithId('level_taggs', id_nt)
+        })
 
       // Add level_taggs group not present in current layout
-      new_level_taggs_list_id.filter(id_nt => {
-        !curr_level_taggs_list_id.includes(id_nt)
-      }).forEach(id_nt => {
-        this.addNodeTagGroup(id_nt, new_layout.drawing_area.sankey.level_taggs_dict[id_nt].name)
-        this.level_taggs_dict[id_nt].copyFrom(new_layout.drawing_area.sankey.level_taggs_dict[id_nt])
-      })
+      new_level_taggs_list_id
+        .filter(id_nt => !curr_level_taggs_list_id.includes(id_nt))
+        .forEach(id_nt => {
+          this.addNodeTagGroup(id_nt, new_layout.sankey.level_taggs_dict[id_nt].name)
+          this.level_taggs_dict[id_nt].copyFrom(new_layout.sankey.level_taggs_dict[id_nt])
+        })
     }
 
     // Update node_tag_dict
@@ -803,29 +803,29 @@ export class Class_Sankey {
       // activate, show_legend and selected.
       const curr_node_taggs_list = this.node_taggs_list
       const curr_node_taggs_list_id = curr_node_taggs_list.map(nt => nt.id)
-      const new_node_taggs_list = new_layout.drawing_area.sankey.node_taggs_list
+      const new_node_taggs_list = new_layout.sankey.node_taggs_list
       const new_node_taggs_list_id = new_node_taggs_list.map(nt => nt.id)
 
       // Delete node_taggs group not present in new layout
-      curr_node_taggs_list_id.filter(id_nt => {
-        !new_node_taggs_list_id.includes(id_nt)
-      }).forEach(id_nt => {
-        this.removeTagGroupWithId('node_taggs', id_nt)
-      })
+      curr_node_taggs_list_id
+        .filter(id_nt => !new_node_taggs_list_id.includes(id_nt))
+        .forEach(id_nt => {
+          this.removeTagGroupWithId('node_taggs', id_nt)
+        })
 
       // Add node_taggs group not present in current layout
-      new_node_taggs_list_id.filter(id_nt => {
-        !curr_node_taggs_list_id.includes(id_nt)
-      }).forEach(id_nt => {
-        this.addNodeTagGroup(id_nt, new_layout.drawing_area.sankey.node_taggs_dict[id_nt].name)
-        this.node_taggs_dict[id_nt].copyFrom(new_layout.drawing_area.sankey.node_taggs_dict[id_nt])
-      })
+      new_node_taggs_list_id
+        .filter(id_nt => !curr_node_taggs_list_id.includes(id_nt))
+        .forEach(id_nt => {
+          this.addNodeTagGroup(id_nt, new_layout.sankey.node_taggs_dict[id_nt].name)
+          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt])
+        })
 
-      new_node_taggs_list_id.filter(id_nt => {
-        curr_node_taggs_list_id.includes(id_nt)
-      }).forEach(id_nt => {
-        this.node_taggs_dict[id_nt].copyFrom(new_layout.drawing_area.sankey.node_taggs_dict[id_nt])
-      })
+      new_node_taggs_list_id
+        .filter(id_nt => curr_node_taggs_list_id.includes(id_nt))
+        .forEach(id_nt => {
+          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt])
+        })
 
 
     }
@@ -837,30 +837,30 @@ export class Class_Sankey {
 
       const curr_flux_taggs_list = this.flux_taggs_list
       const curr_flux_taggs_list_id = curr_flux_taggs_list.map(nt => nt.id)
-      const new_flux_taggs_list = new_layout.drawing_area.sankey.flux_taggs_list
+      const new_flux_taggs_list = new_layout.sankey.flux_taggs_list
       const new_flux_taggs_list_id = new_flux_taggs_list.map(nt => nt.id)
 
       // Delete flux_taggs group not present in new layout
-      curr_flux_taggs_list_id.filter(id_ft => {
-        !new_flux_taggs_list_id.includes(id_ft)
-      }).forEach(id_ft => {
-        this.removeTagGroupWithId('flux_taggs', id_ft)
-      })
+      curr_flux_taggs_list_id
+        .filter(id_ft => !new_flux_taggs_list_id.includes(id_ft))
+        .forEach(id_ft => {
+          this.removeTagGroupWithId('flux_taggs', id_ft)
+        })
 
       // Add flux_taggs group not present in current layout
-      new_flux_taggs_list_id.filter(id_ft => {
-        !curr_flux_taggs_list_id.includes(id_ft)
-      }).forEach(id_ft => {
-        this.addFluxTagGroup(id_ft, new_layout.drawing_area.sankey.flux_taggs_dict[id_ft].name)
-        this.flux_taggs_dict[id_ft].copyFrom(new_layout.drawing_area.sankey.flux_taggs_dict[id_ft])
-      })
+      new_flux_taggs_list_id
+        .filter(id_ft => !curr_flux_taggs_list_id.includes(id_ft))
+        .forEach(id_ft => {
+          this.addFluxTagGroup(id_ft, new_layout.sankey.flux_taggs_dict[id_ft].name)
+          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft])
+        })
 
       // Updtae flux_taggs group present in current layout and this
-      new_flux_taggs_list_id.filter(id_ft => {
-        curr_flux_taggs_list_id.includes(id_ft)
-      }).forEach(id_ft => {
-        this.flux_taggs_dict[id_ft].copyFrom(new_layout.drawing_area.sankey.flux_taggs_dict[id_ft])
-      })
+      new_flux_taggs_list_id
+        .filter(id_ft => curr_flux_taggs_list_id.includes(id_ft))
+        .forEach(id_ft => {
+          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft])
+        })
     }
 
     // Update data_tag_dict
@@ -870,47 +870,47 @@ export class Class_Sankey {
 
       const curr_data_taggs_list = this.data_taggs_list
       const curr_data_taggs_list_id = curr_data_taggs_list.map(nt => nt.id)
-      const new_data_taggs_list = new_layout.drawing_area.sankey.data_taggs_list
+      const new_data_taggs_list = new_layout.sankey.data_taggs_list
       const new_data_taggs_list_id = new_data_taggs_list.map(nt => nt.id)
 
       // Delete data_taggs group not present in new layout
-      curr_data_taggs_list_id.filter(id_ft => {
-        !new_data_taggs_list_id.includes(id_ft)
-      }).forEach(id_ft => {
-        this.removeTagGroupWithId('data_taggs', id_ft)
-      })
+      curr_data_taggs_list_id
+        .filter(id_ft => !new_data_taggs_list_id.includes(id_ft))
+        .forEach(id_ft => {
+          this.removeTagGroupWithId('data_taggs', id_ft)
+        })
 
       // Add data_taggs group not present in current layout
-      new_data_taggs_list_id.filter(id_ft => {
-        !curr_data_taggs_list_id.includes(id_ft)
-      }).forEach(id_ft => {
-        this.addDataTagGroup(id_ft, new_layout.drawing_area.sankey.data_taggs_dict[id_ft].name)
-        this.data_taggs_dict[id_ft].copyFrom(new_layout.drawing_area.sankey.data_taggs_dict[id_ft])
-      })
+      new_data_taggs_list_id
+        .filter(id_ft => !curr_data_taggs_list_id.includes(id_ft))
+        .forEach(id_ft => {
+          this.addDataTagGroup(id_ft, new_layout.sankey.data_taggs_dict[id_ft].name)
+          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft])
+        })
       // update data_taggs group present in current layout and this
-      new_data_taggs_list_id.filter(id_ft => {
-        curr_data_taggs_list_id.includes(id_ft)
-      }).forEach(id_ft => {
-        this.data_taggs_dict[id_ft].copyFrom(new_layout.drawing_area.sankey.data_taggs_dict[id_ft])
-      })
+      new_data_taggs_list_id
+        .filter(id_ft => curr_data_taggs_list_id.includes(id_ft))
+        .forEach(id_ft => {
+          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft])
+        })
     }
 
     // Search node in new that are not in current then add them
     if (mode.includes('addNode')) {
-      list_new_nodes.filter(n => {
-        !list_curr_nodes_id.includes(n.id)
-      }).forEach(n => {
-        this._addNode(n)
-      })
+      list_new_nodes
+        .filter(n => !list_curr_nodes_id.includes(n.id))
+        .forEach(n => {
+          this.addNewNode(n.id, n.name)
+        })
     }
 
     // Search node in current that are not in new then delete them
     if (mode.includes('removeNode')) {
-      list_curr_nodes.filter(n => {
-        !list_new_nodes_id.includes(n.id)
-      }).forEach(n => {
-        this.drawing_area.deleteNode(n)
-      })
+      list_curr_nodes
+        .filter(n => !list_new_nodes_id.includes(n.id))
+        .forEach(n => {
+          this.drawing_area.deleteNode(n)
+        })
     }
 
     // Update nodes ref to node_taggs
@@ -922,33 +922,40 @@ export class Class_Sankey {
         })
       })
       // Apply same node-tag relationship from new_layout to current sankey's nodes
-      new_layout.drawing_area.sankey.nodes_list
+      new_layout.sankey.nodes_list
         .filter(node => this.nodes_dict[node.id] !== undefined)
         .forEach(node => {
           node.tags_list
-            .filter(tag => tag.group.id in this.node_taggs_dict)
+            .filter(tag => {
+              return tag.group.id in this.node_taggs_dict
+            })
             .filter(tag => tag.id in this.node_taggs_dict[tag.group.id].tags_dict)
-            .forEach(tag => this.nodes_dict[node.id].addTag(tag))
+            .forEach(tag => {
+              this.nodes_dict[node.id].addTag(tag)
+            })
         })
 
     }
 
     // Search link in new that are not in current then add them
     if (mode.includes('addFlux')) {
-      list_new_links.filter(link => {
-        !list_curr_nodes_id.includes(link.id)
-      }).forEach(link => {
-        this._addLink(link)
-      })
+      list_new_links
+        .filter(link => !list_curr_nodes_id.includes(link.id))
+        .forEach(link => {
+          const similar_src_curr = this.nodes_dict[link.source.id]
+          const similar_trgt_curr = this.nodes_dict[link.target.id]
+          if (similar_src_curr && similar_trgt_curr)
+            this.addNewLink(link.source, link.target)
+        })
     }
     // Search link in current that are not in new then delete them
     if (mode.includes('removeFlux')) {
 
-      list_new_links.filter(link => {
-        !list_curr_links_id.includes(link.id)
-      }).forEach(link => {
-        this.drawing_area.deleteLink(link)
-      })
+      list_curr_links
+        .filter(link => !list_new_links_id.includes(link.id))
+        .forEach(link => {
+          this.drawing_area.deleteLink(link)
+        })
     }
 
     // Update flux ref to node_taggs
@@ -963,14 +970,14 @@ export class Class_Sankey {
         })
       })
       // Apply same flux-tag relationship from new_layout to current sankey's fluxs
-      new_layout.drawing_area.sankey.links_list
+      new_layout.sankey.links_list
         .filter(link => this.links_dict[link.id] !== undefined)
         .forEach(link => {
           const new_values = link.getAllValues()
           const values = this.links_dict[link.id].getAllValues()
           Object.entries(new_values)
-            .filter(([id, ]) => id in values)
-            .forEach(([id, [val, ]]) => {
+            .filter(([id,]) => id in values)
+            .forEach(([id, [val,]]) => {
               val.flux_tags_list
                 .filter(tag => tag.group.id in this.flux_taggs_dict)
                 .filter(tag => tag.id in this.flux_taggs_dict[tag.group.id].tags_dict)
@@ -979,6 +986,7 @@ export class Class_Sankey {
         })
     }
 
+    // Update node position from new layout
     if (mode.includes('posNode')) {
       list_curr_nodes
         .filter(node => list_new_nodes_id.includes(node.id))
@@ -988,44 +996,43 @@ export class Class_Sankey {
         })
     }
 
-
+    // Apply links values from new layout to current links
+    // /!\ new layout must but an ancient version of the current sankey because each link value has an unique id 
     if (mode.includes('Values')) {
-      // Apply same flux-tag relationship from new_layout to current sankey's fluxs
-      new_layout.drawing_area.sankey.links_list
+      new_layout.sankey.links_list
         .filter(link => this.links_dict[link.id] !== undefined)
         .forEach(link => {
           const new_values = link.getAllValues()
           const values = this.links_dict[link.id].getAllValues()
           Object.entries(new_values)
-            .filter(([id, ]) => id in values)
-            .forEach(([id, [val, ]]) => {
-              val.flux_tags_list
-                .filter(tag => tag.group.id in this.flux_taggs_dict)
-                .filter(tag => tag.id in this.flux_taggs_dict[tag.group.id].tags_dict)
-                .forEach(tag => values[id][0].addTag(tag))
+            .filter(([id,]) => {
+              return id in values
+            })
+            .forEach(([id, [val,]]) => {
+              values[id][0].copyFrom(val)
             })
         })
     }
 
-    // With attrNode we transfer node attr & node style
+    // With attrNode we transfer node attr
     if (mode.includes('attrNode')) {
       // Transfer node attr from new_layout node to correspondinf node in current
-      list_curr_nodes.filter(n => {
-        list_new_nodes_id.includes(n.id)
-      }).forEach(n => {
-        const similar_new_layout_node = list_new_nodes.filter(new_n => new_n.id == n.id)[0]
-        n.copyFrom(similar_new_layout_node)
-      })
+      list_curr_nodes
+        .filter(n => list_new_nodes_id.includes(n.id))
+        .forEach(n => {
+          const similar_new_layout_node = list_new_nodes.filter(new_n => new_n.id == n.id)[0]
+          n.copyFrom(similar_new_layout_node)
+        })
     }
 
-    // With attrFlux we transfer link attr & link style
+    // With attrFlux we transfer link attr
     if (mode.includes('attrFlux')) {
-      list_curr_links.filter(link => {
-        list_new_links_id.includes(link.id)
-      }).forEach(link => {
-        const similar_new_layout_link = list_new_links.filter(new_l => new_l.id == link.id)[0]
-        link.copyFrom(similar_new_layout_link)
-      })
+      list_curr_links
+        .filter(link => list_new_links_id.includes(link.id))
+        .forEach(link => {
+          const similar_new_layout_link = list_new_links.filter(new_l => new_l.id == link.id)[0]
+          link.copyFrom(similar_new_layout_link)
+        })
 
     }
 

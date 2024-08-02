@@ -136,7 +136,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
                           {t.name}
                           {checked(has_tag)}
                         </MenuItem>
-                  })
+                      })
                   }
                 </MenuList>
               </Menu>
@@ -278,14 +278,14 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
       refreshThisAndToggleSaving()
     }}
     variant='light'
-  >
-    {
-      context_link_label_visible ?
-        t('Flux.apparence.hide_link_lab') :
-        t('Flux.apparence.display_link_lab')
-    }
-  </Button>:
-  <></>
+    >
+      {
+        context_link_label_visible ?
+          t('Flux.apparence.hide_link_lab') :
+          t('Flux.apparence.display_link_lab')
+      }
+    </Button>:
+    <></>
 
   const button_open_link_tooltip = (contextualised_link !== undefined) ?
     <Button
@@ -363,5 +363,5 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
         {btn_l_show_tags_menu}
         {button_open_link_tooltip}
       </ButtonGroup>
-  </Box> : <></>
+    </Box> : <></>
 }

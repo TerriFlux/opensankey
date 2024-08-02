@@ -86,7 +86,7 @@ export const default_value_label_to_precision = false
 export const default_value_label_unit = ''
 export const default_value_label_unit_visible = false
 
-const side_order: {[_ in Type_Side]: number} = {
+const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
   'bottom': 1,
   'left': 2,
@@ -713,7 +713,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       this._display.attributes.fromJSON(json_local_object)
     }
     // Get value
-    this._values.fromJSON(getJSONFromJSON(json_object,'value', {}))
+    this._values.fromJSON(getJSONFromJSON(json_object, 'value', {}))
   }
 
   public getPathColorToUse() {
@@ -738,13 +738,18 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     return shape_color
   }
-
+  /**
+   * Copy attributes from element & create/copy ref to current sankey (ref to link_taggs & style & values)
+   *
+   * @param {Class_LinkElement} element
+   * @memberof Class_LinkElement
+   */
   public copyFrom(element: Class_LinkElement) {
 
     // this._display.position = structuredClone(element._display.position)
     this._display.position_x_label = element._display.position_x_label
     this._display.position_y_label = element._display.position_y_label
-    this._tooltip_text=element._tooltip_text
+    this._tooltip_text = element._tooltip_text
     // Copy local attributes
     this._display.attributes.copyFrom(element._display.attributes)
 
@@ -756,14 +761,16 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._control_points.middle_recycling_point.copyFrom(element._control_points.middle_recycling_point)
 
     // Set link style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
-    if(this.drawing_area.sankey.link_styles_list.map(ls=>ls.id).includes(element._display.style.id)){
-      const new_style_id=this.drawing_area.sankey.link_styles_list.map(ls=>ls.id).filter(ls=>ls.includes(element._display.style.id))[0]
-      this._display.style=this.drawing_area.sankey.link_styles_dict[new_style_id]
+    if (this.drawing_area.sankey.link_styles_list.map(ls => ls.id).includes(element._display.style.id)) {
+      const new_style_id = this.drawing_area.sankey.link_styles_list
+        .map(ls => ls.id)
+        .filter(ls => ls.includes(element._display.style.id))[0]
+      this._display.style = this.drawing_area.sankey.link_styles_dict[new_style_id]
       this._display.style.addReference(this)
     }
   }
 
-  public getAllValues(){
+  public getAllValues() {
     return this._values.getAllValues()
   }
 
@@ -975,8 +982,8 @@ export class Class_LinkElement extends Class_ProtoElement {
       .append('div')
       .attr('class', 'sankey-tooltip')
       .style('opacity', 1)
-      .style('top', (this.source.position_y + this.target.position_y)/2 + 'px')
-      .style('left', (this.source.position_x + this.target.position_x)/2 + 'px')
+      .style('top', (this.source.position_y + this.target.position_y) / 2 + 'px')
+      .style('left', (this.source.position_x + this.target.position_x) / 2 + 'px')
       .html(this.tooltip_html)
   }
 
@@ -2934,45 +2941,45 @@ export class Class_LinkAttribute {
   public copyFrom(element: Class_LinkAttribute) {
 
     // Shape type
-    this._shape_is_curved=element._shape_is_curved
-    this._shape_curvature=element._shape_curvature
-    this._shape_is_recycling=element._shape_is_recycling
+    this._shape_is_curved = element._shape_is_curved
+    this._shape_curvature = element._shape_curvature
+    this._shape_is_recycling = element._shape_is_recycling
 
     // Shape orientation
-    this._shape_orientation=element._shape_orientation
-    this._shape_starting_curve=element._shape_starting_curve
-    this._shape_ending_curve=element._shape_ending_curve
-    this._shape_starting_tangeant=element._shape_starting_tangeant
-    this._shape_ending_tangeant=element._shape_ending_tangeant
-    this._shape_middle_recycling=element._shape_middle_recycling
-    this._shape_vert_shift=element._shape_vert_shift
+    this._shape_orientation = element._shape_orientation
+    this._shape_starting_curve = element._shape_starting_curve
+    this._shape_ending_curve = element._shape_ending_curve
+    this._shape_starting_tangeant = element._shape_starting_tangeant
+    this._shape_ending_tangeant = element._shape_ending_tangeant
+    this._shape_middle_recycling = element._shape_middle_recycling
+    this._shape_vert_shift = element._shape_vert_shift
 
     // Shape's arrow attributes
-    this._shape_is_arrow=element._shape_is_arrow
-    this._shape_arrow_size=element._shape_arrow_size
+    this._shape_is_arrow = element._shape_is_arrow
+    this._shape_arrow_size = element._shape_arrow_size
 
     // Shape's Filling attributes
-    this._shape_is_dashed=element._shape_is_dashed
-    this._shape_color=element._shape_color
-    this._shape_opacity=element._shape_opacity
+    this._shape_is_dashed = element._shape_is_dashed
+    this._shape_color = element._shape_color
+    this._shape_opacity = element._shape_opacity
 
     // Geometry link labels
-    this._value_label_position=element._value_label_position
-    this._value_label_orthogonal_position=element._value_label_orthogonal_position
-    this._value_label_on_path=element._value_label_on_path
-    this._value_label_pos_auto=element._value_label_pos_auto
+    this._value_label_position = element._value_label_position
+    this._value_label_orthogonal_position = element._value_label_orthogonal_position
+    this._value_label_on_path = element._value_label_on_path
+    this._value_label_pos_auto = element._value_label_pos_auto
 
     // Value label display
-    this._value_label_is_visible=element._value_label_is_visible
-    this._value_label_font_family=element._value_label_font_family
-    this._value_label_font_size=element._value_label_font_size
-    this._value_label_color=element._value_label_color
-    this._value_label_to_precision=element._value_label_to_precision
-    this._value_label_scientific_precision=element._value_label_scientific_precision
-    this._value_label_custom_digit=element._value_label_custom_digit
-    this._value_label_nb_digit=element._value_label_nb_digit
-    this._value_label_unit_visible=element._value_label_unit_visible
-    this._value_label_unit=element._value_label_unit
+    this._value_label_is_visible = element._value_label_is_visible
+    this._value_label_font_family = element._value_label_font_family
+    this._value_label_font_size = element._value_label_font_size
+    this._value_label_color = element._value_label_color
+    this._value_label_to_precision = element._value_label_to_precision
+    this._value_label_scientific_precision = element._value_label_scientific_precision
+    this._value_label_custom_digit = element._value_label_custom_digit
+    this._value_label_nb_digit = element._value_label_nb_digit
+    this._value_label_unit_visible = element._value_label_unit_visible
+    this._value_label_unit = element._value_label_unit
   }
 
   // PROTECTED METHODS ==================================================================
@@ -3581,13 +3588,13 @@ export class Class_LinkValueTree {
     }
   }
 
-  public getAllValues(){
-    let out: {[_: string]: [Class_LinkValue, Class_DataTag[] | undefined]} = {}
+  public getAllValues() {
+    let out: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined] } = {}
     Object.values(this.children)
       .forEach(child => {
         const _ = child.getAllValues()
         out = {
-          ... _
+          ..._
         }
       })
     Object.values(out)
@@ -3795,7 +3802,7 @@ export class Class_LinkValue {
   }
 
   public getAllValues() {
-    const tmp: {[_:string]:[Class_LinkValue, Class_DataTag[] | undefined]} = {}
+    const tmp: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined] } = {}
     if (this.data_tag)
       tmp[this.id] = [this, [this.data_tag]]
     else
@@ -3813,6 +3820,7 @@ export class Class_LinkValue {
     // Init output JSON
     const json_object: Type_JSON = {}
     // Fill data
+    json_object['id'] = this._id
     if (this.data_value) json_object['data_value'] = this.data_value
     if (this.text_value) json_object['text_value'] = this.text_value
     json_object['tags'] = Object.fromEntries(
@@ -3835,6 +3843,7 @@ export class Class_LinkValue {
    */
   public fromJSON(json_object: Type_JSON) {
     // Update attributes
+    this._id = getStringFromJSON(json_object, 'id', this._id)
     this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
     this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
     // Get Flux tags
@@ -3851,7 +3860,7 @@ export class Class_LinkValue {
       .forEach(([tagg_id, tag_ids]) => {
         const tagg = flux_taggs_dict[tagg_id]
         tagg.tags_list
-          .filter(tag => tag.id in (tag_ids as string[]))
+          .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
       })
   }

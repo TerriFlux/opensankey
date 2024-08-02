@@ -243,6 +243,12 @@ export class Class_Tag extends Class_ProtoTag {
     }
   }
 
+  /**
+   * Copy attributes from element tag
+   *
+   * @param {Class_Tag} element
+   * @memberof Class_Tag
+   */
   public copyFrom(element: Class_Tag) {
     super.copyFrom(element)
     // TODO how to deal with references ?
@@ -315,7 +321,7 @@ export class Class_DataTag extends Class_ProtoTag {
       })
   }
 
-  public copyFrom(element:Class_DataTag){
+  public copyFrom(element: Class_DataTag) {
     super.copyFrom(element)
     // TODO how to deal with references ?
   }
@@ -839,6 +845,12 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
+  /**
+   * Copy tags group attributes from element to current & copy tags
+   *
+   * @param {Class_TagGroup} element
+   * @memberof Class_TagGroup
+   */
   public copyFrom(element: Class_TagGroup) {
     super.copyFrom(element)
     this._show_legend = element.show_legend

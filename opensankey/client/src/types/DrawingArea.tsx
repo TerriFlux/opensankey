@@ -11,12 +11,14 @@ import { MouseEvent } from 'react'
 // Local types
 import {
   Type_JSON,
+  convert_data_legacy,
   default_background_color,
   default_black_color,
   default_grid_color,
   getBooleanFromJSON,
   getNumberFromJSON,
-  getStringFromJSON
+  getStringFromJSON,
+  getStringOrUndefinedFromJSON
 } from './Utils'
 import {
   Class_Sankey
@@ -779,7 +781,16 @@ export class Class_DrawingArea {
    * @param {Type_JSON} json_object
    * @memberof Class_DrawingArea
    */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    redraw: boolean=true
+  ) {
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+
+    // Only legacy convert old sankey
+    if (!(version && Number(version) > 0.9)) {
+      convert_data_legacy(json_object)
+    }
     // Update direct attributes
     this._height = getNumberFromJSON(json_object, 'height', this._height)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
@@ -793,8 +804,11 @@ export class Class_DrawingArea {
     this._legend.fromJSON(json_object)
     // Update Sankey
     this._sankey.fromJSON(json_object)
-    // Draw
-    this.reset()
+    if (redraw) {
+      // Draw
+      this.reset()
+    }
+
   }
 
   /**
@@ -810,7 +824,9 @@ export class Class_DrawingArea {
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
-    // Dump direct attributes
+    // Add current version of app
+    json_object['version'] = 0.9
+    // Dump DA attributes
     json_object['height'] = this._height
     json_object['width'] = this._width
     json_object['grid_visible'] = this._grid_visible

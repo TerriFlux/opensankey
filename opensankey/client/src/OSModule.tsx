@@ -200,7 +200,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
 )=>{
   const application_data = new Class_ApplicationData(false)
   if(initial_data !== undefined){
-    application_data.fromJSON(initial_data)
+    application_data.fromJSON(initial_data,true)
   }
   return {
     data : data,

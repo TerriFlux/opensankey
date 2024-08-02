@@ -258,12 +258,9 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
-  // PUBLIC METHODS =====================================================================
-
-  // Copying ----------------------------------------------------------------------------
-
   /**
-   * Set this node exactly as input node
+   * Copy attributes from element & create/copy ref to current sankey (ref to node_taggs & style)
+   *
    * @param {Class_NodeElement} element
    * @memberof Class_NodeElement
    */
@@ -2998,8 +2995,8 @@ export class Class_NodeElement extends Class_Element {
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
     // Input links
-    if ( this.hasInputLinks() ) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">'+'Entrées'+'</p>' // TODO traduction manquante sur "entrées"
+    if (this.hasInputLinks()) {
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + 'Entrées' + '</p>' // TODO traduction manquante sur "entrées"
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
@@ -3022,7 +3019,7 @@ export class Class_NodeElement extends Class_Element {
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (this._input_data_value > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0)/this._input_data_value)*100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / this._input_data_value) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -3039,15 +3036,15 @@ export class Class_NodeElement extends Class_Element {
           tooltip_html += '   </tr>'
         })
       tooltip_html += '    <tr>'
-      tooltip_html += '       <th>'+'Total'+'</th>'
+      tooltip_html += '       <th>' + 'Total' + '</th>'
       tooltip_html += '       <td>' + this._input_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
       tooltip_html += '    </tr>'
       tooltip_html += '  </tbody>'
       tooltip_html += '</table>'
     }
     // Output links
-    if ( this.hasOutputLinks() ) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">'+'Sortie'+'</p>' // TODO traduction manquante sur "sorties"
+    if (this.hasOutputLinks()) {
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + 'Sortie' + '</p>' // TODO traduction manquante sur "sorties"
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
@@ -3069,7 +3066,7 @@ export class Class_NodeElement extends Class_Element {
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (this._output_data_value > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0)/this._output_data_value)*100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / this._output_data_value) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -3086,7 +3083,7 @@ export class Class_NodeElement extends Class_Element {
           tooltip_html += '    </tr>'
         })
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>'+'Total'+'</th>'
+      tooltip_html += '      <th>' + 'Total' + '</th>'
       tooltip_html += '      <td>' + this._output_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
       tooltip_html += '    </tr>'
       tooltip_html += '  </tbody>'
