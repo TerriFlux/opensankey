@@ -783,10 +783,10 @@ export class Class_DrawingArea {
    */
   public fromJSON(
     json_object: Type_JSON,
-    redraw: boolean=true
+    redraw: boolean=true,
+    match_and_update: boolean=true,
   ) {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
-
     // Only legacy convert old sankey
     if (!(version && Number(version) > 0.9)) {
       // convert_data_legacy(json_object)
@@ -803,12 +803,11 @@ export class Class_DrawingArea {
     // Update legend
     this._legend.fromJSON(json_object)
     // Update Sankey
-    this._sankey.fromJSON(json_object)
+    this._sankey.fromJSON(json_object, match_and_update)
     if (redraw) {
       // Draw
       this.reset()
     }
-
   }
 
   /**

@@ -19,7 +19,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 
 export   const os_all_element_to_transform = [
   'addNode', 'addFlux', 'removeNode', 'removeFlux',
-  'posNode', 
+  'posNode',
   'Values',
   'attrNode', 'attrFlux',
   'tagNode', 'tagFlux', 'tagData', 'tagLevel',
@@ -229,7 +229,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                       setForceUpdate(!forceUpdate)
                     }}
                   }>{t('Menu.Transformation.PosNoeud')}</Button>
-                
+
               </Box>
 
             </Box>
@@ -720,7 +720,7 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
             if (file_layout === undefined) {
               return
             }
-            
+
             const reader = new FileReader()
             reader.onload = (() => {
               return (
@@ -730,11 +730,11 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
                     result = String(result)
                     const new_layout = JSON.parse(result)
                     const tmp_DA=new Class_DrawingArea(0,0,new_data)
-                    tmp_DA.fromJSON(new_layout,false)
+                    tmp_DA.fromJSON(new_layout, false)
                     new_data.drawing_area.sankey.updateLayoutFromJSON(tmp_DA,dataVarToUpdate.current)
                     new_data.drawing_area.drawElements()
                     new_data.menu_configuration.updateAllMenuComponents()
-                    
+
                   }
                 }
               )

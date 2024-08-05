@@ -800,7 +800,11 @@ export class Class_NodeElement extends Class_Element {
    * @param {Type_JSON} json_node_object
    * @memberof Class_NodeElement
    */
-  public fromJSON(json_node_object: Type_JSON) {
+  public fromJSON(
+    json_node_object: Type_JSON,
+    matching_taggs_id: {[_: string]: string} = {},
+    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+  ) {
     // Get root attributes
     super.fromJSON(json_node_object)
     this._name = getStringFromJSON(json_node_object, 'name', this._name)
@@ -825,10 +829,17 @@ export class Class_NodeElement extends Class_Element {
     //   where 'key_grp_tag' represent the id of a node_taggs group
     //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
     Object.entries(json_node_object['tags'] ?? {})
-      .filter(([tagg_id, tag_ids]) =>
-        (tagg_id in this.main_sankey.node_taggs_dict) &&
-        (tag_ids as string[]).length > 0)
-      .forEach(([tagg_id, tag_ids]) => {
+      .filter(([_tagg_id, _tag_ids]) => {
+        const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
+        const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
+        return (
+          (tagg_id in this.main_sankey.node_taggs_dict) &&
+          ((tag_ids as string[]).length > 0)
+        )
+      })
+      .forEach(([_tagg_id, _tag_ids]) => {
+        const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
+        const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
         const tagg = this.main_sankey.node_taggs_dict[tagg_id]
         tagg.tags_list
           .filter(tag => tag.id in (tag_ids as string[]))
@@ -842,21 +853,27 @@ export class Class_NodeElement extends Class_Element {
    * @param {Type_JSON} json_node_object
    * @memberof Class_NodeElement
    */
-  public linksFromJSON(json_node_object: Type_JSON) {
+  public linksFromJSON(
+    json_node_object: Type_JSON,
+    matching_links_id: {[_: string]: string} = {}
+  ) {
     // Input links
     const input_link_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
-    input_link_ids.forEach(link_id => {
+    input_link_ids.forEach(_ => {
+      const link_id = matching_links_id[_] ?? _
       this.addInputLink(this.main_sankey.links_dict[link_id])
     })
     // Output links
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
-    output_link_ids.forEach(link_id => {
+    output_link_ids.forEach(_ => {
+      const link_id = matching_links_id[_] ?? _
       this.addOutputLink(this.main_sankey.links_dict[link_id])
     })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
     if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
-      this._links_order = ordered_link_ids.map(link_id => {
+      this._links_order = ordered_link_ids.map(_ => {
+        const link_id = matching_links_id[_] ?? _
         return this.main_sankey.links_dict[link_id]
       })
     }
@@ -868,22 +885,31 @@ export class Class_NodeElement extends Class_Element {
    * @param {Type_JSON} json_node_object
    * @memberof Class_NodeElement
    */
-  public dimensionsFromJSON(json_node_object: Type_JSON) {
+  public dimensionsFromJSON(
+    json_node_object: Type_JSON,
+    matching_nodes_id: {[_: string]: string} = {},
+    matching_taggs_id: {[_: string]: string} = {},
+    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    // TODO contniuer sur leveltags
+
+  ) {
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
-        .forEach(tagg_id => {
-          const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, tagg_id)
+        .forEach(_ => {
+          const tagg_id = matching_taggs_id[_] ?? _
+          const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, _)
           if (dimension_as_json) {
             // Get level tag group from id
             const tagg = this.main_sankey.level_taggs_dict[tagg_id]
             // Continue only in level tag group exists
             if (tagg) {
               // Continue only if we can find related parent
-              const parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
+              let parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
               if (parent_id){
+                parent_id = matching_nodes_id[parent_id] ?? parent_id
                 const parent =  this.main_sankey.nodes_dict[parent_id]
                 if (parent) {
                   // Read infos from dimension json struct
@@ -894,8 +920,12 @@ export class Class_NodeElement extends Class_Element {
                   const child_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'child_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
                   if (child_tags_ids && parent_tag_id ) {
-                    child_tags = child_tags_ids.map(child_tag_id => tagg.tags_dict[child_tag_id])
-                    parent_tag = tagg.tags_dict[parent_tag_id]
+                    child_tags = child_tags_ids
+                      .map(_ => {
+                        const child_tag_id = matching_tags_id[tagg_id][_] ?? _
+                        return tagg.tags_dict[child_tag_id]
+                      })
+                    parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id)]
                   }
                   // If no tags ids - use level to find matchin tags
                   else {

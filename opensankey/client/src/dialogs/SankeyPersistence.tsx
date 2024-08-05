@@ -414,9 +414,20 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   convert_data: ConvertDataFuncType,
   defaultData: () => SankeyData
 ) => {
-  // Get data & reinit
+  // Get data
   const { new_data } = applicationData
-  new_data.fromJSON(JSON.parse(text) as Type_JSON)
+  // Extract JSON struct
+  const data_as_json = JSON.parse(text) as Type_JSON
+  // Create & draw Sankey
+  new_data.fromJSON(data_as_json)
+  // Apply extracted layout if present
+  if (data_as_json['layout']) {
+    new_data.drawing_area.fromJSON(
+      data_as_json['layout'] as Type_JSON,
+      true,
+      true
+    )
+  }
 
   // TODO autocompute sankey
   // TODO adjust sankey zone
