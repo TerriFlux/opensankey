@@ -1383,7 +1383,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
       <SankeyLoad
         applicationContext={applicationContext}
-        applicationDraw={applicationDraw}
         applicationData={applicationData}
         successAction={() => DownloadExamples(
           processFunctions.path.current,
@@ -1392,8 +1391,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
         )}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
-        convert_data={convert_data}
-        postProcessLoadExcel={postProcessLoadExcel}
       />
 
       {
