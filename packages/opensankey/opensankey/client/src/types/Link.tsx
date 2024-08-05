@@ -697,14 +697,25 @@ export class Class_LinkElement extends Class_ProtoElement {
     return json_object
   }
 
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_nodes_id: {[_: string]: string} = {},
+    matching_taggs_id: {[_: string]: string} = {},
+    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+  ) {
     // Root attributes
     super.fromJSON(json_object)
     // Related nodes
-    const source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
-    if (source_node_id) this.main_sankey.nodes_dict[source_node_id]?.addOutputLink(this)
-    const target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
-    if (target_node_id) this.main_sankey.nodes_dict[target_node_id]?.addInputLink(this)
+    let source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
+    if (source_node_id) {
+      source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
+      this.main_sankey.nodes_dict[source_node_id]?.addOutputLink(this)
+    }
+    let target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
+    if (target_node_id) {
+      target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
+      this.main_sankey.nodes_dict[target_node_id]?.addInputLink(this)
+    }
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
     this._display.style = this.main_sankey.link_styles_dict[style_id]
@@ -713,7 +724,11 @@ export class Class_LinkElement extends Class_ProtoElement {
       this._display.attributes.fromJSON(json_local_object)
     }
     // Get value
-    this._values.fromJSON(getJSONFromJSON(json_object, 'value', {}))
+    this._values.fromJSON(
+      getJSONFromJSON(json_object, 'value', {}),
+      matching_taggs_id,
+      matching_tags_id
+    )
   }
 
   public getPathColorToUse() {
@@ -3573,7 +3588,11 @@ export class Class_LinkValueTree {
     return json_object
   }
 
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: {[_: string]: string} = {},
+    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+  ) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
     // So it is not necessary to read datatag group -> it should be the same as in JSON
     if (this.data_tag_group.id !== json_object['datatag_group'])
@@ -3583,7 +3602,11 @@ export class Class_LinkValueTree {
         .filter(([id, ]) => id !== 'datatag_group') // Skip this entry in JSON
         .forEach(([id, sub_json_object]) => {
           if (typeof sub_json_object === 'object')
-            this.children[id]?.fromJSON(sub_json_object as Type_JSON)
+            this.children[id]?.fromJSON(
+              sub_json_object as Type_JSON,
+              matching_taggs_id,
+              matching_tags_id
+            )
         })
     }
   }
@@ -3841,7 +3864,11 @@ export class Class_LinkValue {
    * @param {Type_JSON} json_object
    * @memberof Class_LinkValue
    */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: {[_: string]: string} = {},
+    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+  ) {
     // Update attributes
     this._id = getStringFromJSON(json_object, 'id', this._id)
     this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
@@ -3854,11 +3881,17 @@ export class Class_LinkValue {
     // for that flux tag group
     const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
-      .filter(([tagg_id, tag_ids]) =>
-        (tagg_id in flux_taggs_dict) &&
-        (tag_ids as string[]).length > 0)
-      .forEach(([tagg_id, tag_ids]) => {
+      .filter(([id, list]) => {
+        const tagg_id = matching_taggs_id[id] ?? id
+        const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
+        return (
+          (tagg_id in flux_taggs_dict) &&
+          (tag_ids.length > 0))
+      })
+      .forEach(([id, list]) => {
+        const tagg_id = matching_taggs_id[id] ?? id
         const tagg = flux_taggs_dict[tagg_id]
+        const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
         tagg.tags_list
           .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
