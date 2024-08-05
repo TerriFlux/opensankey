@@ -768,7 +768,7 @@ export class Class_DrawingArea {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
 
     // Only legacy convert old sankey
-    if (!(version && Number(version) > 0.9)) {
+    if (!(version) && Number(version) < 0.9) {
       convert_data_legacy(json_object)
     }
     // Update direct attributes
