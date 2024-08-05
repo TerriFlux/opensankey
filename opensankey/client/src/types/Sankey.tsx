@@ -35,9 +35,9 @@ import {
 import {
   Type_JSON,
   getJSONFromJSON,
-  getStringFromJSON
+  getStringFromJSON,
+  getStringOrUndefinedFromJSON
 } from './Utils'
-import { Class_ApplicationData } from './ApplicationData'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -375,11 +375,12 @@ export class Class_Sankey {
 
   public addNodeTagGroup(
     id: string,
-    name: string
+    name: string,
+    with_a_tag: boolean = true
   ): Class_TagGroup {
     if (!this._node_taggs[id]) {
       // Create
-      const tag_group = new Class_TagGroup(id, name, this)
+      const tag_group = new Class_TagGroup(id, name, this, with_a_tag)
       // Update
       this._node_taggs[id] = tag_group
       // Return
@@ -387,17 +388,18 @@ export class Class_Sankey {
     }
     // Recursive to avoid id duplicates
     else {
-      return this.addNodeTagGroup(id + '_0', name + '_0')
+      return this.addNodeTagGroup(id + '_0', name + '_0', with_a_tag)
     }
   }
 
   public addFluxTagGroup(
     id: string,
-    name: string
+    name: string,
+    with_a_tag: boolean = true
   ): Class_TagGroup {
     if (!this._flux_taggs[id]) {
       // Create
-      const tag_group = new Class_TagGroup(id, name, this)
+      const tag_group = new Class_TagGroup(id, name, this, with_a_tag)
       // Update
       this._flux_taggs[id] = tag_group
       // Return
@@ -405,17 +407,18 @@ export class Class_Sankey {
     }
     // Recursive to avoid id duplicates
     else {
-      return this.addFluxTagGroup(id + '_0', name + '_0')
+      return this.addFluxTagGroup(id + '_0', name + '_0', with_a_tag)
     }
   }
 
   public addDataTagGroup(
     id: string,
-    name: string
+    name: string,
+    with_a_tag: boolean = true
   ): Class_DataTagGroup {
     if (!this._data_taggs[id]) {
       // Create
-      const tag_group = new Class_DataTagGroup(id, name, this)
+      const tag_group = new Class_DataTagGroup(id, name, this, with_a_tag)
       // Update value tree
       this.links_list.forEach(link => link.addDataTagGroup(tag_group))
       // Update
@@ -425,7 +428,7 @@ export class Class_Sankey {
     }
     // Recursive to avoid id duplicates
     else {
-      return this.addDataTagGroup(id + '_0', name + '_0')
+      return this.addDataTagGroup(id + '_0', name + '_0', with_a_tag)
     }
   }
 
@@ -592,9 +595,28 @@ export class Class_Sankey {
    * @param {{[_:string]:any} json_object
    * @memberof Class_Legend
   */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    match_and_update: boolean = false
+  ) {
     // Id
     this._id = getStringFromJSON(json_object, 'id', this._id)
+    // If we use json object only for updateing layout,
+    // we need to find correspondances for tags, nodes and links ids
+    // from input JSON to this Sankey
+    const matching_taggs_id: {[_: string]: {[_: string]: string}} = {}
+    const matching_tags_id: {[_:string]: {[_: string]: {[_: string]: string}}} = {}
+    const matching_nodes_id: {[_: string]: string} = {}
+    const matching_links_id: {[_: string]: string} = {}
+    if (match_and_update) {
+      this.matchAndModifyJSONIds(
+        json_object,
+        matching_taggs_id,
+        matching_tags_id,
+        matching_nodes_id,
+        matching_links_id
+      )
+    }
     // First read styles
     if (json_object['style_node'] !== undefined) {
       // Set node styles from json data
@@ -621,81 +643,227 @@ export class Class_Sankey {
         })
     }
     // Then read tag groups
-    if (json_object['levelTags'] !== undefined) {
+    let json_entry: string = 'levelTags'
+    if (json_object[json_entry] !== undefined) {
       // Set level tag & tag group from json data
-      Object.entries(json_object['levelTags'])
-        .forEach(([tagg_id, tagg_json]) => {
-          // Create a level tag group
-          const new_grp = this.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or create a level tag group
+          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg = this._level_taggs[tagg_id] ?? this.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
           // Set level tag group value from JSON
-          new_grp.fromJSON(tagg_json as Type_JSON)
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            matching_tags_id[json_entry][_] ?? {})
         })
     }
-    if (json_object['nodeTags'] !== undefined) {
+    json_entry = 'nodeTags'
+    if (json_object[json_entry] !== undefined) {
       // Set node tag & tag group from json data
-      Object.entries(json_object['nodeTags'])
-        .forEach(([tagg_id, tagg_json]) => {
-          // Create a node tag group
-          const new_grp = this.addNodeTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a node tag group
+          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg = this._node_taggs[tagg_id] ?? this.addNodeTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
           // Set node tag group value from JSON
-          new_grp.fromJSON(tagg_json as Type_JSON)
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            matching_tags_id[json_entry][_] ?? {}
+          )
         })
     }
-    if (json_object['fluxTags'] !== undefined) {
+    json_entry = 'fluxTags'
+    if (json_object[json_entry] !== undefined) {
       // Set flux tag & tag group from json data
-      Object.entries(json_object['fluxTags'])
-        .forEach(([tagg_id, tagg_json]) => {
-          // Create a flux tag group
-          const new_grp = this.addFluxTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a flux tag group
+          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg = this._flux_taggs[tagg_id] ?? this.addFluxTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
-          new_grp.fromJSON(tagg_json as Type_JSON)
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            matching_tags_id[json_entry][_] ?? {})
         })
     }
-    if (json_object['dataTags'] !== undefined) {
+    json_entry = 'dataTags'
+    if (json_object[json_entry] !== undefined) {
       // Set data tag & tag group from json data
-      Object.entries(json_object['dataTags'])
-        .forEach(([tagg_id, tagg_json]) => {
-          // Create a flux tag group
-          const new_grp = this.addDataTagGroup(tagg_id, tagg_id) // Will be renamed in fromJSON()
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a flux tag group
+          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg = this._data_taggs[tagg_id] ?? this.addDataTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
-          new_grp.fromJSON(tagg_json as Type_JSON)
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            matching_tags_id[json_entry][_] ?? {})
         })
     }
     // Then read nodes
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
     Object.entries(json_node_object)
-      .forEach(([node_id, node_json]) => {
-        // Create a node
-        const node = this.addNewNode(node_id, node_id)
+      .forEach(([_, node_json]) => {
+        // Get or Create a node
+        const node_id = matching_nodes_id[_] ?? _
+        const node = this._nodes[node_id] ?? this.addNewNode(node_id, node_id)
         // Set node value to node from JSON
-        node.fromJSON(node_json as Type_JSON)
+        node.fromJSON(
+          node_json as Type_JSON,
+          matching_taggs_id['nodeTags'] ?? {},
+          matching_tags_id['nodeTags'] ?? {}
+        )
       })
     // Redo a go throught, but this time create nodes dimension
     Object.entries(json_node_object)
-      .forEach(([node_id, node_json]) => {
-        this._nodes[node_id].dimensionsFromJSON(node_json as Type_JSON)
+      .forEach(([_, node_json]) => {
+        const node_id = matching_nodes_id[_] ?? _
+        this._nodes[node_id].dimensionsFromJSON(
+          node_json as Type_JSON,
+          matching_nodes_id,
+          matching_taggs_id['levelTags'] ?? {},
+          matching_tags_id['levelTags'] ?? {}
+        )
       })
     // Then read links
     Object.entries(json_object['links'])
-      .forEach(([link_id, link_json]) => {
+      .forEach(([_, link_json]) => {
         // Create a default link
+        const link_id = matching_links_id[_] ?? _
         const source = this.nodes_list[0] // default
         const target = this.nodes_list[1] // default
         const link = this._addNewLink(link_id, source, target)
         // Set link value to link from JSON
-        link.fromJSON(link_json as Type_JSON)
+        link.fromJSON(
+          link_json as Type_JSON,
+          matching_nodes_id,
+          matching_taggs_id['fluxTags'] ?? {},
+          matching_tags_id['fluxTags'] ?? {}
+        )
       })
     // Order links io position in each nodes
     // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement
     if (json_node_object)
       this.nodes_list
-        .forEach(n => {
-          n.linksFromJSON(getJSONFromJSON(json_node_object, n.id, {}))
+        .forEach(node => {
+          node.linksFromJSON(
+            getJSONFromJSON(json_node_object, node.id, {}),
+            matching_links_id
+          )
         })
-
   }
 
-
+  public matchAndModifyJSONIds(
+    json_object: Type_JSON,
+    matching_taggs_id: {[_: string]: {[_: string]: string}} = {},
+    matching_tags_id: {[_:string]: {[_: string]: {[_: string]: string}}} = {},
+    matching_nodes_id: {[_: string]: string} = {},
+    matching_links_id: {[_: string]: string} = {}
+  ) {
+    // Loop on every tag group entries in JSON if there is data -------------------------
+    const loop_taggs = {
+      'levelTags': this._level_taggs,
+      'nodeTags': this._node_taggs,
+      'fluxTags': this._flux_taggs,
+      'dataTags': this._data_taggs,
+    }
+    Object.entries(loop_taggs)
+      .forEach(([tagg_type, tagg_dict]) => {
+        if (json_object[tagg_type] !== undefined) {
+          // Variable to save matching ids : old -> new
+          const curr_matching_taggs_id: {[id: string]: string} = {}
+          const curr_matching_tags_id: {[id: string]: {[id: string]: string}} = {}
+          // Cast type for linter
+          const json = json_object[tagg_type] as Type_JSON
+          // Loop on all entries to find tag group and then tags matchs
+          Object.entries(json)
+            .forEach(([tagg_id, _]) => {
+              // Cast type
+              const tagg_json = _ as Type_JSON
+              // Match tag groups between sankey and JSON that have the same name but different id
+              const matching_taggs = Object.values(tagg_dict)
+                .filter(tagg => {
+                  return (
+                    (tagg.name === getStringOrUndefinedFromJSON(tagg_json, 'name')) &&
+                    (tagg.id !== tagg_id))
+                })
+              // We need to find a unique matching entry in JSON
+              if (matching_taggs.length === 1) {
+                curr_matching_taggs_id[tagg_id] = matching_taggs[0].id
+              }
+              // Then match tags using the same methode
+              curr_matching_tags_id[tagg_id] = {}
+              Object.entries(tagg_json)
+                .forEach(([tag_id, __]) => {
+                  // Get related tag group
+                  const new_tagg_id = curr_matching_taggs_id[tagg_id] ?? tagg_id
+                  const tagg = tagg_dict[new_tagg_id] ?? undefined
+                  if (tagg) {
+                    // Casting type
+                    const tag_json = __ as Type_JSON
+                    // Match tag group in json data with theses in sankey data using name
+                    const matching_tags = tagg.tags_list
+                      .filter(tag => {
+                        return (
+                          (tag.name === getStringOrUndefinedFromJSON(tag_json, 'name')) &&
+                          (tag.id !== tag_id))
+                        })
+                    // We need to find a unique matching entry in JSON
+                    if (matching_tags.length === 1) {
+                      curr_matching_tags_id[tagg_id][tag_id] = matching_tags[0].id
+                    }
+                  }
+                })
+            })
+          // Save results
+          matching_taggs_id[tagg_type] = curr_matching_taggs_id
+          matching_tags_id[tagg_type] = curr_matching_tags_id
+        }
+      })
+    // Loop on all nodes ------------------------------------------------------------
+    // Cast type for linter
+    const nodes_json = json_object['nodes'] as Type_JSON
+    Object.entries(nodes_json)
+      .forEach(([node_id, _]) => {
+        // Cast type for linter
+        const node_json = _ as Type_JSON
+        // Loop on all existing node and try to find match based on names
+        const matching_nodes = this.nodes_list
+          .filter(node => {
+            return (
+              (node.name === getStringOrUndefinedFromJSON(node_json, 'name')) &&
+              (node.id !== node_id))
+          })
+        // There must be only one matching node
+        if (matching_nodes.length === 1) {
+          matching_nodes_id[node_id] = matching_nodes[0].id
+        }
+      })
+    // Loop on all links ------------------------------------------------------------
+    // Cast type for linter
+    const links_json = json_object['links'] as Type_JSON
+    Object.entries(links_json)
+      .forEach(([link_id, _]) => {
+        // Cast type for linter
+        const link_json = _ as Type_JSON
+        // Loop on all existing link and try to find match based on names
+        const matching_links = this.links_list
+          .filter(link => {
+            let source_id = getStringFromJSON(link_json, 'idSource', '')
+            source_id = matching_nodes_id[source_id] ?? source_id
+            let target_id = getStringFromJSON(link_json, 'idSource', '')
+            target_id = matching_nodes_id[target_id] ?? target_id
+            return (
+              (link.source.id === source_id) &&
+              (link.target.id === target_id) &&
+              (link.id !== link_id))
+          })
+        // There must be only one matching link
+        if (matching_links.length === 1) {
+          matching_links_id[link_id] = matching_links[0].id
+        }
+      })
+  }
 
   public updateLayoutFromJSON(
     new_layout: Class_DrawingArea,
@@ -768,8 +936,6 @@ export class Class_Sankey {
       this.drawing_area.legend.legend_show_dataTags = new_layout.legend.legend_show_dataTags
       this.drawing_area.legend.node_label_separator = new_layout.legend.node_label_separator
       this.drawing_area.legend.width = new_layout.legend.width
-
-
     }
 
     // Update level_tag_dict
@@ -826,8 +992,6 @@ export class Class_Sankey {
         .forEach(id_nt => {
           this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt])
         })
-
-
     }
 
     // Update flux_tag_dict
@@ -934,7 +1098,6 @@ export class Class_Sankey {
               this.nodes_dict[node.id].addTag(tag)
             })
         })
-
     }
 
     // Search link in new that are not in current then add them
@@ -948,6 +1111,7 @@ export class Class_Sankey {
             this.addNewLink(link.source, link.target)
         })
     }
+
     // Search link in current that are not in new then delete them
     if (mode.includes('removeFlux')) {
 
@@ -997,7 +1161,7 @@ export class Class_Sankey {
     }
 
     // Apply links values from new layout to current links
-    // /!\ new layout must but an ancient version of the current sankey because each link value has an unique id 
+    // /!\ new layout must but an ancient version of the current sankey because each link value has an unique id
     if (mode.includes('Values')) {
       new_layout.sankey.links_list
         .filter(link => this.links_dict[link.id] !== undefined)
@@ -1033,9 +1197,7 @@ export class Class_Sankey {
           const similar_new_layout_link = list_new_links.filter(new_l => new_l.id == link.id)[0]
           link.copyFrom(similar_new_layout_link)
         })
-
     }
-
   }
 
   // PRIVATE METHODS ====================================================================

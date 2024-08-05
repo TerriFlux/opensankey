@@ -644,25 +644,28 @@ export abstract class Class_ProtoTagGroup {
   }
 
   /**
-   *Set Tag_group value & substructur from JSON
+   * Set Tag_group value & substructure from JSON
    *
    * @param {Type_JSON} json_object
    * @memberof Class_TagGroup
    */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_tags_id: {[_: string]: string} = {}
+  ) {
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
     // Read group attributes
     this._name = getStringFromJSON(json_object, 'name', this._name)
     this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
-    // Clean existing tags - always at least one on construction
-    const _ = this.tags_list
-    _.forEach(tag => this.removeTag(tag))
     // Create new tags & read their attributes
     Object.entries(json_object['tags'])
-      .forEach(([tag_id, tag_json]) => {
-        const new_tag = this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
-        new_tag.fromJSON(tag_json as Type_JSON)
+      .forEach(([_, tag_json]) => {
+        // Get or Create tag
+        const tag_id = matching_tags_id[_] ?? _
+        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
+        // Update tag with json
+        tag.fromJSON(tag_json as Type_JSON)
       })
   }
 
@@ -810,13 +813,17 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string, sankey: Class_Sankey) {
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = true
+  ) {
     super(id, name, sankey)
     // Default banner as multi
     this.banner = 'multi'
     // Create a first default tag
-    this.addTag('Etiquette 0')
-
+    if (with_a_tag) this.addTag('Etiquette 0')
   }
 
   // PUBLIC METHODS =====================================================================
@@ -833,8 +840,11 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    * @param {Type_JSON} json_object
    * @memberof Class_TagGroup
    */
-  public fromJSON(json_object: Type_JSON) {
-    super.fromJSON(json_object)
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_tags_id: {[_: string]: string} = {}
+  ) {
+    super.fromJSON(json_object, matching_tags_id)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
@@ -921,11 +931,18 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string, sankey: Class_Sankey) {
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = true
+  ) {
     super(id, name, sankey)
     // Create and select a first default tag
-    const tag = this.addTag('Etiquette 0')
-    tag.setSelected()
+    if (with_a_tag) {
+      const tag = this.addTag('Etiquette 0')
+      tag.setSelected()
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -955,8 +972,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * @param {Type_JSON} json_object
    * @memberof Class_TagGroup
    */
-  public fromJSON(json_object: Type_JSON) {
-    super.fromJSON(json_object)
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_tags_id: {[_: string]: string} = {}
+  ) {
+    super.fromJSON(json_object, matching_tags_id)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
@@ -1051,8 +1071,11 @@ export class Class_LevelTagGroup extends Class_ProtoTagGroup {
     return json_object
   }
 
-  public fromJSON(json_object: Type_JSON) {
-    super.fromJSON(json_object)
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_tags_id: {[_: string]: string} = {}
+  ) {
+    super.fromJSON(json_object, matching_tags_id)
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'sibling', this._siblings)
   }
