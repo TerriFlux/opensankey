@@ -32,11 +32,6 @@ export type ProcessExampleFuncType = (
 export type RetrieveExcelResultsFuncType = (
   applicationData : applicationDataType,
   text: string,
-  updateLayout: updateLayoutFuncType,
-  postProcessLoadExcel: postProcessLoadExcelFuncType,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-  convert_data: ConvertDataFuncType,
-  defaultData: () => SankeyData
 ) => void
 
 export type SaveDiagramOptionsType = {
