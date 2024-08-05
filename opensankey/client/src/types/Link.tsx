@@ -41,6 +41,7 @@ import {
   getJSONOrUndefinedFromJSON,
   getNumberFromJSON,
   getNumberOrNullFromJSON,
+  getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringOrNullFromJSON,
   getStringOrUndefinedFromJSON,
@@ -690,6 +691,11 @@ export class Class_LinkElement extends Class_ProtoElement {
     // Fill style & local attributes
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
+    // Fill dragged postion attribute 
+    if (this._display.position_offset_label !== undefined) json_object['position_offset_label'] = this._display.position_offset_label
+    if (this._display.position_x_label !== undefined) json_object['position_x_label'] = this._display.position_x_label
+    if (this._display.position_y_label !== undefined) json_object['position_y_label'] = this._display.position_y_label
+
     // Values
     if (with_values)
       json_object['value'] = this._values.toJSON()
@@ -705,6 +711,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (source_node_id) this.main_sankey.nodes_dict[source_node_id]?.addOutputLink(this)
     const target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
     if (target_node_id) this.main_sankey.nodes_dict[target_node_id]?.addInputLink(this)
+
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
     this._display.style = this.main_sankey.link_styles_dict[style_id]
@@ -712,6 +719,10 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
     }
+    // Get dragged label pos if defined
+    this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
+    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
+    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
     // Get value
     this._values.fromJSON(getJSONFromJSON(json_object, 'value', {}))
   }
@@ -768,6 +779,11 @@ export class Class_LinkElement extends Class_ProtoElement {
       this._display.style = this.drawing_area.sankey.link_styles_dict[new_style_id]
       this._display.style.addReference(this)
     }
+
+    // Set dragged position from element if defined
+    if (element._display.position_offset_label !== undefined) this._display.position_offset_label = element._display.position_offset_label
+    if (element._display.position_x_label !== undefined) this._display.position_x_label = element._display.position_x_label
+    if (element._display.position_y_label !== undefined) this._display.position_y_label = element._display.position_y_label
   }
 
   public getAllValues() {
@@ -908,14 +924,7 @@ export class Class_LinkElement extends Class_ProtoElement {
             .classed('link_label', true)
             .classed('link_label_text', true)
             .attr('id', 'label_text_' + this.id)
-          // Create text on path
-          const d3_textpath_selection = d3_text_selection?.append('textPath')
-            .classed('link', true)
-            .classed('link_label', true)
-            .classed('link_label_textpath', true)
-            .attr('id', 'label_textpath_' + this.id)
-            .attr('href', '#' + this.id)
-          // Add styling text attributes directly on text object
+
           d3_text_selection?.style('font-weight', 'bold')
             .style('font-style', 'normal')
             .style('font-size', String(this.value_label_font_size) + 'px')
@@ -924,50 +933,282 @@ export class Class_LinkElement extends Class_ProtoElement {
               (this.value_label_color === 'color') ?
                 this.shape_color :
                 this.value_label_color)
-          // Add text directly on textpath object
-          d3_textpath_selection?.text(label_to_display)
-            .attr('spacing', 'exact')
-            .attr('method', 'align')
+
+
+
           // Compute text position
           if (this.value_label_on_path) {
+
+            // Create text on path
+            const d3_textpath_selection = d3_text_selection?.append('textPath')
+              .classed('link', true)
+              .classed('link_label', true)
+              .classed('link_label_textpath', true)
+              .attr('id', 'label_textpath_' + this.id)
+              .attr('href', '#' + this.id)
+
+            // Add text directly on textpath object
+            d3_textpath_selection?.text(label_to_display)
+              .attr('spacing', 'exact')
+              .attr('method', 'align')
+
+            // Add styling text attributes directly on text object
             // Relative position from starting point of path
             this.updateTextPathOffset()
 
-            // Ortogonal position from path
-            let label_ortho_position
-            let label_dominant_baseline
-            if (this.value_label_orthogonal_position === 'above') {
-              label_ortho_position = -this.thickness / 2
-              label_dominant_baseline = 'text-after-edge'
+            if (!this.drawing_area.static) {
+              d3_textpath_selection?.call(d3.drag<SVGTextPathElement, this>()
+                .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+                .on('start', ev => this.dragTextPathStart(ev))
+                .on('drag', ev => this.dragTextPathMove(ev))
+                .on('end', ev => this.dragTextPathEnd(ev))
+              )
             }
-            else if (this.value_label_orthogonal_position === 'middle') {
-              label_ortho_position = 0
-              label_dominant_baseline = 'middle'
+          } else {
+
+            this.updateTextXYPosition()
+
+            d3_text_selection?.text(label_to_display)
+              .attr('spacing', 'exact')
+              .attr('method', 'align')
+
+            if (!this.drawing_area.static) {
+              d3_text_selection?.call(d3.drag<SVGTextElement, this>()
+                .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+                .on('start', ev => this.dragTextStart(ev))
+                .on('drag', ev => this.dragTextMove(ev))
+                .on('end', ev => this.dragTextEnd(ev))
+              )
             }
-            else if (this.value_label_orthogonal_position === 'below') {
-              label_ortho_position = this.thickness / 2 + this.value_label_font_size
-              label_dominant_baseline = 'text-top'
-            }
-            else { // dragged
-              label_ortho_position = 0
-              label_dominant_baseline = 'middle'
-            }
-            d3_text_selection?.attr('dy', label_ortho_position)
-            d3_text_selection?.attr('dominant-baseline', label_dominant_baseline)
           }
 
-          if (!this.drawing_area.static) {
-            d3_textpath_selection?.call(d3.drag<SVGTextPathElement, this>()
-              .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
-              .on('start', ev => this.dragTextStart(ev))
-              .on('drag', ev => this.dragTextMove(ev))
-              .on('end', ev => this.dragTextEnd(ev))
-            )
-          }
         }
       }
     }
   }
+
+
+  //================= Functions for link label if it is a TextPath  =================
+
+  /**
+   * Function used to set link label offset on DA & other attribute linkd to it
+   *
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private updateTextPathOffset() {
+
+    const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
+
+    this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
+    this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
+    this.d3_selection?.select('.link_label_textpath').attr('dy', label_ortho_position)
+    this.d3_selection?.select('.link_label_textpath').attr('dominant-baseline', label_dominant_baseline)
+  }
+
+  /**
+   * Function used to return link label offset on DA & other attribute linkd to it
+   *
+   * @private
+   * @return {*}  {[number, string, number, string]}
+   * @memberof Class_LinkElement
+   */
+  private getTextPathOffset(): [number, string, number, string] {
+    // Initialize value as if it link attributes were : 
+    // - value_label_position : 'start'
+    // - value_label_orthogonal_position : 'above'
+
+    // Offset positions
+    let label_anchor = 'start'
+    let label_position = 1
+    // Ortogonal position from path
+    let label_ortho_position = -this.thickness / 2
+    let label_dominant_baseline = 'text-after-edge'
+
+    if (this._display.position_offset_label !== undefined) {
+      const offset = this._display.position_offset_label
+      // offset attributes when dragged
+      label_anchor = offset > 50 ? 'end' : 'start'
+      label_position = offset
+      // orthogonal attributes when dragged
+      label_ortho_position = 0
+      label_dominant_baseline = 'middle'
+    } else {
+      // offset attributes
+      if (this.value_label_position === 'middle') {
+        label_anchor = 'middle'
+        label_position = 50
+      }
+      else if (this.value_label_position === 'end') {
+        label_anchor = 'end'
+        label_position = 99
+      }
+
+      // orthogonal attributes
+      if (this.value_label_orthogonal_position === 'middle') {
+        label_ortho_position = 0
+        label_dominant_baseline = 'middle'
+      }
+      else if (this.value_label_orthogonal_position === 'below') {
+        label_ortho_position = this.thickness / 2 + this.value_label_font_size
+        label_dominant_baseline = 'text-top'
+      }
+
+    }
+
+
+
+
+    return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
+  }
+  /**
+   * Function triggered when we start dragging node name label when it follow the link path, it initialise relative position if undefined
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
+   */
+  private dragTextPathStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
+    //if position_x_label is undefined init position_x_label pos whith current fixed x position value
+    if (this._display.position_offset_label === undefined) {
+      const [label_offset,] = this.getTextPathOffset()
+
+      this._display.position_offset_label = label_offset
+      this.value_label_position = 'dragged'
+    }
+
+  }
+
+  /**
+   * Function triggered when we move the node name label when it follow the link path, it update relative node position & redraw the name slabel
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
+   */
+  private dragTextPathMove(event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
+    this._display.position_offset_label = ((this._display.position_offset_label !== undefined) ? this._display.position_offset_label : 0) + event.dx
+    if (this._display.position_offset_label < 0) this._display.position_offset_label = 0
+    else if (this._display.position_offset_label > 100) this._display.position_offset_label = 100
+    this.updateTextPathOffset()
+  }
+
+  private dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
+    this.menu_config.updateAllComponentsRelatedToLinks()
+  }
+
+
+  //================= Functions for link label if it is a simple text  =================
+
+  /**
+   * Set the position of the label of the link when it doesn't follow the path
+   *
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private updateTextXYPosition() {
+
+    const [label_pos, label_ortho_pos, label_anchor] = this.getTextXYPos()
+
+    this.d3_selection?.select('.link_label_text').attr('y', label_ortho_pos)
+    this.d3_selection?.select('.link_label_text').attr('x', label_pos)
+    this.d3_selection?.select('.link_label_text').attr('text-anchor', label_anchor)
+
+  }
+
+  /**
+   * Return position value of the label when it doesn't follow the link path,
+   * return [pos_x,pos_y,text-anchor]
+   *
+   * @private
+   * @return {*}  {[number, number, string]}
+   * @memberof Class_LinkElement
+   */
+  private getTextXYPos(): [number, number, string] {
+    // Initialize value as if it link attributes were : 
+    // - value_label_position : 'start'
+    // - value_label_orthogonal_position : 'above'
+
+    let label_ortho_pos = this.position_y_start
+    let label_pos: number = this.position_x_start
+    let label_anchor = 'start'
+
+    // The process of the y position of the label depend of the x position :
+    // - if the label is at the start of the link path then we take position_y_start as the reference
+    // - if the label is at the middle of the link path then we take the center point as the reference
+    // - if the label is at the middle of the link path then we take the position_y_end as the reference
+
+    if (this._display.position_x_label !== undefined) {//dragged
+      label_pos = this._display.position_x_label
+    } else {
+      if (this.value_label_position === 'middle') {
+        label_anchor = 'middle'
+        label_pos = (this._control_points.starting_bezier_point.position_x + this._control_points.ending_bezier_point.position_x) / 2
+        label_ortho_pos = (this._control_points.starting_bezier_point.position_y + this._control_points.ending_bezier_point.position_y) / 2
+      }
+      else if (this.value_label_position === 'end') {
+        label_anchor = 'end'
+        label_pos = this.position_x_end
+        label_ortho_pos = this.position_y_end
+      }
+    }
+
+    if (this._display.position_y_label !== undefined) {//dragged
+      label_ortho_pos = this._display.position_y_label
+    } else {
+      // Then we apply a relative vertical shift depending of the value_label_orthogonal_position
+      if (this.value_label_orthogonal_position === 'above') {
+        label_ortho_pos -= (this.value_label_font_size / 2)
+      } else if (this.value_label_orthogonal_position === 'middle') {
+        label_ortho_pos += (this.value_label_font_size / 3)
+      } else if (this.value_label_orthogonal_position === 'below') {
+        label_ortho_pos += this.value_label_font_size
+      }
+    }
+
+    return [label_pos, label_ortho_pos, label_anchor]
+  }
+
+  /**
+   * Function triggered when we start dragging node name label, it initialise relative position if undefined
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
+   */
+  private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, Class_LinkElement, Class_LinkElement>) {
+    //if position_x_label is undefined init position_x_label pos whith current fixed x position value
+    const [label_pos, label_ortho_pos,] = this.getTextXYPos()
+
+    if (this._display.position_x_label === undefined) {
+      this._display.position_x_label = label_pos
+      this.value_label_position = 'dragged'
+    }
+
+    if (this._display.position_y_label === undefined) {
+      this._display.position_y_label = label_ortho_pos
+      this.value_label_orthogonal_position = 'dragged'
+    }
+
+  }
+
+  /**
+   * Function triggered when we move the node name label, it update relative node position & redraw the name slabel
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGTextElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
+   */
+  private dragTextMove(event: d3.D3DragEvent<SVGTextElement, Class_LinkElement, Class_LinkElement>) {
+    this._display.position_x_label = ((this._display.position_x_label !== undefined) ? this._display.position_x_label : 0) + event.dx
+    this._display.position_y_label = ((this._display.position_y_label !== undefined) ? this._display.position_y_label : 0) + event.dy
+    this.updateTextXYPosition()
+  }
+
+  private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, Class_LinkElement, Class_LinkElement>) {
+    this.menu_config.updateAllComponentsRelatedToLinks()
+  }
+
 
   /**
    * Display the tooltip on drawing area
@@ -987,76 +1228,6 @@ export class Class_LinkElement extends Class_ProtoElement {
       .html(this.tooltip_html)
   }
 
-  /**
-   * Function triggered when we start dragging node name label, it initialise relative position if undefined
-   *
-   * @private
-   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
-   * @memberof Class_LinkElement
-   */
-  private dragTextStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
-    //if position_x_label is undefined init position_x_label pos whith current fixed x position value
-    if (this._display.position_offset_label === undefined) {
-      let label_pos_offset = 1
-      if (this.value_label_position === 'middle') {
-        label_pos_offset = 50
-      }
-      else if (this.value_label_position === 'end') {
-        label_pos_offset = 99
-      }
-      this._display.position_offset_label = label_pos_offset
-      this.value_label_position = 'dragged'
-    }
-
-  }
-
-  /**
-   * Function triggered when we move the node name label, it update relative node position & redraw the name slabel
-   *
-   * @private
-   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
-   * @memberof Class_LinkElement
-   */
-  private dragTextMove(event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
-    this._display.position_offset_label = ((this._display.position_offset_label !== undefined) ? this._display.position_offset_label : 0) + event.dx
-    if (this._display.position_offset_label < 0) this._display.position_offset_label = 0
-    else if (this._display.position_offset_label > 100) this._display.position_offset_label = 100
-    this.updateTextPathOffset()
-  }
-
-  private dragTextEnd(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
-    this.menu_config.updateAllComponentsRelatedToLinks()
-  }
-
-  /**
-   * Function used to set link label offset on DA
-   *
-   * @private
-   * @memberof Class_LinkElement
-   */
-  private updateTextPathOffset() {
-    let label_anchor = 'start'
-    let label_position = 1
-
-    if (this._display.position_offset_label !== undefined) {
-      const offset = this._display.position_offset_label
-      label_anchor = offset > 50 ? 'end' : 'start'
-      label_position = offset
-    } else {
-
-      if (this.value_label_position === 'middle') {
-        label_anchor = 'middle'
-        label_position = 50
-      }
-      else if (this.value_label_position === 'end') {
-        label_anchor = 'end'
-        label_position = 99
-      }
-
-    }
-    this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
-    this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
-  }
 
   private drawControlPoint() {
     // Draw control handler
@@ -3580,7 +3751,7 @@ export class Class_LinkValueTree {
       console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
     else {
       Object.entries(json_object)
-        .filter(([id, ]) => id !== 'datatag_group') // Skip this entry in JSON
+        .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
         .forEach(([id, sub_json_object]) => {
           if (typeof sub_json_object === 'object')
             this.children[id]?.fromJSON(sub_json_object as Type_JSON)
@@ -3850,7 +4021,7 @@ export class Class_LinkValue {
   public fromJSON(json_object: Type_JSON) {
     this.fromJSONLegacy(json_object)
     this._id = getStringFromJSON(json_object, 'id', this._id)
-    const link_has_value=Object.prototype.hasOwnProperty.call(json_object, 'value')
+    const link_has_value = Object.prototype.hasOwnProperty.call(json_object, 'value')
     // Update attributes
     if (link_has_value) {
       this.fromJSONLegacy(json_object)

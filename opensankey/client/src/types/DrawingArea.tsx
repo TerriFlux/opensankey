@@ -789,7 +789,7 @@ export class Class_DrawingArea {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
 
     // Only legacy convert old sankey
-    if (!(version && Number(version) > 0.9)) {
+    if ( version===undefined || Number(version) < 0.9) {
       convert_data_legacy(json_object)
     }
     // Update direct attributes
@@ -826,7 +826,7 @@ export class Class_DrawingArea {
     // Create json struct
     const json_object = {} as Type_JSON
     // Add current version of app
-    json_object['version'] = 0.9
+    json_object['version'] = this.application_data.version
     // Dump DA attributes
     json_object['height'] = this._height
     json_object['width'] = this._width
@@ -841,9 +841,9 @@ export class Class_DrawingArea {
       ...json_object,
       ...this._legend.toJSON(),
       ...this._sankey.toJSON(
-          only_visible_elements,
-          with_values
-        )
+        only_visible_elements,
+        with_values
+      )
     }
   }
 

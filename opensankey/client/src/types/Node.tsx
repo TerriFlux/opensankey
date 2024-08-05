@@ -3603,7 +3603,7 @@ export class Class_NodeDimension {
         if (prev_group)
           same_group = (same_group && (tag.group === prev_group))
         prev_group = tag.group
-    })
+      })
     if (
       (children.includes(parent)) ||
       (!same_group) ||
