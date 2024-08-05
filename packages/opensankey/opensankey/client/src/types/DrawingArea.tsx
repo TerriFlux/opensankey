@@ -1236,7 +1236,7 @@ export class Class_DrawingArea {
   private eventZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
     d3.select('#g_drawing')
       .transition()
-      .attr('transform', event.transform.toString)
+      .attr('transform', event.transform.toString())
   }
 }
 
