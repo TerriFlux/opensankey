@@ -21,10 +21,8 @@ import {
   processFunctionsType,
   dict_hook_ref_setter_show_dialog_componentsType,
   applicationContextType,
-  applicationDrawType,
   applicationDataType,
   SankeyData,
-  postProcessLoadExcelFuncType,
 } from '../types/Types'
 import {
   ClickSaveDiagramFuncType,
@@ -50,16 +48,11 @@ import {
 /*************************************************************************************************/
 
 import {
-  AdjustSankeyZone,
-  AssignNodeLocalAttribute,
   DataSuiteType,
   DefaultLink,
   DefaultNode,
-  DefaultSankeyData,
-  GetRandomInt,
   SetNodeStyleToTypeNode,
   layout_type,
-  list_palette_color
 } from '../configmenus/SankeyUtils'
 import {
   complete_sankey_data
@@ -75,38 +68,29 @@ import { Type_JSON } from '../types/Utils'
 
 interface SankeyLoadProdTypes {
   applicationContext: applicationContextType,
-  applicationDraw: applicationDrawType,
   applicationData: applicationDataType,
   successAction: () => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  processFunctions:processFunctionsType,
-  convert_data:ConvertDataFuncType,
-  postProcessLoadExcel:postProcessLoadExcelFuncType
+  processFunctions:processFunctionsType
 }
 
 /**
  * Loading modal
  * @param {*} {
  *   applicationContext,
- *   applicationDraw,
  *   applicationData,
  *   successAction,
  *   processFunctions,
  *   dict_hook_ref_setter_show_dialog_components,
- *   convert_data,
- *   postProcessLoadExcel
  * }
  * @return {*}
  */
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   applicationContext,
-  applicationDraw,
   applicationData,
   successAction,
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
-  convert_data,
-  postProcessLoadExcel
 }) => {
   const { t, url_prefix } = applicationContext
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults } = processFunctions
@@ -156,12 +140,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
           try {
             RetrieveExcelResults(
               applicationData,
-              text,
-              applicationDraw.updateLayout,
-              postProcessLoadExcel,
-              applicationDraw.GetSankeyMinWidthAndHeight,
-              convert_data,
-              applicationData.get_default_data
+              text
             )
           }
           catch(err) {
@@ -405,14 +384,15 @@ export const UploadExcelImpl: UploadExcelImplFuncType = (
   set_show_excel_dialog(false)
 }
 
+/**
+ * Reset Drawing area with extracted json data from an excel file
+ *
+ * @param {*} applicationData
+ * @param {string} text
+ */
 export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
-  updateLayout: updateLayoutFuncType,
-  postProcessLoadExcel: (server_data: SankeyData) => void,
-  GetSankeyMinWidthAndHeight,
-  convert_data: ConvertDataFuncType,
-  defaultData: () => SankeyData
 ) => {
   // Get data
   const { new_data } = applicationData
@@ -432,48 +412,6 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   // TODO autocompute sankey
   // TODO adjust sankey zone
 
-  // const { set_data } = applicationData
-  // const default_data = defaultData()
-  // const server_data = JSON.parse(text)
-  // let default_nstyle = default_data.style_node['default']
-  // let default_lstyle = default_data.style_link['default']
-  // server_data.h_space = default_data.h_space
-  // server_data.v_space = default_data.v_space
-  // if ((default_data as SankeyData & { layout?: SankeyData} ).layout) {
-  //   server_data.layout = (default_data as SankeyData & { layout?: SankeyData} ).layout
-  // } else {
-  //   default_nstyle = JSON.parse(JSON.stringify(default_data.style_node['default']))
-  //   default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
-  // }
-  // const new_data = Object.assign(default_data, server_data) as SankeyData
-  // applicationData.data=new_data
-  // ProcessExample(applicationData, updateLayout, convert_data, postProcessLoadExcel, DefaultSankeyData)
-  // new_data.style_node['default'] = default_nstyle
-  // new_data.style_link['default'] = default_lstyle
-  // delete (new_data as SankeyData & { layout?: SankeyData} ).layout
-  // if (Object.values(new_data.nodeTags).filter(tagg => tagg.show_legend).length > 0) {
-  //   new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg => tagg[1].show_legend)[0][0]
-  //   Object.values(new_data.nodes).forEach(el => {
-  //     el.colorParameter = 'groupTag'
-  //     el.colorTag = new_data.colorMap
-  //   })
-  // }
-  // if (Object.keys(new_data.nodeTags).filter(t => new_data.nodeTags[t].show_legend).length == 0 &&
-  //   Object.keys(new_data.fluxTags).filter(tag => tag === 'flux_type').length == 0 &&
-  //   Object.values(new_data.nodes).filter(n => n.local && n.local.color).length == 0 &&
-  //   Object.values(new_data.links).filter(l => l.local && l.local.color).length == 0) {
-  //   const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-  //   const n_keys = Object.keys(new_data.nodes)
-  //   const size_color = n_keys.length
-
-  //   for (const i in d3.range(size_color)) {
-  //     AssignNodeLocalAttribute(new_data.nodes[n_keys[i]], 'color', (d3.color(color_selected(+i / size_color))?.formatHex() as string))
-  //   }
-  // }
-  // set_data({ ...new_data })
-  // setTimeout(() => {
-  //   AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight)
-  // }, 100)
 }
 
 
