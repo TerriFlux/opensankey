@@ -136,7 +136,7 @@ export function getBooleanFromJSON(
   key: string,
   fallback_value: boolean
 ) {
-  if (json_object[key]) {
+  if (json_object[key] !== undefined) {
     if (typeof json_object[key] === 'boolean') {
       return json_object[key] as boolean
     }
