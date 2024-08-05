@@ -711,6 +711,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     // Get value
     this._values.fromJSON(getJSONFromJSON(json_object, 'value', {}))
+
   }
 
   public getPathColorToUse() {
@@ -2070,10 +2071,10 @@ export class Class_LinkElement extends Class_ProtoElement {
       .domain([0, this.drawing_area.scale])
       .range([0, 100])
     const data_value = this.data_value
-    return scale(
+    return Math.max(1, scale(
       (data_value !== null) ?
-        Math.max(1, data_value) :
-        1
+        data_value :
+        1)
     )
   }
 
@@ -3823,6 +3824,11 @@ export class Class_LinkValue {
     return json_object
   }
 
+  private fromJSONLegacy(json_object: Type_JSON) {
+    this.data_value = getNumberOrNullFromJSON(json_object, 'value')
+    this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
+  }
+
   /**
    * Read this link value from JSON
    *
@@ -3830,11 +3836,16 @@ export class Class_LinkValue {
    * @memberof Class_LinkValue
    */
   public fromJSON(json_object: Type_JSON) {
-
+    this.fromJSONLegacy(json_object)
     this._id = getStringFromJSON(json_object, 'id', this._id)
+    const link_has_value=Object.prototype.hasOwnProperty.call(json_object, 'value')
     // Update attributes
-    this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
-    this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
+    if (link_has_value) {
+      this.fromJSONLegacy(json_object)
+    } else {
+      this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
+    }
     // Get Flux tags
     // In JSON here are how supposed tags var is :
     // tags: {key_grp_tag: [key_tag, ...] }
