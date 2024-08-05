@@ -242,6 +242,7 @@ export class Class_Tag extends Class_ProtoTag {
       _.removeTag(this)
     }
   }
+
   /**
    * Copy attributes from element tag
    *
@@ -343,7 +344,6 @@ export class Class_DataTag extends Class_ProtoTag {
   public get group() { return this._group }
 }
 
-
 // CLASS LEVELTAG ***********************************************************************
 
 export class Class_LevelTag extends Class_ProtoTag {
@@ -403,10 +403,13 @@ export class Class_LevelTag extends Class_ProtoTag {
   public getOrCreateLowerDimension(
     parent: Class_NodeElement,
     child: Class_NodeElement,
-    child_tag: Class_LevelTag
+    child_tags: Class_LevelTag[]
   ) {
     // First check if tags are from the same groupe
-    if (this.group === child_tag.group) {
+    let same_group = true
+    child_tags
+      .forEach(_ => same_group = (same_group && this.group === _.group))
+    if (same_group) {
       // Try to find matching dimension with :
       // - this as parent tag
       // - input child_tag as children tag
@@ -416,7 +419,7 @@ export class Class_LevelTag extends Class_ProtoTag {
         .forEach(dimension => {
           if (
             (dimension.parent_level_tag === this) &&
-            (dimension.children_level_tag === child_tag) &&
+            (dimension.children_level_tags === child_tags) &&
             (dimension.parent === parent)
           ) {
             dimension_found = dimension
@@ -432,7 +435,7 @@ export class Class_LevelTag extends Class_ProtoTag {
           parent,
           [child],
           this,
-          child_tag
+          child_tags
         )
       }
       // Return
@@ -452,7 +455,7 @@ export class Class_LevelTag extends Class_ProtoTag {
   public addAsChildrenLevel(_: Class_NodeDimension) {
     if (!this.isLevelForChildren(_)) {
       this._references_children[_.id] = _
-      _.children_level_tag = this
+      _.addTagAsChildrenLevelTag(this)
     }
   }
 
@@ -466,7 +469,7 @@ export class Class_LevelTag extends Class_ProtoTag {
   public removeChildrenLevel(_: Class_NodeDimension) {
     if (this.isLevelForChildren(_)) {
       delete this._references_children[_.id]
-      _.delete()
+      _.removeTagFromChildrenLevelTag(this)
     }
   }
 
@@ -662,8 +665,41 @@ export abstract class Class_ProtoTagGroup {
       })
   }
 
+  public copyFrom(
+    element: Class_ProtoTagGroup,
+    tags_synchro=true
+  ) {
+    // Common attributes
+    this._name = element._name
+    this._banner = element._banner
+    this._tag_count = element._tag_count
 
-  public abstract copyFrom(elment: Class_ProtoTagGroup, type: Type_MacroTagGroup): void
+    // Synchronize tags
+    if(tags_synchro) {
+
+      // Delete tags not present in new layout but present in curr
+      this.tags_list
+        .filter(tag => !(tag.id in element.tags_dict))
+        .forEach(tag => {
+          this.removeTag(tag)
+        })
+
+      // Transfer tags attr present in new layout and in curr
+      this.tags_list
+        .filter(tag => (tag.id in element.tags_dict))
+        .forEach(tag => {
+          tag.copyFrom(element.tags_dict[tag.id])
+        })
+
+      // Add tag present in element but not this
+      element.tags_list
+        .filter(tag => !(tag.id in this.tags_dict))
+        .forEach(tag => {
+          this.addTag(tag.name, tag.id).copyFrom(tag)
+        })
+    }
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected abstract createTag(
@@ -802,7 +838,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
   }
 
   /**
-   * Copy tags group attributes from element to current & copy tags 
+   * Copy tags group attributes from element to current & copy tags
    *
    * @param {Class_TagGroup} element
    * @memberof Class_TagGroup
@@ -953,7 +989,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public copyFrom(element: Class_DataTagGroup) {
-    // super.copyFrom(element, false) // FIXME Dont synchronize tags, dont know how to do it properly yet
+    super.copyFrom(element, true)
     this._show_legend = element.show_legend
     this.banner = element.banner
 
