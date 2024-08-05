@@ -865,14 +865,12 @@ export class Class_NodeElement extends Class_Element {
       this.addOutputLink(this.main_sankey.links_dict[link_id])
     })
     // Ordering
-    let ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
-    if(ordered_link_ids.length!=(input_link_ids.length+output_link_ids.length)){
-      ordered_link_ids=[]
-      ordered_link_ids=ordered_link_ids.concat(input_link_ids,output_link_ids)
+    const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
+    if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
+      this._links_order = ordered_link_ids.map(link_id => {
+        return this.main_sankey.links_dict[link_id]
+      })
     }
-    this._links_order = ordered_link_ids.map(link_id => {
-      return this.main_sankey.links_dict[link_id]
-    })
   }
 
   /**
