@@ -1,25 +1,19 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { DeleteLink, deleteSelectedNodeFromData, windowSankey } from '../configmenus/SankeyUtils'
-import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
+import { windowSankey } from '../configmenus/SankeyUtils'
 import { AgregationModal } from './SankeyDrawLayout'
 import {
   RemoveAnimate,
   DrawGrid,
-  SelectVisualyLinks,
-  DeselectVisualyLinks,
-  DeselectVisualyNodes,
-  SelectVisualyNodes
 } from './SankeyDrawFunction'
-import LZString from 'lz-string'
-import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
+import { SankeyDrawTypes } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
-import { AddDrawNodesEvent } from './SankeyDrawNodes'
-import { DeleteGLinks } from './SankeyDrawLinks'
+
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
   }
+
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
   applicationData,
@@ -95,7 +89,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     // Test
     applicationData.new_data?.drawing_area?.reset();
-
 
     // Fonction permettant de déplacer les éléments dans la zone de dessin, seulement quand on drag avec le boutons du milieu de la souris
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)

@@ -679,7 +679,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     return true
   }
 
-  public toJSON() {
+  public toJSON(
+    with_values: boolean = true
+  ) {
     // Root attributes
     const json_object = super.toJSON()
     // Related nodes
@@ -689,7 +691,8 @@ export class Class_LinkElement extends Class_ProtoElement {
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
     // Values
-    json_object['value'] = this._values.toJSON()
+    if (with_values)
+      json_object['value'] = this._values.toJSON()
     // Out
     return json_object
   }
@@ -711,7 +714,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     // Get value
     this._values.fromJSON(getJSONFromJSON(json_object, 'value', {}))
-
   }
 
   public getPathColorToUse() {
@@ -760,7 +762,9 @@ export class Class_LinkElement extends Class_ProtoElement {
 
     // Set link style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
     if (this.drawing_area.sankey.link_styles_list.map(ls => ls.id).includes(element._display.style.id)) {
-      const new_style_id = this.drawing_area.sankey.link_styles_list.map(ls => ls.id).filter(ls => ls.includes(element._display.style.id))[0]
+      const new_style_id = this.drawing_area.sankey.link_styles_list
+        .map(ls => ls.id)
+        .filter(ls => ls.includes(element._display.style.id))[0]
       this._display.style = this.drawing_area.sankey.link_styles_dict[new_style_id]
       this._display.style.addReference(this)
     }
@@ -3561,6 +3565,7 @@ export class Class_LinkValueTree {
 
   public toJSON() {
     const json_object: Type_JSON = {}
+    json_object['datatag_group'] = this.data_tag_group.id
     Object.entries(this.children)
       .forEach(([id, child]) => {
         json_object[id] = child.toJSON()
@@ -3570,11 +3575,17 @@ export class Class_LinkValueTree {
 
   public fromJSON(json_object: Type_JSON) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
-    Object.entries(json_object)
-      .forEach(([id, sub_json_object]) => {
-        if (typeof sub_json_object === 'object')
-          this.children[id]?.fromJSON(sub_json_object as Type_JSON)
-      })
+    // So it is not necessary to read datatag group -> it should be the same as in JSON
+    if (this.data_tag_group.id !== json_object['datatag_group'])
+      console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
+    else {
+      Object.entries(json_object)
+        .filter(([id, ]) => id !== 'datatag_group') // Skip this entry in JSON
+        .forEach(([id, sub_json_object]) => {
+          if (typeof sub_json_object === 'object')
+            this.children[id]?.fromJSON(sub_json_object as Type_JSON)
+        })
+    }
   }
 
   public getAllValues() {
@@ -3810,6 +3821,7 @@ export class Class_LinkValue {
     const json_object: Type_JSON = {}
     json_object['id'] = this._id
     // Fill data
+    json_object['id'] = this._id
     if (this.data_value) json_object['data_value'] = this.data_value
     if (this.text_value) json_object['text_value'] = this.text_value
     json_object['tags'] = Object.fromEntries(

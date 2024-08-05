@@ -200,7 +200,6 @@ export class Class_DrawingArea {
    */
   private _ghost_link: Class_GhostLinkElement | null = null
 
-
   // Elements that are selected in this area
   private _selection: { [id: string]: Class_ProtoElement } = {}
 
@@ -210,8 +209,13 @@ export class Class_DrawingArea {
   private _link_contextualied: Class_LinkElement | undefined = undefined
   private _is_drawing_area_contextualised: boolean = false
 
-  // Zoom & positioning of drawing_area
-  // if we want to move manually the drawing_area, we should use this variable (see areaFitHorizontally && areaFitVertically)
+  /**
+   * Zoom & positioning of drawing_area
+   * if we want to move manually the drawing_area, we should use this variable
+   * (see areaFitHorizontally && areaFitVertically)
+   * @private
+   * @memberof Class_DrawingArea
+   */
   private zoomListener = d3.zoom<SVGSVGElement, unknown>()
     // only trigger zoom event when we scroll (which == 0) &&
     // and drag mouse middle button (which == 2)
@@ -245,20 +249,44 @@ export class Class_DrawingArea {
     this._selection_zone = new Class_ZoneSelection(this, this.application_data.menu_configuration)
   }
 
-  // PUBLIC METHODS ====================================================================
-  public reinit() {
+  public delete() {
+    // Empty selection
+    this.purgeSelection()
+    // Clean ghost link
+    this._ghost_link?.delete()
+    this._ghost_link = null
+    // Unref contextualized elements -> will be deleted later
+    this._link_contextualied = undefined
+    this._node_contextualied = undefined
+    // Clean Elements
     this._sankey.delete()
+    this._legend.delete()
+    this._selection_zone.delete()
+    // Clean drawing area
+    this.unDraw()
+  }
+
+  // PUBLIC METHODS ====================================================================
+
+  public reinit() {
+    // Delete everything
+    this.delete()
+    // Recreate everything
     this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
     this._legend = new Class_Legend(this, this.application_data.menu_configuration)
+    this._selection_zone = new Class_ZoneSelection(this, this.application_data.menu_configuration)
+    // Redraw
     this.reset()
   }
+
   /**
    * Reset drawing area
    * @memberof Class_DrawingArea
    */
   public reset() {
+
     // Clean drawing area
-    this.removeDrawingArea()
+    this.unDraw()
 
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
@@ -293,17 +321,7 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Delete html element SVG containing drawing area
-   *
-   * @memberof Class_DrawingArea
-   */
-  public removeDrawingArea() {
-    this.d3_selection_zoom_area?.remove()
-  }
-
-  /**
    * Draw all elements inside drawing area
-   * @private
    * @memberof Class_DrawingArea
    */
   public drawElements() {
@@ -764,11 +782,14 @@ export class Class_DrawingArea {
    * @param {Type_JSON} json_object
    * @memberof Class_DrawingArea
    */
-  public fromJSON(json_object: Type_JSON, redraw: boolean) {
+  public fromJSON(
+    json_object: Type_JSON,
+    redraw: boolean=true
+  ) {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
 
     // Only legacy convert old sankey
-    if (!(version) && Number(version) < 0.9) {
+    if (!(version && Number(version) > 0.9)) {
       convert_data_legacy(json_object)
     }
     // Update direct attributes
@@ -793,12 +814,15 @@ export class Class_DrawingArea {
 
   /**
    * Convert current drawing area & all substructure as JSON data
-   *
-   * @param {Type_JSON} json_object
+   * @param {boolean} [only_visible_elements=false]
+   * @param {boolean} [with_values=true]
    * @return {*}
    * @memberof Class_DrawingArea
    */
-  public toJSON() {
+  public toJSON(
+    only_visible_elements: boolean = false,
+    with_values: boolean = true
+  ) {
     // Create json struct
     const json_object = {} as Type_JSON
     // Add current version of app
@@ -816,11 +840,26 @@ export class Class_DrawingArea {
     return {
       ...json_object,
       ...this._legend.toJSON(),
-      ...this._sankey.toJSON()
+      ...this._sankey.toJSON(
+          only_visible_elements,
+          with_values
+        )
     }
   }
 
   // PRIVATE METHODS ==================================================================
+
+  /**
+   * Delete html element SVG containing drawing area
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private unDraw() {
+    if (this.d3_selection_zoom_area) {
+      this.d3_selection_zoom_area.remove()
+      this.d3_selection_zoom_area = null
+    }
+  }
 
   /**
    * Draw background for drawing area
