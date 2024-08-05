@@ -136,10 +136,8 @@ export function getBooleanFromJSON(
   key: string,
   fallback_value: boolean
 ) {
-  if (json_object[key] !== undefined) {
-    if (typeof json_object[key] === 'boolean') {
-      return json_object[key] as boolean
-    }
+  if (json_object[key] !== undefined && typeof json_object[key] === 'boolean') { // test if not undefined because json_object[key] can be false thus not assiging correct value but fallback_value
+    return json_object[key] as boolean
   }
   return fallback_value
 }
@@ -149,10 +147,8 @@ export function getNumberFromJSON(
   key: string,
   fallback_value: number
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === 'number') {
-      return json_object[key] as number
-    }
+  if (json_object[key] !== undefined && typeof json_object[key] === 'number') { // test if not undefined because json_object[key] can be 0 (considered as false in javascript condition) thus not assiging correct value but fallback_value
+    return json_object[key] as number
   }
   return fallback_value
 }
@@ -161,10 +157,8 @@ export function getNumberOrUndefinedFromJSON(
   json_object: Type_JSON,
   key: string
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === 'number') {
-      return json_object[key] as number
-    }
+  if (json_object[key] !== undefined && typeof json_object[key] === 'number') { // test if not undefined because json_object[key] can be 0 (considered as false in javascript condition) thus not assiging correct value but fallback_value
+    return json_object[key] as number
   }
   return undefined
 }
@@ -173,10 +167,8 @@ export function getNumberOrNullFromJSON(
   json_object: Type_JSON,
   key: string
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === 'number') {
-      return json_object[key] as number
-    }
+  if (json_object[key] !== undefined && typeof json_object[key] === 'number') { // test if not undefined because json_object[key] can be 0 (considered as false in javascript condition) thus not assiging correct value but fallback_value
+    return json_object[key] as number
   }
   return null
 }
@@ -186,10 +178,8 @@ export function getStringFromJSON(
   key: string,
   fallback_value: string
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === 'string') {
-      return json_object[key] as string
-    }
+  if (json_object[key] && typeof json_object[key] === 'string') { // test if not undefined because json_object[key] can be '' (considered as false in javascript condition) thus not assiging correct value but fallback_value
+    return json_object[key] as string
   }
   return fallback_value
 }
@@ -198,10 +188,8 @@ export function getStringOrUndefinedFromJSON(
   json_object: Type_JSON,
   key: string
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === 'string') {
-      return json_object[key] as string
-    }
+  if (json_object[key] !==undefined && typeof json_object[key] === 'string' ) { // test if not undefined because json_object[key] can be '' (considered as false in javascript condition) thus not assiging correct value but fallback_value
+    return json_object[key] as string
   }
   return undefined
 }
@@ -210,10 +198,8 @@ export function getStringOrNullFromJSON(
   json_object: Type_JSON,
   key: string
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === 'string') {
-      return json_object[key] as string
-    }
+  if (json_object[key] !== undefined && typeof json_object[key] === 'string') { // test if not undefined because json_object[key] can be '' (considered as false in javascript condition) thus not assiging correct value but fallback_value
+    return json_object[key] as string
   }
   return null
 }
@@ -223,10 +209,8 @@ export function getStringListFromJSON(
   key: string,
   fallback_value: string[]
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === typeof fallback_value) {
-      return json_object[key] as string[]
-    }
+  if (json_object[key] && typeof json_object[key] === typeof fallback_value) {
+    return json_object[key] as string[]
   }
   return fallback_value
 }
@@ -248,10 +232,8 @@ export function getJSONFromJSON(
   key: string,
   fallback_value: Type_JSON
 ) {
-  if (json_object[key]) {
-    if (typeof json_object[key] === typeof fallback_value) {
-      return json_object[key] as Type_JSON
-    }
+  if (json_object[key] && typeof json_object[key] === typeof fallback_value) {
+    return json_object[key] as Type_JSON
   }
   return fallback_value
 }
