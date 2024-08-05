@@ -22,6 +22,7 @@ import {
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringListFromJSON,
+  getStringListOrUndefinedFromJSON,
   getStringOrUndefinedFromJSON,
   makeId,
 } from './Utils'
@@ -786,10 +787,11 @@ export class Class_NodeElement extends Class_Element {
     json_object['dimensions'] = Object.fromEntries(
       Object.values(this._dimensions_as_child)
         .map(dimension => [
-          dimension.children_level_tag.group.id,
+          dimension.id,
           {
             'parent_name': dimension.parent.id,
-            'tag': dimension.children_level_tag.id,
+            'parent_tag': dimension.parent_level_tag.id,
+            'child_tags': dimension.children_level_tags.map(_ => _.id),
             'level': dimension.getLevel()
           }
         ])
@@ -899,27 +901,27 @@ export class Class_NodeElement extends Class_Element {
                 if (parent) {
                   // Read infos from dimension json struct
                   // Get child & parent tags
-                  let child_tag: Class_LevelTag | undefined
+                  let child_tags: Class_LevelTag[] | undefined
                   let parent_tag: Class_LevelTag | undefined
                   // Use tags id in priority if existing
-                  const child_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'child_tag')
+                  const child_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'child_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-                  if (child_tag_id && parent_tag_id ) {
-                    child_tag = tagg.tags_dict[child_tag_id]
+                  if (child_tags_ids && parent_tag_id ) {
+                    child_tags = child_tags_ids.map(child_tag_id => tagg.tags_dict[child_tag_id])
                     parent_tag = tagg.tags_dict[parent_tag_id]
                   }
                   // If no tags ids - use level to find matchin tags
                   else {
                     const level = getNumberOrUndefinedFromJSON(dimension_as_json, 'level')
                     if (level && level > 1) {
-                      child_tag = tagg.tags_list[level]
+                      child_tags = [tagg.tags_list[level]]
                       parent_tag = tagg.tags_list[level-1]
                     }
                   }
                   // If tags has been found,
                   // create a new dimension OR add parent & child relation to an existing dimension
-                  if (child_tag && parent_tag) {
-                    parent_tag.getOrCreateLowerDimension(parent, this, child_tag)
+                  if (child_tags && parent_tag) {
+                    parent_tag.getOrCreateLowerDimension(parent, this, child_tags)
                   }
                 }
               }
@@ -2158,7 +2160,10 @@ export class Class_NodeElement extends Class_Element {
       })
     Object.values(this._dimensions_as_child)
       .forEach(dimension => {
-        level_tags_dict[dimension.children_level_tag.id] = dimension.children_level_tag
+        dimension.children_level_tags
+          .forEach(children_level_tag => {
+            level_tags_dict[children_level_tag.id] = children_level_tag
+          })
       })
     return level_tags_dict
   }
@@ -3535,7 +3540,7 @@ export class Class_NodeDimension {
 
   // Tags relations
   private _parent_level_tag: Class_LevelTag
-  private _children_level_tag: Class_LevelTag
+  private _children_level_tags: Class_LevelTag[]
 
   /**
    * True if element is currently on a deletion process
@@ -3559,14 +3564,20 @@ export class Class_NodeDimension {
     parent: Class_NodeElement,
     children: Class_NodeElement[],
     parent_level_tag: Class_LevelTag,
-    children_level_tag: Class_LevelTag,
+    children_level_tags: Class_LevelTag[],
     id?: string
   ) {
     // Create unique id
     if (id)
       this._id = id
     else
-      this._id = makeId(parent_level_tag.id+'_'+children_level_tag.id)
+      this._id = makeId(
+        parent_level_tag.id +
+        '_' +
+        children_level_tags
+          .map(_ => _.id)
+          .join('')
+      )
     // Set parenthood reference
     this._parent = parent
     this._parent.addNewDimensionAsParent(this)
@@ -3576,16 +3587,27 @@ export class Class_NodeDimension {
     // Set leveltags references
     this._parent_level_tag = parent_level_tag
     this._parent_level_tag.addAsParentLevel(this)
-    this._children_level_tag = children_level_tag
-    this._children_level_tag.addAsChildrenLevel(this)
+    this._children_level_tags = children_level_tags
+    this._children_level_tags
+      .forEach(_ => _.addAsChildrenLevel(this))
     // Sanity checks
     // Immediatly delete for any of this conditions :
     // - Parent is in children list
+    // - Children tag are not of the same group
     // - Parent & children tags groups are not the same
     // - Children list is empty
+    let same_group: boolean = true
+    let prev_group: undefined | Class_LevelTagGroup = undefined
+    this._children_level_tags
+      .forEach(tag => {
+        if (prev_group)
+          same_group = (same_group && (tag.group === prev_group))
+        prev_group = tag.group
+    })
     if (
       (children.includes(parent)) ||
-      (parent_level_tag.group !== children_level_tag.group) ||
+      (!same_group) ||
+      (parent_level_tag.group !== this.children_level_tagg) ||
       (!this.has_children)
     ) {
       this.delete()
@@ -3607,7 +3629,9 @@ export class Class_NodeDimension {
       this._children = []
       // Remove cross references with leveltags
       this._parent_level_tag.removeParentLevel(this)
-      this._children_level_tag.removeChildrenLevel(this)
+      this._children_level_tags
+        .forEach(_ => _.removeChildrenLevel(this))
+      this._children_level_tags = []
       // Garbage collector will do the rest ...
     }
   }
@@ -3643,6 +3667,27 @@ export class Class_NodeDimension {
     }
   }
 
+  public addTagAsChildrenLevelTag(_: Class_LevelTag) {
+    if (
+      !this._children_level_tags.includes(_) &&
+      _.group === this.children_level_tagg
+    ) {
+      this._children_level_tags.push(_)
+      _.addAsChildrenLevel(this)
+    }
+  }
+
+  public removeTagFromChildrenLevelTag(_: Class_LevelTag) {
+    const idx = this._children_level_tags.indexOf(_)
+    if (idx) {
+      this._children_level_tags.splice(idx, 1)
+      // If all children level tags has been deleted, clear this
+      if (!(this._children_level_tags.length > 0))
+        this.delete()
+    }
+  }
+
+
   // GETTERS / SETTERS ==================================================================
 
   public get id() { return this._id }
@@ -3652,24 +3697,17 @@ export class Class_NodeDimension {
     // Do modification only if there is a change & if parent/children tag group are matching
     if (
       (_ !== this._parent_level_tag) &&
-      (this._children_level_tag?.group === _.group)
+      (this.children_level_tagg === _.group)
     ) {
+      const old = this._parent_level_tag
       this._parent_level_tag = _
       _.addAsParentLevel(this)
+      old.removeParentLevel(this)
     }
   }
 
-  public get children_level_tag() { return this._children_level_tag }
-  public set children_level_tag(_: Class_LevelTag) {
-    // Do modification only if there is a change & if parent/children tag group are matching
-    if (
-      (_ !== this._children_level_tag) &&
-      (this._parent_level_tag?.group === _.group)
-    ) {
-      this._parent_level_tag = _
-      _.addAsChildrenLevel(this)
-    }
-  }
+  public get children_level_tags() { return this._children_level_tags }
+  public get children_level_tagg() { return this._children_level_tags[0]?.group ?? undefined }
 
   public get parent() { return this._parent }
 
