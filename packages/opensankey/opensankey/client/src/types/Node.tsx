@@ -855,9 +855,11 @@ export class Class_NodeElement extends Class_Element {
     })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
-    this._links_order = ordered_link_ids.map(link_id => {
-      return this.main_sankey.links_dict[link_id]
-    })
+    if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
+      this._links_order = ordered_link_ids.map(link_id => {
+        return this.main_sankey.links_dict[link_id]
+      })
+    }
   }
 
   /**
