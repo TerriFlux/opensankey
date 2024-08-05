@@ -416,7 +416,6 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
 ) => {
   // Get data & reinit
   const { new_data } = applicationData
-  new_data.reset()
   new_data.fromJSON(JSON.parse(text) as Type_JSON)
 
   // TODO autocompute sankey
