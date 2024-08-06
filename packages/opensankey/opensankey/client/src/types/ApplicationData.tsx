@@ -10,7 +10,7 @@ import LZString from 'lz-string'
 
 // Local types
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_JSON, Type_Structure } from './Utils'
+import { Type_JSON } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { TFunction } from 'i18next'
@@ -19,7 +19,6 @@ import { useTranslation } from 'react-i18next'
 
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-const initial_show_structure = 'reconciled'
 
 /**
  * Class that contains all elements to make the application work
@@ -42,23 +41,15 @@ export class Class_ApplicationData {
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  // Display
-  private _show_structure: Type_Structure = initial_show_structure
-
-  // Limitations
-  private _maximum_flux?: number
-  private _minimum_flux?: number
-
-  private _filter_label: number = 0
-
-  private _t: TFunction = useTranslation().t
-  private _logo: string 
-  private _logo_terriflux: string  //TODO
+  // General attributes for the application
+  private _t: TFunction = useTranslation().t //traductor
+  private _logo: string // path to logo
+  private _logo_terriflux: string  //path to logo_terriflux
   private _logo_width: number = 100
   private _app_name: string = 'SankeySuite'
-  private _url_prefix: string = '/opensankey/'
+  private _url_prefix: string = '/opensankey/' // path for server call
 
-  private _has_free_account: boolean = true
+  private _has_free_account: boolean = true // token for opensankey (if user is connected with an account)
 
 
   // OPTIONNAL ATTRIBUTES ===============================================================
@@ -124,10 +115,6 @@ export class Class_ApplicationData {
 
   public reset() {
     // Reset values of attributes
-    this._show_structure = initial_show_structure
-    delete this._maximum_flux
-    delete this._minimum_flux
-    this._filter_label = 0
     // Recreate drawing area
     this.drawing_area.delete()
     this.drawing_area = new Class_DrawingArea(
@@ -313,28 +300,6 @@ export class Class_ApplicationData {
   }
 
   // GETTERS / SETTERS ==================================================================
-
-  public get maximum_flux(): number | undefined { return this._maximum_flux }
-  public set maximum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._maximum_flux = value
-      this.drawing_area.drawElements()
-    }
-  }
-
-  public get minimum_flux(): number | undefined { return this._minimum_flux }
-  public set minimum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._minimum_flux = value
-      this.drawing_area.drawElements()
-    }
-  }
-
-  public get show_structure(): Type_Structure { return this._show_structure }
-  public set show_structure(value: Type_Structure) { this._show_structure = value }
-
-  public get filter_label(): number { return this._filter_label }
-  public set filter_label(value: number) { this._filter_label = value }
 
   public get has_free_account(): boolean { return this._has_free_account }
   public set has_free_account(value: boolean) {/* TODO */ }

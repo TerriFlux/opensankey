@@ -705,9 +705,9 @@ export class Class_LinkElement extends Class_ProtoElement {
 
   public fromJSON(
     json_object: Type_JSON,
-    matching_nodes_id: {[_: string]: string} = {},
-    matching_taggs_id: {[_: string]: string} = {},
-    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    matching_nodes_id: { [_: string]: string } = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     // Root attributes
     super.fromJSON(json_object)
@@ -798,6 +798,16 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (element._display.position_offset_label !== undefined) this._display.position_offset_label = element._display.position_offset_label
     if (element._display.position_x_label !== undefined) this._display.position_x_label = element._display.position_x_label
     if (element._display.position_y_label !== undefined) this._display.position_y_label = element._display.position_y_label
+  }
+
+  /**
+   * Return maximum value possible for this link
+   *
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  public getMaxValue() {
+    return this._values.getMaxValue()
   }
 
   public getAllValues() {
@@ -921,11 +931,11 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
   }
 
-  private drawLabel() {
+  public drawLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.value_label_is_visible) {
+    if (this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -2256,15 +2266,21 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public get thickness() {
-    const scale = d3.scaleLinear()
-      .domain([0, this.drawing_area.scale])
-      .range([0, 100])
+    // Get link value for current dataTaggs selected
     const data_value = this.data_value
-    return Math.max(1, scale(
-      (data_value !== null) ?
-        data_value :
-        1)
-    )
+    // Scale this value for the drawing area
+    const linkValueInPx = this.drawing_area.scaleValueToPx((data_value !== null) ? data_value : 1)
+
+    // If link processed size is inferior to min. limit return min. limit
+    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
+      return this.drawing_area.minimum_flux
+    }
+    // If link processed size is superior to max. limit return max. limit
+    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
+      return this.drawing_area.maximum_flux
+    }
+
+    return linkValueInPx
   }
 
   public get position_x_start() {
@@ -3760,8 +3776,8 @@ export class Class_LinkValueTree {
 
   public fromJSON(
     json_object: Type_JSON,
-    matching_taggs_id: {[_: string]: string} = {},
-    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
     // So it is not necessary to read datatag group -> it should be the same as in JSON
@@ -3779,6 +3795,22 @@ export class Class_LinkValueTree {
             )
         })
     }
+  }
+
+  /**
+   * Browse children & search for the maximum value among them
+   *
+   * @return {*} 
+   * @memberof Class_LinkValueTree
+   */
+  public getMaxValue() {
+    let max: number | null = null
+    Object.entries(this.children)
+      .forEach(child => {
+        const _ = child[1].getMaxValue()
+        max = ((max ?? 0) <= _ ? _ : max)
+      })
+    return max
   }
 
   public getAllValues() {
@@ -3994,6 +4026,16 @@ export class Class_LinkValue {
     }
   }
 
+  /**
+   * Function that can be used instead of the one in Class_linkValueTree so the recursive function stop & return a value
+   *
+   * @return {*} 
+   * @memberof Class_LinkValue
+   */
+  public getMaxValue() {
+    return this.data_value
+  }
+
   public getAllValues() {
     const tmp: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined] } = {}
     if (this.data_tag)
@@ -4042,8 +4084,8 @@ export class Class_LinkValue {
    */
   public fromJSON(
     json_object: Type_JSON,
-    matching_taggs_id: {[_: string]: string} = {},
-    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
     // Update attributes

@@ -11,6 +11,7 @@ import { MouseEvent } from 'react'
 // Local types
 import {
   Type_JSON,
+  Type_Structure,
   convert_data_legacy,
   default_background_color,
   default_black_color,
@@ -43,7 +44,7 @@ import { Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
 
 // CONSTANTS ****************************************************************************
-
+const initial_show_structure = 'reconciled'
 const default_grid_size = 50
 const default_grid_visible = true
 const default_horizontal_spacing = 200
@@ -168,9 +169,30 @@ export class Class_DrawingArea {
   // Scale
   private _scale: number = default_scale
 
+  /**
+   * _scaleValueToPx transform a value to a proportional size in px according to data scale
+   *
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private _scaleValueToPx = d3.scaleLinear()
+    .domain([0, default_scale])
+    .range([0, 100])
+
+
   // Positionning
   private _horizontal_spacing: number = default_horizontal_spacing
   private _vertical_spacing: number = default_vertical_spacing
+
+  // Limitations of link thickness
+  private _maximum_flux?: number
+  private _minimum_flux?: number
+
+  // Filter out link label inferior to this value (null is considered as 0)
+  private _filter_label: number = 0
+
+  // Display
+  private _show_structure: Type_Structure = initial_show_structure
 
   // Objects containeds in drawing area -------------------------------------------------
 
@@ -286,6 +308,12 @@ export class Class_DrawingArea {
 
     // Clean drawing area
     this.unDraw()
+
+    // reset some attributes
+    delete this._maximum_flux
+    delete this._minimum_flux
+    this._filter_label = 0
+    this._show_structure = initial_show_structure
 
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
@@ -438,6 +466,9 @@ export class Class_DrawingArea {
   public set scale(value: number) {
     if (value > 0) {
       this._scale = value
+      this._scaleValueToPx = d3.scaleLinear()
+        .domain([0, default_scale])
+        .range([0, 100])
       this.drawElements()
     }
   }
@@ -478,6 +509,30 @@ export class Class_DrawingArea {
 
   public get is_drawing_area_contextualised(): boolean { return this._is_drawing_area_contextualised }
   public set is_drawing_area_contextualised(value: boolean) { this._is_drawing_area_contextualised = value }
+
+  public get maximum_flux(): number | undefined { return this._maximum_flux }
+  public set maximum_flux(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._maximum_flux = value
+      this.drawElements()
+    }
+  }
+
+  public get minimum_flux(): number | undefined { return this._minimum_flux }
+  public set minimum_flux(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._minimum_flux = value
+      this.drawElements()
+    }
+  }
+
+  public get scaleValueToPx() { return this._scaleValueToPx }
+
+  public get filter_label(): number { return this._filter_label }
+  public set filter_label(value: number) { this._filter_label = value }
+
+  public get show_structure(): Type_Structure { return this._show_structure }
+  public set show_structure(value: Type_Structure) { this._show_structure = value }
 
   // PUBLIC METHODS =====================================================================
 
@@ -783,8 +838,8 @@ export class Class_DrawingArea {
    */
   public fromJSON(
     json_object: Type_JSON,
-    redraw: boolean=true,
-    match_and_update: boolean=true,
+    redraw: boolean = true,
+    match_and_update: boolean = true,
   ) {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     // Only legacy convert old sankey
