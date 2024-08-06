@@ -4,34 +4,16 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 
 import SankeyApp from './SankeyApp'
-import { convert_data,complete_sankey_data } from './configmenus/SankeyConvert'
-import { DefaultLink, DefaultNode, DefaultSankeyData } from './configmenus/SankeyUtils'
-import LZString from 'lz-string'
+import { DefaultSankeyData } from './configmenus/SankeyUtils'
 import './traduction'
 import { 
-  initializeApplicationContext, 
   initializeApplicationData, 
-  initializeElementSelected, 
-  initializeApplicationDraw, 
-  initializeShowDialog, 
-  initializeComponentUpdater, 
   initializeReinitialization, 
-  closeAllMenu, 
-  initializeUIElementsRef, 
-  initializeContextMenu, 
-  initializeProcessFunctions, 
-  initializeLinkFunctions,
-  initializeNodeFunctions,
   initializeAdditionalMenus,
   moduleDialogs,
-  DrawAll,
-  InstallEventsOnSVG,
-  initializeMenuConfiguration,
-  InitalizeSelectorDetailNodes
-} from './OSModule'
+  initializeMenuConfiguration} from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
-import { GetSankeyMinWidthAndHeight } from './draw/SankeyDrawFunction'
 
 
 window.React = React
@@ -45,11 +27,6 @@ const container=document.getElementById('react-container') as Element | Document
 const root=createRoot(container)
 root.render(
   <SankeyApp
-    //- Application
-    initializeApplicationContext={initializeApplicationContext} // Logo, names, licences
-    initializeElementSelected={initializeElementSelected} 
-    // Global variables not stored in SankeyData
-    // Mode, nodes and links selected, style selected...
     initializeReinitialization={initializeReinitialization}
 
     //- Data
@@ -57,29 +34,14 @@ root.render(
     get_default_data={DefaultSankeyData} // Default sankey data
     initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
 
-    //- Draw
-    initializeApplicationDraw={initializeApplicationDraw} // Functions necessay to draw the diagram
-    initializeLinkFunctions={initializeLinkFunctions} // Functions necessay to draw the links
-    initializeNodeFunctions={initializeNodeFunctions} // Functions necessay to draw the nodes
-    DrawAll={DrawAll}
-    installEventOnSVG={InstallEventsOnSVG}
-
     //- UI
-    initializeComponentUpdater={initializeComponentUpdater}
     initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
-    // Used to update the various component of the application
-    initializeUIElementsRef={initializeUIElementsRef} 
+    
     // Ref to some key ui element in the application
     initializeAdditionalMenus={initializeAdditionalMenus}
     // Submenus to add in the application
     moduleDialogs={moduleDialogs}
-    // Modal Dialogs
-    initializeShowDialog={initializeShowDialog}
-    // Visibility states for the modal dialogs
-    initializeContextMenu={initializeContextMenu}
-    // Menu opening on RMB
-    closeAllMenu={closeAllMenu}
-
+    
     // Input data used for updateLayout
     // (OS only use data from imported file 
     // but OSP can use its view as imported data
@@ -87,13 +49,10 @@ root.render(
     initializeDiagrammSelector={()=>OpenSankeyDiagramSelector}
 
     //- BackEnd
-    initializeProcessFunctions={initializeProcessFunctions}
 
     ClickSaveDiagram={ClickSaveDiagram}
 
     // Content of the popover node aggregation selector
-    InitalizeSelectorDetailNodes={InitalizeSelectorDetailNodes}
-    GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
   />
 )
 

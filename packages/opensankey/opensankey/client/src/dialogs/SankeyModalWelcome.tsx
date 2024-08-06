@@ -28,16 +28,16 @@ import { windowSankey } from '../configmenus/SankeyUtils'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
 
 export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = ({
+  applicationData,
   t,
   active_page,
-  dict_hook_ref_setter_show_dialog_components,
   never_see_again,
   additional_shortcut_item,
   external_pagination,
   external_content
 })=>{
   const [show_wecome,set_show_welcome]=useState(!never_see_again.current)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current=set_show_welcome
 
   const content_rc_static=<>
     <Heading variant='heading_welcome_style' >{t('Menu.rcc_titre_princ')}</Heading>
