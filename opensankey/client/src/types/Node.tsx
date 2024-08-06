@@ -278,13 +278,14 @@ export class Class_NodeElement extends Class_Element {
     this._input_links = Object.fromEntries(Object.entries(element._input_links).filter(il=>list_links_id.includes(il[0])))
     this._output_links = Object.fromEntries(Object.entries(element._output_links).filter(il=>list_links_id.includes(il[0])))
     // Get new link order but only keeping link present in current link order
-    this._links_order = element._links_order.filter(link => this.drawing_area.sankey.links_list.includes(link))
+    const new_link_order_id = element._links_order.map(new_link => new_link.id)
+    this._links_order = new_link_order_id.filter(link_id => link_id in this.drawing_area.sankey.links_dict).map(link_id => this.drawing_area.sankey.links_dict[link_id])
     // Copy local attributes
     this._display.attributes.copyFrom(element._display.attributes)
     // Set node style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
-    if(this.drawing_area.sankey.node_styles_list.map(ns=>ns.id).includes(element._display.style.id)){
-      const new_style_id=this.drawing_area.sankey.node_styles_list.map(ns=>ns.id).filter(ns=>ns.includes(element._display.style.id))[0]
-      this._display.style=this.drawing_area.sankey.node_styles_dict[new_style_id]
+    if (this.drawing_area.sankey.node_styles_list.map(ns => ns.id).includes(element._display.style.id)) {
+      const new_style_id = this.drawing_area.sankey.node_styles_list.map(ns => ns.id).filter(ns => ns.includes(element._display.style.id))[0]
+      this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id]
       this._display.style.addReference(this)
     }
     // Copy tags
@@ -842,7 +843,7 @@ export class Class_NodeElement extends Class_Element {
         const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
         const tagg = this.main_sankey.node_taggs_dict[tagg_id]
         tagg.tags_list
-          .filter(tag => tag.id in (tag_ids as string[]))
+          .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
       })
   }
@@ -3620,7 +3621,7 @@ export class Class_NodeDimension {
         if (prev_group)
           same_group = (same_group && (tag.group === prev_group))
         prev_group = tag.group
-    })
+      })
     if (
       (children.includes(parent)) ||
       (!same_group) ||
