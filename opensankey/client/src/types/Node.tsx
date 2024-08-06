@@ -3121,6 +3121,25 @@ export class Class_NodeElement extends Class_Element {
     return to_display
   }
 
+  private get is_related_level_selected() {
+    let ok_dimension: boolean = false
+    // Check dimensions where node is tagged as a child
+    Object.values(this._dimensions_as_child)
+      .forEach(dim => ok_dimension = (ok_dimension || dim.show_children))
+    // Check dimensions where node is tagged as a parent
+    if (!ok_dimension) {
+      Object.values(this._dimensions_as_parent)
+        .forEach(dim => ok_dimension = ok_dimension || dim.show_parent)
+    }
+    return (
+      (ok_dimension) ||
+      (
+        (Object.keys(this._dimensions_as_child).length === 0) &&
+        (Object.keys(this._dimensions_as_parent).length === 0)
+      )
+    )
+  }
+
   /**
    * Function used in element_displayed tho check if at least one of the level tag associated to the node is selected,
    * We draw the node only if this is the case
@@ -3129,58 +3148,59 @@ export class Class_NodeElement extends Class_Element {
    * @private
    * @memberof Class_NodeElement
    */
-  private get is_related_level_selected() {
-    // Existing level tags group
-    const all_level_taggs = this.main_sankey.level_taggs_list
-    // Nodes related level tag group
-    const level_tags = this.level_tags_list // Avoid hidden recomputing
-    const level_taggs = this.level_taggs_list // Avoid hidden recomputing
-    // Check if there is other aggregation tags than 'Primaire',
-    const opt_level_taggs = all_level_taggs
-      .filter(tagg => tagg.id !== 'Primaire') // TODO id Or name ?
-    const multi_level_taggs = (opt_level_taggs.length > 0)
-    // Activated level taggs
-    const activ_level_taggs = all_level_taggs
-      .filter(tagg => tagg.activated)
-    const only_one_activated = (activ_level_taggs.length === 1)
-    // Is only primary level activated
-    const only_primaire_activated = (
-      (this.main_sankey.level_taggs_dict['Primaire']?.activated ?? false) &&
-      only_one_activated)
-    const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
-    // Check if level tags are correctly selected = ok to display
-    let to_display = true
-    // To display a node according to level tag we search if:
-    // - The node.nodeTags have more level grp tag than 'Primaire',
-    //   if that's the case we don't use grp tag 'Primaire' in the filter
-    //   of node grp tag
-    // - The node grp tag is activated (variable is set false if we activate
-    //   another grp tag that has this grp tag in variable sibling)
-    // - The node has the grp tag name in his tags
-    all_level_taggs
-      .filter(tagg => (
-        (
-          (
-            (multi_level_taggs) &&
-            (!multi_but_only_primaire)
-          ) ?
-            tagg.id !== 'Primaire' :
-            true
-        ) &&
-        (tagg.activated) &&
-        (level_taggs.includes(tagg))
-      ))
-      .forEach(tagg_activated => {
-        // Check selected tags from the activated level tag group
-        // If the node don't have a least one matching tag, we dont display it
-        let tmp_to_display = false
-        tagg_activated.tags_list
-          .filter(tag => tag.is_selected)
-          .forEach(tag => tmp_to_display = (tmp_to_display || level_tags.includes(tag)))
-        to_display = to_display && tmp_to_display
-      })
-    return to_display
-  }
+  // private get is_related_level_selected() {
+  //   // TODO supprimer si ok avec dimensions
+  //   // Existing level tags group
+  //   const all_level_taggs = this.main_sankey.level_taggs_list
+  //   // Nodes related level tag group
+  //   const level_tags = this.level_tags_list // Avoid hidden recomputing
+  //   const level_taggs = this.level_taggs_list // Avoid hidden recomputing
+  //   // Check if there is other aggregation tags than 'Primaire',
+  //   const opt_level_taggs = all_level_taggs
+  //     .filter(tagg => tagg.id !== 'Primaire') // TODO id Or name ?
+  //   const multi_level_taggs = (opt_level_taggs.length > 0)
+  //   // Activated level taggs
+  //   const activ_level_taggs = all_level_taggs
+  //     .filter(tagg => tagg.activated)
+  //   const only_one_activated = (activ_level_taggs.length === 1)
+  //   // Is only primary level activated
+  //   const only_primaire_activated = (
+  //     (this.main_sankey.level_taggs_dict['Primaire']?.activated ?? false) &&
+  //     only_one_activated)
+  //   const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
+  //   // Check if level tags are correctly selected = ok to display
+  //   let to_display = true
+  //   // To display a node according to level tag we search if:
+  //   // - The node.nodeTags have more level grp tag than 'Primaire',
+  //   //   if that's the case we don't use grp tag 'Primaire' in the filter
+  //   //   of node grp tag
+  //   // - The node grp tag is activated (variable is set false if we activate
+  //   //   another grp tag that has this grp tag in variable sibling)
+  //   // - The node has the grp tag name in his tags
+  //   all_level_taggs
+  //     .filter(tagg => (
+  //       (
+  //         (
+  //           (multi_level_taggs) &&
+  //           (!multi_but_only_primaire)
+  //         ) ?
+  //           tagg.id !== 'Primaire' :
+  //           true
+  //       ) &&
+  //       (tagg.activated) &&
+  //       (level_taggs.includes(tagg))
+  //     ))
+  //     .forEach(tagg_activated => {
+  //       // Check selected tags from the activated level tag group
+  //       // If the node don't have a least one matching tag, we dont display it
+  //       let tmp_to_display = false
+  //       tagg_activated.tags_list
+  //         .filter(tag => tag.is_selected)
+  //         .forEach(tag => tmp_to_display = (tmp_to_display || level_tags.includes(tag)))
+  //       to_display = to_display && tmp_to_display
+  //     })
+  //   return to_display
+  // }
 
   private get tooltip_html() {
     // Title
@@ -3719,6 +3739,10 @@ export class Class_NodeDimension {
   private _parent_level_tag: Class_LevelTag
   private _children_level_tags: Class_LevelTag[]
 
+  // Dimension selected
+  private _show_parent: boolean = false
+  private _show_children: boolean = false
+
   /**
    * True if element is currently on a deletion process
    * Avoid cross calls of delete() method
@@ -3910,6 +3934,20 @@ export class Class_NodeDimension {
     }
   }
 
+  public forceShowParent() {
+    this._show_parent = true
+    this._show_children = false
+  }
+
+  public forceShowChildren() {
+    this._show_parent = false
+    this._show_children = true
+  }
+
+  public showFromLevelTags() {
+    this._show_parent = false
+    this._show_children = false
+  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -3944,4 +3982,20 @@ export class Class_NodeDimension {
 
   public get has_children() { return (this._children.length > 0) }
   public get children() { return this._children }
+
+  public get show_parent() {
+    return (
+      (this._show_parent && !this._show_children) ||
+      this.parent_level_tag.is_selected
+    )
+  }
+  public get show_children() {
+    let ok_children_level_tags = false
+    this.children_level_tags
+      .forEach(tag => ok_children_level_tags = (ok_children_level_tags || tag.is_selected))
+    return (
+      (!this._show_parent && this._show_children) ||
+      (ok_children_level_tags)
+    )
+  }
 }
