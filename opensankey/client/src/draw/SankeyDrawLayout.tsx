@@ -150,7 +150,7 @@ export const computeHorizontalIndex: computeHorizontalIndexFuncType = (
     .filter(linkId =>
     // Computes only for link to visible nodes
     // and not for nodes related to recyling flux
-    (visible_nodes_ids.includes(links[linkId].idTarget) &&
+      (visible_nodes_ids.includes(links[linkId].idTarget) &&
       !recycling_links_ids.includes(linkId)))
     .forEach(linkId => {
       // Next node to recurse on
