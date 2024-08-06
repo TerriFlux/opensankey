@@ -29,7 +29,7 @@ export class Class_ApplicationData {
   // PUBLIC ATTRIBUTES =================================================================
 
   // App
-  public version: string = '0.8'
+  public version: string = '0.9'
   public fit_screen: boolean
 
   // Drawing area
@@ -108,6 +108,7 @@ export class Class_ApplicationData {
     // TODO read application data attributes
     // Update drawing area
     this.drawing_area.fromJSON(json_object)
+    this.menu_configuration.updateAllMenuComponents()
   }
 
   public toJSON() {
