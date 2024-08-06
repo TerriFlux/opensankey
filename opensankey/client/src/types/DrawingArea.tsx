@@ -842,9 +842,9 @@ export class Class_DrawingArea {
       ...json_object,
       ...this._legend.toJSON(),
       ...this._sankey.toJSON(
-          only_visible_elements,
-          with_values
-        )
+        only_visible_elements,
+        with_values
+      )
     }
   }
 

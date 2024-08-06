@@ -14,15 +14,14 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 // MENU COMPONENT ***********************************************************************
 
 export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
-  applicationContext,
   applicationData,
   extra_background_element
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
 
   // Components updaters ---------------------------------------------------------------
 
@@ -268,7 +267,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={!new_data.drawing_area.legend.masked ? <FaEye /> : <FaEyeSlash />}
         isChecked={!new_data.drawing_area.legend.masked}
-        onChange={(evt) => {
+        onChange={() => {
           new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
           refreshThisAndUpdateRelatedComponents()
         }}

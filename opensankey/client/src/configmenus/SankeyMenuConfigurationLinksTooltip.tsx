@@ -28,7 +28,6 @@ import { Class_LinkElement } from '../types/Link'
  */
 export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
   applicationData,
-  applicationContext,
   menu_for_modal
 })=>{
 
@@ -36,7 +35,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
 
   // Get necessary infos
   const { new_data } = applicationData
-  const { t } = applicationContext
+  const { t } = applicationData.new_data
 
   // Selected links ---------------------------------------------------------------------
 

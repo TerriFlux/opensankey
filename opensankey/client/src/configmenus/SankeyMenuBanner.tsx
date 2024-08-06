@@ -49,20 +49,12 @@ import { faShareNodes,
 
 // Internal Types / Classes
 import {
-  ComponentUpdaterType,
-  LinkFunctionTypes,
-  NodeFunctionTypes,
   SankeyData,
-  applicationDataType,
-  applicationDrawType
-} from '../types/Types'
+  applicationDataType} from '../types/Types'
 import {
   Class_TagGroup,
   Class_LevelTagGroup
 } from '../types/Tag'
-import {
-  ConvertDataFuncType
-} from './types/SankeyConvertTypes'
 import {
   addAllDropDownNodeFType,
   AddAllDropDownFluxFType,
@@ -72,9 +64,6 @@ import {
   stretchButtonsFType,
   ToolbarBuilderFType,
 } from './types/SankeyMenuBannerTypes'
-import {
-  GetSankeyMinWidthAndHeightFuncType
-} from './types/SankeyUtilsTypes'
 
 // Internal functions / Components
 import {
@@ -83,15 +72,6 @@ import {
 import {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
-import {
-  DeleteGNodes
-} from '../draw/SankeyDrawNodes'
-import {
-  DeleteGLinks
-} from '../draw/SankeyDrawLinks'
-import {
-  actualizeDrawAreaFrame
-} from '../draw/SankeyDrawEventFunction'
 import {
   InitalizeSelectorDetailNodes
 } from '../OSModule'
@@ -156,18 +136,6 @@ export const setDiagram: setDiagramFuncType = (
   set_data({ ...new_data })
 }
 
-const redrawNodeLinkLegend = (
-  applicationData: applicationDataType,
-  node_function: NodeFunctionTypes,
-  link_function: LinkFunctionTypes,
-  ComponentUpdater: ComponentUpdaterType,
-  applicationDraw: applicationDrawType
-) => {
-  node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-  link_function.RedrawLinks(Object.values(applicationData.display_links))
-  applicationDraw.reDrawLegend()
-  ComponentUpdater.updateComponenSaveInCache.current(false)
-}
 
 // COMPONENTS ===========================================================================
 
@@ -249,14 +217,13 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
  */
 export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
   {
-    applicationContext,
     applicationData,
     level
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
 
   // Tag group dicts
   const node_taggs = new_data.drawing_area.sankey.node_taggs_dict
@@ -477,13 +444,12 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
  */
 export const AddAllDropDownFlux: FunctionComponent<AddAllDropDownFluxFType> = (
   {
-    applicationContext,
     applicationData
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
 
   // Tag group dicts
   const flux_taggs_dict = new_data.drawing_area.sankey.flux_taggs_dict
@@ -723,29 +689,18 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
  */
 export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   {
-    applicationContext,
     applicationData,
-    applicationState,
     filter,
     set_current_filter,
-    detail_level,
     url_prefix,
-    first_selected_node,
-    dict_hook_ref_setter_show_dialog_components,
-    never_see_again,
     additional_link_visual_filter_content,
-    node_function,
-    link_function,
-    ComponentUpdater,
-    applicationDraw
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
   const { sankey } = new_data.drawing_area
   // const { ref_getter_mode_selection, ref_setter_mode_selection } = applicationState
-  const { GetSankeyMinWidthAndHeight } = applicationDraw
 
   // ===================Create hooks used in this component========================
 
@@ -753,7 +708,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const [s_force_update, sforceUpdate] = useBoolean()
   const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.show_structure)
   const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
-  const [mode_selection, sModeSelection] = useState('ln')
   const [, setForceUpdate] = useBoolean()
   new_data.menu_configuration.ref_to_toolbar_updater.current=setForceUpdate.toggle
   let btn_mouse_mode_edition = <></>
@@ -798,7 +752,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const redrawNodeLinkLegend = () => {
     sankey.draw()
     new_data.drawing_area.legend.draw()
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   const legend_filter = <Box
@@ -994,7 +948,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   </Popover>
 
   const node_tag_filter_content = <AddAllDropDownNode
-    applicationContext={applicationContext}
     applicationData={applicationData}
     level={false}
   />
@@ -1078,7 +1031,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       <PopoverBody>
         {legend_filter}
         <AddAllDropDownFlux
-          applicationContext={applicationContext}
           applicationData={applicationData}
         />
       </PopoverBody>
@@ -1117,7 +1069,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
       <OSTooltip
         placement='left'
-        label={(mode_selection == 's') ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
+        label={(new_data.drawing_area.isInEditionMode()) ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
       >
         <Button
           variant='toolbar_button_1'
@@ -1142,9 +1094,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       placement='left'
       label={t('Banner.hlp_1_txt_2')}>
       {
-        InitalizeSelectorDetailNodes(
-          applicationContext,
-          applicationData)
+        InitalizeSelectorDetailNodes(applicationData)
       }
     </OSTooltip>
   </>:
@@ -1190,7 +1140,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     </OSTooltip></> : <></>
 
   const btn_show_help_in_static = window.SankeyToolsStatic ? <OSTooltip placement='left' label={t('Banner.tooltipHelp')}>
-    <Button variant='info' onClick={() => { never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
+    <Button variant='info' onClick={() => { new_data.menu_configuration.never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) }} >
       ?
     </Button>
   </OSTooltip> : <></>
@@ -1213,7 +1163,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     {btn_show_data_filter}
     {btn_show_data_type}
 
-    {stretchButtons(applicationData, GetSankeyMinWidthAndHeight, t)}
+    {stretchButtons(applicationData, t)}
 
     {btn_show_help_in_static}
 
@@ -1231,7 +1181,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
  */
 const stretchButtons: stretchButtonsFType = (
   applicationData,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
   t: TFunction
 ) => {
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>

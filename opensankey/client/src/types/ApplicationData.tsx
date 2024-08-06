@@ -13,6 +13,8 @@ import { Class_DrawingArea } from './DrawingArea'
 import { Type_JSON, Type_Structure } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
+import { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
@@ -49,6 +51,16 @@ export class Class_ApplicationData {
 
   private _filter_label: number = 0
 
+  private _t: TFunction = useTranslation().t
+  private _logo: string 
+  private _logo_terriflux: string  //TODO
+  private _logo_width: number = 100
+  private _app_name: string = 'SankeySuite'
+  private _url_prefix: string = '/opensankey/'
+
+  private _has_free_account: boolean = true
+
+
   // OPTIONNAL ATTRIBUTES ===============================================================
 
   // File name
@@ -74,6 +86,38 @@ export class Class_ApplicationData {
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
+
+    // Get logo PNG
+    let logo = ''
+    try {
+      /* eslint-disable */
+      // @ts-ignore
+      logo = require('../css/opensankey.png')
+      /* eslint-enable */
+      const path = window.location.href
+      if (!path.includes('localhost')) {
+        logo = logo.replace('static/', 'static/opensankey/')
+      }
+    } catch (expt) {
+      console.log('opensankey.png not found')
+    }
+
+    let logo_terriflux = ''
+    try {
+      /* eslint-disable */
+      // @ts-ignore
+      logo_terriflux = require('../css/terriflux.png')
+      /* eslint-enable */
+      const path = window.location.href
+      if (!path.includes('localhost')) {
+        logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
+      }
+    } catch (expt) {
+      console.log('terriflux.png not found')
+    }
+
+    this._logo=logo
+    this._logo_terriflux=logo_terriflux
   }
 
   // PUBLIC METHODS =====================================================================
@@ -291,4 +335,24 @@ export class Class_ApplicationData {
 
   public get filter_label(): number { return this._filter_label }
   public set filter_label(value: number) { this._filter_label = value }
+
+  public get has_free_account(): boolean { return this._has_free_account }
+  public set has_free_account(value: boolean) {/* TODO */ }
+
+  public get t(): TFunction {return this._t}
+
+  public get url_prefix(): string {return this._url_prefix}
+  public set url_prefix(value: string) {this._url_prefix = value}
+
+  public get logo(): string {return this._logo}
+  public set logo(value: string) {this._logo = value}
+
+  public get logo_terriflux(): string {return this._logo_terriflux}
+  public set logo_terriflux(value: string) {this._logo_terriflux = value}
+
+  public get logo_width(): number {return this._logo_width}
+  public set logo_width(value: number) {this._logo_width = value}
+
+  public get app_name(): string {return this._app_name}
+  public set app_name(value: string) {this._app_name = value}
 }

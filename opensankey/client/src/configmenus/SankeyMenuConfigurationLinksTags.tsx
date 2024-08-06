@@ -19,14 +19,13 @@ import {
 
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   applicationData,
-  applicationContext,
   menu_for_modal,
 })=>{
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } =new_data
 
   // Tags -------------------------------------------------------------------------------
 

@@ -6,8 +6,10 @@
 
 // External imports
 import * as d3 from 'd3'
-import { MutableRefObject, RefObject, useRef } from 'react'
+import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 import { Type_MacroTagGroup } from './Sankey'
+import { menu_config_width } from '../topmenus/SankeyMenuTop'
+import { dict_hook_ref_setter_show_dialog_componentsType, textForToastPromiseType } from './Types'
 
 
 // CLASS MENU CONFIG ********************************************************************
@@ -22,6 +24,17 @@ export class Class_MenuConfig {
 
   // Update component Menu
   private _ref_to_menu_updater: MutableRefObject<() => void>
+
+  // Ref to state if configuration is opened
+  private _ref_menu_opened: MutableRefObject<boolean>
+
+  // Variable to stock a function (that can take some time to process) for it to be used while a loading spinner appear
+  private _function_on_wait: MutableRefObject<() => void>
+
+  // Ref to launch _function_on_wait & create a toast with a spinner to show we have to wait
+  // Optional arguments to show custom message while loading & when finished
+  private _ref_lauchToast: MutableRefObject<(intake?: textForToastPromiseType) => void>
+
 
   /* ========================================
    Ref to button on the configuration menu in the app
@@ -83,7 +96,7 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_link_tooltips_updater: MutableRefObject<() => void>
 
   // Update component SankeySettingsEditionElementTags
-  private _ref_to_menu_config_tags_updater: { [_: string] : MutableRefObject<() => void> } = {}
+  private _ref_to_menu_config_tags_updater: { [_: string]: MutableRefObject<() => void> } = {}
 
   // Update component ContextMenuNode
   private _ref_to_menu_context_nodes_updater: MutableRefObject<(() => void)>
@@ -99,9 +112,6 @@ export class Class_MenuConfig {
 
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
-
-  // Update component OSPTransformationElements
-  private _updateComponentBtnUpdateLayout: MutableRefObject<(() => void)>
 
   // Update component ToolbarBuilder
   private _updateToolbar: MutableRefObject<(() => void)>
@@ -123,11 +133,25 @@ export class Class_MenuConfig {
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
 
   /* ========================================
+    Dict of ref of setter of dialogs menu
+  =========================================== */
+  private _dict_setter_show_dialog: dict_hook_ref_setter_show_dialog_componentsType
+
+
+  /* ========================================
     Visible Nodes / Links selectors
   =========================================== */
 
   private _selector_only_visible_nodes: boolean = false
   private _selector_only_visible_links: boolean = false
+
+  // Ref to style of currently selected node(s)
+  private _ref_selected_style_node: MutableRefObject<string> = useRef('default')
+  // Ref to style of currently selected link(s)
+  private _ref_selected_style_link: MutableRefObject<string> = useRef('default')
+
+  // Var to hide welcome menu when we relaucnh application
+  private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAggainWelcome') === '1'))
 
   // CONSTRUCTOR ========================================================================
 
@@ -148,6 +172,9 @@ export class Class_MenuConfig {
 
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
+    this._ref_menu_opened = useRef(false)
+    this._ref_lauchToast = useRef<() => void>(() => null),
+    this._function_on_wait = useRef(() => null)
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -173,7 +200,6 @@ export class Class_MenuConfig {
 
     // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
-    this._updateComponentBtnUpdateLayout = useRef(() => null)
     this._ref_to_toolbar_updater = useRef(() => null)
     this._updateToolbar = useRef(() => null)
 
@@ -189,6 +215,37 @@ export class Class_MenuConfig {
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
+
+    // Init dict of setter show dialog -------------------------------------------------
+    this._dict_setter_show_dialog = {
+      ref_setter_show_menu_node_apparence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_node_io: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_node_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_node_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_link_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_link_data: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_link_appearence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_link_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modale_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modale_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_excel_dialog: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_save_json: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_getter_show_save_json: useRef(false),
+      ref_setter_show_style_node: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_style_link: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+
+      ref_setter_show_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_template: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_load: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_lauchToast: useRef<() => void>(() => null),
+      ref_setter_show_resolution_save_png: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_png_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
+      ref_setter_png_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null)
+    }
+
   }
 
   // PUBLIC METHODS =====================================================================
@@ -208,7 +265,7 @@ export class Class_MenuConfig {
     }
   }
 
-  public toggleGivenAccordion(_:string) {
+  public toggleGivenAccordion(_: string) {
     if (this.isGivenAccordionShowed(_))
       this.removeFromAccordionsToShow(_)
     else
@@ -438,12 +495,32 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToLinks()
   }
 
+  /**
+   * Function to position horizontally the toolbar, it's position depend if the configuration menu is opened
+   * @memberof Class_MenuConfig
+   */
+  public positionToolBar() {
+    d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current ? menu_config_width : 0)) + 'px')
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   // Main menu component ----------------------------------------------------------------
 
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
+  }
+
+  public get ref_menu_opened(): MutableRefObject<boolean> {
+    return this._ref_menu_opened
+  }
+
+  public get ref_lauchToast(): MutableRefObject<(intake?: textForToastPromiseType) => void> {
+    return this._ref_lauchToast
+  }
+
+  public get function_on_wait(): MutableRefObject<() => void> {
+    return this._function_on_wait
   }
 
   // Accordion menu openers -------------------------------------------------------------
@@ -545,7 +622,7 @@ export class Class_MenuConfig {
 
   // Tags menus -------------------------------------------------------------------------
 
-  public get ref_to_menu_config_tags_updater(): {[_: string]: MutableRefObject<() => void>} {
+  public get ref_to_menu_config_tags_updater(): { [_: string]: MutableRefObject<() => void> } {
     return this._ref_to_menu_config_tags_updater
   }
 
@@ -559,9 +636,6 @@ export class Class_MenuConfig {
     return this._ref_to_toolbar_updater
   }
 
-  public get updateComponentBtnUpdateLayout(): MutableRefObject<(() => void)> {
-    return this._updateComponentBtnUpdateLayout
-  }
 
   public get updateToolbar(): MutableRefObject<(() => void)> {
     return this._updateToolbar
@@ -593,5 +667,20 @@ export class Class_MenuConfig {
 
   public get is_selector_only_for_visible_links() {
     return this._selector_only_visible_links
+  }
+
+  // Getter dict of ref setter show dialog
+  public get dict_setter_show_dialog(): dict_hook_ref_setter_show_dialog_componentsType {
+    return this._dict_setter_show_dialog
+  }
+
+  public get ref_selected_style_node(): MutableRefObject<string> {
+    return this._ref_selected_style_node
+  }
+  public get ref_selected_style_link(): MutableRefObject<string> {
+    return this._ref_selected_style_link
+  }
+  public get never_see_again(): MutableRefObject<boolean> {
+    return this._never_see_again
   }
 }

@@ -1,63 +1,19 @@
 import React, {
   Dispatch,
   SetStateAction,
-  useRef,
-  useState
-} from 'react'
-import { useTranslation } from 'react-i18next'
+  useRef} from 'react'
 /*************************************************************************************************/
 import {
-  ComponentUpdaterType,
-  contextMenuType,
-  dict_hook_ref_setter_show_dialog_componentsType,
   applicationDataType,
-  applicationStateType,
-  DrawAllType,
   InitalizeSelectorDetailNodesType,
   initializeAdditionalMenusType,
-  initializeApplicationContextType,
   initializeApplicationDataType,
-  initializeApplicationDrawType,
   initializeCloseAllMenuContextType,
-  initializeElementSelectedType,
-  initializeKeyHandlerType,
-  initializeLinkFunctionsType,
   initializeMenuConfigurationFuncType,
-  initializeNodeFunctionsType,
   initializeReinitializationType,
-  initializeShowDialogType,
-  initializeUIElementsRefType,
-  InstallEventsOnSVGType,
   module_dialogsType,
-  processFunctionsType,
-  SankeyData,
-  SankeyLink,
-  SankeyNode,
-  NodeFunctionTypes
-} from './types/Types'
-/*************************************************************************************************/
-import {
-  DrawArrows,
-  GetSankeyMinWidthAndHeight,
-  LinkStroke
-} from './draw/SankeyDrawFunction'
-import {
-  AdjustSankeyZone,
-  GetLinkValue,
-  LinkColor,
-  LinkText,
-  NodeDisplayed,
-  ReturnValueLink
-} from './configmenus/SankeyUtils'
-import { updateLayout } from './draw/SankeyDrawLayout'
-import { os_all_element_to_transform } from './dialogs/SankeyMenuDialogs'
+  processFunctionsType} from './types/Types'
 import { RetrieveExcelResults } from './dialogs/SankeyPersistence'
-import { AddDrawLinksEvent, DrawAllLinks, drawAddLinks, drawLinkShape } from './draw/SankeyDrawLinks'
-import { LinkTooltipsContent, NodeTooltipsContent } from './draw/SankeyTooltip'
-import * as d3 from 'd3'
-import { DrawLinkStartSabot } from './draw/SankeyDrawShapes'
-import { DrawAllNodes, drawAddNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
-import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 import { MenuDraggable, OpenSankeySaveButton } from './topmenus/SankeyMenuTop'
 import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
@@ -67,15 +23,11 @@ import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuCon
 import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
-import { drag_legend, DrawLegend } from './draw/SankeyDrawLegend'
-import { EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp } from './draw/SankeyDrawEventFunction'
 import * as SankeyConvert from './configmenus/SankeyConvert'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
-// import { keyHandler } from './draw/SankeyDraw'
 import { AddSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
-import { OpposingDragElements } from './draw/SankeyDragNodes'
-import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input, useBoolean } from '@chakra-ui/react'
+import { Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger,Button, Input } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
@@ -96,78 +48,6 @@ declare const window: Window &
     }
   }
 
-let logo = ''
-try {
-  /* eslint-disable */
-  // @ts-ignore
-  logo = require('./css/opensankey.png')
-  /* eslint-enable */
-  const path = window.location.href
-  if ( !path.includes('localhost') ) {
-    logo = logo.replace('static/', 'static/opensankey/')
-  }
-} catch (expt) {
-  console.log('opensankey.png not found')
-}
-
-let logo_terriflux = ''
-try {
-  /* eslint-disable */
-  // @ts-ignore
-  logo_terriflux = require('./css/terriflux.png')
-  /* eslint-enable */
-  const path = window.location.href
-  if ( !path.includes('localhost') ) {
-    logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
-  }
-} catch (expt) {
-  console.log('terriflux.png not found')
-}
-
-// Logo, names, licences
-export const initializeApplicationContext : initializeApplicationContextType = ()=> {return {
-  t : useTranslation().t,
-  logo_width : 100,
-  app_name : 'SankeySuite',//TODO
-  url_prefix : '/opensankey/',
-  logo : logo,
-  logo_terriflux : logo_terriflux,
-  has_free_account:true
-}}
-
-// Global variables not stored in SankeyData
-// Mode, nodes and links selected, style selected...
-export const initializeElementSelected : initializeElementSelectedType = ()=> {
-  const elementsSelected = {
-    ref_setter_mode_selection : useRef<Dispatch<SetStateAction<string>>>(()=>null),
-    ref_getter_mode_selection : useRef<string>(),
-    multi_selected_nodes : useRef([]),
-    multi_selected_links : useRef([] as SankeyLink[]),
-    ref_selected_style_node : useRef('default'),
-    ref_selected_style_link :  useRef('default'),
-    first_selected_node : useRef<SankeyNode>(),
-    ref_pre_idSource : useRef('none'),
-    ref_pre_idTarget : useRef('none'),
-
-    link_io:useRef('output'),
-    link_pos:useRef('right'),
-
-    ref_display_link_opacity : useRef<Dispatch<SetStateAction<string>>[]>([]),
-    displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
-    displayedInputLinkDataTagSetterRef : useRef<Dispatch<SetStateAction<{[k: string]: string;}>>[]>([]),
-    displayedInputLinkValueRef : useRef<string>(''),
-
-    userScaleRef : useRef(10),
-
-    legend_clicked : useRef(false),
-    never_see_again : useRef((localStorage.getItem('dontSeeAggainWelcome')==='1'))
-  }
-  // Reset list of setter of input link value
-  elementsSelected.displayedInputLinkValueSetterRef.current=[]
-  elementsSelected.displayedInputLinkDataTagSetterRef.current=[]
-  elementsSelected.ref_display_link_opacity.current=[]
-  return elementsSelected
-}
 
 /**
  * Réinitialise data et vide les noeud/liens sélectionnés
@@ -194,8 +74,6 @@ export const initializeApplicationData : initializeApplicationDataType = (
   data,
   set_data,
   get_default_data,
-  display_nodes,
-  display_links,
   initial_data
 )=>{
   const application_data = new Class_ApplicationData(false)
@@ -207,325 +85,21 @@ export const initializeApplicationData : initializeApplicationDataType = (
     set_data : set_data,
     get_default_data : get_default_data,
     convert_data : SankeyConvert.convert_data,
-    display_nodes : display_nodes,
-    display_links : display_links,
-    function_on_wait:useRef(()=>null),
-    min_link_thickness:2,
     dataVarToUpdate:useRef(['']),
     setDiagram:setDiagram,
     new_data: application_data
   }
 }
-// General functions necessay to draw the diagram
-export const initializeApplicationDraw : initializeApplicationDrawType = (
-  applicationData,
-  applicationState,
-  contextMenu:contextMenuType,
-  applicationContext,
-  ComponentUpdater,
-  uiElementsRef,
-  node_function,
-  link_function,
-  start_point,
-  resizeCanvas,
-)=> {
-  const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
-    AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
-  }
-  const reDrawLegend=()=>{
 
-  }
-  return {
-    GetSankeyMinWidthAndHeight,
-    updateLayout,
-    resizeCanvas,
-    reAdjustSankey: reAdjustSankey(applicationData),
-    all_element_UpdateLayout:os_all_element_to_transform,
-    start_point,
-    reDrawLegend
-  }
-}
-// Functions necessay to draw the links
-export const initializeLinkFunctions : initializeLinkFunctionsType = (
-  applicationData,
-  applicationState,
-  contextMenu,
-  applicationContext,
-  ComponentUpdater,
-  uiElementsRef,
-  dict_hook_ref_setter_show_dialog_components,
-  ref_alt_key_pressed
-) => {
-  const node_arrow_visible =
-  (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true
-
-  // Color for the sabot when the source node is an arrow
-  const {data} = applicationData
-  const LinkSabotColor=LinkColor
-  const OSDrawLinkStartSabot=(node_to_update:SankeyNode[])=>{
-    const scale = d3.scaleLinear()
-      .domain([0, data.user_scale])
-      .range([0, 100])
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, data.user_scale])
-    node_to_update.forEach(n=>{
-      DrawLinkStartSabot(applicationData,n,scale,inv_scale,GetLinkValue,LinkSabotColor)
-    })
-  }
-  const _ = {
-    GetLinkValue,
-    LinkText,
-    DrawArrows,
-    LinkStroke,
-    LinkSabotColor,
-    reDrawLinkStartSabot:OSDrawLinkStartSabot,
-    node_arrow_visible,
-    LinkTooltipsContent,
-    DrawAllLinks,
-    drawAddLinks,
-    drawLinkShape,
-    RedrawLinks:(()=>null) as unknown as ((_:SankeyLink[])=>null),
-    CreateLinksOnSVG:(()=>null) as unknown as ((_:SankeyLink[])=>null),
-  }
-  _.RedrawLinks=(links_to_update:SankeyLink[])=>{
-    drawLinkShape(
-      applicationData,
-      applicationState,
-      applicationContext,
-      _,
-      links_to_update,
-      ComponentUpdater
-    )
-    AddDrawLinksEvent(
-      contextMenu,
-      applicationData,
-      uiElementsRef,
-      applicationState,
-      _,
-      ComponentUpdater,
-      applicationContext,
-      ref_alt_key_pressed
-    )
-    ComponentUpdater.updateComponenSaveInCache.current(false)
-    return null
-  }
-
-  _.CreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
-    drawAddLinks(
-      contextMenu,
-      applicationData,
-      uiElementsRef,
-      applicationState,
-      applicationContext,
-      ref_alt_key_pressed,
-      _,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      links_to_update
-    )
-    ComponentUpdater.updateComponenSaveInCache.current(false)
-    return null
-  }
-
-  return _
-}
-
-// Functions necessay to draw the nodes
-export const initializeNodeFunctions : initializeNodeFunctionsType = (
-  applicationData,
-  applicationState,
-  contextMenu,
-  applicationContext,
-  ComponentUpdater,
-  uiElementsRef,
-  resizeCanvas,
-  dict_hook_ref_setter_show_dialog_components,
-  ref_alt_key_pressed,
-  accept_simple_click,
-  recomputeDisplayedElement,
-  link_function
-) => {
-  const _ = {
-    DrawAllNodes,
-    drawAddNodes,
-    RedrawNodes: (()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
-    RedrawNodesLabels: (()=>null),
-    recomputeDisplayedElement,
-    CreateNodesOnSVG:(()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
-    OpposingDragElements:OpposingDragElements,
-    postProcessLoadExcel: (()=>null)
-  } as NodeFunctionTypes
-  _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
-    updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)
-    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
-    return null
-  }
-  _.RedrawNodesLabels=(nodes_to_update:SankeyNode[])=>{
-    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
-  }
-  _.CreateNodesOnSVG=(nodes_to_update:SankeyNode[])=>{
-    drawAddNodes(
-      contextMenu,
-      applicationData,
-      uiElementsRef,
-      applicationState,
-      applicationContext,
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      _,
-      nodes_to_update,
-      GetSankeyMinWidthAndHeight,
-      resizeCanvas
-    )
-    return null
-  }
-  return _
-}
-
-export const DrawAll : DrawAllType = (
-  contextMenu,
-  applicationData,
-  uiElementsRef,
-  applicationState,
-  applicationContext,
-  alt_key_pressed,
-  accept_simple_click,
-  link_function,
-  NodeTooltipsContent,
-  ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
-  node_function,
-  GetSankeyMinWidthAndHeight,
-  applicationDraw
-)=>{
-  node_function.DrawAllNodes(
-    contextMenu,
-    applicationData,
-    uiElementsRef,
-    applicationState,
-    applicationContext,
-    alt_key_pressed,
-    accept_simple_click,
-    link_function,
-    NodeTooltipsContent,
-    ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components,
-    node_function,
-    GetSankeyMinWidthAndHeight,
-    applicationDraw.resizeCanvas
-
-  )
-  link_function.DrawAllLinks(
-    contextMenu,
-    applicationData,
-    uiElementsRef,
-    applicationState,
-    applicationContext,
-    alt_key_pressed,
-    //(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute', TODO
-    'absolute',
-    link_function,
-    ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components
-  )
-
-  // Legend
-  applicationDraw.reDrawLegend()
-}
-
-export const InstallEventsOnSVG : InstallEventsOnSVGType = (
-  contextMenu,
-  applicationContext,
-  applicationData,
-  uiElementsRef,
-  applicationState,
-  link_function,
-  ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
-  node_function,
-  applicationDraw
-) => {
-  const svgSankey=d3.select('.opensankey #svg')
-
-  // svgSankey.on('mousedown',evt=>{
-  //   EventOnZoneMouseDown(
-  //     applicationData,
-  //     applicationState,
-  //     dict_hook_ref_setter_show_dialog_components,
-  //     false,
-  //     evt,
-  //     applicationDraw.start_point,
-  //     contextMenu.closeAllMenuContext,
-  //     node_function
-  //   )
-  // })
-  svgSankey.on('mousemove',evt=>{
-    EventOnZoneMouseMove(
-      applicationData,
-      applicationState,
-      evt,
-      applicationDraw.start_point
-    )
-  })
-  svgSankey.on('mouseup',evt=>{
-    EventOnZoneMouseUp(
-      applicationData,
-      uiElementsRef,
-      applicationState,
-      dict_hook_ref_setter_show_dialog_components,
-      false,
-      evt,
-      applicationDraw.start_point,
-      applicationState.legend_clicked,
-      link_function,
-      ComponentUpdater,
-      node_function,
-      applicationDraw.reDrawLegend,
-      applicationDraw.resizeCanvas
-    )
-  })
-}
-
-// Used to update the various component of the application
-export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
-  const _ = {
-    updateComponentMenuConfig:useRef(()=>null),
-    updateComponenSaveInCache:useRef((b:boolean)=>null),
-    updateComponentMenuNodeIOSelectSideNode : useRef([] as (() => null)[]),
-    updateMenuConfigTextNodeTooltip : useRef([] as (() => void)[]),
-    updateMenuConfigTextLinkTooltip : useRef([] as (() => void)[]),
-    updateComponentBtnUpdateLayout : useRef(()=>null),
-    updateMenus: useState<boolean>(false)
-  }
-  return _
-}
-
-// Ref to some key ui element (accordion item) in the application
-export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {return {
-  button_ref : useRef<HTMLLabelElement>(null),
-  accordion_ref : useRef<HTMLDivElement>(null),
-  links_accordion_ref : useRef<HTMLDivElement>(null),
-  nodes_accordion_ref : useRef<HTMLDivElement>(null),
-  ref_setter_nav_item_active : useRef<Dispatch<SetStateAction<number>>>(()=>null),
-  ref_nav_item_active : useRef<number>(-1),
-  ref_setter_sub_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null)
-}}
 
 export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
-  applicationContext,
   applicationData,
 ) => {
   if (!window.SankeyToolsStatic) {
     additional_menus.additional_nav_item.push(
       <OpenSankeySaveButton
         applicationData={applicationData}
-        applicationContext={applicationContext}
       />
     )
   }
@@ -533,215 +107,108 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
 
 // Modal Dialogs
 export const moduleDialogs : module_dialogsType = (
-  applicationContext,
   applicationData,
-  applicationState,
-  contextMenu,
-  applicationDraw,
-  uiElementsRef,
-  dict_hook_ref_setter_show_dialog_components,
-  node_function,
-  link_function,
-  ComponentUpdater,
   additional_menus,
-  menu_configuration_nodes_attributes,
-  reDrawLegend
-) => {return [
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_node_apparence'}
-    content={menu_configuration_nodes_attributes}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_node_io'}
-    content={<SankeyMenuConfigurationNodesIO
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      menu_for_modal={true}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_link_data'}
-    content={<MenuConfigurationLinksData
-      applicationData={applicationData}
-      applicationContext={applicationContext}
-      additional_data_element={additional_menus.additional_data_element}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_link_appearence'}
-    content={<MenuConfigurationLinksAppearence
-      applicationData={applicationData}
-      applicationState={applicationState}
-      applicationContext={applicationContext}
-      additional_link_appearence_items={additional_menus.additional_link_appearence_items}
-      menu_for_style={false}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_layout'}
-    content={<OpenSankeyMenuConfigurationLayout
-      applicationData={applicationData}
-      applicationContext={applicationContext}
-      extra_background_element={additional_menus.extra_background_element}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.MEP')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_node_tooltip'}
-    content={<SankeyMenuConfigurationNodesTooltip
-      applicationData={applicationData}
-      applicationContext={applicationContext}
-      menu_for_modal = {true}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IS')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_node_tags'}
-    content={<SankeyMenuConfigurationNodesTags
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      menu_for_modal={true}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Menu.Etiquettes')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_link_tags'}
-    content={<MenuConfigurationLinksTags
-      applicationContext={applicationContext}
-      applicationData={applicationData}
-      menu_for_modal={true}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.Flux')+' '+applicationContext.t('Menu.Etiquettes')}
-  />,
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    dialog_name={'ref_setter_show_menu_link_tooltip'}
-    content={<MenuConfigurationLinksTooltip
-      applicationData={applicationData}
-      applicationContext={applicationContext}
-      menu_for_modal={true}
-    />}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB')}
-  />
-]}
+  menu_configuration_nodes_attributes
+) => {
+  const {t}=applicationData.new_data
+  return [
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_node_apparence'}
+      content={menu_configuration_nodes_attributes}
+      title={t('Menu.Noeuds')+' '+t('Noeud.apparence.apparence')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_node_io'}
+      content={<SankeyMenuConfigurationNodesIO
+        applicationData={applicationData}
+        menu_for_modal={true}
+      />}
+      title={t('Menu.Noeuds')+' '+t('Noeud.PF.PFM')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_link_data'}
+      content={<MenuConfigurationLinksData
+        applicationData={applicationData}
+        additional_data_element={additional_menus.additional_data_element}
+      />}
+      title={t('Menu.flux')+' '+t('Flux.data.données')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_link_appearence'}
+      content={<MenuConfigurationLinksAppearence
+        applicationData={applicationData}
+        additional_link_appearence_items={additional_menus.additional_link_appearence_items}
+        menu_for_style={false}
+      />}
+      title={t('Menu.flux')+' '+t('Flux.apparence.apparence')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_layout'}
+      content={<OpenSankeyMenuConfigurationLayout
+        applicationData={applicationData}
+        extra_background_element={additional_menus.extra_background_element}
+      />}
+      title={t('Menu.MEP')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_node_tooltip'}
+      content={<SankeyMenuConfigurationNodesTooltip
+        applicationData={applicationData}
+        menu_for_modal = {true}
+      />}
+      title={t('Menu.Noeuds')+' '+t('Noeud.IS')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_node_tags'}
+      content={<SankeyMenuConfigurationNodesTags
+        applicationData={applicationData}
+        menu_for_modal={true}
+      />}
+      title={t('Menu.Noeuds')+' '+t('Menu.Etiquettes')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_link_tags'}
+      content={<MenuConfigurationLinksTags
+        applicationData={applicationData}
+        menu_for_modal={true}
+      />}
+      title={t('Menu.Flux')+' '+t('Menu.Etiquettes')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_link_tooltip'}
+      content={<MenuConfigurationLinksTooltip
+        applicationData={applicationData}
+        menu_for_modal={true}
+      />}
+      title={t('Menu.flux')+' '+t('Flux.IB')}
+    />
+  ]}
 
-// Visibility states for the modal dialogs
-export const initializeShowDialog : initializeShowDialogType = () => {return {
-  ref_setter_show_menu_node_apparence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_node_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_node_tags : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_link_tags : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_link_data : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_link_appearence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_link_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_menu_layout : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_modal_welcome : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_modale_tuto : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_modale_support : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_excel_dialog : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_save_json : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_getter_show_save_json : useRef(false),
-  ref_setter_show_style_node : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_style_link : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-
-  ref_setter_show_apply_layout : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_lauchToast : useRef<()=>void>(()=>null),
-  ref_setter_show_resolution_save_png : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  ref_setter_png_res_h:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
-  ref_setter_png_res_v:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null)
-}}
-
-// Menu opening on RMB
-export const initializeContextMenu : ()=> contextMenuType = ()=> {
-  // Initialize the object onctaining contextMenu var
-  const _ = {
-    ref_setter_contextualised_node : useRef<Dispatch<SetStateAction<SankeyNode|undefined>>>(),
-    ref_contextualised_node : useRef<SankeyNode|undefined>(),
-    ref_setter_contextualised_link : useRef<Dispatch<SetStateAction<SankeyLink|undefined>>>(),
-    tagContext : useRef<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>([]),
-    pointer_pos : useRef([window.innerWidth/4,window.innerHeight/4]),
-    showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>]>(),
-    closeAllMenuContext:()=>null
-  }  as contextMenuType
-
-  // Then add the function closeAllMenuContext
-  _.closeAllMenuContext =initializeCloseAllMenuContext(
-    _.ref_setter_contextualised_node,
-    _.ref_setter_contextualised_link,
-    _.tagContext,
-    _.showContextZDDRef
-  )
-
-  return _ as contextMenuType
-}
 export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType=(
-  ref_setter_contextualised_node ,
-  ref_setter_contextualised_link ,
   tagContext ,
   showContextZDDRef
 )=>{
   return ()=>{
-    ref_setter_contextualised_node.current!(undefined)
-    ref_setter_contextualised_link.current!(undefined)
     tagContext.current![0][1](undefined)
     showContextZDDRef.current![1](false)
   }
 }
-export const closeAllMenu=(
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  contextMenu:contextMenuType
-)=>{
-  const func = (
-  )=> {
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tags.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current!(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_style_node.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_style_link.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current(false)
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_support.current(false)
-    contextMenu.closeAllMenuContext()
-  }
-  return func
-}
+
 
 //- BackEnd
 export const initializeProcessFunctions : (
-    dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType
-  )=> processFunctionsType = (dict_hook_ref_setter_show_dialog_components) => {
+    applicationData:applicationDataType,
+  )=> processFunctionsType = (applicationData) => {
     const _ = {
       ref_processing : useRef(false),
       ref_setter_processing : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
@@ -752,7 +219,7 @@ export const initializeProcessFunctions : (
       RetrieveExcelResults,
       launch:(cur_path:string)=>{
         _.path.current = cur_path
-        dict_hook_ref_setter_show_dialog_components.ref_setter_show_load.current!(true)
+        applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_load.current!(true)
         _.ref_setter_processing.current(true)
         _.failure.current = true
         _.not_started.current = false
@@ -765,7 +232,6 @@ export const initializeProcessFunctions : (
 /***************************************************************************************/
 export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   applicationData,
-  applicationContext,
   additional_menus,
   config_link_data,
   config_link_attr,
@@ -773,31 +239,26 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
 ) => {
   return <OpenSankeyConfigurationsMenus
     applicationData = {applicationData}
-    applicationContext = {applicationContext}
     menu_configuration_layout = {
       <OpenSankeyMenuConfigurationLayout
         applicationData={applicationData}
-        applicationContext={applicationContext}
         extra_background_element={additional_menus.extra_background_element}
       />
     }
     menu_configuration_node_tags = {
       <SankeySettingsEditionElementTags
-        applicationContext={applicationContext}
         applicationData={applicationData}
         elementTagNameProp='node_taggs'
       />
     }
     menu_configuration_link_tags = {
       <SankeySettingsEditionElementTags
-        applicationContext={applicationContext}
         applicationData={applicationData}
         elementTagNameProp='flux_taggs'
       />
     }
     menu_configuration_data_tags = {
       <SankeySettingsEditionElementTags
-        applicationContext={applicationContext}
         applicationData={applicationData}
         elementTagNameProp='data_taggs'
       />
@@ -818,9 +279,10 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
  * @return {*}
  */
 export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
-  applicationContext,
   applicationData
 )=>{
+  const { t } = applicationData.new_data
+
   return <Popover placement='left' id='popover_details_level'>
     <PopoverTrigger>
       <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
@@ -830,7 +292,7 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(
     <PopoverContent>
       <PopoverArrow />
       <PopoverCloseButton />
-      <PopoverHeader>{applicationContext.t('Banner.ndd')}</PopoverHeader>
+      <PopoverHeader>{t('Banner.ndd')}</PopoverHeader>
       <PopoverBody>
         <>
           {

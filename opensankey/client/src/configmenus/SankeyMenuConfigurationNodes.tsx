@@ -18,7 +18,6 @@ import {
 /*************************************************************************************************/
 
 import {
-  applicationContextType,
   applicationDataType,
 } from '../types/Types'
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
@@ -38,7 +37,6 @@ import { Class_NodeElement } from '../types/Node'
 /*************************************************************************************************/
 
 type SankeyEditionTypes = {
-  applicationContext: applicationContextType,
   applicationData: applicationDataType,
   menu_configuration_nodes_attributes:JSX.Element
 }
@@ -47,7 +45,6 @@ type SankeyEditionTypes = {
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
-    applicationContext,
     applicationData,
     menu_configuration_nodes_attributes,
   }
@@ -56,7 +53,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // Datas ------------------------------------------------------------------------------
 
   // Traduction
-  const { t } = applicationContext
+  const { t } = applicationData.new_data
   // Data class
   const { new_data } = applicationData
 
@@ -110,21 +107,18 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     />,
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
       applicationData={applicationData}
-      applicationContext={applicationContext}
       menu_for_modal={false}
     />
   }
 
   if (new_data.drawing_area.sankey.node_taggs_list.length > 0 ) {
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
-      applicationContext={applicationContext}
       applicationData={applicationData}
       menu_for_modal={false}
     />
   }
 
   ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
-    applicationContext={applicationContext}
     applicationData={applicationData}
     menu_for_modal={false}
   />
@@ -264,7 +258,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {
-        (!applicationContext.has_free_account && new_data.drawing_area.sankey.nodes_list.length > 15) ?
+        (!applicationData.new_data.has_free_account && new_data.drawing_area.sankey.nodes_list.length > 15) ?
           <Box
             as='span'
             layerStyle='menuconfigpanel_warn_msg'
@@ -283,7 +277,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={!applicationContext.has_free_account && nodes.length > 15}
+            isDisabled={!applicationData.new_data.has_free_account && nodes.length > 15}
             onClick={() => {
               // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
