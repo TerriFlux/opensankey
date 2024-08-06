@@ -33,7 +33,6 @@ import {
   Class_DrawingArea
 } from './DrawingArea'
 import {
-  default_main_sankey_id,
   default_style_id
 } from './Sankey'
 import {

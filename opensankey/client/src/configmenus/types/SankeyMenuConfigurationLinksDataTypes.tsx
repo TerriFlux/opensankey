@@ -1,8 +1,7 @@
-import { applicationContextType, applicationDataType } from '../../types/Types'
+import { applicationDataType } from '../../types/Types'
 
 export type MenuConfigurationLinksDataFType = {
   applicationData:applicationDataType,
-  applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
 }
 

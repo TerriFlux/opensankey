@@ -227,20 +227,6 @@ export class Class_Legend extends Class_Element {
       .attr('fill', this._legend_bg_color)
       .attr('fill-opacity', this._legend_bg_opacity / 100)
 
-    //  Event below get triggered when dragging
-    // .on('mouseover', () => {
-    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
-    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
-    // })
-    // .on('mouseleave', () => {
-    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', 'unherit')
-    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
-    // })
-    // .on('mousedown', () => {
-    //   this.setSelected()
-    //   this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', () => '6,6')
-    //   //   draw_legend_handles(applicationData,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
-    // })
   }
 
   /**

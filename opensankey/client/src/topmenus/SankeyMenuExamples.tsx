@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { applicationContextType, applicationDataType, applicationStateType } from '../types/Types'
+import { applicationDataType } from '../types/Types'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
@@ -21,9 +21,8 @@ type subtypeObjectList={[_:string]:ExempleMenuTypes}
  * @type {{ exemple_menu: any; url_prefix: any; data: any; set_data: any; current_path: any; multi_selected_nodes: any; multi_selected_links: any; multi_selected_label: any; launch: any; }}
  */
 export type ExempleItemTypes = {
-  applicationContext:applicationContextType,
+  
   applicationData:applicationDataType,
-  applicationState:applicationStateType,
   exemple_menu : JSX.Element | ExempleMenuTypes,
   current_path : string,
   launch: (s:string) => void,
@@ -39,18 +38,15 @@ export type ExempleItemTypes = {
  */
 export const ExempleItem = (
   {
-    applicationContext,
     applicationData,
-    applicationState,
     exemple_menu,
     current_path,
     launch,
     Reinitialization
   }: ExempleItemTypes
 ) => {
-  const {data,set_data,convert_data,get_default_data}=applicationData
-  const {url_prefix}=applicationContext
-  const {multi_selected_nodes,multi_selected_links}=applicationState
+  const {data,set_data,convert_data,get_default_data,new_data}=applicationData
+  const {url_prefix}=new_data
   let content=<></>
   let item=Object.keys(exemple_menu).map(
     (key, index) => {
@@ -68,9 +64,7 @@ export const ExempleItem = (
           return <></>
         }
         return <ExempleItem
-          applicationContext={applicationContext}
           applicationData={applicationData}
-          applicationState={applicationState}
           exemple_menu={(exemple_menu as subtypeObjectList)[key]}
           current_path={the_current_path}
           launch={launch}
@@ -109,9 +103,7 @@ export const ExempleItem = (
           </MenuButton>
           <MenuList>
             <ExempleItem
-              applicationContext={applicationContext}
               applicationData={applicationData}
-              applicationState={applicationState}
               exemple_menu={(exemple_menu as subtypeObjectList)[key]}
               current_path={the_current_path}
               launch={launch}
@@ -133,8 +125,9 @@ export const ExempleItem = (
         <MenuItem
           key={index}
           onClick={() => {
-            multi_selected_nodes.current = []
-            multi_selected_links.current = []
+            // multi_selected_nodes.current = []
+            // multi_selected_links.current = []
+            applicationData.new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
             }
