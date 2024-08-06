@@ -783,7 +783,7 @@ export class Class_DrawingArea {
    */
   public fromJSON(
     json_object: Type_JSON,
-    redraw: boolean=true,
+    redraw: boolean = true,
     match_and_update: boolean=true,
   ) {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
@@ -792,7 +792,7 @@ export class Class_DrawingArea {
       (version === undefined) ||
       (Number(version) < 0.9)
     ) {
-      convert_data_legacy(json_object)
+      // convert_data_legacy(json_object) FIXME
     }
     // Update direct attributes
     this._height = getNumberFromJSON(json_object, 'height', this._height)

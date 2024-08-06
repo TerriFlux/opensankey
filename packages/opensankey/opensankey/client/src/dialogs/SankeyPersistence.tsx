@@ -398,6 +398,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   const { new_data } = applicationData
   // Extract JSON struct
   const data_as_json = JSON.parse(text) as Type_JSON
+  data_as_json['version'] = '0.9' // Avoid converter process
   // Create & draw Sankey
   new_data.fromJSON(data_as_json)
   // Apply extracted layout if present
