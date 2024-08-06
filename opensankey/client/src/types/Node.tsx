@@ -260,38 +260,198 @@ export class Class_NodeElement extends Class_Element {
   }
 
   /**
-   * Copy attributes from element & create/copy ref to current sankey (ref to node_taggs & style)
+   * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
    *
-   * @param {Class_NodeElement} element
+   * @param {Class_NodeElement} node_to_copy
    * @memberof Class_NodeElement
    */
-  public copyFrom(element: Class_NodeElement) {
+  public copyFrom(node_to_copy: Class_NodeElement) {
+    // Copy attributes ------------------------------------------------------------------
     // Name
-    this._name = element.name
-    this._name_label_separator = element._name_label_separator
+    this._name = node_to_copy.name
+    this._name_label_separator = node_to_copy._name_label_separator
     // Display
-    this._display.position = structuredClone(element._display.position)
-    this._display.position_x_label = element._display.position_x_label
-    this._display.position_y_label = element._display.position_y_label
-    // Links
-    const list_links_id = Object.keys(this.drawing_area.sankey.links_dict)
-    this._input_links = Object.fromEntries(Object.entries(element._input_links).filter(il=>list_links_id.includes(il[0])))
-    this._output_links = Object.fromEntries(Object.entries(element._output_links).filter(il=>list_links_id.includes(il[0])))
-    // Get new link order but only keeping link present in current link order
-    const new_link_order_id = element._links_order.map(new_link => new_link.id)
-    this._links_order = new_link_order_id.filter(link_id => link_id in this.drawing_area.sankey.links_dict).map(link_id => this.drawing_area.sankey.links_dict[link_id])
+    this._display.position = structuredClone(node_to_copy._display.position)
+    this._display.position_x_label = node_to_copy._display.position_x_label
+    this._display.position_y_label = node_to_copy._display.position_y_label
     // Copy local attributes
-    this._display.attributes.copyFrom(element._display.attributes)
-    // Set node style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
-    if (this.drawing_area.sankey.node_styles_list.map(ns => ns.id).includes(element._display.style.id)) {
-      const new_style_id = this.drawing_area.sankey.node_styles_list.map(ns => ns.id).filter(ns => ns.includes(element._display.style.id))[0]
+    this._display.attributes.copyFrom(node_to_copy._display.attributes)
+    // Set node style to node_to_copy style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
+    if (this.drawing_area.sankey.node_styles_list.map(ns => ns.id).includes(node_to_copy._display.style.id)) {
+      const new_style_id = this.drawing_area.sankey.node_styles_list.map(ns => ns.id).filter(ns => ns.includes(node_to_copy._display.style.id))[0]
       this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id]
       this._display.style.addReference(this)
     }
-    // Copy tags
-    // TODO
-    // Copy dimensions
-    // TODO
+    // Copy input links ------------------------------------------------------------------
+    // Add missing input links
+    node_to_copy.input_links_list
+      .filter(link => {
+        return (
+          (link.id in this.main_sankey.links_dict) &&
+          !(link.id in this.input_links_dict)
+        )
+      })
+      .forEach(link => {
+        this.addInputLink(this.main_sankey.links_dict[link.id])
+      })
+    // Create missing input link from existing source node
+    node_to_copy.input_links_list
+      .filter(link => {
+        return (
+          !(link.id in this.main_sankey.links_dict) &&
+          (link.source.id in this.main_sankey.nodes_dict)
+        )
+      })
+      .forEach(link => {
+        const new_link = new Class_LinkElement(
+          link.id,
+          this.main_sankey.nodes_dict[link.source.id],
+          this,
+          this.drawing_area,
+          this.menu_config
+        )
+        this.addInputLink(new_link)
+      })
+    // Remove input link that are not input links on node to copy from
+    this.input_links_list
+      .filter(link => {
+        return (
+          !(link.id in node_to_copy.input_links_dict)
+        )
+      })
+      .forEach(link => this.deleteInputLink(link))
+    // Copy output links ------------------------------------------------------------------
+    // Add missing output links
+    node_to_copy.output_links_list
+      .filter(link => {
+        return (
+          (link.id in this.main_sankey.links_dict) &&
+          !(link.id in this.output_links_dict)
+        )
+      })
+      .forEach(link => {
+        this.addOutputLink(this.main_sankey.links_dict[link.id])
+      })
+    // Create missing input link from existing source node
+    node_to_copy.output_links_list
+      .filter(link => {
+        return (
+          !(link.id in this.main_sankey.links_dict) &&
+          (link.target.id in this.main_sankey.nodes_dict)
+        )
+      })
+      .forEach(link => {
+        const new_link = new Class_LinkElement(
+          link.id,
+          this,
+          this.main_sankey.nodes_dict[link.target.id],
+          this.drawing_area,
+          this.menu_config
+        )
+        this.addInputLink(new_link)
+      })
+    // Remove input link that are not input links on node to copy from
+    this.output_links_list
+      .filter(link => {
+        return (
+          !(link.id in node_to_copy.output_links_dict)
+        )
+      })
+      .forEach(link => this.deleteInputLink(link))
+    // Copy links orders ----------------------------------------------------------------
+    this._links_order = node_to_copy._links_order
+      .filter(link => link.id in this.drawing_area.sankey.links_dict)
+      .map(link => this.drawing_area.sankey.links_dict[link.id])
+    // Copy tags ------------------------------------------------------------------------
+    let all_existing_tags: {[_:string]: Class_Tag} = {}
+    this.main_sankey.node_taggs_list
+      .forEach(tagg => {
+        all_existing_tags = {
+          ...all_existing_tags,
+          ...tagg.tags_dict
+        }
+      })
+    // Add missing tags
+    node_to_copy.tags_list
+      .filter(tag => {
+        return (
+          (tag.id in all_existing_tags) &&
+          !(tag.id in this.tags_dict)
+        )
+      })
+      .forEach(tag => {
+        this.addTag(tag)
+      })
+    // Remove tags that are not present on node to copy from
+    this.tags_list
+      .filter(tag => {
+        return (
+          !(tag.id in node_to_copy.tags_dict)
+        )
+      })
+      .forEach(tag => this.removeTag(tag))
+    // Copy dimensions ------------------------------------------------------------------
+    // Create a dict of all existing dimensions in this related sankey
+    const all_existing_dim: {[_: string]: Class_NodeDimension} = {}
+    this.main_sankey.level_taggs_list
+      .forEach(tagg => {
+        tagg.tags_list
+          .forEach(tag => {
+            // Chech children dimensions
+            tag.dimensions_list_as_tag_for_children
+              .filter(dim => !(dim.id in all_existing_dim))
+              .forEach(dim => all_existing_dim[dim.id] = dim)
+            // Check parent dimensions
+            tag.dimensions_list_as_tag_for_parent
+              .filter(dim => !(dim.id in all_existing_dim))
+              .forEach(dim => all_existing_dim[dim.id] = dim)
+          })
+      })
+    // Add existing and missing child dimensions
+    Object.values(node_to_copy._dimensions_as_child)
+      .filter(dim =>{
+        return (
+          (dim.id in all_existing_dim) &&
+          !(dim.id in this._dimensions_as_child)
+        )
+      })
+      .forEach(dim => {
+        this.addNewDimensionAsChild(all_existing_dim[dim.id])
+      })
+    // Add existing and missing parent dimensions
+    Object.values(node_to_copy._dimensions_as_parent)
+      .filter(dim =>{
+        return (
+          (dim.id in all_existing_dim) &&
+          !(dim.id in this._dimensions_as_parent)
+        )
+      })
+      .forEach(dim => {
+        this.addNewDimensionAsParent(all_existing_dim[dim.id])
+      })
+    // TODO Create non-existing and missing child & parent dimensions
+    // Delete unnecessary child dimensions
+    Object.values(this._dimensions_as_child)
+      .filter(dim => {
+        return (
+          !(dim.id in node_to_copy._dimensions_as_child)
+        )
+      })
+      .forEach(dim => this.removeDimensionAsChild(dim))
+    // Delete unnecessary parent dimensions
+    Object.values(this._dimensions_as_parent)
+      .filter(dim => {
+        return (
+          !(dim.id in node_to_copy._dimensions_as_parent)
+        )
+      })
+      .forEach(dim => this.removeDimensionAsParent(dim))
+    // Sync child dimensions
+    Object.values(this._dimensions_as_child)
+      .forEach(dim => dim.synchroWith(node_to_copy._dimensions_as_child[dim.id]))
+    // Sync parent dimensions
+    Object.values(this._dimensions_as_parent)
+      .forEach(dim => dim.synchroWith(node_to_copy._dimensions_as_parent[dim.id]))
   }
 
   // Drawing methods --------------------------------------------------------------------
@@ -491,29 +651,30 @@ export class Class_NodeElement extends Class_Element {
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (_.parent === this) &&
+      (_.parent !== this) &&
+      (!_.children.includes(this)) &&
       (!this._dimensions_as_parent[_.id])
     ) {
       this._dimensions_as_parent[_.id] = _
+      _.parent = this
     }
   }
 
   public addNewDimensionAsChild(_: Class_NodeDimension) {
     if (
       (_.parent !== this) &&
+      (!_.children.includes(this)) &&
       (!this._dimensions_as_child[_.id])
     ) {
-      // If this not in dimension as child -> add it
-      if (!_.children.includes(this))
-        _.addNodeAsChildren(this)
       this._dimensions_as_child[_.id] = _
+      _.addNodeAsChild(this)
     }
   }
 
   public removeDimensionAsParent(_: Class_NodeDimension) {
     if (this._dimensions_as_parent[_.id]) {
       delete this._dimensions_as_parent[_.id]
-      _.delete() // Dimension cannot exist with no parent
+      _.removeNodeAsParent(this)
     }
   }
 
@@ -891,8 +1052,6 @@ export class Class_NodeElement extends Class_Element {
     matching_nodes_id: {[_: string]: string} = {},
     matching_taggs_id: {[_: string]: string} = {},
     matching_tags_id: {[_: string]: {[_: string]: string}} = {},
-    // TODO contniuer sur leveltags
-
   ) {
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
@@ -3656,7 +3815,53 @@ export class Class_NodeDimension {
 
   // PUBLIC METHODS =====================================================================
 
-  public addNodeAsChildren(_: Class_NodeElement) {
+  public synchroWith(dim: Class_NodeDimension) {
+    // Get list of all nodes
+    const nodes_dict = this.parent.main_sankey.nodes_dict
+    const level_taggs_dict = this.parent.main_sankey.level_taggs_dict
+    // Sync references with parent nodes
+    if (dim.parent.id in nodes_dict) {
+      this.parent = nodes_dict[dim.parent.id]
+    }
+    else { // parent node does not exits -> delete this
+      this.delete()
+    }
+    // Sync reference with parent tag
+    if (
+      (dim.parent_level_tag.group.id in level_taggs_dict) &&
+      (dim.parent_level_tag.id in level_taggs_dict[dim.parent_level_tag.group.id].tags_dict)
+    ) {
+      this.parent_level_tag = level_taggs_dict[dim.parent_level_tag.group.id].tags_dict[dim.parent_level_tag.id]
+    }
+    else { // parent level tag does not exits -> delete this
+      this.delete()
+    }
+    // Sync references with children
+    dim._children  // Append all missing children
+      .filter(child => child.id in nodes_dict)
+      .forEach(child => this.addNodeAsChild(nodes_dict[child.id]))
+    this._children // Remove all unnecessary children
+      .filter(child => !(dim._children.map(_ => _.id).includes(child.id)))
+      .forEach(child => this.removeNodeFromChildren(child))
+    // Sync reference with children tags
+    dim._children_level_tags // Append all missing children tags
+      .filter(tag => {
+        (tag.group.id in level_taggs_dict) &&
+        (tag.id in level_taggs_dict[tag.group.id ].tags_dict)
+      })
+      .forEach(tag => this.addTagAsChildrenLevelTag(level_taggs_dict[tag.group.id].tags_dict[tag.id]))
+    this._children_level_tags
+      .filter(tag => !(dim._children_level_tags.map(_ => _.id).includes(tag.id)))
+      .forEach(tag => this.removeTagFromChildrenLevelTag(tag))
+  }
+
+  public removeNodeAsParent(_: Class_NodeElement) {
+    if (this._parent === _) {
+      this.delete()  // Simply delete because dimension can not exist without parent
+    }
+  }
+
+  public addNodeAsChild(_: Class_NodeElement) {
     if (!this._children.includes(_)) {
       this._children.push(_)
       _.addNewDimensionAsChild(this)
@@ -3728,6 +3933,14 @@ export class Class_NodeDimension {
   public get children_level_tagg() { return this._children_level_tags[0]?.group ?? undefined }
 
   public get parent() { return this._parent }
+  public set parent(_: Class_NodeElement) {
+    if (!(this._parent === _)) {
+      const old_parent = this._parent
+      this._parent = _
+      _.addNewDimensionAsParent(this)
+      old_parent.removeDimensionAsParent(this)
+    }
+  }
 
   public get has_children() { return (this._children.length > 0) }
   public get children() { return this._children }

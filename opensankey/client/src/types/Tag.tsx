@@ -100,7 +100,7 @@ export abstract class Class_ProtoTag {
     this._color = element._color
     this._is_selected = element._is_selected
     this._ref_sankey = element._ref_sankey
-    // TODO how to deal with group ? -> Switching ?
+    // Groups are switched from related group class
   }
 
   public setSelected() {
@@ -244,14 +244,26 @@ export class Class_Tag extends Class_ProtoTag {
   }
 
   /**
-   * Copy attributes from element tag
+   * Copy attributes from external tag
    *
    * @param {Class_Tag} element
    * @memberof Class_Tag
    */
-  public copyFrom(element: Class_Tag) {
-    super.copyFrom(element)
-    // TODO how to deal with references ?
+  public copyFrom(tag: Class_Tag) {
+    super.copyFrom(tag)
+    // Synchronize references
+    let all_possible_reference: {[x: string]:  Type_TagReference} = {... this._ref_sankey.nodes_dict}
+    this._ref_sankey.links_list
+      .map(link => all_possible_reference = {
+        ... all_possible_reference,
+        ... Object.fromEntries(Object.entries(link.getAllValues()).map(([id, list]) => [id, list[0]]))
+      })
+    Object.keys(tag._references) // Add missing refs
+      .filter(ref_id => ref_id in all_possible_reference)
+      .forEach(ref_id => this.addReference(all_possible_reference[ref_id]))
+    Object.keys(this._references) // Remove extra refs
+      .filter(ref_id => !tag._references[ref_id])
+      .forEach(ref_id => this.removeReference(this._references[ref_id]))
   }
 
   // PROTECTED METHODS ==================================================================
@@ -309,7 +321,7 @@ export class Class_DataTag extends Class_ProtoTag {
     this._references = sankey.links_dict
     // Update all links
     Object.values(this._references)
-      .forEach(link => link.addDataTag(this))
+      .forEach(ref => ref.addDataTag(this))
   }
 
   // PUBLIC METHODS =====================================================================
@@ -321,9 +333,17 @@ export class Class_DataTag extends Class_ProtoTag {
       })
   }
 
-  public copyFrom(element: Class_DataTag) {
-    super.copyFrom(element)
-    // TODO how to deal with references ?
+  /**
+   * Copy all attributes from input tags + Set the same refs
+   *
+   * @param {Class_DataTag} tag
+   * @memberof Class_DataTag
+   */
+  public copyFrom(tag: Class_DataTag) {
+    super.copyFrom(tag)
+    // No need for reference synchro here
+    // -> will be done from new links creation / removal
+    // + will be done from new datatags creation / removal
   }
 
   // PROTECTED METHODS ==================================================================
@@ -358,8 +378,8 @@ export class Class_LevelTag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  private _references_parents: { [_: string]: Class_NodeDimension } = {}
-  private _references_children: { [_: string]: Class_NodeDimension } = {}
+  private _dimensions_as_tag_for_parent: { [_: string]: Class_NodeDimension } = {}
+  private _dimensions_as_tag_for_children: { [_: string]: Class_NodeDimension } = {}
 
   // CONSTRUCTOR ========================================================================
 
@@ -387,18 +407,166 @@ export class Class_LevelTag extends Class_ProtoTag {
    * @memberof Class_Tag
    */
   protected cleanForDeletion() {
-    // TODO
+    // Need to delete references
+    this.dimensions_list_as_tag_for_children
+      .forEach(dim => dim.removeTagFromChildrenLevelTag(this))
+    this._dimensions_as_tag_for_children = {}
+    this.dimensions_list_as_tag_for_parent
+      .forEach(dim => dim.delete())
+    this._dimensions_as_tag_for_parent = {}
+    // Let the garbage collector do the rest
   }
 
-  public copyFrom(element:Class_DataTag){
-    super.copyFrom(element)
-    // TODO how to deal with references ?
+  /**
+   * Copy all attributes from input tags + Set the same refs
+   *
+   * @param {Class_DataTag} tag
+   * @memberof Class_DataTag
+   */
+  public copyFrom(tag: Class_LevelTag) {
+    // Copy herited attributes
+    super.copyFrom(tag)
+    // Get all existing references ------------------------------------------------------
+    // Create a dict of all existing node in this related sankey
+    const all_existing_nodes = this._ref_sankey.nodes_dict
+    // Create a dict of all existing dimensions in this related sankey
+    const all_existing_dim: {[_: string]: Class_NodeDimension} = {}
+    this._ref_sankey.level_taggs_list
+      .forEach(tagg => {
+        tagg.tags_list
+          .forEach(tag => {
+            // Chech children dimensions
+            tag.dimensions_list_as_tag_for_children
+              .filter(dim => !(dim.id in all_existing_dim))
+              .forEach(dim => all_existing_dim[dim.id] = dim)
+            // Check parent dimensions
+            tag.dimensions_list_as_tag_for_parent
+              .filter(dim => !(dim.id in all_existing_dim))
+              .forEach(dim => all_existing_dim[dim.id] = dim)
+          })
+      })
+    // Synchro dimensions where tag is for children -------------------------------------
+    // Add missing but existing dimensions where this is a tag for children
+    tag.dimensions_list_as_tag_for_children
+      .filter(dim => {
+        return (
+          (dim.id in all_existing_dim) &&
+          !(dim.id in this._dimensions_as_tag_for_children)
+        )
+      })
+      .forEach(dim => {
+        this.addAsChildrenLevel(all_existing_dim[dim.id])
+      })
+    // Add missing and non-existing dimensions where this is a tag for children
+    tag.dimensions_list_as_tag_for_children
+      .filter(dim => {
+        // Verify if there is at least one child that exist in related sankey
+        let at_least_one_match_for_children = false
+        dim.children
+          .forEach(child => at_least_one_match_for_children = (
+            (at_least_one_match_for_children) ||
+            (child.id in all_existing_nodes)))
+        // And verify that parent also exists in related sankey
+        // And that related tag for parent is in the same group
+        return (
+          !(dim.id in all_existing_dim) &&
+          (dim.parent.id in all_existing_nodes) &&
+          (at_least_one_match_for_children) &&
+          (dim.parent_level_tag.id in this.group.tags_dict)
+        )
+      })
+      .forEach(dim => {
+        const parent = all_existing_nodes[dim.parent.id]
+        const children = dim.children.map(_ => all_existing_nodes[_.id])
+        const parent_level_tag = this.group.tags_dict[dim.parent_level_tag.id]
+        const new_dim = new Class_NodeDimension(
+          parent,
+          children,
+          parent_level_tag,
+          [this],
+          dim.id
+        )
+        this.addAsChildrenLevel(new_dim)
+      })
+    // Remove existing dimension where this tag is no more
+    this.dimensions_list_as_tag_for_children
+      .filter(dim => {
+        return (
+          !(dim.id in tag._dimensions_as_tag_for_children)
+        )
+      })
+      .forEach(dim => this.removeChildrenLevel(dim))
+    // Synchro dimensions where tag is for parents --------------------------------------
+    // Add missing but existing dimensions where this is a tag for parent
+    tag.dimensions_list_as_tag_for_parent
+      .filter(dim => {
+        return (
+          (dim.id in all_existing_dim) &&
+          !(dim.id in this._dimensions_as_tag_for_parent)
+        )
+      })
+      .forEach(dim => {
+        this.addAsParentLevel(all_existing_dim[dim.id])
+      })
+    // Add missing and non-existing dimensions where this is a tag for parent
+    tag.dimensions_list_as_tag_for_parent
+      .filter(dim => {
+        // Verify if there is at least one child that exist in related sankey
+        let ok_for_children_nodes = false
+        dim.children
+          .forEach(child => ok_for_children_nodes = (
+            (ok_for_children_nodes) ||
+            (child.id in all_existing_nodes)))
+        // And that related tag for parent is in the same group
+        let ok_children_level_tags = false
+        dim.children_level_tags
+            .forEach(tag => ok_children_level_tags = (
+              (ok_children_level_tags) ||
+              (tag.id in this.group.tags_dict)
+            ))
+        // And verify that parent also exists in related sankey
+        return (
+          !(dim.id in all_existing_dim) &&
+          (dim.parent.id in all_existing_nodes) &&
+          (ok_for_children_nodes) &&
+          (ok_children_level_tags)
+        )
+      })
+      .forEach(dim => {
+        const parent = all_existing_nodes[dim.parent.id]
+        const children = dim.children.map(_ => all_existing_nodes[_.id])
+        const children_level_tag = dim.children_level_tags
+          .filter(tag => tag.id in this.group.tags_dict)
+          .map(tag => this.group.tags_dict[tag.id])
+        const new_dim = new Class_NodeDimension(
+          parent,
+          children,
+          this,
+          children_level_tag,
+          dim.id
+        )
+        this.addAsParentLevel(new_dim)
+      })
+    // Remove existing dimension where this tag is no more
+    this.dimensions_list_as_tag_for_parent
+      .filter(dim => {
+        return (
+          !(dim.id in tag._dimensions_as_tag_for_parent)
+        )
+      })
+      .forEach(dim => this.removeParentLevel(dim))
   }
 
   // PUBLIC METHODS =====================================================================
 
   public update() {
-    // TODO
+    this.dimensions_list_as_tag_for_children
+      .forEach(dim => {
+        dim.children
+          .forEach(child => child.draw())
+      })
+    this.dimensions_list_as_tag_for_parent
+      .forEach(dim => dim.parent.draw())
   }
 
   public getOrCreateLowerDimension(
@@ -428,7 +596,7 @@ export class Class_LevelTag extends Class_ProtoTag {
         })
       // If found - just add child
       if (dimension_found) {
-        dimension_found.addNodeAsChildren(child)
+        dimension_found.addNodeAsChild(child)
       }
       // If no dimension has been found, create a new one
       else  {
@@ -446,37 +614,37 @@ export class Class_LevelTag extends Class_ProtoTag {
   }
 
   public isLevelForChildren(_: Class_NodeDimension) {
-    return (this._references_children[_.id] !== undefined)
+    return (this._dimensions_as_tag_for_children[_.id] !== undefined)
   }
 
   public isLevelForParent(_: Class_NodeDimension) {
-    return (this._references_parents[_.id] !== undefined)
+    return (this._dimensions_as_tag_for_parent[_.id] !== undefined)
   }
 
   public addAsChildrenLevel(_: Class_NodeDimension) {
     if (!this.isLevelForChildren(_)) {
-      this._references_children[_.id] = _
+      this._dimensions_as_tag_for_children[_.id] = _
       _.addTagAsChildrenLevelTag(this)
     }
   }
 
   public addAsParentLevel(_: Class_NodeDimension) {
     if (!this.isLevelForParent(_)) {
-      this._references_parents[_.id] = _
+      this._dimensions_as_tag_for_parent[_.id] = _
       _.parent_level_tag = this
     }
   }
 
   public removeChildrenLevel(_: Class_NodeDimension) {
     if (this.isLevelForChildren(_)) {
-      delete this._references_children[_.id]
+      delete this._dimensions_as_tag_for_children[_.id]
       _.removeTagFromChildrenLevelTag(this)
     }
   }
 
   public removeParentLevel(_: Class_NodeDimension) {
     if (this.isLevelForParent(_)) {
-      delete this._references_parents[_.id]
+      delete this._dimensions_as_tag_for_parent[_.id]
       _.delete()
     }
   }
@@ -494,11 +662,11 @@ export class Class_LevelTag extends Class_ProtoTag {
   }
 
   public get dimensions_list_as_tag_for_parent() {
-    return Object.values(this._references_parents)
+    return Object.values(this._dimensions_as_tag_for_parent)
   }
 
   public get dimensions_list_as_tag_for_children() {
-    return Object.values(this._references_children)
+    return Object.values(this._dimensions_as_tag_for_children)
   }
 }
 
