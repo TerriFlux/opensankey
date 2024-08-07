@@ -3177,6 +3177,10 @@ export class Class_NodeElement extends Class_Element {
   }
 
   private get is_related_level_selected() {
+    // Draw by default if there is no dimensions
+    if (!this.is_child && !this.is_parent)
+      return true
+    // If there is any dimension - check them
     let ok_dimension: boolean = false
     // Check dimensions where node is tagged as a child
     Object.values(this._dimensions_as_child)
@@ -3186,13 +3190,7 @@ export class Class_NodeElement extends Class_Element {
       Object.values(this._dimensions_as_parent)
         .forEach(dim => ok_dimension = ok_dimension || dim.show_parent)
     }
-    return (
-      (ok_dimension) ||
-      (
-        (Object.keys(this._dimensions_as_child).length === 0) &&
-        (Object.keys(this._dimensions_as_parent).length === 0)
-      )
-    )
+    return ok_dimension
   }
 
   private get tooltip_html() {
@@ -3994,8 +3992,8 @@ export class Class_NodeDimension {
 
   public get show_parent() {
     return (
-      (this._show_parent && !this._show_children) ||
-      this.parent_level_tag.is_selected
+      (!this._show_children) &&
+      ((this._show_parent) || (this.parent_level_tag.is_selected))
     )
   }
   public get show_children() {
@@ -4003,8 +4001,8 @@ export class Class_NodeDimension {
     this.children_level_tags
       .forEach(tag => ok_children_level_tags = (ok_children_level_tags || tag.is_selected))
     return (
-      (!this._show_parent && this._show_children) ||
-      (ok_children_level_tags)
+      (!this._show_parent) &&
+      ((this._show_children) || (ok_children_level_tags))
     )
   }
 }
