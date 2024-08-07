@@ -210,54 +210,11 @@ export abstract class Class_ProtoElement {
   }
 
   /**
-   * Convert element to JSON
-   *
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public toJSON() {
-    // Init output JSON
-    const json_object: Type_JSON = {}
-    // Fill data
-    json_object['is_visible'] = this._is_visible
-    json_object['is_selected'] = this._is_selected
-    // Return
-    return json_object
-  }
-
-  /**
-   * Apply json to element
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_NodeElement
-   */
-  public fromJSON(json_object: Type_JSON) {
-    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
-    this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
-  }
-
-  // PROTECTED METHODES =================================================================
-
-  /**
-   * Unset element from d3 svg area
-   * @protected
-   * @memberof Class_Element
-   */
-  protected unDraw() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.remove()
-      this.d3_selection = null
-    }
-  }
-
-  protected abstract drawAsSelected(): void
-
-  /**
    * Set up events related to element d3_element
    * @protected
    * @memberof Class_Element
    */
-  protected setEventsListeners() {
+  public setEventsListeners() {
     if (!this._display.drawing_area.static) {
       // Right mouse button clicks
       this.d3_selection?.on(
@@ -317,6 +274,49 @@ export abstract class Class_ProtoElement {
       }
     }
   }
+
+  /**
+   * Convert element to JSON
+   *
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public toJSON() {
+    // Init output JSON
+    const json_object: Type_JSON = {}
+    // Fill data
+    json_object['is_visible'] = this._is_visible
+    json_object['is_selected'] = this._is_selected
+    // Return
+    return json_object
+  }
+
+  /**
+   * Apply json to element
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_NodeElement
+   */
+  public fromJSON(json_object: Type_JSON) {
+    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
+    this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
+  }
+
+  // PROTECTED METHODES =================================================================
+
+  /**
+   * Unset element from d3 svg area
+   * @protected
+   * @memberof Class_Element
+   */
+  protected unDraw() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.remove()
+      this.d3_selection = null
+    }
+  }
+
+  protected abstract drawAsSelected(): void
 
   /**
    * Deal with simple left Mouse Button (LMB) click on given element

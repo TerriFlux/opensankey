@@ -38,17 +38,16 @@ import { Class_LinkElement } from '../types/Link'
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   {
     applicationData,
-    applicationContext,
     menu_config_link_data,
     menu_config_link_attr,
   }
 ) => {
   // Data -------------------------------------------------------------------------------
 
-  // Traduction
-  const { t } = applicationContext
   // Data
   const { new_data } = applicationData
+  // Traduction
+  const { t } =new_data
 
   // Links to display in selection menus ------------------------------------------------
 
@@ -129,7 +128,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     />,
     'Flux.IS': <MenuConfigurationLinksTooltip
       applicationData={applicationData}
-      applicationContext={applicationContext}
       menu_for_modal={false}
     />
   }
@@ -139,7 +137,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     (new_data.menu_configuration.isGivenAccordionShowed('EF'))
   ) {
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
-      applicationContext={applicationContext}
       applicationData={applicationData}
       menu_for_modal={false}
     />

@@ -108,10 +108,8 @@ import { default_style_id } from '../types/Sankey'
  * @return {*}
  */
 export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
-  applicationContext,
   applicationData,
   menu_for_style,
-  ref_selected_style_node,
   advanced_appearence_content,
   advanced_label_content,
   advanced_label_value_content,
@@ -120,7 +118,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t } = applicationContext
+  const { t } = applicationData.new_data
   // Get data
   const { new_data } = applicationData
 
@@ -139,7 +137,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Elements on which menu modification applies
   let elements: Class_NodeStyle[] | Class_NodeElement[]
   if (menu_for_style) {
-    elements = [new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]]
+    elements = [new_data.drawing_area.sankey.node_styles_dict[new_data.menu_configuration.ref_selected_style_node.current]]
   }
   else {
     elements = selected_nodes
@@ -1097,7 +1095,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 <MenuItem
                   key={style.id}
                   onClick={() => {
-                    ref_selected_style_node.current = style.id
+                    new_data.menu_configuration.ref_selected_style_node.current = style.id
                     selected_nodes.map(node => {
                       node.style = style
                     })

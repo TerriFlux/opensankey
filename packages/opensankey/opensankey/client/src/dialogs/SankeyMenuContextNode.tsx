@@ -28,9 +28,7 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 
 export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
   {
-    applicationContext,
     applicationData,
-    dict_hook_ref_setter_show_dialog_components,
     agregation,
     additional_context_element_menu,
     additional_context_element_other
@@ -39,9 +37,9 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   // Datas ------------------------------------------------------------------------------
 
-  const { t } = applicationContext
   const { new_data } = applicationData
-
+  const { t } = new_data
+  const {ref_setter_show_menu_node_apparence, ref_setter_show_menu_node_tooltip, ref_setter_show_menu_node_io, ref_setter_show_menu_node_tags}=new_data.menu_configuration.dict_setter_show_dialog
   // Node on which this menu applies ----------------------------------------------------
 
   const contextualised_node = new_data.drawing_area.node_contextualised
@@ -156,7 +154,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   const dropdown_c_n_apparence = <Button
     onClick={() => {
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(true)
+      ref_setter_show_menu_node_apparence.current(true)
       closeContextMenu()
     }}
     variant='contextmenu_button'
@@ -167,7 +165,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   const dropdown_c_n_tooltip = <Button
     onClick={() => {
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(true)
+      ref_setter_show_menu_node_tooltip.current(true)
       closeContextMenu()
     }}
     variant='contextmenu_button'
@@ -230,7 +228,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   const dropdown_c_n_io = <Button
     onClick={() => {
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
+      ref_setter_show_menu_node_io.current(true)
       closeContextMenu()
     }}
     variant='contextmenu_button'
@@ -551,7 +549,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   const btn_c_n_show_tags_menu = <Button
     onClick={() => {
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
+      ref_setter_show_menu_node_tags.current(true)
       closeContextMenu()
     }}
     variant='contextmenu_button'

@@ -53,7 +53,6 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
 export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigurationsMenusFType> = (
   {
     applicationData,
-    applicationContext,
     menu_configuration_layout,
     menu_configuration_node_tags,
     menu_configuration_link_tags,
@@ -67,7 +66,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = applicationContext
+  const { t } = applicationData.new_data
   const { new_data } = applicationData
   const config_object = new_data.menu_configuration
 
@@ -148,7 +147,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
             </AccordionButton>
             <AccordionPanel>
               <SankeyNodeEdition
-                applicationContext={applicationContext}
                 applicationData={applicationData}
                 menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
               />
@@ -172,7 +170,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
             <AccordionPanel>
               <SankeyMenuConfigurationLinks
                 applicationData={applicationData}
-                applicationContext={applicationContext}
                 menu_config_link_data={menu_config_link_data}
                 menu_config_link_attr={menu_config_link_attr}
               />

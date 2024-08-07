@@ -3,9 +3,7 @@ import {MutableRefObject } from 'react'
 import { TFunction } from 'i18next'
 
 import {
-  ComponentUpdaterType,
   SankeyData,
-  applicationContextType,
   dict_hook_ref_setter_show_dialog_componentsType,
   applicationDataType,
   processFunctionsType
@@ -18,8 +16,6 @@ export type OpenSankeyMenusFType = (
   t:TFunction,
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  never_see_again:MutableRefObject<boolean>,
   applicationData:applicationDataType,
   external_edition_item:JSX.Element[],
   external_file_item:JSX.Element[],
@@ -32,10 +28,10 @@ export type OpenSankeyMenusFType = (
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 
 export type SankeyModalWelcomeFType = {
+  applicationData:applicationDataType,
   t:TFunction,
   active_page : string,
   // set_active_page : (_:string)=>void,
-  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again : MutableRefObject<boolean>,
   additional_shortcut_item:JSX.Element[],
   external_pagination:{[x:string]:JSX.Element},
@@ -53,40 +49,21 @@ export type MenuDraggableFType = {
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   dialog_name: keyof dict_hook_ref_setter_show_dialog_componentsType,
   content:JSX.Element|JSX.Element[],
-  pointer_pos:{current:number[]},
   title:string,
 }
 
 export type OpenSankeySaveButtonFType = {
   applicationData:applicationDataType,
-  applicationContext:applicationContextType
-}
-
-export type LastCheckpointTimeFType = (t:TFunction,ComponentUpdater:ComponentUpdaterType) => JSX.Element
-export type SankeyMenuFileExportFType=(
-  t:TFunction,
-  data:SankeyData,
-  additonal_export_item:JSX.Element[]
-  )=> JSX.Element
-
-export type ToastWaitFuncFType={
-  applicationData:applicationDataType,
-  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  applicationContext:applicationContextType
 }
 
 export type Modale_resolution_pngFType=(
   t:TFunction,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   applicationData:applicationDataType,
-  pointer_pos:{current:number[]},
-
 
   )=> JSX.Element
 
 export type ModalTutoType={
     applicationData:applicationDataType,
-    applicationContext:applicationContextType,
     processFunctions:processFunctionsType,
     formations_menu: object,
     show_tuto:boolean,

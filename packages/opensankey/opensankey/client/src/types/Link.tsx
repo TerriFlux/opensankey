@@ -316,6 +316,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     is_dragged: boolean
   }
 
+  // Boolean var only used when enlarging thickness when mouse hovering link
+  private _artifical_enlargement: boolean = false
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -705,9 +708,9 @@ export class Class_LinkElement extends Class_ProtoElement {
 
   public fromJSON(
     json_object: Type_JSON,
-    matching_nodes_id: {[_: string]: string} = {},
-    matching_taggs_id: {[_: string]: string} = {},
-    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    matching_nodes_id: { [_: string]: string } = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     // Root attributes
     super.fromJSON(json_object)
@@ -800,6 +803,16 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (element._display.position_y_label !== undefined) this._display.position_y_label = element._display.position_y_label
   }
 
+  /**
+   * Return maximum value possible for this link
+   *
+   * @return {*} 
+   * @memberof Class_LinkElement
+   */
+  public getMaxValue() {
+    return this._values.getMaxValue()
+  }
+
   public getAllValues() {
     return this._values.getAllValues()
   }
@@ -890,7 +903,33 @@ export class Class_LinkElement extends Class_ProtoElement {
       // this.drawing_area.purgeSelection()
       // Show tooltip
       this.drawTooltip()
+    } else if (this.thickness < 15) {
+      this._artifical_enlargement = true
+      // Artificially enlarge link thickness if too thin
+      this.d3_selection?.select('.link_path').attr('stroke-width', 15)
     }
+  }
+
+  /**
+   * Define event when mouse move out of element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseOut(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    super.eventMouseOut(event)
+
+    // Clear tooltip
+    d3.selectAll('.sankey-tooltip').remove()
+
+    // reset link thickness
+    if (this._artifical_enlargement) {
+      this._artifical_enlargement = false
+      this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
+    }
+
   }
 
   // PRIVATE METHODS ====================================================================
@@ -917,15 +956,15 @@ export class Class_LinkElement extends Class_ProtoElement {
         .attr('stroke', () => this.getPathColorToUse())
         .attr('stroke-opacity', this.shape_opacity)
         .attr('stroke-width', this.thickness)
-        .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
+        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '5,3' : '')
     }
   }
 
-  private drawLabel() {
+  public drawLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.value_label_is_visible) {
+    if (this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -1491,17 +1530,19 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     // Value can be null if not specified by user
     if (data_value) {
+      text_value = data_value.toString()
+
       // Do we need to keep only N significant numbers ?
-      if (this.value_label_scientific_precision > 0) {
+      if (this.value_label_to_precision && this.value_label_scientific_precision > 0) {
         // 12345.67 avec nb_sign = 4 devient 12340
         text_value = data_value.toPrecision(this.value_label_scientific_precision)
         data_value = parseFloat(text_value)
       }
       //
-      if (this.value_label_to_precision) {
-        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        text_value = data_value.toPrecision()
-      }
+      // if (this.value_label_to_precision) {
+      //   // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+      //   text_value = data_value.toPrecision()
+      // }
       else if (this.value_label_custom_digit) {
         text_value = data_value.toFixed(this.value_label_nb_digit)
       }
@@ -2256,15 +2297,21 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   public get thickness() {
-    const scale = d3.scaleLinear()
-      .domain([0, this.drawing_area.scale])
-      .range([0, 100])
+    // Get link value for current dataTaggs selected
     const data_value = this.data_value
-    return Math.max(1, scale(
-      (data_value !== null) ?
-        data_value :
-        1)
-    )
+    // Scale this value for the drawing area
+    const linkValueInPx = this.drawing_area.scaleValueToPx((data_value !== null) ? data_value : 1)
+
+    // If link processed size is inferior to min. limit return min. limit
+    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
+      return this.drawing_area.minimum_flux
+    }
+    // If link processed size is superior to max. limit return max. limit
+    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
+      return this.drawing_area.maximum_flux
+    }
+
+    return linkValueInPx
   }
 
   public get position_x_start() {
@@ -3765,8 +3812,8 @@ export class Class_LinkValueTree {
 
   public fromJSON(
     json_object: Type_JSON,
-    matching_taggs_id: {[_: string]: string} = {},
-    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
     // So it is not necessary to read datatag group -> it should be the same as in JSON
@@ -3784,6 +3831,22 @@ export class Class_LinkValueTree {
             )
         })
     }
+  }
+
+  /**
+   * Browse children & search for the maximum value among them
+   *
+   * @return {*} 
+   * @memberof Class_LinkValueTree
+   */
+  public getMaxValue() {
+    let max: number | null = null
+    Object.entries(this.children)
+      .forEach(child => {
+        const _ = child[1].getMaxValue()
+        max = ((max ?? 0) <= _ ? _ : max)
+      })
+    return max
   }
 
   public getAllValues() {
@@ -3999,6 +4062,16 @@ export class Class_LinkValue {
     }
   }
 
+  /**
+   * Function that can be used instead of the one in Class_linkValueTree so the recursive function stop & return a value
+   *
+   * @return {*} 
+   * @memberof Class_LinkValue
+   */
+  public getMaxValue() {
+    return this.data_value
+  }
+
   public getAllValues() {
     const tmp: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined] } = {}
     if (this.data_tag)
@@ -4047,8 +4120,8 @@ export class Class_LinkValue {
    */
   public fromJSON(
     json_object: Type_JSON,
-    matching_taggs_id: {[_: string]: string} = {},
-    matching_tags_id: {[_: string]: {[_: string]: string}} = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
     // Update attributes

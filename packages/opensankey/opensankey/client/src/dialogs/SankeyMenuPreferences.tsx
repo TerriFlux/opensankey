@@ -16,14 +16,12 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 // COMPONENTS ===========================================================================
 
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
-  applicationContext,
   applicationData,
   trad,
-  node_function
 )=>{
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
-  const { new_data, data, display_nodes } = applicationData
+  const { t } = applicationData.new_data
+  const { new_data, data } = applicationData
 
   // Component updater ------------------------------------------------------------------
 
@@ -153,7 +151,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           onChange={evt=>{
             data.node_label_separator = evt.target.value  // TODO passer dans new_data
           }}
-          onBlur={()=>node_function.RedrawNodes(Object.values(display_nodes))}
+          onBlur={()=>new_data.drawing_area.sankey.visible_nodes_list.forEach(node=>node.draw())}
         />
       </Box></OSTooltip>,
   }
@@ -163,10 +161,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
 
 export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
   {
-    dict_hook_ref_setter_show_dialog_components,
+    applicationData,
     ui,
-    t,
-    pointer_pos
+    t
   }
 )=>{
   const content = <>
@@ -176,10 +173,9 @@ export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
   </>
 
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_preference'}
     content={content}
-    pointer_pos={pointer_pos}
     title={t('Menu.title_pref')}
   />
 }
