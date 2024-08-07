@@ -1530,17 +1530,19 @@ export class Class_LinkElement extends Class_ProtoElement {
     }
     // Value can be null if not specified by user
     if (data_value) {
+      text_value = data_value.toString()
+
       // Do we need to keep only N significant numbers ?
-      if (this.value_label_scientific_precision > 0) {
+      if (this.value_label_to_precision && this.value_label_scientific_precision > 0) {
         // 12345.67 avec nb_sign = 4 devient 12340
         text_value = data_value.toPrecision(this.value_label_scientific_precision)
         data_value = parseFloat(text_value)
       }
       //
-      if (this.value_label_to_precision) {
-        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        text_value = data_value.toPrecision()
-      }
+      // if (this.value_label_to_precision) {
+      //   // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+      //   text_value = data_value.toPrecision()
+      // }
       else if (this.value_label_custom_digit) {
         text_value = data_value.toFixed(this.value_label_nb_digit)
       }
