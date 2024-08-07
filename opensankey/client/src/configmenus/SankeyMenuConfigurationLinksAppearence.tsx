@@ -78,7 +78,7 @@ import {
   TooltipValueSurcharge,
   OSTooltip,
   CutName
-} from './SankeyUtils'
+} from '../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/

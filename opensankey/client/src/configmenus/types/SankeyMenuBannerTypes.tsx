@@ -1,14 +1,10 @@
 import { TFunction } from 'i18next'
 import { 
-  SankeyData, applicationDataType } from '../../types/Types'
-import { ConvertDataFuncType } from './SankeyConvertTypes'
-import { DefaultSankeyDataFuncType } from './SankeyUtilsTypes'
+  applicationDataType } from '../../types/Types'
 
 export type setDiagramFuncType = (
-  the_diagram: string,
-  set_data: (d: SankeyData) => void,
-  convert_data: ConvertDataFuncType,
-  DefaultSankeyData:DefaultSankeyDataFuncType
+  the_diagram:string,
+  applicationData:applicationDataType
 ) => void
 
 export type addSimpleLevelDropDownFType = {

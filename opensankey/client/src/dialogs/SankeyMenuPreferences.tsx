@@ -9,7 +9,7 @@ import {
 } from './types/SankeyMenuPreferencesTypes'
 
 // Internal components / functions
-import { OSTooltip } from '../configmenus/SankeyUtils'
+import { OSTooltip } from '../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 

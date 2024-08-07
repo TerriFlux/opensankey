@@ -23,7 +23,6 @@ import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuCon
 import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
-import * as SankeyConvert from './configmenus/SankeyConvert'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
 import { AddSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
@@ -84,7 +83,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
     data : data,
     set_data : set_data,
     get_default_data : get_default_data,
-    convert_data : SankeyConvert.convert_data,
+    // convert_data : convert_data_legacy,
     dataVarToUpdate:useRef(['']),
     setDiagram:setDiagram,
     new_data: application_data

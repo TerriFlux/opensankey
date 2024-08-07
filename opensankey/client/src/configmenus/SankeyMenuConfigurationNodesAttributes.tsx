@@ -86,7 +86,7 @@ import {
   CutName,
   OSTooltip,
   TooltipValueSurcharge,
-} from './SankeyUtils'
+} from '../types/Utils'
 import { default_style_id } from '../types/Sankey'
 
 /*************************************************************************************************/

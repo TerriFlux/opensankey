@@ -12,7 +12,6 @@ import { MouseEvent } from 'react'
 import {
   Type_JSON,
   Type_Structure,
-  convert_data_legacy,
   default_background_color,
   default_black_color,
   default_grid_color,
@@ -43,6 +42,7 @@ import {
 import { Class_Legend } from './Legend'
 import { Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
+import { convert_data_legacy } from './Legacy'
 
 // CONSTANTS ****************************************************************************
 const initial_show_structure = 'reconciled'

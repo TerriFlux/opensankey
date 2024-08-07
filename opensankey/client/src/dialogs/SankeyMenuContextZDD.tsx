@@ -3,9 +3,9 @@ import React, { FunctionComponent, useState } from 'react'
 import { ContextMenuZddFType } from './types/SankeyMenuContextZDDTypes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { GetRandomInt } from '../configmenus/SankeyUtils'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Input, NumberInput, NumberInputField } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
+import { GetRandomInt } from '../types/Legacy'
 
 const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />

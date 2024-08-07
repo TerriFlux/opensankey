@@ -16,7 +16,7 @@ import {
 // Local components or functions
 import {
   OSTooltip
-} from './SankeyUtils'
+} from '../types/Utils'
 import { Class_LinkElement, default_value_label_unit } from '../types/Link'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
