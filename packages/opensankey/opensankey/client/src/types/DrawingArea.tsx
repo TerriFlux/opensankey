@@ -18,6 +18,7 @@ import {
   default_grid_color,
   getBooleanFromJSON,
   getNumberFromJSON,
+  getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringOrUndefinedFromJSON
 } from './Utils'
@@ -466,9 +467,7 @@ export class Class_DrawingArea {
   public set scale(value: number) {
     if (value > 0) {
       this._scale = value
-      this._scaleValueToPx = d3.scaleLinear()
-        .domain([0, default_scale])
-        .range([0, 100])
+      this._scaleValueToPx.domain([0, value])
       this.drawElements()
     }
   }
@@ -858,6 +857,10 @@ export class Class_DrawingArea {
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
+    this._scaleValueToPx.domain([0,this._scale])
+    this._minimum_flux=getNumberOrUndefinedFromJSON(json_object,'minimum_flux')
+    this._maximum_flux=getNumberOrUndefinedFromJSON(json_object,'maximum_flux')
+    this._filter_label=getNumberFromJSON(json_object,'filter_label',0)
     // Update legend
     this._legend.fromJSON(json_object)
     // Update Sankey
@@ -892,6 +895,10 @@ export class Class_DrawingArea {
     json_object['v_space'] = this._vertical_spacing
     json_object['user_scale'] = this._scale
     json_object['couleur_fond_sankey'] = this._color
+    if(this._maximum_flux)json_object['maximum_flux'] = this._maximum_flux
+    if(this._minimum_flux)json_object['minimum_flux'] = this._minimum_flux
+    json_object['filter_label'] = this._filter_label
+
     // Dump with json of contained elements
     return {
       ...json_object,
