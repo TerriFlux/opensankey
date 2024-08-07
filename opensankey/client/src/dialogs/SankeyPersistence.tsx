@@ -1,5 +1,4 @@
 import React,{ FunctionComponent, useEffect, useState, } from 'react'
-import * as d3 from 'd3'
 
 import {
   Box,
@@ -19,8 +18,6 @@ import FileSaver from 'file-saver'
 
 import {
   processFunctionsType,
-  dict_hook_ref_setter_show_dialog_componentsType,
-  applicationContextType,
   applicationDataType,
   SankeyData,
 } from '../types/Types'
@@ -41,9 +38,7 @@ import {
 import {
   DefaultSankeyDataFuncType
 } from '../configmenus/types/SankeyUtilsTypes'
-import {
-  updateLayoutFuncType
-} from '../draw/types/SankeyDrawLayoutTypes'
+
 
 /*************************************************************************************************/
 
@@ -51,26 +46,18 @@ import {
   DataSuiteType,
   DefaultLink,
   DefaultNode,
-  SetNodeStyleToTypeNode,
-  layout_type,
 } from '../configmenus/SankeyUtils'
 import {
   complete_sankey_data
 } from '../configmenus/SankeyConvert'
-import {
-  ComputeAutoSankey,
-  compute_default_input_outputLinksId
-} from '../draw/SankeyDrawLayout'
 import { Type_JSON } from '../types/Utils'
 
 
 /* FILE LOADING COMPONENTS *************************************************************/
 
 interface SankeyLoadProdTypes {
-  applicationContext: applicationContextType,
   applicationData: applicationDataType,
   successAction: () => void,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType
 }
 
@@ -86,18 +73,17 @@ interface SankeyLoadProdTypes {
  * @return {*}
  */
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
-  applicationContext,
   applicationData,
   successAction,
   processFunctions,
-  dict_hook_ref_setter_show_dialog_components,
+  // postProcessLoadExcel
 }) => {
-  const { t, url_prefix } = applicationContext
-  const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults } = processFunctions
+  const { t, url_prefix } = applicationData.new_data
+  const { ref_processing, ref_setter_processing, failure, ref_result, not_started } = processFunctions
 
   const [value,setValue] = useState([1,2])
   const [show_load_dialog,set_show_load_dialog] = useState(false)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_load.current=set_show_load_dialog
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_load.current=set_show_load_dialog
   const [result,set_result] = useState('')
   ref_result.current = set_result
   const [processing,set_processing] = useState(false)
@@ -128,7 +114,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
 
   if (!not_started.current && !processing) {
     const path = window.location.href
-    const url = path + applicationContext.url_prefix + 'loads_retrieves_result'
+    const url = path + applicationData.new_data.url_prefix + 'loads_retrieves_result'
     const form_data = new FormData()
     const fetchData = {
       method: 'POST',
@@ -461,67 +447,66 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 // TODO s'en occuper
 export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
-  updateLayout: updateLayoutFuncType,
   convert_data: ConvertDataFuncType,
   postProcessLoadExcel: (server_data: SankeyData) => void,
   DefaultSankeyData: () => SankeyData
 
 ): SankeyData => {
-  const {data}=applicationData
-  complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
-  convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
-  if ((data as SankeyData & layout_type).layout === undefined) {
-    // Compute node position of all node according to their level tags
-    const lvl_tag_keys=Object.keys(data.levelTags)
-    // If data only have level Tag 'Primaire' then compute node position at each levle
-    if( (lvl_tag_keys.length == 1) && lvl_tag_keys[0]==='Primaire' ){
-      const prim=lvl_tag_keys[0]
-      Object.values(data.levelTags[prim].tags).reverse().forEach(tag_prim=>{
-      // Deselect all Primaire tags
-        Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
-        // Select current tag to compute position
-        tag_prim.selected=true
-        ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
-      })
-    }else if((lvl_tag_keys.length > 1)){
-    // If data have multiple level Tag
-    // then compute node position at each level of each level tag group
-    // except 'Primaire'
+//   const {data}=applicationData
+//   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
+//   convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
+//   if ((data as SankeyData & layout_type).layout === undefined) {
+//     // Compute node position of all node according to their level tags
+//     const lvl_tag_keys=Object.keys(data.levelTags)
+//     // If data only have level Tag 'Primaire' then compute node position at each levle
+//     if( (lvl_tag_keys.length == 1) && lvl_tag_keys[0]==='Primaire' ){
+//       const prim=lvl_tag_keys[0]
+//       Object.values(data.levelTags[prim].tags).reverse().forEach(tag_prim=>{
+//       // Deselect all Primaire tags
+//         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
+//         // Select current tag to compute position
+//         tag_prim.selected=true
+//         ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+//       })
+//     }else if((lvl_tag_keys.length > 1)){
+//     // If data have multiple level Tag
+//     // then compute node position at each level of each level tag group
+//     // except 'Primaire'
 
-      lvl_tag_keys.filter(kt=>kt!=='Primaire').forEach(kt=>{
-        Object.values(data.levelTags[kt].tags).reverse().forEach(tag_prim=>{
-        // Deselect all tags of the current grp tag
-          Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
-          // Select current tag to compute position
-          tag_prim.selected=true
-          ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
-        })
-      })
+  //       lvl_tag_keys.filter(kt=>kt!=='Primaire').forEach(kt=>{
+  //         Object.values(data.levelTags[kt].tags).reverse().forEach(tag_prim=>{
+  //         // Deselect all tags of the current grp tag
+  //           Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
+  //           // Select current tag to compute position
+  //           tag_prim.selected=true
+  //           ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+  //         })
+  //       })
 
-    }
-    else{
-      ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+  //     }
+  //     else{
+  //       ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
 
-    }
-    postProcessLoadExcel(data)
-    compute_default_input_outputLinksId(data.nodes, data.links)
-    // Set sector/product style to node only when it come from an excel file and without a layout
-    SetNodeStyleToTypeNode(data)
-  } else {
-    convert_data(
-      {data: (data as SankeyData & layout_type).layout} as applicationDataType, // FIXME when new_data ready for it
-      DefaultSankeyData
-    )
-    complete_sankey_data((data as SankeyData & layout_type).layout, DefaultSankeyData, DefaultNode, DefaultLink)// FIXME when new_data ready for it
-    compute_default_input_outputLinksId(data.nodes, data.links)
-    const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
-    delete (data as SankeyData & { layout?: SankeyData} ).layout
-    updateLayout(data, data_layout, ['posNode', 'attrNode', 'attrFlux', 'attrDrawingArea', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
-    postProcessLoadExcel(data)
-  }
-  d3.select('.loading_auto_compute').remove()
+  //     }
+  //     postProcessLoadExcel(data)
+  //     compute_default_input_outputLinksId(data.nodes, data.links)
+  //     // Set sector/product style to node only when it come from an excel file and without a layout
+  //     SetNodeStyleToTypeNode(data)
+  //   } else {
+  //     convert_data(
+  //       {data: (data as SankeyData & layout_type).layout} as applicationDataType, // FIXME when new_data ready for it
+  //       DefaultSankeyData
+  //     )
+  //     complete_sankey_data((data as SankeyData & layout_type).layout, DefaultSankeyData, DefaultNode, DefaultLink)// FIXME when new_data ready for it
+  //     compute_default_input_outputLinksId(data.nodes, data.links)
+  //     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
+  //     delete (data as SankeyData & { layout?: SankeyData} ).layout
+  //     updateLayout(data, data_layout, ['posNode', 'attrNode', 'attrFlux', 'attrDrawingArea', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
+  //     postProcessLoadExcel(data)
+  //   }
+  //   d3.select('.loading_auto_compute').remove()
 
-  return data
+  return DefaultSankeyData()
 }
 
 /**

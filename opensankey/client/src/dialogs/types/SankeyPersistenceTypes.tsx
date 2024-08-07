@@ -1,12 +1,10 @@
 
-import { SankeyData, postProcessLoadExcelFuncType, applicationDataType } from '../../types/Types'
+import { SankeyData, applicationDataType } from '../../types/Types'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
 
 import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
-import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
 
 /**
  * Description placeholder
@@ -23,7 +21,6 @@ export type CounterType={
 }
 export type ProcessExampleFuncType = (
   applicationData:applicationDataType,
-    updateLayout: updateLayoutFuncType,
     convert_data: ConvertDataFuncType,
     postProcessLoadExcel: (server_data: SankeyData) => void,
     DefaultSankeyData: DefaultSankeyDataFuncType

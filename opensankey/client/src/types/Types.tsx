@@ -1,18 +1,8 @@
-import { TFunction } from 'i18next'
-
-
-import { DrawArrowsType, LinkStrokeFType } from '../draw/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
 import { ClickSaveDiagramFuncType, RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
-import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType, initializeDiagrammSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
-import { LinkTooltipsContentFType, NodeTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
-import { DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType } from '../draw/types/SankeyDrawLinksTypes'
-import { DrawAllNodesFType, drawNodeShapeFType } from '../draw/types/SankeyDrawNodesTypes'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
-import { opposing_DragElementsFuncType } from '../draw/types/SankeyDragTypes'
 import { Class_ApplicationData } from './ApplicationData'
 import { Type_JSON } from './Utils'
 
@@ -318,24 +308,6 @@ export interface SankeyAppState {
   data: SankeyData
 }
 
-export type SankeyDrawCurve={
-  curve: (
-    applicationData: applicationDataType,
-    applicationState: applicationStateType,
-    applicationContext: applicationContextType,
-    display_style: display_styleType,
-    nodeTags: TagsCatalog,
-    l: SankeyLink,
-    error_msg: { text?: string | undefined; } | undefined,
-    LinkText: LinkTextFuncType,
-    GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-    GetLinkValue: GetLinkValueFuncType,
-    DrawArrows: DrawArrowsType,
-    ComponentUpdater: ComponentUpdaterType,
-    scale: (t: number)=>number,
-    inv_scale: (t: number)=>number,
-  ) => string | number | boolean | readonly (string | number)[] | null
-}
 
 export interface treeFolderType{
   id: string
@@ -377,30 +349,12 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_png_res_v: MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
 }
 
-export type uiElementsRefType = {
-  button_ref: MutableRefObject<HTMLLabelElement|null>,
-  accordion_ref: MutableRefObject<HTMLDivElement|null>,
-  links_accordion_ref: MutableRefObject<HTMLDivElement|null>,
-  nodes_accordion_ref: MutableRefObject<HTMLDivElement|null>,
-  ref_setter_nav_item_active: MutableRefObject<Dispatch<SetStateAction<number>>>,
-  ref_nav_item_active: MutableRefObject<number>,
-  ref_setter_sub_nav_item_active: MutableRefObject<Dispatch<SetStateAction<string>>>
-}
 
 
 
-export type contextMenuType = {
-  ref_setter_contextualised_node: MutableRefObject<Dispatch<SetStateAction<SankeyNode|undefined>>|undefined>,
-  ref_contextualised_node: MutableRefObject<SankeyNode|undefined>
-  ref_setter_contextualised_link: MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
-  tagContext: RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
-  closeAllMenuContext: () => void,
-  pointer_pos: { current: number[] },
-  showContextZDDRef: MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]|undefined>
-}
+
+
 export type initializeCloseAllMenuContextType =(
-  ref_setter_contextualised_node: MutableRefObject<Dispatch<SetStateAction<SankeyNode|undefined>>|undefined>,
-  ref_setter_contextualised_link: MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
   tagContext: RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
   showContextZDDRef: MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]|undefined>
 )=>()=>void
@@ -420,13 +374,8 @@ export type processFunctionsType = {
 }
 
 export type applicationDrawType = {
-  GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
-  updateLayout: updateLayoutFuncType,
   all_element_UpdateLayout: string[]
-  reAdjustSankey: ()=>void
-  resizeCanvas: ()=>void
   start_point: React.MutableRefObject<number[]>,
-  reDrawLegend: () => void
 }
 
 export type agregationType = {
@@ -436,15 +385,9 @@ export type agregationType = {
 }
 
 export type MenuTypes = {
-  applicationContext: applicationContextType,
   applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  contextMenu: contextMenuType,
   processFunctions: processFunctionsType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  applicationDraw: applicationDrawType,
   reinitialization: () => void,
-  convert_data: ConvertDataFuncType,
   DiagramSelector: OpenSankeyDiagramSelectorFType,
   configurations_menus: JSX.Element,
   menus: {[s: string]: JSX.Element[] | JSX.Element},
@@ -453,52 +396,12 @@ export type MenuTypes = {
   apply_transformation_additional_elements: JSX.Element[],
   additional_nav_item: JSX.Element[],
   formations_menu: object,
-  postProcessLoadExcel: postProcessLoadExcelFuncType,
-  ComponentUpdater: ComponentUpdaterType
+  // postProcessLoadExcel: postProcessLoadExcelFuncType,
 }
 
 export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
 /*****************************************************************************/
-// Application
-// Logo, names, licences
-export type applicationContextType = {
-  t: TFunction,
-  logo: string
-  logo_terriflux: string,
-  logo_width: number,
-  app_name: string,
-  url_prefix: string,
-  has_free_account: boolean,
-}
-export type initializeApplicationContextType = ()=>applicationContextType
 
-// Global variables not stored in SankeyData
-// Mode, nodes and links selected, style selected...
-export type applicationStateType = {
-  ref_getter_mode_selection: MutableRefObject<string|undefined>
-  ref_setter_mode_selection: MutableRefObject<Dispatch<SetStateAction<string>>>
-  multi_selected_nodes: { current: SankeyNode[] }
-  multi_selected_links: { current: SankeyLink[] }
-  ref_selected_style_node: MutableRefObject<string>
-  ref_selected_style_link: MutableRefObject<string>
-  first_selected_node: {current: SankeyNode|undefined}
-
-  link_io: MutableRefObject<string>,
-  link_pos: MutableRefObject<string>,
-
-  ref_pre_idSource: MutableRefObject<string>
-  ref_pre_idTarget: MutableRefObject<string>
-  ref_display_link_opacity: MutableRefObject<Dispatch<SetStateAction<string>>[]>
-  displayedInputLinkValueSetterRef: MutableRefObject<Dispatch<SetStateAction<string>>[]>
-  displayedInputLinkValueRef: MutableRefObject<string>
-  displayedInputLinkDataTagSetterRef: MutableRefObject<Dispatch<SetStateAction<{[k: string]: string;}>>[]>
-
-  userScaleRef: MutableRefObject<number>
-
-  legend_clicked: MutableRefObject<boolean>
-  never_see_again: MutableRefObject<boolean>
-}
-export type initializeElementSelectedType = ()=>applicationStateType
 
 export type initializeReinitializationType = (
   applicationData : applicationDataType
@@ -513,10 +416,9 @@ export type applicationDataType = {
   set_data: (_: SankeyData)=>void,
   get_default_data: OSGetDefaultData,
   convert_data: ConvertDataFuncType,
-  display_nodes: {[_: string]: SankeyNode},
-  display_links: {[_: string]: SankeyLink},
-  function_on_wait: MutableRefObject<()=>void>,
-  min_link_thickness: number,
+  // display_nodes: {[_: string]: SankeyNode},
+  // display_links: {[_: string]: SankeyLink},
+  // min_link_thickness: number,
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: setDiagramFuncType,
   new_data: Class_ApplicationData
@@ -526,125 +428,18 @@ export type initializeApplicationDataType = (
   data: SankeyData,
   set_data: (_: SankeyData)=>void,
   get_default_data: OSGetDefaultData,
-  display_nodes: {[_: string]: SankeyNode},
-  display_links: {[_: string]: SankeyLink},
   initial_data: Type_JSON | undefined
 )=>applicationDataType
 
 /*****************************************************************************/
-// Draw
-export type initializeApplicationDrawType = (
-  applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  contextMenu: contextMenuType,
-  applicationContext: applicationContextType,
-  ComponentUpdater: ComponentUpdaterType,
-  uiElementsRef: uiElementsRefType,
-  node_function: NodeFunctionTypes,
-  link_function: LinkFunctionTypes,
-  start_point: {current: number[]},
-  resizeCanvas: ()=>void,
-  ref_alt_key_pressed?: MutableRefObject<boolean>
-)=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update: SankeyLink[])=>void
-export type RedrawLinksFType=(links_to_update: SankeyLink[])=>void
-export type LinkFunctionTypes = {
-  GetLinkValue: GetLinkValueFuncType,
-  LinkText: LinkTextFuncType
-  DrawArrows: DrawArrowsType,
-  LinkStroke: LinkStrokeFType,
-  LinkSabotColor: LinkColorFuncType,
-  reDrawLinkStartSabot: RedrawNodesFType,
-  node_arrow_visible: (data: SankeyData,n: SankeyNode)=>boolean,
-  LinkTooltipsContent: LinkTooltipsContentFType,
-  DrawAllLinks: DrawAllLinksFType,
-  drawAddLinks: drawAddLinksFType,
-  drawLinkShape: drawLinkShapeFType,
-  RedrawLinks: RedrawLinksFType
-  CreateLinksOnSVG: CreateLinksOnSVGFType,
-}
-export type initializeLinkFunctionsType = (
-  applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  contextMenu: contextMenuType,
-  applicationContext: applicationContextType,
-  ComponentUpdater: ComponentUpdaterType,
-  uiElementsRef: uiElementsRefType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  ref_alt_key_pressed: React.MutableRefObject<boolean>
-) => LinkFunctionTypes
-
-export type RedrawNodesFType=(node_to_update: SankeyNode[])=>void
-export type drawNodesFType=(node_to_update: SankeyNode[])=>void
-
-export type NodeFunctionTypes = {
-  DrawAllNodes: DrawAllNodesFType,
-  drawAddNodes: drawNodeShapeFType,
-  CreateNodesOnSVG: drawNodesFType,
-  RedrawNodes: RedrawNodesFType,
-  RedrawNodesLabels: RedrawNodesFType,
-  recomputeDisplayedElement: ()=>void,
-  OpposingDragElements: opposing_DragElementsFuncType
-  postProcessLoadExcel: ()=>void
-}
-export type initializeNodeFunctionsType = (
-  applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  contextMenu: contextMenuType,
-  applicationContext: applicationContextType,
-  ComponentUpdater: ComponentUpdaterType,
-  uiElementsRef: uiElementsRefType,
-  resizeCanvas: (_: applicationDataType)=>void,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  ref_alt_key_pressed: React.MutableRefObject<boolean>,
-  accept_simple_click: React.MutableRefObject<boolean>,
-  recomputeDisplayedElement: () => void,
-  link_function: LinkFunctionTypes
-) => NodeFunctionTypes
 
 export type DrawAllType = (
-  contextMenu: contextMenuType,
-  applicationData: applicationDataType,
-  uiElementsRef: uiElementsRefType,
-  applicationState: applicationStateType,
-  applicationContext: applicationContextType,
-  alt_key_pressed: MutableRefObject<boolean>,
-  accept_simple_click: {current: boolean},
-  link_function: LinkFunctionTypes,
-  NodeTooltipsContent: NodeTooltipsContentFType,
-  ComponentUpdater: ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  node_function: NodeFunctionTypes,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-  applicationDraw: applicationDrawType
+  
 ) => void
 
-export type InstallEventsOnSVGType = (
-  contextMenu: contextMenuType,
-  applicationContext: applicationContextType,
-  applicationData: applicationDataType,
-  uiElementsRef: uiElementsRefType,
-  applicationState: applicationStateType,
-  link_function: LinkFunctionTypes,
-  ComponentUpdater: ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  node_function: NodeFunctionTypes,
-  applicationDraw: applicationDrawType
-) => void
 
-export type ComponentUpdaterType={
-  updateComponentMenuConfig: MutableRefObject<()=>void>
-  updateComponenSaveInCache: MutableRefObject<(b: boolean)=>void>
-  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(()=>null)[]>
-  updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
-  updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>
-  updateComponentBtnUpdateLayout: MutableRefObject<(()=>void)>
-  updateMenus: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
-}
-export type initializeComponentUpdaterType = ()=>ComponentUpdaterType
-
-export type initializeUIElementsRefType = ()=> uiElementsRefType
 
 export type AdditionalMenusType = {
   // Top Menu
@@ -697,96 +492,40 @@ export type AdditionalMenusType = {
 
 export type initializeAdditionalMenusType = (
   additional_menus: AdditionalMenusType,
-  applicationContext: applicationContextType,
   applicationData: applicationDataType
 ) => void
 
 export type module_dialogsType = (
-  applicationContext: applicationContextType,
   applicationData: applicationDataType,
-  applicationState: applicationStateType,
-  contextMenu: contextMenuType,
-  applicationDraw: applicationDrawType,
-  uiElementsRef: uiElementsRefType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  node_function: NodeFunctionTypes,
-  link_function: LinkFunctionTypes,
-  ComponentUpdater: ComponentUpdaterType,
   additional_menus: AdditionalMenusType,
   menu_configuration_nodes_attributes: JSX.Element,
-  reDrawLegend: ()=>void,
   processFunctions: processFunctionsType
 ) => JSX.Element[]
-export type initializeShowDialogType = ()=>dict_hook_ref_setter_show_dialog_componentsType
-
-export type initializeContextMenuType = ()=> contextMenuType
-
-export type initializeProcessFunctionsType = (
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType
-) => processFunctionsType
 
 /*****************************************************************************/
 
 export type SankeyAppTypes = {
   initial_sankey_data: SankeyData
   get_default_data: OSGetDefaultData,
-  initializeApplicationContext: initializeApplicationContextType
   initializeApplicationData: initializeApplicationDataType,
-  initializeElementSelected: initializeElementSelectedType,
   initializeMenuConfiguration: initializeMenuConfigurationFuncType,
-  initializeApplicationDraw : initializeApplicationDrawType,
-  initializeShowDialog: initializeShowDialogType,
-  initializeComponentUpdater: ()=>ComponentUpdaterType
-  closeAllMenu: (
-    dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-    contextMenu: contextMenuType
-  )=>()=>void,
   initializeReinitialization: initializeReinitializationType,
-  initializeProcessFunctions: initializeProcessFunctionsType
-  initializeContextMenu: initializeContextMenuType,
-  initializeUIElementsRef: initializeUIElementsRefType,
-  initializeLinkFunctions: initializeLinkFunctionsType,
-  initializeNodeFunctions: initializeNodeFunctionsType,
   initializeAdditionalMenus: initializeAdditionalMenusType,
   initializeDiagrammSelector: initializeDiagrammSelectorFType,
   moduleDialogs: module_dialogsType,
-  DrawAll: DrawAllType,
-  installEventOnSVG: InstallEventsOnSVGType,
   ClickSaveDiagram: ClickSaveDiagramFuncType,
-  InitalizeSelectorDetailNodes: InitalizeSelectorDetailNodesType,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType
 }
 
 export type initializeMenuConfigurationFuncType=(
   applicationData: applicationDataType,
-  applicationContext: applicationContextType,
   additional_menus: AdditionalMenusType,
   config_link_data: JSX.Element,
   config_link_attr: JSX.Element,
   menu_configuration_nodes_attributes: JSX.Element,
 ) => JSX.Element
 
-export type initializeKeyHandlerType=(
-  applicationData: applicationDataType,
-  uiElementsRef: uiElementsRefType,
-  contextMenu: contextMenuType,
-  e: KeyboardEvent,
-  applicationState: applicationStateType,
-  closeAllMenu: ()=>void,
-  ref_alt_key_pressed: MutableRefObject<boolean>,
-  accept_simple_click: {current: boolean},
-  link_function: LinkFunctionTypes,
-  NodeTooltipsContent: NodeTooltipsContentFType,
-  ComponentUpdater: ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  applicationContext: applicationContextType,
-  node_function: NodeFunctionTypes,
-  applicationDraw: applicationDrawType,
-
-) => void
 
 
 export type InitalizeSelectorDetailNodesType=(
-  applicationContext: applicationContextType,
   applicationData: applicationDataType,
 )=>JSX.Element

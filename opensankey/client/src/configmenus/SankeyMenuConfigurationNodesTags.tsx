@@ -25,15 +25,14 @@ import {
  * @type {*}
  */
 export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
-  applicationContext,
   applicationData,
   menu_for_modal
 })=> {
 
   // Data ------------------------------------------------------------------------------
 
-  const { t } = applicationContext
   const { new_data} = applicationData
+  const { t } =new_data
 
   // Node tags groups ------------------------------------------------------------------
 

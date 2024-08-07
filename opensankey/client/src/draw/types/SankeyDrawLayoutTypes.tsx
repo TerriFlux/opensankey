@@ -169,7 +169,6 @@ export type reorganize_node_outputLinksIdFuncType = (data: SankeyData,
     links: { [idLink: string]: SankeyLink} 
 ) => void
 export type synchronizeNodesandLinksIdFuncType = (dataModify: SankeyData, dataRef: SankeyData) => void
-export type updateLayoutFuncType = (data: SankeyData, new_layout: SankeyData, mode: string[], synchronize?: boolean) => void
 export type AggregateFuncType = (
     n: SankeyNode, data: SankeyData, agregation: agregationType
 ) => void

@@ -22,16 +22,13 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfigur
 
 /*************************************************************************************************/
 
-export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
+export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLinksDataFType> = ({
   applicationData,
-  applicationContext,
   additional_data_element,
 }) => {
 
-  // Application data ------------------------------------------------------------------
-
   // Traduction
-  const { t } = applicationContext
+  const { t } = applicationData.new_data
 
   // Sankey datas
   const { new_data } = applicationData
@@ -56,8 +53,8 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   // Components updaters ---------------------------------------------------------------
 
   // Refs used to trigger refreshing of number & text inputs
-  const ref_set_data_value_input = useRef((_:number | null | undefined) => null)
-  const ref_set_text_value_input = useRef((_:string | null | undefined) => null)
+  const ref_set_data_value_input = useRef((_: number | null | undefined) => null)
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
     ref_set_data_value_input.current(value?.data_value ?? null)
@@ -66,7 +63,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   }
 
   // Function used to force this component to reload
-  const [ , refreshThis] = useBoolean()
+  const [, refreshThis] = useBoolean()
 
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
@@ -76,10 +73,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
     refreshThis.toggle()
   }
 
-  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current =()=>{
+  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = () => {
     updateInputsValues()
     refreshThis.toggle()
-  } 
+  }
 
   // JSX -------------------------------------------------------------------------------
 
@@ -185,10 +182,10 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
         </Box>
         <ConfigMenuTextInput
           ref_to_set_value={ref_set_text_value_input}
-          function_get_value={() => {return value?.text_value}}
+          function_get_value={() => { return value?.text_value }}
           function_on_blur={(_) => {
             // Update text for links
-            selected_links.forEach(link=>{
+            selected_links.forEach(link => {
               link.text_value = (_ ?? '')
             })
             // Update this menu
@@ -216,9 +213,9 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
  * @param {applicationData} TODO
  * @return {JSX.Elmement}
  */
-export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType>=({
+export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> = ({
   applicationData,
-})=>{
+}) => {
 
   // Application data ------------------------------------------------------------------
 
@@ -241,14 +238,14 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType>=(
   // Components updaters ---------------------------------------------------------------
 
   // Refs used to trigger refreshing of number & text inputs
-  const ref_set_data_value_input = useRef((_:number | null | undefined) => null)
+  const ref_set_data_value_input = useRef((_: number | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
     ref_set_data_value_input.current(value?.data_value ?? null)
   }
 
   // Function used to force this component to reload
-  const [ , refreshThis] = useBoolean()
+  const [, refreshThis] = useBoolean()
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator

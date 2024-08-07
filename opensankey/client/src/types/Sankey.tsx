@@ -807,7 +807,7 @@ export class Class_Sankey {
                         return (
                           (tag.name === getStringOrUndefinedFromJSON(tag_json, 'name')) &&
                           (tag.id !== tag_id))
-                        })
+                      })
                     // We need to find a unique matching entry in JSON
                     if (matching_tags.length === 1) {
                       curr_matching_tags_id[tagg_id][tag_id] = matching_tags[0].id
