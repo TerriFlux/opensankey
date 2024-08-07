@@ -1,5 +1,6 @@
 # Flask imports
 from flask import Flask
+from flask import redirect
 
 
 # Global functions
@@ -11,5 +12,14 @@ def create_app():
 
     # Blueprint for OpenSankey part of app
     from .views import opensankey as main_blueprint
-    app.register_blueprint(main_blueprint)
+    app.register_blueprint(main_blueprint, url_prefix='/opensankey')
+
+    # 404 handler
+    def page_not_found(e):
+        try:
+            return redirect("/")
+        except Exception:
+            return '404 not found'
+    app.register_error_handler(404, page_not_found)
+
     return app

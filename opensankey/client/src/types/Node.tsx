@@ -651,7 +651,6 @@ export class Class_NodeElement extends Class_Element {
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (_.parent !== this) &&
       (!_.children.includes(this)) &&
       (!this._dimensions_as_parent[_.id])
     ) {
@@ -663,7 +662,6 @@ export class Class_NodeElement extends Class_Element {
   public addNewDimensionAsChild(_: Class_NodeDimension) {
     if (
       (_.parent !== this) &&
-      (!_.children.includes(this)) &&
       (!this._dimensions_as_child[_.id])
     ) {
       this._dimensions_as_child[_.id] = _
@@ -1091,8 +1089,9 @@ export class Class_NodeElement extends Class_Element {
                   else {
                     const level = getNumberOrUndefinedFromJSON(dimension_as_json, 'level')
                     if (level && level > 1) {
-                      child_tags = [tagg.tags_list[level]]
-                      parent_tag = tagg.tags_list[level-1]
+                      // Careful here : levels start from 1
+                      child_tags = [tagg.tags_list[level-1]]
+                      parent_tag = tagg.tags_list[level-2]
                     }
                   }
                   // If tags has been found,
@@ -3781,8 +3780,8 @@ export class Class_NodeDimension {
       )
     // Set parenthood reference
     this._parent = parent
-    this._parent.addNewDimensionAsParent(this)
     this._children = children
+    this._parent.addNewDimensionAsParent(this)
     this._children
       .forEach(_ => _.addNewDimensionAsChild(this))
     // Set leveltags references
@@ -3886,7 +3885,10 @@ export class Class_NodeDimension {
   }
 
   public addNodeAsChild(_: Class_NodeElement) {
-    if (!this._children.includes(_)) {
+    if (
+      (this._parent !== _) &&
+      !(this._children.includes(_))
+    ) {
       this._children.push(_)
       _.addNewDimensionAsChild(this)
     }
@@ -3972,7 +3974,10 @@ export class Class_NodeDimension {
 
   public get parent() { return this._parent }
   public set parent(_: Class_NodeElement) {
-    if (!(this._parent === _)) {
+    if (
+      (this._parent !== _) &&
+      !(this._children.includes(_))
+    ) {
       const old_parent = this._parent
       this._parent = _
       _.addNewDimensionAsParent(this)

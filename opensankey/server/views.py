@@ -77,6 +77,19 @@ image_template_folder = os.path.join(
 # ---------------------------------------------------------------
 # Define all routes
 
+@opensankey.route('/')
+def start():
+    return render_template(
+        'index.html',
+        filename='',
+        static_site='false'
+    )
+
+
+@opensankey.route('/<adress>')
+def goto(adress):
+    return render_template(adress)
+
 
 @opensankey.route('/sankey/save_excel', methods=['POST'])
 def save_excel():
@@ -516,15 +529,6 @@ def menus_examples():
         return response
 
     return response
-
-
-@opensankey.route('/')
-def start():
-    return render_template(
-        'index.html',
-        filename='',
-        static_site='false'
-    )
 
 
 @opensankey.route('/loads_retrieves_result', methods=['POST'])

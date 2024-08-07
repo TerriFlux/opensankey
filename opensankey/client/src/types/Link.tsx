@@ -3675,8 +3675,13 @@ export class Class_LinkValueTree {
     if (matching_tags.length !== 1) return null
     // Recursive
     const child = this.children[matching_tags[0].id]
-    if (child instanceof Class_LinkValue) return child
-    else return child.getValueForDataTags(remaining_tags)
+    if (child !== undefined ) {
+      if (child instanceof Class_LinkValue) return child
+      else return child.getValueForDataTags(remaining_tags)
+    }
+    else {
+      return null
+    }
   }
 
   public setDataValueForDataTags(data_tags: Class_DataTag[], val: number | null) {
