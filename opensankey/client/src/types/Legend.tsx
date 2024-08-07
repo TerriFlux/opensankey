@@ -152,6 +152,9 @@ export class Class_Legend extends Class_Element {
     json_object['legend_bg_color'] = this._legend_bg_color
     json_object['legend_bg_opacity'] = this._legend_bg_opacity
     json_object['legend_show_dataTags'] = this._legend_show_dataTags
+    json_object['legend_position_x'] = this.position_x
+    json_object['legend_position_y'] = this.position_y
+
     return json_object
   }
 
@@ -171,6 +174,9 @@ export class Class_Legend extends Class_Element {
     this._legend_bg_color = getStringFromJSON(json_object, 'legend_bg_color', this._legend_bg_color)
     this._legend_bg_opacity = getNumberFromJSON(json_object, 'legend_bg_opacity', this._legend_bg_opacity)
     this._legend_show_dataTags = getBooleanFromJSON(json_object, 'legend_show_dataTags', this._legend_show_dataTags)
+    this._display.position.x = getNumberFromJSON(json_object, 'legend_position_x', default_element_position.x)
+    this._display.position.y = getNumberFromJSON(json_object, 'legend_position_y', default_element_position.y)
+
   }
 
   // PROTECTED METHODS ==================================================================
@@ -192,9 +198,11 @@ export class Class_Legend extends Class_Element {
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ): void {
+    console.log('here')
     this._display.position.x += (event.sourceEvent.movementX)
     this._display.position.y += (event.sourceEvent.movementY)
-    this.d3_selection?.attr('transform', 'translate(' + (this.position_x) + ',' + this.position_y + ')')
+    // this.d3_selection?.attr('transform', 'translate(' + (this.position_x) + ',' + this.position_y + ')')
+    this.setPosXY(this._display.position.x, this._display.position.y)
   }
 
   protected eventMouseDragEnd(
@@ -240,7 +248,7 @@ export class Class_Legend extends Class_Element {
     const flux_taggs = this.drawing_area.sankey.flux_taggs_list
     const data_taggs = this.drawing_area.sankey.data_taggs_list
     // Get all grp tag insind one variable
-    const all_tags = [... node_taggs, ... flux_taggs, ... data_taggs]
+    const all_tags = [...node_taggs, ...flux_taggs, ...data_taggs]
     all_tags
       .filter(tag_group => tag_group.show_legend)
       .forEach(tag_group => {
@@ -449,6 +457,8 @@ export class Class_Legend extends Class_Element {
    * @memberof Class_Legend
    */
   private drawInfoDashedLink() {
+    this._dy += this._legend_police
+
     // Create info zone
     const dashed_link = this.d3_selection?.append('g')
       .attr('id', 'gg_legend_dashed_links')
@@ -479,19 +489,19 @@ export class Class_Legend extends Class_Element {
    */
   private drawSankeyScale() {
     // Update vertical offset
-    this._dy += this._legend_police
+    this._dy += this._legend_police + 50 //(50 is the height of the draggable scale)
     // Remove previous info zone for scale
     d3.selectAll(' .opensankey #svg .g_scale').remove()
     // Create info zone for scale
     const g_scale = this.d3_selection?.append('g')
       .attr('class', 'g_scale')
       .style('transform', 'translate(0,' + (this._dy) + 'px)')
+
     // Add explanation text
-    // g_scale?.append('text').text(t('scale')+':').style('font-size',this._legend_police+'px')
     g_scale?.append('text')
       .text('scale' + ':')
       .style('font-size', this._legend_police + 'px')
-    // Set draggable behavior
+
     const g_draggable = g_scale?.append('g')
       .attr('class', 'g_draggable_scale')
       .style('cursor', 'grab')
@@ -504,28 +514,24 @@ export class Class_Legend extends Class_Element {
       .attr('class', 'measurment_scale')
       .style('transform', 'translate(5px,25px)')
       .text(Math.round((this.drawing_area.scale / 2)))
-    let h: number | undefined
+
+
+
+    // Add drag event for the scale representation
     g_draggable?.call(d3.drag<SVGGElement, this, unknown>()
       .subject(Object)
-      .on('strat', () => {
-        h = document.getElementById('gg_legend')?.getBoundingClientRect().height
-      })
-      .on('drag', function (event, curr_leg) {
-        h = h ? h : 50
-        d3.select('#gg_legend .drag_zone_leg').attr('height', h)
-        if (event.x > 0 && event.x < curr_leg.width && event.y < 0 && event.y > -h + 25) {
-          d3.select(' .opensankey .g_draggable_scale').style('transform', 'translate(' + (event.x - 15) + 'px,' + (event.y - 25) + 'px)')
-        }
+      .on('drag', function (event) {
+        g_draggable.style('transform', 'translate(' + (event.x) + 'px,' + (event.y) + 'px)')
       }))
   }
 
   private updateLegendHeight() {
-    let h = document.getElementById('g_legend')?.getBoundingClientRect().height
-    h = h ? (h+this._legend_police) : 0
-    d3.select('#g_legend .zone_for_dragging').attr('height', h)
-    const w = document.getElementById('g_legend')?.getBoundingClientRect().width
+    let h = document.getElementById('grp_legend')?.getBoundingClientRect().height
+    h = h ? (h + this._legend_police) : 0
+    d3.select('.zone_for_dragging').attr('height', h)
+    const w = document.getElementById('grp_legend')?.getBoundingClientRect().width
     if (w && w > this._width * 1.1) {
-      d3.select('#g_legend .zone_for_dragging').attr('width', w)
+      d3.select('#grp_legend .zone_for_dragging').attr('width', w)
       this._width = w
     }
   }
