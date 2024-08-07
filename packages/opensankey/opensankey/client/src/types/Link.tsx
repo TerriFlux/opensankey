@@ -316,6 +316,9 @@ export class Class_LinkElement extends Class_ProtoElement {
     is_dragged: boolean
   }
 
+  // Boolean var only used when enlarging thickness when mouse hovering link
+  private _artifical_enlargement: boolean = false
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -900,7 +903,33 @@ export class Class_LinkElement extends Class_ProtoElement {
       // this.drawing_area.purgeSelection()
       // Show tooltip
       this.drawTooltip()
+    } else if (this.thickness < 15) {
+      this._artifical_enlargement = true
+      // Artificially enlarge link thickness if too thin
+      this.d3_selection?.select('.link_path').attr('stroke-width', 15)
     }
+  }
+
+  /**
+   * Define event when mouse move out of element
+   * @protected
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_Element
+   */
+  protected eventMouseOut(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    super.eventMouseOut(event)
+
+    // Clear tooltip
+    d3.selectAll('.sankey-tooltip').remove()
+
+    // reset link thickness
+    if (this._artifical_enlargement) {
+      this._artifical_enlargement = false
+      this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
+    }
+
   }
 
   // PRIVATE METHODS ====================================================================
@@ -927,7 +956,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         .attr('stroke', () => this.getPathColorToUse())
         .attr('stroke-opacity', this.shape_opacity)
         .attr('stroke-width', this.thickness)
-        .attr('stroke-dasharray', this.shape_is_dashed ? '10,5' : '')
+        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '5,3' : '')
     }
   }
 
