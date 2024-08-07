@@ -187,8 +187,8 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
     <MenuList>
       {
         new_data.drawing_area.sankey.node_styles_list_sorted
-          .map(sn => {
-            return <MenuItem onClick={() => {
+          .map((sn,i) => {
+            return <MenuItem key={'context_node_item_'+i} onClick={() => {
               if (contextualised_node) {
                 selected_nodes.map(node => {
                   node.style = sn

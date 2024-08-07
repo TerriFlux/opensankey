@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react'
 
 import { OpenSankeyMenuConfigurationLayoutFType } from './types/SankeyMenuConfigurationLayoutTypes'
-import { OSTooltip } from './SankeyUtils'
+import { OSTooltip } from '../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 // MENU COMPONENT ***********************************************************************

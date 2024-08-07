@@ -95,14 +95,13 @@ import {
   OpenSankeySaveButtonFType
 } from './types/SankeyMenuTopTypes'
 import {
+  OSTooltip,
   Type_JSON
 } from '../types/Utils'
 
 /*************************************************************************************************/
 
-import {
-  OSTooltip
-} from '../configmenus/SankeyUtils'
+
 import SankeyLoad from '../dialogs/SankeyPersistence'
 import {
   ExcelModal,
@@ -111,9 +110,7 @@ import {
 import {
   ClickSaveExcel
 } from '../dialogs/SankeyPersistence'
-import {
-  UploadExemple
-} from '../dialogs/SankeyPersistence'
+
 import {
   UploadExcelImpl
 } from '../dialogs/SankeyPersistence'
@@ -219,10 +216,9 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   external_file_export_item,
   externale_save_item,
   externale_navbar_item,
-  convert_data,
   setDiagram
 ) => {
-  const { data, set_data, new_data } = applicationData
+  const { data, new_data } = applicationData
   const _load_json = useRef<HTMLInputElement>(null)
 
   const { ref_setter_show_style_node, ref_setter_show_style_link ,
@@ -289,7 +285,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         <Select style={{ width: '200px', color:'black' }}
           onChange={evt=> {
             sDiagram(evt.target.value)
-            setDiagram(evt.target.value, set_data, convert_data, get_default_data)
+            setDiagram(evt.target.value, applicationData)
           }}
           value={s_diagram}>
           {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -309,7 +305,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             sDiagram(evt.target.value)
             const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, set_data, convert_data, get_default_data)
+            setDiagram(diagram_path, applicationData)
           }}
           value={s_diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -321,7 +317,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               sDiagram2(evt.target.value)
               const diagram_path = s_diagram+'/'+evt.target.value
-              setDiagram(diagram_path, set_data, convert_data, get_default_data)
+              setDiagram(diagram_path, applicationData)
             }}
             value={s_diagram_2}>
             {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
@@ -1066,9 +1062,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const menu_nav = <Box>
     <Tabs variant={'tabs_navbar'}>
       <TabList>
-        {Object.keys(ordered_menu).map(m => {
+        {Object.keys(ordered_menu).map((m,i) => {
           return <Tab
             position='relative'
+            key={'menutop_'+i}
           >
             <Box layerStyle="menutop_tab_style">
               {
@@ -1091,8 +1088,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
         })}
       </TabList>
       <TabPanels>
-        {Object.values(ordered_menu).map(m => {
-          return <TabPanel>
+        {Object.values(ordered_menu).map((m,i) => {
+          return <TabPanel key={'menutop_item_'+i}>
             {m}
           </TabPanel>
         })}
@@ -1625,10 +1622,10 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
   formations_menu,
   show_tuto,
   set_show_tuto,
-  Reinitialization
+  
 }) => {
-  const { convert_data } = applicationData
-  const { t,url_prefix } = applicationData.new_data
+  // const { convert_data } = applicationData
+  const { t, } = applicationData.new_data
 
   // Pré-traitement du menu tuto pour trier les groupes
   const n_a = new Array(50)
@@ -1671,9 +1668,9 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               {/* Button to open directly the JSON file */}
               <Button variant='toolbar_button_6'
                 onClick={() => {
-                  UploadExemple(
-                    ('Formations/Tutoriels/'+(d[0])+'/'+dd), url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
-                  )
+                  // UploadExemple(
+                  //   ('Formations/Tutoriels/'+(d[0])+'/'+dd), url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                  // )
                   applicationData.set_data({ ...applicationData.data })
                   set_show_tuto(false)
                 }}
@@ -1684,9 +1681,9 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
                 <Button variant='toolbar_button_6'
                   onClick={() => {
                     processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
-                    UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
-                    )
+                    // UploadExemple(
+                    //   'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
+                    // )
                     set_show_tuto(false)
                   }
                   }
@@ -1697,10 +1694,10 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '_reconciled.xlsx')) ?
                 <Button variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
-                    UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
-                    )
+                    // processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
+                    // UploadExemple(
+                    //   'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
+                    // )
                     set_show_tuto(false)
                   }
                   }

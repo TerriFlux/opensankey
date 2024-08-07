@@ -215,7 +215,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     additionalMenus.external_file_export_item,
     additionalMenus.externale_save_item,
     additionalMenus.externale_navbar_item,
-    applicationData.convert_data,
     applicationData.setDiagram,
   )
 

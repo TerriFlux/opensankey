@@ -1,5 +1,4 @@
 // External Imports
-import * as d3 from 'd3'
 import React, { FunctionComponent, useState } from 'react'
 import {
   TFunction
@@ -50,9 +49,7 @@ import {
 
 // Internal Types / Classes
 import {
-  SankeyData,
-  applicationDataType
-} from '../types/Types'
+  SankeyData} from '../types/Types'
 import {
   Class_TagGroup,
   Class_LevelTagGroup
@@ -70,7 +67,7 @@ import {
 // Internal functions / Components
 import {
   OSTooltip
-} from './SankeyUtils'
+} from '../types/Utils'
 import {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
@@ -122,9 +119,7 @@ declare const window: Window &
 
 export const setDiagram: setDiagramFuncType = (
   the_diagram,
-  set_data,
-  convert_data,
-  DefaultSankeyData,
+  applicationData
 ) => {
   const sous_filieres = window.sankey.sous_filieres
 
@@ -132,10 +127,12 @@ export const setDiagram: setDiagramFuncType = (
     JSON.stringify(
       window.sankey[sous_filieres[the_diagram]]
     )
-  ) as SankeyData
-  convert_data({ data: new_data } as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
-  d3.select(' .opensankey #svg').on('.zoom', null)
-  set_data({ ...new_data })
+  ) 
+
+  applicationData.new_data.fromJSON(new_data)
+  // convert_data({ data: new_data } as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
+  // d3.select(' .opensankey #svg').on('.zoom', null)
+  // set_data({ ...new_data })
 }
 
 

@@ -26,7 +26,7 @@ import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 
 import {
   OSTooltip
-} from './SankeyUtils'
+} from '../types/Utils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'

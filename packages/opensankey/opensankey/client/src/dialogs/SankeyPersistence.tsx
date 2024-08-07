@@ -33,9 +33,6 @@ import {
 } from './types/SankeyPersistenceTypes'
 
 import {
-  ConvertDataFuncType
-} from '../configmenus/types/SankeyConvertTypes'
-import {
   DefaultSankeyDataFuncType
 } from '../configmenus/types/SankeyUtilsTypes'
 
@@ -43,13 +40,13 @@ import {
 /*************************************************************************************************/
 
 import {
+  ConvertDataFuncType,
   DataSuiteType,
   DefaultLink,
   DefaultNode,
-} from '../configmenus/SankeyUtils'
-import {
   complete_sankey_data
-} from '../configmenus/SankeyConvert'
+} from '../types/Legacy'
+
 import { Type_JSON } from '../types/Utils'
 
 
