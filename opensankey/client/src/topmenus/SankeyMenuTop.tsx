@@ -1020,15 +1020,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   
 
   const [update, setUpdate] = useState(false)
-  // let max_link_value = 0
-  // Object.values(applicationData.data.links).forEach(link => {
-  //   const new_max_link_value = FindMaxLinkValue(
-  //     max_link_value,
-  //     link.value
-  //   )
-  //   max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
-  // })
-  // max_link_value += 1
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
