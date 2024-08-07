@@ -258,6 +258,8 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  // PUBLIC METHODS =====================================================================
+
   /**
    * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
    *
@@ -682,10 +684,32 @@ export class Class_NodeElement extends Class_Element {
     }
   }
 
+  public drawParent() {
+    if (this.is_child) {
+      Object.values(this._dimensions_as_child)[0].forceShowParent()
+    }
+  }
+
+  public drawChildren() {
+    if (this.is_parent) {
+      Object.values(this._dimensions_as_parent)[0].forceShowChildren()
+    }
+  }
+
   // Links related methods --------------------------------------------------------------
 
-  // Check links
+  /**
+   * Return true if this node hase at least one input link
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
   public hasInputLinks() { return (this.input_links_list.length > 0) }
+
+  /**
+   * Return true if this node hase at least one output link
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
   public hasOutputLinks() { return (this.output_links_list.length > 0) }
 
   /**
@@ -2285,6 +2309,8 @@ export class Class_NodeElement extends Class_Element {
     return this._name
   }
 
+  // Tags related -----------------------------------------------------------------------
+
   /**
    * Dict as [id: tag] of tags related to node
    * @readonly
@@ -2326,6 +2352,8 @@ export class Class_NodeElement extends Class_Element {
   public get taggs_list() {
     return Object.values(this.taggs_dict)
   }
+
+  // Level related ----------------------------------------------------------------------
 
   /**
    * Dict of level tags related to node
@@ -2377,6 +2405,26 @@ export class Class_NodeElement extends Class_Element {
   public get level_taggs_list() {
     return Object.values(this.level_taggs_dict)
   }
+
+  /**
+   * TODO Description
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get is_child() {
+    return (Object.values(this._dimensions_as_child).length > 0)
+  }
+
+  /**
+   * TODO description
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get is_parent() {
+    return (Object.values(this._dimensions_as_parent).length > 0)
+  }
+
+  // Links related ----------------------------------------------------------------------
 
   /**
    * Get node value formatted as label
@@ -2436,6 +2484,8 @@ export class Class_NodeElement extends Class_Element {
    * @memberof Class_NodeElement
    */
   public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
+
+  // Style / Local attributes related ---------------------------------------------------
 
   /**
    * Get style key of node
@@ -3098,6 +3148,8 @@ export class Class_NodeElement extends Class_Element {
     this.drawValueLabel()
   }
 
+  // Tooltip related --------------------------------------------------------------------
+
   public get tooltip_text() {
     return this._tooltip_text
   }
@@ -3142,68 +3194,6 @@ export class Class_NodeElement extends Class_Element {
       )
     )
   }
-
-  /**
-   * Function used in element_displayed tho check if at least one of the level tag associated to the node is selected,
-   * We draw the node only if this is the case
-   *
-   * @readonly
-   * @private
-   * @memberof Class_NodeElement
-   */
-  // private get is_related_level_selected() {
-  //   // TODO supprimer si ok avec dimensions
-  //   // Existing level tags group
-  //   const all_level_taggs = this.main_sankey.level_taggs_list
-  //   // Nodes related level tag group
-  //   const level_tags = this.level_tags_list // Avoid hidden recomputing
-  //   const level_taggs = this.level_taggs_list // Avoid hidden recomputing
-  //   // Check if there is other aggregation tags than 'Primaire',
-  //   const opt_level_taggs = all_level_taggs
-  //     .filter(tagg => tagg.id !== 'Primaire') // TODO id Or name ?
-  //   const multi_level_taggs = (opt_level_taggs.length > 0)
-  //   // Activated level taggs
-  //   const activ_level_taggs = all_level_taggs
-  //     .filter(tagg => tagg.activated)
-  //   const only_one_activated = (activ_level_taggs.length === 1)
-  //   // Is only primary level activated
-  //   const only_primaire_activated = (
-  //     (this.main_sankey.level_taggs_dict['Primaire']?.activated ?? false) &&
-  //     only_one_activated)
-  //   const multi_but_only_primaire = multi_level_taggs && only_primaire_activated
-  //   // Check if level tags are correctly selected = ok to display
-  //   let to_display = true
-  //   // To display a node according to level tag we search if:
-  //   // - The node.nodeTags have more level grp tag than 'Primaire',
-  //   //   if that's the case we don't use grp tag 'Primaire' in the filter
-  //   //   of node grp tag
-  //   // - The node grp tag is activated (variable is set false if we activate
-  //   //   another grp tag that has this grp tag in variable sibling)
-  //   // - The node has the grp tag name in his tags
-  //   all_level_taggs
-  //     .filter(tagg => (
-  //       (
-  //         (
-  //           (multi_level_taggs) &&
-  //           (!multi_but_only_primaire)
-  //         ) ?
-  //           tagg.id !== 'Primaire' :
-  //           true
-  //       ) &&
-  //       (tagg.activated) &&
-  //       (level_taggs.includes(tagg))
-  //     ))
-  //     .forEach(tagg_activated => {
-  //       // Check selected tags from the activated level tag group
-  //       // If the node don't have a least one matching tag, we dont display it
-  //       let tmp_to_display = false
-  //       tagg_activated.tags_list
-  //         .filter(tag => tag.is_selected)
-  //         .forEach(tag => tmp_to_display = (tmp_to_display || level_tags.includes(tag)))
-  //       to_display = to_display && tmp_to_display
-  //     })
-  //   return to_display
-  // }
 
   private get tooltip_html() {
     // Title
@@ -3943,16 +3933,26 @@ export class Class_NodeDimension {
   public forceShowParent() {
     this._show_parent = true
     this._show_children = false
+    this.drawElements()
   }
 
   public forceShowChildren() {
     this._show_parent = false
     this._show_children = true
+    this.drawElements()
   }
 
   public showFromLevelTags() {
     this._show_parent = false
     this._show_children = false
+    this.drawElements()
+  }
+
+  // PRIVATE METHODS ====================================================================
+
+  private drawElements() {
+    this._parent.draw()
+    this._children.forEach(child => child.draw())
   }
 
   // GETTERS / SETTERS ==================================================================
