@@ -379,6 +379,7 @@ export class Class_DrawingArea {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
+    this._legend.setEventsListeners() 
     this.application_data.menu_configuration.ref_to_toolbar_updater.current()
   }
 
