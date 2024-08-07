@@ -1,6 +1,4 @@
-//import renderer from 'react-test-renderer';
-//import {DefaultSankeyData, GetLinkValue} from '../configmenus/SankeyUtils'
-// import SankeyDraw from './SankeyDraw'
+
 import { SankeyData, applicationDataType } from '../types/Types'
 import { convert_data } from '../configmenus/SankeyConvert'
 import { ComputeAutoSankey } from './SankeyDrawLayout'
@@ -67,15 +65,6 @@ test.each(the_tests)( 'tyty',(full_path) => {
     }
   )
 
-  // const component = render(
-  //   <SankeyDraw
-  //     data={(new_data as unknown) as SankeyData}
-  //     display_nodes={new_data.nodes}
-  //     display_links={new_data.links}
-  //   />
-  // )
-  // const tree = component.container
-  // expect(tree).toMatchSnapshot()
 })
 
 

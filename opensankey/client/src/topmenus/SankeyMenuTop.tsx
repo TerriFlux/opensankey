@@ -101,7 +101,6 @@ import {
 /*************************************************************************************************/
 
 import {
-  FindMaxLinkValue,
   OSTooltip
 } from '../configmenus/SankeyUtils'
 import SankeyLoad from '../dialogs/SankeyPersistence'
@@ -121,9 +120,7 @@ import {
 import {
   DownloadExamples
 } from '../dialogs/SankeyPersistence'
-import {
-  RepositionneSidebar
-} from '../draw/SankeyDrawFunction'
+
 import {
   DataTagSelector
 } from '../configmenus/SankeyMenuBanner'
@@ -216,8 +213,6 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   t: TFunction,
   Reinitialization,
   get_default_data,
-  dict_hook_ref_setter_show_dialog_components,
-  never_see_again,
   applicationData,
   external_edition_item,
   external_file_item,
@@ -230,7 +225,21 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   const { data, set_data, new_data } = applicationData
   const _load_json = useRef<HTMLInputElement>(null)
 
-  const { ref_setter_show_style_node, ref_setter_show_style_link } = dict_hook_ref_setter_show_dialog_components
+  const { ref_setter_show_style_node, ref_setter_show_style_link ,
+    ref_setter_show_modal_template,
+    ref_setter_show_excel_dialog,
+    ref_setter_show_save_json,
+    ref_setter_png_res_h,
+    ref_setter_png_res_v,
+    ref_setter_show_resolution_save_png,
+    ref_setter_show_modal_preference,
+    ref_setter_show_apply_layout,
+    ref_setter_show_modal_welcome,
+    ref_setter_show_modale_tuto,
+    ref_setter_show_modale_support,
+
+
+  } = new_data.menu_configuration.dict_setter_show_dialog
 
   const logo_tempalte = <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -387,7 +396,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
           </MenuItem>
 
           <MenuItem
-            onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_template.current!(true) }}
+            onClick={() => { ref_setter_show_modal_template.current!(true) }}
           >
             {logo_tempalte}
             {t('Menu.from_model')}
@@ -465,7 +474,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               }}
             />
             <MenuItem
-              onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current!(true)}
+              onClick={() => ref_setter_show_excel_dialog.current!(true)}
             >
               <FontAwesomeIcon
                 style={{'height':'1rem', 'width':'1rem'}}
@@ -514,7 +523,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         </OSTooltip>
         <MenuList>
           <MenuItem onClick={() => {
-            dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current!(true)
+            ref_setter_show_save_json.current!(true)
           }} >
             <FontAwesomeIcon
               style={{'height':'1rem', 'width':'1rem'}}
@@ -572,9 +581,9 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         </OSTooltip>
         <MenuList>
           <MenuItem onClick={() => {
-            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(parseInt(String(data.width)))
-            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current(parseInt(String(data.height)))
-            dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)
+            ref_setter_png_res_h.current(parseInt(String(data.width)))
+            ref_setter_png_res_v.current(parseInt(String(data.height)))
+            ref_setter_show_resolution_save_png.current!(true)
           }}>
             <FontAwesomeIcon
               style={{'height':'1rem', 'width':'1rem'}}
@@ -603,7 +612,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
           <Button
             variant='menutop_button'
             onClick={() => {
-              dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current!(true)
+              ref_setter_show_modal_preference.current!(true)
             }}
           >
             <Box
@@ -636,7 +645,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       >
         <Button
           variant='menutop_button'
-          onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(true)}
+          onClick={() => ref_setter_show_apply_layout.current!(true)}
         >
           <Box
             layerStyle='menutop_button_style'
@@ -727,8 +736,8 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         <Button
           variant='menutop_button'
           onClick={() => {
-            dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true)
-            never_see_again.current = false
+            ref_setter_show_modal_welcome.current!(true)
+            applicationData.new_data.menu_configuration.never_see_again.current = false
             localStorage.setItem('dontSeeAggainWelcome', '0')
           }}>
           <Box
@@ -755,7 +764,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       >
         <Button
           variant='menutop_button'
-          onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_tuto.current!(true)}
+          onClick={() => ref_setter_show_modale_tuto.current!(true)}
         >
           <Box
             layerStyle='menutop_button_style'
@@ -807,7 +816,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       >
         <Button
           variant='menutop_button'
-          onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_support.current!(true)}
+          onClick={() => ref_setter_show_modale_support.current!(true)}
         >
           <Box
             layerStyle='menutop_button_style'
@@ -838,15 +847,13 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
 
 export const Modale_resolution_png: Modale_resolution_pngFType = (
   t: TFunction,
-  dict_hook_ref_setter_show_dialog_components,
-  applicationData,
-  pointer_pos
+  applicationData
 ) => {
   const [h, set_h] = useState<number>()
   const [v, set_v] = useState<number>()
   const valid_input = (h === undefined && v === undefined) || (v !== undefined && h !== undefined && !isNaN(+v) && !isNaN(+h))
-  dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current = set_h
-  dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current = set_v
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_res_h.current = set_h
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_res_v.current = set_v
   const content = <>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
@@ -909,10 +916,10 @@ export const Modale_resolution_png: Modale_resolution_pngFType = (
     <Button
       disabled={!valid_input}
       onClick={() => {
-        applicationData.function_on_wait.current = () => {
+        applicationData.new_data.menu_configuration.function_on_wait.current = () => {
           clickSavePNG(h, v)
         }
-        dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
+        applicationData.new_data.menu_configuration.ref_lauchToast.current()
       }}
     >
       Save
@@ -920,10 +927,9 @@ export const Modale_resolution_png: Modale_resolution_pngFType = (
   </>
 
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_resolution_save_png'}
     content={content}
-    pointer_pos={pointer_pos}
     title={t('Menu.setResolutionPNG')}
   />
 }
@@ -985,28 +991,22 @@ const clickSavePNG = (
  */
 export const Menu: FunctionComponent<MenuTypes> = (
   {
-    applicationContext,
     applicationData,
-    applicationState,
-    contextMenu,
     processFunctions,
-    dict_hook_ref_setter_show_dialog_components,
-    applicationDraw,
     configurations_menus,
     menus,
     cardsTemplate,
     external_modal,
     reinitialization,
     additional_nav_item,
-    convert_data,
     apply_transformation_additional_elements,
     DiagramSelector,
     formations_menu,
-    postProcessLoadExcel,
-    ComponentUpdater,
+    // postProcessLoadExcel,
   }
 ) => {
-  const { ref_setter_show_modale_tuto, ref_setter_show_modal_template } = dict_hook_ref_setter_show_dialog_components
+  const {t,url_prefix,logo,app_name,logo_terriflux}=applicationData.new_data
+  const { ref_setter_show_modale_tuto, ref_setter_show_modal_template } = applicationData.new_data.menu_configuration.dict_setter_show_dialog
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
   const [show_template, set_show_template] = useState(false)
@@ -1015,18 +1015,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ref_setter_show_modal_template.current = set_show_template
   const {new_data}=applicationData
   new_data.menu_configuration.ref_to_menu_updater.current=setForceUpdate.toggle
-  RepositionneSidebar(show_nav)
+  new_data.menu_configuration.ref_menu_opened.current=show_nav
+  new_data.menu_configuration.positionToolBar()
+  
 
   const [update, setUpdate] = useState(false)
-  let max_link_value = 0
-  Object.values(applicationData.data.links).forEach(link => {
-    const new_max_link_value = FindMaxLinkValue(
-      max_link_value,
-      link.value
-    )
-    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
-  })
-  max_link_value += 1
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
@@ -1062,7 +1055,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   const modal_tuto = <ModalTuto
     applicationData={applicationData}
-    applicationContext={applicationContext}
     processFunctions={processFunctions}
     formations_menu={formations_menu}
     show_tuto={show_tuto}
@@ -1093,7 +1085,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                   </Box>:
                   <></>
               }
-              {applicationContext.t('Menu.' + m)}
+              {t('Menu.' + m)}
             </Box>
           </Tab>
         })}
@@ -1114,23 +1106,22 @@ export const Menu: FunctionComponent<MenuTypes> = (
     <Text
       fontStyle='h3'
     >
-      {applicationContext.t('Menu.rth_support')}:
+      {t('Menu.rth_support')}:
     </Text>
     <Text
       fontStyle='h4'
     >
-      {applicationContext.t('Menu.support_explication').split('[]')[0]}
+      {t('Menu.support_explication').split('[]')[0]}
       <a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>
-      {applicationContext.t('Menu.support_explication').split('[]')[1]}
+      {t('Menu.support_explication').split('[]')[1]}
     </Text>
   </>
 
   const modal_support = <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modale_support'}
     content={content_support}
-    pointer_pos={contextMenu.pointer_pos}
-    title={applicationContext.t('Menu.c_support')}
+    title={t('Menu.c_support')}
   />
 
   const data_tags = Object.assign({}, applicationData.data.dataTags)
@@ -1149,9 +1140,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       in_popover={false}
     />
   }
-  const modal_resolution_png = Modale_resolution_png(applicationContext.t,
-    dict_hook_ref_setter_show_dialog_components, applicationData, contextMenu.pointer_pos
-  )
+  const modal_resolution_png = Modale_resolution_png(t,applicationData)
   return (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
@@ -1186,21 +1175,21 @@ export const Menu: FunctionComponent<MenuTypes> = (
                 justifySelf='center'
               >
                 <Image
-                  src={applicationContext.logo_terriflux}
+                  src={logo_terriflux}
                   onClick={() => { window.open('https://terriflux.com/', '_blank') }}
                 />
               </Box> :
               <></>
           }
           {
-            applicationContext.logo != '' ?
+            logo != '' ?
               <Box
                 margin='0.25rem'
                 alignSelf='center'
                 justifySelf='center'
               >
                 <Image
-                  src={applicationContext.logo}
+                  src={logo}
                 />
               </Box> :
               <></>
@@ -1278,14 +1267,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
             justifySelf='start'
           >
             ©<a href="https://terriflux.com/" >
-              <img width={75} src={applicationContext.logo_terriflux} />
-            </a> - {applicationContext.t('tdr')}
+              <img width={75} src={logo_terriflux} />
+            </a> - {t('tdr')}
           </Box>
           <Box layerStyle="menubottom_item_style">
-            {applicationContext.app_name}
+            {app_name}
           </Box>
           <Box layerStyle="menubottom_item_style">
-            <a href='https://terriflux.com/mentions-legales/'>{applicationContext.t('legal')}</a>
+            <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
           </Box>
           <Box layerStyle="menubottom_item_style">
             <a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a>
@@ -1313,6 +1302,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           because for some reason a style is directly applied to this component
           and we cannot override it in the theme */}
           <DrawerContent
+            className='drawer_menu_config'
             style={{
               width: menu_config_width,
               marginTop: document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y + document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
@@ -1359,36 +1349,27 @@ export const Menu: FunctionComponent<MenuTypes> = (
             </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
-        applicationContext={applicationContext}
-        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         applicationData={applicationData}
-        applicationDraw={applicationDraw}
-        convert_data={convert_data}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
-        DefaultSankeyData={applicationData.get_default_data}
-        ComponentUpdater={ComponentUpdater}
       />
 
       <ExcelModal
-        t={applicationContext.t}
+        applicationData={applicationData}
+        t={t}
         launch={processFunctions.launch}
         UploadExcelImpl={UploadExcelImpl}
-        url_prefix={applicationContext.url_prefix}
-        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+        url_prefix={url_prefix}
         Reinitialization={reinitialization}
-        pointer_pos={contextMenu.pointer_pos}
       />
 
       <SankeyLoad
-        applicationContext={applicationContext}
         applicationData={applicationData}
         successAction={() => DownloadExamples(
           processFunctions.path.current,
-          applicationContext.url_prefix,
+          url_prefix,
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )}
-        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
       />
 
@@ -1401,7 +1382,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           <ModalContent
             maxWidth='inherit'
           >
-            <ModalHeader>{applicationContext.t('Banner.sdr')}</ModalHeader>
+            <ModalHeader>{t('Banner.sdr')}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <Box
@@ -1425,15 +1406,13 @@ export const MenuDraggable: FunctionComponent<MenuDraggableFType> = ({
   dict_hook_ref_setter_show_dialog_components,
   dialog_name,
   content,
-  pointer_pos,
   title}
 ) => {
   const [display_menu, set_display_menu] = useState(false)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
-
   return <Draggable
     handle='.title_menu'
-    defaultPosition={{ x: pointer_pos.current[0], y: pointer_pos.current[1] }}
+    defaultPosition={{ x: window.innerWidth/4, y:window.innerHeight/4 }}
     bounds={{ left: 0, top: 0 }}
   >
     <Box
@@ -1466,12 +1445,12 @@ export const MenuDraggable: FunctionComponent<MenuDraggableFType> = ({
 }
 
 export const OpenSankeySaveButton: FunctionComponent<OpenSankeySaveButtonFType> = ({
-  applicationData,
-  applicationContext
+  applicationData
 }) => {
   const last_save = localStorage.getItem('last_save')
   const has_save_in_cache = last_save !== undefined && last_save !== null
   const { new_data } = applicationData
+  const { t } = new_data
 
   const [forceUpdate, setForceUpdate] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => setForceUpdate(b)
@@ -1491,7 +1470,7 @@ export const OpenSankeySaveButton: FunctionComponent<OpenSankeySaveButtonFType> 
   }
   return <OSTooltip
     placement='bottom'
-    label={applicationContext.t('Menu.tooltips.checkpoint')}
+    label={t('Menu.tooltips.checkpoint')}
   >
     <Button
       variant='menutop_button_save_in_cache'
@@ -1616,27 +1595,7 @@ export const post_process_export_svg = () => {
   d3.select(' .opensankey#svg-container svg').style('border', '2px')
 }
 
-// export const ToastWaitFunc=({
-//   applicationData,
-//   dict_hook_ref_setter_show_dialog_components,
-//   applicationContext}:ToastWaitFuncFType
-// )=>{
-//   const [show_toast_wait,set_show_toast_wait]=useState(false)
-//   dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current=set_show_toast_wait
 
-//   return     <Toast onEntered={()=>{
-//     setTimeout(()=>{
-//       applicationData.function_on_wait.current()
-//       applicationData.function_on_wait.current=()=>null
-//       set_show_toast_wait(false)
-//     },50
-//     )
-//   }} className='toast_waiting' show={show_toast_wait} onClose={()=>set_show_toast_wait(false)} bg='info' style={{ 'width':'auto', 'position': 'fixed', 'right':'0','top':window.innerHeight-150, 'zIndex': 4 }}>
-//     <Toast.Body>
-//       <Spinner/>
-//       {applicationContext.t('Menu.waiting')}</Toast.Body>
-//   </Toast>
-// }
 
 export const launchToastConstructor = (
   applicationData: applicationDataType,
@@ -1651,7 +1610,7 @@ export const launchToastConstructor = (
   }
   const tmp = new Promise((resole) => {
     setTimeout(() => {
-      applicationData.function_on_wait.current()
+      applicationData.new_data.menu_configuration.function_on_wait.current()
       resole(200)
     }, 50)
   })
@@ -1662,7 +1621,6 @@ export const launchToastConstructor = (
 
 export const ModalTuto: FunctionComponent<ModalTutoType> = ({
   applicationData,
-  applicationContext,
   processFunctions,
   formations_menu,
   show_tuto,
@@ -1670,6 +1628,7 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
   Reinitialization
 }) => {
   const { convert_data } = applicationData
+  const { t,url_prefix } = applicationData.new_data
 
   // Pré-traitement du menu tuto pour trier les groupes
   const n_a = new Array(50)
@@ -1713,12 +1672,12 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               <Button variant='toolbar_button_6'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/Tutoriels/'+(d[0])+'/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                    ('Formations/Tutoriels/'+(d[0])+'/'+dd), url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                   )
                   applicationData.set_data({ ...applicationData.data })
                   set_show_tuto(false)
                 }}
-              >{applicationContext.t('useTutoJSON')}</Button>
+              >{t('useTutoJSON')}</Button>
 
               {/* Button to open the Excel file */}
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '.xlsx')) ?
@@ -1726,12 +1685,12 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
                   onClick={() => {
                     processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
                     )
                     set_show_tuto(false)
                   }
                   }
-                >{applicationContext.t('useTutoExcel')}</Button>
+                >{t('useTutoExcel')}</Button>
                 : <></>}
 
               {/* Button to open the Excel file reconcilied */}
@@ -1740,12 +1699,12 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
                   onClick={() => {
                     processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
                     )
                     set_show_tuto(false)
                   }
                   }
-                >{applicationContext.t('useTutoExcel')}</Button>
+                >{t('useTutoExcel')}</Button>
                 : <></>}
 
             </ButtonGroup>
@@ -1761,7 +1720,7 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
     <ModalContent
       maxWidth='inherit'
     >
-      <ModalHeader>{applicationContext.t('Menu.formation')}</ModalHeader>
+      <ModalHeader>{t('Menu.formation')}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
         <Tabs variant='tabs_navbar'>

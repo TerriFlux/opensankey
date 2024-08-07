@@ -10,14 +10,15 @@ import LZString from 'lz-string'
 
 // Local types
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_JSON, Type_Structure } from './Utils'
+import { Type_JSON } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
+import { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-const initial_show_structure = 'reconciled'
 
 /**
  * Class that contains all elements to make the application work
@@ -40,14 +41,16 @@ export class Class_ApplicationData {
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  // Display
-  private _show_structure: Type_Structure = initial_show_structure
+  // General attributes for the application
+  private _t: TFunction = useTranslation().t //traductor
+  private _logo: string // path to logo
+  private _logo_terriflux: string  //path to logo_terriflux
+  private _logo_width: number = 100
+  private _app_name: string = 'SankeySuite'
+  private _url_prefix: string = '/opensankey/' // path for server call
 
-  // Limitations
-  private _maximum_flux?: number
-  private _minimum_flux?: number
+  private _has_free_account: boolean = true // token for opensankey (if user is connected with an account)
 
-  private _filter_label: number = 0
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -74,16 +77,44 @@ export class Class_ApplicationData {
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
+
+    // Get logo PNG
+    let logo = ''
+    try {
+      /* eslint-disable */
+      // @ts-ignore
+      logo = require('../css/opensankey.png')
+      /* eslint-enable */
+      const path = window.location.href
+      if (!path.includes('localhost')) {
+        logo = logo.replace('static/', 'static/opensankey/')
+      }
+    } catch (expt) {
+      console.log('opensankey.png not found')
+    }
+
+    let logo_terriflux = ''
+    try {
+      /* eslint-disable */
+      // @ts-ignore
+      logo_terriflux = require('../css/terriflux.png')
+      /* eslint-enable */
+      const path = window.location.href
+      if (!path.includes('localhost')) {
+        logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
+      }
+    } catch (expt) {
+      console.log('terriflux.png not found')
+    }
+
+    this._logo=logo
+    this._logo_terriflux=logo_terriflux
   }
 
   // PUBLIC METHODS =====================================================================
 
   public reset() {
     // Reset values of attributes
-    this._show_structure = initial_show_structure
-    delete this._maximum_flux
-    delete this._minimum_flux
-    this._filter_label = 0
     // Recreate drawing area
     this.drawing_area.delete()
     this.drawing_area = new Class_DrawingArea(
@@ -172,7 +203,7 @@ export class Class_ApplicationData {
       }
       else if (evt.key == 'Escape') {
         // Set app in selection mode
-        this.drawing_area.setSelectionMode()
+        if(this.drawing_area.isInEditionMode())this.drawing_area.switchMode()
 
         // Deselect all element
         app_ref.drawing_area.purgeSelection()
@@ -270,25 +301,23 @@ export class Class_ApplicationData {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get maximum_flux(): number | undefined { return this._maximum_flux }
-  public set maximum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._maximum_flux = value
-      this.drawing_area.drawElements()
-    }
-  }
+  public get has_free_account(): boolean { return this._has_free_account }
+  public set has_free_account(value: boolean) {/* TODO */ }
 
-  public get minimum_flux(): number | undefined { return this._minimum_flux }
-  public set minimum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._minimum_flux = value
-      this.drawing_area.drawElements()
-    }
-  }
+  public get t(): TFunction {return this._t}
 
-  public get show_structure(): Type_Structure { return this._show_structure }
-  public set show_structure(value: Type_Structure) { this._show_structure = value }
+  public get url_prefix(): string {return this._url_prefix}
+  public set url_prefix(value: string) {this._url_prefix = value}
 
-  public get filter_label(): number { return this._filter_label }
-  public set filter_label(value: number) { this._filter_label = value }
+  public get logo(): string {return this._logo}
+  public set logo(value: string) {this._logo = value}
+
+  public get logo_terriflux(): string {return this._logo_terriflux}
+  public set logo_terriflux(value: string) {this._logo_terriflux = value}
+
+  public get logo_width(): number {return this._logo_width}
+  public set logo_width(value: number) {this._logo_width = value}
+
+  public get app_name(): string {return this._app_name}
+  public set app_name(value: string) {this._app_name = value}
 }

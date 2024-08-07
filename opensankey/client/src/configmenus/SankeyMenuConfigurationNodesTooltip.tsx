@@ -30,15 +30,15 @@ import { OSTooltip } from './SankeyUtils'
  */
 export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
   applicationData,
-  applicationContext,
   menu_for_modal
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
   // Get necessary infos
-  const { t } = applicationContext
-  const { new_data, data } = applicationData
+  const { new_data } = applicationData
+  const { t } = new_data
+
 
   // Selected nodes ---------------------------------------------------------------------
 

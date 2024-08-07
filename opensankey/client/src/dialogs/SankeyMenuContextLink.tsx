@@ -29,16 +29,15 @@ const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''
 // MENU COMPONENT ***********************************************************************
 
 export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
-  applicationContext,
   applicationData,
-  dict_hook_ref_setter_show_dialog_components
 }) => {
 
   // Datas ------------------------------------------------------------------------------
 
-  const { t } = applicationContext
-  const { new_data} = applicationData
-
+  const { new_data } = applicationData
+  const { t } = new_data
+  const { ref_setter_show_menu_link_appearence, ref_setter_show_menu_link_data, ref_setter_show_menu_link_tooltip, ref_setter_show_menu_link_tags
+  } = new_data.menu_configuration.dict_setter_show_dialog
   // Link on which this menu applies ----------------------------------------------------
 
   const contextualised_link = new_data.drawing_area.link_contextualised
@@ -71,10 +70,10 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [ , refreshThis] = useBoolean()
+  const [, refreshThis] = useBoolean()
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_context_links_updater.current=refreshThis.toggle
+  new_data.menu_configuration.ref_to_menu_context_links_updater.current = refreshThis.toggle
 
   // Functions used to reset menu UI ----------------------------------------------------
 
@@ -124,11 +123,11 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
                         return <MenuItem
                           onClick={() => {
                             // Assign tag to selected links
-                            if(has_tag){
-                              selected_links.forEach(l=> l.addTag(tag))
+                            if (has_tag) {
+                              selected_links.forEach(l => l.addTag(tag))
                             }
                             else {
-                              selected_links.forEach(l=>l.removeTag(tag))
+                              selected_links.forEach(l => l.removeTag(tag))
                             }
                             refreshThisAndToggleSaving()
                           }}
@@ -150,7 +149,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const button_open_link_appearence = (contextualised_link !== undefined) ?
     <Button
       onClick={() => {
-        dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(true)
+        ref_setter_show_menu_link_appearence.current(true)
         new_data.drawing_area.link_contextualised = undefined
       }}
       variant='contextmenu_button'
@@ -259,7 +258,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const button_open_link_data = (contextualised_link !== undefined) ?
     <Button
       onClick={() => {
-        dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(true)
+        ref_setter_show_menu_link_data.current(true)
         new_data.drawing_area.link_contextualised = undefined
       }}
       variant='contextmenu_button'
@@ -272,8 +271,8 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const button_mask_link_label = (contextualised_link !== undefined) ?
     <Button onClick={() => {
       selected_links
-        .forEach(link=>{
-          link.value_label_is_visible=!context_link_label_visible
+        .forEach(link => {
+          link.value_label_is_visible = !context_link_label_visible
         })
       refreshThisAndToggleSaving()
     }}
@@ -284,14 +283,14 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
           t('Flux.apparence.hide_link_lab') :
           t('Flux.apparence.display_link_lab')
       }
-    </Button>:
+    </Button> :
     <></>
 
   const button_open_link_tooltip = (contextualised_link !== undefined) ?
     <Button
       onClick={() => {
-        dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(true)
-        new_data.drawing_area.link_contextualised=undefined
+        ref_setter_show_menu_link_tooltip.current(true)
+        new_data.drawing_area.link_contextualised = undefined
       }}
       variant='contextmenu_button'
     >
@@ -302,8 +301,8 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
 
   const btn_l_show_tags_menu = <Button
     onClick={() => {
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tags.current(true)
-      new_data.drawing_area.link_contextualised=undefined
+      ref_setter_show_menu_link_tags.current(true)
+      new_data.drawing_area.link_contextualised = undefined
     }}
     variant='contextmenu_button'
   >
@@ -332,7 +331,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   const btn_inverse_io = <Button
     variant='contextmenu_button'
     onClick={() => {
-      selected_links.forEach(l=>l.inverse())
+      selected_links.forEach(l => l.inverse())
       refreshThisAndToggleSaving()
     }}
   >

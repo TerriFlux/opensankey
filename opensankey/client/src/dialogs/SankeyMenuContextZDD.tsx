@@ -1,11 +1,9 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useState } from 'react'
 import { ContextMenuZddFType } from './types/SankeyMenuContextZDDTypes'
-import { ComputeAutoSankey, arrangeNodes } from '../draw/SankeyDrawLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { GetRandomInt, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
-import { DrawGrid } from '../draw/SankeyDrawFunction'
+import { GetRandomInt } from '../configmenus/SankeyUtils'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Input, NumberInput, NumberInputField } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -14,14 +12,12 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
 
 export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
-  applicationContext,
   applicationData,
-  dict_hook_ref_setter_show_dialog_components,
 }) => {
 
 
   const {new_data } = applicationData
-  const { t } = applicationContext
+  const { t } = new_data
 
   const [forceUpdate, setForceUpdate] = useState(false)
 
@@ -148,14 +144,15 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
       <Button variant='contextmenu_button'
         onClick={() => {
-          applicationData.function_on_wait.current = () => {
+          applicationData.new_data.menu_configuration.function_on_wait.current = () => {
 
             // TODO re-implment function when computeautosankey is re-implemented with classes
             // ComputeAutoSankey(applicationData, node_hspace, false)
 
             indicateSankeyToSaveInCache()
           }
-          dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current({ success: 'Layout Updated' })
+          applicationData.new_data.menu_configuration.ref_lauchToast.current({ success: 'Layout Updated' })
+
         }}>
         {t('MEP.PA_action')}
       </Button>
@@ -205,7 +202,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
   // Item to open a draggable modal with the configuration menu of the draw area
   const button_open_layout = <Button onClick={() => {
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(true)
+    applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_layout.current(true)
     new_data.drawing_area.is_drawing_area_contextualised = false
   }} variant='contextmenu_button'>
     {t('Menu.MEP')} {icon_open_modal}

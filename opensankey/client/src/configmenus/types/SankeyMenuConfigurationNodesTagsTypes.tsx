@@ -1,4 +1,4 @@
-import { SankeyNode, applicationContextType, applicationDataType } from '../../types/Types'
+import { SankeyNode, applicationDataType } from '../../types/Types'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -8,7 +8,6 @@ import { SankeyNode, applicationContextType, applicationDataType } from '../../t
    * @type {*}
    */
 export type SankeyMenuConfigurationNodesTagsFType = {
-  applicationContext : applicationContextType,
   applicationData : applicationDataType,
   menu_for_modal:boolean
 }

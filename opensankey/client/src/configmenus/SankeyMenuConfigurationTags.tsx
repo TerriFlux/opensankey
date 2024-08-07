@@ -60,13 +60,12 @@ const list_palette_color = [
 ]
 
 const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({
-  applicationContext,
   applicationData,
   elementTagNameProp,
 }) => {
-  const { t } = applicationContext
   const { new_data } = applicationData
-
+  const { t } = new_data
+  
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)

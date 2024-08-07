@@ -14,32 +14,31 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 // MENU COMPONENT ***********************************************************************
 
 export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
-  applicationContext,
   applicationData,
   extra_background_element
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
 
   // Components updaters ---------------------------------------------------------------
 
-  const [ , refreshThis ] = useBoolean()
+  const [, refreshThis] = useBoolean()
   new_data.menu_configuration.ref_to_menu_config_layout_updater.current = refreshThis.toggle
 
 
   // Link to ConfigMenuNumberInput state variable
   const number_of_input = 9
-  const ref_set_number_inputs: MutableRefObject<(_:number | null | undefined) => void>[] = []
-  for (let i=0; i<number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_:number | null | undefined) => null))
+  const ref_set_number_inputs: MutableRefObject<(_: number | null | undefined) => void>[] = []
+  for (let i = 0; i < number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_: number | null | undefined) => null))
 
   // Be sure that values are updated in inputs when refreshing this component
   ref_set_number_inputs[0].current(new_data.drawing_area.scale)
-  ref_set_number_inputs[1].current(new_data.minimum_flux)
-  ref_set_number_inputs[2].current(new_data.maximum_flux)
+  ref_set_number_inputs[1].current(new_data.drawing_area.minimum_flux)
+  ref_set_number_inputs[2].current(new_data.drawing_area.maximum_flux)
   ref_set_number_inputs[3].current(new_data.drawing_area.legend.legend_police)
   ref_set_number_inputs[4].current(new_data.drawing_area.legend.legend_bg_opacity)
   ref_set_number_inputs[5].current(new_data.drawing_area.legend.position_x)
@@ -220,17 +219,19 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
         <OSTooltip label={t('MEP.tooltips.MinFlux')}>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={new_data.minimum_flux}
+            default_value={new_data.drawing_area.minimum_flux}
             function_on_blur={(value) => {
               if (value) {
-                new_data.minimum_flux = value
+                new_data.drawing_area.minimum_flux = value
+                // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
               }
             }}
             minimum_value={1}
-            maximum_value={new_data.maximum_flux}
+            maximum_value={new_data.drawing_area.maximum_flux}
             stepper={true}
-            unit_text={right_addon_pixel(new_data.minimum_flux!)}
+            unit_text={right_addon_pixel(new_data.drawing_area.minimum_flux!)}
           />
         </OSTooltip>
       </Box>
@@ -243,16 +244,18 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
         <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[2]}
-            default_value={new_data.maximum_flux}
+            default_value={new_data.drawing_area.maximum_flux}
             function_on_blur={(value) => {
               if (value) {
-                new_data.maximum_flux = value
+                new_data.drawing_area.maximum_flux = value
+                // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
               }
             }}
-            minimum_value={new_data.minimum_flux}
+            minimum_value={new_data.drawing_area.minimum_flux}
             stepper={true}
-            unit_text={right_addon_pixel(new_data.maximum_flux!)}
+            unit_text={right_addon_pixel(new_data.drawing_area.maximum_flux!)}
           />
         </OSTooltip>
       </Box>
@@ -268,7 +271,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={!new_data.drawing_area.legend.masked ? <FaEye /> : <FaEyeSlash />}
         isChecked={!new_data.drawing_area.legend.masked}
-        onChange={(evt) => {
+        onChange={() => {
           new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
           refreshThisAndUpdateRelatedComponents()
         }}

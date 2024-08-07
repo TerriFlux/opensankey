@@ -35,7 +35,8 @@ import {
   useBoolean
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes,
+import {
+  faShareNodes,
   faArrowPointer,
   faCodeBranch,
   faDiagramProject,
@@ -49,20 +50,13 @@ import { faShareNodes,
 
 // Internal Types / Classes
 import {
-  ComponentUpdaterType,
-  LinkFunctionTypes,
-  NodeFunctionTypes,
   SankeyData,
-  applicationDataType,
-  applicationDrawType
+  applicationDataType
 } from '../types/Types'
 import {
   Class_TagGroup,
   Class_LevelTagGroup
 } from '../types/Tag'
-import {
-  ConvertDataFuncType
-} from './types/SankeyConvertTypes'
 import {
   addAllDropDownNodeFType,
   AddAllDropDownFluxFType,
@@ -72,9 +66,6 @@ import {
   stretchButtonsFType,
   ToolbarBuilderFType,
 } from './types/SankeyMenuBannerTypes'
-import {
-  GetSankeyMinWidthAndHeightFuncType
-} from './types/SankeyUtilsTypes'
 
 // Internal functions / Components
 import {
@@ -83,15 +74,6 @@ import {
 import {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
-import {
-  DeleteGNodes
-} from '../draw/SankeyDrawNodes'
-import {
-  DeleteGLinks
-} from '../draw/SankeyDrawLinks'
-import {
-  actualizeDrawAreaFrame
-} from '../draw/SankeyDrawEventFunction'
 import {
   InitalizeSelectorDetailNodes
 } from '../OSModule'
@@ -151,23 +133,11 @@ export const setDiagram: setDiagramFuncType = (
       window.sankey[sous_filieres[the_diagram]]
     )
   ) as SankeyData
-  convert_data({data: new_data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
+  convert_data({ data: new_data } as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
 }
 
-const redrawNodeLinkLegend = (
-  applicationData: applicationDataType,
-  node_function: NodeFunctionTypes,
-  link_function: LinkFunctionTypes,
-  ComponentUpdater: ComponentUpdaterType,
-  applicationDraw: applicationDrawType
-) => {
-  node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-  link_function.RedrawLinks(Object.values(applicationData.display_links))
-  applicationDraw.reDrawLegend()
-  ComponentUpdater.updateComponenSaveInCache.current(false)
-}
 
 // COMPONENTS ===========================================================================
 
@@ -188,7 +158,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
   const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
   // Component updater ------------------------------------------------------------------
-  const [ , refreshThis] = useBoolean()
+  const [, refreshThis] = useBoolean()
   new_data.menu_configuration.ref_to_leveltag_filter_updater.current = refreshThis.toggle
 
   // JSX Component ----------------------------------------------------------------------
@@ -249,14 +219,13 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
  */
 export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
   {
-    applicationContext,
     applicationData,
     level
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
 
   // Tag group dicts
   const node_taggs = new_data.drawing_area.sankey.node_taggs_dict
@@ -281,7 +250,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
     }
   }
   else {
-    taggs_in_banner =  Object.values(node_taggs)
+    taggs_in_banner = Object.values(node_taggs)
       .filter(tagg => tagg.banner !== 'none')
   }
 
@@ -477,19 +446,19 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
  */
 export const AddAllDropDownFlux: FunctionComponent<AddAllDropDownFluxFType> = (
   {
-    applicationContext,
     applicationData
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
 
   // Tag group dicts
   const flux_taggs_dict = new_data.drawing_area.sankey.flux_taggs_dict
   const flux_taggs_with_banner = Object.values(flux_taggs_dict)
     .filter(flux_tagg => {
-      return ((flux_tagg.banner === 'one') || (flux_tagg.banner === 'multi')) })
+      return ((flux_tagg.banner === 'one') || (flux_tagg.banner === 'multi'))
+    })
 
   // Component updater ------------------------------------------------------------------
   const [, refreshThis] = useBoolean()
@@ -656,13 +625,15 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
         const selected_options = tagg.selected_tags_list
           .map((tag) => { return { 'label': tag.name, 'value': tag.id } })
         const options = tagg.tags_list
-          .map((tag) => { return {
-            'label': tag.name,
-            'value': tag.id,
-            'disabled': (
-              (selected_options.length < 2) &&
-              (tag.id == selected_options[0].value)
-            )}
+          .map((tag) => {
+            return {
+              'label': tag.name,
+              'value': tag.id,
+              'disabled': (
+                (selected_options.length < 2) &&
+                (tag.id == selected_options[0].value)
+              )
+            }
           })
         selector = <MultiSelect
           className={'multidropdown_filter_node_link'}
@@ -723,82 +694,42 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
  */
 export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   {
-    applicationContext,
     applicationData,
-    applicationState,
     filter,
     set_current_filter,
-    detail_level,
     url_prefix,
-    first_selected_node,
-    dict_hook_ref_setter_show_dialog_components,
-    never_see_again,
     additional_link_visual_filter_content,
-    node_function,
-    link_function,
-    ComponentUpdater,
-    applicationDraw
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } = new_data
   const { sankey } = new_data.drawing_area
   // const { ref_getter_mode_selection, ref_setter_mode_selection } = applicationState
-  const { GetSankeyMinWidthAndHeight } = applicationDraw
 
   // ===================Create hooks used in this component========================
 
-  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.show_structure))
+  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.drawing_area.show_structure))
   const [s_force_update, sforceUpdate] = useBoolean()
-  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.show_structure)
-  const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
-  const [mode_selection, sModeSelection] = useState('ln')
+  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.drawing_area.show_structure)
+  const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.drawing_area.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [, setForceUpdate] = useBoolean()
-  new_data.menu_configuration.ref_to_toolbar_updater.current=setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_toolbar_updater.current = setForceUpdate.toggle
   let btn_mouse_mode_edition = <></>
 
-  // ref_getter_mode_selection.current = mode_selection
-  // ref_setter_mode_selection.current = sModeSelection
 
   const node_filter = Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
   const flux_filter = Object.entries(sankey.flux_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
   const level_filter = Object.entries(sankey.level_taggs_dict).length > 0
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
-  /**
-   * Change the mouse behavior
-   */
-  // const setSelectionMode = (val: string) => {
-  //   sModeSelection(val)
-  //   //- trigger update
-  //   const tutu = filter
-  //   set_current_filter(filter + 1)
-  //   set_current_filter(tutu)
-  //   d3.selectAll(' .opensankey #svg #path-flux').remove()
-  //   if (val == 's' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)) {
-  //     data.nodes = Object.fromEntries(Object.entries(data.nodes).filter(n => n[1].name != 'node_tmp'))
-  //     first_selected_node.current = undefined
-  //   }
-  // }
-
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  let max_link_value = 0
-  // TODO re implement it with new value class
-
-  // Object.values(sankey.links_dict).forEach(link => {
-  //   const new_max_link_value = FindMaxLinkValue(
-  //     max_link_value,
-  //     link.value
-  //   )
-  //   max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
-  // })
-  max_link_value += 1
+  const max_link_value = Math.max(...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
 
   const redrawNodeLinkLegend = () => {
     sankey.draw()
     new_data.drawing_area.legend.draw()
-    ComponentUpdater.updateComponenSaveInCache.current(false)
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   const legend_filter = <Box
@@ -890,12 +821,13 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
             <Slider
               min={0}
               max={max_link_value}
-              value={new_data.filter_label}
+              value={new_data.drawing_area.filter_label}
               onChange={(evt) => {
-                applicationData.new_data.filter_label = +evt
+                applicationData.new_data.drawing_area.filter_label = +evt
                 setForceUpdate.toggle()
-                redrawNodeLinkLegend()
-              }}>
+                new_data.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
+              }}
+            >
               <SliderTrack>
                 <SliderFilledTrack />
               </SliderTrack>
@@ -905,15 +837,15 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
             <NumberInput
               min={0}
               max={max_link_value}
-              value={new_data.filter_label}
+              value={new_data.drawing_area.filter_label}
               onChange={(evt) => {
                 let tmp = +evt
                 if (tmp > max_link_value) {
                   tmp = max_link_value
                 }
-                applicationData.new_data.filter_label = tmp
+                applicationData.new_data.drawing_area.filter_label = tmp
                 setForceUpdate.toggle()
-                redrawNodeLinkLegend()
+                new_data.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
               }}
             >
               <NumberInputField />
@@ -954,7 +886,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
           <Select
             value={s_type_value}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              new_data.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
+              new_data.drawing_area.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
               sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled')
               if (evt.target.value === 'reconciled') {
                 sIsDataTypeReconcilied(true)
@@ -972,15 +904,15 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
 
         <Box
           layerStyle='menuconfig_grid'
-          display={s_is_data_type_reconcilied ? '' : 'none' }
+          display={s_is_data_type_reconcilied ? '' : 'none'}
         >
           <Box fontStyle='h3' >
             {t('Banner.indetermined_value')}
           </Box>
           <Select
-            value={new_data.show_structure}
+            value={new_data.drawing_area.show_structure}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              new_data.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+              new_data.drawing_area.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
               setForceUpdate.toggle()
               redrawNodeLinkLegend()
             }}>
@@ -994,7 +926,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   </Popover>
 
   const node_tag_filter_content = <AddAllDropDownNode
-    applicationContext={applicationContext}
     applicationData={applicationData}
     level={false}
   />
@@ -1078,7 +1009,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       <PopoverBody>
         {legend_filter}
         <AddAllDropDownFlux
-          applicationContext={applicationContext}
           applicationData={applicationData}
         />
       </PopoverBody>
@@ -1117,14 +1047,13 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
       <OSTooltip
         placement='left'
-        label={(mode_selection == 's') ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
+        label={(new_data.drawing_area.isInEditionMode()) ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
       >
         <Button
           variant='toolbar_button_1'
           id='button_selection_edition'
           onClick={() => {
             applicationData.new_data?.drawing_area.switchMode()
-            setForceUpdate.toggle()
           }} >
           <FontAwesomeIcon icon={(
             applicationData.new_data?.drawing_area.isInEditionMode() ?
@@ -1142,12 +1071,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
       placement='left'
       label={t('Banner.hlp_1_txt_2')}>
       {
-        InitalizeSelectorDetailNodes(
-          applicationContext,
-          applicationData)
+        InitalizeSelectorDetailNodes(applicationData)
       }
     </OSTooltip>
-  </>:
+  </> :
     <></>
 
   const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
@@ -1157,13 +1084,13 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   </>
 
 
-  const btn_show_data_type=url_prefix !== '' ?<><OSTooltip placement='left' label={t('Banner.sdr')}>
+  const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
     {struc_data_reconciled}
   </OSTooltip>
-  </>:
+  </> :
     <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
       <Button variant={'success'} onClick={() => {
-        new_data.show_structure = new_data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+        new_data.drawing_area.show_structure = new_data.drawing_area.show_structure == 'reconciled' ? 'structure' : 'reconciled'
         setForceUpdate.toggle()
         redrawNodeLinkLegend()
 
@@ -1176,7 +1103,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     <OSTooltip placement='left' label={t('Banner.hlp_node_tag_filter')}>
       {filter_color_node}
     </OSTooltip>
-  </>:
+  </> :
     <></>
 
   const btn_show_link_filter = (flux_filter) ? <>
@@ -1190,7 +1117,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     </OSTooltip></> : <></>
 
   const btn_show_help_in_static = window.SankeyToolsStatic ? <OSTooltip placement='left' label={t('Banner.tooltipHelp')}>
-    <Button variant='info' onClick={() => { never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
+    <Button variant='info' onClick={() => { new_data.menu_configuration.never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) }} >
       ?
     </Button>
   </OSTooltip> : <></>
@@ -1213,7 +1140,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     {btn_show_data_filter}
     {btn_show_data_type}
 
-    {stretchButtons(applicationData, GetSankeyMinWidthAndHeight, t)}
+    {stretchButtons(applicationData, t)}
 
     {btn_show_help_in_static}
 
@@ -1231,7 +1158,6 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
  */
 const stretchButtons: stretchButtonsFType = (
   applicationData,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
   t: TFunction
 ) => {
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>

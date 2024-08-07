@@ -1,12 +1,10 @@
 import {
-  applicationContextType,
   applicationDataType,
 } from '../../types/Types'
 
 
 export type OpenSankeyConfigurationsMenusFType = {
   applicationData: applicationDataType,
-  applicationContext: applicationContextType,
   menu_configuration_layout: JSX.Element,
   menu_configuration_node_tags: JSX.Element,
   menu_configuration_link_tags: JSX.Element,

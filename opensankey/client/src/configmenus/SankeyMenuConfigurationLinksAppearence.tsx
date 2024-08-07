@@ -139,8 +139,6 @@ const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24
 
 export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurationLinksAppearenceFType> = ({
   applicationData,
-  applicationState,
-  applicationContext,
   additional_link_appearence_items,
   menu_for_style
 }) => {
@@ -148,11 +146,11 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t } = applicationContext
+  const { t } = applicationData.new_data
 
   // Get data
   const { new_data } = applicationData
-  const { ref_selected_style_link } = applicationState
+  const { ref_selected_style_link } = new_data.menu_configuration
 
   // Elements on which this menu applies ------------------------------------------------
 
@@ -236,7 +234,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   // Components updaters ----------------------------------------------------------------
 
   // State variable to trigger this menu refreshing
-  const [ , refreshThis ] = useBoolean()
+  const [, refreshThis] = useBoolean()
 
   // Link this menu's update function
   if (!menu_for_style) {
@@ -245,16 +243,16 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
   // Link to ConfigMenuNumberInput state variable
   const number_of_input = 9
-  const ref_set_number_inputs: MutableRefObject<(_:number | null | undefined) => void>[] = []
-  for (let i=0; i<number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_:number | null | undefined) => null))
+  const ref_set_number_inputs: MutableRefObject<(_: number | null | undefined) => void>[] = []
+  for (let i = 0; i < number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_: number | null | undefined) => null))
 
   // Be sure that values are updated in inputs when refreshing this component
   ref_set_number_inputs[0].current(shape_arrow_size)
-  ref_set_number_inputs[1].current(shape_starting_curve*100)
-  ref_set_number_inputs[2].current(shape_ending_curve*100)
-  ref_set_number_inputs[3].current(shape_starting_tangeant*100)
-  ref_set_number_inputs[4].current(shape_ending_tangeant*100)
+  ref_set_number_inputs[1].current(shape_starting_curve * 100)
+  ref_set_number_inputs[2].current(shape_ending_curve * 100)
+  ref_set_number_inputs[3].current(shape_starting_tangeant * 100)
+  ref_set_number_inputs[4].current(shape_ending_tangeant * 100)
   ref_set_number_inputs[5].current(shape_opacity)
   ref_set_number_inputs[6].current(value_label_scientific_precision)
   ref_set_number_inputs[7].current(value_label_nb_digit)
@@ -295,7 +293,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       isChecked={shape_is_recycling}
       onChange={
         (evt) => {
-          elements.forEach(element => {element.shape_is_recycling = evt.target.checked})
+          elements.forEach(element => { element.shape_is_recycling = evt.target.checked })
           refreshThisAndUpdateRelatedComponents()
         }}>
       <OSTooltip label={t('Flux.apparence.tooltips.recy')}>{t('Flux.apparence.recy')}
@@ -308,7 +306,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {t('Flux.apparence.of')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_orientation') ?
+            isAttributeOverloaded(selected_links, 'shape_orientation') ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
@@ -411,7 +409,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {t('Flux.apparence.arrow_size')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_arrow_size') ?
+            isAttributeOverloaded(selected_links, 'shape_arrow_size') ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
@@ -464,15 +462,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
         <ConfigMenuNumberInput
           ref_to_set_value={ref_set_number_inputs[1]}
-          default_value={shape_starting_curve*100}
+          default_value={shape_starting_curve * 100}
           function_on_blur={(value) => {
             elements.forEach(element =>
-              element.shape_starting_curve = (value ? value/100 : undefined))
+              element.shape_starting_curve = (value ? value / 100 : undefined))
             refreshThisAndUpdateRelatedComponents()
           }}
           menu_for_style={menu_for_style}
           minimum_value={0}
-          maximum_value={shape_ending_curve*100}
+          maximum_value={shape_ending_curve * 100}
           step={1}
           stepper={true}
           unit_text='%'
@@ -496,16 +494,16 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
         <ConfigMenuNumberInput
           ref_to_set_value={ref_set_number_inputs[2]}
-          default_value={shape_ending_curve*100}
+          default_value={shape_ending_curve * 100}
           menu_for_style={menu_for_style}
-          minimum_value={shape_starting_curve*100}
+          minimum_value={shape_starting_curve * 100}
           maximum_value={100}
           step={1}
           stepper={true}
           unit_text='%'
           function_on_blur={(value) => {
             elements.forEach(element =>
-              element.shape_ending_curve = (value ? value/100 : undefined))
+              element.shape_ending_curve = (value ? value / 100 : undefined))
             refreshThis.toggle()
           }}
         />
@@ -519,7 +517,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {t('Flux.apparence.starting_tangeant')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_starting_tangeant') ?
+            isAttributeOverloaded(selected_links, 'shape_starting_tangeant') ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
@@ -528,7 +526,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[3]}
-            default_value={shape_starting_tangeant*100}
+            default_value={shape_starting_tangeant * 100}
             menu_for_style={menu_for_style}
             minimum_value={0}
             step={1}
@@ -536,7 +534,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             unit_text='%'
             function_on_blur={(value) => {
               elements.forEach(element =>
-                element.shape_starting_tangeant = (value ? value/100 : undefined))
+                element.shape_starting_tangeant = (value ? value / 100 : undefined))
               refreshThisAndUpdateRelatedComponents()
             }
             }
@@ -553,7 +551,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {t('Flux.apparence.ending_tangeant')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_ending_tangeant') ?
+            isAttributeOverloaded(selected_links, 'shape_ending_tangeant') ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
@@ -562,7 +560,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[4]}
-            default_value={shape_ending_tangeant*100}
+            default_value={shape_ending_tangeant * 100}
             menu_for_style={menu_for_style}
             minimum_value={0}
             step={1}
@@ -570,8 +568,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             unit_text='%'
             function_on_blur={(value) => {
               elements.forEach(element =>
-                element.shape_ending_tangeant = (value ? value/100 : undefined))
-              refreshThisAndUpdateRelatedComponents()  }
+                element.shape_ending_tangeant = (value ? value / 100 : undefined))
+              refreshThisAndUpdateRelatedComponents()
+            }
             }
           />
         </OSTooltip>
@@ -584,7 +583,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {t('Flux.apparence.couleur')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_color') ?
+            isAttributeOverloaded(selected_links, 'shape_color') ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
@@ -606,7 +605,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         {t('Flux.apparence.opacity')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_opacity') ?
+            isAttributeOverloaded(selected_links, 'shape_opacity') ?
             <>{TooltipValueSurcharge('link_var_', t)}</> :
             <></>
         }
@@ -645,7 +644,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       </OSTooltip>
       {
         (!menu_for_style) &&
-        isAttributeOverloaded(selected_links, 'shape_is_dashed') ?
+          isAttributeOverloaded(selected_links, 'shape_is_dashed') ?
           TooltipValueSurcharge('link_var_', t) :
           <></>
       }
@@ -677,7 +676,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </OSTooltip>
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'value_label_is_visible') ?
+            isAttributeOverloaded(selected_links, 'value_label_is_visible') ?
             TooltipValueSurcharge('link_var_', t) :
             <></>
         }
@@ -724,7 +723,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </OSTooltip>
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'value_label_to_precision') ?
+            isAttributeOverloaded(selected_links, 'value_label_to_precision') ?
             TooltipValueSurcharge('link_var_', t) :
             <></>
         }
@@ -753,7 +752,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </OSTooltip>
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'value_label_custom_digit') ?
+            isAttributeOverloaded(selected_links, 'value_label_custom_digit') ?
             TooltipValueSurcharge('link_var_', t) :
             <></>
         }
@@ -772,7 +771,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               menu_for_style={menu_for_style}
               minimum_value={0}
               stepper={true}
-              function_on_blur={(value) =>{
+              function_on_blur={(value) => {
                 elements.forEach(element =>
                   element.value_label_nb_digit = value ?? undefined)
                 refreshThisAndUpdateRelatedComponents()
@@ -795,7 +794,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </OSTooltip>
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'value_label_unit_visible') ?
+            isAttributeOverloaded(selected_links, 'value_label_unit_visible') ?
             TooltipValueSurcharge('link_var_', t) :
             <></>
         }
@@ -810,7 +809,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
                 {t('Flux.label.l_u')}
                 {
                   (!menu_for_style) &&
-                  isAttributeOverloaded(selected_links, 'value_label_unit') ?
+                    isAttributeOverloaded(selected_links, 'value_label_unit') ?
                     <>{TooltipValueSurcharge('link_var_', t)}</> :
                     <></>
                 }
@@ -856,7 +855,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               {t('Flux.label.len')}
               {
                 (!menu_for_style) &&
-                isAttributeOverloaded(selected_links, 'value_label_color') ?
+                  isAttributeOverloaded(selected_links, 'value_label_color') ?
                   <>{TooltipValueSurcharge('link_var_', t)}</> :
                   <></>
               }
@@ -879,7 +878,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               {t('Flux.label.lb')}
               {
                 (!menu_for_style) &&
-                isAttributeOverloaded(selected_links, 'value_label_color') ?
+                  isAttributeOverloaded(selected_links, 'value_label_color') ?
                   <>{TooltipValueSurcharge('link_var_', t)}</> :
                   <></>
               }
@@ -902,7 +901,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
               {t('Flux.label.lec')}
               {
                 (!menu_for_style) &&
-                isAttributeOverloaded(selected_links, 'value_label_color') ?
+                  isAttributeOverloaded(selected_links, 'value_label_color') ?
                   <>{TooltipValueSurcharge('link_var_', t)}</> :
                   <></>
               }
@@ -945,7 +944,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             minimum_value={11}
             stepper={true}
             unit_text='pixels'
-            function_on_blur={(value) =>{
+            function_on_blur={(value) => {
               elements.forEach(element =>
                 element.value_label_font_size = value ?? undefined)
               refreshThisAndUpdateRelatedComponents()
@@ -983,7 +982,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
             {t('Flux.label.pos')}
             {
               (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_position') ?
+                isAttributeOverloaded(selected_links, 'value_label_position') ?
                 <>{TooltipValueSurcharge('link_var_', t)}</> :
                 <></>
             }
@@ -1183,7 +1182,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
         </OSTooltip>
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'value_label_on_path') ?
+            isAttributeOverloaded(selected_links, 'value_label_on_path') ?
             TooltipValueSurcharge('link_var_', t) :
             <></>
         }
@@ -1250,7 +1249,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       margin: '10px',
       color: 'grey',
       backgroundColor: 'grey',
-      height: 2 }}
+      height: 2
+    }}
     />
   </Box> : <></>
 
@@ -1323,7 +1323,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       margin: '10px',
       color: 'grey',
       backgroundColor: 'grey',
-      height: 2 }}
+      height: 2
+    }}
     />
   </Box> : <></>
 
@@ -1339,7 +1340,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       margin: '10px',
       color: 'grey',
       backgroundColor: 'grey',
-      height: 2 }} />
+      height: 2
+    }} />
     {content_label}
   </Box>
 

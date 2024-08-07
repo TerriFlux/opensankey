@@ -38,15 +38,14 @@ import { Class_NodeElement } from '../types/Node'
   * @return {*}
   */
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
-  applicationContext,
   applicationData,
   menu_for_modal
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = applicationContext
   const { new_data } = applicationData
+  const { t } =new_data
 
   // Nodes to modify --------------------------------------------------------------------
 

@@ -1,10 +1,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, } from '../types/Types'
-import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
-import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
-import { arrangeNodes, ComputeAutoSankey } from '../draw/SankeyDrawLayout'
+import { applicationDataType } from '../types/Types'
+import { OSTooltip } from '../configmenus/SankeyUtils'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -14,7 +11,6 @@ import { Box, Checkbox, Button, NumberInput, Input, NumberDecrementStepper, Numb
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
-import { Class_ApplicationData } from '../types/ApplicationData'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
 export   const os_all_element_to_transform = [
@@ -32,33 +28,17 @@ export   const os_all_element_to_transform = [
  * @returns {*}
  */
 export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
-  applicationContext,
-  dict_hook_ref_setter_show_dialog_components,
   applicationData,
-  applicationDraw,
-  convert_data,
   diagramSelector,
-  apply_transformation_additional_elements,
-  DefaultSankeyData,
-  ComponentUpdater
-}) => {
-  const {updateLayout,all_element_UpdateLayout}=applicationDraw
-  const {t}=applicationContext
-  const {data,set_data,dataVarToUpdate}=applicationData
-  const [prev_sankey_data,set_prev_sankey_data] = useState(data)
+  apply_transformation_additional_elements}) => {
+  const {dataVarToUpdate,new_data}=applicationData
+  const { t } = new_data
+  // const [prev_sankey_data,set_prev_sankey_data] = useState(data)
   const [forceUpdate,setForceUpdate] = useState(true)
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
-  const [node_hspace,set_node_hspace] = useState(data.h_space)
-  const [node_vspace,set_node_vspace] = useState(data.v_space)
-  if ( node_hspace !== data.h_space) {
-    set_node_hspace(data.h_space)
-  }
-  if ( node_vspace !== data.v_space) {
-    set_node_vspace(data.v_space)
-  }
-  const node_visible=NodeVisibleOnsSvg()
+
   const simple_element_to_transform = [
     'posNode',
     'attrNode', 'attrFlux',
@@ -70,22 +50,24 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     'attrDrawingArea'
   ]
 
+  const all_element_UpdateLayout=os_all_element_to_transform
+
   const applyStretch=(param:string)=>{
-    const attr=param=='h'?'x':'y'
+    const attr=param=='h'?'position_x':'position_y'
     const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
-    let min=Object.values(data.nodes)[0][attr]
+    
+    let min=new_data.drawing_area.sankey.visible_nodes_list[0][attr]
     // Cheche la position en y du noeud le plus en haut à gauche
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>{
       min=(n[attr]<min)?n[attr]:min
     })
 
     // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
     // applique le delta mutiplié par le facteur au noeud
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>{
       const delta=n[attr]-min
       n[attr]=min+(delta*stretchFactor)
     })
-    set_data({...data})
   }
   const content_modal_layout=  <Tabs>
     <TabList>
@@ -103,8 +85,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
         <Box layerStyle='menuconfigpanel_grid' >
 
           {diagramSelector(
-            applicationData,applicationContext,
-            updateLayout, dataVarToUpdate,
+            applicationData,dataVarToUpdate,
           )}
 
           <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -114,8 +95,8 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               {t('Menu.choseTransforDifficulty')}
             </Box>
             <Box layerStyle='options_3cols' >
-              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={()=>{set_mode_trans('simple')}}>Basiques</Button>
-              <Button variant={mode_trans=='expert'?'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} onClick={()=>{set_mode_trans('expert')}}>Tous</Button>
+              <Button variant={mode_trans=='simple'?'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={()=>{set_mode_trans('simple');new_data.menu_configuration.ref_to_menu_updater.current()}}>Basiques</Button>
+              <Button variant={mode_trans=='expert'?'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} onClick={()=>{set_mode_trans('expert');new_data.menu_configuration.ref_to_menu_updater.current()}}>Tous</Button>
             </Box>
           </Box>
 
@@ -128,7 +109,6 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   variant='menuconfigpanel_option_button'
                   onClick={() => {
                     dataVarToUpdate.current.length = 0
-                    ComponentUpdater.updateComponentBtnUpdateLayout.current()
                     setForceUpdate(!forceUpdate)
                   }}
                 >{t('Menu.Transformation.unSelectAll')}</Button>
@@ -141,7 +121,6 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     }else{
                       all_element_UpdateLayout.forEach(el=>dataVarToUpdate.current.push(el))
                     }
-                    ComponentUpdater.updateComponentBtnUpdateLayout.current()
                     setForceUpdate(!forceUpdate)
                   }}
                 >{t('Menu.Transformation.selectAll')}</Button>
@@ -150,7 +129,6 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   onClick={() => {
                     dataVarToUpdate.current.length = 0
                     default_element_to_transform.forEach(el=>dataVarToUpdate.current.push(el))
-                    ComponentUpdater.updateComponentBtnUpdateLayout.current()
                     setForceUpdate(!forceUpdate)
                   }}
                 >{t('Menu.Transformation.selectDefault')}</Button>
@@ -395,10 +373,10 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 step={1}
                 min={0}
                 allowMouseWheel
-                value={node_hspace}
+                value={new_data.drawing_area.horizontal_spacing}
                 onChange={evt => {
-                  set_node_hspace(+evt)
-                  data.h_space = +evt
+                  new_data.drawing_area.horizontal_spacing = +evt
+                  setForceUpdate(!forceUpdate)
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -419,10 +397,10 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 step={1}
                 min={0}
                 allowMouseWheel
-                value={node_vspace}
+                value={new_data.drawing_area.vertical_spacing}
                 onChange={evt => {
-                  set_node_vspace(+evt)
-                  data.v_space = +evt
+                  new_data.drawing_area.horizontal_spacing = +evt
+                  setForceUpdate(!forceUpdate)
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -503,12 +481,11 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  applicationData.function_on_wait.current=()=>{
-                    ComputeAutoSankey(applicationData, node_hspace,false)
-                    set_data({ ...data })
+                  applicationData.new_data.menu_configuration.function_on_wait.current=()=>{
+                    // ComputeAutoSankey(applicationData, node_hspace,false)
+                    // set_data({ ...data })
                   }
-                  dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
-
+                  applicationData.new_data.menu_configuration.ref_lauchToast.current()
                 }}>
                 {t('MEP.PA')}
               </Button>
@@ -517,8 +494,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  arrangeNodes(data)
-                  set_data({ ...data })
+                  // set_data({ ...data })
                 }}>
                 {t('MEP.AN')}
               </Button>
@@ -532,10 +508,9 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
 
   </Tabs>
   const dragLayout= <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_apply_layout'}
     content={content_modal_layout}
-    pointer_pos={{current:[window.innerWidth/4,window.innerHeight/4]}}
     title={t('Menu.Transformation.title')}
   />
   return dragLayout
@@ -549,8 +524,6 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
 export type ApplySaveJSONTypes = {
   t : TFunction
   applicationData : applicationDataType,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  applicationState:applicationStateType,
   additional_file_save_json_option:JSX.Element[],
   ClickSaveDiagram:ClickSaveDiagramFuncType
 }
@@ -564,8 +537,6 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
   {
     t,
     applicationData,
-    dict_hook_ref_setter_show_dialog_components,
-    applicationState,
     additional_file_save_json_option,
     ClickSaveDiagram
   }: ApplySaveJSONTypes
@@ -573,7 +544,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
   const [show_save_json_modal,set_show_save_json_modal]=useState(false)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current=set_show_save_json_modal
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_save_json.current=set_show_save_json_modal
   return <Modal
     isOpen={show_save_json_modal}
     onClose={() => set_show_save_json_modal(false)}
@@ -638,13 +609,12 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
 }
 
 export type ExcelModalTypes = {
+  applicationData:applicationDataType,
   t : TFunction,
   UploadExcelImpl: UploadExcelImplFuncType,
   url_prefix: string,
   launch: (path: string) => void,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   Reinitialization:()=>void,
-  pointer_pos:{current:number[]}
 }
 
 /**
@@ -653,7 +623,7 @@ export type ExcelModalTypes = {
  * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components,Reinitialization,pointer_pos }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ applicationData,t,UploadExcelImpl, url_prefix,launch,Reinitialization }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const content =<Box
     layerStyle='menuconfigpanel_grid'
@@ -678,7 +648,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
             Reinitialization()
             launch((input_file_name as unknown as {[name:string]:string}).name)
             UploadExcelImpl(
-              dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current,input_file_name as Blob,url_prefix
+              applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_excel_dialog.current,input_file_name as Blob,url_prefix
             )
           }
         }
@@ -686,10 +656,9 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
     </Box>
   </Box>
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_excel_dialog'}
     content={content}
-    pointer_pos={pointer_pos}
     title={t('Menu.open_excel_file')}
   />
 
@@ -697,12 +666,10 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
 
 export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
   applicationData,
-  applicationContext,
-  updateLayout,
   dataVarToUpdate,
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
-  const {t}=applicationContext
+  const { t } = applicationData.new_data
   const {new_data}=applicationData
   return <Box>
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
