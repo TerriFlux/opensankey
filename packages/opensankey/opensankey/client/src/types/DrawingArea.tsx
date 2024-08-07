@@ -379,7 +379,7 @@ export class Class_DrawingArea {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
-    this._legend.setEventsListeners() 
+    this._legend.setEventsListeners()
     this.application_data.menu_configuration.ref_to_toolbar_updater.current()
   }
 
@@ -659,7 +659,7 @@ export class Class_DrawingArea {
    * Remove all link selected
    * @memberof Class_DrawingArea
    */
-  public purgeSelectionOfLinks() {
+  public purgeSelectionOfLinks(reset = true) {
     // Unselect elements
     this.selected_links_list
       .forEach(link => {
@@ -667,7 +667,10 @@ export class Class_DrawingArea {
         delete this._selection[link.id]
       })
     // Reset config menu
-    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    // Sometime this function is used then updateAllComponentsRelatedToLinks is also called,
+    //  this mean that the hook referenced go from true -> false -> true before the rerender
+    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
+    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
   /**
@@ -1187,6 +1190,9 @@ export class Class_DrawingArea {
             this._ghost_link.source,
             this.sankey.nodes_dict[node_id]
           )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.OpenConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target)
         }
@@ -1199,6 +1205,9 @@ export class Class_DrawingArea {
             this._ghost_link.source,
             this._ghost_link.target
           )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.OpenConfigMenuElementsLinks()
         }
         // In case we get there still deref ghost link
         this._ghost_link.delete()
