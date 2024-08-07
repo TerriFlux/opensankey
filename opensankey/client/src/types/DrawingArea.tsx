@@ -378,6 +378,8 @@ export class Class_DrawingArea {
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
+    this.application_data.menu_configuration.ref_to_toolbar_updater.current()
   }
 
   public changeCursor(is_edition: boolean) {
@@ -857,10 +859,10 @@ export class Class_DrawingArea {
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
-    this._scaleValueToPx.domain([0,this._scale])
-    this._minimum_flux=getNumberOrUndefinedFromJSON(json_object,'minimum_flux')
-    this._maximum_flux=getNumberOrUndefinedFromJSON(json_object,'maximum_flux')
-    this._filter_label=getNumberFromJSON(json_object,'filter_label',0)
+    this._scaleValueToPx.domain([0, this._scale])
+    this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
+    this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
     // Update legend
     this._legend.fromJSON(json_object)
     // Update Sankey
@@ -895,8 +897,8 @@ export class Class_DrawingArea {
     json_object['v_space'] = this._vertical_spacing
     json_object['user_scale'] = this._scale
     json_object['couleur_fond_sankey'] = this._color
-    if(this._maximum_flux)json_object['maximum_flux'] = this._maximum_flux
-    if(this._minimum_flux)json_object['minimum_flux'] = this._minimum_flux
+    if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
+    if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
     json_object['filter_label'] = this._filter_label
 
     // Dump with json of contained elements
