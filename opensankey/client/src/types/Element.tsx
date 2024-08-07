@@ -257,7 +257,7 @@ export abstract class Class_ProtoElement {
    * @protected
    * @memberof Class_Element
    */
-  protected setEventsListeners() {
+  public setEventsListeners() {
     if (!this._display.drawing_area.static) {
       // Right mouse button clicks
       this.d3_selection?.on(

@@ -1065,10 +1065,15 @@ export class Class_NodeElement extends Class_Element {
     // Get related drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
-    // Only trigger the drag if we drag a selected node
-    if (nodes_selected.includes(this)) {
+
+    if(nodes_selected.length==0){
+      if(drawing_area.isInSelectionMode()){
+        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+        this.drawing_area.checkAndUpdateAreaSize()
+      }
+    }else if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
-      if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
+      if (drawing_area.isInEditionMode()) {
         // /* TODO définir  */
       }
       // SELECTION MODE =========================================================
