@@ -959,7 +959,7 @@ export class Class_NodeElement extends Class_Element {
     json_object['dimensions'] = Object.fromEntries(
       Object.values(this._dimensions_as_child)
         .map(dimension => [
-          dimension.id,
+          dimension.parent_level_tag.group.id,
           {
             'parent_name': dimension.parent.id,
             'parent_tag': dimension.parent_level_tag.id,
