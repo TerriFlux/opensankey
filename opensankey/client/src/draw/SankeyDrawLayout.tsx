@@ -30,10 +30,9 @@ import {
   reorganize_all_input_outputLinksIdFType,
   reorganize_inputLinksIdFType
 } from './types/SankeyDrawLayoutTypes'
-import {
-  ReturnValueLink,
-} from '../configmenus/SankeyUtils'
+
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Text } from '@chakra-ui/react'
+import { ReturnValueLink } from '../types/Legacy'
 
 
 export const reorganize_inputLinksId: reorganize_inputLinksIdFType = (

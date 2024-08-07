@@ -24,8 +24,8 @@ import {
   Text,
 } from '@chakra-ui/react'
 
-import { windowSankey } from '../configmenus/SankeyUtils'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
+import { windowSankey } from '../types/Legacy'
 
 export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = ({
   applicationData,

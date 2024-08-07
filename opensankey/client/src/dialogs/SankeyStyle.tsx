@@ -19,7 +19,7 @@ import {
 
 import {
   CutName
-} from '../configmenus/SankeyUtils'
+} from '../types/Utils'
 import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
