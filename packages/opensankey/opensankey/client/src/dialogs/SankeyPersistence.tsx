@@ -394,6 +394,9 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
 ) => {
+  // Failsafe
+  if (text === '{}')
+    return
   // Get data
   const { new_data } = applicationData
   // Extract JSON struct
