@@ -39,7 +39,13 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   const { new_data } = applicationData
   const { t } = new_data
-  const {ref_setter_show_menu_node_apparence, ref_setter_show_menu_node_tooltip, ref_setter_show_menu_node_io, ref_setter_show_menu_node_tags}=new_data.menu_configuration.dict_setter_show_dialog
+  const {
+    ref_setter_show_menu_node_apparence,
+    ref_setter_show_menu_node_tooltip,
+    ref_setter_show_menu_node_io,
+    ref_setter_show_menu_node_tags
+  } = new_data.menu_configuration.dict_setter_show_dialog
+
   // Node on which this menu applies ----------------------------------------------------
 
   const contextualised_node = new_data.drawing_area.node_contextualised
@@ -472,30 +478,43 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
     {t('Noeud.Reorg')}
   </Button>
 
+  const btn_aggregate = (
+    (selected_nodes.length === 1) &&
+    (contextualised_node !== undefined) &&
+    (selected_nodes.includes(contextualised_node)) &&
+    (contextualised_node.is_child)
+  ) ?
+      <Button
+        variant='contextmenu_button'
+        onClick={() => {
+          contextualised_node.drawParent()
+          new_data.drawing_area.purgeSelection()
+          new_data.drawing_area.node_contextualised = undefined
+          refreshThisAndToggleSaving()
+        }}
+      >
+        {t('Noeud.context_agregate')}
+      </Button> :
+      <></>
 
-  // TODO : function to aggregate/deaggregate only 1 node
-
-  // const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
-  //   Aggregate(contextualised_node, data, agregation)
-  //   multi_selected_nodes.current = []
-  //   node_function.recomputeDisplayedElement()
-  //   set_data({ ...data })
-  //   new_data.drawing_area.node_contextualised = undefined
-  //
-  //   refreshThisAndToggleSaving()
-
-  // }}>{t('Noeud.context_agregate')}</Button> : <></>
-
-  // const btn_desagregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasDesaggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
-  //   Desaggregate(contextualised_node, applicationData, agregation)
-  //   multi_selected_nodes.current = []
-  //   node_function.recomputeDisplayedElement()
-  //   set_data({ ...data })
-  //   new_data.drawing_area.node_contextualised = undefined
-  //
-  //   refreshThisAndToggleSaving()
-
-  // }}>{t('Noeud.context_desagregate')}</Button> : <></>
+  const btn_desagregate = (
+    (selected_nodes.length === 1) &&
+    (contextualised_node !== undefined) &&
+    (selected_nodes.includes(contextualised_node)) &&
+    (contextualised_node.is_parent)
+  ) ?
+      <Button
+        variant='contextmenu_button'
+        onClick={() => {
+          contextualised_node.drawChildren()
+          new_data.drawing_area.purgeSelection()
+          new_data.drawing_area.node_contextualised = undefined
+          refreshThisAndToggleSaving()
+      }}
+      >
+        {t('Noeud.context_desagregate')}
+      </Button> :
+      <></>
 
   const btn_mask_shape = <Button
     variant='contextmenu_button'
@@ -574,9 +593,9 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
         orientation='vertical'
         isAttached
       >
-        {/* TODO mettre en oeuvre {btn_aggregate} */}
-        {/* TODO mettre en oeuvre {btn_desagregate} */}
-        {/* {sep} */}
+        {btn_aggregate}
+        {btn_desagregate}
+        {sep}
 
         {selected_nodes.length > 1 ? <>
           {dropdown_c_n_align}
