@@ -203,7 +203,7 @@ export class Class_ApplicationData {
       }
       else if (evt.key == 'Escape') {
         // Set app in selection mode
-        this.drawing_area.setSelectionMode()
+        if(this.drawing_area.isInEditionMode())this.drawing_area.switchMode()
 
         // Deselect all element
         app_ref.drawing_area.purgeSelection()
