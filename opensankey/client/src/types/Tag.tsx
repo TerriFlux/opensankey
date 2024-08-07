@@ -597,7 +597,7 @@ export class Class_LevelTag extends Class_ProtoTag {
     child: Class_NodeElement,
     child_tags: Class_LevelTag[]
   ) {
-    // First check if tags are from the same groupe
+    // First check if tags are from the same group
     let same_group = true
     child_tags
       .forEach(_ => same_group = (same_group && this.group === _.group))
@@ -609,9 +609,17 @@ export class Class_LevelTag extends Class_ProtoTag {
       let dimension_found: Class_NodeDimension | undefined
       this.dimensions_list_as_tag_for_parent
         .forEach(dimension => {
+          // Check if children tag list contains the same tags as in dimensions children tag list
+          let ok_children_level_tags = true
+          dimension.children_level_tags.forEach(tag => ok_children_level_tags = ok_children_level_tags && child_tags.includes(tag))
+          child_tags.forEach(tag => ok_children_level_tags = ok_children_level_tags && dimension.children_level_tags.includes(tag))
+          // Match dimension if all these conditions are true
+          // - Parent are the same
+          // - Parent level tags are the same
+          // - All children level tags are the same
           if (
             (dimension.parent_level_tag === this) &&
-            (dimension.children_level_tags === child_tags) &&
+            (ok_children_level_tags) &&
             (dimension.parent === parent)
           ) {
             dimension_found = dimension
