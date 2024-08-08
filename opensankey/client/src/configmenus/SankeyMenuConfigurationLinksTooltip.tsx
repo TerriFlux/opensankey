@@ -11,7 +11,7 @@ import {
 import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurationLinksTooltipTypes'
 
 // Local functions
-import { OSTooltip } from './SankeyUtils'
+import { OSTooltip } from '../types/Utils'
 import { Class_LinkElement } from '../types/Link'
 
 // MENU COMPONENT ***********************************************************************

@@ -24,7 +24,7 @@ import {
 } from './types/SankeyMenuConfigurationLinksTypes'
 import {
   OSTooltip
-} from './SankeyUtils'
+} from '../types/Utils'
 
 /*************************************************************************************************/
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'

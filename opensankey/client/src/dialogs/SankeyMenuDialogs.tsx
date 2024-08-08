@@ -1,7 +1,6 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { applicationDataType } from '../types/Types'
-import { OSTooltip } from '../configmenus/SankeyUtils'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -12,6 +11,7 @@ import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { OSTooltip } from '../types/Utils'
 
 export   const os_all_element_to_transform = [
   'addNode', 'addFlux', 'removeNode', 'removeFlux',

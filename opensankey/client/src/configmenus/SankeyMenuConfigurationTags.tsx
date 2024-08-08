@@ -31,8 +31,9 @@ import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigu
 import { Class_ProtoTag, Class_ProtoTagGroup, tag_banner_type } from '../types/Tag'
 
 // Local functions / components
-import { GetRandomInt, OSTooltip } from './SankeyUtils'
-import { default_grey_color } from '../types/Utils'
+
+import { default_grey_color, OSTooltip } from '../types/Utils'
+import { GetRandomInt } from '../types/Legacy'
 
 const list_palette_color = [
   d3.interpolateBlues,

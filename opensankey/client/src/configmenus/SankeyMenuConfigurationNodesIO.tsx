@@ -22,7 +22,7 @@ import { SankeyMenuConfigurationNodesIOFType } from './types/SankeyMenuConfigura
 
 /*************************************************************************************************/
 
-import { OSTooltip } from './SankeyUtils'
+import { OSTooltip } from '../types/Utils'
 import { Class_NodeElement } from '../types/Node'
 
 /*************************************************************************************************/
