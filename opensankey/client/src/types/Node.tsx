@@ -156,7 +156,8 @@ export class Class_NodeElement extends Class_Element {
   private _output_data_value: number = 0
 
   // Handles used to move related IO links relativly to eachother
-  private _handle_links: { [x: string]: Class_Handler } = {}
+  private _handle_input_links: { [x: string]: Class_Handler } = {}
+  private _handle_output_links: { [x: string]: Class_Handler } = {}
 
   // Node tags
   private _tags: { [id: string]: Class_Tag } = {}
@@ -211,51 +212,24 @@ export class Class_NodeElement extends Class_Element {
     this._links_order = []
     Object.values(this._input_links)
       .forEach(link => {
+        this.removeInputLink(link)
+        link.delete()
+      })
+    Object.values(this._output_links)
+      .forEach(link => {
+        this.removeOutputLink(link)
         link.delete()
       })
     this._input_links = {}
-    Object.values(this._output_links)
-      .forEach(link => {
-        link.delete()
-      })
     this._output_links = {}
+    this._links_order = []
+    this._handle_input_links = {}
+    this._handle_output_links = {}
     // Remove reference of self in related tags
     this.tags_list.forEach(tag => tag.removeReference(this))
     this._tags = {}
     // Remove reference of self in style
     this.style.removeReference(this)
-  }
-
-  /**
-   * TODO
-   * @param {Class_LinkElement} link
-   * @memberof Class_NodeElement
-   */
-  public deleteInputLink(link: Class_LinkElement) {
-    if (this._input_links[link.id] !== undefined) {
-      this._handle_links[link.id].delete()
-      delete this._handle_links[link.id]
-      delete this._input_links[link.id]
-      this.removeLinkFromOrderingLinksList(link)
-      link.delete()
-      this.draw()
-    }
-  }
-
-  /**
-   * TODO
-   * @param {Class_LinkElement} link
-   * @memberof Class_NodeElement
-   */
-  public deleteOutputLink(link: Class_LinkElement) {
-    if (this._output_links[link.id] !== undefined) {
-      this._handle_links[link.id].delete()
-      delete this._handle_links[link.id]
-      delete this._output_links[link.id]
-      this.removeLinkFromOrderingLinksList(link)
-      link.delete()
-      this.draw()
-    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -360,9 +334,15 @@ export class Class_NodeElement extends Class_Element {
       })
       .forEach(link => this.deleteInputLink(link))
     // Copy links orders ----------------------------------------------------------------
-    this._links_order = node_to_copy._links_order
-      .filter(link => link.id in this.drawing_area.sankey.links_dict)
-      .map(link => this.drawing_area.sankey.links_dict[link.id])
+    this._links_order = []  // Empty current link order list
+    // Fill with link that exist in current sankey and avoid duplicates in link ordre list
+    node_to_copy._links_order
+      .filter(link_to_copy => link_to_copy.id in this.drawing_area.sankey.links_dict)
+      .forEach(link_to_copy => {
+        const link = this.drawing_area.sankey.links_dict[link_to_copy.id]
+        if (!this._links_order.includes(link))
+          this._links_order.push(link)
+      })
     // Copy tags ------------------------------------------------------------------------
     let all_existing_tags: {[_:string]: Class_Tag} = {}
     this.main_sankey.node_taggs_list
@@ -722,7 +702,7 @@ export class Class_NodeElement extends Class_Element {
       this._input_links[link.id] = link
       this._links_order.push(link)
       link.target = this
-      this.addMovingHandleForGivenLink(link, true)
+      this.addMovingHandleForGivenLink(link, 'input')
       this.updateInputValue()
       this.drawLinks()
       this.drawValueLabel()
@@ -739,10 +719,36 @@ export class Class_NodeElement extends Class_Element {
       this._output_links[link.id] = link
       this._links_order.push(link)
       link.source = this
-      this.addMovingHandleForGivenLink(link, false)
+      this.addMovingHandleForGivenLink(link, 'output')
       this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
+    }
+  }
+
+  /**
+   * Remove and delete given input link if it exists
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public deleteInputLink(link: Class_LinkElement) {
+    if (this._input_links[link.id] !== undefined) {
+      this.removeInputLink(link)
+      link.delete()
+      this.draw()
+    }
+  }
+
+  /**
+   * Remove and delete given output link if it exists
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public deleteOutputLink(link: Class_LinkElement) {
+    if (this._output_links[link.id] !== undefined) {
+      this.removeOutputLink(link)
+      link.delete()
+      this.draw()
     }
   }
 
@@ -754,7 +760,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public swapInputLink(link: Class_LinkElement, node: Class_NodeElement) {
     if (this._input_links[link.id] !== undefined) {
-      delete this._input_links[link.id]
+      this.removeInputLink(link)
       node.addInputLink(link)
       this.updateInputValue()
       this.drawLinks()
@@ -770,7 +776,7 @@ export class Class_NodeElement extends Class_Element {
    */
   public swapOutputLink(link: Class_LinkElement, node: Class_NodeElement) {
     if (this._output_links[link.id] !== undefined) {
-      delete this._output_links[link.id]
+      this.removeOutputLink(link)
       node.addOutputLink(link)
       this.updateOutputValue()
       this.drawLinks()
@@ -801,6 +807,20 @@ export class Class_NodeElement extends Class_Element {
     const output_links_for_side = links_for_side
       .filter(link => link.id in this._output_links)
     return output_links_for_side
+  }
+
+  /**
+   * Get list of link in order for a given side
+   * @param {Type_Side} _
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public getLinksOrdered(_: Type_Side) {
+    return this._links_order.filter(link => {
+      return (
+        (link.target === this && link.target_side === _) ||
+        (link.source === this && link.source_side === _))
+    })
   }
 
   /**
@@ -1042,23 +1062,26 @@ export class Class_NodeElement extends Class_Element {
   ) {
     // Input links
     const input_link_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
-    input_link_ids.forEach(_ => {
-      const link_id = matching_links_id[_] ?? _
-      this.addInputLink(this.main_sankey.links_dict[link_id])
-    })
+    input_link_ids
+      .forEach(_ => {
+        const link_id = matching_links_id[_] ?? _
+        this.addInputLink(this.main_sankey.links_dict[link_id])
+      })
     // Output links
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
-    output_link_ids.forEach(_ => {
-      const link_id = matching_links_id[_] ?? _
-      this.addOutputLink(this.main_sankey.links_dict[link_id])
-    })
+    output_link_ids
+      .forEach(_ => {
+        const link_id = matching_links_id[_] ?? _
+        this.addOutputLink(this.main_sankey.links_dict[link_id])
+      })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
     if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
-      this._links_order = ordered_link_ids.map(_ => {
-        const link_id = matching_links_id[_] ?? _
-        return this.main_sankey.links_dict[link_id]
-      })
+      this._links_order = ordered_link_ids
+        .map(_ => {
+          const link_id = matching_links_id[_] ?? _
+          return this.main_sankey.links_dict[link_id]
+        })
     }
   }
 
@@ -1967,22 +1990,22 @@ export class Class_NodeElement extends Class_Element {
       if (link.source === this) {
         if (link.source_side === 'right') {
           link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
+          this._handle_output_links[link.id].initPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
           dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
           link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
+          this._handle_output_links[link.id].initPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
           dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
           link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
-          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
+          this._handle_output_links[link.id].initPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
           dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
           link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          this._handle_links[link.id].initPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
+          this._handle_output_links[link.id].initPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -1990,22 +2013,22 @@ export class Class_NodeElement extends Class_Element {
       else if (link.target === this) {
         if (link.target_side === 'right') {
           link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
+          this._handle_input_links[link.id].initPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
           dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
           link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
-          this._handle_links[link.id].initPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
+          this._handle_input_links[link.id].initPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
           dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
           link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
-          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
+          this._handle_input_links[link.id].initPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
           dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
           link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          this._handle_links[link.id].initPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
+          this._handle_input_links[link.id].initPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
       }
@@ -2074,20 +2097,6 @@ export class Class_NodeElement extends Class_Element {
   }
 
   /**
-   * Get list of link in order for a given side
-   * @param {Type_Side} _
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public getLinksOrdered(_: Type_Side) {
-    return this._links_order.filter(link => {
-      return (
-        (link.target === this && link.target_side === _) ||
-        (link.source === this && link.source_side === _))
-    })
-  }
-
-  /**
    * For a given side, compute sum of all links thickness.
    * Helps to compute min height & width for node
    * @private
@@ -2097,9 +2106,11 @@ export class Class_NodeElement extends Class_Element {
    */
   private getSumOfLinksThickness(side: Type_Side) {
     let sum = 0
-    this.getLinksOrdered(side).forEach(link => {
-      sum = sum + link.thickness
-    })
+    this.getLinksOrdered(side)
+      .filter(link => link.is_visible)
+      .forEach(link => {
+        sum = sum + link.thickness
+      })
     return sum
   }
 
@@ -2121,19 +2132,46 @@ export class Class_NodeElement extends Class_Element {
   }
 
   /**
+   * Remove link reference from all related attributes it this node.
+   * /!\ Keep as private method. This can create dangling ref for links
+   *
+   * @private
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  private removeInputLink(link: Class_LinkElement) {
+    this._handle_input_links[link.id]?.delete()
+    delete this._handle_input_links[link.id]
+    delete this._input_links[link.id]
+    this.removeLinkFromOrderingLinksList(link)
+  }
+
+  /**
+   * Remove link reference from all related attributes it this node.
+   * /!\ Keep as private method. This can create dangling ref for links
+   * @private
+   * @param {Class_LinkElement} link
+   * @memberof Class_NodeElement
+   */
+  private removeOutputLink(link: Class_LinkElement) {
+    this._handle_output_links[link.id]?.delete()
+    delete this._handle_output_links[link.id]
+    delete this._output_links[link.id]
+    this.removeLinkFromOrderingLinksList(link)
+  }
+
+  /**
    * Remove link from ordering list
+   * /!\ Keep as private method. This can create dangling ref for links
    * @private
    * @param {Class_LinkElement} link
    * @memberof Class_NodeElement
    */
   private removeLinkFromOrderingLinksList(link: Class_LinkElement) {
-    let i = 0
-    for (i; i <= this._links_order.length; i++) {
-      if (this._links_order[i] === link) {
-        break
-      }
+    const idx = this._links_order.indexOf(link)
+    if (idx !== undefined) {
+      this._links_order.splice(idx, 1)
     }
-    this._links_order.splice(i, 1)
   }
 
   /**
@@ -2145,11 +2183,10 @@ export class Class_NodeElement extends Class_Element {
    */
   private addMovingHandleForGivenLink(
     link: Class_LinkElement,
-    input: boolean
+    type: 'input' | 'output'
   ) {
-    const custom_id = input ? 'input' : 'output'
     const handle = new Class_Handler(
-      ('handle_' + this.id + custom_id + '_' + link.id),
+      ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
       this.menu_config,
       this,
@@ -2162,7 +2199,10 @@ export class Class_NodeElement extends Class_Element {
         class: 'node_io'
       }
     )
-    this._handle_links[link.id] = handle
+    if (type === 'input')
+      this._handle_input_links[link.id] = handle
+    else // type === 'output'
+      this._handle_output_links[link.id] = handle
   }
 
   /**
@@ -2255,16 +2295,19 @@ export class Class_NodeElement extends Class_Element {
   }
 
   private getLinkFromHandler(handler: Class_Handler) {
-    const list_id = Object.entries(this._handle_links)
-      .filter(ent_handle => {
-        return ent_handle[1] === handler
-      })
-    if (list_id.length === 1) {
-      if (list_id[0][0] in this.input_links_dict) {
-        return this.input_links_dict[list_id[0][0]]
+    const list_id = Object.entries({
+      ... this._handle_input_links,
+      ... this._handle_output_links
+    })
+      .filter(([, _]) => _ === handler)
+      .map(([id,]) => id)
+    if (list_id.length > 1) {
+      const link_id = list_id[0]
+      if (link_id in this.input_links_dict) {
+        return this.input_links_dict[link_id]
       }
-      else if (list_id[0][0] in this.output_links_dict) {
-        return this.output_links_dict[list_id[0][0]]
+      else if (link_id in this.output_links_dict) {
+        return this.output_links_dict[link_id]
       }
     }
   }
@@ -3888,7 +3931,7 @@ export class Class_NodeDimension {
 
   public removeNodeFromChildren(_: Class_NodeElement) {
     const idx = this._children.indexOf(_)
-    if (idx) {
+    if (idx !== undefined) {
       this._children.splice(idx, 1)
       // If all children has been deleted, clear this
       if (!this.has_children)
@@ -3920,7 +3963,7 @@ export class Class_NodeDimension {
 
   public removeTagFromChildrenLevelTag(_: Class_LevelTag) {
     const idx = this._children_level_tags.indexOf(_)
-    if (idx) {
+    if (idx !== undefined) {
       this._children_level_tags.splice(idx, 1)
       // If all children level tags has been deleted, clear this
       if (!(this._children_level_tags.length > 0))
