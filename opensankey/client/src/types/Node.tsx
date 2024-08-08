@@ -2301,7 +2301,7 @@ export class Class_NodeElement extends Class_Element {
     })
       .filter(([, _]) => _ === handler)
       .map(([id,]) => id)
-    if (list_id.length > 1) {
+    if (list_id.length > 0) {
       const link_id = list_id[0]
       if (link_id in this.input_links_dict) {
         return this.input_links_dict[link_id]
