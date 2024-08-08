@@ -4,7 +4,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
 
 import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
+import { ConvertDataFuncType } from '../../types/Legacy'
 
 /**
  * Description placeholder

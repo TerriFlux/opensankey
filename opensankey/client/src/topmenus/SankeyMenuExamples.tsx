@@ -1,7 +1,6 @@
 
 import React from 'react'
 import { applicationDataType } from '../types/Types'
-import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -45,8 +44,6 @@ export const ExempleItem = (
     Reinitialization
   }: ExempleItemTypes
 ) => {
-  const {data,set_data,convert_data,get_default_data,new_data}=applicationData
-  const {url_prefix}=new_data
   let content=<></>
   let item=Object.keys(exemple_menu).map(
     (key, index) => {
@@ -131,9 +128,9 @@ export const ExempleItem = (
             if (path.includes('xlsx')) {
               launch(path)
             }
-            UploadExemple(
-              path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
-            )
+            // UploadExemple(
+            //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
+            // )
             // UploadExemple(
             //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
             // )}

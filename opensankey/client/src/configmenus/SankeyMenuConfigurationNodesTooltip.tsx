@@ -14,7 +14,7 @@ import {
 } from './types/SankeyMenuConfigurationNodesTooltipTypes'
 
 // Local functions
-import { OSTooltip } from './SankeyUtils'
+import { OSTooltip } from '../types/Utils'
 
 // MENU COMPONENT ***********************************************************************
 

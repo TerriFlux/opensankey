@@ -4,7 +4,6 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 
 import SankeyApp from './SankeyApp'
-import { DefaultSankeyData } from './configmenus/SankeyUtils'
 import './traduction'
 import { 
   initializeApplicationData, 
@@ -14,6 +13,7 @@ import {
   initializeMenuConfiguration} from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
+import { DefaultSankeyData } from './types/Legacy'
 
 
 window.React = React
