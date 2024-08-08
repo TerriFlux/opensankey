@@ -2124,10 +2124,10 @@ export class Class_NodeElement extends Class_Element {
    */
   private getLinksStartingPositionOffSet(side: Type_Side) {
     if (side === 'left' || side === 'right') {
-      return Math.max(0, (this.shape_min_height - this.getSumOfLinksThickness(side)) / 2)
+      return Math.max(0, (this.getShapeHeightToUse() - this.getSumOfLinksThickness(side)) / 2)
     }
     else {
-      return Math.max(0, (this.shape_min_width - this.getSumOfLinksThickness(side)) / 2)
+      return Math.max(0, (this.getShapeWidthToUse() - this.getSumOfLinksThickness(side)) / 2)
     }
   }
 
