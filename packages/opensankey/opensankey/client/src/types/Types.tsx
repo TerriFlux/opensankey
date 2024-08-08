@@ -1,7 +1,6 @@
 import { ClickSaveDiagramFuncType, RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
 import { OpenSankeyDiagramSelectorFType, initializeDiagrammSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
-import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
 import { Class_ApplicationData } from './ApplicationData'
 import { Type_JSON } from './Utils'
@@ -415,7 +414,7 @@ export type applicationDataType = {
   data: SankeyData,
   set_data: (_: SankeyData)=>void,
   get_default_data: OSGetDefaultData,
-  convert_data: ConvertDataFuncType,
+  // convert_data: ConvertDataFuncType,
   // display_nodes: {[_: string]: SankeyNode},
   // display_links: {[_: string]: SankeyLink},
   // min_link_thickness: number,
