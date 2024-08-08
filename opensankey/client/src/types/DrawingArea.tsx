@@ -189,6 +189,9 @@ export class Class_DrawingArea {
   private _maximum_flux?: number
   private _minimum_flux?: number
 
+  // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
+  private _filter_link_value: number = 0
+
   // Filter out link label inferior to this value (null is considered as 0)
   private _filter_label: number = 0
 
@@ -314,6 +317,7 @@ export class Class_DrawingArea {
     delete this._maximum_flux
     delete this._minimum_flux
     this._filter_label = 0
+    this._filter_link_value = 0
     this._show_structure = initial_show_structure
 
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
@@ -535,6 +539,9 @@ export class Class_DrawingArea {
 
   public get show_structure(): Type_Structure { return this._show_structure }
   public set show_structure(value: Type_Structure) { this._show_structure = value }
+
+  public get filter_link_value(): number {return this._filter_link_value}
+  public set filter_link_value(value: number) {this._filter_link_value = value}
 
   // PUBLIC METHODS =====================================================================
 
@@ -867,6 +874,7 @@ export class Class_DrawingArea {
     this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
     this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
+    this._filter_link_value = getNumberFromJSON(json_object, 'filter_link_value', 0)
     // Update legend
     this._legend.fromJSON(json_object)
     // Update Sankey
@@ -904,6 +912,7 @@ export class Class_DrawingArea {
     if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
     if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
     json_object['filter_label'] = this._filter_label
+    json_object['filter_link_value'] = this._filter_link_value
 
     // Dump with json of contained elements
     return {

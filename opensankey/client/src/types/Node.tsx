@@ -1740,11 +1740,11 @@ export class Class_NodeElement extends Class_Element {
    * @private
    * @memberof Class_NodeElement
    */
-  private drawLinksArrow() {
+  public drawLinksArrow() {
     this.input_links_list.forEach(link => {
       link.d3_selection?.select('.link_arrow').remove()
     })
-    const list_link_to_add_arrow = this._links_order.filter(link => this.input_links_list.includes(link) && link.is_visible && link.shape_is_arrow && link.d3_selection !== undefined)
+    const list_link_to_add_arrow = this.links_order_visible.filter(link => this.input_links_list.includes(link) && link.is_visible && link.shape_is_arrow && link.d3_selection !== undefined)
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
@@ -1960,7 +1960,7 @@ export class Class_NodeElement extends Class_Element {
     let dx_top = this.getLinksStartingPositionOffSet('top')
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
     // Loop on all links
-    this._links_order.forEach(link => {
+    this.links_order_visible.forEach(link => {
       const thickness = link.thickness
       const handle_position_shift = 5
       // Current node is link's source
@@ -2097,9 +2097,11 @@ export class Class_NodeElement extends Class_Element {
    */
   private getSumOfLinksThickness(side: Type_Side) {
     let sum = 0
-    this.getLinksOrdered(side).forEach(link => {
-      sum = sum + link.thickness
-    })
+    this.getLinksOrdered(side)
+      .filter(link=>link.is_visible)
+      .forEach(link => {
+        sum = sum + link.thickness
+      })
     return sum
   }
 
@@ -2307,6 +2309,16 @@ export class Class_NodeElement extends Class_Element {
       return this._name.split(this._name_label_separator)[0]
     }
     return this._name
+  }
+
+  /**
+   * Get links order of only visible links
+   *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get links_order_visible(){
+    return this._links_order.filter(link=>link.is_visible)
   }
 
   // Tags related -----------------------------------------------------------------------
