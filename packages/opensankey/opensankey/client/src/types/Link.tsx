@@ -718,12 +718,14 @@ export class Class_LinkElement extends Class_ProtoElement {
     let source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
     if (source_node_id) {
       source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
-      this.main_sankey.nodes_dict[source_node_id]?.addOutputLink(this)
+      if (this.main_sankey.nodes_dict[source_node_id])
+        this.source = this.main_sankey.nodes_dict[source_node_id]
     }
     let target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
     if (target_node_id) {
       target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
-      this.main_sankey.nodes_dict[target_node_id]?.addInputLink(this)
+      if (this.main_sankey.nodes_dict[target_node_id])
+        this.target = this.main_sankey.nodes_dict[target_node_id]
     }
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
@@ -806,7 +808,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Return maximum value possible for this link
    *
-   * @return {*} 
+   * @return {*}
    * @memberof Class_LinkElement
    */
   public getMaxValue() {
@@ -3836,7 +3838,7 @@ export class Class_LinkValueTree {
   /**
    * Browse children & search for the maximum value among them
    *
-   * @return {*} 
+   * @return {*}
    * @memberof Class_LinkValueTree
    */
   public getMaxValue() {
@@ -4065,7 +4067,7 @@ export class Class_LinkValue {
   /**
    * Function that can be used instead of the one in Class_linkValueTree so the recursive function stop & return a value
    *
-   * @return {*} 
+   * @return {*}
    * @memberof Class_LinkValue
    */
   public getMaxValue() {
