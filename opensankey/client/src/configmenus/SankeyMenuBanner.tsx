@@ -693,8 +693,6 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   {
     applicationData,
-    filter,
-    set_current_filter,
     url_prefix,
     additional_link_visual_filter_content,
   }
@@ -786,8 +784,9 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
               onChange={evt => {
                 applicationData.new_data.drawing_area.filter_link_value = +evt
                 setForceUpdate.toggle()
-                new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+                // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
+                // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+                new_data.drawing_area.sankey.draw()
               }
               } >
               <SliderTrack>
@@ -811,8 +810,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
 
               }}
               onBlur={()=>{
-                new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+                // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
+                // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+                new_data.drawing_area.sankey.draw()
+
               }}
             >
               <NumberInputField />

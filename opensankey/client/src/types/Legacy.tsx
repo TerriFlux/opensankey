@@ -869,6 +869,8 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     data_to_convert.node_label_separator = ' - '
   }
 
+
+
   clean_data_local(data_to_convert)
 }
 
@@ -2182,9 +2184,31 @@ export const convert_nodes: convert_nodesFuncType = (
     tags_to_remove.forEach(tag => { delete n.tags[tag] })
 
     data.nodes[n.idNode] = n
+
+
+    // Convert dimension for application version >= 0.9 
+    Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
+      const dim_level = nt[1][0]
+      if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length >0) {
+        n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level) + 1
+      }
+      // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3) 
+      
+      // const dim_level_list=nt[1]
+      // dim_level_list.forEach(node_dim=>{
+      //   n.dimensions[nt[0]].level=Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(node_dim)+1
+      // })
+      // if(n.dimensions[nt[0]]){
+      //   n.dimensions[nt[0].level=Object.keys(data_to_convert.levelTags[nt[0]]).indexOf(dim_level)+1]
+      // }
+      
+      delete n.tags[nt[0]]
+    })
   }
 
   )
+
+
 
 }
 

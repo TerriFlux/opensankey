@@ -228,8 +228,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     menu_for_style={false}
   />
 
-  const {filter}=applicationData.data.display_style
-
   if (
     (window.sankey === undefined) ||
     (window.sankey.toolbar === undefined) ||
@@ -237,13 +235,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   ) {
     sankey_menus['toolbar']= <ToolbarBuilder
       applicationData={applicationData}
-      filter={filter}
-      set_current_filter= {
-        ( new_current_filter: number ) => {
-          const { display_style } = applicationData.data
-          display_style.filter = +new_current_filter
-          applicationData.set_data({ ...applicationData.data })
-        }}
       url_prefix={applicationData.new_data.url_prefix}
       additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
     />
