@@ -33,8 +33,6 @@ export type AddAllDropDownFluxFType = {
 export type ToolbarBuilderFType = {
   
   applicationData:applicationDataType,
-  filter:number,
-  set_current_filter:(n:number)=>void,
   url_prefix: string,
   additional_link_visual_filter_content:JSX.Element[],
 }

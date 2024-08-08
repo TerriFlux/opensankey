@@ -859,7 +859,7 @@ export class Class_DrawingArea {
       (version === undefined) ||
       (Number(version) < 0.9)
     ) {
-      // convert_data_legacy(json_object) FIXME
+      convert_data_legacy(json_object) // FIXME
     }
     // Update direct attributes
     this._height = getNumberFromJSON(json_object, 'height', this._height)
