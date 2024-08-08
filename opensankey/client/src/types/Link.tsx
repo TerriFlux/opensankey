@@ -1970,7 +1970,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     return (
       this.are_source_and_target_displayed &&
       this.are_related_tags_selected &&
-      this.is_value_above_threshold && 
+      this.is_value_above_threshold &&
       this._is_visible
     )
   }
@@ -2005,6 +2005,11 @@ export class Class_LinkElement extends Class_ProtoElement {
       this._source = _
       // Clean old source
       old_source.swapOutputLink(this, _)
+
+      // If we set a source from himself then make the link a recycing one
+      if (this.target === this.source) {
+        this.shape_is_recycling = true
+      }
     }
   }
 
@@ -2069,6 +2074,10 @@ export class Class_LinkElement extends Class_ProtoElement {
       this._target = _
       // Clean old source
       old_target.swapInputLink(this, _)
+      // If we set a target to himself then make the link a recycing one
+      if (this.target === this.source) {
+        this.shape_is_recycling = true
+      }
     }
   }
 
@@ -2983,18 +2992,18 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   /**
-   * If drawing area has filter_link_value above 0:
-   * - check if the link value is superior to the filter
-   *   if not don't display the link
-   * @readonly
-   * @private
-   * @memberof Class_LinkElement
-   */
+ * If drawing area has filter_link_value above 0:
+ * - check if the link value is superior to the filter
+ *   if not don't display the link
+ * @readonly
+ * @private
+ * @memberof Class_LinkElement
+ */
   private get is_value_above_threshold() {
-    if(this.drawing_area.filter_link_value==0){
+    if (this.drawing_area.filter_link_value == 0) {
       return true
-    }else{
-      return  Number(this.data_value)>=this.drawing_area.filter_link_value
+    } else {
+      return Number(this.data_value) >= this.drawing_area.filter_link_value
     }
   }
 
@@ -3741,7 +3750,7 @@ export class Class_LinkValueTree {
     if (matching_tags.length !== 1) return null
     // Recursive
     const child = this.children[matching_tags[0].id]
-    if (child !== undefined ) {
+    if (child !== undefined) {
       if (child instanceof Class_LinkValue) return child
       else return child.getValueForDataTags(remaining_tags)
     }

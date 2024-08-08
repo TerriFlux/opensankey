@@ -420,7 +420,7 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
     options.mode_save
   )
   // Prepare JSON for saving
-  const json_data_str = JSON.stringify(json_data)
+  const json_data_str = JSON.stringify(json_data,null,2)
   const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
   // Set name for file to download
   const dataAsSuite = (json_data as DataSuiteType)

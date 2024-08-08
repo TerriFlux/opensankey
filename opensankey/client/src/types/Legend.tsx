@@ -198,7 +198,6 @@ export class Class_Legend extends Class_Element {
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ): void {
-    console.log('here')
     this._display.position.x += (event.sourceEvent.movementX)
     this._display.position.y += (event.sourceEvent.movementY)
     // this.d3_selection?.attr('transform', 'translate(' + (this.position_x) + ',' + this.position_y + ')')

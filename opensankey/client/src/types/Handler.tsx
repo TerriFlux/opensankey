@@ -46,6 +46,7 @@ export class Class_Handler extends Class_Element {
   private _filled: boolean = true
   private _custom_class: string|undefined
   private _ref_element: Class_LinkElement | Class_NodeElement
+  private _ref_element_optional?: Class_LinkElement | Class_NodeElement | undefined
 
   // CONSTRUCTOR ========================================================================
 
@@ -65,15 +66,18 @@ export class Class_Handler extends Class_Element {
     id: string,
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
-    ref_link: Class_LinkElement | Class_NodeElement,
+    ref: Class_LinkElement | Class_NodeElement,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
-    options?: {class?:string, size?: number, color?: string, filled?: boolean }
+    options?: {class?:string, size?: number, color?: string, filled?: boolean },
+    ref_optional?: Class_LinkElement | Class_NodeElement,
+
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_handlers')
-    this._ref_element = ref_link
+    this._ref_element = ref
+    this._ref_element_optional=ref_optional
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
@@ -141,8 +145,10 @@ export class Class_Handler extends Class_Element {
      * @memberof Class_Handler
      */
   public get is_visible() {
-    return (this._ref_element.is_selected && this._is_visible)
+    return ( this._ref_element.is_visible  && this._ref_element.is_selected && this._is_visible && (this._ref_element_optional?.is_visible??true) )
   }
 
   public get ref_element(): Class_LinkElement | Class_NodeElement { return this._ref_element }
+
+  public get ref_element_optional(): Class_LinkElement | Class_NodeElement | undefined {return this._ref_element_optional}
 }
