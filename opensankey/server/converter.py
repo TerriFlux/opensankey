@@ -489,8 +489,8 @@ class SankeyToJson(object):
         """
         # First create default datas struct
         default_data_strct = {
-            "value": "",
-            "display_value": "",
+            "data_value": "",
+            "text_value": "",
             "tags": {},
             "extension": {}
         }
