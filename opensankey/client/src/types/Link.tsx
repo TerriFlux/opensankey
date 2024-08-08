@@ -1968,6 +1968,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     return (
       this.are_source_and_target_displayed &&
       this.are_related_tags_selected &&
+      this.is_value_above_threshold && 
       this._is_visible
     )
   }
@@ -2977,6 +2978,22 @@ export class Class_LinkElement extends Class_ProtoElement {
    */
   private get are_related_tags_selected() {
     return this.flux_tags_list.filter(t => !t.is_selected).length === 0
+  }
+
+  /**
+   * If drawing area has filter_link_value above 0:
+   * - check if the link value is superior to the filter
+   *   if not don't display the link
+   * @readonly
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private get is_value_above_threshold() {
+    if(this.drawing_area.filter_link_value==0){
+      return true
+    }else{
+      return  Number(this.data_value)>=this.drawing_area.filter_link_value
+    }
   }
 
   /**

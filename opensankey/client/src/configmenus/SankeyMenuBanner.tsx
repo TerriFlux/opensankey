@@ -49,7 +49,8 @@ import {
 
 // Internal Types / Classes
 import {
-  SankeyData} from '../types/Types'
+  SankeyData
+} from '../types/Types'
 import {
   Class_TagGroup,
   Class_LevelTagGroup
@@ -127,7 +128,7 @@ export const setDiagram: setDiagramFuncType = (
     JSON.stringify(
       window.sankey[sous_filieres[the_diagram]]
     )
-  ) 
+  )
 
   applicationData.new_data.fromJSON(new_data)
   // convert_data({ data: new_data } as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
@@ -781,10 +782,12 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
             <Slider
               min={0}
               max={max_link_value}
-              defaultValue={filter}
+              defaultValue={new_data.drawing_area.filter_link_value}
               onChange={evt => {
-                set_current_filter(Number(evt))
+                applicationData.new_data.drawing_area.filter_link_value = +evt
                 setForceUpdate.toggle()
+                new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
               }
               } >
               <SliderTrack>
@@ -794,17 +797,24 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
             </Slider>
 
             <NumberInput
+              allowMouseWheel
               min={0}
-              max={filter}
-              defaultValue={filter}
+              max={max_link_value}
+              value={new_data.drawing_area.filter_link_value}
               onChange={(evt) => {
                 let tmp = +evt
                 if (tmp > max_link_value) {
                   tmp = max_link_value
                 }
-                set_current_filter(tmp)
+                applicationData.new_data.drawing_area.filter_link_value = tmp
                 setForceUpdate.toggle()
-              }}>
+
+              }}
+              onBlur={()=>{
+                new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+              }}
+            >
               <NumberInputField />
             </NumberInput>
           </Box>
@@ -822,7 +832,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
               onChange={(evt) => {
                 applicationData.new_data.drawing_area.filter_label = +evt
                 setForceUpdate.toggle()
-                new_data.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
+                new_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawLabel())
               }}
             >
               <SliderTrack>
@@ -832,6 +842,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
             </Slider>
 
             <NumberInput
+              allowMouseWheel
               min={0}
               max={max_link_value}
               value={new_data.drawing_area.filter_label}

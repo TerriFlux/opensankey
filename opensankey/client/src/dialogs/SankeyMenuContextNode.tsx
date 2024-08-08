@@ -484,18 +484,18 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
     (selected_nodes.includes(contextualised_node)) &&
     (contextualised_node.is_child)
   ) ?
-      <Button
-        variant='contextmenu_button'
-        onClick={() => {
-          contextualised_node.drawParent()
-          new_data.drawing_area.purgeSelection()
-          new_data.drawing_area.node_contextualised = undefined
-          refreshThisAndToggleSaving()
-        }}
-      >
-        {t('Noeud.context_agregate')}
-      </Button> :
-      <></>
+    <Button
+      variant='contextmenu_button'
+      onClick={() => {
+        contextualised_node.drawParent()
+        new_data.drawing_area.purgeSelection()
+        new_data.drawing_area.node_contextualised = undefined
+        refreshThisAndToggleSaving()
+      }}
+    >
+      {t('Noeud.context_agregate')}
+    </Button> :
+    <></>
 
   const btn_desagregate = (
     (selected_nodes.length === 1) &&
@@ -503,18 +503,18 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
     (selected_nodes.includes(contextualised_node)) &&
     (contextualised_node.is_parent)
   ) ?
-      <Button
-        variant='contextmenu_button'
-        onClick={() => {
-          contextualised_node.drawChildren()
-          new_data.drawing_area.purgeSelection()
-          new_data.drawing_area.node_contextualised = undefined
-          refreshThisAndToggleSaving()
+    <Button
+      variant='contextmenu_button'
+      onClick={() => {
+        contextualised_node.drawChildren()
+        new_data.drawing_area.purgeSelection()
+        new_data.drawing_area.node_contextualised = undefined
+        refreshThisAndToggleSaving()
       }}
-      >
-        {t('Noeud.context_desagregate')}
-      </Button> :
-      <></>
+    >
+      {t('Noeud.context_desagregate')}
+    </Button> :
+    <></>
 
   const btn_mask_shape = <Button
     variant='contextmenu_button'

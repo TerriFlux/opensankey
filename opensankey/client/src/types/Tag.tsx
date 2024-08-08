@@ -520,10 +520,10 @@ export class Class_LevelTag extends Class_ProtoTag {
         // And that related tag for parent is in the same group
         let ok_children_level_tags = false
         dim.children_level_tags
-            .forEach(tag => ok_children_level_tags = (
-              (ok_children_level_tags) ||
+          .forEach(tag => ok_children_level_tags = (
+            (ok_children_level_tags) ||
               (tag.id in this.group.tags_dict)
-            ))
+          ))
         // And verify that parent also exists in related sankey
         return (
           !(dim.id in all_existing_dim) &&
