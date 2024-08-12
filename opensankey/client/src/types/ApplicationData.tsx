@@ -107,8 +107,8 @@ export class Class_ApplicationData {
       console.log('terriflux.png not found')
     }
 
-    this._logo=logo
-    this._logo_terriflux=logo_terriflux
+    this._logo = logo
+    this._logo_terriflux = logo_terriflux
   }
 
   // PUBLIC METHODS =====================================================================
@@ -199,11 +199,12 @@ export class Class_ApplicationData {
           })
         }
 
-        this.drawing_area.checkAndUpdateAreaSize()
+        // Move all elements so none of them are outside the DA 
+        this.drawing_area.recenterElements()
       }
       else if (evt.key == 'Escape') {
         // Set app in selection mode
-        if(this.drawing_area.isInEditionMode())this.drawing_area.switchMode()
+        if (this.drawing_area.isInEditionMode()) this.drawing_area.switchMode()
 
         // Deselect all element
         app_ref.drawing_area.purgeSelection()
@@ -304,20 +305,20 @@ export class Class_ApplicationData {
   public get has_free_account(): boolean { return this._has_free_account }
   public set has_free_account(value: boolean) {/* TODO */ }
 
-  public get t(): TFunction {return this._t}
+  public get t(): TFunction { return this._t }
 
-  public get url_prefix(): string {return this._url_prefix}
-  public set url_prefix(value: string) {this._url_prefix = value}
+  public get url_prefix(): string { return this._url_prefix }
+  public set url_prefix(value: string) { this._url_prefix = value }
 
-  public get logo(): string {return this._logo}
-  public set logo(value: string) {this._logo = value}
+  public get logo(): string { return this._logo }
+  public set logo(value: string) { this._logo = value }
 
-  public get logo_terriflux(): string {return this._logo_terriflux}
-  public set logo_terriflux(value: string) {this._logo_terriflux = value}
+  public get logo_terriflux(): string { return this._logo_terriflux }
+  public set logo_terriflux(value: string) { this._logo_terriflux = value }
 
-  public get logo_width(): number {return this._logo_width}
-  public set logo_width(value: number) {this._logo_width = value}
+  public get logo_width(): number { return this._logo_width }
+  public set logo_width(value: number) { this._logo_width = value }
 
-  public get app_name(): string {return this._app_name}
-  public set app_name(value: string) {this._app_name = value}
+  public get app_name(): string { return this._app_name }
+  public set app_name(value: string) { this._app_name = value }
 }

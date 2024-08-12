@@ -40,7 +40,7 @@ import {
   initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_ProtoElement } from './Element'
+import { Class_Element, Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
 import { convert_data_legacy } from './Legacy'
 
@@ -540,8 +540,8 @@ export class Class_DrawingArea {
   public get show_structure(): Type_Structure { return this._show_structure }
   public set show_structure(value: Type_Structure) { this._show_structure = value }
 
-  public get filter_link_value(): number {return this._filter_link_value}
-  public set filter_link_value(value: number) {this._filter_link_value = value}
+  public get filter_link_value(): number { return this._filter_link_value }
+  public set filter_link_value(value: number) { this._filter_link_value = value }
 
   // PUBLIC METHODS =====================================================================
 
@@ -925,6 +925,47 @@ export class Class_DrawingArea {
     }
   }
 
+  /**
+   * Move all visible elements so that none of them are outside the DA
+   *
+   * @memberof Class_DrawingArea
+   */
+  public recenterElements() {
+    let element_min_x: Class_Element | undefined = undefined
+    let element_min_y: Class_Element | undefined = undefined
+
+    this.sankey.visible_nodes_list
+      .forEach(n => {
+        // Search for node with position x inf. to 0 and to element with minimum x position value
+        if (n.position_x < 0 && n.position_x < (element_min_x?.position_x??0)) {
+          element_min_x = n as Class_Element
+        }
+        // Search for node with position y inf. to 0 and to element with minimum y position value
+       if (n.position_y < 0 && n.position_y < (element_min_x?.position_y??0)) {
+          element_min_y = n as Class_Element
+        }
+      })
+
+    if (element_min_x !== undefined) {
+      const true_element = element_min_x as Class_Element
+      // If element is on the left of the DA move all elements to 'x' pixel to the right
+      // (x being the absolute value of element position x )
+      this._sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+        node.position_x += Math.abs(true_element.position_x)
+      })
+      true_element.position_x = 0
+    }
+    if (element_min_y !== undefined) {
+      const true_element = element_min_y as Class_Element
+      // If element is on top of the DA move all elements to 'y' pixel to the bottom
+      // (y being the absolute value of element position y )
+      this._sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+        node.position_y += Math.abs(true_element.position_y)
+      })
+      true_element.position_y = 0
+    }
+    this.checkAndUpdateAreaSize()
+  }
   // PRIVATE METHODS ==================================================================
 
   /**
