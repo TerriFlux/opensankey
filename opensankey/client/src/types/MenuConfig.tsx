@@ -388,6 +388,7 @@ export class Class_MenuConfig {
   public updateAllMenuComponents() {
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
+    this._ref_to_toolbar_updater.current()
     Object.values(this._ref_to_menu_config_tags_updater)
       .forEach(ref => ref.current())
   }
