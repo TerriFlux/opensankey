@@ -1,4 +1,4 @@
-import React, { FunctionComponent, MutableRefObject, useRef } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import {
   FaAlignLeft,
   FaAlignCenter,
@@ -26,7 +26,6 @@ import {
   MenuItem,
   MenuList,
   Select,
-  useBoolean,
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -234,11 +233,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   // Components updaters ----------------------------------------------------------------
 
   // State variable to trigger this menu refreshing
-  const [, refreshThis] = useBoolean()
+  // const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
+  const [, setCountStyle] = useState(0)
 
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = refreshThis.toggle
+    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = () => setCount(a => a + 1)
+  } else {
+    new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current = () => setCountStyle(a => a + 1)
   }
 
   // Link to ConfigMenuNumberInput state variable
@@ -264,12 +267,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Update menus for node's apparence in case we use this for style
     if (menu_for_style) {
       new_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      // Update menus for link's apparence in case we use this for style
+      new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current()
+      // Redraw all visible nodes if we modifie link style
+      new_data.drawing_area.sankey.visible_links_list.forEach(link => link.draw())
     }
     // And update this menu also
-    refreshThis.toggle()
+    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current()
   }
 
 
@@ -504,7 +510,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
           function_on_blur={(value) => {
             elements.forEach(element =>
               element.shape_ending_curve = (value ? value / 100 : undefined))
-            refreshThis.toggle()
+            refreshThisAndUpdateRelatedComponents()
           }}
         />
       </OSTooltip>
