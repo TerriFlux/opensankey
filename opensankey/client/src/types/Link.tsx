@@ -412,10 +412,9 @@ export class Class_LinkElement extends Class_ProtoElement {
       })
     // Source
     this._source = source
+    this._target = target// Target
     this._source.addOutputLink(this)
-    // Target
-    this._target = target
-    this._target.addInputLink(this)
+    this._target.addInputLink(this)// Target
     // Instanciate display on svg
     this.computeControlPoints()
     this.draw()
