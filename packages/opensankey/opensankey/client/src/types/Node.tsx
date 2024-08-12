@@ -1302,8 +1302,12 @@ export class Class_NodeElement extends Class_Element {
     // Get related elements in drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
-    // Only trigger the drag if we drag a selected node
-    if (nodes_selected.includes(this)) {
+    if (nodes_selected.length == 0) {
+      // Move all elements so none of them are outside the DA 
+      this.drawing_area.recenterElements()
+    } else if (nodes_selected.includes(this)) {
+      // Only trigger the drag if we drag a selected node
+
       // EDITION MODE ===========================================================
       if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
         // /* TODO définir  */
@@ -1318,7 +1322,8 @@ export class Class_NodeElement extends Class_Element {
               link.target.applyPosition()
             })
           })
-        this.drawing_area.checkAndUpdateAreaSize()
+        // Move all elements so none of them are outside the DA 
+        this.drawing_area.recenterElements()
       }
     }
   }
@@ -1826,29 +1831,29 @@ export class Class_NodeElement extends Class_Element {
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            break
-          case 'top':
-            node_face_size = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size = sumLinkTop
-            break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size2 = sumLinkRight
-            break
-          case 'top':
-            node_face_size2 = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size2 = sumLinkTop
-            break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
