@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
+import { FaArrowAltCircleUp, FaArrowAltCircleDown } from 'react-icons/fa'
 
 import {
   Box,
@@ -12,7 +12,6 @@ import {
   Th,
   Thead,
   Tr,
-  useBoolean,
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -37,7 +36,7 @@ import { Class_NodeElement } from '../types/Node'
   * }
   * @return {*}
   */
-export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
+export const SankeyMenuConfigurationNodesIO: FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationData,
   menu_for_modal
 }) => {
@@ -45,7 +44,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   // Data -------------------------------------------------------------------------------
 
   const { new_data } = applicationData
-  const { t } =new_data
+  const { t } = new_data
 
   // Nodes to modify --------------------------------------------------------------------
 
@@ -108,14 +107,14 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
 
   // Set list of links to reorganize ----------------------------------------------------
 
-  const links_to_reorganize: {[_ in Type_Side]:Class_LinkElement[]} = {
+  const links_to_reorganize: { [_ in Type_Side]: Class_LinkElement[] } = {
     'right': [], 'left': [], 'top': [], 'bottom': []
   }
-  if ( unique_node_selected && direction_selected && side_selected )  {
+  if (unique_node_selected && direction_selected && side_selected) {
     Object.keys(links_to_reorganize)
       .forEach((_) => {
         const side = _ as Type_Side
-        if (direction_selected === output_direction){
+        if (direction_selected === output_direction) {
           links_to_reorganize[side] = unique_node_selected.getOutputLinksForGivenSide(side)
         }
         else {
@@ -126,15 +125,15 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
 
   // Boolean to color or not link table ------------------------------------------------
 
-  const [ tab_colored, setTabColored ] = useState(false)
+  const [tab_colored, setTabColored] = useState(false)
 
   // Components updaters ---------------------------------------------------------------
 
   // Function used to force this component to reload
-  const [ , refreshThis ] = useBoolean()
+  const [, setCount] = useState(0)
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_node_io_updater.current = refreshThis.toggle
+  new_data.menu_configuration.ref_to_menu_config_node_io_updater.current = ()=>setCount(a=>a+1)
 
   /**
    * Local refresh function
@@ -143,12 +142,12 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   // JSX Components ---------------------------------------------------------------------
 
-  const content_reorg=<Box
+  const content_reorg = <Box
     layerStyle='menuconfigpanel_grid'
   >
     <Box
@@ -161,7 +160,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     <OSTooltip label={t('Noeud.tooltips.Reorg')}>
       <Button
         variant='menuconfigpanel_option_button'
-        isDisabled= {!has_at_least_one_input_link && !has_at_least_one_output_link}
+        isDisabled={!has_at_least_one_input_link && !has_at_least_one_output_link}
         onClick={() => {
           selected_nodes.forEach(node => node.reorganizeIOLinks())
           refreshThisAndUpdateRelatedComponents()
@@ -202,21 +201,21 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           }}
         >
           {
-            has_input_links?
+            has_input_links ?
               <option
                 value={input_direction}
               >
                 {t('Noeud.PF.ent')}
-              </option>:
+              </option> :
               <></>
           }
           {
-            has_output_links?
+            has_output_links ?
               <option
                 value={output_direction}
               >
                 {t('Noeud.PF.sort')}
-              </option>:
+              </option> :
               <></>
           }
         </Select>
@@ -244,22 +243,22 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
         >
           {
             (links_to_reorganize['left'].length > 0) ?
-              <option value='left'>{t('Noeud.PF.gauche')}</option>:
+              <option value='left'>{t('Noeud.PF.gauche')}</option> :
               <></>
           }
           {
-            (links_to_reorganize['right'].length > 0)?
-              <option value='right'>{t('Noeud.PF.droite')}</option>:
+            (links_to_reorganize['right'].length > 0) ?
+              <option value='right'>{t('Noeud.PF.droite')}</option> :
               <></>
           }
           {
-            (links_to_reorganize['top'].length > 0)?
-              <option value='top'>{t('Noeud.PF.ades')}</option>:
+            (links_to_reorganize['top'].length > 0) ?
+              <option value='top'>{t('Noeud.PF.ades')}</option> :
               <></>
           }
           {
-            (links_to_reorganize['bottom'].length > 0)?
-              <option value='bottom'>{t('Noeud.PF.edes')}</option>:
+            (links_to_reorganize['bottom'].length > 0) ?
+              <option value='bottom'>{t('Noeud.PF.edes')}</option> :
               <></>
           }
         </Select>
@@ -347,7 +346,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
           </Table>
         </>
       }
-    </Box>:
+    </Box> :
     <></>
 
   const content_always_present = <Box
@@ -368,7 +367,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
       <OSTooltip label={t('Noeud.tooltips.SlctOutLink')}>
         <Button
           variant='menuconfigpanel_option_button_left'
-          isDisabled= {!has_at_least_one_output_link}
+          isDisabled={!has_at_least_one_output_link}
           onClick={() => {
             new_data.drawing_area.purgeSelectionOfLinks()
             selected_nodes
@@ -385,7 +384,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
       <OSTooltip label={t('Noeud.tooltips.SlctInLink')}>
         <Button
           variant='menuconfigpanel_option_button_right'
-          isDisabled= {!has_at_least_one_input_link}
+          isDisabled={!has_at_least_one_input_link}
           onClick={() => {
             new_data.drawing_area.purgeSelectionOfLinks()
             selected_nodes
@@ -401,7 +400,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
     </Box>
   </Box>
 
-  const content=<Box
+  const content = <Box
     layerStyle='menuconfigpanel_grid'
   >
     {content_reorg}

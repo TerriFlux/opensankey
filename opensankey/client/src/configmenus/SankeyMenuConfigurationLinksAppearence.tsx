@@ -233,7 +233,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   // Components updaters ----------------------------------------------------------------
 
   // State variable to trigger this menu refreshing
-  // const [, refreshThis] = useBoolean()
   const [, setCount] = useState(0)
   const [, setCountStyle] = useState(0)
 

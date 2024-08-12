@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -11,8 +11,7 @@ import {
   Tabs,
   TabList,
   TabPanels,
-  Tab,
-  useBoolean
+  Tab
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -77,9 +76,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_node_updater.current = refreshThis.toggle
+  new_data.menu_configuration.ref_to_menu_config_node_updater.current = ()=>setCount(a=>a+1)
 
   // Function used to reset menu UI -----------------------------------------------------
 
@@ -87,7 +86,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   const refreshThisAndUpdateRelatedComponents = () => {

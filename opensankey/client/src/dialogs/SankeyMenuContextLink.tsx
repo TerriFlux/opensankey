@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
@@ -18,7 +18,6 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { ContextMenuLinkFType } from './types/SankeyMenuContextLinkTypes'
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
-import { useBoolean } from '@chakra-ui/react'
 
 /*************************************************************************************************/
 
@@ -70,10 +69,10 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_context_links_updater.current = refreshThis.toggle
+  new_data.menu_configuration.ref_to_menu_context_links_updater.current = ()=>setCount(a=>a+1)
 
   // Functions used to reset menu UI ----------------------------------------------------
 
@@ -81,7 +80,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   // JSX Components ---------------------------------------------------------------------

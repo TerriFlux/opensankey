@@ -5,7 +5,6 @@ import {
   Checkbox,
   Select,
   TabPanel,
-  useBoolean
 } from '@chakra-ui/react'
 
 // Local types
@@ -24,15 +23,15 @@ import {
  *
  * @type {*}
  */
-export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
+export const SankeyMenuConfigurationNodesTags: FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
   applicationData,
   menu_for_modal
-})=> {
+}) => {
 
   // Data ------------------------------------------------------------------------------
 
-  const { new_data} = applicationData
-  const { t } =new_data
+  const { new_data } = applicationData
+  const { t } = new_data
 
   // Node tags groups ------------------------------------------------------------------
 
@@ -55,11 +54,11 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
 
   // Menu updaters ----------------------------------------------------------------------
 
-  const [ , refreshThis ] = useBoolean()
+  const [, setCount] = useState(0)
   const updateThis = () => {
     // Can just use simple refresh if node_tagg entry exists
     if (new_data.drawing_area.sankey.node_taggs_list[node_tagg_entry_index])
-      refreshThis.toggle()
+      setCount(a=>a+1)
     // If not, reset entry index
     else
       setNodeTaggEntryIndex(0)
@@ -73,7 +72,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   // Utils functions --------------------------------------------------------------------
@@ -144,7 +143,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                 const [allTrue, allFalse] = haveAllSelectedNodesGivenTag(node_tag)
                 return <Checkbox
                   variant='menuconfigpanel_tag_checkbox'
-                  isIndeterminate = {
+                  isIndeterminate={
                     (selected_nodes.length > 1) &&
                     (!allTrue) &&
                     (!allFalse)
@@ -175,7 +174,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   } </>
 
   return menu_for_modal ?
-    content:
+    content :
     <TabPanel>
       {content}
     </TabPanel>

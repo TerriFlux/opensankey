@@ -23,7 +23,6 @@ import {
   InputRightAddon,
   InputGroup,
   Input,
-  useBoolean,
 } from '@chakra-ui/react'
 
 // Local libs
@@ -72,8 +71,8 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
 
   // Component updater ------------------------------------------------------------------
 
-  const [ , refreshThis] = useBoolean()
-  config_object.ref_to_menu_config_updater.current = refreshThis.toggle
+  const [, setCount] = useState(0)
+  config_object.ref_to_menu_config_updater.current = ()=>setCount(a=>a+1)
 
   // JSX Component ----------------------------------------------------------------------
 
@@ -90,12 +89,13 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
           //MENU PARAMETRE GENERAUX
         }
         <AccordionButton
-          onClick={()=>{
+          onClick={() => {
             const scroll_x = window.scrollX
             const scroll_y = window.scrollY
             setTimeout(() => {
-              document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-            },50)}}
+              document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+            }, 50)
+          }}
         >
           <Box
             as='span'
@@ -186,12 +186,12 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
           //MENU ETIQUETTES
         }
         <AccordionButton
-          onClick={()=>{
+          onClick={() => {
             const scroll_x = window.scrollX
             const scroll_y = window.scrollY
             setTimeout(() => {
-              document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-            },50)
+              document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+            }, 50)
           }}
         >
           <Box
@@ -213,12 +213,12 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
                 //MENU ETIQUETTES DE NOEUDS
               }
               <AccordionButton
-                onClick={()=>{
+                onClick={() => {
                   const scroll_x = window.scrollX
                   const scroll_y = window.scrollY
                   setTimeout(() => {
-                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-                  },50)
+                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+                  }, 50)
                 }}>
                 <Box
                   as='span'
@@ -239,12 +239,12 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
                 //MENU ETIQUETTES DE FLUX
               }
               <AccordionButton
-                onClick={()=>{
+                onClick={() => {
                   const scroll_x = window.scrollX
                   const scroll_y = window.scrollY
                   setTimeout(() => {
-                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-                  },50)
+                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+                  }, 50)
                 }}
               >
                 <Box
@@ -266,12 +266,12 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
                 //MENU ETIQUETTES DE DONNÉES
               }
               <AccordionButton
-                onClick={()=>{
+                onClick={() => {
                   const scroll_x = window.scrollX
                   const scroll_y = window.scrollY
                   setTimeout(() => {
-                    document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-                  },50)
+                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+                  }, 50)
                 }}
               >
                 <Box
@@ -387,7 +387,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
         // Update displayed value_as_number
         setValue((value_as_string !== '') ? value_as_number : null)
       }}
-      onKeyDown={e=> {
+      onKeyDown={e => {
         if (e.key === 'Enter') {
           ref_input.current?.blur()
         }
@@ -411,7 +411,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
 
 export type FCType_ConfigMenuNumberInput = {
   default_value: number | null | undefined,
-  ref_to_set_value: MutableRefObject<(_:number | null | undefined) => void>,
+  ref_to_set_value: MutableRefObject<(_: number | null | undefined) => void>,
   function_on_blur: (val: number | null | undefined) => void,
   menu_for_style?: boolean,
   minimum_value?: number,
@@ -463,7 +463,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
         // Update displayed updated_value
         setValue((updated_value !== '') ? updated_value : null)
       }}
-      onKeyDown={e=> {
+      onKeyDown={e => {
         if (e.key === 'Enter') {
           ref_input.current?.blur()
         }
@@ -480,7 +480,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
 }
 
 export type FCType_ConfigMenuTextInput = {
-  ref_to_set_value: MutableRefObject<(_:string | null | undefined) => void>,
+  ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_get_value: () => string | null | undefined,
   function_on_blur: (_: string | null | undefined) => void,
   menu_for_style?: boolean

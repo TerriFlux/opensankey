@@ -1,10 +1,9 @@
 // External imports
-import React, { FunctionComponent, useRef } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 
 import {
   Box,
   Select,
-  useBoolean
 } from '@chakra-ui/react'
 
 // Local types
@@ -63,19 +62,19 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
   }
 
   // Function used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
 
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = () => {
     updateInputsValues()
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   // JSX -------------------------------------------------------------------------------
@@ -245,7 +244,7 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
   }
 
   // Function used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
@@ -253,7 +252,7 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
     // Update data menu for link
     new_data.menu_configuration.ref_to_menu_config_link_data_updater.current()
     // And update this menu also
-    refreshThis.toggle()
+    setCount(a=>a+1)
     updateInputsValues()
   }
 

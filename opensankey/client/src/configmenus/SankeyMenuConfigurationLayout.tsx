@@ -1,10 +1,9 @@
-import React, { FunctionComponent, MutableRefObject, useRef } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
   Checkbox,
   Input,
-  useBoolean,
 } from '@chakra-ui/react'
 
 import { OpenSankeyMenuConfigurationLayoutFType } from './types/SankeyMenuConfigurationLayoutTypes'
@@ -25,8 +24,8 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
 
   // Components updaters ---------------------------------------------------------------
 
-  const [, refreshThis] = useBoolean()
-  new_data.menu_configuration.ref_to_menu_config_layout_updater.current = refreshThis.toggle
+  const [, setCount] = useState(0)
+  new_data.menu_configuration.ref_to_menu_config_layout_updater.current = () => setCount(a => a + 1)
 
 
   // Link to ConfigMenuNumberInput state variable
@@ -53,7 +52,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis.toggle()
+    setCount(a => a + 1)
   }
 
   // Utils functions -------------------------------------------------------------------

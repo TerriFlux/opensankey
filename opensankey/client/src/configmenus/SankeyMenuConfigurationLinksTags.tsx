@@ -5,7 +5,6 @@ import {
   Checkbox,
   Select,
   TabPanel,
-  useBoolean
 } from '@chakra-ui/react'
 
 // Local types
@@ -17,15 +16,15 @@ import {
 
 /*************************************************************************************************/
 
-export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
+export const MenuConfigurationLinksTags: FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   applicationData,
   menu_for_modal,
-})=>{
+}) => {
 
   // Data -------------------------------------------------------------------------------
 
   const { new_data } = applicationData
-  const { t } =new_data
+  const { t } = new_data
 
   // Tags -------------------------------------------------------------------------------
 
@@ -52,11 +51,11 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
 
   // Menu updaters ----------------------------------------------------------------------
 
-  const [ , refreshThis ] = useBoolean()
+  const [, setCount] = useState(0)
   const updateThis = () => {
     // Can just use simple refresh if flux_tagg entry exists
     if (new_data.drawing_area.sankey.flux_taggs_list[flux_tagg_entry_index])
-      refreshThis.toggle()
+      setCount(a=>a+1)
     // If not, reset entry
     else
       setFluxTaggEntryIndex(0)
@@ -192,7 +191,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                       isIndeterminate={!allTrue && !allFalse}
                       onChange={(evt) => {
                         const visible = evt.target.checked
-                        selected_links.forEach(link=>{
+                        selected_links.forEach(link => {
                           if (visible) {
                             link.addTag(flux_tag)
                           }

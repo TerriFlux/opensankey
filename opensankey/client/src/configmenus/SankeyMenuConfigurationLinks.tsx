@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { ReactElementLike } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -13,7 +13,6 @@ import {
   TabList,
   TabPanels,
   Tabs,
-  useBoolean
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate } from '@fortawesome/free-solid-svg-icons'
@@ -93,9 +92,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   // Components updaters ----------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_link_updater.current = refreshThis.toggle
+  new_data.menu_configuration.ref_to_menu_config_link_updater.current = ()=>setCount(a=>a+1)
 
   // Function used to reset menu UI -----------------------------------------------------
 
@@ -103,7 +102,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
-    refreshThis.toggle()
+    setCount(a=>a+1)
   }
 
   const refreshThisAndUpdateRelatedComponents = () => {

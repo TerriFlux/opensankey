@@ -23,7 +23,6 @@ import {
   Th,
   Thead,
   Tr,
-  useBoolean,
 } from '@chakra-ui/react'
 
 // Local types
@@ -77,10 +76,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   // Trigger reloading of this component ------------------------------------------------
 
-  const [, refreshThis] = useBoolean()
+  const [, setCount] = useState(0)
   const updateThis = () => {
     if (tags_group_dict[tags_group_entry_id])
-      refreshThis.toggle()
+      setCount(a=>a+1)
     else
       setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
   }
