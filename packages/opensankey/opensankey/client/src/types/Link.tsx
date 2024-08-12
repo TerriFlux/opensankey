@@ -1784,6 +1784,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     return () => {
       this._control_points.is_dragged = false
       this.drawControlPoint()
+      this.menu_config.ref_to_menu_config_link_apparence_updater.current()
     }
   }
 
