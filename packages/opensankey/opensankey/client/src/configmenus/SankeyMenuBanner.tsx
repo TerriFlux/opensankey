@@ -176,6 +176,10 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 level_taggs['Primaire'].selectTagsFromId(evt.target.value)
                 new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
+                // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints 
+                // (it isn't done for link not directly displayed after fromJSON)
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw()) 
+                new_data.drawing_area.checkAndUpdateAreaSize()
               }}
             >
               {
