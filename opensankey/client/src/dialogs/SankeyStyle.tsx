@@ -37,7 +37,6 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
   // Component's state
   const [, setForceUpdate] = useBoolean()
   const [selected_node_style_id, setSelectedNodeStyleId] = useState(default_style_id)
-
   // Shared refs with external components
   new_data.menu_configuration.ref_selected_style_node.current = selected_node_style_id
 
@@ -58,10 +57,10 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
           // Update Style config menu
           new_data.menu_configuration.ref_selected_style_node.current = new_style.id
           new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+          new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current()
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-          // Update display for this component
-          setSelectedNodeStyleId(new_style.id)
+
         }}>
         <FaPlus />
       </Button>
@@ -89,7 +88,9 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
                     onClick={() => {
                       // Update style apparence menu
                       new_data.menu_configuration.ref_selected_style_node.current = id
-                      new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+                      // new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current() //doesn't need to trigger update of config node attr in menu config
+                      new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current()
+
                       // Update this menu
                       setSelectedNodeStyleId(id)
                     }}
@@ -110,7 +111,8 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
           new_data.drawing_area.sankey.deleteNodeStyle(node_styles_dict[selected_node_style_id])
           // Fallback to default style
           new_data.menu_configuration.ref_selected_style_node.current = default_style_id
-          new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+          new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current() 
+          new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current()
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
           // Update this menu
@@ -180,8 +182,8 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
   const { ref_selected_style_link } = new_data.menu_configuration
 
   // Component's state
-  const [ selected_link_style_id, setSelectedLinkStyleId ] = useState(default_style_id)
-  const [ ,setForceUpdate ] = useBoolean()
+  const [selected_link_style_id, setSelectedLinkStyleId] = useState(default_style_id)
+  const [, setForceUpdate] = useBoolean()
 
   // Shared refs for external components
   ref_selected_style_link.current = selected_link_style_id
@@ -202,7 +204,9 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
           const new_style = new_data.drawing_area.sankey.addNewDefaultLinkStyle()
           // Update Style config menu
           ref_selected_style_link.current = new_style.id
-          new_data.menu_configuration.ref_to_menu_config_link_updater.current()
+          new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current()
+          new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current()
+          
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
           // Update this component
@@ -233,8 +237,9 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
                   onClick={() => {
                     // Update Style config menu
                     ref_selected_style_link.current = id
-                    new_data.menu_configuration.ref_to_menu_config_link_updater.current()
-                    // Update this menu
+                    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current()
+                    new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current()
+
                     setSelectedLinkStyleId(id)
                   }}
                 >
@@ -254,8 +259,9 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
           new_data.drawing_area.sankey.deleteLinkStyle(link_styles_dict[selected_link_style_id])
           // Update Style config menu
           ref_selected_style_link.current = default_style_id
-          new_data.menu_configuration.ref_to_menu_config_link_updater.current()
-          // Need to save
+          new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current()
+          new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current()
+
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
           // Update this component
           setSelectedLinkStyleId(default_style_id)

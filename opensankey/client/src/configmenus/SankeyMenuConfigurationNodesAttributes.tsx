@@ -42,7 +42,6 @@ import {
   SliderThumb,
   SliderTrack,
   TabPanel,
-  useBoolean,
 } from '@chakra-ui/react'
 
 // Local types
@@ -206,10 +205,13 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Components updaters ----------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [,setCount]=useState(0)
+  const [,setCountStyle]=useState(0)
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = refreshThis.toggle
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = ()=>setCount(a=>a+1)
+  }else{
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current = ()=>setCountStyle(a=>a+1)
   }
 
   /**
@@ -218,12 +220,15 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Update menus for node's apparence in case we use this for style
     if (menu_for_style) {
-      new_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    // Update menus for node's apparence in case we use this for style
+      new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current()
+      // Redraw all visible nodes if we modifie node style
+      new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
     }
     // And update this menu also
-    refreshThis.toggle()
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+
   }
 
   // JSX menu components ---------------------------------------------------------------
