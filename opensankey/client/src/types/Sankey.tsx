@@ -227,6 +227,11 @@ export class Class_Sankey {
    */
   public deleteNode(node: Class_NodeElement) {
     if (this._nodes[node.id] !== undefined) {
+      // if we remove a node we also have to remove it link attached to it
+      node.input_links_list.forEach(l => this.drawing_area.deleteLink(l))
+      node.output_links_list.forEach(l => this.drawing_area.deleteLink(l))
+
+      // Delete node in sankey
       const _ = this._nodes[node.id]
       delete this._nodes[node.id]
       _.delete()
@@ -357,8 +362,7 @@ export class Class_Sankey {
   public addLevelTagGroup(
     id: string,
     name: string
-  ): Class_LevelTagGroup
-  {
+  ): Class_LevelTagGroup {
     if (!this._level_taggs[id]) {
       // Create
       const tag_group = new Class_LevelTagGroup(id, name, this)
@@ -604,10 +608,10 @@ export class Class_Sankey {
     // If we use json object only for updateing layout,
     // we need to find correspondances for tags, nodes and links ids
     // from input JSON to this Sankey
-    const matching_taggs_id: {[_: string]: {[_: string]: string}} = {}
-    const matching_tags_id: {[_:string]: {[_: string]: {[_: string]: string}}} = {}
-    const matching_nodes_id: {[_: string]: string} = {}
-    const matching_links_id: {[_: string]: string} = {}
+    const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
+    const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
+    const matching_nodes_id: { [_: string]: string } = {}
+    const matching_links_id: { [_: string]: string } = {}
     if (match_and_update) {
       this.matchAndModifyJSONIds(
         json_object,
@@ -755,10 +759,10 @@ export class Class_Sankey {
 
   public matchAndModifyJSONIds(
     json_object: Type_JSON,
-    matching_taggs_id: {[_: string]: {[_: string]: string}} = {},
-    matching_tags_id: {[_:string]: {[_: string]: {[_: string]: string}}} = {},
-    matching_nodes_id: {[_: string]: string} = {},
-    matching_links_id: {[_: string]: string} = {}
+    matching_taggs_id: { [_: string]: { [_: string]: string } } = {},
+    matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {},
+    matching_nodes_id: { [_: string]: string } = {},
+    matching_links_id: { [_: string]: string } = {}
   ) {
     // Loop on every tag group entries in JSON if there is data -------------------------
     const loop_taggs = {
@@ -771,8 +775,8 @@ export class Class_Sankey {
       .forEach(([tagg_type, tagg_dict]) => {
         if (json_object[tagg_type] !== undefined) {
           // Variable to save matching ids : old -> new
-          const curr_matching_taggs_id: {[id: string]: string} = {}
-          const curr_matching_tags_id: {[id: string]: {[id: string]: string}} = {}
+          const curr_matching_taggs_id: { [id: string]: string } = {}
+          const curr_matching_tags_id: { [id: string]: { [id: string]: string } } = {}
           // Cast type for linter
           const json = json_object[tagg_type] as Type_JSON
           // Loop on all entries to find tag group and then tags matchs
