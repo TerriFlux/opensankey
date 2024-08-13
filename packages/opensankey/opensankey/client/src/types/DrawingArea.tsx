@@ -941,7 +941,7 @@ export class Class_DrawingArea {
           element_min_x = n as Class_Element
         }
         // Search for node with position y inf. to 0 and to element with minimum y position value
-       if (n.position_y < 0 && n.position_y < (element_min_x?.position_y??0)) {
+        if (n.position_y < 0 && n.position_y < (element_min_x?.position_y??0)) {
           element_min_y = n as Class_Element
         }
       })
