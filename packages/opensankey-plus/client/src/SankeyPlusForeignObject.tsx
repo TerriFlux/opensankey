@@ -1,312 +1,312 @@
-// External imports
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import * as d3 from 'd3'
+// // External imports
+// import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+// import * as d3 from 'd3'
 
-import ReactQuill from 'react-quill'
-import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
+// import ReactQuill from 'react-quill'
+// import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
-// Local imports
-import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
-import { OSPData, OSPNode } from '../types/Types'
-import { OSPDrawNodesFOFType, OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
-import { NodeDisplayed } from './import/OpenSankey'
+// // Local imports
+// import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
+// import { OSPData, OSPNode } from '../types/Types'
+// import { OSPDrawNodesFOFType, OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
+// import { NodeDisplayed } from './import/OpenSankey'
 
-// OpenSankey types
-import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { OSTooltip } from 'open-sankey/dist/configmenus/SankeyUtils'
-
-
-declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-}
-
-export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
-  t,
-  data,
-  multi_selected_nodes,
-  is_activated,
-  applicationState,
-  node_function
-})=> {
-  const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
-  const [forceUpdate, setForceUpdate] = useState(false)
-
-  let s_tmp_editor_content_fo_node = s_editor_content_fo_node
-  applicationState.r_setter_editor_content_fo_node.current = sEditorContentFoNode
-
-  let s_tmp_editor_content_changed = false
-  if (multi_selected_nodes.current.length>0) {
-    if (multi_selected_nodes.current[0].FO_content !== s_editor_content_fo_node) {
-      s_tmp_editor_content_changed = true
-    }
-  }
+// // OpenSankey types
+// import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
+// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+// import { OSTooltip } from 'open-sankey/dist/configmenus/SankeyUtils'
 
 
+// declare const window: Window &
+// typeof globalThis & {
+//   SankeyToolsStatic: boolean
+// }
 
-  const modules = {
-    toolbar: [
-      [{ 'font': [] }],
-      ['bold', 'italic', 'underline','strike'],
-      [{ 'size': [] }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{'list': 'ordered'}, {'list': 'bullet'}],
-      [{'align':[]}],
+// export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
+//   t,
+//   data,
+//   multi_selected_nodes,
+//   is_activated,
+//   applicationState,
+//   node_function
+// })=> {
+//   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
+//   const [forceUpdate, setForceUpdate] = useState(false)
 
-      ['clean'],
-    ],
-  }
+//   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
+//   applicationState.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
-  const formats = ['font','size',
-    'bold', 'italic', 'underline', 'strike','color','background',
-    'list', 'bullet','align'
-  ]
-
-  const value_of_key = OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
-
-  //Create 2 editor :
-  // - one in an editor when we can apply layout width buttons
-  // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo=<Box style={{'height':'300px'}}>
-    <ReactQuill
-      className='quill_editor'
-      value={s_editor_content_fo_node}
-      onChange={(evt, _, s) => {
-        if(s==='user'){
-          s_tmp_editor_content_fo_node = evt
-          if (!s_tmp_editor_content_changed) {
-            sEditorContentFoNode(s_tmp_editor_content_fo_node)
-          }
-        }
-      }}
-      onBlur={()=>{
-        sEditorContentFoNode(s_tmp_editor_content_fo_node)
-      }}
-      theme="snow"
-      modules={modules}
-      formats={formats}
-      readOnly={!is_activated}
-      style={{
-        color:(!is_activated || !value_of_key['has_FO'][0] )?'#666666':'',
-        backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':'',
-        overflowY: 'scroll'
-      }}
-    />
-  </Box>
-
-  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
-  const editor_fo_raw=<Textarea
-    rows={5}
-    color={(!is_activated || !value_of_key['has_FO'][0])?'#666666':''}
-    backgroundColor={(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}
-    disabled={!is_activated}
-    ref={inputRef}
-    defaultValue={s_editor_content_fo_node}
-    onChange={(evt) => {
-      s_tmp_editor_content_fo_node = evt.target.value
-      if (!s_tmp_editor_content_changed) {
-        sEditorContentFoNode(s_tmp_editor_content_fo_node)
-      }
-    }}
-    onBlur={()=>{
-      sEditorContentFoNode(s_tmp_editor_content_fo_node)
-    }}
-  />
-
-  return <TabPanel>
-    <Box
-      layerStyle='menuconfigpanel_grid'
-    >
-
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isDisabled={!is_activated}
-        isIndeterminate={value_of_key['has_FO'][1]}
-        isChecked={value_of_key['has_FO'][0] as boolean}
-        onChange={(evt) => {
-          Object
-            .values(data.nodes)
-            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-            .forEach(d => {
-              d.has_FO = evt.target.checked
-            })
-          node_function.RedrawNodes(multi_selected_nodes.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      >
-        {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
-      </Checkbox>
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isDisabled={!is_activated}
-        isIndeterminate={value_of_key['is_FO_raw'][1]}
-        isChecked={value_of_key['is_FO_raw'][0] as boolean}
-        onChange={(evt) => {
-          Object
-            .values(data.nodes)
-            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-            .forEach(d => {
-              d.is_FO_raw = evt.target.checked
-            })
-          node_function.RedrawNodes(multi_selected_nodes.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      >
-        {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
-      </Checkbox>
-
-      {
-        (multi_selected_nodes.current.length>0)?
-
-          <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyOSPDisabled')}>
-            {
-              (multi_selected_nodes.current[0].is_FO_raw)?
-                editor_fo_raw:
-                editor_fo
-            }
-          </OSTooltip>
-          :<></>
-      }
-
-      <Box
-        as='span'
-        layerStyle='options_2cols'
-      >
-        <Button
-          variant='menuconfigpanel_option_button_left'
-          isDisabled={!is_activated || !s_tmp_editor_content_changed}
-          backgroundColor='red.200'
-          onClick={() => {
-            if (multi_selected_nodes.current.length>0) {
-              if ( typeof multi_selected_nodes.current[0].FO_content !== 'undefined' ) {
-                // Reset textaera
-                if ( typeof inputRef.current !== 'undefined' ) {
-                  if (inputRef.current !== null) {
-                    inputRef.current.value = multi_selected_nodes.current[0].FO_content
-                  }
-                }
-                // Reset state value
-                sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
-              }
-              else {
-                // Reset textaera
-                if (typeof inputRef.current !== 'undefined') {
-                  if (inputRef.current !== null) {
-                    inputRef.current.value = ''
-                  }
-                }
-                // Reset state value
-                sEditorContentFoNode('')
-              }
-            }
-            else {
-              // Reset textaera
-              if (typeof inputRef.current !== 'undefined') {
-                if (inputRef.current !== null) {
-                  inputRef.current.value = ''
-                }
-              }
-              // Reset state value
-              sEditorContentFoNode('')
-            }
-            setForceUpdate(!forceUpdate)
-          }}
-        >
-          {t('Noeud.FO.cancel')}
-        </Button>
-        <Button
-          variant='menuconfigpanel_option_button_right'
-          isDisabled={!is_activated || !s_tmp_editor_content_changed}
-          onClick={() => {
-            Object
-              .values(data.nodes)
-              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .map(d => {
-                d.FO_content = s_tmp_editor_content_fo_node
-              })
-            node_function.RedrawNodes(multi_selected_nodes.current)
-            sEditorContentFoNode(s_tmp_editor_content_fo_node)
-          }}
-        >
-          {t('Noeud.FO.submit')}
-        </Button>
-      </Box>
-    </Box>
-  </TabPanel>
-}
+//   let s_tmp_editor_content_changed = false
+//   if (multi_selected_nodes.current.length>0) {
+//     if (multi_selected_nodes.current[0].FO_content !== s_editor_content_fo_node) {
+//       s_tmp_editor_content_changed = true
+//     }
+//   }
 
 
-export const OSPDrawNodesFO : OSPDrawNodesFOFType = (
-  data : OSPData,
-  display_nodes : { [node_id: string]: OSPNode },
-  applicationState,
-  NodeTooltipsContent: NodeTooltipsContentFType,
-  GetLinkValue:GetLinkValueFuncType,
-  trad
-) => {
-  const {ref_getter_mode_selection} =applicationState
-  const node_mouse_over=(data:OSPData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's')? 'pointer' : 'unset')
-    if (NodeDisplayed(data,(d as OSPNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
-      const sankeyTooltip=d3.select('.sankey-tooltip')
 
-      sankeyTooltip
-        .style('opacity', 1)
-        .html(NodeTooltipsContent(data,display_nodes, d as OSPNode,GetLinkValue,trad))
-    }
-  }
+//   const modules = {
+//     toolbar: [
+//       [{ 'font': [] }],
+//       ['bold', 'italic', 'underline','strike'],
+//       [{ 'size': [] }],
+//       [{ 'color': [] }, { 'background': [] }],
+//       [{'list': 'ordered'}, {'list': 'bullet'}],
+//       [{'align':[]}],
 
-  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    if ((NodeDisplayed(data,(d as OSPNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
-      const sankeyTooltip=d3.select('.sankey-tooltip')
+//       ['clean'],
+//     ],
+//   }
 
-      const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
-      let pos_tooltip_y= event.clientY
-      const size_browser=window.innerHeight
-      pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
+//   const formats = ['font','size',
+//     'bold', 'italic', 'underline', 'strike','color','background',
+//     'list', 'bullet','align'
+//   ]
 
-      const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))
-      let pos_tooltip_x= event.clientX
-      const size_browser_w=window.innerWidth
-      pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
+//   const value_of_key = OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
 
-      sankeyTooltip
-        .style('top',pos_tooltip_y + 'px')
-        .style('left',pos_tooltip_x + 'px')
-    }
-  }
+//   //Create 2 editor :
+//   // - one in an editor when we can apply layout width buttons
+//   // - one with raw html in case the editor can't do exactly what we want
+//   const editor_fo=<Box style={{'height':'300px'}}>
+//     <ReactQuill
+//       className='quill_editor'
+//       value={s_editor_content_fo_node}
+//       onChange={(evt, _, s) => {
+//         if(s==='user'){
+//           s_tmp_editor_content_fo_node = evt
+//           if (!s_tmp_editor_content_changed) {
+//             sEditorContentFoNode(s_tmp_editor_content_fo_node)
+//           }
+//         }
+//       }}
+//       onBlur={()=>{
+//         sEditorContentFoNode(s_tmp_editor_content_fo_node)
+//       }}
+//       theme="snow"
+//       modules={modules}
+//       formats={formats}
+//       readOnly={!is_activated}
+//       style={{
+//         color:(!is_activated || !value_of_key['has_FO'][0] )?'#666666':'',
+//         backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':'',
+//         overflowY: 'scroll'
+//       }}
+//     />
+//   </Box>
 
-  const add_nodes_fo = (
-  ) => {
-    //----------------ICON-----------------
+//   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
+//   const editor_fo_raw=<Textarea
+//     rows={5}
+//     color={(!is_activated || !value_of_key['has_FO'][0])?'#666666':''}
+//     backgroundColor={(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}
+//     disabled={!is_activated}
+//     ref={inputRef}
+//     defaultValue={s_editor_content_fo_node}
+//     onChange={(evt) => {
+//       s_tmp_editor_content_fo_node = evt.target.value
+//       if (!s_tmp_editor_content_changed) {
+//         sEditorContentFoNode(s_tmp_editor_content_fo_node)
+//       }
+//     }}
+//     onBlur={()=>{
+//       sEditorContentFoNode(s_tmp_editor_content_fo_node)
+//     }}
+//   />
 
-    // Add icon to node (if there is one associated to it)
-    // then apply selected parameter
-    const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
+//   return <TabPanel>
+//     <Box
+//       layerStyle='menuconfigpanel_grid'
+//     >
 
-    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>)
+//       <Checkbox
+//         variant='menuconfigpanel_option_checkbox'
+//         isDisabled={!is_activated}
+//         isIndeterminate={value_of_key['has_FO'][1]}
+//         isChecked={value_of_key['has_FO'][0] as boolean}
+//         onChange={(evt) => {
+//           Object
+//             .values(data.nodes)
+//             .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+//             .forEach(d => {
+//               d.has_FO = evt.target.checked
+//             })
+//           node_function.RedrawNodes(multi_selected_nodes.current)
+//           setForceUpdate(!forceUpdate)
+//         }}
+//       >
+//         {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
+//       </Checkbox>
+//       <Checkbox
+//         variant='menuconfigpanel_option_checkbox'
+//         isDisabled={!is_activated}
+//         isIndeterminate={value_of_key['is_FO_raw'][1]}
+//         isChecked={value_of_key['is_FO_raw'][0] as boolean}
+//         onChange={(evt) => {
+//           Object
+//             .values(data.nodes)
+//             .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+//             .forEach(d => {
+//               d.is_FO_raw = evt.target.checked
+//             })
+//           node_function.RedrawNodes(multi_selected_nodes.current)
+//           setForceUpdate(!forceUpdate)
+//         }}
+//       >
+//         {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
+//       </Checkbox>
 
-    ggg_nodes.filter((d)=>{
-      return d.has_FO
-    }) .append('foreignObject')
-      .attr('width',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
-      .attr('height',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
-      .attr('id',(d)=> d.idNode + '_fo')
-      .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,event,d)
-      })
-      .on('mousemove', function (event,d) {
-        node_mouse_move(event,d)
-      })
-      .on('mouseout', function () {
-        sankeyTooltip.style('opacity', 0)
-      })
-      .append('xhtml:div')
-      .attr('class','ql-editor')
-      .html((d)=>d.FO_content)
-  }
-  add_nodes_fo()
+//       {
+//         (multi_selected_nodes.current.length>0)?
 
-}
+//           <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyOSPDisabled')}>
+//             {
+//               (multi_selected_nodes.current[0].is_FO_raw)?
+//                 editor_fo_raw:
+//                 editor_fo
+//             }
+//           </OSTooltip>
+//           :<></>
+//       }
+
+//       <Box
+//         as='span'
+//         layerStyle='options_2cols'
+//       >
+//         <Button
+//           variant='menuconfigpanel_option_button_left'
+//           isDisabled={!is_activated || !s_tmp_editor_content_changed}
+//           backgroundColor='red.200'
+//           onClick={() => {
+//             if (multi_selected_nodes.current.length>0) {
+//               if ( typeof multi_selected_nodes.current[0].FO_content !== 'undefined' ) {
+//                 // Reset textaera
+//                 if ( typeof inputRef.current !== 'undefined' ) {
+//                   if (inputRef.current !== null) {
+//                     inputRef.current.value = multi_selected_nodes.current[0].FO_content
+//                   }
+//                 }
+//                 // Reset state value
+//                 sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
+//               }
+//               else {
+//                 // Reset textaera
+//                 if (typeof inputRef.current !== 'undefined') {
+//                   if (inputRef.current !== null) {
+//                     inputRef.current.value = ''
+//                   }
+//                 }
+//                 // Reset state value
+//                 sEditorContentFoNode('')
+//               }
+//             }
+//             else {
+//               // Reset textaera
+//               if (typeof inputRef.current !== 'undefined') {
+//                 if (inputRef.current !== null) {
+//                   inputRef.current.value = ''
+//                 }
+//               }
+//               // Reset state value
+//               sEditorContentFoNode('')
+//             }
+//             setForceUpdate(!forceUpdate)
+//           }}
+//         >
+//           {t('Noeud.FO.cancel')}
+//         </Button>
+//         <Button
+//           variant='menuconfigpanel_option_button_right'
+//           isDisabled={!is_activated || !s_tmp_editor_content_changed}
+//           onClick={() => {
+//             Object
+//               .values(data.nodes)
+//               .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+//               .map(d => {
+//                 d.FO_content = s_tmp_editor_content_fo_node
+//               })
+//             node_function.RedrawNodes(multi_selected_nodes.current)
+//             sEditorContentFoNode(s_tmp_editor_content_fo_node)
+//           }}
+//         >
+//           {t('Noeud.FO.submit')}
+//         </Button>
+//       </Box>
+//     </Box>
+//   </TabPanel>
+// }
+
+
+// export const OSPDrawNodesFO : OSPDrawNodesFOFType = (
+//   data : OSPData,
+//   display_nodes : { [node_id: string]: OSPNode },
+//   applicationState,
+//   NodeTooltipsContent: NodeTooltipsContentFType,
+//   GetLinkValue:GetLinkValueFuncType,
+//   trad
+// ) => {
+//   const {ref_getter_mode_selection} =applicationState
+//   const node_mouse_over=(data:OSPData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+//     d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's')? 'pointer' : 'unset')
+//     if (NodeDisplayed(data,(d as OSPNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
+//       const sankeyTooltip=d3.select('.sankey-tooltip')
+
+//       sankeyTooltip
+//         .style('opacity', 1)
+//         .html(NodeTooltipsContent(data,display_nodes, d as OSPNode,GetLinkValue,trad))
+//     }
+//   }
+
+//   const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+//     if ((NodeDisplayed(data,(d as OSPNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
+//       const sankeyTooltip=d3.select('.sankey-tooltip')
+
+//       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
+//       let pos_tooltip_y= event.clientY
+//       const size_browser=window.innerHeight
+//       pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
+
+//       const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))
+//       let pos_tooltip_x= event.clientX
+//       const size_browser_w=window.innerWidth
+//       pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
+
+//       sankeyTooltip
+//         .style('top',pos_tooltip_y + 'px')
+//         .style('left',pos_tooltip_x + 'px')
+//     }
+//   }
+
+//   const add_nodes_fo = (
+//   ) => {
+//     //----------------ICON-----------------
+
+//     // Add icon to node (if there is one associated to it)
+//     // then apply selected parameter
+//     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
+
+//     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>)
+
+//     ggg_nodes.filter((d)=>{
+//       return d.has_FO
+//     }) .append('foreignObject')
+//       .attr('width',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
+//       .attr('height',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
+//       .attr('id',(d)=> d.idNode + '_fo')
+//       .on('mouseover', function (event, d) {
+//         node_mouse_over(data,this,event,d)
+//       })
+//       .on('mousemove', function (event,d) {
+//         node_mouse_move(event,d)
+//       })
+//       .on('mouseout', function () {
+//         sankeyTooltip.style('opacity', 0)
+//       })
+//       .append('xhtml:div')
+//       .attr('class','ql-editor')
+//       .html((d)=>d.FO_content)
+//   }
+//   add_nodes_fo()
+
+// }
 

@@ -1,37 +1,26 @@
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 import { Diff } from 'deep-diff'
 import ReactQuill from 'react-quill'
-import {
-  SankeyData,
-  SankeyLink,
-  SankeyNode,
-  SankeyNodeStyle,
-  SankeyLinkStyle,
-  SankeyLinkAttrLocal,
-  dict_hook_ref_setter_show_dialog_componentsType,
-  applicationDataType,
-  applicationStateType,
-  contextMenuType,
-  applicationContextType,
-  uiElementsRefType,
-  NodeFunctionTypes,
-  LinkFunctionTypes,
-  ComponentUpdaterType,
-  applicationDrawType,
-  initializeApplicationContextType,
-  initializeApplicationDataType,
-  initializeElementSelectedType,
-  initializeShowDialogType,
-  initializeApplicationDrawType,
-  initializeReinitializationType,
-  initializeNodeFunctionsType,
-  initializeAdditionalMenusType,
-  initializeComponentUpdaterType,
-  initializeUIElementsRefType,
-  initializeLinkFunctionsType
-} from 'open-sankey/src/types/Types'
+// import {
+//   SankeyData,
+//   SankeyLink,
+//   SankeyNode,
+//   SankeyNodeStyle,
+//   SankeyLinkStyle,
+//   SankeyLinkAttrLocal,
+//   dict_hook_ref_setter_show_dialog_componentsType,
+//   initializeAdditionalMenusType,
+//   initializeApplicationDataType,
+//   initializeReinitializationType,
+  
+// } from 'open-sankey/src/types/Types'
 import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
-import { DrawArrowsType, LinkStrokeFType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
+import { Class_ApplicationDataPlus } from '../src/Types/ApplicationDataPlus'
+import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
+import { applicationDataType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationDataType, initializeReinitializationType, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyNode, SankeyNodeStyle } from 'open-sankey/src/types/LegacyType'
+// import { applicationDataType } from 'open-sankey/src/types/Legacy'
 
 
 export type DiffType = {
@@ -136,26 +125,36 @@ export type OSPShowMenuComponentsVarType={
 export type OSPConvertDataFuncType = (data: OSPData, DefaultSankeyData: OSPGetDefaultData) => void
 
 // OSP type that overwrite or add variable to for applicationDataType
-export type OSPApplicationDataVarType = {
+export interface OSPApplicationDataVarType extends applicationDataType {
   // Recast some OS var to OSP type 
+  // data: OSPData,
+  // get_default_data: OSPGetDefaultData
+  // new_data:Class_ApplicationDataPlus
+  // // Exclusive OSP var 
+  // master_data: OSPData | undefined,
+  // set_master_data: (_: OSPData | undefined) => void,
+  // view: string,
+  // set_view: (_: string) => void,
+  // view_not_saved:string,
+  // set_view_not_saved:(s:string)=>void,
+  // is_catalog:boolean
+
+
+
+
   data: OSPData,
-  display_nodes: { [idNode: string]: OSPNode; }
-  display_links: { [idLink: string]: OSPLink; }
-  get_default_data: OSPGetDefaultData
-  convert_data: OSPConvertDataFuncType,
-
-  // Exclusive OSP var 
-  master_data: OSPData | undefined,
-  set_master_data: (_: OSPData | undefined) => void,
-  view: string,
-  set_view: (_: string) => void,
-  view_not_saved:string,
-  set_view_not_saved:(s:string)=>void,
-  is_catalog:boolean
+  set_data: (_: SankeyData)=>void,
+  get_default_data: OSPGetDefaultData,
+  // convert_data: ConvertDataFuncType,
+  // display_nodes: {[_: string]: SankeyNode},
+  // display_links: {[_: string]: SankeyLink},
+  // min_link_thickness: number,
+  dataVarToUpdate: MutableRefObject<string[]>,
+  setDiagram: setDiagramFuncType,
+  new_data: Class_ApplicationDataPlus
 }
-export type OSPApplicationDataType = applicationDataType & OSPApplicationDataVarType
+export type OSPApplicationDataType = OSPApplicationDataVarType
 
-export type OSPElementsSelectedType = applicationStateType & OSPElementsSelectedVarType
 export type OSPElementsSelectedVarType={
   multi_selected_nodes: { current: OSPNode[] }
   multi_selected_links: { current: OSPLink[] }
@@ -167,21 +166,11 @@ export type OSPElementsSelectedVarType={
   saveViewGetter:MutableRefObject<boolean>
 }
 
-export type OSPContextMenuType = contextMenuType & OSPContextMenuVarType
 
 export type OSPContextMenuVarType ={
   contextualised_zdt: MutableRefObject<Dispatch<SetStateAction<OSPLabel | undefined>> | undefined>
 }
 
-export interface OSPApplicationContextType extends applicationContextType {
-  has_open_sankey_plus: boolean
-}
-
-export type OSPUiElementsRefType = uiElementsRefType & OSPUiElementsRefVar
-export type OSPUiElementsRefVar={
-  zdt_accordion_ref: MutableRefObject<HTMLDivElement | null>,
-  ViewSelector:MutableRefObject<JSX.Element | null>
-}
 
 
 // TO DELETE WHEN UNITARY SANKEY WILL BE MERGE IN SANKEYPLUS
@@ -189,7 +178,6 @@ export interface SankeyUnitData extends OSPData {
   unitary_node: string[],
 }
 
-export type OSPComponentUpdaterType = ComponentUpdaterType & OSPComponentUpdaterVar
 export type OSPComponentUpdaterVar = {
   updateComponentMenuConfigZdt: MutableRefObject<(() => void)[]>
 }
@@ -202,26 +190,7 @@ export type OSPNodeFuntionVarType =  {
   reDrawOSPNodeEvent: reDrawOSPNodeEventFType,
 }
 
-export type OSPNodeFuntionType = NodeFunctionTypes & OSPNodeFuntionVarType
 
-export type OSPLinkFuntionType = LinkFunctionTypes & OSPLinkFunctionVar
-export type OSPLinkFunctionVar={
-  DrawArrows: DrawArrowsType
-LinkStroke: LinkStrokeFType
-LinkSabotColor: OSPLinkSabotColorFType
-}
-export type OSPApplicationDrawType = applicationDrawType & OSPApplicationDrawVarType
-export type OSPApplicationDrawVarType={
-  reDrawOSPLabels: reDrawOSPLabelsFType
-}
-
-export type OSPInitializeApplicationContextType = initializeApplicationContextType & OSPInitializeApplicationContextVarType
-
-export type OSPApplicationContextTypeVar = {
-  has_open_sankey_plus: boolean
-}
-
-export type OSPInitializeApplicationContextVarType = () => OSPApplicationContextTypeVar
 export type OSPGetDefaultData = () => OSPData
 
 // Generic Type that with given argument return a functionType that return a given type,
@@ -237,15 +206,8 @@ export type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...arg
 
 // Extract parameter from OS function type
 type paramInitAppDataType = Parameters<initializeApplicationDataType>
-type parmaInitializeElementSelectedType=Parameters<initializeElementSelectedType>
-type parmaInitializeShowDialogType=Parameters<initializeShowDialogType>
-type parmaInitializeApplicationDrawType=Parameters<initializeApplicationDrawType>
 type paramInitializeReinitializationType=Parameters<initializeReinitializationType>
-type paramInitializeNodeFunctionsType=Parameters<initializeNodeFunctionsType>
 type paramInitializeAdditionalMenusType=Parameters<initializeAdditionalMenusType>
-type paramInitializeComponentUpdaterType=Parameters<initializeComponentUpdaterType>
-type paramInitializeUIElementsRefType=Parameters<initializeUIElementsRefType>
-type paramInitializeLinkFuntionType=Parameters<initializeLinkFunctionsType>
 
 // Special parameter for additionnalMenu
 // It take original AdditionalMenusType parameters but also its return object that contains array of additonal JSX.Element
@@ -257,30 +219,12 @@ type paramOSPInitializeAdditionalMenusType=[...paramInitializeAdditionalMenusTyp
 // and exclusive OSP var type : multi_selected_label,r_setter_editor_content_fo_node,r_setter_editor_content_fo_zdt,r_setter_value_editor_name_view
 // (some function from OS take no parameters and return void but we still create an override in the event of change in OS)
 export type OSPInitializeApplicationDataVarType = RecastReturnTypeOfFunction<paramInitAppDataType, OSPApplicationDataVarType>
-export type OSPInitializeElementSelectedType = RecastReturnTypeOfFunction<parmaInitializeElementSelectedType, OSPElementsSelectedVarType>
-export type OSPInitializeShowDialogType = RecastReturnTypeOfFunction<parmaInitializeShowDialogType, OSPShowMenuComponentsVarType>
-export type OSPInitializeApplicationDrawType = RecastReturnTypeOfFunction<parmaInitializeApplicationDrawType, OSPApplicationDrawVarType>
 export type OSPInitializeReinitializationType = RecastReturnTypeOfFunction<paramInitializeReinitializationType, ()=>void>
-export type OSPInitializeNodeFunctionsType = RecastReturnTypeOfFunction<paramInitializeNodeFunctionsType, OSPNodeFuntionVarType>
 export type OSPInitializeAdditionalMenusType = RecastReturnTypeOfFunction<paramOSPInitializeAdditionalMenusType, void>
-export type OSPInitializeComponentUpdaterType = RecastReturnTypeOfFunction<paramInitializeComponentUpdaterType, OSPComponentUpdaterVar>
-export type OSPInitializeUIElementsRefType = RecastReturnTypeOfFunction<paramInitializeUIElementsRefType, OSPUiElementsRefVar>
-export type OSPInitializeLinkFuntionType = RecastReturnTypeOfFunction<paramInitializeLinkFuntionType, OSPLinkFunctionVar>
 
 export type OSPUpdateMenuConfType=(
   menu_conf:JSX.Element[],
   applicationData:applicationDataType,
-  applicationContext:applicationContextType,
-  uiElementsRef:uiElementsRefType,
 
 )=>JSX.Element[]
 
-export type OSPInitializeKeyHandlerType=(
-  applicationContext:OSPApplicationContextType,
-  e: KeyboardEvent,
-  applicationData:OSPApplicationDataType,
-  applicationState:OSPElementsSelectedType,
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-  reDrawOSPLabels:reDrawOSPLabelsFType,
-  ComponentUpdater:OSPComponentUpdaterType
-)=>void

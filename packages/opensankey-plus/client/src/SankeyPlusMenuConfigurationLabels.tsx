@@ -2,7 +2,7 @@
 import React, { Ref, useState, ChangeEvent, FunctionComponent, useRef } from 'react'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
-import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
+import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import ReactQuill from 'react-quill'
 //import 'react-quill/dist/quill.snow.css'
 
@@ -25,12 +25,10 @@ import {
   ButtonGroup
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
+import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // Local libs
-import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
-import { deleteGLabel } from './SankeyPlusLabels'
-import { OSPContextMenuType,OSPLabel} from '../types/Types'
+// import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import {
   OSPMenuConfigurationFreeLabelsFType,
   OSPMenuPreferenceLabelsFType,
@@ -41,9 +39,11 @@ import {
 import { OSTooltip } from './import/OpenSankey'
 
 // OpenSankey js-code
-import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
+// import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
+import { Class_FreeLabel } from './Types/FreeLabel'
+import { Type_MenuSelectionEntry } from 'open-sankey/src/topmenus/SankeyMenuTop'
 
-const sep=<hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
 /**
  *  TODO
@@ -53,19 +53,18 @@ const sep=<hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgr
  * @param { Function } set_data - TODO description
  *
  */
-export const OSPMenuPreferenceLabels : FunctionComponent<OSPMenuPreferenceLabelsFType> = ({
-  t,
-  data,
+export const OSPMenuPreferenceLabels: FunctionComponent<OSPMenuPreferenceLabelsFType> = ({
+  applicationData,
   updateMenus
-})=>{
+}) => {
+  const {new_data}=applicationData
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
-    isChecked={data.accordeonToShow.includes('LL')}
-    onChange={() => {
-      preferenceCheck('LL',data)
+    defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('MEP')} onChange={() => {
+      new_data.menu_configuration.toggleGivenAccordion('MEP')     
       updateMenus[1](!updateMenus[0])
     }}>
-    {t('Menu.LL')}
+    {new_data.t('Menu.LL')}
   </Checkbox>
 }
 
@@ -75,65 +74,47 @@ export const OSPMenuPreferenceLabels : FunctionComponent<OSPMenuPreferenceLabels
  * @export
  * @typedef {selected_type}
  */
-export interface selected_type  {'label':string;'value':string}
+export interface selected_type { 'label': string; 'value': string }
 
-export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigurationFreeLabelsFType> = ({
+export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurationFreeLabelsFType> = ({
   applicationData,
-  applicationContext,
-  applicationState,
-  ComponentUpdater,
-  reDrawOSPLabels
 }) => {
-  const {data}=applicationData
-  const {multi_selected_label}=applicationState
-  const {t,has_open_sankey_plus}=applicationContext
-  const r_editor_ZDT= useRef<ReactQuill>() as {current:ReactQuill}
-  const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
-  const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
-  const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
-  const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.title, 'value': d.idLabel } })
-  const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
+  const { new_data } = applicationData
+  const { t } = new_data
+  const selected_zdt = new_data.drawing_area_plus.selected_free_labels_list
+
+  const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
+  const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'zdt') : 'zdt')
+  const [button_icon_or_image, set_button_icon_or_image] = useState<'zdt' | 'image'>(zdt_or_image)
+
+  const INITIAL_OPTIONS_label = new_data.drawing_area_plus.sankey.free_labels_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
+  const selected_label = selected_zdt.map((d) => { return { 'label': d.title, 'value': d.id } })
+
   //const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
-  const [forceUpdate,setForceUpdate]=useState(false)
-  const {updateComponentMenuConfigZdt,updateMenus} = ComponentUpdater
-  updateComponentMenuConfigZdt.current.push(()=>setForceUpdate(!forceUpdate))
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  // Link current component updater to menu config class
+  new_data.menu_configuration_plus.ref_to_menu_config_free_label_updater.current = () => setForceUpdate(!forceUpdate)
   //applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
 
-  // if (multi_selected_label.current.length == 0 && s_editor_content_fo_zdt != '') {
+  // if (selected_zdt.length == 0 && s_editor_content_fo_zdt != '') {
   //   sEditorContentFOZdt('')
   // }
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
-  const handleUplabel = (i: string) => {
-    const { labels } = data
-    const listElmt = Object.keys(labels)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: OSPLabel } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = labels[elt]
-    })
-    for (const member in labels) delete labels[member]
-    Object.assign(labels, new_cat)
-    reDrawOSPLabels(Object.values(data.labels))
+  const handleUplabel = (i: Class_FreeLabel) => {
+    new_data.drawing_area_plus.sankey.moveUpFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après
-  const handleDownlabel = (i: string) => {
-    const { labels } = data
-    const listElmt = Object.keys(labels)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: OSPLabel } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = labels[elt]
-    })
-    for (const member in labels) delete labels[member]
-    Object.assign(labels, new_cat)
-    reDrawOSPLabels(Object.values(data.labels))
+  const handleDownlabel = (i: Class_FreeLabel) => {
+    new_data.drawing_area_plus.sankey.moveDownFreeLabelOrder(i)
+    setForceUpdate(!forceUpdate)
+  }
+
+  const redrawAndRefresh = () => {
+    selected_zdt.forEach(zdt => zdt.draw())
     setForceUpdate(!forceUpdate)
   }
 
@@ -149,7 +130,7 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           width='10rem'
         >
           <MultiSelect
-            disabled={!has_open_sankey_plus}
+            disabled={!new_data.has_sankey_plus}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
             }}
@@ -158,20 +139,20 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
             overrideStrings={{
               'selectAll': 'Tout sélectionner',
             }}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              const new_sel = selected.map(d => d.value)
-              const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
-              multi_selected_label.current = m_s
-              reDrawOSPLabels(multi_selected_label.current)
-              if(multi_selected_label.current.length>0){
-                // const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
-                updateMenus[1](!updateMenus[0])
-              }else{
-                updateMenus[1](!updateMenus[0])
-              }
-              updateComponentMenuConfigZdt.current.forEach(f=>f())
+            onChange={(entries: Type_MenuSelectionEntry[]) => {
+              // Update selection list
+              const entries_values = entries.map(d => d.value)
+              new_data.drawing_area_plus.sankey.free_labels_list.forEach(zdt => {
+                if (entries_values.includes(zdt.id)) {
+                  new_data.drawing_area_plus.addFreeLabelToSelection(zdt)
+                }
+                else {
+                  new_data.drawing_area_plus.removeFreeLabelFromSelection(zdt)
+                }
+              })
+              setForceUpdate(!forceUpdate)
             }}
-            labelledBy={'hello'}
+            labelledBy={t('Noeud.TS')}
           />
         </Box></Box>)
     return DD
@@ -181,10 +162,10 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
   const allLabelHeight = () => {
     let display_size = true
     let size = 25
-    if (multi_selected_label.current.length !== 0) {
-      size = multi_selected_label.current[0].label_height
+    if (selected_zdt.length !== 0) {
+      size = selected_zdt[0].label_height
     }
-    multi_selected_label.current.map((d) => {
+    selected_zdt.map((d) => {
       display_size = (d.label_height === size) ? display_size : false
     })
     return (display_size) ? Math.round(size) : -1
@@ -193,43 +174,45 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
   const allLabelWidth = () => {
     let display_size = true
     let size = 25
-    if (multi_selected_label.current.length !== 0) {
-      size = multi_selected_label.current[0].label_width
+    if (selected_zdt.length !== 0) {
+      size = selected_zdt[0].label_width
     }
-    multi_selected_label.current.map((d) => {
+    selected_zdt.map((d) => {
       display_size = (d.label_width === size) ? display_size : false
     })
     return (display_size) ? Math.round(size) : -1
   }
 
   const allLabelTitle = () => {
-    return multi_selected_label.current.length>0?multi_selected_label.current[0].title:''
+    return selected_zdt.length > 0 ? selected_zdt[0].title : ''
   }
 
   const allLabelTransparent = () => {
     let display_size = true
     let opa = 100
-    if (multi_selected_label.current.length !== 0) {
-      opa = multi_selected_label.current[0].opacity
+    if (selected_zdt.length !== 0) {
+      opa = selected_zdt[0].opacity
     }
-    multi_selected_label.current.map((d) => {
+    selected_zdt.map((d) => {
       display_size = (d.opacity === opa) ? display_size : false
     })
     return (display_size) ? opa : 0
   }
 
-  const valAllLabelBorderTransparent=IsAllZdtAttrSameValue(data,multi_selected_label.current,'transparent_border') as boolean[]
 
+  const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
+  // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
+  const valAllLabelBorderTransparentIndeterminate = !selected_zdt.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
 
 
   const modules = {
     toolbar: [
       [{ 'font': [] }],
-      ['bold', 'italic', 'underline','strike'],
+      ['bold', 'italic', 'underline', 'strike'],
       [{ 'size': ['small', false, 'large', 'huge'] }],
       [{ 'color': [] }, { 'background': [] }],
-      [{'list': 'ordered'}, {'list': 'bullet'}],
-      [{'align':[]}],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'align': [] }],
       ['clean'],
     ],
   }
@@ -248,12 +231,12 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
     'align'
   ]
 
-  const disable_options = has_open_sankey_plus? (multi_selected_label.current.length === 0):true
+  const disable_options = new_data.has_sankey_plus ? (selected_zdt.length === 0) : true
 
 
   const content_image = <>
     {/* Import image */}
-    <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyOSPDisabled'):''} >
+    <OSTooltip label={!new_data.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
 
       <Box
         as='span'
@@ -273,12 +256,9 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
             reader.onload = (() => {
               return (e: ProgressEvent<FileReader>) => {
                 const resultat = (e.target as FileReader).result
-                const res=resultat?.toString().replaceAll('=','')
-                Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
-                  .forEach(n=>n.image_src=(res as string))
-
-                reDrawOSPLabels(multi_selected_label.current)
-                setForceUpdate(!forceUpdate)
+                const res = resultat?.toString().replaceAll('=', '')
+                selected_zdt.forEach(n => n.image_src = (res as string))
+                redrawAndRefresh()
 
               }
             })()
@@ -289,42 +269,21 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
     </OSTooltip>
   </>
 
-  const content_menu_zdt= <Box layerStyle='menuconfigpanel_grid'>
+  const content_menu_zdt = <Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
       layerStyle='menuconfigpanel_zdt_row_droplist'
     >
       <Button
-        isDisabled={!has_open_sankey_plus}
+        isDisabled={!new_data.has_sankey_plus}
         variant='menuconfigpanel_add_button'
         onClick={() => {
-
-          let idZdt = Object.keys(data.labels).length
-          const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
-          while (tab_title.includes('Zone de texte '+idZdt) ) {
-            idZdt = idZdt+1
-          }
-          const new_label = {
-            idLabel: 'label_' + String(new Date().getTime()),
-            title:'Zone de texte '+idZdt,
-            content: 'Text Label ...',
-            label_width: 100,
-            label_height: 25,
-            color: 'white',
-            color_border: 'black',
-            opacity: 100,
-            transparent_border: false,
-
-            is_image:false,
-            image_src:'',
-            x: 50,
-            y: 50,
-          }
-          data.labels[new_label.idLabel] = new_label
-          multi_selected_label.current = [new_label]
-
-          reDrawOSPLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
+          // Create default node
+          const new_node = new_data.drawing_area_plus.sankey.addNewDefaultFreeLabel()
+          // Add node to selection
+          new_data.drawing_area_plus.addFreeLabelToSelection(new_node)
+          // Update menus
+          redrawAndRefresh()
         }
         }><FaPlus /></Button>
 
@@ -334,10 +293,10 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
         variant='menuconfigpanel_del_button'
         isDisabled={disable_options}
         onClick={() => {
-          deleteGLabel(updateMenus,multi_selected_label.current)
-          data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
-          multi_selected_label.current = []
-          updateComponentMenuConfigZdt.current.forEach(f=>f())
+          // Delete all selected nodes
+          applicationData.new_data.drawing_area_plus.sankey.deleteSelectedFreeLabels()
+          // Update all menus
+          redrawAndRefresh()
         }
         }><FaMinus /></Button>
 
@@ -348,8 +307,8 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
         variant='menuconfigpanel_option_button'
         isDisabled={disable_options}
         onClick={() => {
-          multi_selected_label.current.map(l => {
-            handleDownlabel(l.idLabel)
+          selected_zdt.map(l => {
+            handleDownlabel(l)
           })
         }}><FaAngleUp /></Button>
 
@@ -357,8 +316,8 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
         variant='menuconfigpanel_option_button'
         isDisabled={disable_options}
         onClick={() => {
-          multi_selected_label.current.map(l => {
-            handleUplabel(l.idLabel)
+          selected_zdt.map(l => {
+            handleUplabel(l)
           })
         }}><FaAngleDown /></Button>
 
@@ -383,12 +342,13 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           max={100}
           disabled={disable_options}
           style={{
-            color:(disable_options)?'#666666':'',
-            backgroundColor:(disable_options)?'#cccccc':''}}
+            color: (disable_options) ? '#666666' : '',
+            backgroundColor: (disable_options) ? '#cccccc' : ''
+          }}
           value={allLabelTitle()}
           onChange={evt => {
-            const value=evt.target.value
-            multi_selected_label.current.map(d => d.title = value)
+            const value = evt.target.value
+            selected_zdt.map(d => d.title = value)
             setForceUpdate(!forceUpdate)
           }}
         />
@@ -410,51 +370,41 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           isDisabled={disable_options}
           variant='menuconfigpanel_option_button'
           onClick={() => {
-            Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
-              .forEach(n=>n.is_image=false)
+            selected_zdt.forEach(n => n.is_image = false)
             set_button_icon_or_image('zdt')
-            reDrawOSPLabels(multi_selected_label.current)
-            setForceUpdate(!forceUpdate)
+            redrawAndRefresh()
           }}>Texte</Button>
 
         <Button
           disabled={disable_options}
           variant='menuconfigpanel_option_button'
           onClick={() => {
-
-            Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
-              .forEach(n=>n.is_image=true)
+            selected_zdt.forEach(n => n.is_image = true)
 
             set_button_icon_or_image('image')
-            reDrawOSPLabels(multi_selected_label.current)
-            setForceUpdate(!forceUpdate)
-
+            redrawAndRefresh()
           }}>Image</Button></Box>
     </Box>
 
-    {button_icon_or_image==='zdt'?<Box style={{'height':'300px'}}><ReactQuill
+    {button_icon_or_image === 'zdt' ? <Box style={{ 'height': '300px' }}><ReactQuill
       className='quill_editor'
-      value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].content : ''}
+      value={selected_zdt.length > 0 ? selected_zdt[0].content : ''}
       ref={r_editor_ZDT}
       onChange={(evt) => {
-        //sEditorContentFOZdt(evt)
-        Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-          d.content = evt
-        })
-        reDrawOSPLabels(multi_selected_label.current)
-        setForceUpdate(!forceUpdate)
+        selected_zdt.forEach(n => n.content = evt)
+        redrawAndRefresh()
       }}
       theme="snow"
       modules={modules}
       formats={formats}
       readOnly={disable_options}
       style={{
-        'height':'300px',
-        color:(disable_options)?'#666666':'',
-        backgroundColor:(disable_options)?'#cccccc':'',
+        'height': '300px',
+        color: (disable_options) ? '#666666' : '',
+        backgroundColor: (disable_options) ? '#cccccc' : '',
         overflowY: 'scroll'
       }}
-    /></Box>:content_image}
+    /></Box> : content_image}
 
     <Box
       as='span'
@@ -476,16 +426,15 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
             isDisabled={disable_options}
             value={allLabelHeight()}
             onChange={evt => {
-              multi_selected_label.current.map(d => d.label_height = +evt)
+              selected_zdt.map(d => d.label_height = +evt)
 
-              reDrawOSPLabels(multi_selected_label.current)
-              setForceUpdate(!forceUpdate)
+              redrawAndRefresh()
             }}
           >
-            <NumberInputField/>
+            <NumberInputField />
             <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
             </NumberInputStepper>
           </NumberInput></InputGroup>
       </Box>
@@ -505,16 +454,15 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
             isDisabled={disable_options}
             value={allLabelWidth()}
             onChange={evt => {
-              multi_selected_label.current.map(d => d.label_width = +evt)
+              selected_zdt.map(d => d.label_width = +evt)
 
-              reDrawOSPLabels(multi_selected_label.current)
-              setForceUpdate(!forceUpdate)
+              redrawAndRefresh()
             }}
           >
-            <NumberInputField/>
+            <NumberInputField />
             <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
             </NumberInputStepper>
           </NumberInput>
         </InputGroup>
@@ -538,13 +486,12 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           id='form_color_zdt'
           name='form_color_zdt'
           isDisabled={disable_options}
-          value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
+          value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
           onChange={evt => {
             const val = evt.target.value
-            multi_selected_label.current.map(d => d.color = val)
+            selected_zdt.map(d => d.color = val)
 
-            reDrawOSPLabels(multi_selected_label.current)
-            setForceUpdate(!forceUpdate)
+            redrawAndRefresh()
           }}
         />
       </Box>
@@ -566,17 +513,16 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
             isDisabled={disable_options}
             value={allLabelTransparent()}
             onChange={evt => {
-              const value=+evt
-              multi_selected_label.current.map(d => d.opacity = value)
+              const value = +evt
+              selected_zdt.map(d => d.opacity = value)
 
-              reDrawOSPLabels(multi_selected_label.current)
-              setForceUpdate(!forceUpdate)
+              redrawAndRefresh()
             }}
           >
-            <NumberInputField/>
+            <NumberInputField />
             <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
             </NumberInputStepper>
           </NumberInput>
         </InputGroup>
@@ -599,28 +545,26 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
           type='color'
           id='form_color_border_zdt'
           name='form_color_border_zdt'
-          disabled={!has_open_sankey_plus && !valAllLabelBorderTransparent }
-          value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
+          disabled={!new_data.has_sankey_plus && !valAllLabelBorderTransparent}
+          value={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
           onChange={evt => {
             const val = evt.target.value
-            multi_selected_label.current.map(d => d.color_border = val)
+            selected_zdt.map(d => d.color_border = val)
 
-            reDrawOSPLabels(multi_selected_label.current)
-            setForceUpdate(!forceUpdate)
+            redrawAndRefresh()
           }}
         />
 
         <Checkbox
           variant='menuconfigpanel_part_title_1_checkbox'
-          iconColor={valAllLabelBorderTransparent[1]?'#78C2AD':'white'}
+          iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'}
           isDisabled={disable_options}
-          isIndeterminate={valAllLabelBorderTransparent[1]}
-          isChecked={valAllLabelBorderTransparent[0]}
+          isIndeterminate={valAllLabelBorderTransparentIndeterminate}
+          isChecked={valAllLabelBorderTransparent}
           onChange={(evt) => {
-            multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
+            selected_zdt.map(d => d.transparent_border = evt.target.checked)
 
-            reDrawOSPLabels(multi_selected_label.current)
-            setForceUpdate(!forceUpdate)
+            redrawAndRefresh()
           }}>
           {t('LL.bt')}
         </Checkbox>
@@ -632,48 +576,62 @@ export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigura
 }
 
 
-export const ContextZDT : FunctionComponent<context_zdtFType> =({
-  contextMenu,
-  t,
+export const ContextZDT: FunctionComponent<context_zdtFType> = ({
+
   applicationData,
-  dict_hook_ref_setter_show_dialog_components,
-  applicationState,
-  ComponentUpdater,
-  reDrawOSPLabels
+
 }
-)=>{
-  const {data}=applicationData
-  const {pointer_pos,contextualised_zdt}=(contextMenu as OSPContextMenuType)
-  const {multi_selected_label}=applicationState
-  const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<OSPLabel>()
-  const {updateComponentMenuConfigZdt} = ComponentUpdater
-  contextualised_zdt.current=set_zdt_to_contextualise
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
-  let style_c_zdd='0px 0px auto auto'
-  if(zdt_to_contextualise){
-    style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+) => {
+  const { new_data } = applicationData
+  const { t } = new_data
+  // const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<OSPLabel>()
+  // const { _ref_to_menu_config_free_label_updater } = ComponentUpdater
+  const selected_zdt = new_data.drawing_area_plus.selected_free_labels_list
+  const zdt_to_contextualise = new_data.drawing_area_plus.contextualised_free_label
+  // contextualised_zdt.current = set_zdt_to_contextualise
+  // dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
+  const [, setCount] = useState(0)
+
+  let style_c_zdd = '0px 0px auto auto'
+  if (zdt_to_contextualise) {
+    style_c_zdd = (new_data.drawing_area.pointer_pos[1] - 20) + 'px auto auto ' + (new_data.drawing_area.pointer_pos[0] + 10) + 'px'
   }
 
-  const valAllLabelBorderTransparent=IsAllZdtAttrSameValue(data,multi_selected_label.current,'transparent_border') as boolean[]
+  const redrawAndRefresh = () => {
+    // Refresh menu config free label
+    new_data.menu_configuration_plus.ref_to_menu_config_free_label_updater.current()
+    // Redraw selected elements
+    selected_zdt.forEach(zdt => zdt.draw())
+    // Refresh this menu
+    setCount(a => a + 1)
+  }
 
-  const btn_mask_border=<Button onClick={()=>{
-    multi_selected_label.current.forEach(zdt=>zdt.transparent_border=!valAllLabelBorderTransparent[0])
-    set_zdt_to_contextualise(undefined)
-    reDrawOSPLabels(multi_selected_label.current)
-    updateComponentMenuConfigZdt.current.forEach(f=>f())
-  }} variant='contextmenu_button'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area_plus.contextualised_free_label = undefined
+    setCount(a => a + 1)
+
+  }
+
+  const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
+  // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
+  const valAllLabelBorderTransparentIndeterminate = !selected_zdt.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
+
+  const btn_mask_border = <Button onClick={() => {
+    selected_zdt.forEach(zdt => zdt.transparent_border = !valAllLabelBorderTransparent)
+    redrawAndRefresh()
+  }} variant='contextmenu_button'>{valAllLabelBorderTransparent ? t('LL.display_border') : t('LL.hide_border')}</Button>
 
 
-  const btn_change_color=<>
+  const btn_change_color = <>
 
     <Button variant='contextmenu_button'>
       <Input hidden type='color' id='form_color_zdt' name='color_bg_zdd'
-        value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
+        value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
         onChange={(evt) => {
           const val = evt.target.value
-          multi_selected_label.current.map(d => d.color = val)
-          reDrawOSPLabels(multi_selected_label.current)
-          updateComponentMenuConfigZdt.current.forEach(f=>f())
+          selected_zdt.map(d => d.color = val)
+          redrawAndRefresh()
         }}
       >
       </Input>
@@ -682,63 +640,63 @@ export const ContextZDT : FunctionComponent<context_zdtFType> =({
   </>
 
 
-  const button_open_layout=<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current!(true)
-    set_zdt_to_contextualise(undefined)
+  const button_open_layout = <Button onClick={() => {
+    new_data.menu_configuration_plus.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
+    closeContextMenu()
 
   }} variant='contextmenu_button'>{t('Menu.LL')} {icon_open_modal}</Button>
 
-  return zdt_to_contextualise?<Box layerStyle='context_menu' id="context_zdd_pop_over"
-    style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd,zIndex:4}}>
+  return zdt_to_contextualise ? <Box layerStyle='context_menu' id="context_zdd_pop_over"
+    style={{ maxWidth: '100%', position: 'absolute', inset: style_c_zdd, zIndex: 4 }}>
     <ButtonGroup orientation='vertical' isAttached>
       {btn_mask_border}
       {btn_change_color}
       {sep}
       {button_open_layout}
     </ButtonGroup>
-  </Box>:<></>
+  </Box> : <></>
 }
 
-const icon_open_modal =<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
+const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 
-export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
-  r_editor_ZDT:{current:ReactQuill}
-)=>{
-  if(r_editor_ZDT && r_editor_ZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??false)){
+export const blur_ZDT_wysiwyg: blur_ZDT_wysiwygFType = (
+  r_editor_ZDT: { current: ReactQuill }
+) => {
+  if (r_editor_ZDT && r_editor_ZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor') ?? false)) {
     r_editor_ZDT.current.getEditor().focus()
     r_editor_ZDT.current.getEditor().blur()
   }
 }
 
 /**
- *  Function that return content_menu_zdt with JSX to imbricate it in the config menu
- *
- * @param {OSPData} data
- * @param {uiElementsRefType} uiElementsRef
- * @param {boolean} has_open_sankey_plus
- * @param {TFunction} t
- * @param {JSX.Element} content_menu_zdt
- * @return {*}
- */
-export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType>=({
-  data,
-  uiElementsRef,
-  applicationContext,
+ *Function that return content_menu_zdt with JSX to imbricate it in the config menu
+*
+* @param {*} {
+*   applicationData,
+*   content_menu_zdt
+* }
+* @return {*} 
+*/
+export const ZDTMenuAsAccordeonItem: FunctionComponent<ZDTMenuAsAccordeonItemType> = ({
+  applicationData,
   content_menu_zdt
-})=>{
+}) => {
   // const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
-  const {t} = applicationContext
+  // const { t } = applicationContext
+  const { new_data } = applicationData
+  const { t } = new_data
   return <AccordionItem
-    style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'initial' : 'none' }}
+    style={{ 'display': (new_data.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
   >
     <AccordionButton
-      ref={uiElementsRef.zdt_accordion_ref as Ref<HTMLButtonElement>}
-      onClick={()=>{
+      ref={new_data.menu_configuration_plus.zdt_accordion_ref}
+      onClick={() => {
         const scroll_x = window.scrollX
         const scroll_y = window.scrollY
         setTimeout(() => {
-          document.getElementsByTagName ('html')[0]?.scrollTo(scroll_x,scroll_y)
-        },50)}}
+          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+        }, 50)
+      }}
     >
       <Box
         as='span'
@@ -746,7 +704,7 @@ export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType
       >
         {t('Menu.LL')}
       </Box>
-      <AccordionIcon/>
+      <AccordionIcon />
     </AccordionButton>
     <AccordionPanel>
       {content_menu_zdt}

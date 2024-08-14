@@ -3,53 +3,45 @@ import { Box, Card, CardBody, Divider, Heading, Input, Modal, ModalBody, ModalCl
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { FaPlus } from 'react-icons/fa'
-import { OSPApplicationDataType, OSPElementsSelectedType, OSPShowMenuComponentsType, OSPNodeFuntionType, OSPNode } from '../types/Types'
+import { OSPApplicationDataType, OSPShowMenuComponentsType, OSPNode } from '../types/Types'
 import SankeyListIcons from './icons/lib_of_icons.json'
 
 export type ModalSelectionIconsType={
-  t:TFunction,
   applicationData:OSPApplicationDataType,
-  applicationState:OSPElementsSelectedType,
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-  node_function:OSPNodeFuntionType
 }
 
 type KeysOfIcon = keyof typeof SankeyListIcons
 
 export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
-  t,
   applicationData,
-  applicationState,
-  dict_hook_ref_setter_show_dialog_components,
-  node_function
 }
 )=>{
-  const {data}=applicationData
-  const {multi_selected_nodes }=applicationState
+  const {new_data}=applicationData
+  const list_nodes_selected=new_data.drawing_area_plus.selected_nodes_list_plus
+  // const list_nodes=new_data.drawing_area_plus.sankey.nodes_list_plus
+  const {t}=new_data
   const imported_icon=localStorage.getItem('icon_imported')
   const init_imported_svg:{[s:string]:{path:string,Vb:string}}=imported_icon != null && imported_icon!=='' ? JSON.parse(imported_icon) : {}
-  const plus_multi_selected_nodes=(multi_selected_nodes as {[x:string]:OSPNode[]})
   const [filter_name,set_filter_name]=useState('')
   const _load_svg = useRef<HTMLInputElement>(null)
   const import_svg=useRef<{[s:string]:{path:string,Vb:string}}>(init_imported_svg)
   const [s_show_modal,sShowModal]=useState(false)
   const [forceUpdate,setForceUpdate]=useState(false)
 
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_import_icons.current=sShowModal
+  new_data.menu_configuration_plus.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current=sShowModal
 
 
   const isAllIconVisible = () => {
-    let selected_icon = ''
-    if(plus_multi_selected_nodes.current.length>0){
-      selected_icon=plus_multi_selected_nodes.current[0].iconName
-    }
+    let selected_icon = list_nodes_selected.length>0 ? list_nodes_selected[0].iconName : ''
 
-    plus_multi_selected_nodes.current.map(d => selected_icon = (d.iconName===selected_icon) ? selected_icon : '')
+    list_nodes_selected.map(d => selected_icon = (d.iconName===selected_icon) ? selected_icon : '')
     return selected_icon
   }
   const allSelectedNodeHasSameicon=isAllIconVisible()
+  const icon_visible = (list_nodes_selected[0].iconVisible)
 
-  plus_multi_selected_nodes.current.length>0?plus_multi_selected_nodes.current[0].iconName:'None'
+
+  list_nodes_selected.length>0?list_nodes_selected[0].iconName:'None'
 
   // Create object containing list of card elements regrouped by the icon themes
   const tuto_sub_nav:{[s:string]:JSX.Element}={}
@@ -64,14 +56,14 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
       return <Card
         variant={allSelectedNodeHasSameicon===ki+'_'+icon[0]?'card_icon_selected':'card_icon_not_selected'}
         onClick={()=>{
-          data.icon_catalog[ki+'_'+icon[0]]=icon[1]
-          Object.values(data.nodes).filter(f => plus_multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+          new_data.icon_catalog[ki+'_'+icon[0]]=icon[1]
+          list_nodes_selected.forEach(d => {
             d.iconName = ki+'_'+icon[0]
             if(!d.iconColor)d.iconColor='#000000'
             delete d.iconViewBox
 
           })
-          node_function.reDrawIllustration(plus_multi_selected_nodes.current as OSPNode[])
+          list_nodes_selected.forEach(node=>node.draw())
           sShowModal(false)
         }}
       >
@@ -157,13 +149,13 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
     return <Card
       variant={allSelectedNodeHasSameicon==='icon_imported_'+ki?'card_icon_selected':'card_icon_not_selected'}
       onClick={()=>{
-        data.icon_catalog['icon_imported_'+ki]=import_svg.current[ki].path
-        Object.values(data.nodes).filter(f => plus_multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+        new_data.icon_catalog['icon_imported_'+ki]=import_svg.current[ki].path
+        list_nodes_selected.forEach(d => {
           d.iconName = 'icon_imported_'+ki
           d.iconViewBox=import_svg.current[ki].Vb
           d.iconColor='#000000'
         })
-        node_function.reDrawIllustration(plus_multi_selected_nodes.current as OSPNode[])
+        list_nodes_selected.forEach(node=>node.draw())
         sShowModal(false)
       }}
     >
