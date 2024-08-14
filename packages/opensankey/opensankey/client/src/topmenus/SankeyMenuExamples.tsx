@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { applicationDataType } from '../types/Types'
+import { applicationDataType } from '../types/LegacyType'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 

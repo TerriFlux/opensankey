@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { applicationDataType } from '../../types/Types'
+import { applicationDataType } from '../../types/LegacyType'
 
 export type OpenSankeyConfigurationNodesAttributesFType = {
   applicationData : applicationDataType,

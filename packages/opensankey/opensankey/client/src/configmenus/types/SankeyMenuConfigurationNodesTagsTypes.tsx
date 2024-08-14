@@ -1,4 +1,4 @@
-import { SankeyNode, applicationDataType } from '../../types/Types'
+import { SankeyNode, applicationDataType } from '../../types/LegacyType'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group

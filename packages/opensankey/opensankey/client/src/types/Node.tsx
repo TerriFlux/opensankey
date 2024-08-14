@@ -87,7 +87,7 @@ export const default_value_label_vert: Type_TextVPos = 'top'
 export const default_value_label_horiz: Type_TextHPos = 'middle'
 export const default_label_box_width = 150
 
-const default_selected_stroke_width = 3
+export const default_selected_stroke_width = 3
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
@@ -2086,7 +2086,7 @@ export class Class_NodeElement extends Class_Element {
    * @return {*}
    * @memberof Class_NodeElement
    */
-  private getShapeColorToUse() {
+  protected getShapeColorToUse() {
     // Default color
     let shape_color = this.shape_color
     // Is the color defined by tags

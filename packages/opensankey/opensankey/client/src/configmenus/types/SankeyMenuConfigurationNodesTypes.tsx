@@ -2,7 +2,7 @@ import { TFunction } from 'i18next'
 import {
   SankeyData, SankeyNode, 
   treeFolderType
-} from '../../types/Types'
+} from '../../types/LegacyType'
 
 
 

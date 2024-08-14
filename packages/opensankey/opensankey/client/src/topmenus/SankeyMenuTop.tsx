@@ -85,7 +85,7 @@ import {
   MenuTypes,
   applicationDataType,
   textForToastPromiseType
-} from '../types/Types'
+} from '../types/LegacyType'
 import {
   MenuDraggableFType,
   ModalTutoType,

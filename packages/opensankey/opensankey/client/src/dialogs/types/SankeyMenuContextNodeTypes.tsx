@@ -1,6 +1,6 @@
 import { 
   agregationType, 
-  applicationDataType} from '../../types/Types'
+  applicationDataType} from '../../types/LegacyType'
 
 export type ContextMenuNodeFType = {
   applicationData : applicationDataType,

@@ -1,4 +1,4 @@
-import { applicationDataType } from '../../types/Types'
+import { applicationDataType } from '../../types/LegacyType'
 
 import { MutableRefObject } from 'react'
 
