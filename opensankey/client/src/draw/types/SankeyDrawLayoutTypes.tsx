@@ -1,5 +1,4 @@
-import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, agregationType, applicationDataType } from '../../types/Types'
+import { GetLinkValueFuncType, SankeyData, SankeyLink, SankeyNode, agregationType, applicationDataType } from '../../types/LegacyType'
 
 export type ComputeAutoSankeyFuncType = (applicationData:applicationDataType, h_space: number,launched_from_process:boolean) => void
 

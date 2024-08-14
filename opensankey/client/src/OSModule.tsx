@@ -4,7 +4,6 @@ import React, {
   useRef} from 'react'
 /*************************************************************************************************/
 import {
-  applicationDataType,
   InitalizeSelectorDetailNodesType,
   initializeAdditionalMenusType,
   initializeApplicationDataType,
@@ -12,7 +11,7 @@ import {
   initializeMenuConfigurationFuncType,
   initializeReinitializationType,
   module_dialogsType,
-  processFunctionsType} from './types/Types'
+  processFunctionsType} from './types/LegacyType'
 import { RetrieveExcelResults } from './dialogs/SankeyPersistence'
 import { MenuDraggable, OpenSankeySaveButton } from './topmenus/SankeyMenuTop'
 import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
@@ -31,6 +30,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
 import { Class_ApplicationData } from './types/ApplicationData'
+import { applicationDataType } from './types/LegacyType'
 
 declare const window: Window &
   typeof globalThis & {
@@ -75,6 +75,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
   get_default_data,
   initial_data
 )=>{
+
   const application_data = new Class_ApplicationData(false)
   if(initial_data !== undefined){
     application_data.fromJSON(initial_data)

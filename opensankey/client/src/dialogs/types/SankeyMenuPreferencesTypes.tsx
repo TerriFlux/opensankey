@@ -1,7 +1,7 @@
 import { TFunction, i18n } from 'i18next'
 import {
   applicationDataType,
-} from '../../types/Types'
+} from '../../types/LegacyType'
 
 export type OpenSankeyDefaultModalePreferenceContentFType = (
   applicationData: applicationDataType,

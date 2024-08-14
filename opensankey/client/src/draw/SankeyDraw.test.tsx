@@ -1,5 +1,5 @@
 
-import { applicationDataType } from '../types/Types'
+import { applicationDataType } from '../types/LegacyType'
 
 import { ComputeAutoSankey } from './SankeyDrawLayout'
 // const fs = require('fs')

@@ -1,5 +1,4 @@
-import { SankeyNode, applicationDataType, display_styleType } from '../../types/Types'
-import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { SankeyNode, applicationDataType, display_styleType,GetLinkValueFuncType} from '../../types/LegacyType'
 
 
 export type DrawArrowsType = (

@@ -1,5 +1,5 @@
 import { 
-  applicationDataType} from '../../types/Types'
+  applicationDataType} from '../../types/LegacyType'
 
 export type ContextMenuZddFType = {
   applicationData : applicationDataType,

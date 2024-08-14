@@ -1,5 +1,5 @@
 
-import { applicationDataType } from '../../types/Types'
+import { applicationDataType } from '../../types/LegacyType'
 
 export type SankeyMenuConfigurationNodesIOFType = {
   applicationData : applicationDataType,
