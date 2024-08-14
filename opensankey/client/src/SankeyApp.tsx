@@ -16,7 +16,7 @@ import {
   SankeyAppTypes,
   SankeyData,
   SankeyNode
-} from './types/Types'
+} from './types/LegacyType'
 
 import { ToolbarBuilder } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'

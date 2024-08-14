@@ -50,7 +50,7 @@ import {
 // Internal Types / Classes
 import {
   SankeyData
-} from '../types/Types'
+} from '../types/LegacyType'
 import {
   Class_TagGroup,
   Class_LevelTagGroup

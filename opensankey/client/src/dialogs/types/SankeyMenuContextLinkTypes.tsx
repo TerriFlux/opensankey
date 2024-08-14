@@ -1,5 +1,5 @@
 import {
-  applicationDataType} from '../../types/Types'
+  applicationDataType} from '../../types/LegacyType'
 
 export type ContextMenuLinkFType = {
   applicationData : applicationDataType,

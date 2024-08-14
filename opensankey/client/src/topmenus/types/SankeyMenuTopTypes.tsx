@@ -7,7 +7,7 @@ import {
   dict_hook_ref_setter_show_dialog_componentsType,
   applicationDataType,
   processFunctionsType
-} from '../../types/Types'
+} from '../../types/LegacyType'
 
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 

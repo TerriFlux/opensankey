@@ -34,10 +34,10 @@ export class Class_ApplicationData {
   public fit_screen: boolean
 
   // Drawing area
-  drawing_area: Class_DrawingArea
+  private _drawing_area: Class_DrawingArea
 
   // Configuration Menu
-  menu_configuration: Class_MenuConfig
+  private _menu_configuration: Class_MenuConfig
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -66,9 +66,9 @@ export class Class_ApplicationData {
     */
   constructor(published_mode: boolean) {
     // Deals with UI menu updates / each modifications
-    this.menu_configuration = new Class_MenuConfig
+    this._menu_configuration = new Class_MenuConfig
     // Contains all drawn objects
-    this.drawing_area = new Class_DrawingArea(
+    this._drawing_area = new Class_DrawingArea(
       initial_window_height,
       initial_window_width,
       this)
@@ -301,6 +301,12 @@ export class Class_ApplicationData {
   }
 
   // GETTERS / SETTERS ==================================================================
+
+  public get drawing_area(): Class_DrawingArea {return this._drawing_area}
+  protected set drawing_area(value: Class_DrawingArea) {this._drawing_area = value} // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
+
+  public get menu_configuration(): Class_MenuConfig {return this._menu_configuration}
+  protected set menu_configuration(value: Class_MenuConfig) {this._menu_configuration = value} // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get has_free_account(): boolean { return this._has_free_account }
   public set has_free_account(value: boolean) {/* TODO */ }

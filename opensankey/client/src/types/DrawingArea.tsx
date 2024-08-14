@@ -149,7 +149,7 @@ export class Class_DrawingArea {
    * @type {number}
    * @memberof Class_DrawingArea
    */
-  private _height: number
+  protected _height: number
 
   /**
    * Width in px of drawing area in application
@@ -157,15 +157,15 @@ export class Class_DrawingArea {
    * @type {number}
    * @memberof Class_DrawingArea
    */
-  private _width: number
+  protected _width: number
 
   // Color
-  private _color: string = default_background_color
+  protected _color: string = default_background_color
 
   // Grid
-  private _grid_color: string = default_grid_color
-  private _grid_visible: boolean = default_grid_visible
-  private _grid_size: number = default_grid_size
+  protected _grid_color: string = default_grid_color
+  protected _grid_visible: boolean = default_grid_visible
+  protected _grid_size: number = default_grid_size
 
   // Scale
   private _scale: number = default_scale
@@ -201,8 +201,8 @@ export class Class_DrawingArea {
   // Objects containeds in drawing area -------------------------------------------------
 
   // Elements that are contained in this area
-  private _sankey: Class_Sankey
-  private _legend: Class_Legend
+  protected _sankey: Class_Sankey
+  protected _legend: Class_Legend
   private _selection_zone: Class_ZoneSelection
   private _number_of_elements: number = 0
 
@@ -226,7 +226,7 @@ export class Class_DrawingArea {
   private _ghost_link: Class_GhostLinkElement | null = null
 
   // Elements that are selected in this area
-  private _selection: { [id: string]: Class_ProtoElement } = {}
+  protected _selection: { [id: string]: Class_ProtoElement } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]

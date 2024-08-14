@@ -1,4 +1,4 @@
-import {  SankeyData, applicationDataType } from '../../types/Types'
+import {  SankeyData, applicationDataType } from '../../types/LegacyType'
 
 export type MenuConfigurationLinksAppearenceFType = {
   applicationData:applicationDataType,

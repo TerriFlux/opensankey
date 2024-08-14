@@ -1,6 +1,6 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { applicationDataType } from '../types/Types'
+import { applicationDataType } from '../types/LegacyType'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'

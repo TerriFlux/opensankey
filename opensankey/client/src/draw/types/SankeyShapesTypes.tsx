@@ -1,5 +1,4 @@
-import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyNode, SankeyLink, applicationDataType } from '../../types/Types'
+import { SankeyData, SankeyNode, SankeyLink, applicationDataType,GetLinkValueFuncType } from '../../types/LegacyType'
 
 /**
  * Function that return the path used t draw arrow with d3

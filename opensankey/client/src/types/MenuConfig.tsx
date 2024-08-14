@@ -9,7 +9,7 @@ import * as d3 from 'd3'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 import { Type_MacroTagGroup } from './Sankey'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
-import { dict_hook_ref_setter_show_dialog_componentsType, textForToastPromiseType } from './Types'
+import { textForToastPromiseType, dict_hook_ref_setter_show_dialog_componentsType } from './LegacyType'
 
 
 // CLASS MENU CONFIG ********************************************************************

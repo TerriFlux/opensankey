@@ -9,7 +9,7 @@ import {
   SankeyNodeAttrLocal,
   agregationType,
   applicationDataType
-} from '../types/Types'
+} from '../types/LegacyType'
 import {
   AggregateFuncType,
   DesaggregateFuncType,

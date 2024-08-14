@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { 
-  applicationDataType } from '../../types/Types'
+  applicationDataType } from '../../types/LegacyType'
 
 export type setDiagramFuncType = (
   the_diagram:string,
@@ -13,7 +13,6 @@ export type addSimpleLevelDropDownFType = {
 
 
 export type addAllDropDownNodeFType = {
-  
   applicationData:applicationDataType,
   level:boolean,
 }

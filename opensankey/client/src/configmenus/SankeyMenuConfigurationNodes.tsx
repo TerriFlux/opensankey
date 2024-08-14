@@ -18,7 +18,7 @@ import {
 
 import {
   applicationDataType,
-} from '../types/Types'
+} from '../types/LegacyType'
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 
 /*************************************************************************************************/

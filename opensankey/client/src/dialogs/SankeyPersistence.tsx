@@ -20,7 +20,10 @@ import {
   processFunctionsType,
   applicationDataType,
   SankeyData,
-} from '../types/Types'
+  ConvertDataFuncType,
+  DefaultSankeyDataFuncType,
+  DataSuiteType,
+} from '../types/LegacyType'
 import {
   ClickSaveDiagramFuncType,
   ClickSaveExcelFuncType,
@@ -32,16 +35,11 @@ import {
   UploadExempleFuncType
 } from './types/SankeyPersistenceTypes'
 
-import {
-  DefaultSankeyDataFuncType
-} from '../configmenus/types/SankeyUtilsTypes'
 
 
 /*************************************************************************************************/
 
 import {
-  ConvertDataFuncType,
-  DataSuiteType,
   DefaultLink,
   DefaultNode,
   complete_sankey_data

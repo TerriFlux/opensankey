@@ -1,6 +1,6 @@
 import {
   applicationDataType,
-} from '../../types/Types'
+} from '../../types/LegacyType'
 
 
 export type OpenSankeyConfigurationsMenusFType = {
