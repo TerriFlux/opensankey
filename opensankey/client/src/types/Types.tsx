@@ -578,6 +578,7 @@ export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
 export type drawNodesFType=(node_to_update:SankeyNode[])=>void
 
 export type NodeFunctionTypes = {
+  NodeTooltipsContent: NodeTooltipsContentFType,
   DrawAllNodes : DrawAllNodesFType,
   drawAddNodes : drawNodeShapeFType,
   CreateNodesOnSVG:drawNodesFType,
