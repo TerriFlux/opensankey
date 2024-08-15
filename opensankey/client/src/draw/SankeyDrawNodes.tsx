@@ -20,8 +20,6 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-
-
 export const DrawAllNodes : DrawAllNodesFType = (
   contextMenu,
   applicationData,
@@ -31,7 +29,6 @@ export const DrawAllNodes : DrawAllNodesFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -47,7 +44,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
     contextMenu, applicationData, uiElementsRef, applicationState,applicationContext,
-    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
+    alt_key_pressed, accept_simple_click, link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
     Object.values(display_nodes),
     GetSankeyMinWidthAndHeight,
     resizeCanvas
@@ -70,7 +67,6 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -168,7 +164,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       const sankeyTooltip=d3.select('.sankey-tooltip')
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
+        .html(node_function.NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
     }
   })
   filtered_gg_nodes.on('mousemove', function (event) {
@@ -358,7 +354,6 @@ export const drawAddNodes : drawNodeShapeFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -420,7 +415,6 @@ export const drawAddNodes : drawNodeShapeFType = (
     alt_key_pressed,
     accept_simple_click,
     link_function,
-    NodeTooltipsContent,
     ComponentUpdater,
     dict_hook_ref_setter_show_dialog_components,
     node_function,
