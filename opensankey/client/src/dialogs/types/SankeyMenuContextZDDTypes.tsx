@@ -7,7 +7,6 @@ import {
 export type ContextMenuZddFType = {
   applicationContext : applicationContextType,
   applicationData : applicationDataType,
-  applicationState : applicationStateType,
   contextMenu : contextMenuType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
