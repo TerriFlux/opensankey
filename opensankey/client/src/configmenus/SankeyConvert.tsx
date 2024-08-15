@@ -914,11 +914,11 @@ export const convert_nodes:convert_nodesFuncType = (
     //   AssignNodeLocalAttribute(n,'label_visible', false)
     //   AssignNodeLocalAttribute(n,'shape_visible', false)
     // }
-    if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
-      n.position = 'relative'
-      n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
-      n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
-    }
+    // if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
+    //   n.position = 'relative'
+    //   n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
+    //   n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
+    // }
     if ( !('Primaire' in n.dimensions) ) {
       n.dimensions['Primaire'] = { level : 1, parent_name: undefined }
     }

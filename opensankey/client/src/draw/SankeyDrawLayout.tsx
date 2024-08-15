@@ -428,6 +428,10 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
     }, {}) as {[idNode:string]:SankeyNode}
   applicationData.display_nodes=display_nodes
   AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
+  AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
+  AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
+  // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
+  // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
   const display_links=Object.keys(data.links)
     .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
     .reduce((obj, key) => {
@@ -471,9 +475,9 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   // Get list of all visible nodes
   //  /!\ the nodes of this list will be the only nodes
   //      that are going to be positionned
-  const visible_nodes_ids = Object.values(data.nodes)
-    .filter(n => NodeDisplayed(data, n) && (n.position !== 'relative'))
-    .map(n=>n.idNode)
+  const visible_nodes_ids = Object.values(display_nodes)
+    .filter(n => !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange')
+    .map(n => n.idNode)
 
   // Compute positionning indexes
   const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
@@ -643,6 +647,8 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
               // Update referencing for bubble node
               vertical_indexes_per_node_id[node.idNode] = prev_v_index
               nodes_ids_per_vertical_index[prev_v_index] = node.idNode
+              //node.v = prev_v_index
+              //node.dy = 0
               // Update referencing for prev node
               vertical_indexes_per_node_id[prev_node_id] = v_index
               nodes_ids_per_vertical_index[v_index] = prev_node_id
@@ -886,7 +892,7 @@ export const apply_v = (
   tagGroup:TagsGroup|undefined
 ) => {
   const {data} = applicationData
-  const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
+  const all_nodes = data.nodes //Object.assign({},data.nodes,data.additional_nodes)
   //node.position = 'parametric'
   node.v = current_v
   if (!tagGroup) {
@@ -927,7 +933,7 @@ const apply_v_agregate = (
   node:SankeyNode,
   current_v:number 
 ) => {
-  const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
+  const all_nodes = data.nodes //Object.assign({},data.nodes,data.additional_nodes)
   //node.position = 'parametric'
   node.v = current_v
   // node.dy = 0
