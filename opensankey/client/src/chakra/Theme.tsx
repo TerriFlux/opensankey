@@ -474,6 +474,17 @@ export const opensankey_theme = extendTheme({
       alignItems: 'center',
       justifyItems: 'center'
     },
+    menuplay_button_style: {
+      height: '3rem',
+      width: '4rem',
+      padding: '0',
+      margin: '0',
+      textStyle: 'h4',
+      fontSize: '9px',
+      color: 'gray.600',
+      stroke: 'gray.600', // Svg params
+      fill: 'gray.600'  // svg params
+    },
     menubottom_layout_style: {
       background: 'gray.50',
       bgColor: 'gray.50',

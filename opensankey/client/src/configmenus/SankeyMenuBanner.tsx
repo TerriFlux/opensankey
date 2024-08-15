@@ -33,7 +33,9 @@ import {
   faSliders,
   faExpand,
   faCompress,
-  faDatabase
+  faDatabase,
+  faCaretSquareRight,
+  faCircleStop
 } from '@fortawesome/free-solid-svg-icons'
 import {
   selected_type
@@ -81,7 +83,7 @@ import {
 } from '@chakra-ui/react'
 import {
   FaEye,
-  FaEyeSlash
+  FaEyeSlash,
 } from 'react-icons/fa'
 import {
   DeleteGNodes
@@ -1076,10 +1078,55 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 }) => {
   const { data } = applicationData
   const [forceUpdate, setForceUpdate] = useState(false)
-  const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  const [playing,set_playing] = useState(false)
+
+  const banner_grouptag = Object.entries(data.dataTags)
+
   const allDD = banner_grouptag.map(([, tags_group]) => {
     let selecteor = <></>
-    if (tags_group.banner == 'one') {
+    let play = <></>
+    if (Object.entries(tags_group.tags).length<=1) {
+      return <></>
+    }
+    if (tags_group.banner == 'one' || tags_group.banner == 'movie' ) {
+      const play_movie = ()=>{
+        if (!playing) {
+          return
+        }
+
+        let idx = 0
+        Object.entries(tags_group.tags).forEach((tag,i) => {if(tag[1].selected) idx = i})
+        idx = idx == Object.entries(tags_group.tags).length -1 ? 0 : idx+1
+        Object.entries(tags_group.tags).forEach((tag,i) => {
+          tag[1].selected= false
+          if(i===idx) {tag[1].selected= true }
+        })
+        applicationData.set_data(JSON.parse(JSON.stringify(applicationData.data)))  
+      }
+      if (tags_group.banner == 'movie' ) {
+        const current_diagram = window.sankey ? window.sankey.diagram : undefined
+        const to = setTimeout(() => {         
+          if (current_diagram && window.sankey && current_diagram !== window.sankey.diagram) {
+            return
+          }
+          let idx = 0
+          Object.entries(tags_group.tags).forEach((tag,i) => {if(tag[1].selected) idx = i})
+          if ( idx === Object.entries(tags_group.tags).length -1) {
+            clearTimeout(to)
+            set_playing(false)
+            return
+          }
+          play_movie()
+        }, 1000)
+        // let idx = 0
+        // Object.entries(tags_group.tags).forEach((tag,i) => {if(tag[1].selected) idx = i})
+        // if ( idx === Object.entries(tags_group.tags).length -1) {
+        //   clearTimeout(to)
+        //   set_playing(false)
+        //   return
+        // }
+      }
+
       let selected = ''
       if (Object.entries(tags_group.tags).filter(([, v]) => v.selected).length > 0) {
         selected = Object.entries(tags_group.tags).filter(([, v]) => v.selected)[0][0]
@@ -1124,6 +1171,33 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             return (<option key={i} value={tag_key} >{tag.name}</option>)
           })}
       </Select>
+      play = <Button
+        variant='menutop_button'
+        onClick={() => {
+          if (playing) {
+            set_playing(false)
+          } else {
+            Object.values(tags_group.tags).forEach(tag => tag.selected = false)
+            Object.values(tags_group.tags)[0].selected = true
+            applicationData.set_data(JSON.parse(JSON.stringify(applicationData.data)))
+            setTimeout(() => {         
+              set_playing(true)
+            }, 1000)
+          }
+        }}
+      >
+        <Box
+          layerStyle='menuplay_button_style'
+        >
+
+          <FontAwesomeIcon
+            style={{
+              'height': '2rem',
+              'width': '3rem',
+              // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
+            }}
+            icon={playing ? faCircleStop : faCaretSquareRight }
+          /></Box></Button>
     }
     else {
       const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
@@ -1171,7 +1245,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 
     return (
       <Box
-        as='span' layerStyle='menuconfigpanel_row_2cols'
+        as='span' layerStyle='menuconfigpanel_row_3cols'
       >
         <Box
           as='span'
@@ -1179,42 +1253,43 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
         >
           {tags_group.group_name}
         </Box>
-        <Box
-          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
-        >
-          {selecteor}
-          {
-            in_popover ?
-              <Switch
-                justifySelf='end'
-                alignSelf='center'
-                height='1rem'
-                isChecked={(banner_grouptag.length > 0) ? (Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
-                onChange={evt => {
-                  //Déselecitonne tous les type de tag
-                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+        {/* <Box
+          layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : 'menuconfigpanel_row_2cols'}
+        > */}
+        {selecteor}
+        {in_popover || tags_group.banner !== 'movie' ? <></> : play}
+        {
+          in_popover ?
+            <Switch
+              justifySelf='end'
+              alignSelf='center'
+              height='1rem'
+              isChecked={(banner_grouptag.length > 0) ? (Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend) : false}
+              onChange={evt => {
+                //Déselecitonne tous les type de tag
+                Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
+                Object.values(data.links).forEach(el => {
+                  el.colorTag = 'no_colormap'
+                })
+                data.linksColorMap = 'no_colormap'
+                //Met le dernier dataTag en tant que couleur a suivre pour les flux
+                if (evt.target.checked) {
                   Object.values(data.links).forEach(el => {
                     el.colorTag = 'no_colormap'
                   })
-                  data.linksColorMap = 'no_colormap'
-                  //Met le dernier dataTag en tant que couleur a suivre pour les flux
-                  if (evt.target.checked) {
-                    Object.values(data.links).forEach(el => {
-                      el.colorTag = 'no_colormap'
-                    })
-                    data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
-                    Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
-                  }
-                  setForceUpdate(!forceUpdate)
-                  redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
-                }}
-              /> :
-              <></>
-          }
-        </Box>
-      </Box>)
+                  data.linksColorMap = 'dataTags_' + Object.keys(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0]
+                  Object.values(data.dataTags).slice(banner_grouptag.length - 1, banner_grouptag.length)[0].show_legend = evt.target.checked
+                }
+                setForceUpdate(!forceUpdate)
+                redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
+              }}
+            /> :
+            <></>
+        }
+      </Box>
+    )
   })
   return <>{allDD}</>
 }
