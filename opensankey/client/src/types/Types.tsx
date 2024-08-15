@@ -36,13 +36,17 @@ export type SankeyNodeAttrLocal ={
   label_box_width?: number,
   label_color?: boolean,
   label_vert?: string,
+  label_vert_shift?: number,
   label_horiz?: string,
+  label_horiz_shift?: number,
   label_background?:boolean,
 
   // Parameter of node value label
   show_value?: boolean,
   label_vert_valeur?: string,
+  label_vert_valeur_shift?: number,
   label_horiz_valeur?: string,
+  label_horiz_valeur_shift?: number,
   value_font_size?: number,
 }
 
@@ -71,14 +75,19 @@ export type SankeyNodeStyle ={
   label_box_width: number,
   label_color: boolean,
   label_vert: string,
+  label_vert_shift: number,
   label_horiz: string,
+  label_horiz_shift: number,
   label_background:boolean,
 
   // Parameter of node value label
   show_value: boolean,
   label_vert_valeur: string,
   label_horiz_valeur: string,
+  label_horiz_valeur_shift: number,
+  label_vert_valeur_shift: number,
   value_font_size: number,
+
 }
 
 

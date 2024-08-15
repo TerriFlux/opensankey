@@ -746,7 +746,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           {/* Position  du label par rapport au noeud */}
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name' >
-              Position
+              Ancre
             </Box>
 
             <Box layerStyle='options_2cols' >
@@ -919,6 +919,53 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             </Box>
           </Box>
 
+
+          {/* Position du label par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {'Coordonnée horizontale'}
+                {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_horiz_shift',menu_for_style)?
+                  <>{TooltipValueSurcharge('node_var_',t)}</>:
+                  <></>)}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                data={applicationData.data}
+                parameter_to_modify={parameter_to_modify}
+                selected_parameter={selected_parameter}
+                menu_for_style={menu_for_style}
+                local_var_of_node='label_horiz_shift'
+                function_onBlur={()=>updateMenuConfigNode()}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
+
+          {/* Position du label par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {'Coordonnée verticale'}
+                {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_vert_shift',menu_for_style)?
+                  <>{TooltipValueSurcharge('node_var_',t)}</>:
+                  <></>)}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                data={applicationData.data}
+                parameter_to_modify={parameter_to_modify}
+                selected_parameter={selected_parameter}
+                menu_for_style={menu_for_style}
+                local_var_of_node='label_vert_shift'
+                function_onBlur={()=>updateMenuConfigNode()}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
+
           {advanced_label_content}
         </Box>:
         <></>
@@ -979,7 +1026,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           {/* Position de l'affichage des données par rapport au noeud */}
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name' >
-              Position
+              Ancre
             </Box>
             <Box layerStyle='options_2cols' >
               {/* Horizontale */}
@@ -1128,6 +1175,53 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             </Box>
             {advanced_label_value_content}
           </Box>
+          {/* Position du label par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {'Coordonnée horizontale'}
+                {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_horiz_valeur_shift',menu_for_style)?
+                  <>{TooltipValueSurcharge('node_var_',t)}</>:
+                  <></>)}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                data={applicationData.data}
+                parameter_to_modify={parameter_to_modify}
+                selected_parameter={selected_parameter}
+                menu_for_style={menu_for_style}
+                local_var_of_node='label_horiz_valeur_shift'
+                function_onBlur={()=>updateMenuConfigNode()}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
+
+          {/* Position du label par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {'Coordonnée verticale'}
+                {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_vert_valeur_shift',menu_for_style)?
+                  <>{TooltipValueSurcharge('node_var_',t)}</>:
+                  <></>)}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                data={applicationData.data}
+                parameter_to_modify={parameter_to_modify}
+                selected_parameter={selected_parameter}
+                menu_for_style={menu_for_style}
+                local_var_of_node='label_vert_valeur_shift'
+                function_onBlur={()=>updateMenuConfigNode()}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
+
+
         </Box>:
         <></>
     }

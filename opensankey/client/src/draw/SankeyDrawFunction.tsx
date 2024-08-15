@@ -195,11 +195,11 @@ export const TextNodeWrap : TextNodeWrapFType = (
       const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
 
       if (ReturnValueNode(data,d,'label_horiz')  == 'middle') {
-        return width / 2
+        return width / 2 + +ReturnValueNode(data,d,'label_horiz_shift')
       } else if (ReturnValueNode(data,d,'label_horiz')  == 'right') {
-        return ReturnValueNode(data,d,'label_vert')  == 'middle' ? width : 0
+        return ReturnValueNode(data,d,'label_vert')  == 'middle' ? width + +ReturnValueNode(data,d,'label_horiz_shift'): 0
       } else {
-        return 0
+        return 0+ +ReturnValueNode(data,d,'label_horiz_shift')
       }
     })
   }
@@ -1472,11 +1472,11 @@ export const NodeLabelPosX : NodeLabelValuePosXFType =(
   if (n.x_label) {
     return n.x_label
   } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'middle') {
-    return width / 2
+    return width / 2+ +ReturnValueNode(data,n,'label_horiz_shift')
   } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'left') {
-    return 0
+    return 0+ +ReturnValueNode(data,n,'label_horiz_shift')
   } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'right') {
-    return (ReturnValueNode(data,n,'label_vert') as string) == 'middle' ? width : 0
+    return (ReturnValueNode(data,n,'label_vert') as string) == 'middle' ? width + +ReturnValueNode(data,n,'label_horiz_shift'): 0
   } else {
     return 0
   }
@@ -1491,11 +1491,11 @@ export const NodeLabelPosY : NodeLabelValuePosYFType = (
   if (n.y_label && data.show_structure !== 'structure') {
     return n.y_label
   } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'middle') {
-    return height / 2
+    return height / 2 + +ReturnValueNode(data,n,'label_vert_shift')
   } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'top') {
-    return -4
+    return 0 + +ReturnValueNode(data,n,'label_vert_shift')
   } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'bottom') {
-    return height
+    return height + +ReturnValueNode(data,n,'label_vert_shift')
   } else {
     return 0
   }
@@ -1506,13 +1506,13 @@ export const NodeLabelValuePosX : NodeLabelValuePosXFType = (
   const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
   const val=(ReturnValueNode(data,n,'label_horiz_valeur') as string)
   if (val== 'middle') {
-    return width / 2
+    return width / 2 + +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   } else if (val == 'left') {
-    return 0
+    return 0 + +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   } else if (val == 'right') {
-    return width
+    return width+ +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   } else {
-    return 0
+    return 0+ +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   }
 }
 
@@ -1526,13 +1526,13 @@ export const NodeLabelValuePosY : NodeLabelValuePosYFType = (
   const val_font_size=(ReturnValueNode(data,n,'font_size') as number)
   const is_same_pos=NodeValueAndTextSamePos(data,n)
   if (val == 'middle') {
-    return height / 2 + 0.25*val_font_size
+    return height / 2 + 0.25*val_font_size + +ReturnValueNode(data,n,'label_vert_valeur_shift')
   } else if (val == 'top') {
-    return 0+ ((is_same_pos)?-height_text*1.5:0)
+    return 0+ ((is_same_pos)?-height_text*1.5:0)+ +ReturnValueNode(data,n,'label_vert_valeur_shift')
   } else if (val == 'bottom') {
-    return height+((is_same_pos)?height_text*1.8:val_font_size)
+    return height+((is_same_pos)?height_text*1.8:val_font_size)+ +ReturnValueNode(data,n,'label_vert_valeur_shift')
   } else {
-    return 0
+    return 0+ +ReturnValueNode(data,n,'label_vert_valeur_shift')
   }
 }
 

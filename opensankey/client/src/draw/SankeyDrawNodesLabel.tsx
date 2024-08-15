@@ -204,9 +204,9 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       } else if (ReturnValueNode(data,nn,'label_horiz') == 'left') {
         return -(ReturnValueNode(data,nn,'label_box_width')as number)
       } else if (ReturnValueNode(data,nn,'label_horiz') == 'right') {
-        return width
+        return width + +ReturnValueNode(data,nn,'label_horiz_shift')
       } else {
-        return 0
+        return 0 + +ReturnValueNode(data,nn,'label_horiz_shift')
       }
     })
     .attr('y', n => {
