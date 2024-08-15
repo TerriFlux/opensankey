@@ -1022,7 +1022,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
     ref_alt_key_pressed,
     accept_simple_click,
     link_function,
-    NodeTooltipsContent,
     ComponentUpdater,
     node_function
   }
@@ -1213,7 +1212,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
               ref_alt_key_pressed,
               accept_simple_click,
               link_function,
-              NodeTooltipsContent,
               ComponentUpdater,
               dict_hook_ref_setter_show_dialog_components,
               node_function,
