@@ -2,7 +2,7 @@ import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
+import { DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { arrangeNodes, ComputeAutoSankey, ComputeParametrization } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
@@ -70,13 +70,13 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
     let min=Object.values(data.nodes)[0][attr]
     // Cheche la position en y du noeud le plus en haut à gauche
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
       min=(n[attr]<min)?n[attr]:min
     })
 
     // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
     // applique le delta mutiplié par le facteur au noeud
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
       const delta=n[attr]-min
       n[attr]=min+(delta*stretchFactor)
     })
@@ -393,7 +393,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
         <Box layerStyle='menuconfigpanel_grid' >
           {/* Positionnement vertical automatique */}
           <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-            <Checkbox
+            {/* <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={data.parametric_mode}
               onChange={(evt) => {
@@ -404,19 +404,16 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               <OSTooltip label={'Positionnement vertical ajusté'}>
                 {'Positionnement vertical ajusté'}
               </OSTooltip>
-            </Checkbox>
+            </Checkbox> */}
             <Button
               variant='menuconfigpanel_option_button'
               onClick={()=>{
                 ComputeParametrization(applicationData)
-                Object.values(applicationData.data.nodes)
-                .filter(n=> n.position !== 'relative' )
-                .forEach(n=> n.position = 'parametric' )
                 applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}>
               {t('MEP.defaultParametric')}
             </Button>
-            <Button
+            {/* <Button
               variant='menuconfigpanel_option_button'
               onClick={()=>{
                 Object.values(applicationData.data.nodes)
@@ -425,7 +422,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}>
               {t('MEP.resetVerticalIntervals')}
-            </Button>
+            </Button> */}
           </Box>
           {/* Ecart horizontal */}
           <OSTooltip label={t('MEP.tooltips.EEN_h')} >

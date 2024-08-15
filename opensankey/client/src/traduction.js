@@ -1055,7 +1055,8 @@ export const open_resources = {
         sector:'Secteur',
         exchange:'Échange',
         selector:'Selectionner des noeuds',
-        size:'Taille',
+        size:'Taille et position',
+        interval:'Ecart vertical',
         text:'Texte',
         tooltips:{
           Nom:'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',

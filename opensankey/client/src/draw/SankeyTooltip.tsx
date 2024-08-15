@@ -186,7 +186,7 @@ export const NodeTooltipsContent = (
 
   t += '<div style="padding-left :5px;padding-right :5px">'
 
-  t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.u + ' ' +n.v + ' ' +n.dy + '</p>'
+  // t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.u + ' ' +n.v + ' ' +n.dy + '</p>'
 
   if (n.tooltip_text) {
     t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>'
@@ -253,7 +253,7 @@ export const NodeTooltipsContent = (
                 return
               }
               names.push(data.fluxTags[tag_group_key].tags[tag].name)
-          })
+            })
             t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
           })
         } else {
@@ -326,8 +326,8 @@ export const NodeTooltipsContent = (
                 }
                 names.push(data.fluxTags[tag_group_key].tags[tag].name)
                 t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
+              })
             })
-          })
 
           } else {
             t += '<td></td></tr>'

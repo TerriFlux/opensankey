@@ -4,7 +4,7 @@ import { ContextMenuZddFType } from './types/SankeyMenuContextZDDTypes'
 import { ComputeAutoSankey, arrangeNodes } from '../draw/SankeyDrawLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { GetRandomInt, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
+import { GetRandomInt, AssignNodeLocalAttribute, ReturnValueNode } from '../configmenus/SankeyUtils'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Input, NumberInput, NumberInputField } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
@@ -16,6 +16,7 @@ const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''
 export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   applicationContext,
   applicationData,
+  applicationState,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -80,12 +81,16 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   </>
   const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-    const n_keys = Object.keys(data.nodes)
+    let n_keys = Object.keys(data.nodes)
+    if (applicationState.multi_selected_nodes.current.length > 0) {
+      n_keys = applicationState.multi_selected_nodes.current.map(n=>n.idNode)
+    }
     const size_color = n_keys.length
 
     for (const i in d3.range(size_color)) {
       AssignNodeLocalAttribute(data.nodes[n_keys[i]], 'color', (d3.color(color_selected(+i / size_color))?.formatHex() as string))
     }
+
     RedrawNodes(Object.values(applicationData.display_nodes))
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }}>{t('Menu.rand_node_color')}</Button>
@@ -194,7 +199,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
       RedrawNodes(Object.values(applicationData.display_nodes))
       RedrawLinks(Object.values(applicationData.display_links))
       ComponentUpdater.updateComponenSaveInCache.current(false)
-      Object.values(applicationData.display_nodes).filter(n => n.position != 'relative').forEach(n => {
+      Object.values(applicationData.display_nodes).filter(n => ReturnValueNode(data,n,'position')!= 'relative').forEach(n => {
         d3.select('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
       })
     }}>

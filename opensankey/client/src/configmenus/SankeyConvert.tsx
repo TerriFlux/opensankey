@@ -1,6 +1,13 @@
 import { SankeyData, SankeyLink, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyle,SankeyLinkAttrLocal, SankeyNodeAttrLocal} from '../types/Types'
 import colormap from 'colormap'
-import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
+import { 
+  DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,
+  DefaultNodeProductStyle,DefaultNodeSectorStyle,DefaultNodeImportStyle,DefaultNodeExportStyle,
+  DefaultLinkImportStyle,
+  DefaultLinkExportStyle,
+  AssignNodeLocalAttribute,
+  GetNodeAttributeValueFromStyle
+} from './SankeyUtils'
 
 import { ConvertDataFuncType, complete_sankey_dataFunctType, compute_flux_maxFType, compute_initial_colorsFType, convert_booleanFType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from './types/SankeyConvertTypes'
 import {
@@ -35,6 +42,7 @@ interface ConvertSankeyNode {
   not_to_scale?:boolean,
   not_to_scale_direction?:string,
   display?:boolean,
+  position?:'relative' | 'absolute' | 'parametric',
   display_style?:{
     label_vert:string,
     label_horiz:string,
@@ -113,7 +121,7 @@ interface ConvertSankeyData {
   trade_hspace?: number
   trade_close_hspace?: number
   trade_close_vspace?: number
-  trade_sectors?: string[]
+
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
   agregated_level?: number
@@ -490,6 +498,18 @@ export const convert_tags:convert_tagsFuncType = (
     if(!Object.keys(data.style_node).includes('NodeSectorStyle')){
       data.style_node['NodeSectorStyle']=DefaultNodeSectorStyle()
     }
+    if(!Object.keys(data.style_node).includes('NodeImportStyle')){
+      data.style_node['NodeImportStyle']=DefaultNodeImportStyle()
+    }
+    if(!Object.keys(data.style_node).includes('NodeExportStyle')){
+      data.style_node['NodeExportStyle']=DefaultNodeExportStyle()
+    }
+    if(!Object.keys(data.style_node).includes('LinkImportStyle')){
+      data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
+    }
+    if(!Object.keys(data.style_node).includes('LinkExportStyle')){
+      data.style_link['LinkExportStyle']=DefaultLinkExportStyle()
+    }
   }
 
   if (data.nodeTags.Dimensions) {
@@ -576,45 +596,58 @@ export const convert_tags:convert_tagsFuncType = (
         n.tags['Type de noeud'].splice(n.tags['Type de noeud'].indexOf('échange'),1)
       }
       if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'].includes('echange')) {
-        if (n.inputLinksId.length === 0) {
-          const link =  data.links[n.outputLinksId[0]]
-          if (!link) {
-            return
+        if (n.style == 'default') {
+          if (n.inputLinksId.length === 0) {
+            n.style = 'NodeImportStyle'
+          } else if (n.outputLinksId.length === 0) {
+            n.style = 'NodeExportStyle'
           }
-          //link.idSource = new_node.idNode
-          const target_node = data.nodes[link.idTarget]
-          Object.keys(target_node.dimensions).forEach(dim_key => {
-            n.dimensions[dim_key] = JSON.parse(JSON.stringify(target_node.dimensions[dim_key]))
-          })
+          AssignNodeLocalAttribute(n,'relative_dx',n.x-+GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'relative_dx'))
+          AssignNodeLocalAttribute(n,'relative_dy',n.y-+GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'relative_dy'))
+        }
+        //     const link =  data.links[n.outputLinksId[0]]
+      //     if (!link) {
+      //       return
+      //     }
+      //     //link.idSource = new_node.idNode
+      //     const target_node = data.nodes[link.idTarget]
+      //     Object.keys(target_node.dimensions).forEach(dim_key => {
+      //       n.dimensions[dim_key] = JSON.parse(JSON.stringify(target_node.dimensions[dim_key]))
+      //     })
 
-          Object.keys(target_node.tags).forEach(tag_key => {
-            if ( tag_key === 'Type de noeud' ) {
-              return
-            }
-            //const tags = [...target_node.tags[tag_key]]
-            //if (tag_key in target_node.tags) {
-            n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
-            //}
-          })
-        } else {
-          const link = data.links[n.inputLinksId[0]]
-          if (!link) {
-            return
-          }
-          link.idTarget = n.idNode
-          const source_node = data.nodes[link.idSource]
-          Object.keys(source_node.dimensions).forEach(dim_key => {
-            n.dimensions[dim_key] = JSON.parse(JSON.stringify(source_node.dimensions[dim_key]))
-          })
+      //     Object.keys(target_node.tags).forEach(tag_key => {
+      //       if ( tag_key === 'Type de noeud' ) {
+      //         return
+      //       }
+      //       //const tags = [...target_node.tags[tag_key]]
+      //       //if (tag_key in target_node.tags) {
+      //       n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
+      //       //}
+      //     })
+      //   } else {
+      //     const link = data.links[n.inputLinksId[0]]
+      //     if (!link) {
+      //       return
+      //     }
+      //     link.idTarget = n.idNode
+      //     const source_node = data.nodes[link.idSource]
+      //     Object.keys(source_node.dimensions).forEach(dim_key => {
+      //       n.dimensions[dim_key] = JSON.parse(JSON.stringify(source_node.dimensions[dim_key]))
+      //     })
 
-          Object.keys(source_node.tags).forEach(tag_key => {
-            if ( tag_key === 'Type de noeud' ) {
-              return
-            }
-            //if (tag_key in n.tags) {
-            n.tags[tag_key] = JSON.parse(JSON.stringify(source_node.tags[tag_key]))
-            //}
-          })
+      //     Object.keys(source_node.tags).forEach(tag_key => {
+      //       if ( tag_key === 'Type de noeud' ) {
+      //         return
+      //       }
+      //       //if (tag_key in n.tags) {
+      //       n.tags[tag_key] = JSON.parse(JSON.stringify(source_node.tags[tag_key]))
+      //       //}
+      //     })
+      //   }
+      }
+      if (n_convert.position) {
+        if (data.style_node[n.style].position !== n_convert.position) {
+          AssignNodeLocalAttribute(n,'position',n_convert.position)          
         }
       }
     }
@@ -728,7 +761,7 @@ export const convert_tags:convert_tagsFuncType = (
 export const convert_nodes:convert_nodesFuncType = (
   data: SankeyData
 ) => {
-  const data_to_convert = data as SankeyData & ConvertSankeyData
+  //const data_to_convert = data as SankeyData & ConvertSankeyData
   const default_n=DefaultNode(data)
 
   // If node has old 'id' attribute, convert it to new one 'idNode'
@@ -914,49 +947,40 @@ export const convert_nodes:convert_nodesFuncType = (
     //   AssignNodeLocalAttribute(n,'label_visible', false)
     //   AssignNodeLocalAttribute(n,'shape_visible', false)
     // }
-    if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
-      n.position = 'relative'
-      n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
-      n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
-    }
+    // if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
+    //   n.position = 'relative'
+    //   n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
+    //   n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
+    // }
     if ( !('Primaire' in n.dimensions) ) {
       n.dimensions['Primaire'] = { level : 1, parent_name: undefined }
     }
-    if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
-      n.tags['Type de noeud'] = ['echange']
-      if (!n.dimensions) {
-        n.dimensions = {}
-      }
-      if (data_to_convert.trade_sectors) {
-        if (n.tags['Exchanges'][0].includes((data_to_convert.trade_sectors as string[])[0].split(' - ')[0])) {
-          n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
-          if (!('Echanges' in n.tags)) {
-            n.tags.Echanges = []
-          }
-        } else {
-          const names = n.name.split(' - ')
-          names[1] = (data_to_convert.trade_sectors as string[])[0].split(' - ')[0]
-          const parent_name = names.join(' - ')
-          const parent_node = Object.values(data.nodes).filter( n => n.name === parent_name)[0]
-          if (parent_node) {
-            n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
-          }
-          if (!('Echanges' in n.tags)) {
-            n.tags.Echanges = []
-          }
-        }
-      }
-    }
+    // if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
+    //   n.tags['Type de noeud'] = ['echange']
+    //   if (!n.dimensions) {
+    //     n.dimensions = {}
+    //   }
+    //   if (data_to_convert.trade_sectors) {
+    //     if (n.tags['Exchanges'][0].includes((data_to_convert.trade_sectors as string[])[0].split(' - ')[0])) {
+    //       n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
+    //       if (!('Echanges' in n.tags)) {
+    //         n.tags.Echanges = []
+    //       }
+    //     } else {
+    //       const names = n.name.split(' - ')
+    //       names[1] = (data_to_convert.trade_sectors as string[])[0].split(' - ')[0]
+    //       const parent_name = names.join(' - ')
+    //       const parent_node = Object.values(data.nodes).filter( n => n.name === parent_name)[0]
+    //       if (parent_node) {
+    //         n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
+    //       }
+    //       if (!('Echanges' in n.tags)) {
+    //         n.tags.Echanges = []
+    //       }
+    //     }
+    //   }
+    // }
     delete n.tags['Exchanges']
-
-    // Nodes with type Echanges did not have the correct dimensions
-    if ( n.tags['Echanges'] ) {
-      const new_dimensions = {
-        'Primaire' : n.dimensions['Primaire'],
-        'Echanges' : n.dimensions['Echanges']
-      }
-      n.dimensions = new_dimensions
-    }
 
 
     // Filter out variable in the node that are null or undefined so they can be attribued the default value
@@ -1652,6 +1676,13 @@ export const convert_data:ConvertDataFuncType = (
 
   if(data.node_label_separator===undefined || data.node_label_separator===null){
     data.node_label_separator=' - '
+  }
+
+  if (!data.additional_nodes) {
+    data.additional_nodes = {}
+    data.additional_links = {}
+    data.removed_nodes = {}
+    data.removed_links = {}
   }
 
   clean_data_local(data)

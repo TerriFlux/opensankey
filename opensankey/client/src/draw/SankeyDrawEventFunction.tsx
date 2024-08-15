@@ -815,7 +815,7 @@ export const SvgDragMiddleMouseStart: SvgDragMiddleMouseStartFuncType = () => {
 }
 
 export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => {
-  d3.selectAll('.ggg_nodes').filter(n => (n as SankeyNode).position !== 'relative').attr('transform', (d) => {
+  d3.selectAll('.ggg_nodes').filter(n => ReturnValueNode(data,n as SankeyNode,'position') !== 'relative').attr('transform', (d) => {
     const n = d as SankeyNode
     n.x += event.dx
     n.y += event.dy

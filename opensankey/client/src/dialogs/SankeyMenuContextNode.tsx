@@ -70,7 +70,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
 
   // b:before,m:middle,a:after
   const align_node = (ref: 'min' | 'max', attr: 'x' | 'y', pos: 'b' | 'm' | 'a') => {
-    const node_ref = multi_selected_nodes.current.filter(nf => nf.position != 'relative').sort((n1, n2) => {
+    const node_ref = multi_selected_nodes.current.filter(nf => ReturnValueNode(data,nf,'position') != 'relative').sort((n1, n2) => {
       return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
     })[0]
     const pos_ref = node_ref[attr]
@@ -84,7 +84,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       center_ref = pos_ref + (wORh_ref / 2)
     }
 
-    multi_selected_nodes.current.filter(n => n != node_ref && n.position != 'relative').forEach(n => {
+    multi_selected_nodes.current.filter(n => n != node_ref && ReturnValueNode(data,n,'position') != 'relative').forEach(n => {
 
       const is_circle_to_shift = d3.select('#shape_' + n.idNode).attr('rx') !== null
       const wORh_to_shift = is_circle_to_shift ? Number(d3.select('#shape_' + n.idNode).attr('r' + attr)) : Number(d3.select('#shape_' + n.idNode).attr(wORh))

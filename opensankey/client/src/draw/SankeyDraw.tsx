@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { DeleteLink,deleteSelectedNodeFromData,windowSankey} from '../configmenus/SankeyUtils'
+import { DeleteLink,deleteSelectedNodeFromData,ReturnValueNode,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
 import { RemoveAnimate,
@@ -8,7 +8,8 @@ import { RemoveAnimate,
   SelectVisualyLinks,
   DeselectVisualyLinks,
   DeselectVisualyNodes,
-  SelectVisualyNodes} from './SankeyDrawFunction'
+  SelectVisualyNodes,
+  nodeTransform} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
@@ -187,7 +188,6 @@ export const keyHandler : keyHandlerFType = (
   ref_alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   applicationContext,
@@ -212,9 +212,9 @@ export const keyHandler : keyHandlerFType = (
           return d.idNode
         }
       }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+        // if (ReturnValueNode(data,d,'position') === 'relative') {
+        //   return
+        // }
 
         d.y = d.y - data.grid_square_size
 
@@ -233,9 +233,9 @@ export const keyHandler : keyHandlerFType = (
           return d.idNode
         }
       }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+        // if (ReturnValueNode(data,d,'position') === 'relative') {
+        //   return
+        // }
 
         d.y = d.y + data.grid_square_size
 
@@ -250,9 +250,9 @@ export const keyHandler : keyHandlerFType = (
           return d.idNode
         }
       }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+        // if (ReturnValueNode(data,d,'position') === 'relative') {
+        //   return
+        // }
 
         d.x = d.x - data.grid_square_size
 
@@ -267,9 +267,9 @@ export const keyHandler : keyHandlerFType = (
           return d.idNode
         }
       }).includes(f.idNode)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
+        // if (ReturnValueNode(data,d,'position') === 'relative') {
+        //   return
+        // }
 
         d.x = d.x + data.grid_square_size
 
@@ -283,7 +283,7 @@ export const keyHandler : keyHandlerFType = (
     multi_selected_nodes.current.forEach(n=>{
       link_to_update=link_to_update.concat(n.outputLinksId)
       link_to_update=link_to_update.concat(n.inputLinksId)
-      d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
+      d3.selectAll('#ggg_' + n.idNode).attr('transform', nodeTransform(applicationData,n,link_function,true))
     })
     link_to_update=[...new Set(link_to_update)]
     link_function.RedrawLinks(Object.values(applicationData.display_links))
@@ -315,7 +315,6 @@ export const keyHandler : keyHandlerFType = (
       ref_alt_key_pressed,
       accept_simple_click,
       link_function,
-      NodeTooltipsContent,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
       node_function,

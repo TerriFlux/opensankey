@@ -120,7 +120,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
         const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
         const size_shape=+d3.select('#shape_'+n.idNode).attr('width')
         const box_text=document.getElementById('text_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
-        let horiz_shift=0
+        let horiz_shift=0+ +ReturnValueNode(data,n,'label_horiz_shift')
         const pos_h=ReturnValueNode(data,n,'label_horiz')
         if(pos_h=='left'){
           horiz_shift=box_text.width
@@ -204,9 +204,9 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       } else if (ReturnValueNode(data,nn,'label_horiz') == 'left') {
         return -(ReturnValueNode(data,nn,'label_box_width')as number)
       } else if (ReturnValueNode(data,nn,'label_horiz') == 'right') {
-        return width
+        return width + +ReturnValueNode(data,nn,'label_horiz_shift')
       } else {
-        return 0
+        return 0 + +ReturnValueNode(data,nn,'label_horiz_shift')
       }
     })
     .attr('y', n => {

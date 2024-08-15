@@ -22,7 +22,7 @@ export type ProcessExampleFuncType = (
   applicationData:applicationDataType,
     updateLayout: updateLayoutFuncType,
     convert_data: ConvertDataFuncType,
-    postProcessLoadExcel: (server_data: SankeyData) => void,
+    postProcessLoadExcel: (applicationData: applicationDataType) => void,
     DefaultSankeyData: DefaultSankeyDataFuncType
 ) => SankeyData
 

@@ -4,7 +4,6 @@ import {
   applicationDataType, contextMenuType, applicationStateType, uiElementsRefType,
   LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes
 } from '../../types/Types'
-import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 
@@ -17,7 +16,6 @@ export type DrawAllNodesFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
@@ -36,7 +34,6 @@ export type AddDrawNodesFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
@@ -53,7 +50,6 @@ export type drawNodeShapeFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,

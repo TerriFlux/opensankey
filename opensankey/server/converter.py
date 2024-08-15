@@ -23,7 +23,7 @@ JSON_TO_IO_XL__TAGG_TYPES = {
     'levelTags': CONST_IO_XL.TAG_TYPE_LEVEL
 }
 
-DEFAULT_LEVEL_TAGGS = ['Primaire', 'Echanges']
+DEFAULT_LEVEL_TAGGS = ['Primaire']
 
 
 # Private Functions -----------------------------------------------------------

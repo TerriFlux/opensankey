@@ -20,8 +20,6 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-
-
 export const DrawAllNodes : DrawAllNodesFType = (
   contextMenu,
   applicationData,
@@ -31,7 +29,6 @@ export const DrawAllNodes : DrawAllNodesFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -47,7 +44,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
     contextMenu, applicationData, uiElementsRef, applicationState,applicationContext,
-    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
+    alt_key_pressed, accept_simple_click, link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
     Object.values(display_nodes),
     GetSankeyMinWidthAndHeight,
     resizeCanvas
@@ -70,7 +67,6 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -168,7 +164,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       const sankeyTooltip=d3.select('.sankey-tooltip')
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
+        .html(node_function.NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
     }
   })
   filtered_gg_nodes.on('mousemove', function (event) {
@@ -278,9 +274,9 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
         if (HasLinksZero(data,n)) {
           return 'none'
         }
-        if (n.position === 'relative') { 
-          return 'none'
-        } 
+        // if (n.position === 'relative') { 
+        //   return 'none'
+        // } 
         return 'inline'
       })
       
@@ -363,7 +359,6 @@ export const drawAddNodes : drawNodeShapeFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -377,7 +372,7 @@ export const drawAddNodes : drawNodeShapeFType = (
   const {t} = applicationContext
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
   const columns : {[_:number]:SankeyNode[]} = {}
-  if (!data.parametric_mode) {
+  if (/*!data.parametric_mode*/false) {
     columns[0] = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
   } else {
     Object.values(display_nodes).forEach(n=>{
@@ -390,41 +385,47 @@ export const drawAddNodes : drawNodeShapeFType = (
     d3.selectAll(' .opensankey #g_nodes g').remove()   
   }
   Object.values(columns).forEach(column=>{
-    column.sort((n1,n2)=>n1.v-n2.v)
+    column.sort((n1, n2) => {
+      if (n1.v>=0 || n2.v>=0) {
+        return n1.v - n2.v
+      } else {
+        return n2.v - n1.v
+      }
+    })
     column.forEach(n=>{
-    d3.select(' .opensankey #g_nodes').datum(n).append('g')
-      .attr('id', d => {
-        return 'gg_' + d.idNode
-      })
-      .attr('class', 'gg_nodes')
-    // On gere la visibilité directement sur gg_nodes avec un display <inline />
-    // Cela permettra de mieux gérer des zooms sur les éléments visibles
-      .style('display', (d) => {
-        if (HasLinksZero(data,d)) {
-          return 'none'
-        }
-        if (d.position === 'relative') { 
-          return 'none'
-        } 
-        return 'inline'
-      })
-      .style('font-family', (d) => {
-        return ReturnValueNode(data, d, 'font_family') as string
-      })
-      .append('g')
-      .attr('id', d => 'ggg_' + d.idNode)
-      .attr('class', 'ggg_nodes')
-      .attr('transform', d => nodeTransform(applicationData,d, link_function,false))
-  })})
+      d3.select(' .opensankey #g_nodes').datum(n).append('g')
+        .attr('id', d => {
+          return 'gg_' + d.idNode
+        })
+        .attr('class', 'gg_nodes')
+      // On gere la visibilité directement sur gg_nodes avec un display <inline />
+      // Cela permettra de mieux gérer des zooms sur les éléments visibles
+        .style('display', (d) => {
+          if (HasLinksZero(data,d)) {
+            return 'none'
+          }
+          // if (d.position === 'relative') { 
+          //   return 'none'
+          // } 
+          return 'inline'
+        })
+        .style('font-family', (d) => {
+          return ReturnValueNode(data, d, 'font_family') as string
+        })
+        .append('g')
+        .attr('id', d => 'ggg_' + d.idNode)
+        .attr('class', 'ggg_nodes')
+        .attr('transform', d => nodeTransform(applicationData,d, link_function,false))
+    })})
   updateDrawNodeShape(
     applicationData,
     link_function,
     multi_selected_nodes,
-    node_to_draw
+    Object.values(display_nodes)
   )
   RedrawNodesLabel(
     applicationData,
-    node_to_draw,
+    Object.values(display_nodes),
     link_function.GetLinkValue,
     t,
     node_function
@@ -438,7 +439,6 @@ export const drawAddNodes : drawNodeShapeFType = (
     alt_key_pressed,
     accept_simple_click,
     link_function,
-    NodeTooltipsContent,
     ComponentUpdater,
     dict_hook_ref_setter_show_dialog_components,
     node_function,

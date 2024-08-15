@@ -238,10 +238,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
           return
         }
 
-        const node_x = node.position !== 'relative' ? +node.x : +target_node.x + +node.x
-        const node_y = node.position !== 'relative' ? +node.y : +target_node.y + +node.y
-        const target_node_x = target_node.position !== 'relative' ? +target_node.x : +node.x + +target_node.x
-        const target_node_y = target_node.position !== 'relative' ? +target_node.y : +node.y + +target_node.y
+        
+
+        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +target_node.x + +ReturnPositionValueNode(data,node,'relative_dx')
+        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +target_node.y + +ReturnPositionValueNode(data,node,'relative_dy')
+        const target_node_x = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.x : +node.x + +ReturnPositionValueNode(data,target_node,'relative_dx')
+        const target_node_y = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.y : +node.y + +ReturnPositionValueNode(data,target_node,'relative_dy')
         if (ReturnValueLink(data,link,'orientation') === 'hh') {
           if (target_node_x > node_x && !ReturnValueLink(data,link,'recycling') || target_node_x <= node_x && ReturnValueLink(data,link,'recycling')) {
             right_flux.push(idLink)
@@ -285,10 +287,10 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         } catch {
           return
         }
-        const source_node_x = source_node.position !== 'relative' ? +source_node.x : +node.x + +source_node.x
-        const source_node_y = source_node.position !== 'relative' ? +source_node.y : +node.y + +source_node.y
-        const node_x = node.position !== 'relative' ? +node.x : +source_node.x + +node.x
-        const node_y = node.position !== 'relative' ? +node.y : +source_node.y + +node.y
+        const source_node_x = ReturnValueNode(data,source_node,'position') !== 'relative' ? +source_node.x : +node.x + +ReturnPositionValueNode(data,source_node,'relative_dx')
+        const source_node_y = ReturnValueNode(data,source_node,'position') ? +source_node.y : +node.y + +ReturnPositionValueNode(data,source_node,'relative_dy')
+        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +source_node.x + +ReturnPositionValueNode(data,node,'relative_dx')
+        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +source_node.y + +ReturnPositionValueNode(data,node,'relative_dy')
         const ori_link = ReturnValueLink(data,link,'orientation')
         if (ori_link === 'vv') {
           if (source_node_y < node_y) {
@@ -354,7 +356,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free ) {
         // if flux is displayed thin
         offset_width_top += inv_scale(applicationData.min_link_thickness)
@@ -389,7 +391,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_width_bottom += inv_scale(applicationData.min_link_thickness)
@@ -425,7 +427,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_left += inv_scale(applicationData.min_link_thickness)
@@ -460,7 +462,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_right += inv_scale(applicationData.min_link_thickness)
@@ -633,8 +635,14 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     couleur_fond_sankey:'#f2f2f2',
     displayed_node_selector:false,
     displayed_link_selector:false,
+    initial_nodes:{},
     nodes: {},
+    additional_nodes: {},
+    removed_nodes: {},
+    initial_links:{},
     links: {},
+    additional_links: {},
+    removed_links: {}, 
     user_scale: 20,
 
     accordeonToShow: ['MEP'],
@@ -684,14 +692,26 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_show_dataTags:false,
     node_label_separator:' - ',
 
-    parametric_mode : false
+    //parametric_mode : false
   }
   const node_style_sect=DefaultNodeSectorStyle()
   const node_style_prod=DefaultNodeProductStyle()
+  const node_style_import = DefaultNodeImportStyle()
+  const node_style_export = DefaultNodeExportStyle()
   const default_data = {
     ...data,
-    style_node: { 'default' : DefaultNodeStyle(),'NodeSectorStyle':node_style_sect,'NodeProductStyle':node_style_prod },
-    style_link: { 'default' : DefaultLinkStyle() }
+    style_node: { 
+      'default' : DefaultNodeStyle(),
+      'NodeSectorStyle':node_style_sect,
+      'NodeProductStyle':node_style_prod,
+      'NodeImportStyle':node_style_import,
+      'NodeExportStyle':node_style_export      
+    },
+    style_link: { 
+      'default' : DefaultLinkStyle(),
+      'LinkExportStyle' : DefaultLinkExportStyle(), 
+      'LinkImportStyle' : DefaultLinkImportStyle() 
+    }
   }
   return (default_data as unknown as SankeyData)
 }
@@ -740,7 +760,7 @@ export const LinkColor:LinkColorFuncType = (
       return colorLink
     }
   }
-
+  
   const source_node = data.nodes[l.idSource]
   const target_node = data.nodes[l.idTarget]
   let selected_tag = ''
@@ -796,17 +816,17 @@ export const LinkVisible: LinkVisibleFunctType=(
   data: SankeyData,
   display_nodes : { [node_id: string]: SankeyNode }
 ): boolean => {
-  const { dataTags, fluxTags } = data
+  const { dataTags, fluxTags, nodes } = data
 
   if (!l) {
     return false
   }
-  if (data.show_structure === 'structure') {
-    if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative') {
-      return false
-    }
-  }
-  if (!data.nodes[l.idSource] || !display_nodes[l.idSource] || !data.nodes[l.idTarget] || !display_nodes[l.idTarget]) {
+  // if (data.show_structure === 'structure') {
+  //   if (ReturnValueNode(data,nodes[l.idSource],'position') === 'relative' || ReturnValueNode(data,nodes[l.idTarget],'position') === 'relative') {
+  //     return false
+  //   }
+  // }
+  if (!nodes[l.idSource] || !display_nodes[l.idSource] || !nodes[l.idTarget] || !display_nodes[l.idTarget]) {
     return false
   }
   let val = l.value
@@ -877,12 +897,11 @@ export const DefaultNode:DefaultNodeFuncType = (
     idNode: 'default',
 
     colorParameter: 'local',
-    position: 'absolute',
     x: 100,
     y: 100,
     u:0,
     v:0,
-    dy:0,
+
     inputLinksId: [],
     outputLinksId: [],
     tags: {},
@@ -908,6 +927,11 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
     label_visible: true,
     node_width: 40,
     node_height: 40,
+    position: 'absolute',
+    dx:200,
+    dy : 50,
+    relative_dx:100,
+    relative_dy:50,
     color: defaultElementColor,
     colorSustainable:false,
     not_to_scale:false,
@@ -919,32 +943,78 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
     bold: false,
     italic: false,
     label_vert: 'bottom',
+    label_vert_shift: 0,
     label_horiz: 'middle',
+    label_horiz_shift: 0,
     label_background:false,
 
     show_value: false,
     label_vert_valeur: 'top',
+    label_vert_valeur_shift: 0,
     label_horiz_valeur: 'middle',
     value_font_size:14,
     label_box_width: 150,
     label_color:false,
-
+    label_horiz_valeur_shift: 0,
   }
 }
 
+export const DefaultNodeImportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode='NodeImportStyle'
+  node_style.name='Noeuds de type importations'
+  // relative
+  node_style.position = 'relative'
+  node_style.relative_dx = -100
+  node_style.relative_dy = -50
+  // parametric
+  node_style.dy = 20
+  // common import export
+  node_style.label_visible = false
+  node_style.shape_visible = false
+  node_style.node_width = 0
+  node_style.label_box_width = 300
+  node_style.label_vert = 'middle'
+  // label
+  node_style.label_horiz = 'left'
+  return node_style
+}
+
+export const DefaultNodeExportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode='NodeExportStyle'
+  node_style.name='Noeuds de type exportations'
+  // relative  
+  node_style.position = 'relative'
+  node_style.relative_dx = 100
+  node_style.relative_dy = 50
+  // parametric
+  node_style.dy = 20
+  // common import export
+  node_style.label_visible = false
+  node_style.shape_visible = false
+  node_style.label_vert = 'middle'
+  node_style.node_width = 0
+  node_style.label_box_width = 300
+  // label
+  node_style.label_horiz = 'right'
+
+  return node_style
+}
+
 export const DefaultNodeSectorStyle:DefaultNodeSectorStyleFuncStyle=()=>{
-  const node_style=DefaultNodeStyle()
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle()))
   node_style.idNode='NodeSectorStyle'
-  node_style.name='Noeud de type secteur'
+  node_style.name='Noeuds de type secteur'
   return node_style
 }
 
 
 export const DefaultNodeProductStyle:DefaultNodeProductStyleFuncStyle=(): SankeyNodeStyle=>{
-  const node_style=DefaultNodeStyle()
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle()))
   node_style.shape='ellipse'
   node_style.idNode='NodeProductStyle'
-  node_style.name='Noeud de type produit'
+  node_style.name='Noeuds de type produit'
   return node_style
 }
 // Return default style configuration for link
@@ -982,6 +1052,29 @@ export const DefaultLinkStyle:DefaultLinkStyleFuncType=()=>{
   }
 }
 
+export const DefaultLinkExportStyle:DefaultLinkStyleFuncType=()=>{
+  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'hv'
+  link_style.label_visible = true
+  link_style.label_position = 'end'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink='LinkExportStyle'
+  link_style.name='Flux de type exportations'
+  return link_style
+}
+
+export const DefaultLinkImportStyle:DefaultLinkStyleFuncType=()=>{
+  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'vh'
+  link_style.label_visible = true
+  link_style.label_position = 'beginning'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink='LinkImportStyle'
+  link_style.name='Flux de type importations'
+  return link_style
+}
 
 /**
  *
@@ -1415,6 +1508,19 @@ const updateLinkValueDepthWithNewDTGrp=(prev_l:SankeyLinkValueDict|SankeyLinkVal
 // Return the value of an attribute from node :
 // - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the node has (a node always has a style )
+export const ReturnPositionValueNode:ReturnValueNodeFuncType=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle): string | number | boolean=>{
+  const value=ReturnLocalNodeValue(n,k as keyof SankeyNodeAttrLocal)
+  const ks=k as keyof SankeyNodeStyle
+  const style_value= n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
+  if(value === undefined || value === null){
+    return style_value
+  }
+  return (+value)+(+style_value)
+}
+
+// Return the value of an attribute from node :
+// - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
+// - Else it return the attribute from the style the node has (a node always has a style )
 export const ReturnValueNode:ReturnValueNodeFuncType=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle): string | number | boolean=>{
   let value=ReturnLocalNodeValue(n,k as keyof SankeyNodeAttrLocal)
   if(value === undefined || value === null){
@@ -1561,20 +1667,19 @@ export const NodeHasDisplayedLevel=(
 )=>{
   let to_display=true
   // Check if there is other aggregation tags than 'Primaire',
-  const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
+  //const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
 
-  const only_one_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).length==1
-  const only_primaire_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).map(nt=>nt[0])[0]=='Primaire'
+  //const only_one_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).length==1
+  //const only_primaire_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).map(nt=>nt[0])[0]=='Primaire'
 
-  const multy_but_only_primaire=multi_level && only_one_activated && only_primaire_activated
+  //onst multy_but_only_primaire=multi_level && only_one_activated && only_primaire_activated
 
   // To display a node according to level tag we search if:
   // - The node grp tag banner is 'level'
   // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
   // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
   // - The node has the grp tag name in his tags
-  Object.entries(data.levelTags).filter(nt=>(
-    (multi_level && !multy_but_only_primaire)?nt[0]!=='Primaire':true) && 
+  Object.entries(data.levelTags).filter(nt=>
     nt[1].activated && Object.keys(n.tags).includes(nt[0])
   ).forEach(nt=>{
     // Check tags from the group attribued to the node

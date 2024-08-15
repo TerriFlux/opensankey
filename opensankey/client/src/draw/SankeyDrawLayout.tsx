@@ -14,6 +14,7 @@ import {
   SankeyLinkValueDict,
   SankeyNode,
   SankeyNodeAttrLocal,
+  TagsGroup,
   agregationType,
   applicationDataType
 } from '../types/Types'
@@ -56,7 +57,9 @@ import {
   ReturnValueLink,
   DeleteNode,
   DeleteLink,
-  AddDataTags
+  AddDataTags,
+  AssignNodeStyleAttribute,
+  ReturnLocalNodeValue
 } from '../configmenus/SankeyUtils'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
@@ -311,7 +314,7 @@ export const arrangeNodes : arrangeNodesFType = (
   data: SankeyData
 ) => {
   Object.values(data.nodes).forEach(node => {
-    if ( !NodeDisplayed(data,node) || node.position === 'relative' ) {
+    if ( !NodeDisplayed(data,node) || ReturnValueNode(data,node,'position') === 'relative' ) {
       return
     }
     const x = Math.round(node.x / data.grid_square_size) * data.grid_square_size
@@ -347,7 +350,7 @@ export const nodeHeight : nodeHeightFType = (
     undefined,
     GetLinkValue)
   const [total_offset_height_left, total_offset_height_right] = res
-  const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
+  const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right,inv_scale(+ReturnValueNode(data,node,'node_height')))
   //Hauteur des noeuds
   if ((res[0] === 0) &&
       (res[1] === 0) &&
@@ -358,6 +361,46 @@ export const nodeHeight : nodeHeightFType = (
     return ReturnValueNode(data, node, 'node_height') as number
   }
   return scale(node_size_s_height)
+}
+
+/**
+ * Calcul de la hauteur difference'un noeud
+ *
+ * @param {SankeyNode} node Node to compute height from
+ * @param {SankeyData} data
+ * @param {{ [node_id: string]: SankeyNode }} display_nodes Visible nodes
+ * @param {Function} inv_scale
+ * @param {Function} scale
+ * @param {Function} GetLinkValue
+ */
+export const nodeWidth : nodeHeightFType = (
+  node: SankeyNode,
+  applicationData,
+  inv_scale: (t:number)=>number,
+  scale: (t:number)=>number,
+  GetLinkValue:GetLinkValueFuncType
+) => {
+  const {data}=applicationData
+  const res = ComputeTotalOffsets(
+    inv_scale,
+    node,
+    applicationData,
+    TestLinkValue,
+    undefined,
+    GetLinkValue)
+  const [, , total_offset_width_top, total_offset_width_bottom] = res
+
+  const width = Math.max(total_offset_width_top, total_offset_width_bottom,inv_scale(+ReturnValueNode(data,node,'node_height')))
+  //Hauteur des noeuds
+  if ((res[0] === 0) &&
+      (res[1] === 0) &&
+      (res[2] === 0) &&
+      (res[3] === 0) || data.show_structure == 'structure') {
+    // Hauteur des noeuds
+    // return data.node_height
+    return ReturnValueNode(data, node, 'node_width') as number
+  }
+  return scale(width)
 }
 
 /**
@@ -375,7 +418,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   launched_from_process
 ) => {
   const {data}=applicationData
-  data.parametric_mode = true
+  //data.parametric_mode = true
   const display_nodes = Object.keys(data.nodes)
     .filter((key) => NodeDisplayed(data,data.nodes[key]))
     .reduce((obj, key) => {
@@ -384,7 +427,11 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
       })
     }, {}) as {[idNode:string]:SankeyNode}
   applicationData.display_nodes=display_nodes
-  Object.values(display_nodes).forEach(n=>n.position='parametric')
+  AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
+  AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
+  AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
+  // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
+  // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
   const display_links=Object.keys(data.links)
     .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
     .reduce((obj, key) => {
@@ -428,9 +475,9 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   // Get list of all visible nodes
   //  /!\ the nodes of this list will be the only nodes
   //      that are going to be positionned
-  const visible_nodes_ids = Object.values(data.nodes)
-    .filter(n => NodeDisplayed(data, n) && (n.position !== 'relative'))
-    .map(n=>n.idNode)
+  const visible_nodes_ids = Object.values(display_nodes)
+    .filter(n => !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange')
+    .map(n => n.idNode)
 
   // Compute positionning indexes
   const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
@@ -587,7 +634,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         sortcoef_per_nodes_ids[node.idNode] = node_sortcoef
         vertical_indexes_per_node_id[node.idNode] = max_vertical_index
         node.v = max_vertical_index
-        node.dy = 0
+        delete node.local!.dy
         nodes_ids_per_vertical_index.push(node.idNode)
         if (max_vertical_index > 0) {
           // Bubble sort algo
@@ -746,9 +793,14 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   data.height = v_margin*2 + max_height_cumul
 
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
-
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const columns : {[_:number]:SankeyNode[]} = {}
-  Object.values(display_nodes).forEach(n=>{
+  Object.values(display_nodes).filter(n => NodeDisplayed(data, n) && !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange').forEach(n=>{
     if (columns[n.u]) {
       columns[n.u].push(n)
     } else {
@@ -758,10 +810,12 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
   Object.values(columns).forEach(column=>{
     column.sort((n1,n2)=>n1.y-n2.y)
-    let current_v = 0
-    column.forEach(n=>current_v = apply_v(data,n,current_v))}
-  )
-  Object.values(columns).forEach(column=>column.forEach(n=>apply_v_agregate(data,n,n.v)))
+    Object.values(data.levelTags).forEach( tagGroup=> {
+      let current_v = 0
+      column.forEach(n=>current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,n,current_v,tagGroup))
+    })
+  })
+  //Object.values(columns).forEach(column=>column.forEach(n=>apply_v_agregate(data,n,n.v)))
 }
 
 export const ComputeParametrization:ComputeParametrizationType = (
@@ -784,8 +838,13 @@ export const ComputeParametrization:ComputeParametrizationType = (
       smaller_x = n.x
     }
   })
+
+  AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
+  AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
+  AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
+
   Object.values(display_nodes).forEach(n=>{
-    if ('Type de noeud' in n.tags &&  n.tags['Type de noeud'][0] === 'echange') {
+    if (ReturnValueNode(data,n,'position') === 'relative' ) {
       return
     }
     n.u = Math.floor((n.x-smaller_x/2)/data.h_space)
@@ -801,45 +860,70 @@ export const ComputeParametrization:ComputeParametrizationType = (
       if (i==0) {
         return
       }
-      n.dy = n.y - column[i-1].y - data.v_space - nodeHeight(column[i-1],applicationData,inv_scale,scale,GetLinkValue)
-  })
+      const dy = n.y - column[i-1].y - data.style_node[n.style].dy - nodeHeight(column[i-1],applicationData,inv_scale,scale,GetLinkValue)
+      if (dy !== 0) {
+        AssignNodeLocalAttribute(n,'dy',dy)
+      } else {
+        delete n.local!.dy
+      }
+    })
   })
   Object.values(columns).forEach(column=>{
     column.sort((n1,n2)=>n1.y-n2.y)
-    let current_v = 0
-    column.forEach(n=>current_v = apply_v(data,n,current_v))
-    column.forEach(n=>apply_v_agregate(data,n,n.v))
+    if (Object.values(data.levelTags).length == 0) {
+      let current_v = 0
+      column.forEach(n=>current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,n,current_v,undefined))      
+    }
+    Object.values(data.levelTags).forEach( tagGroup=> {
+      let current_v = 0
+      column.forEach(n=>current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,n,current_v,tagGroup))
+      //column.forEach(n=>apply_v_agregate(data,n,n.v))
+    })
   })
 }
 
-const apply_v = (
-  data:SankeyData,
+export const apply_v = (
+  applicationData:applicationDataType,
+  inv_scale: (t:number)=>number,
+  scale: (t:number)=>number,
+  GetLinkValue:GetLinkValueFuncType,
   node:SankeyNode,
-  current_v:number 
+  current_v:number,
+  tagGroup:TagsGroup|undefined
 ) => {
-  node.position = 'parametric'
+  const {data} = applicationData
+  const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
+  //node.position = 'parametric'
   node.v = current_v
+  if (!tagGroup) {
+    return current_v+1    
+  }
   //node.y == undefined
-  const dim_desagregate_nodes = Object.values(data.nodes).filter( 
+  const dim_desagregate_nodes = Object.values(all_nodes).filter( 
     nn => {
-      if ('Type de noeud' in nn.tags &&  nn.tags['Type de noeud'][0] === 'echange') {
-        return
-      }
       let is_children = false
-      Object.values(data.levelTags).forEach( tagGroup=> {
-        if (nn.dimensions[tagGroup.group_name] && nn.dimensions[tagGroup.group_name].parent_name === node.idNode) {
-          is_children = true
-        }
-      })
+      if (nn.dimensions[tagGroup.group_name] && nn.dimensions[tagGroup.group_name].parent_name === node.idNode) {
+        is_children = true
+      }
       return is_children
     }
   )
   let new_current_v = current_v
+  let cur_relative_dx = ReturnLocalNodeValue(node,'relative_dx') as number
+  if (!cur_relative_dx) {
+    cur_relative_dx = 0
+  }
+  let current_node_width = 0
   dim_desagregate_nodes.forEach(nn=>{
+    // parametric
     nn.x = node.x
     nn.u = node.u
-    nn.dy = 0
-    new_current_v = apply_v(data,nn,new_current_v)
+    // relative
+    AssignNodeLocalAttribute(nn,'relative_dx',cur_relative_dx+current_node_width)
+    current_node_width += nodeWidth(nn, applicationData, inv_scale, scale, GetLinkValue)
+    cur_relative_dx = cur_relative_dx + (ReturnValueNode(data,nn,'dy') as number)+current_node_width
+
+    new_current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,nn,new_current_v,tagGroup)
   })
   return new_current_v+1
 }
@@ -849,11 +933,12 @@ const apply_v_agregate = (
   node:SankeyNode,
   current_v:number 
 ) => {
-  node.position = 'parametric'
+  const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
+  //node.position = 'parametric'
   node.v = current_v
   // node.dy = 0
   //node.y == undefined
-  const dim_agregate_nodes = Object.values(data.nodes).filter( 
+  const dim_agregate_nodes = Object.values(all_nodes).filter( 
     nn => {
       let is_parent = false
       Object.values(data.levelTags).forEach( tagGroup=> {
@@ -949,18 +1034,22 @@ export const desagregation : desagregationFType = (
   // }
 }
 
-const hasAggregationLinkToNode:hasAggregationLinkToNodeFuncType=(data : SankeyData,
+const hasAggregationLinkToNode:hasAggregationLinkToNodeFuncType=(
+  data : SankeyData,
   idNodeFather: string,
   idNodeCurr:string,
   cur_dimension: string,
 )=>{
+  if (!data.nodes[idNodeCurr]) {
+    return false
+  }
   if(data.nodes[idNodeCurr].dimensions){
-    const father_for_curr_node_with_curr_dim=data.nodes[idNodeCurr].dimensions[cur_dimension]
-    if(father_for_curr_node_with_curr_dim && father_for_curr_node_with_curr_dim.parent_name){
-      if(idNodeFather === father_for_curr_node_with_curr_dim.parent_name){
+    const curr_dim=data.nodes[idNodeCurr].dimensions[cur_dimension]
+    if(curr_dim && curr_dim.parent_name){
+      if(idNodeFather === curr_dim.parent_name){
         return true
       }else{
-        return hasAggregationLinkToNode(data,idNodeFather,father_for_curr_node_with_curr_dim.parent_name,cur_dimension)
+        return hasAggregationLinkToNode(data,idNodeFather,curr_dim.parent_name,cur_dimension)
       }
     }else{
       return false
@@ -1224,10 +1313,10 @@ export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType 
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
-      if (n2.position == 'relative') {
+      if (ReturnValueNode(data,n2,'position') == 'relative') {
         return 1
       }
-      if (n1.position == 'relative') {
+      if (ReturnValueNode(data,n1,'position') == 'relative') {
         return -1
       }
       if (l1_recy && !l2_recy) {
@@ -1306,10 +1395,10 @@ export const reorganize_node_outputLinksId: reorganize_node_outputLinksIdFuncTyp
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
-      if (n2.position == 'relative') {
+      if (ReturnValueNode(data,n2,'position') == 'relative') {
         return -1
       }
-      if (n1.position == 'relative') {
+      if (ReturnValueNode(data,n1,'position') == 'relative') {
         return 1
       }
       if (l1_recy && !l2_recy) {
@@ -1911,10 +2000,9 @@ const  getDesagregationNodes = (
   data: SankeyData, 
   node: SankeyNode
 ) => {
-  let all_dim_desagregate_nodes = Object.values(data.nodes).filter(n =>
+  const all_dim_desagregate_nodes = Object.values(data.nodes).filter(n =>
     n.dimensions[cur_dimension] &&
-    n.dimensions[cur_dimension].parent_name === node.idNode &&
-    (!('Type de noeud' in n.tags) ||  n.tags['Type de noeud'][0] !== 'echange')
+    n.dimensions[cur_dimension].parent_name === node.idNode
   )
   let to_remove : SankeyNode[] = []
 

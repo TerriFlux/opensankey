@@ -36,14 +36,25 @@ export type SankeyNodeAttrLocal ={
   label_box_width?: number,
   label_color?: boolean,
   label_vert?: string,
+  label_vert_shift?: number,
   label_horiz?: string,
+  label_horiz_shift?: number,
   label_background?:boolean,
 
   // Parameter of node value label
   show_value?: boolean,
   label_vert_valeur?: string,
+  label_vert_valeur_shift?: number,
   label_horiz_valeur?: string,
+  label_horiz_valeur_shift?: number,
   value_font_size?: number,
+
+  // geometry
+  position?: 'absolute' | 'relative' | 'parametric',
+  dx?:number,
+  dy?:number,
+  relative_dy?:number,
+  relative_dx?:number
 }
 
 // Same as Local node attribute but with required value as now style attributes is the default attributes of node
@@ -71,14 +82,25 @@ export type SankeyNodeStyle ={
   label_box_width: number,
   label_color: boolean,
   label_vert: string,
+  label_vert_shift: number,
   label_horiz: string,
+  label_horiz_shift: number,
   label_background:boolean,
 
   // Parameter of node value label
   show_value: boolean,
   label_vert_valeur: string,
   label_horiz_valeur: string,
+  label_horiz_valeur_shift: number,
+  label_vert_valeur_shift: number,
   value_font_size: number,
+
+  // geometry
+  position: 'absolute' | 'relative' | 'parametric',
+  dx:number,
+  dy:number,
+  relative_dy:number,
+  relative_dx:number
 }
 
 
@@ -101,14 +123,14 @@ export type SankeyNode = {
   colorTag: string,
 
   // geometry
-  position: 'absolute' | 'relative' | 'parametric',
+  //position: 'absolute' | 'relative' | 'parametric',
   x: number,
   y: number,
   x_label?: number,
   y_label?: number,
   u: number,
   v: number,
-  dy:number,
+  //dy:number,
 
 
   tooltip_text?: string,
@@ -284,8 +306,16 @@ export type SankeyData = {
   legend_bg_border:boolean,
   legend_show_dataTags:boolean,
 
+  initial_nodes?: {[_:string]:SankeyNode},
   nodes: {[_:string]:SankeyNode},
+  additional_nodes?: {[_:string]:SankeyNode},
+  removed_nodes?: {[_:string]:SankeyNode},
+
+  initial_links?: {[_:string]:SankeyLink},
   links: {[_:string]:SankeyLink},
+  additional_links?: {[_:string]:SankeyLink},
+  removed_links?: {[_:string]:SankeyLink},
+  
   display_style : display_styleType,
 
   linkZIndex:string[]
@@ -304,7 +334,7 @@ export type SankeyData = {
   legend_width:number,
   node_label_separator:string
 
-  parametric_mode: boolean
+  //parametric_mode: boolean
 }
 
 export interface SankeyMenuState {
@@ -459,14 +489,11 @@ export type MenuTypes = {
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
-
-
 }
 
-export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
+export type postProcessLoadExcelFuncType = (applicationData: applicationDataType) => void
 /*****************************************************************************/
 // Application
 // Logo, names, licences
@@ -587,6 +614,7 @@ export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
 export type drawNodesFType=(node_to_update:SankeyNode[])=>void
 
 export type NodeFunctionTypes = {
+  NodeTooltipsContent: NodeTooltipsContentFType,
   DrawAllNodes : DrawAllNodesFType,
   drawAddNodes : drawNodeShapeFType,
   CreateNodesOnSVG:drawNodesFType,
@@ -620,7 +648,6 @@ export type DrawAllType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
@@ -808,7 +835,6 @@ export type initializeKeyHandlerType=(
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType,

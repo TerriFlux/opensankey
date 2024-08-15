@@ -10,7 +10,8 @@ import {
   ComputeTotalOffsets,
   TestLinkValue,
   ReturnValueLink,
-  LinkVisible
+  LinkVisible,
+  ReturnPositionValueNode
 } from '../configmenus/SankeyUtils'
 import {
   GetLinkValueFuncType,
@@ -811,7 +812,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
 
   const theLinkValue = GetLinkValue(data, link.idLink)
   let is_structure = false
-  if (source_node.position !== 'relative' && target_node.position !== 'relative') {
+  if (ReturnValueNode(data,source_node,'position') !== 'relative' && ReturnValueNode(data,target_node,'position') !== 'relative') {
     if (data.show_structure === 'data') {
       if (!(theLinkValue as SankeyLinkValue & { extension: { data_value: string } }).extension.data_value) {
         is_structure = true
@@ -868,10 +869,10 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
   const delta_t_width_top = Math.max(0, (node_size_t_width - t_total_offset_width_top) / 2)
   const delta_t_height_right = Math.max(0, (node_size_t_height - t_total_offset_height_right) / 2)
   const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
-  const source_node_x = source_node.position !== 'relative' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
-  const source_node_y = source_node.position !== 'relative' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
-  const target_node_x = target_node.position !== 'relative' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
-  const target_node_y = target_node.position !== 'relative' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  const source_node_x = ReturnValueNode(data,source_node,'position') !== 'relative' ? +source_node.x : +target_node.x + +ReturnPositionValueNode(data,source_node,'relative_dx') - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const source_node_y = ReturnValueNode(data,source_node,'position') !== 'relative' ? +source_node.y : +target_node.y + +ReturnPositionValueNode(data,source_node,'relative_dy') - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  const target_node_x = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.x : +source_node.x + +ReturnPositionValueNode(data,target_node,'relative_dx') + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const target_node_y = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.y : +source_node.y + +ReturnPositionValueNode(data,target_node,'relative_dy') + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
   let xs = source_node_x
   let ys = source_node_y
   let xt = target_node_x

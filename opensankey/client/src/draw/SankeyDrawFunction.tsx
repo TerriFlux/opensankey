@@ -21,7 +21,10 @@ import { ComputeTotalOffsets,
   ReturnValueNode,
   ReturnValueLink,
   AssignLinkLocalAttribute,
-  ToPrecision} from '../configmenus/SankeyUtils'
+  ToPrecision,
+  GetNodeAttributeValueFromStyle,
+  ReturnPositionValueNode
+} from '../configmenus/SankeyUtils'
 import {
   DragLinkCenterHandleEvent,
   DragLinkShiftHandleEvent,
@@ -69,7 +72,7 @@ import {
 } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeEndPoints } from './SankeyDrawShapes'
 import { TFunction } from 'i18next'
-import { nodeHeight } from './SankeyDrawLayout'
+import { nodeHeight, nodeWidth } from './SankeyDrawLayout'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10
@@ -160,8 +163,9 @@ export const nodeTransform : nodeTransformFType = (
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
-  if (d.position === 'relative') {
+  if (ReturnValueNode(data,d,'position') === 'relative') {
     if (d.inputLinksId.length > 0) {
+      // Exportations
       if ( !display_links[d.inputLinksId[0]]) {
         return 'translate(0,0)'
       }
@@ -169,10 +173,11 @@ export const nodeTransform : nodeTransformFType = (
       if ( !source_node) {
         return 'translate(0,0)'
       }
-      const x = source_node.x + d.x
-      const y = source_node.y + d.y
+      const x = source_node.x + +ReturnPositionValueNode(data,d,'relative_dx')+ +ReturnValueNode(data,source_node,'node_width')
+      const y = source_node.y + +ReturnPositionValueNode(data,d,'relative_dy')+ nodeHeight(source_node,applicationData,inv_scale,scale,link_function.GetLinkValue)
       return 'translate(' + x + ', ' + y + ')'
     } else if (d.outputLinksId.length > 0) {
+      // importations
       if ( !display_links[d.outputLinksId[0]]) {
         return 'translate(0,0)'
       }
@@ -180,32 +185,49 @@ export const nodeTransform : nodeTransformFType = (
       if ( !target_node) {
         return 'translate(0,0)'
       }
-      const x = target_node.x + d.x
-      const y = target_node.y + d.y
+      const x = target_node.x + +ReturnPositionValueNode(data, d, 'relative_dx')- nodeWidth(d,applicationData,inv_scale,scale,link_function.GetLinkValue)
+      const y = target_node.y + +ReturnPositionValueNode(data, d, 'relative_dy')- +ReturnValueNode(data, d, 'node_height')
       return 'translate(' + x + ', ' + y + ')'
     }
     return 'translate(' + 10 + ', ' + 10 + ')'
-  } else if (d.position == 'absolute' || drag || !data.parametric_mode) {
+  } else if (ReturnValueNode(data,d,'position') == 'absolute' || drag /*|| !data.parametric_mode*/) {
     return 'translate(' + d.x + ', ' + d.y + ')'
   } else {
     const same_u = Object.values(display_nodes)
-      .filter(
-        n=>!n.tags['Type de noeud'] || !n.tags['Type de noeud'].includes('echange')
-      )
       .filter(n=>n.u === d.u)
-    same_u.sort((n1,n2)=>n1.v-n2.v)
 
     if (d.v == 0) {
       return 'translate(' + d.x + ', ' + d.y + ')'
     }
-    const nodes_above = same_u.filter(n=>n.v<d.v)
-    const node_above = nodes_above.pop()
-    if (node_above) {
-      d.y = node_above.y + nodeHeight(node_above, applicationData, inv_scale, scale,link_function.GetLinkValue) + + data.v_space + d.dy
+    if (d.v>=0) {
+      same_u.sort((n1,n2)=>n1.v-n2.v)
+      const nodes_above = same_u.filter(n=>n.v<d.v && n.v >=0 )
+      const node_above = nodes_above.pop()
+      if (node_above) {
+        d.y = node_above.y + 
+        nodeHeight(node_above, applicationData, inv_scale, scale,link_function.GetLinkValue) + 
+        + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
+        + (d.local && d.local!.dy ? d.local!.dy : 0)
+      } else {
+        const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
+        d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
+      }
+      return 'translate(' + d.x + ', ' + d.y + ')'
     } else {
-      d.y = Object.values(data.nodes).filter(n=>n.u===d.u && n.v===0)[0].y
+      same_u.sort((n1,n2)=>n2.v-n1.v)
+      const nodes_below = same_u.filter(n=>n.v>d.v)
+      const node_below = nodes_below.pop()
+      if (node_below) {
+        d.y = node_below.y 
+        - nodeHeight(node_below, applicationData, inv_scale, scale,link_function.GetLinkValue) 
+        - + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
+        - (d.local && d.local!.dy ? d.local!.dy : 0)
+      } else {
+        const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
+        d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
+      }
+      return 'translate(' + d.x + ', ' + d.y + ')'
     }
-    return 'translate(' + d.x + ', ' + d.y + ')'
   }
 }
 
@@ -223,11 +245,11 @@ export const TextNodeWrap : TextNodeWrapFType = (
       const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
 
       if (ReturnValueNode(data,d,'label_horiz')  == 'middle') {
-        return width / 2
+        return width / 2 + +ReturnValueNode(data,d,'label_horiz_shift')
       } else if (ReturnValueNode(data,d,'label_horiz')  == 'right') {
-        return ReturnValueNode(data,d,'label_vert')  == 'middle' ? width : 0
+        return ReturnValueNode(data,d,'label_vert')  == 'middle' ? width + +ReturnValueNode(data,d,'label_horiz_shift'): 0
       } else {
-        return 0
+        return 0+ +ReturnValueNode(data,d,'label_horiz_shift')
       }
     })
   }
@@ -237,11 +259,11 @@ export const TextNodeWrap : TextNodeWrapFType = (
     if (d.x_label) {
       return d.x_label
     } else if (ReturnValueNode(data,d,'label_horiz')  == 'middle') {
-      return width / 2
+      return width / 2 + +ReturnValueNode(data,d,'label_horiz_shift')
     } else if (ReturnValueNode(data,d,'label_horiz')  == 'right') {
-      return width
+      return width + +ReturnValueNode(data,d,'label_horiz_shift')
     } else {
-      return 0
+      return 0 + +ReturnValueNode(data,d,'label_horiz_shift')
     }
   })
   let nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
@@ -548,8 +570,13 @@ export const DrawArrows : DrawArrowsType = (
           // If link come vertically to the node (arrow pointing down)
             if (n.y > source_node.y || is_exportation_node) {
               // If node source of the link is above
-              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
-              yt = +n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
+              if (is_exportation_node) {
+                xt = +ReturnPositionValueNode(data,n,'relative_dx') + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
+                yt = +ReturnPositionValueNode(data,n,'relative_dy') +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
+              } else {
+                xt = n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
+                yt = n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)                
+              }
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow_part(
@@ -597,7 +624,7 @@ export const DrawArrows : DrawArrowsType = (
 export const SortOutputLinksIdByYPos : SortOutputLinksIdByYPosFType = (
   data:SankeyData,n:SankeyNode
 )=>{
-  return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
+  return n.outputLinksId.filter(idL=>ReturnValueNode(data,data.nodes[data.links[idL].idTarget],'position') !=='relative')
     .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y
     )
 }
@@ -1500,11 +1527,11 @@ export const NodeLabelPosX : NodeLabelValuePosXFType =(
   if (n.x_label) {
     return n.x_label
   } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'middle') {
-    return width / 2
+    return width / 2+ +ReturnValueNode(data,n,'label_horiz_shift')
   } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'left') {
-    return 0
+    return 0+ +ReturnValueNode(data,n,'label_horiz_shift')
   } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'right') {
-    return (ReturnValueNode(data,n,'label_vert') as string) == 'middle' ? width : 0
+    return (ReturnValueNode(data,n,'label_vert') as string) == 'middle' ? width + +ReturnValueNode(data,n,'label_horiz_shift'): 0
   } else {
     return 0
   }
@@ -1519,11 +1546,11 @@ export const NodeLabelPosY : NodeLabelValuePosYFType = (
   if (n.y_label && data.show_structure !== 'structure') {
     return n.y_label
   } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'middle') {
-    return height / 2
+    return height / 2 + +ReturnValueNode(data,n,'label_vert_shift')
   } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'top') {
-    return -4
+    return 0 + +ReturnValueNode(data,n,'label_vert_shift')
   } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'bottom') {
-    return height
+    return height + +ReturnValueNode(data,n,'label_vert_shift')
   } else {
     return 0
   }
@@ -1534,13 +1561,13 @@ export const NodeLabelValuePosX : NodeLabelValuePosXFType = (
   const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
   const val=(ReturnValueNode(data,n,'label_horiz_valeur') as string)
   if (val== 'middle') {
-    return width / 2
+    return width / 2 + +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   } else if (val == 'left') {
-    return 0
+    return 0 + +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   } else if (val == 'right') {
-    return width
+    return width+ +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   } else {
-    return 0
+    return 0+ +ReturnValueNode(data,n,'label_horiz_valeur_shift')
   }
 }
 
@@ -1554,13 +1581,13 @@ export const NodeLabelValuePosY : NodeLabelValuePosYFType = (
   const val_font_size=(ReturnValueNode(data,n,'font_size') as number)
   const is_same_pos=NodeValueAndTextSamePos(data,n)
   if (val == 'middle') {
-    return height / 2 + 0.25*val_font_size
+    return height / 2 + 0.25*val_font_size + +ReturnValueNode(data,n,'label_vert_valeur_shift')
   } else if (val == 'top') {
-    return 0+ ((is_same_pos)?-height_text*1.5:0)
+    return 0+ ((is_same_pos)?-height_text*1.5:0)+ +ReturnValueNode(data,n,'label_vert_valeur_shift')
   } else if (val == 'bottom') {
-    return height+((is_same_pos)?height_text*1.8:val_font_size)
+    return height+((is_same_pos)?height_text*1.8:val_font_size)+ +ReturnValueNode(data,n,'label_vert_valeur_shift')
   } else {
-    return 0
+    return 0+ +ReturnValueNode(data,n,'label_vert_valeur_shift')
   }
 }
 
@@ -1768,7 +1795,7 @@ export const sizeOfNodeInDrawArea=(n:SankeyNode,applicationData:applicationDataT
   const height_label=(box_label?.height??0)/scale_svg
 
   let source_node_y = 0
-  if (n.position == 'relative' && n.inputLinksId.length == 1) {
+  if (ReturnValueNode(data,n,'position') == 'relative' && n.inputLinksId.length == 1) {
     const source_node = data.nodes[data.links[n.inputLinksId[0]].idSource]
     source_node_y = source_node.y
   }
