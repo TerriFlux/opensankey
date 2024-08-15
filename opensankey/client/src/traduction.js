@@ -963,6 +963,7 @@ export const open_resources = {
         factExpV:'Facteur d\'expansion verticale',
         stretchH:'Appliquer',
         stretchV:'Appliquer',
+        defaultParametric: 'Calculer paramétrisation',
         show_legend_free_value:'Valeur contenue dans un intervalle',
         legend_dashed_links:'Flux existant',
         hide_leg:'Masquer la légende',
@@ -1053,7 +1054,7 @@ export const open_resources = {
         sector:'Secteur',
         exchange:'Échange',
         selector:'Selectionner des noeuds',
-        size:'Taille',
+        size:'Taille et position',
         text:'Texte',
         tooltips:{
           Nom:'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',

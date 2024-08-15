@@ -78,19 +78,15 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
     }
     fetch(url, fetchData).then(response => {
       response.text().then(text => {
-        try {
-          RetrieveExcelResults(
-            applicationData,
-            text,
-            applicationDraw.updateLayout,
-            postProcessLoadExcel,
-            applicationDraw.GetSankeyMinWidthAndHeight,
-            convert_data,
-            applicationData.get_default_data
-          )
-        } catch(err) {
-          alert(err)
-        }
+        RetrieveExcelResults(
+          applicationData,
+          text,
+          applicationDraw.updateLayout,
+          postProcessLoadExcel,
+          applicationDraw.GetSankeyMinWidthAndHeight,
+          convert_data,
+          applicationData.get_default_data
+        )
       }).then(()=>{
         set_is_computing(false)
       })
@@ -258,11 +254,11 @@ export default SankeyLoad
 export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
-  updateLayout: updateLayoutFuncType,
-  postProcessLoadExcel: (server_data: SankeyData) => void,
+  updateLayout,
+  postProcessLoadExcel,
   GetSankeyMinWidthAndHeight,
-  convert_data: ConvertDataFuncType,
-  defaultData: () => SankeyData
+  convert_data,
+  defaultData
 ) => {
   const {set_data}=applicationData
   const default_data = defaultData()
@@ -357,10 +353,10 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
 export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
-  updateLayout: updateLayoutFuncType,
-  convert_data: ConvertDataFuncType,
-  postProcessLoadExcel: (server_data: SankeyData) => void,
-  DefaultSankeyData: () => SankeyData
+  updateLayout,
+  convert_data,
+  postProcessLoadExcel,
+  DefaultSankeyData
 
 ): SankeyData => {
   const {data}=applicationData
@@ -399,8 +395,10 @@ export const ProcessExample: ProcessExampleFuncType = (
       ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
 
     }
-    postProcessLoadExcel(data)
+    postProcessLoadExcel(applicationData)
+    
     compute_default_input_outputLinksId(data.nodes, data.links)
+    reorganize_all_input_outputLinksId(data,data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout
     SetNodeStyleToTypeNode(data)
   } else {
@@ -409,8 +407,8 @@ export const ProcessExample: ProcessExampleFuncType = (
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
+    postProcessLoadExcel(applicationData)
     updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
-    postProcessLoadExcel(data)
   }
   d3.select('.loading_auto_compute').remove()
 
@@ -520,9 +518,19 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data:
   }
   let url = root + url_prefix + 'sankey/save_excel'
 
+  const cpy = JSON.parse(JSON.stringify(data)) as SankeyData
+  cpy.nodes = JSON.parse(JSON.stringify(data.initial_nodes))
+  cpy.links = JSON.parse(JSON.stringify(data.initial_links))  
+  delete cpy.initial_nodes
+  delete cpy.initial_links
+  delete cpy.additional_nodes
+  delete cpy.additional_links
+  delete cpy.removed_nodes
+  delete cpy.removed_links
+
   const fetchData = {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(cpy)
   }
 
   const showFile = (blob: BlobPart) => {

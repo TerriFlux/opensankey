@@ -392,6 +392,7 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
+      diagram: string,
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
@@ -414,6 +415,7 @@ export const setDiagram: setDiagramFuncType = (
       window.sankey[sous_filieres[the_diagram]]
     )
   ) as SankeyData
+  window.sankey.diagram = the_diagram
   convert_data(new_data, DefaultSankeyData)
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })

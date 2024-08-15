@@ -439,6 +439,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   // Pop over that serve as context menu
   return contextualised_node !== undefined ? <Box layerStyle='context_menu' id="context_node_pop_over"
     className={'context_popover ' + (is_top ? '' : 'at_bot')}
+    zIndex='3'
     style={{ maxWidth: '100%', position: 'absolute', inset: style_c_n }}>
     <ButtonGroup orientation='vertical' isAttached>
       {btn_aggregate}
