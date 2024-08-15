@@ -362,6 +362,7 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
   link_function
 ) => {
   const _ = {
+    NodeTooltipsContent,
     DrawAllNodes,
     drawAddNodes,
     RedrawNodes: (()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
@@ -389,7 +390,6 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
       ref_alt_key_pressed,
       accept_simple_click,
       link_function,
-      NodeTooltipsContent,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
       _,
@@ -411,7 +411,6 @@ export const DrawAll : DrawAllType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -427,7 +426,6 @@ export const DrawAll : DrawAllType = (
     alt_key_pressed,
     accept_simple_click,
     link_function,
-    NodeTooltipsContent,
     ComponentUpdater,
     dict_hook_ref_setter_show_dialog_components,
     node_function,
@@ -907,7 +905,6 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
   ref_alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   applicationContext,
@@ -924,7 +921,6 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
     ref_alt_key_pressed,
     accept_simple_click,
     link_function,
-    NodeTooltipsContent,
     ComponentUpdater,
     dict_hook_ref_setter_show_dialog_components,
     applicationContext,

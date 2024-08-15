@@ -28,7 +28,6 @@ import {
 import { applyZoomEvent } from './draw/SankeyDrawEventFunction'
 
 import { ContextLegendTags} from './draw/SankeyDrawLegend'
-import { NodeTooltipsContent } from './draw/SankeyTooltip'
 import {
   GetLinkValue,
   LinkVisible,
@@ -456,7 +455,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       ref_alt_key_pressed,
       accept_simple_click,
       link_function,
-      NodeTooltipsContent,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
       applicationContext,
@@ -488,7 +486,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       ref_alt_key_pressed,
       accept_simple_click,
       link_function,
-      NodeTooltipsContent,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
       node_function,
@@ -613,7 +610,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             ref_alt_key_pressed={ref_alt_key_pressed}
             accept_simple_click={accept_simple_click}
             link_function={link_function}
-            NodeTooltipsContent={NodeTooltipsContent}
             ComponentUpdater={ComponentUpdater}
             node_function={node_function}
           />

@@ -453,11 +453,8 @@ export type MenuTypes = {
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
-
-
 }
 
 export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
@@ -614,7 +611,6 @@ export type DrawAllType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
@@ -802,7 +798,6 @@ export type initializeKeyHandlerType=(
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType,
