@@ -123,7 +123,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
         let horiz_shift=0
         const pos_h=ReturnValueNode(data,n,'label_horiz')
         if(pos_h=='left'){
-          horiz_shift=box_text.width
+          horiz_shift=box_text.width-+ReturnValueNode(data,n,'label_horiz_shift')
         } else if (pos_h == 'middle'  && size_shape<box_text.width) {
           horiz_shift= (box_text.width-size_shape)/2
         }

@@ -209,11 +209,11 @@ export const TextNodeWrap : TextNodeWrapFType = (
     if (d.x_label) {
       return d.x_label
     } else if (ReturnValueNode(data,d,'label_horiz')  == 'middle') {
-      return width / 2
+      return width / 2 + +ReturnValueNode(data,d,'label_horiz_shift')
     } else if (ReturnValueNode(data,d,'label_horiz')  == 'right') {
-      return width
+      return width + +ReturnValueNode(data,d,'label_horiz_shift')
     } else {
-      return 0
+      return 0 + +ReturnValueNode(data,d,'label_horiz_shift')
     }
   })
   let nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
