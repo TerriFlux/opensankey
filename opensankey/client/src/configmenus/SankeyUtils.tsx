@@ -915,16 +915,19 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
     bold: false,
     italic: false,
     label_vert: 'bottom',
+    label_vert_shift: 0,
     label_horiz: 'middle',
+    label_horiz_shift: 0,
     label_background:false,
 
     show_value: false,
     label_vert_valeur: 'top',
+    label_vert_valeur_shift: 0,
     label_horiz_valeur: 'middle',
     value_font_size:14,
     label_box_width: 150,
     label_color:false,
-
+    label_horiz_valeur_shift: 0,
   }
 }
 
