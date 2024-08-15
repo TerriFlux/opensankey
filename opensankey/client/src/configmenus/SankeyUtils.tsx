@@ -635,8 +635,14 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     couleur_fond_sankey:'#f2f2f2',
     displayed_node_selector:false,
     displayed_link_selector:false,
+    initial_nodes:{},
     nodes: {},
+    additional_nodes: {},
+    removed_nodes: {},
+    initial_links:{},
     links: {},
+    additional_links: {},
+    removed_links: {}, 
     user_scale: 20,
 
     accordeonToShow: ['MEP'],
@@ -684,15 +690,28 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_color:defaultElementColor,
     legend_bg_opacity:0,
     legend_show_dataTags:false,
-    node_label_separator:' - '
+    node_label_separator:' - ',
 
+    //parametric_mode : false
   }
   const node_style_sect=DefaultNodeSectorStyle()
   const node_style_prod=DefaultNodeProductStyle()
+  const node_style_import = DefaultNodeImportStyle()
+  const node_style_export = DefaultNodeExportStyle()
   const default_data = {
     ...data,
-    style_node: { 'default' : DefaultNodeStyle(),'NodeSectorStyle':node_style_sect,'NodeProductStyle':node_style_prod },
-    style_link: { 'default' : DefaultLinkStyle() }
+    style_node: { 
+      'default' : DefaultNodeStyle(),
+      'NodeSectorStyle':node_style_sect,
+      'NodeProductStyle':node_style_prod,
+      'NodeImportStyle':node_style_import,
+      'NodeExportStyle':node_style_export      
+    },
+    style_link: { 
+      'default' : DefaultLinkStyle(),
+      'LinkExportStyle' : DefaultLinkExportStyle(), 
+      'LinkImportStyle' : DefaultLinkImportStyle() 
+    }
   }
   return (default_data as unknown as SankeyData)
 }
@@ -940,19 +959,62 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
   }
 }
 
+export const DefaultNodeImportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode='NodeImportStyle'
+  node_style.name='Noeuds de type importations'
+  // relative
+  node_style.position = 'relative'
+  node_style.relative_dx = -100
+  node_style.relative_dy = -50
+  // parametric
+  node_style.dy = 20
+  // common import export
+  node_style.label_visible = false
+  node_style.shape_visible = false
+  node_style.node_width = 0
+  node_style.label_box_width = 300
+  node_style.label_vert = 'middle'
+  // label
+  node_style.label_horiz = 'left'
+  return node_style
+}
+
+export const DefaultNodeExportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode='NodeExportStyle'
+  node_style.name='Noeuds de type exportations'
+  // relative  
+  node_style.position = 'relative'
+  node_style.relative_dx = 100
+  node_style.relative_dy = 50
+  // parametric
+  node_style.dy = 20
+  // common import export
+  node_style.label_visible = false
+  node_style.shape_visible = false
+  node_style.label_vert = 'middle'
+  node_style.node_width = 0
+  node_style.label_box_width = 300
+  // label
+  node_style.label_horiz = 'right'
+
+  return node_style
+}
+
 export const DefaultNodeSectorStyle:DefaultNodeSectorStyleFuncStyle=()=>{
-  const node_style=DefaultNodeStyle()
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle()))
   node_style.idNode='NodeSectorStyle'
-  node_style.name='Noeud de type secteur'
+  node_style.name='Noeuds de type secteur'
   return node_style
 }
 
 
 export const DefaultNodeProductStyle:DefaultNodeProductStyleFuncStyle=(): SankeyNodeStyle=>{
-  const node_style=DefaultNodeStyle()
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle()))
   node_style.shape='ellipse'
   node_style.idNode='NodeProductStyle'
-  node_style.name='Noeud de type produit'
+  node_style.name='Noeuds de type produit'
   return node_style
 }
 // Return default style configuration for link
@@ -990,6 +1052,29 @@ export const DefaultLinkStyle:DefaultLinkStyleFuncType=()=>{
   }
 }
 
+export const DefaultLinkExportStyle:DefaultLinkStyleFuncType=()=>{
+  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'hv'
+  link_style.label_visible = true
+  link_style.label_position = 'end'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink='LinkExportStyle'
+  link_style.name='Flux de type exportations'
+  return link_style
+}
+
+export const DefaultLinkImportStyle:DefaultLinkStyleFuncType=()=>{
+  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'vh'
+  link_style.label_visible = true
+  link_style.label_position = 'beginning'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink='LinkImportStyle'
+  link_style.name='Flux de type importations'
+  return link_style
+}
 
 /**
  *
