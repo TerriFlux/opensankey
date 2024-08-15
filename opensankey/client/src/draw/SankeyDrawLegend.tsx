@@ -3,7 +3,7 @@ import React, { FunctionComponent, useState } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-import { LinkVisible} from '../configmenus/SankeyUtils'
+import { LinkVisible, ReturnValueNode} from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg, SelectVisualyLinks, returnScaleOfDrawArea } from './SankeyDrawFunction'
 import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from './types/SankeyDrawLegendTypes'
 import { Box, Button, } from '@chakra-ui/react'
@@ -137,7 +137,7 @@ export const DrawLegend : DrawLegendFType= (
                 n.tags[data.nodesColorMap] &&
                 n.tags[data.nodesColorMap].includes(tag[0]) &&
                 node_visible.includes(n.idNode) &&
-                (n.position !== 'relative')
+                ReturnValueNode(data,n,'position') !== 'relative'
               )
             }).length
             return t2>0

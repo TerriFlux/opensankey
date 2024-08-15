@@ -1,11 +1,12 @@
 import * as d3 from 'd3'
-import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
+import { ReturnValueNode, AssignNodeLocalAttribute, GetNodeAttributeValueFromStyle } from '../configmenus/SankeyUtils'
 import { GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { applicationDataType, applicationStateType, SankeyNode, SankeyData } from '../types/Types'
-import { RemoveAnimate, DrawArrows, drawCurveFunction, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid } from './SankeyDrawFunction'
+import { RemoveAnimate, DrawArrows, drawCurveFunction, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid, nodeTransform } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { shiftAllArrowPath, shiftAllLinkPath } from './SankeyDrawEventFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
+import { nodeHeight } from './SankeyDrawLayout'
 
 declare const window: Window &
   typeof globalThis & {
@@ -42,16 +43,21 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   GetSankeyMinWidthAndHeight,
   resizeCanvas
 ) => {
+  const {data,display_nodes} = applicationData
   const { ref_getter_mode_selection } = applicationState
   const node_visible = [] as string[]
+  let relative_nodes :SankeyNode[] = []
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object)
-    .on('start', () => {
+    .on('start', (event,node) => {
 
       RemoveAnimate()
       d3.selectAll('.node_shape').nodes().forEach(element => {
         node_visible.push(d3.select(element).attr('id'))
       })
+      const imp_relative_nodes = node.inputLinksId.filter(lId=>ReturnValueNode(data,data.nodes[data.links[lId].idSource],'position')=='relative').map(lId=>data.nodes[data.links[lId].idSource])
+      const exp_relative_nodes = node.inputLinksId.filter(lId=>ReturnValueNode(data,data.nodes[data.links[lId].idTarget],'position')=='relative').map(lId=>data.nodes[data.links[lId].idTarget])
+      relative_nodes = [...imp_relative_nodes,...exp_relative_nodes]
     })
     .on('drag', function (event, node) {
       if (ref_getter_mode_selection.current == 's') {
@@ -68,19 +74,59 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater, link_function,node_function
           )
+          node_function.RedrawNodes(relative_nodes)
         }
         const elt_dragged = d3.select(event.subject.sourceEvent.target).node().tagName
         if (elt_dragged == 'rect' || elt_dragged == 'ellipse' || elt_dragged == 'path' || elt_dragged == 'image') {
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater, link_function,node_function
           )
+          node_function.RedrawNodes(relative_nodes)
         }
       }
     }).on('end', function (event,node) {
       setTimeout(() => {
         if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // Update all links displayed
-          node_function.RedrawNodes([node])
+          if (/*data.parametric_mode &&*/ ReturnValueNode(data,node,'position') === 'parametric') {
+            const same_u = Object.values(applicationData.display_nodes)
+              .filter(n=>ReturnValueNode(data,n,'position') === 'parametric')
+              .filter(n=>n.u === node.u)
+            same_u.sort((n1,n2)=>n1.v-n2.v)
+            const nodes_below = same_u.filter(n=>n.v>node.v).reverse()
+            const node_below= nodes_below.pop()
+            if (node_below) {
+              if (node.y > node_below.y) {
+                const tmp = node_below.v
+                node_below.v = node.v
+                node.v = tmp
+              } else {
+                AssignNodeLocalAttribute(
+                  node,
+                  'dy',
+                  node_below.y - node.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') - nodeHeight(node,applicationData,inv_scale,scale,GetLinkValue)
+                )
+              }
+            }
+            const nodes_above = same_u.filter(n=>n.v<node.v)
+            const node_above = nodes_above.pop()
+            if (node_above) {
+              if (node.y < node_above.y) {
+                const tmp = node_above.v
+                node_above.v = node.v
+                node.v = tmp
+              }
+              AssignNodeLocalAttribute(
+                node,
+                'dy',
+                node.y - node_above.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node.style],'dy') - nodeHeight(node_above,applicationData,inv_scale,scale,GetLinkValue)
+              )
+            }
+
+            node_function.RedrawNodes(same_u)
+          } else {
+            node_function.RedrawNodes([node,...relative_nodes])
+          }
           link_function.RedrawLinks(Object.values(applicationData.display_links))
           ComponentUpdater.updateComponenSaveInCache.current(false)
           resizeCanvas(applicationData)
@@ -221,12 +267,12 @@ export const ReturnOutOfBoundElement: ReturnOutOfBoundElementFuncType = (
   const out_of_zone_item: (SankeyNode)[] = Object.values(data.nodes).filter(d => {
     const n = d as SankeyNode
     // Don't take into account node with relative position because they aren't reliable  
-    if (n.position == 'relative' || !node_visible.includes('shape_' + n.idNode)) {
+    if (ReturnValueNode(data,n,'position') == 'relative' || !node_visible.includes('shape_' + n.idNode)) {
       return false
     }
-    if (multi_selected_nodes.current.filter(n => n.position !== 'relative').length > 0) {
+    if (multi_selected_nodes.current.filter(n => ReturnValueNode(data,n,'position') !== 'relative').length > 0) {
       return (n.x <= 0 && event.dx < 0) || (n.y <= 0 && event.dy < 0) || (n.x <= 0 && event.x < 0) || (n.y <= 0 && event.y < 0)
-    } else if (Object.keys(node).length > 0 && node.position !== 'relative') {
+    } else if (Object.keys(node).length > 0 && ReturnValueNode(data,n,'position') !== 'relative') {
       return node == n && (n.x <= 0 && event.dx < 0) || (n.y <= 0 && event.dy < 0) || (n.x <= 0 && event.x < 0) || (n.y <= 0 && event.y < 0)
     } else {
       return false
@@ -259,7 +305,7 @@ export const OpposingDragElements: opposing_DragElementsFuncType = (
 
   if ((out_of_zone_item[0].x <= 0 && event.x < 0) || (out_of_zone_item[0].x <= 0 && event.dx < 0)) {
     // Shift not selected nodes to opposing direction
-    Object.values(data.nodes).filter(nf => (multi_selected_nodes.current.length > 0 ? !multi_selected_nodes.current.includes(nf) : (Object.keys(node).length == 0 || nf !== node)) && nf.position !== 'relative').forEach(n_shift => {
+    Object.values(data.nodes).filter(nf => (multi_selected_nodes.current.length > 0 ? !multi_selected_nodes.current.includes(nf) : (Object.keys(node).length == 0 || nf !== node)) && ReturnValueNode(data,nf,'position') !== 'relative').forEach(n_shift => {
       n_shift.x -= event.dx
       d3.selectAll('#ggg_' + n_shift.idNode).attr('transform', 'translate(' + n_shift.x + ',' + n_shift.y + ')')
     })
@@ -284,7 +330,7 @@ export const OpposingDragElements: opposing_DragElementsFuncType = (
 
   if ((out_of_zone_item[0].y <= 0 && event.y < 0) || (out_of_zone_item[0].y <= 0 && event.dy < 0)) {
     // Shift not selected nodes to opposing direction
-    Object.values(data.nodes).filter(nf => (multi_selected_nodes.current.length > 0 ? !multi_selected_nodes.current.includes(nf) : (Object.keys(node).length == 0 || nf !== node)) && nf.position !== 'relative').forEach(n_shift => {
+    Object.values(data.nodes).filter(nf => (multi_selected_nodes.current.length > 0 ? !multi_selected_nodes.current.includes(nf) : (Object.keys(node).length == 0 || nf !== node)) && ReturnValueNode(data,nf,'position') !== 'relative').forEach(n_shift => {
       n_shift.y -= event.dy
       d3.selectAll('#ggg_' + n_shift.idNode).attr('transform', 'translate(' + n_shift.x + ',' + n_shift.y + ')')
     })
@@ -331,22 +377,34 @@ export const DragElements: DragElementsFuncType = (
     const n = d as SankeyNode
     // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
     // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changement au noeud draggé
-    if (multi_selected_nodes.current.includes(node) && multi_selected_nodes.current.filter(n => n.position !== 'relative').length > 0) {
-      return multi_selected_nodes.current.filter(n => n.position !== 'relative').includes(n)
-    } else if (multi_selected_nodes.current.length == 0 && (Object.keys(node).length > 0 && node.position !== 'relative')) {
+    if (multi_selected_nodes.current.includes(node)) {
+      return multi_selected_nodes.current.filter(n => ReturnValueNode(data,n,'position') !== 'relative').includes(n)
+    } else if (multi_selected_nodes.current.length == 0 && (Object.keys(node).length > 0 )) {
       return node == n
     } else {
       return false
     }
   }).attr('transform', (d) => {
     const n = d as SankeyNode
-    n.x += event.dx
-    n.y += event.dy
-    if (n.x < 0) {
-      n.x = 0
-    }
-    if (n.y < 0) {
-      n.y = 0
+    if (ReturnValueNode(data,n,'position') == 'relative' ) {
+      if (!n.local) {
+        n.local = {}
+      }
+      if (! n.local!.relative_dx) {
+        AssignNodeLocalAttribute(n,'relative_dx',+ReturnValueNode(data,n,'relative_dx'))
+        AssignNodeLocalAttribute(n,'relative_dy',+ReturnValueNode(data,n,'relative_dy'))       
+      }
+      AssignNodeLocalAttribute(n,'relative_dx',+ReturnValueNode(data,n,'relative_dx')+ event.dx)
+      AssignNodeLocalAttribute(n,'relative_dy',+ReturnValueNode(data,n,'relative_dy')+ event.dy)
+    } else {
+      n.x += event.dx
+      n.y += event.dy
+      if (n.x < 0) {
+        n.x = 0
+      }
+      if (n.y < 0) {
+        n.y = 0
+      }
     }
 
     const pos_n = sizeOfNodeInDrawArea(n, applicationData)
@@ -363,13 +421,13 @@ export const DragElements: DragElementsFuncType = (
       applicationData.data.height = pos_n[1] + margin
       DrawGrid(data)
     }
-    return 'translate(' + n.x + ',' + n.y + ')'
+    return nodeTransform(applicationData,n,link_function,true)//'translate(' + n.x + ',' + n.y + ')'
   })
 
 
   if (multi_selected_nodes.current.length > 1) {
     // We redraw each arrows linked to a selected nodes after shifting it
-    multi_selected_nodes.current.filter(n => n.position !== 'relative').forEach(n => {
+    multi_selected_nodes.current.forEach(n => {
       DrawArrows(n as SankeyNode, applicationData, scale, inv_scale, GetLinkValue, data.display_style);
       // Redraw link linked to dragged nodes
       [...n.outputLinksId, ...n.inputLinksId].filter(idLink => Object.keys(applicationData.display_links).includes(idLink)).forEach(idLink => {

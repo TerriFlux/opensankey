@@ -1,7 +1,11 @@
 import { MutableRefObject } from 'react'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, agregationType, applicationContextType, applicationDrawType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, uiElementsRefType } from '../../types/Types'
-import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
+import { 
+  ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, agregationType, 
+  applicationContextType, applicationDrawType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, 
+  applicationDataType, applicationStateType, uiElementsRefType 
+} from '../../types/Types'
+
 
 export type keyHandlerFType = (
     applicationData : applicationDataType,

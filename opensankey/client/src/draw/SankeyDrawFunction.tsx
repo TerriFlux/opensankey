@@ -21,7 +21,10 @@ import { ComputeTotalOffsets,
   ReturnValueNode,
   ReturnValueLink,
   AssignLinkLocalAttribute,
-  ToPrecision} from '../configmenus/SankeyUtils'
+  ToPrecision,
+  GetNodeAttributeValueFromStyle,
+  ReturnPositionValueNode
+} from '../configmenus/SankeyUtils'
 import {
   DragLinkCenterHandleEvent,
   DragLinkShiftHandleEvent,
@@ -69,6 +72,7 @@ import {
 } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeEndPoints } from './SankeyDrawShapes'
 import { TFunction } from 'i18next'
+import { nodeHeight, nodeWidth } from './SankeyDrawLayout'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10
@@ -147,12 +151,21 @@ export const LinkStroke : LinkStrokeFType = (
 
 // Function to place the node on the draw zone
 export const nodeTransform : nodeTransformFType = (
-  d:SankeyNode,
-  display_nodes:{[node_id:string]:SankeyNode},
-  display_links:{[ink_id:string]:SankeyLink}
+  applicationData,
+  d,
+  link_function,
+  drag
 )=>{
-  if (d.position === 'relative') {
+  const {data, display_nodes, display_links} = applicationData
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
+  if (ReturnValueNode(data,d,'position') === 'relative') {
     if (d.inputLinksId.length > 0) {
+      // Exportations
       if ( !display_links[d.inputLinksId[0]]) {
         return 'translate(0,0)'
       }
@@ -160,10 +173,11 @@ export const nodeTransform : nodeTransformFType = (
       if ( !source_node) {
         return 'translate(0,0)'
       }
-      const x = source_node.x + d.x
-      const y = source_node.y + d.y
+      const x = source_node.x + +ReturnPositionValueNode(data,d,'relative_dx')+ +ReturnValueNode(data,source_node,'node_width')
+      const y = source_node.y + +ReturnPositionValueNode(data,d,'relative_dy')+ nodeHeight(source_node,applicationData,inv_scale,scale,link_function.GetLinkValue)
       return 'translate(' + x + ', ' + y + ')'
     } else if (d.outputLinksId.length > 0) {
+      // importations
       if ( !display_links[d.outputLinksId[0]]) {
         return 'translate(0,0)'
       }
@@ -171,13 +185,49 @@ export const nodeTransform : nodeTransformFType = (
       if ( !target_node) {
         return 'translate(0,0)'
       }
-      const x = target_node.x + d.x
-      const y = target_node.y + d.y
+      const x = target_node.x + +ReturnPositionValueNode(data, d, 'relative_dx')- nodeWidth(d,applicationData,inv_scale,scale,link_function.GetLinkValue)
+      const y = target_node.y + +ReturnPositionValueNode(data, d, 'relative_dy')- +ReturnValueNode(data, d, 'node_height')
       return 'translate(' + x + ', ' + y + ')'
     }
     return 'translate(' + 10 + ', ' + 10 + ')'
-  } else {
+  } else if (ReturnValueNode(data,d,'position') == 'absolute' || drag /*|| !data.parametric_mode*/) {
     return 'translate(' + d.x + ', ' + d.y + ')'
+  } else {
+    const same_u = Object.values(display_nodes)
+      .filter(n=>n.u === d.u)
+
+    if (d.v == 0) {
+      return 'translate(' + d.x + ', ' + d.y + ')'
+    }
+    if (d.v>=0) {
+      same_u.sort((n1,n2)=>n1.v-n2.v)
+      const nodes_above = same_u.filter(n=>n.v<d.v && n.v >=0 )
+      const node_above = nodes_above.pop()
+      if (node_above) {
+        d.y = node_above.y + 
+        nodeHeight(node_above, applicationData, inv_scale, scale,link_function.GetLinkValue) + 
+        + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
+        + (d.local && d.local!.dy ? d.local!.dy : 0)
+      } else {
+        const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
+        d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
+      }
+      return 'translate(' + d.x + ', ' + d.y + ')'
+    } else {
+      same_u.sort((n1,n2)=>n2.v-n1.v)
+      const nodes_below = same_u.filter(n=>n.v>d.v)
+      const node_below = nodes_below.pop()
+      if (node_below) {
+        d.y = node_below.y 
+        - nodeHeight(node_below, applicationData, inv_scale, scale,link_function.GetLinkValue) 
+        - + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
+        - (d.local && d.local!.dy ? d.local!.dy : 0)
+      } else {
+        const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
+        d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
+      }
+      return 'translate(' + d.x + ', ' + d.y + ')'
+    }
   }
 }
 
@@ -520,8 +570,13 @@ export const DrawArrows : DrawArrowsType = (
           // If link come vertically to the node (arrow pointing down)
             if (n.y > source_node.y || is_exportation_node) {
               // If node source of the link is above
-              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
-              yt = +n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
+              if (is_exportation_node) {
+                xt = +ReturnPositionValueNode(data,n,'relative_dx') + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
+                yt = +ReturnPositionValueNode(data,n,'relative_dy') +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
+              } else {
+                xt = n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
+                yt = n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)                
+              }
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow_part(
@@ -569,7 +624,7 @@ export const DrawArrows : DrawArrowsType = (
 export const SortOutputLinksIdByYPos : SortOutputLinksIdByYPosFType = (
   data:SankeyData,n:SankeyNode
 )=>{
-  return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
+  return n.outputLinksId.filter(idL=>ReturnValueNode(data,data.nodes[data.links[idL].idTarget],'position') !=='relative')
     .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y
     )
 }
@@ -1740,7 +1795,7 @@ export const sizeOfNodeInDrawArea=(n:SankeyNode,applicationData:applicationDataT
   const height_label=(box_label?.height??0)/scale_svg
 
   let source_node_y = 0
-  if (n.position == 'relative' && n.inputLinksId.length == 1) {
+  if (ReturnValueNode(data,n,'position') == 'relative' && n.inputLinksId.length == 1) {
     const source_node = data.nodes[data.links[n.inputLinksId[0]].idSource]
     source_node_y = source_node.y
   }

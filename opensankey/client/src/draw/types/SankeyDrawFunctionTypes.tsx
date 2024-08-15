@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, applicationDataType, display_styleType } from '../../types/Types'
+import { LinkFunctionTypes, SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, applicationDataType, display_styleType } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { TFunction } from 'i18next'
 
@@ -63,9 +63,10 @@ export type LinkStrokeFType = (l:SankeyLink,data:SankeyData,
 
 // Function to place the node on the draw zone
 export type nodeTransformFType = (
+  applicationData:applicationDataType,
   d:SankeyNode,
-  display_nodes:{[node_id:string]:SankeyNode},
-  display_links:{[ink_id:string]:SankeyLink}
+  link_function:LinkFunctionTypes,
+  drag:boolean
 )=>string
 
 // Function that wrap node text when the length of the label exceed the limit

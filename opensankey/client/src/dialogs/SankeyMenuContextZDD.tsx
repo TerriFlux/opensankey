@@ -4,7 +4,7 @@ import { ContextMenuZddFType } from './types/SankeyMenuContextZDDTypes'
 import { ComputeAutoSankey, arrangeNodes } from '../draw/SankeyDrawLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { GetRandomInt, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
+import { GetRandomInt, AssignNodeLocalAttribute, ReturnValueNode } from '../configmenus/SankeyUtils'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Input, NumberInput, NumberInputField } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
@@ -194,7 +194,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
       RedrawNodes(Object.values(applicationData.display_nodes))
       RedrawLinks(Object.values(applicationData.display_links))
       ComponentUpdater.updateComponenSaveInCache.current(false)
-      Object.values(applicationData.display_nodes).filter(n => n.position != 'relative').forEach(n => {
+      Object.values(applicationData.display_nodes).filter(n => ReturnValueNode(data,n,'position')!= 'relative').forEach(n => {
         d3.select('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
       })
     }}>

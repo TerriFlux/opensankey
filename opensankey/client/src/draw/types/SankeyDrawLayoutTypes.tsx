@@ -1,7 +1,15 @@
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, agregationType, applicationDataType } from '../../types/Types'
 
-export type ComputeAutoSankeyFuncType = (applicationData:applicationDataType, h_space: number,launched_from_process:boolean) => void
+export type ComputeAutoSankeyFuncType = (
+  applicationData:applicationDataType, 
+  h_space: number,
+  launched_from_process:boolean
+) => void
+
+export type ComputeParametrizationType = (
+  applicationData:applicationDataType
+) => void
 
 export type reorganize_inputLinksIdFType = (
   data:SankeyData,
@@ -142,8 +150,7 @@ export type reorganize_all_input_outputLinksIdFType = (
 export type desagregationFType = (
   applicationData:applicationDataType,
   idNode: string,
-  cur_dimension: string,
-  to_compute_auto_sankey:boolean
+  cur_dimension: string
 ) => void
 
 /**

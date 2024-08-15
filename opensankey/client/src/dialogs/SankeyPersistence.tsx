@@ -8,7 +8,7 @@ import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink,
 import FileSaver from 'file-saver'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { ComputeAutoSankey, compute_default_input_outputLinksId } from '../draw/SankeyDrawLayout'
+import { ComputeAutoSankey, compute_default_input_outputLinksId, reorganize_all_input_outputLinksId } from '../draw/SankeyDrawLayout'
 import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Spinner } from '@chakra-ui/react'
 

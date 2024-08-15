@@ -14,7 +14,7 @@ import {
   Tr,
 } from '@chakra-ui/react'
 
-import { LinkVisible, LinkColor, ReturnValueLink, OSTooltip } from './SankeyUtils'
+import { LinkVisible, LinkColor, ReturnValueLink, OSTooltip, ReturnValueNode } from './SankeyUtils'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
 import { LinkFunctionTypes, SankeyData, SankeyLink, SankeyNode } from '../types/Types'
@@ -44,7 +44,7 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
 
         const n_s=data.nodes[data.links[k].idSource]
-        const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !recy)
+        const cond_no_recy=(((n_s.x<=n.x && ReturnValueNode(data,n_s,'position')!='relative') ||(ReturnValueNode(data,n_s,'position')=='relative' && n_s.x<0))&& !recy)
         const cond_recy=(recy && n_s.x>=n.x)
 
         return (
@@ -60,7 +60,7 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
 
         const n_s=data.nodes[data.links[k].idSource]
-        const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !recy)
+        const cond_no_recy=(((n_s.x>=n.x && ReturnValueNode(data,n_s,'position')!='relative') ||(ReturnValueNode(data,n_s,'position')=='relative' && n_s.x>0))&& !recy)
         const cond_recy=(recy && n_s.x<n.x)
 
         return (
@@ -104,7 +104,7 @@ const getIOLink = (
         const recy=ReturnValueLink(data,data.links[k],'recycling') as boolean
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
-        const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !recy)
+        const cond_no_recy=(((n_t.x<n.x  && ReturnValueNode(data,n_t,'position')!='relative') ||(ReturnValueNode(data,n_t,'position')=='relative' && n_t.x<=0)) && !recy)
         const cond_recy=(recy && n_t.x>n.x)
 
         return (
@@ -122,7 +122,7 @@ const getIOLink = (
         const recy=ReturnValueLink(data,data.links[k],'recycling') as boolean
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
-        const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !recy)
+        const cond_no_recy=(((n_t.x>=n.x && ReturnValueNode(data,n_t,'position')!='relative') ||(ReturnValueNode(data,n_t,'position')=='relative' && n_t.x>0))&& !recy)
         const cond_recy=(recy && n_t.x<=n.x)
 
         return (

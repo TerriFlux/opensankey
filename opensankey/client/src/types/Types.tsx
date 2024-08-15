@@ -48,6 +48,13 @@ export type SankeyNodeAttrLocal ={
   label_horiz_valeur?: string,
   label_horiz_valeur_shift?: number,
   value_font_size?: number,
+
+  // geometry
+  position?: 'absolute' | 'relative' | 'parametric',
+  dx?:number,
+  dy?:number,
+  relative_dy?:number,
+  relative_dx?:number
 }
 
 // Same as Local node attribute but with required value as now style attributes is the default attributes of node
@@ -88,6 +95,12 @@ export type SankeyNodeStyle ={
   label_vert_valeur_shift: number,
   value_font_size: number,
 
+  // geometry
+  position: 'absolute' | 'relative' | 'parametric',
+  dx:number,
+  dy:number,
+  relative_dy:number,
+  relative_dx:number
 }
 
 
@@ -110,11 +123,15 @@ export type SankeyNode = {
   colorTag: string,
 
   // geometry
-  position: 'absolute' | 'relative',
+  //position: 'absolute' | 'relative' | 'parametric',
   x: number,
   y: number,
   x_label?: number,
   y_label?: number,
+  u: number,
+  v: number,
+  //dy:number,
+
 
   tooltip_text?: string,
 
@@ -308,6 +325,8 @@ export type SankeyData = {
 
   legend_width:number,
   node_label_separator:string
+
+  //parametric_mode: boolean
 }
 
 export interface SankeyMenuState {

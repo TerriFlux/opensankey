@@ -238,10 +238,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
           return
         }
 
-        const node_x = node.position === 'absolute' ? +node.x : +target_node.x + +node.x
-        const node_y = node.position === 'absolute' ? +node.y : +target_node.y + +node.y
-        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x + +target_node.x
-        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y + +target_node.y
+        
+
+        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +target_node.x + +ReturnPositionValueNode(data,node,'relative_dx')
+        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +target_node.y + +ReturnPositionValueNode(data,node,'relative_dy')
+        const target_node_x = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.x : +node.x + +ReturnPositionValueNode(data,target_node,'relative_dx')
+        const target_node_y = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.y : +node.y + +ReturnPositionValueNode(data,target_node,'relative_dy')
         if (ReturnValueLink(data,link,'orientation') === 'hh') {
           if (target_node_x > node_x && !ReturnValueLink(data,link,'recycling') || target_node_x <= node_x && ReturnValueLink(data,link,'recycling')) {
             right_flux.push(idLink)
@@ -285,10 +287,10 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         } catch {
           return
         }
-        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x + +source_node.x
-        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
-        const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
-        const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
+        const source_node_x = ReturnValueNode(data,source_node,'position') !== 'relative' ? +source_node.x : +node.x + +ReturnPositionValueNode(data,source_node,'relative_dx')
+        const source_node_y = ReturnValueNode(data,source_node,'position') ? +source_node.y : +node.y + +ReturnPositionValueNode(data,source_node,'relative_dy')
+        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +source_node.x + +ReturnPositionValueNode(data,node,'relative_dx')
+        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +source_node.y + +ReturnPositionValueNode(data,node,'relative_dy')
         const ori_link = ReturnValueLink(data,link,'orientation')
         if (ori_link === 'vv') {
           if (source_node_y < node_y) {
@@ -354,7 +356,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free ) {
         // if flux is displayed thin
         offset_width_top += inv_scale(applicationData.min_link_thickness)
@@ -389,7 +391,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_width_bottom += inv_scale(applicationData.min_link_thickness)
@@ -425,7 +427,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_left += inv_scale(applicationData.min_link_thickness)
@@ -460,7 +462,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !(nodes[links[the_id].idTarget].position == 'relative')
+                      !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_right += inv_scale(applicationData.min_link_thickness)
@@ -795,17 +797,17 @@ export const LinkVisible: LinkVisibleFunctType=(
   data: SankeyData,
   display_nodes : { [node_id: string]: SankeyNode }
 ): boolean => {
-  const { dataTags, fluxTags } = data
+  const { dataTags, fluxTags, nodes } = data
 
   if (!l) {
     return false
   }
-  if (data.show_structure === 'structure') {
-    if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative') {
-      return false
-    }
-  }
-  if (!data.nodes[l.idSource] || !display_nodes[l.idSource] || !data.nodes[l.idTarget] || !display_nodes[l.idTarget]) {
+  // if (data.show_structure === 'structure') {
+  //   if (ReturnValueNode(data,nodes[l.idSource],'position') === 'relative' || ReturnValueNode(data,nodes[l.idTarget],'position') === 'relative') {
+  //     return false
+  //   }
+  // }
+  if (!nodes[l.idSource] || !display_nodes[l.idSource] || !nodes[l.idTarget] || !display_nodes[l.idTarget]) {
     return false
   }
   let val = l.value
@@ -876,9 +878,11 @@ export const DefaultNode:DefaultNodeFuncType = (
     idNode: 'default',
 
     colorParameter: 'local',
-    position: 'absolute',
     x: 100,
     y: 100,
+    u:0,
+    v:0,
+
     inputLinksId: [],
     outputLinksId: [],
     tags: {},
@@ -904,6 +908,11 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
     label_visible: true,
     node_width: 40,
     node_height: 40,
+    position: 'absolute',
+    dx:200,
+    dy : 50,
+    relative_dx:100,
+    relative_dy:50,
     color: defaultElementColor,
     colorSustainable:false,
     not_to_scale:false,
@@ -1409,6 +1418,19 @@ const updateLinkValueDepthWithNewDTGrp=(prev_l:SankeyLinkValueDict|SankeyLinkVal
   }
   return prev_l
 
+}
+
+// Return the value of an attribute from node :
+// - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
+// - Else it return the attribute from the style the node has (a node always has a style )
+export const ReturnPositionValueNode:ReturnValueNodeFuncType=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle): string | number | boolean=>{
+  const value=ReturnLocalNodeValue(n,k as keyof SankeyNodeAttrLocal)
+  const ks=k as keyof SankeyNodeStyle
+  const style_value= n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
+  if(value === undefined || value === null){
+    return style_value
+  }
+  return (+value)+(+style_value)
 }
 
 // Return the value of an attribute from node :
