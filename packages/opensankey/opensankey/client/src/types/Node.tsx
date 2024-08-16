@@ -36,7 +36,8 @@ import {
   default_style_id
 } from './Sankey'
 import {
-  Class_Element
+  Class_Element,
+  Class_ProtoElement
 } from './Element'
 import {
   Class_Tag,
@@ -2212,7 +2213,7 @@ export class Class_NodeElement extends Class_Element {
       ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
       this.menu_config,
-      this,
+      this as Class_ProtoElement,
       this.dragStartHandlerMoveLink,
       this.dragHandlerMoveLink,
       this.dragEndHandlerMoveLink,
