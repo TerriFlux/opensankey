@@ -266,7 +266,8 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     menu_configuration_nodes_attributes = {menu_configuration_nodes_attributes}
     menu_config_link_data = {config_link_data}
     menu_config_link_attr = {config_link_attr}
-    additional_accordion_edition_elements = {additional_menus.additional_configuration_menus}
+    // additional_accordion_edition_elements = {additional_menus.additional_configuration_menus}
+    additional_menus={additional_menus}
   />
 }
 

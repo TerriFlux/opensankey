@@ -88,8 +88,14 @@ export class Class_Sankey {
    */
   private _id: string
 
-  // Nodes
-  private _nodes: { [_: string]: Class_NodeElement } = {}
+  /**
+   * Nodes
+   *
+   * @protected
+   * @type {{ [_: string]: Class_NodeElement }}
+   * @memberof Class_Sankey
+   */
+  protected _nodes: { [_: string]: Class_NodeElement } = {}
 
   // Links
   private _links: { [_: string]: Class_LinkElement } = {}
