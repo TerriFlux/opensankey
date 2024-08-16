@@ -55,9 +55,13 @@ export class Class_MenuConfig {
   /* ========================================
     Updater of component in the configuration menu
     ========================================*/
-
-  // List of accordions to show
-  private _accordions_to_show: string[] = []
+  /**
+   *   List of accordions to show
+   * @protected
+   * @type {string[]}
+   * @memberof Class_MenuConfig
+   */
+  protected _accordions_to_show: string[] = []
 
   // Update component OpenSankeyConfigurationsMenus
   private _ref_to_menu_config_updater: MutableRefObject<() => void>

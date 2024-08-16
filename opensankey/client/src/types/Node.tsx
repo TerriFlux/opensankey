@@ -2082,7 +2082,7 @@ export class Class_NodeElement extends Class_Element {
 
   /**
    * Select the right color to use for this node (attribute / style / tags / ...)
-   * @private
+   * @protected
    * @return {*}
    * @memberof Class_NodeElement
    */

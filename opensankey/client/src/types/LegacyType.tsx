@@ -5,6 +5,7 @@ import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
 import { Class_ApplicationData } from './ApplicationData'
 import { Type_JSON } from './Utils'
 import { TFunction } from 'i18next'
+import { Class_MenuConfig } from './MenuConfig'
 
 export type SankeyNodeAttrLocal = {
     local_aggregation?: boolean,
@@ -758,3 +759,6 @@ export interface DataSuiteType {
     is_catalog?: boolean,
     view?: { id: string, view_data: object, nom: string, details: string }[],
   }
+
+export type getterConfigType=()=>Class_MenuConfig
+export type setterConfigType=(_:Class_MenuConfig)=>void

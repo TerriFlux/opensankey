@@ -59,7 +59,9 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
     menu_configuration_nodes_attributes,
     menu_config_link_data,
     menu_config_link_attr,
-    additional_accordion_edition_elements,
+    // additional_accordion_edition_elements,
+    additional_menus,
+
   }
 ) => {
 
@@ -149,6 +151,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
               <SankeyNodeEdition
                 applicationData={applicationData}
                 menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
+                additionalMenus={additional_menus}
               />
             </AccordionPanel>
           </AccordionItem>
@@ -175,7 +178,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
               />
             </AccordionPanel>
           </AccordionItem>
-          {additional_accordion_edition_elements}
+          {additional_menus.additional_configuration_menus}
         </Accordion>
       </AccordionPanel>
     </AccordionItem>,
