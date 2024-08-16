@@ -17,8 +17,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
 }
 )=>{
   const {new_data}=applicationData
-  const list_nodes_selected=new_data.drawing_area_plus.selected_nodes_list_plus
-  // const list_nodes=new_data.drawing_area_plus.sankey.nodes_list_plus
+  const list_nodes_selected=new_data.drawing_area.selected_nodes_list_plus
   const {t}=new_data
   const imported_icon=localStorage.getItem('icon_imported')
   const init_imported_svg:{[s:string]:{path:string,Vb:string}}=imported_icon != null && imported_icon!=='' ? JSON.parse(imported_icon) : {}
@@ -28,7 +27,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
   const [s_show_modal,sShowModal]=useState(false)
   const [forceUpdate,setForceUpdate]=useState(false)
 
-  new_data.menu_configuration_plus.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current=sShowModal
+  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current=sShowModal
 
 
   const isAllIconVisible = () => {
@@ -38,7 +37,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
     return selected_icon
   }
   const allSelectedNodeHasSameicon=isAllIconVisible()
-  const icon_visible = (list_nodes_selected[0].iconVisible)
+  // const icon_visible = (list_nodes_selected[0].iconVisible)
 
 
   list_nodes_selected.length>0?list_nodes_selected[0].iconName:'None'
@@ -56,12 +55,11 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
       return <Card
         variant={allSelectedNodeHasSameicon===ki+'_'+icon[0]?'card_icon_selected':'card_icon_not_selected'}
         onClick={()=>{
-          new_data.icon_catalog[ki+'_'+icon[0]]=icon[1]
+          new_data.drawing_area.sankey.icon_catalog[ki+'_'+icon[0]]=icon[1]
           list_nodes_selected.forEach(d => {
             d.iconName = ki+'_'+icon[0]
             if(!d.iconColor)d.iconColor='#000000'
             delete d.iconViewBox
-
           })
           list_nodes_selected.forEach(node=>node.draw())
           sShowModal(false)
@@ -149,7 +147,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
     return <Card
       variant={allSelectedNodeHasSameicon==='icon_imported_'+ki?'card_icon_selected':'card_icon_not_selected'}
       onClick={()=>{
-        new_data.icon_catalog['icon_imported_'+ki]=import_svg.current[ki].path
+        new_data.drawing_area.sankey.icon_catalog['icon_imported_'+ki]=import_svg.current[ki].path
         list_nodes_selected.forEach(d => {
           d.iconName = 'icon_imported_'+ki
           d.iconViewBox=import_svg.current[ki].Vb

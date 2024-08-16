@@ -125,7 +125,7 @@ export type OSPShowMenuComponentsVarType={
 export type OSPConvertDataFuncType = (data: OSPData, DefaultSankeyData: OSPGetDefaultData) => void
 
 // OSP type that overwrite or add variable to for applicationDataType
-export interface OSPApplicationDataVarType extends applicationDataType {
+export interface OSPApplicationDataVarType  {
   // Recast some OS var to OSP type 
   // data: OSPData,
   // get_default_data: OSPGetDefaultData

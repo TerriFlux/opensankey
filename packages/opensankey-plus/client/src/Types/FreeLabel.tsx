@@ -1,8 +1,9 @@
-import { Class_Element } from 'open-sankey/src/types/Element'
+import { Class_Element } from 'open-sankey/dist/types/Element'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { default_element_position, Type_ElementPosition } from 'open-sankey/src/types/Utils'
+import { Type_ElementPosition } from 'open-sankey/src/types/Utils'
+import { default_element_position  } from 'open-sankey/dist/types/Utils'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
-import { default_selected_stroke_width } from 'open-sankey/src/types/Node'
+import { default_selected_stroke_width } from 'open-sankey/dist/types/Node'
 
 
 
@@ -43,10 +44,10 @@ export class Class_FreeLabel extends Class_Element {
     drawing_area: Class_DrawingAreaPlus,
 
   ) {
-    super(id, menu_config, 'g_label')
+    super(id, menu_config, 'g_labels')
     this._display = {
       drawing_area: drawing_area,
-      position: structuredClone(default_element_position),
+      position: structuredClone(default_element_position as Type_ElementPosition),
     }
 
     this._title = 'Zone de texte ' + this.id
@@ -90,7 +91,7 @@ export class Class_FreeLabel extends Class_Element {
     // Apply common properties
     this.d3_selection?.selectAll('.zdt_shape')
       .attr('id', this.id)
-      .attr('fill-opacity', this._opacity)
+      .attr('fill-opacity', this._opacity/100)
       .attr('fill', this._color)
       .style('stroke', this._color_border)
       .style('stroke-width', this.is_selected ? default_selected_stroke_width : ((this._transparent_border) ? 0 : 1))
@@ -110,6 +111,15 @@ export class Class_FreeLabel extends Class_Element {
     } else {
       this.drawContentText()
     }
+  }
+
+  /**
+   * Function triggered when element is (un)selected
+   *
+   * @memberof Class_FreeLabel
+   */
+  public drawAsSelected() {
+    this.draw()
   }
 
   /**

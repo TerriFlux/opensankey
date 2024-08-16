@@ -1,16 +1,17 @@
-import { Class_DrawingArea } from 'open-sankey/src/types/DrawingArea'
+import { Class_DrawingArea } from 'open-sankey/dist/types/DrawingArea'
 import { Class_SankeyPlus } from './SankeyPlus'
 import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
 import { Class_NodePlusElement } from './NodePlus'
-import { initial_window_width, initial_window_height } from 'open-sankey/src/types/ApplicationData'
+import { initial_window_width, initial_window_height, Class_ApplicationData } from 'open-sankey/dist/types/ApplicationData'
 import { Class_FreeLabel } from './FreeLabel'
-import { Class_ProtoElement } from 'open-sankey/src/types/Element'
+import { Class_Sankey } from 'open-sankey/dist/types/Sankey'
 
 
 export class Class_DrawingAreaPlus extends Class_DrawingArea {
 
-  private _contextualised_free_label: Class_FreeLabel | undefined=undefined
-
+  private _contextualised_free_label: Class_FreeLabel | undefined = undefined
+  // override _sankey:Class_SankeyPlus
+  // private _sankey_plus:Class_SankeyPlus=this._sankey
 
   /**
    * d3 selection of svg group that contains drawing area free labels
@@ -18,11 +19,9 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public d3_selection_free_label: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-
-
   constructor(height: number, width: number, application_data: Class_ApplicationDataPlus) {
-    super(height, width, application_data)
+    super(height, width, application_data as Class_ApplicationData)
+    this._sankey = (new Class_SankeyPlus(this, this.application_data.menu_configuration)) as unknown as Class_Sankey
   }
 
 
@@ -40,7 +39,8 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
   }
 
   public drawElements(): void {
-    this.sankey.free_labels_list.forEach(zdt => zdt.draw())
+    super.drawElements()
+    this.sankey_plus.free_labels_list.forEach(zdt => zdt.draw())
   }
 
   /**
@@ -53,7 +53,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
 
     let max_free_label_pos_x = 0
     let max_free_label_pos_y = 0
-    this.sankey.visible_free_labels_list.filter(free_label => free_label.position_type === 'absolute').map(free_label => {
+    this.sankey_plus.visible_free_labels_list.filter(free_label => free_label.position_type === 'absolute').map(free_label => {
       const free_label_rightest_pos = free_label.position_x + free_label.label_width
       const free_label_bottomest_pos = free_label.position_y + free_label.label_height
       max_free_label_pos_x = Math.max(max_free_label_pos_x, free_label_rightest_pos)
@@ -83,8 +83,12 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
    * @memberof Class_DrawingAreaPlus
    */
   public addFreeLabelToSelection(zdt: Class_FreeLabel) {
-    this._selection[zdt.id] = zdt as Class_ProtoElement
+    this._selection[zdt.id] = zdt
     zdt.setSelected()
+  }
+
+  public addNewDefaultNodeToSankey() {
+    return this.sankey.addNewDefaultNode()
   }
 
 
@@ -99,15 +103,32 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
       zdt.setUnSelected()
     }
   }
+
+  /**
+   * override purgeSelection to include event for OSP DA
+   *
+   * @memberof Class_DrawingAreaPlus
+   */
+  override purgeSelection() {
+    super.purgeSelection()
+    this.application_data_plus.menu_configuration.ref_to_menu_config_free_label_updater.current()
+
+  }
   // ============GETTER && SETTER ==================
 
-  override get sankey(): Class_SankeyPlus { return this._sankey as Class_SankeyPlus }
+  public get sankey_plus() { return this._sankey as unknown as Class_SankeyPlus }
+  override get sankey() { return this._sankey as Class_SankeyPlus }
+  override set sankey(_: Class_SankeyPlus) { this._sankey = _ }
 
-  public get selected_nodes_list_plus(): Class_NodePlusElement[] { return this.selected_nodes_list as Class_NodePlusElement[] }
+  public get application_data_plus():Class_ApplicationDataPlus{
+    return this.application_data as Class_ApplicationDataPlus
+  }
 
-  public get selected_free_labels_list() { return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) }
+  public get selected_nodes_list_plus(): Class_NodePlusElement[] { return this.selected_nodes_list as unknown as Class_NodePlusElement[] }
+
+  public get selected_free_labels_list() { return this.sankey_plus.free_labels_list.filter(zdt => zdt.is_selected) }
   public get selected_free_labels_list_sorted() { return this.selected_free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 
-  public get contextualised_free_label(): Class_FreeLabel | undefined {return this._contextualised_free_label}
-  public set contextualised_free_label(value: Class_FreeLabel | undefined) {this._contextualised_free_label = value}
+  public get contextualised_free_label(): Class_FreeLabel | undefined { return this._contextualised_free_label }
+  public set contextualised_free_label(value: Class_FreeLabel | undefined) { this._contextualised_free_label = value }
 }

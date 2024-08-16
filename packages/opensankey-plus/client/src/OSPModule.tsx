@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import {
   dict_hook_ref_setter_show_dialog_componentsType,
   module_dialogsType,
@@ -99,6 +99,7 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
     set_data: set_data_plus,
     get_default_data: plus_get_defaut_data,
     new_data:new Class_ApplicationDataPlus(false),
+    dataVarToUpdate:useRef(['']),
     // convert_data : (data:SankeyData,DefaultSankeyData:()=>SankeyData) => {
     //   plus_convert_data(data as OSPData,DefaultSankeyData as ()=> OSPData)
     //   convert_data(data,DefaultSankeyData)
@@ -137,7 +138,7 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   applicationData,
 ) => {
   // const OSPApplicationContext=applicationContext as OSPApplicationContextType
-  const plus_dict_app_data = applicationData as OSPApplicationDataType
+  const plus_dict_app_data = applicationData as unknown as OSPApplicationDataType
 
   // TODO : re implement SelecteurView with class
   // (uiElementsRef as OSPUiElementsRefType).ViewSelector.current=<SelecteurView
@@ -159,7 +160,6 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   //   has_open_sankey_plus={true}
   // />
 
-  const OSPApplicationData = applicationData as OSPApplicationDataType
   // TODO : re implement OSPBannerView with class
 
   // const has_views = OSPApplicationData.master_data &&  OSPApplicationData.master_data.view.length > 0 
@@ -241,7 +241,7 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
     />
   )
 
-  const plusData = applicationData as OSPApplicationDataType
+  const plusData = applicationData as unknown as OSPApplicationDataType
   // TODO : re implement MenuEnregistrerView with class
   // if (plusData.master_data && plusData.master_data.current_view && plusData.master_data.current_view!=='none') {
   //   additionalMenus.additional_file_save_json_option.push(
@@ -275,14 +275,14 @@ export const OSPModuleDialogs: module_dialogsType = (
   processFunctions
 
 ) => {
-  const OSP_dict_app_data = applicationData as OSPApplicationDataType
+  const OSP_dict_app_data = applicationData as unknown as OSPApplicationDataType
   const { new_data } = OSP_dict_app_data
   const content_draggable_menu_zdt = <OSPMenuConfigurationFreeLabels
     applicationData={OSP_dict_app_data}
   />
   return [
     <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration_plus.dict_setter_show_dialog_plus as unknown as dict_hook_ref_setter_show_dialog_componentsType }
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog_plus as unknown as dict_hook_ref_setter_show_dialog_componentsType }
       dialog_name={'ref_setter_show_menu_zdt' as keyof dict_hook_ref_setter_show_dialog_componentsType}
       content={content_draggable_menu_zdt }
       title={new_data.t('Menu.LL')}

@@ -1,4 +1,4 @@
-import { Class_MenuConfig } from 'open-sankey/src/types/MenuConfig'
+import { Class_MenuConfig } from 'open-sankey/dist/types/MenuConfig'
 import { MutableRefObject, Dispatch, SetStateAction, useRef, RefObject } from 'react'
 import { OSPShowMenuComponentsVarType } from '../../types/Types'
 

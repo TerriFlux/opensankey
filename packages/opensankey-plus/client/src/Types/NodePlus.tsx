@@ -1,4 +1,4 @@
-import { Class_NodeElement } from 'open-sankey/src/types/Node'
+import { Class_NodeElement } from 'open-sankey/dist/types/Node'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import * as d3 from 'd3'
@@ -20,7 +20,6 @@ export class Class_NodePlusElement extends Class_NodeElement {
   private _image_src: string
 
   private _hyperlink: string
-
   constructor(
     id: string,
     name: string,
@@ -43,13 +42,13 @@ export class Class_NodePlusElement extends Class_NodeElement {
   }
 
   // PUBLIC METHOD =================================
-  public draw() {
+  override draw() {
     super.draw()
     this.drawIllustration()
   }
 
   public drawIllustration() {
-    this.d3_selection?.selectAll('.illustartion').remove()
+    this.d3_selection_plus?.selectAll('.illustartion').remove()
     if (this._is_image) {
       this.drawIllustrationImage()
     }
@@ -59,12 +58,11 @@ export class Class_NodePlusElement extends Class_NodeElement {
   }
 
   public isEqualPlus(element:Class_NodePlusElement){
-    
     this.isEqual(element as Class_NodeElement)
   }
   // PRIVATE ===========================
   private drawIllustrationImage() {
-    this.d3_selection?.append('image')
+    this.d3_selection_plus?.append('image')
       .attr('id', n => 'image_node_' + n.id)
       .attr('class', 'illustartion')
       .attr('href', n => n.image_src)
@@ -74,16 +72,16 @@ export class Class_NodePlusElement extends Class_NodeElement {
   }
 
   private drawIllustrationIcon() {
-    this.d3_selection?.append('svg')
+    this.d3_selection_plus?.append('svg')
       .attr('id', n => 'icon_node_' + n.id)
       .attr('class', 'icon_node')
       .attr('viewBox', d => d.iconViewBox ? d.iconViewBox : '0 0 1000 1000')
-      .attr('height', n => +d3.select(' .opensankey #shape_' + n.id).attr('height'))
-      .attr('width', n => +d3.select(' .opensankey #shape_' + n.id).attr('width'))
+      .attr('height', n => n.getShapeHeightToUse())
+      .attr('width', n => n.getShapeWidthToUse())
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', this.getShapeColorToUse())
+      .style('fill', this.iconColor)
       .attr('d', n => (this.drawing_area.sankey as Class_SankeyPlus).getIconFromCatalog(n.iconName))
   }
 
@@ -91,6 +89,8 @@ export class Class_NodePlusElement extends Class_NodeElement {
   // ============GETTER && SETTER ==================
   public get iconName(): string { return this._iconName }
   public set iconName(value: string) { this._iconName = value }
+
+  public get d3_selection_plus(){return this.d3_selection as d3.Selection<SVGGElement, this, SVGGElement, unknown> | null}
 
   public get iconColor(): string { return this._iconColor }
   public set iconColor(value: string) { this._iconColor = value }

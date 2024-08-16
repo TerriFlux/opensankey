@@ -5,7 +5,7 @@
 // ==================================================================================================
 
 // External imports
-import { Class_Sankey } from 'open-sankey/src/types/Sankey'
+import { Class_Sankey } from 'open-sankey/dist/types/Sankey'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodePlusElement } from './NodePlus'
@@ -179,17 +179,40 @@ export class Class_SankeyPlus extends Class_Sankey {
    * @memberof Class_SankeyPlus
    */
   public getIconFromCatalog(id_icon: string) {
-    const icon = this._icon_catalog[id_icon]
+    const icon = this.icon_catalog[id_icon]
     if (icon !== undefined && icon !== null) {
       return icon
     }
     return ''
   }
 
+  public addNewDefaultNode() {
+    const n = String(Object.values(this._nodes).length)
+    const id = 'node' + n
+    const name = 'Node ' + n
+    return this.addNewNode(id, name)
+  }
+
+  public addNewNode(id: string, name: string): Class_NodePlusElement {
+    if (!this._nodes[id]) {
+      // Create node
+      const node = new Class_NodePlusElement(id, name, this.drawing_area, this._menu_config)
+      // Set node to default position
+      node.initDefaultPosXY()
+      // Update registry of nodes
+      this._addNode(node)
+      return node
+    }
+    else {
+      return this.addNewNode(id + '_0', name + '_0')
+    }
+  }
+
   // GETTERS / SETTERS ==================================================================
   public get nodes_list_plus(): Class_NodePlusElement[] {
-    return super.nodes_list as Class_NodePlusElement[]
+    return this.nodes_list as unknown as Class_NodePlusElement[]
   }
+
 
   public get free_labels_dict() { return this._labels }
 

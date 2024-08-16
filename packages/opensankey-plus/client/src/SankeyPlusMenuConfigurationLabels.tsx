@@ -81,20 +81,19 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
 }) => {
   const { new_data } = applicationData
   const { t } = new_data
-  const selected_zdt = new_data.drawing_area_plus.selected_free_labels_list
+  const selected_zdt = new_data.drawing_area.selected_free_labels_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
   const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'zdt') : 'zdt')
   const [button_icon_or_image, set_button_icon_or_image] = useState<'zdt' | 'image'>(zdt_or_image)
 
-  const INITIAL_OPTIONS_label = new_data.drawing_area_plus.sankey.free_labels_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
+  const INITIAL_OPTIONS_label = new_data.drawing_area.sankey.free_labels_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
   const selected_label = selected_zdt.map((d) => { return { 'label': d.title, 'value': d.id } })
 
   //const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
   const [forceUpdate, setForceUpdate] = useState(false)
-
   // Link current component updater to menu config class
-  new_data.menu_configuration_plus.ref_to_menu_config_free_label_updater.current = () => setForceUpdate(!forceUpdate)
+  new_data.menu_configuration.ref_to_menu_config_free_label_updater.current = () => setForceUpdate(!forceUpdate)
   //applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
 
   // if (selected_zdt.length == 0 && s_editor_content_fo_zdt != '') {
@@ -103,13 +102,13 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: Class_FreeLabel) => {
-    new_data.drawing_area_plus.sankey.moveUpFreeLabelOrder(i)
+    new_data.drawing_area.sankey.moveUpFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleDownlabel = (i: Class_FreeLabel) => {
-    new_data.drawing_area_plus.sankey.moveDownFreeLabelOrder(i)
+    new_data.drawing_area.sankey.moveDownFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
 
@@ -142,15 +141,15 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
             onChange={(entries: Type_MenuSelectionEntry[]) => {
               // Update selection list
               const entries_values = entries.map(d => d.value)
-              new_data.drawing_area_plus.sankey.free_labels_list.forEach(zdt => {
+              new_data.drawing_area.sankey.free_labels_list.forEach(zdt => {
                 if (entries_values.includes(zdt.id)) {
-                  new_data.drawing_area_plus.addFreeLabelToSelection(zdt)
+                  new_data.drawing_area.addFreeLabelToSelection(zdt)
                 }
                 else {
-                  new_data.drawing_area_plus.removeFreeLabelFromSelection(zdt)
+                  new_data.drawing_area.removeFreeLabelFromSelection(zdt)
                 }
               })
-              setForceUpdate(!forceUpdate)
+              redrawAndRefresh()
             }}
             labelledBy={t('Noeud.TS')}
           />
@@ -279,9 +278,9 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
         variant='menuconfigpanel_add_button'
         onClick={() => {
           // Create default node
-          const new_node = new_data.drawing_area_plus.sankey.addNewDefaultFreeLabel()
+          const new_node = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
           // Add node to selection
-          new_data.drawing_area_plus.addFreeLabelToSelection(new_node)
+          new_data.drawing_area.addFreeLabelToSelection(new_node)
           // Update menus
           redrawAndRefresh()
         }
@@ -294,7 +293,7 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
         isDisabled={disable_options}
         onClick={() => {
           // Delete all selected nodes
-          applicationData.new_data.drawing_area_plus.sankey.deleteSelectedFreeLabels()
+          applicationData.new_data.drawing_area.sankey.deleteSelectedFreeLabels()
           // Update all menus
           redrawAndRefresh()
         }
@@ -586,8 +585,8 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
   const { t } = new_data
   // const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<OSPLabel>()
   // const { _ref_to_menu_config_free_label_updater } = ComponentUpdater
-  const selected_zdt = new_data.drawing_area_plus.selected_free_labels_list
-  const zdt_to_contextualise = new_data.drawing_area_plus.contextualised_free_label
+  const selected_zdt = new_data.drawing_area.selected_free_labels_list
+  const zdt_to_contextualise = new_data.drawing_area.contextualised_free_label
   // contextualised_zdt.current = set_zdt_to_contextualise
   // dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
   const [, setCount] = useState(0)
@@ -599,7 +598,7 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
   const redrawAndRefresh = () => {
     // Refresh menu config free label
-    new_data.menu_configuration_plus.ref_to_menu_config_free_label_updater.current()
+    new_data.menu_configuration.ref_to_menu_config_free_label_updater.current()
     // Redraw selected elements
     selected_zdt.forEach(zdt => zdt.draw())
     // Refresh this menu
@@ -608,7 +607,7 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
   const closeContextMenu = () => {
     // Unset contextualized node
-    new_data.drawing_area_plus.contextualised_free_label = undefined
+    new_data.drawing_area.contextualised_free_label = undefined
     setCount(a => a + 1)
 
   }
@@ -641,7 +640,7 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
 
   const button_open_layout = <Button onClick={() => {
-    new_data.menu_configuration_plus.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
+    new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
 
   }} variant='contextmenu_button'>{t('Menu.LL')} {icon_open_modal}</Button>
@@ -681,15 +680,13 @@ export const ZDTMenuAsAccordeonItem: FunctionComponent<ZDTMenuAsAccordeonItemTyp
   applicationData,
   content_menu_zdt
 }) => {
-  // const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
-  // const { t } = applicationContext
   const { new_data } = applicationData
   const { t } = new_data
   return <AccordionItem
-    style={{ 'display': (new_data.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
+    // style={{ 'display': (new_data.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
   >
     <AccordionButton
-      ref={new_data.menu_configuration_plus.zdt_accordion_ref}
+      ref={new_data.menu_configuration.zdt_accordion_ref}
       onClick={() => {
         const scroll_x = window.scrollX
         const scroll_y = window.scrollY

@@ -54,8 +54,9 @@ import {
 // import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 
 // OpenSankey js-code
-import { TooltipValueSurcharge } from 'open-sankey/dist/configmenus/SankeyUtils'
-import { Class_NodeElement, default_shape_visible, isAttributeOverloaded } from 'open-sankey/src/types/Node'
+// import { TooltipValueSurcharge } from 'open-sankey/dist/configmenus/SankeyUtils'
+import { default_shape_visible, isAttributeOverloaded } from 'open-sankey/dist/types/Node'
+import { TooltipValueSurcharge } from 'open-sankey/dist/types/Utils'
 
 
 declare const window: Window &
@@ -72,8 +73,8 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   const is_activated = new_data.has_sankey_plus
   const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(false)
-  const selected_nodes = new_data.drawing_area_plus.sankey.nodes_list_plus
-  new_data.menu_configuration_plus.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
+  const selected_nodes = new_data.drawing_area.sankey.nodes_list_plus
+  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
 
   const redrawIllustrationAndRefresh = () => {
     selected_nodes.forEach(zdt => zdt.drawIllustration())
@@ -81,7 +82,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   }
 
   const redrawAndRefresh = () => {
-    new_data.menu_configuration_plus.ref_to_menu_config_node_apparence_updater.current()
+    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
     selected_nodes.forEach(zdt => zdt.draw())
     setForceUpdate(!forceUpdate)
   }
@@ -140,7 +141,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
                 variant='menuconfigpanel_option_button'
                 disabled={!is_activated}
                 onClick={() => {
-                  new_data.menu_configuration_plus.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current!(true)
+                  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current!(true)
                 }}
               >
                 <FontAwesomeIcon icon={faIcons} />
@@ -284,7 +285,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
         {t('Noeud.apparence.Visibilité')}
       </OSTooltip>
       {
-        isAttributeOverloaded(selected_nodes as Class_NodeElement[], 'shape_visible') ?
+        isAttributeOverloaded(selected_nodes, 'shape_visible') ?
           TooltipValueSurcharge('node_var', t) :
           <></>
       }

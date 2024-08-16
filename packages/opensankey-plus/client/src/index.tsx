@@ -35,7 +35,7 @@ import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPers
 import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
 import { initializeApplicationData } from 'open-sankey/src/OSModule'
 import { initializeMenuConfiguration } from 'open-sankey/dist/OSModule'
-import { processFunctionsType, SankeyData } from 'open-sankey/src/types/LegacyType'
+import { applicationDataType, processFunctionsType, SankeyData } from 'open-sankey/src/types/LegacyType'
 
 declare const window: Window &
 typeof globalThis & {
@@ -119,8 +119,8 @@ root.render(
       )=>{
         return {
           // ...initializeApplicationData(data,set_data,get_default_data,initial_data),
-          ...OSPInitializeApplicationData(data,set_data,get_default_data,initial_data)
-        } as OSPApplicationDataType
+          ...OSPInitializeApplicationData(data,set_data,get_default_data,initial_data) as unknown as applicationDataType
+        } 
       }
     }
 
@@ -222,7 +222,7 @@ root.render(
     // but OSP can use its view as imported data
     // )
     initializeDiagrammSelector={(applicationData)=>{
-      const plus_app_data=applicationData as OSPApplicationDataType
+      const plus_app_data=applicationData as unknown as OSPApplicationDataType
       // return OSPDiagramSelector(
       //   plus_app_data
       // )
