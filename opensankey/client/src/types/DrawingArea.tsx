@@ -225,7 +225,13 @@ export class Class_DrawingArea {
    */
   private _ghost_link: Class_GhostLinkElement | null = null
 
-  // Elements that are selected in this area
+  /**
+   *Elements that are selected in this area
+   *
+   * @protected
+   * @type {{ [id: string]: Class_ProtoElement }}
+   * @memberof Class_DrawingArea
+   */
   protected _selection: { [id: string]: Class_ProtoElement } = {}
 
   // Context menu
@@ -392,8 +398,14 @@ export class Class_DrawingArea {
     this.d3_selection?.classed('selection_mode', !is_edition)
   }
 
-  // Sankey
-  public get sankey() { return this._sankey }
+  /**
+   * return sankey
+   *
+   * @readonly
+   * @return {Class_Sankey}
+   * @memberof Class_DrawingArea
+   */
+  public get sankey(): Class_Sankey { return this._sankey }
 
   // Legend
   public get legend(): Class_Legend { return this._legend }
@@ -582,7 +594,7 @@ export class Class_DrawingArea {
    * @return {*}
    * @memberof Class_DrawingArea
    */
-  private isMouseOverAnExistingNode() {
+  private isMouseOverAnExistingNode(): boolean {
     let node_id: string
     for (node_id in this.sankey.nodes_dict) {
       if (this.sankey.nodes_dict[node_id].isMouseOver())
@@ -596,7 +608,7 @@ export class Class_DrawingArea {
    * @return {boolean}
    * @memberof Class_DrawingArea
    */
-  public eventsEnabled() {
+  public eventsEnabled(): boolean {
     // Deal with node events in priority
     const mouse_over_nodes = this.isMouseOverAnExistingNode()
     if (mouse_over_nodes === true) {
@@ -620,7 +632,7 @@ export class Class_DrawingArea {
    * @return {Class_NodeElement}
    * @memberof Class_DrawingArea
    */
-  public addNewDefaultNodeToSankey() { return this.sankey.addNewDefaultNode() }
+  public addNewDefaultNodeToSankey(): Class_NodeElement { return this.sankey.addNewDefaultNode() }
 
   /**
    * Retrieve node by id from sankey struct
@@ -628,22 +640,22 @@ export class Class_DrawingArea {
    * @return {Class_NodeElement | null}
    * @memberof Class_DrawingArea
    */
-  public getNodeFromSankey(id: string) { return this.sankey.getNode(id) }
+  public getNodeFromSankey(id: string): Class_NodeElement | null { return this.sankey.getNode(id) }
 
   /**
    * Add a new default link to drawing area sankey
    * @return {Class_LinkElement}
    * @memberof Class_DrawingArea
    */
-  public addNewDefaultLinkToSankey() { return this.sankey.addNewDefaultLink() }
+  public addNewDefaultLinkToSankey(): Class_LinkElement { return this.sankey.addNewDefaultLink() }
 
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
-   * @return {Class_NodeElement | null}
+   * @return {Class_LinkElement | null}
    * @memberof Class_DrawingArea
    */
-  public getLinkFromSankey(id: string) { return this.sankey.getLink(id) }
+  public getLinkFromSankey(id: string): Class_LinkElement | null { return this.sankey.getLink(id) }
 
   /**
    * Clean selection set of sankey elements
@@ -937,11 +949,11 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list
       .forEach(n => {
         // Search for node with position x inf. to 0 and to element with minimum x position value
-        if (n.position_x < 0 && n.position_x < (element_min_x?.position_x??0)) {
+        if (n.position_x < 0 && n.position_x < (element_min_x?.position_x ?? 0)) {
           element_min_x = n as Class_Element
         }
         // Search for node with position y inf. to 0 and to element with minimum y position value
-        if (n.position_y < 0 && n.position_y < (element_min_x?.position_y??0)) {
+        if (n.position_y < 0 && n.position_y < (element_min_x?.position_y ?? 0)) {
           element_min_y = n as Class_Element
         }
       })
@@ -1002,7 +1014,7 @@ export class Class_DrawingArea {
 
   /**
    * Draw grid for drawing area
-   * @private
+   * @public
    * @memberof Class_DrawingArea
    */
   public drawGrid() {

@@ -17,6 +17,7 @@ import {
 /*************************************************************************************************/
 
 import {
+  AdditionalMenusType,
   applicationDataType,
 } from '../types/LegacyType'
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
@@ -37,7 +38,8 @@ import { Class_NodeElement } from '../types/Node'
 
 type SankeyEditionTypes = {
   applicationData: applicationDataType,
-  menu_configuration_nodes_attributes:JSX.Element
+  menu_configuration_nodes_attributes:JSX.Element,
+  additionalMenus : AdditionalMenusType
 }
 
 /*************************************************************************************************/
@@ -46,6 +48,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
     applicationData,
     menu_configuration_nodes_attributes,
+    additionalMenus
   }
 ) => {
 
@@ -107,7 +110,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
       applicationData={applicationData}
       menu_for_modal={false}
-    />
+    />,
+    ...additionalMenus.additional_menu_configuration_nodes
   }
 
   if (new_data.drawing_area.sankey.node_taggs_list.length > 0 ) {
@@ -122,6 +126,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     menu_for_modal={false}
   />
 
+  // Object.assign(ui,additionalMenus.additional_menu_configuration_nodes)
+  // ui={...ui,...additionalMenus.additional_menu_configuration_nodes}
   // Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
     const DD = (

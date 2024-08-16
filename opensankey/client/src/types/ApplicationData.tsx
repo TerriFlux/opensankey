@@ -33,11 +33,23 @@ export class Class_ApplicationData {
   public version: string = '0.9'
   public fit_screen: boolean
 
-  // Drawing area
-  private _drawing_area: Class_DrawingArea
+  /**
+   *Drawing area
+   *
+   * @protected
+   * @type {Class_DrawingArea}
+   * @memberof Class_ApplicationData
+   */
+  protected _drawing_area: Class_DrawingArea
 
-  // Configuration Menu
-  private _menu_configuration: Class_MenuConfig
+  /**
+   *Configuration Menu
+   *
+   * @protected
+   * @type {Class_MenuConfig}
+   * @memberof Class_ApplicationData
+   */
+  protected _menu_configuration: Class_MenuConfig
 
   // PRIVATE ATTRIBUTES =================================================================
 
