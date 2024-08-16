@@ -521,10 +521,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
     </OSTooltip>
 
     {/* Position du noeud */}
-    <OSTooltip label={t('Noeud.apparence.tooltips.Forme')}>
+    <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
-          {'Type de positionnement'}
+          {t('Noeud.apparence.geometry')}
           {(IsNodeDisplayingValueLocal(multi_selected_nodes,'position',menu_for_style)?
             <>{TooltipValueSurcharge('node_var_',t)}</>:
             <></>)}
@@ -544,7 +544,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
               updateLinkAttachedToNodes()
             }}
           >
-            {'Absolu'}
+            {t('Noeud.apparence.geometry_absolute')}
           </Button>
 
           <Button
@@ -560,7 +560,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
               updateLinkAttachedToNodes()
             }}
           >
-            {'Paramétrique'}
+            {t('Noeud.apparence.geometry_parametric')}
           </Button>
 
           <Button
@@ -587,16 +587,37 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
               updateLinkAttachedToNodes()
             }}
           >
-            {'Relatif'}
+            {t('Noeud.apparence.geometry_relative')}
           </Button>
         </Box>
       </Box>
     </OSTooltip>
-    {/* Ecarts vertical des noeuds */}
-    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
+    {/* Ecarts horizontal des noeuds */}
+    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.interval')}
+          {t('Noeud.apparence.geometry_dx')}
+        </Box>
+        <ConfigNodeAttributeNumberInput
+          data={applicationData.data}
+          parameter_to_modify={parameter_to_modify}
+          selected_parameter={selected_parameter}
+          menu_for_style={menu_for_style}
+          local_var_of_node='dx'
+          function_onBlur={()=>{
+            updateMenuConfigNode()
+            updateLinkAttachedToNodes()
+          }}
+          stepper={true}
+          unitText='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
+    {/* Ecarts vertical des noeuds */}
+    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_dy')}
         </Box>
         <ConfigNodeAttributeNumberInput
           data={applicationData.data}
@@ -614,10 +635,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       </Box>
     </OSTooltip> : <></>}
     {/* Ecarts vertical des noeuds */}
-    {list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
+    {list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dx')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
-          {'dx'}
+          {t('Noeud.apparence.geometry_relative_dx')}
         </Box>
         <ConfigNodeAttributeNumberInput
           data={applicationData.data}
@@ -634,10 +655,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         />
       </Box>
     </OSTooltip> : <></>}
-    {list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
+    {list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dy')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
-          {'dy'}
+          {t('Noeud.apparence.geometry_relative_dy')}
         </Box>
         <ConfigNodeAttributeNumberInput
           data={applicationData.data}
@@ -897,7 +918,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           {/* Position  du label par rapport au noeud */}
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name' >
-              Ancre
+              {t('Noeud.labels.anchor')}
             </Box>
 
             <Box layerStyle='options_2cols' >
@@ -1072,10 +1093,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
 
 
           {/* Position du label par rapport à l'ancre*/}
-          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+          <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {'Coordonnée horizontale'}
+                {t('Noeud.labels.anchor_dx')}
                 {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_horiz_shift',menu_for_style)?
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
                   <></>)}
@@ -1095,10 +1116,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           </OSTooltip>
 
           {/* Position du label par rapport à l'ancre*/}
-          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+          <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {'Coordonnée verticale'}
+                {t('Noeud.labels.anchor_dy')}
                 {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_vert_shift',menu_for_style)?
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
                   <></>)}
@@ -1177,7 +1198,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           {/* Position de l'affichage des données par rapport au noeud */}
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name' >
-              Ancre
+              {t('Noeud.node_value.anchor')}
             </Box>
             <Box layerStyle='options_2cols' >
               {/* Horizontale */}
@@ -1326,11 +1347,11 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             </Box>
             {advanced_label_value_content}
           </Box>
-          {/* Position du label par rapport à l'ancre*/}
-          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+          {/* Position de la valeur du noeud par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dx')}>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {'Coordonnée horizontale'}
+                {t('Noeud.node_value.anchor_dx')}
                 {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_horiz_valeur_shift',menu_for_style)?
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
                   <></>)}
@@ -1349,11 +1370,11 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             </Box>
           </OSTooltip>
 
-          {/* Position du label par rapport à l'ancre*/}
-          <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+          {/* Position de la valeur du noeud par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dy')}>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {'Coordonnée verticale'}
+                {t('Noeud.node_value.anchor_dy')}
                 {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_vert_valeur_shift',menu_for_style)?
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
                   <></>)}
