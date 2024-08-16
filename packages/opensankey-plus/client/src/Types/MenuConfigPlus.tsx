@@ -1,7 +1,7 @@
 import { Class_MenuConfig } from 'open-sankey/dist/types/MenuConfig'
 import { MutableRefObject, Dispatch, SetStateAction, useRef, RefObject } from 'react'
 import { OSPShowMenuComponentsVarType } from '../../types/Types'
-
+import * as d3 from 'd3'
 
 export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
@@ -25,6 +25,22 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
       ref_setter_show_modal_transparent_view_attr: useRef<() => void>(() => null),
 
     }
+  }
+
+  //PUBLIC METHODS =====================================
+  public OpenConfigMenuElementsFreeLabels() {
+    this.OpenConfigMenuElements()
+    this._zdt_accordion_ref.current?.click()
+    // Leave enough time for menus to open
+    setTimeout(() => {
+      // Open Free labels element menu
+      if (
+        this._zdt_accordion_ref.current &&
+        (d3.select(this._zdt_accordion_ref.current).attr('aria-expanded') === 'false')
+      ) {
+        this._zdt_accordion_ref.current.click()
+      }
+    }, 200)
   }
 
 

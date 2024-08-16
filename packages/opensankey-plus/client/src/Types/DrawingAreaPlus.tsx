@@ -34,7 +34,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
   public reset() {
     super.reset()
     // Add specific groups for free_labels, link and others
-    this.d3_selection_free_label = this.d3_selection?.append('g').attr('id', 'g_labels') ?? null
+    this.d3_selection_free_label = this.d3_selection?.insert('g','#g_links').attr('id','g_labels') ?? null
     this.drawElements()
   }
 
