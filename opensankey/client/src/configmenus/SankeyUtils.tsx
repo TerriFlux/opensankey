@@ -683,13 +683,13 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
 
     legend_width:180,
     legend_position: [0,0],
-    mask_legend:false,
+    mask_legend:true,
     display_legend_scale:false,
     legend_police:16,
     legend_bg_border:false,
     legend_bg_color:defaultElementColor,
     legend_bg_opacity:0,
-    legend_show_dataTags:false,
+    legend_show_dataTags:true,
     node_label_separator:' - ',
 
     //parametric_mode : false
