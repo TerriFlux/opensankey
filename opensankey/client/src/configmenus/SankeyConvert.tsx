@@ -1211,14 +1211,14 @@ export const convert_links:convert_linksFuncType = (
     if (!source_node || !target_node) {
       return
     }
-    if (l && l.local && !('orientation' in l.local)) {
-      AssignLinkLocalAttribute(l,'orientation','hh')
-      if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        AssignLinkLocalAttribute(l,'orientation','vh')
-      } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
-        AssignLinkLocalAttribute(l,'orientation','hv')
-      }
-    }
+    // if (l && l.local && !('orientation' in l.local)) {
+    //   AssignLinkLocalAttribute(l,'orientation','hh')
+    //   if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+    //     AssignLinkLocalAttribute(l,'orientation','vh')
+    //   } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
+    //     AssignLinkLocalAttribute(l,'orientation','hv')
+    //   }
+    // }
     if ('link_reverse' in l) {
       delete l_convert.link_reverse
     }

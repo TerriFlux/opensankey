@@ -441,8 +441,13 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
     }, {}) as {[idNode:string]:SankeyNode}
   applicationData.display_nodes=display_nodes
   AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
-  AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
-  AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
+
+  if ( data.style_node['NodeSectorStyle'] ) {
+    AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
+  }
+  if ( data.style_node['NodeProductStyle'] ) {
+    AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
+  }
   // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
   // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
   const display_links=Object.keys(data.links)
@@ -850,8 +855,12 @@ export const ComputeParametrization:ComputeParametrizationType = (
   })
 
   AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
-  AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
-  AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
+  if ( data.style_node['NodeSectorStyle'] ) {
+    AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
+  }
+  if ( data.style_node['NodeProductStyle'] ) {
+    AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
+  }
 
   Object.values(display_nodes).forEach(n=>{
 
