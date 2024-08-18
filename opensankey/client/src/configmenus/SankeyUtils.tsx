@@ -240,10 +240,10 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
 
         
 
-        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +target_node.x + +ReturnPositionValueNode(data,node,'relative_dx')
-        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +target_node.y + +ReturnPositionValueNode(data,node,'relative_dy')
-        const target_node_x = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.x : +node.x + +ReturnPositionValueNode(data,target_node,'relative_dx')
-        const target_node_y = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.y : +node.y + +ReturnPositionValueNode(data,target_node,'relative_dy')
+        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +target_node.x + +ReturnValueNode(data,node,'relative_dx')
+        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +target_node.y + +ReturnValueNode(data,node,'relative_dy')
+        const target_node_x = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.x : +node.x + +ReturnValueNode(data,target_node,'relative_dx')
+        const target_node_y = ReturnValueNode(data,target_node,'position') !== 'relative' ? +target_node.y : +node.y + +ReturnValueNode(data,target_node,'relative_dy')
         if (ReturnValueLink(data,link,'orientation') === 'hh') {
           if (target_node_x > node_x && !ReturnValueLink(data,link,'recycling') || target_node_x <= node_x && ReturnValueLink(data,link,'recycling')) {
             right_flux.push(idLink)
@@ -287,10 +287,10 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         } catch {
           return
         }
-        const source_node_x = ReturnValueNode(data,source_node,'position') !== 'relative' ? +source_node.x : +node.x + +ReturnPositionValueNode(data,source_node,'relative_dx')
-        const source_node_y = ReturnValueNode(data,source_node,'position') ? +source_node.y : +node.y + +ReturnPositionValueNode(data,source_node,'relative_dy')
-        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +source_node.x + +ReturnPositionValueNode(data,node,'relative_dx')
-        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +source_node.y + +ReturnPositionValueNode(data,node,'relative_dy')
+        const source_node_x = ReturnValueNode(data,source_node,'position') !== 'relative' ? +source_node.x : +node.x + +ReturnValueNode(data,source_node,'relative_dx')
+        const source_node_y = ReturnValueNode(data,source_node,'position') ? +source_node.y : +node.y + +ReturnValueNode(data,source_node,'relative_dy')
+        const node_x = ReturnValueNode(data,node,'position') !== 'relative' ? +node.x : +source_node.x + +ReturnValueNode(data,node,'relative_dx')
+        const node_y = ReturnValueNode(data,node,'position') !== 'relative' ? +node.y : +source_node.y + +ReturnValueNode(data,node,'relative_dy')
         const ori_link = ReturnValueLink(data,link,'orientation')
         if (ori_link === 'vv') {
           if (source_node_y < node_y) {
@@ -651,14 +651,14 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     height: window.innerHeight - 50,
     linkZIndex:[],
 
-    h_space: 200,
-    v_space: 50,
+    // h_space: 200,
+    // v_space: 50,
 
     show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
 
-    left_shift: 0,
-    right_shift: 1,
+    // left_shift: 0,
+    // right_shift: 1,
     display_style: {
       filter: 0,
       filter_label: 0,
@@ -760,7 +760,7 @@ export const LinkColor:LinkColorFuncType = (
       return colorLink
     }
   }
-
+  
   const source_node = data.nodes[l.idSource]
   const target_node = data.nodes[l.idTarget]
   let selected_tag = ''
@@ -972,7 +972,7 @@ export const DefaultNodeImportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
   // common import export
   node_style.label_visible = false
   node_style.shape_visible = false
-  node_style.node_width = 0
+  node_style.node_width = 1
   node_style.label_box_width = 300
   node_style.label_vert = 'middle'
   // label
@@ -1661,22 +1661,27 @@ const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
   return to_display
 }
 
-const NodeHasDisplayedLevel=(data:SankeyData,n:SankeyNode)=>{
+export const NodeHasDisplayedLevel=(
+  data:SankeyData,
+  n:SankeyNode
+)=>{
   let to_display=true
   // Check if there is other aggregation tags than 'Primaire',
-  const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
+  //const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
 
-  const only_one_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).length==1
-  const only_primaire_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).map(nt=>nt[0])[0]=='Primaire'
+  //const only_one_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).length==1
+  //const only_primaire_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).map(nt=>nt[0])[0]=='Primaire'
 
-  const multy_but_only_primaire=multi_level && only_one_activated && only_primaire_activated
+  //onst multy_but_only_primaire=multi_level && only_one_activated && only_primaire_activated
 
   // To display a node according to level tag we search if:
   // - The node grp tag banner is 'level'
   // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
   // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
   // - The node has the grp tag name in his tags
-  Object.entries(data.levelTags).filter(nt=>((multi_level && !multy_but_only_primaire)?nt[0]!=='Primaire':true) && nt[1].activated && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{
+  Object.entries(data.levelTags).filter(nt=>
+    nt[1].activated && Object.keys(n.tags).includes(nt[0])
+  ).forEach(nt=>{
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]

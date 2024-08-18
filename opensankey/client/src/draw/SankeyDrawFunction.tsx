@@ -22,8 +22,7 @@ import { ComputeTotalOffsets,
   ReturnValueLink,
   AssignLinkLocalAttribute,
   ToPrecision,
-  GetNodeAttributeValueFromStyle,
-  ReturnPositionValueNode
+  GetNodeAttributeValueFromStyle
 } from '../configmenus/SankeyUtils'
 import {
   DragLinkCenterHandleEvent,
@@ -173,8 +172,8 @@ export const nodeTransform : nodeTransformFType = (
       if ( !source_node) {
         return 'translate(0,0)'
       }
-      const x = source_node.x + +ReturnPositionValueNode(data,d,'relative_dx')+ +ReturnValueNode(data,source_node,'node_width')
-      const y = source_node.y + +ReturnPositionValueNode(data,d,'relative_dy')+ nodeHeight(source_node,applicationData,inv_scale,scale,link_function.GetLinkValue)
+      const x = source_node.x + +ReturnValueNode(data,d,'relative_dx') + nodeWidth(source_node,applicationData,link_function.GetLinkValue)
+      const y = source_node.y + +ReturnValueNode(data,d,'relative_dy') + nodeHeight(source_node,applicationData,link_function.GetLinkValue)
       return 'translate(' + x + ', ' + y + ')'
     } else if (d.outputLinksId.length > 0) {
       // importations
@@ -185,8 +184,8 @@ export const nodeTransform : nodeTransformFType = (
       if ( !target_node) {
         return 'translate(0,0)'
       }
-      const x = target_node.x + +ReturnPositionValueNode(data, d, 'relative_dx')- nodeWidth(d,applicationData,inv_scale,scale,link_function.GetLinkValue)
-      const y = target_node.y + +ReturnPositionValueNode(data, d, 'relative_dy')- +ReturnValueNode(data, d, 'node_height')
+      const x = target_node.x + +ReturnValueNode(data, d, 'relative_dx') - nodeWidth(d,applicationData,link_function.GetLinkValue)
+      const y = target_node.y + +ReturnValueNode(data, d, 'relative_dy') - nodeHeight(d,applicationData,link_function.GetLinkValue)
       return 'translate(' + x + ', ' + y + ')'
     }
     return 'translate(' + 10 + ', ' + 10 + ')'
@@ -194,6 +193,7 @@ export const nodeTransform : nodeTransformFType = (
     return 'translate(' + d.x + ', ' + d.y + ')'
   } else {
     const same_u = Object.values(display_nodes)
+      .filter(n=>ReturnValueNode(data,n,'position') == 'parametric')
       .filter(n=>n.u === d.u)
 
     if (d.v == 0) {
@@ -205,13 +205,13 @@ export const nodeTransform : nodeTransformFType = (
       const node_above = nodes_above.pop()
       if (node_above) {
         d.y = node_above.y + 
-        nodeHeight(node_above, applicationData, inv_scale, scale,link_function.GetLinkValue) + 
+        nodeHeight(node_above, applicationData, link_function.GetLinkValue) + 
         + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
         + (d.local && d.local!.dy ? d.local!.dy : 0)
-      } else {
+      } /*else {
         const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
         d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
-      }
+      }*/
       return 'translate(' + d.x + ', ' + d.y + ')'
     } else {
       same_u.sort((n1,n2)=>n2.v-n1.v)
@@ -219,13 +219,18 @@ export const nodeTransform : nodeTransformFType = (
       const node_below = nodes_below.pop()
       if (node_below) {
         d.y = node_below.y 
-        - nodeHeight(node_below, applicationData, inv_scale, scale,link_function.GetLinkValue) 
-        - + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
-        - (d.local && d.local!.dy ? d.local!.dy : 0)
-      } else {
+        - nodeHeight(d, applicationData, link_function.GetLinkValue) 
+        - + GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') 
+        - (node_below.local && node_below.local!.dy ? node_below.local!.dy : 0)
+      } /*else {
         const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
         d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
-      }
+      }*/
+      if (d.y < 0) {
+        Object.values(data.nodes).forEach(n=>n.y = n.y - d.y+20)
+        const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
+        ggg_nodes.attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')')
+      } 
       return 'translate(' + d.x + ', ' + d.y + ')'
     }
   }
@@ -408,7 +413,7 @@ export const DrawArrows : DrawArrowsType = (
   let cum_v_right = 0
   let cum_h_bottom = 0
   let is_v = true
-  let is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
+  //let is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
   const node_shape=ReturnValueNode(data,n,'shape')
 
   let node_angle_direction='right'
@@ -435,10 +440,14 @@ export const DrawArrows : DrawArrowsType = (
     let arrows_adjustment=0
     const arrow_length= ReturnValueLink(data,l,'arrow_size') as number
 
-    const link_input_from_right=(data.nodes[l.idSource].x>n.x) && node_angle_direction==='left' && (ori === 'hh' || ori === 'vh')
-    const link_input_from_left=(data.nodes[l.idSource].x<n.x) && node_angle_direction==='right' && (ori === 'hh' || ori === 'vh')
-    const link_input_from_top=(data.nodes[l.idSource].y<n.y) && node_angle_direction==='bottom' && (ori === 'vv' || ori === 'hv')
-    const link_input_from_from_bottom=(data.nodes[l.idSource].y<n.y) && node_angle_direction==='top' && (ori === 'vv' || ori === 'hv')
+    const source = data.nodes[l.idSource]
+    const nxx = ReturnValueNode(data,n,'position') === 'relative' ? source.x+ +ReturnValueNode(data,n,'relative_dx') : n.x
+    const nyy = ReturnValueNode(data,n,'position') === 'relative' ? source.y+ +ReturnValueNode(data,n,'relative_dy') : n.y
+
+    const link_input_from_right=(data.nodes[l.idSource].x>nxx) && node_angle_direction==='left' && (ori === 'hh' || ori === 'vh')
+    const link_input_from_left=(data.nodes[l.idSource].x<nxx) && node_angle_direction==='right' && (ori === 'hh' || ori === 'vh')
+    const link_input_from_top=(data.nodes[l.idSource].y<nyy) && node_angle_direction==='bottom' && (ori === 'vv' || ori === 'hv')
+    const link_input_from_from_bottom=(data.nodes[l.idSource].y<nyy) && node_angle_direction==='top' && (ori === 'vv' || ori === 'hv')
 
     const link_direction_same_as_node_arrow= link_input_from_right || link_input_from_left || link_input_from_top || link_input_from_from_bottom
 
@@ -467,9 +476,9 @@ export const DrawArrows : DrawArrowsType = (
       if (extension.display_thin) {
         link_value = inv_scale(applicationData.min_link_thickness)
       }
-      if (data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'  && extension.free_mini !== undefined  && is_exportation_node) {
-        is_exportation_node = false
-      }
+      // if (data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'  && extension.free_mini !== undefined  && is_exportation_node) {
+      //   is_exportation_node = false
+      // }
     }
     
 
@@ -526,13 +535,22 @@ export const DrawArrows : DrawArrowsType = (
           let xt
           let yt
           let p5
-
           if (ori === 'hh' || ori === 'vh') {
+            let dx = 0
+            let dy = 0
+            if (n.x > source.x) {
+              dx = nodeWidth(source,applicationData,GetLinkValue)
+            }
+            if (n.y > source.y) {
+              dy = nodeHeight(source,applicationData,GetLinkValue)
+            }
+            const nx = ReturnValueNode(data,n,'position') === 'relative' ? source.x+ +ReturnValueNode(data,n,'relative_dx') + dx: n.x
+            const ny = ReturnValueNode(data,n,'position') === 'relative' ? source.y+ +ReturnValueNode(data,n,'relative_dy') + dy: n.y
           // If link come horizontally to the node
-            if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
+            if (nx <= source_node.x && recy || nx > source_node.x && !recy) {
               // If node source of the link is to his left (arrow pointing right)
-              xt = +n.x
-              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
+              xt = +nx
+              yt = +ny + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow_part(
@@ -549,8 +567,8 @@ export const DrawArrows : DrawArrowsType = (
               )
             } else {
               // If node source of the link is to his right (arrow pointing left)
-              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width')
-              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
+              xt = +nx + +d3.select('#shape_' + n.idNode).attr('width')
+              yt = +ny + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow_part(
@@ -568,14 +586,14 @@ export const DrawArrows : DrawArrowsType = (
             }
           } else if (ori === 'vv' || ori === 'hv') {
           // If link come vertically to the node (arrow pointing down)
-            if (n.y > source_node.y || is_exportation_node) {
+            if (n.y > source_node.y ) {
               // If node source of the link is above
-              if (is_exportation_node) {
-                xt = +ReturnPositionValueNode(data,n,'relative_dx') + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
-                yt = +ReturnPositionValueNode(data,n,'relative_dy') +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
+              if ( ReturnValueNode(data,n,'position')==='relative') {
+                xt = +ReturnValueNode(data,n,'relative_dx') +source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width') + +d3.select('#shape_' + n.idNode).attr('width') / 2 
+                yt = +ReturnValueNode(data,n,'relative_dy') +source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height')
               } else {
-                xt = n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
-                yt = n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)                
+                xt = nxx + +d3.select('#shape_' + n.idNode).attr('width') / 2 
+                yt = nyy                
               }
               p5 = [xt, yt]
               is_v = false
@@ -604,13 +622,13 @@ export const DrawArrows : DrawArrowsType = (
         .attr('stroke',LinkColor(l, data,GetLinkValue))
         .attr('stroke-width',0.1)
 
-      if ((is_v && !recy && n.x > source_node.x ) || (is_v && recy && n.x < source_node.x) ) {
+      if ((is_v && !recy && nxx > source_node.x ) || (is_v && recy && nxx < source_node.x) ) {
         cum_v_left += link_value
-      } else if ((is_v && !recy &&n.x < source_node.x) || (is_v && recy && n.x > source_node.x)) {
+      } else if ((is_v && !recy &&nxx < source_node.x) || (is_v && recy && nxx > source_node.x)) {
         cum_v_right += link_value
-      } else if ((!is_v && !recy && n.y > source_node.y) || (!is_v && recy && n.y < source_node.y)) {
+      } else if ((!is_v && !recy && nyy > source_node.y) || (!is_v && recy && nyy < source_node.y)) {
         cum_h_top += link_value
-      } else if ((!is_v && !recy && n.y < source_node.y) || (!is_v && recy && n.y > source_node.y)) {
+      } else if ((!is_v && !recy && nyy < source_node.y) || (!is_v && recy && nyy > source_node.y)) {
         cum_h_bottom += link_value
       }
     }

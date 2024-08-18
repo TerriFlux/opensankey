@@ -31,8 +31,8 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   const { pointer_pos } = contextMenu
   const { RedrawNodes } = node_function
   const { RedrawLinks } = link_function
-  const [node_hspace, set_node_hspace] = useState(data.h_space)
-  const [node_vspace, set_node_vspace] = useState(data.v_space)
+  const [node_hspace, set_node_hspace] = useState(data.style_node['default'].dx)
+  const [node_vspace, set_node_vspace] = useState(data.style_node['default'].dy)
   const [forceUpdate, setForceUpdate] = useState(false)
   const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
     d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
@@ -131,7 +131,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
           value={node_hspace}
           onChange={evt => {
             set_node_hspace(+evt)
-            data.h_space = +evt
+            data.style_node['default'].dx = +evt
             ComponentUpdater.updateComponenSaveInCache.current(false)
           }}>
           <NumberInputField/>
@@ -151,7 +151,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
           value={node_vspace}
           onChange={evt => {
             set_node_vspace(+evt)
-            data.h_space = +evt
+            data.style_node['default'].dy = +evt
             ComponentUpdater.updateComponenSaveInCache.current(false)
           }}>
           <NumberInputField/>
@@ -162,8 +162,8 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
       <Button variant='contextmenu_button'
         onClick={() => {
           applicationData.function_on_wait.current = () => {
-            applicationData.data.v_space = node_vspace
-            ComputeAutoSankey(applicationData, node_hspace, false)
+            applicationData.data.style_node['default'].dy = node_vspace
+            ComputeAutoSankey(applicationData, false)
             Object.values(applicationData.display_nodes).forEach(n => {
               d3.select('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
             })

@@ -265,8 +265,8 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   const server_data = JSON.parse(text)
   let default_nstyle = default_data.style_node['default']
   let default_lstyle = default_data.style_link['default']
-  server_data.h_space = default_data.h_space
-  server_data.v_space = default_data.v_space
+  // server_data.h_space = default_data.h_space
+  // server_data.v_space = default_data.v_space
   if ((default_data as SankeyData & { layout?: SankeyData} ).layout) {
     server_data.layout = (default_data as SankeyData & { layout?: SankeyData} ).layout
   } else {
@@ -373,7 +373,7 @@ export const ProcessExample: ProcessExampleFuncType = (
         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
         // Select current tag to compute position
         tag_prim.selected=true
-        ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+        ComputeAutoSankey(applicationData,true)
       })
     }else if((lvl_tag_keys.length > 1)){
     // If data have multiple level Tag
@@ -386,13 +386,13 @@ export const ProcessExample: ProcessExampleFuncType = (
           Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
           // Select current tag to compute position
           tag_prim.selected=true
-          ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+          ComputeAutoSankey(applicationData,true)
         })
       })
 
     }
     else{
-      ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+      ComputeAutoSankey(applicationData,true)
 
     }
     postProcessLoadExcel(applicationData)

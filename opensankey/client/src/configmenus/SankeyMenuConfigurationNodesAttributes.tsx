@@ -57,6 +57,7 @@ import {
   TooltipValueSurcharge,
 } from './SankeyUtils'
 import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModalOrMenuType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
+import { nodeHeight, nodeWidth } from '../draw/SankeyDrawLayout'
 
 export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
@@ -579,8 +580,16 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
                       return
                     }
                     const extremity_node = d.inputLinksId.length>0 ? data.nodes[data.links[d.inputLinksId[0]].idSource] : data.nodes[data.links[d.outputLinksId[0]].idTarget]
-                    AssignNodeLocalAttribute(d,'relative_dx',d.x-extremity_node.x)
-                    AssignNodeLocalAttribute(d,'relative_dy',d.y-extremity_node.y)
+                    if ( d.x - extremity_node.x < 0 ) {
+                      AssignNodeLocalAttribute(d,'relative_dx',d.x - extremity_node.x + nodeWidth(d,applicationData,link_function.GetLinkValue))
+                    } else {
+                      AssignNodeLocalAttribute(d,'relative_dx',d.x - extremity_node.x - nodeWidth(extremity_node,applicationData,link_function.GetLinkValue))                      
+                    }
+                    if ( d.y - extremity_node.y < 0 ) {
+                      AssignNodeLocalAttribute(d,'relative_dy',d.y - extremity_node.y + nodeHeight(d,applicationData,link_function.GetLinkValue))
+                    } else {
+                      AssignNodeLocalAttribute(d,'relative_dy',d.y - extremity_node.y - nodeHeight(extremity_node,applicationData,link_function.GetLinkValue))                      
+                    }
                   }
                 })
               updateMenuConfigNode()
@@ -1573,8 +1582,12 @@ export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumber
 
   return <InputGroup variant='menuconfigpanel_option_input' >
     <NumberInput allowMouseWheel variant={variantOfInput} min={minimum_value} max={maximum_value} step={1} 
-      value={val}
+      value={isNaN(val) ? val : Math.round(val)}
       onChange={(_,value)=>{
+        if (isNaN(value)) {
+          val = value
+          return
+        }
         Object
           .values(parameter_to_modify)
           .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))

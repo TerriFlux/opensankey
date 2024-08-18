@@ -56,7 +56,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         node_visible.push(d3.select(element).attr('id'))
       })
       const imp_relative_nodes = node.inputLinksId.filter(lId=>ReturnValueNode(data,data.nodes[data.links[lId].idSource],'position')=='relative').map(lId=>data.nodes[data.links[lId].idSource])
-      const exp_relative_nodes = node.inputLinksId.filter(lId=>ReturnValueNode(data,data.nodes[data.links[lId].idTarget],'position')=='relative').map(lId=>data.nodes[data.links[lId].idTarget])
+      const exp_relative_nodes = node.outputLinksId.filter(lId=>ReturnValueNode(data,data.nodes[data.links[lId].idTarget],'position')=='relative').map(lId=>data.nodes[data.links[lId].idTarget])
       relative_nodes = [...imp_relative_nodes,...exp_relative_nodes]
     })
     .on('drag', function (event, node) {
@@ -74,14 +74,18 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater, link_function,node_function
           )
-          node_function.RedrawNodes(relative_nodes)
+          if (relative_nodes.length>0) {
+            node_function.RedrawNodes(relative_nodes)
+          }
         }
         const elt_dragged = d3.select(event.subject.sourceEvent.target).node().tagName
         if (elt_dragged == 'rect' || elt_dragged == 'ellipse' || elt_dragged == 'path' || elt_dragged == 'image') {
           DragNodes(node, event, applicationData, applicationState, applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater, link_function,node_function
           )
-          node_function.RedrawNodes(relative_nodes)
+          if (relative_nodes.length>0) {
+            node_function.RedrawNodes(relative_nodes)
+          }
         }
       }
     }).on('end', function (event,node) {
@@ -102,9 +106,9 @@ export const DragGNodeEvent: DragGNodeEventFType = (
                 node.v = tmp
               } else {
                 AssignNodeLocalAttribute(
-                  node,
+                  node_below,
                   'dy',
-                  node_below.y - node.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') - nodeHeight(node,applicationData,inv_scale,scale,GetLinkValue)
+                  node_below.y - node.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') - nodeHeight(node,applicationData,GetLinkValue)
                 )
               }
             }
@@ -119,7 +123,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
               AssignNodeLocalAttribute(
                 node,
                 'dy',
-                node.y - node_above.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node.style],'dy') - nodeHeight(node_above,applicationData,inv_scale,scale,GetLinkValue)
+                node.y - node_above.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node.style],'dy') - nodeHeight(node_above,applicationData,GetLinkValue)
               )
             }
 
@@ -396,7 +400,7 @@ export const DragElements: DragElementsFuncType = (
       }
       AssignNodeLocalAttribute(n,'relative_dx',+ReturnValueNode(data,n,'relative_dx')+ event.dx)
       AssignNodeLocalAttribute(n,'relative_dy',+ReturnValueNode(data,n,'relative_dy')+ event.dy)
-    } else {
+    } //else {
       n.x += event.dx
       n.y += event.dy
       if (n.x < 0) {
@@ -405,7 +409,7 @@ export const DragElements: DragElementsFuncType = (
       if (n.y < 0) {
         n.y = 0
       }
-    }
+    //}
 
     const pos_n = sizeOfNodeInDrawArea(n, applicationData)
     const margin = data.grid_square_size * 2

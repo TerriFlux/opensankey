@@ -1487,7 +1487,7 @@ export const MenuDraggable: MenuDraggableFType = (
       layerStyle='menucontext_layout'
       hidden={!display_menu}
       position='absolute'
-      zIndex='1'
+      zIndex='3'
     >
       <Box
         className='title_menu'

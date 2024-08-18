@@ -602,8 +602,8 @@ export const convert_tags:convert_tagsFuncType = (
           } else if (n.outputLinksId.length === 0) {
             n.style = 'NodeExportStyle'
           }
-          AssignNodeLocalAttribute(n,'relative_dx',n.x-+GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'relative_dx'))
-          AssignNodeLocalAttribute(n,'relative_dy',n.y-+GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'relative_dy'))
+          AssignNodeLocalAttribute(n,'relative_dx',n.x)
+          AssignNodeLocalAttribute(n,'relative_dy',n.y)
         }
         //     const link =  data.links[n.outputLinksId[0]]
       //     if (!link) {

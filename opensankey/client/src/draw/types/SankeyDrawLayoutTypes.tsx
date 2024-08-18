@@ -2,8 +2,7 @@ import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, agregationType, applicationDataType } from '../../types/Types'
 
 export type ComputeAutoSankeyFuncType = (
-  applicationData:applicationDataType, 
-  h_space: number,
+  applicationData:applicationDataType,
   launched_from_process:boolean
 ) => void
 
@@ -120,11 +119,13 @@ export type arrangeNodesFType = (
 export type nodeHeightFType = (
   node: SankeyNode,
   applicationData:applicationDataType,
-  inv_scale: (t:number)=>number,
-  scale: (t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 ) => number
-
+export type nodeWidthFType = (
+  node: SankeyNode,
+  applicationData:applicationDataType,
+  GetLinkValue:GetLinkValueFuncType
+) => number
 /**
  * Reorganize vertically all input / output position
  * of given links to / from given nodes

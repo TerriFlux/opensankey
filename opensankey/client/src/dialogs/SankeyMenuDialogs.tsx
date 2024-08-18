@@ -2,7 +2,7 @@ import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
+import { AssignNodeLocalAttribute, DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { arrangeNodes, ComputeAutoSankey, ComputeParametrization } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
@@ -45,13 +45,15 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
-  const [node_hspace,set_node_hspace] = useState(data.h_space)
-  const [node_vspace,set_node_vspace] = useState(data.v_space)
-  if ( node_hspace !== data.h_space) {
-    set_node_hspace(data.h_space)
+  const [parametric,set_parametric]=useState(true)
+  const [trade_close,set_trade_close]=useState(true)
+  const [node_hspace,set_node_hspace] = useState(data.style_node['default'].dx)
+  const [node_vspace,set_node_vspace] = useState(data.style_node['default'].dy)
+  if ( node_hspace !== data.style_node['default'].dx) {
+    set_node_hspace(data.style_node['default'].dx)
   }
-  if ( node_vspace !== data.v_space) {
-    set_node_vspace(data.v_space)
+  if ( node_vspace !== data.style_node['default'].dy) {
+    set_node_vspace(data.style_node['default'].dy)
   }
   const node_visible=NodeVisibleOnsSvg()
   const simple_element_to_transform = [
@@ -390,42 +392,10 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
 
       {/* Geometry */}
       <TabPanel>
-        <Box layerStyle='menuconfigpanel_grid' >
-          {/* Positionnement vertical automatique */}
-          <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-            {/* <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={data.parametric_mode}
-              onChange={(evt) => {
-                data.parametric_mode = evt.target.checked
-                setForceUpdate(!forceUpdate)
-              }}
-            >
-              <OSTooltip label={'Positionnement vertical ajusté'}>
-                {'Positionnement vertical ajusté'}
-              </OSTooltip>
-            </Checkbox> */}
-            <Button
-              variant='menuconfigpanel_option_button'
-              onClick={()=>{
-                ComputeParametrization(applicationData)
-                applicationData.set_data(JSON.parse(JSON.stringify(data)))
-              }}>
-              {t('MEP.defaultParametric')}
-            </Button>
-            {/* <Button
-              variant='menuconfigpanel_option_button'
-              onClick={()=>{
-                Object.values(applicationData.data.nodes)
-                .filter(n=> n.position !== 'relative' )
-                .forEach(n=> n.dy = 0 )
-                applicationData.set_data(JSON.parse(JSON.stringify(data)))
-              }}>
-              {t('MEP.resetVerticalIntervals')}
-            </Button> */}
-          </Box>
-          {/* Ecart horizontal */}
-          <OSTooltip label={t('MEP.tooltips.EEN_h')} >
+      <Box layerStyle='menuconfigpanel_grid' >
+      <h5><center>Grille pour le positionnement</center></h5>
+               {/* Ecart horizontal */}
+               <OSTooltip label={t('MEP.tooltips.EEN_h')} >
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.Horizontal')}</Box>
               <NumberInput
@@ -436,7 +406,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 value={node_hspace}
                 onChange={evt => {
                   set_node_hspace(+evt)
-                  data.h_space = +evt
+                  data.style_node['default'].dx = +evt
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -460,7 +430,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 value={node_vspace}
                 onChange={evt => {
                   set_node_vspace(+evt)
-                  data.v_space = +evt
+                  data.style_node['default'].dy = +evt
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -469,67 +439,147 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 </NumberInputStepper>
               </NumberInput>
             </Box>
-          </OSTooltip>
+          </OSTooltip></Box>
+        <Box layerStyle='menuconfigpanel_grid' >
+        <h5><center>Cas général</center></h5>
+          <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              isChecked={parametric}
+              onChange={(evt) => {
+                set_parametric(evt.target.checked)
+              }}
+            >
+              <OSTooltip label={'Positionnement vertical ajusté'}>
+                {'Intervalles verticaux constants'}
+              </OSTooltip>
+            </Checkbox>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              isChecked={!parametric}
+              onChange={(evt) => {
+                //data.parametric_mode = evt.target.checked
+                set_parametric(!evt.target.checked)
+              }}
+            >
+              <OSTooltip label={'Positions constantes'}>
+                {'Positions constantes'}
+              </OSTooltip>
+            </Checkbox>
+            <Button
+              variant='menuconfigpanel_option_button'
+              onClick={()=>{
+                if (parametric) {
+                  Object.values(applicationData.data.nodes)
+                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
+                    .forEach(node=>AssignNodeLocalAttribute(node,'position','parametric'))
+                  ComputeParametrization(applicationData)
+                } else {
+                  Object.values(applicationData.data.nodes)
+                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
+                    .forEach(node=>AssignNodeLocalAttribute(node,'position','absolute'))
+                }
+                //applicationData.set_data(JSON.parse(JSON.stringify(data)))
+              }}>
+              {'Réinitialiser'}
+            </Button>
 
-          <OSTooltip label={t('MEP.tooltips.factExpH')} >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.factExpH')}</Box>
-              <InputGroup>
-                <NumberInput
-                  variant='menuconfigpanel_option_numberinput_with_right_addon'
-                  step={0.1}
-                  min={0}
-                  allowMouseWheel
-                  value={stretchFactorH}
-                  onChange={evt=>{
-                    set_stretchFactorH(evt as unknown as number)
-                  }}>
-                  <NumberInputField/>
-                  <NumberInputStepper>
-                    <NumberIncrementStepper/>
-                    <NumberDecrementStepper/>
-                  </NumberInputStepper>
-                </NumberInput>
-                <InputRightAddon>
-                  <Button
-                    variant='menuconfigpanel_option_button'
-                    onClick={()=>applyStretch('h')}>
-                    {t('MEP.stretchH')}
-                  </Button>
-                </InputRightAddon>
-              </InputGroup>
-            </Box>
-          </OSTooltip>
+            {/* <Button
+              variant='menuconfigpanel_option_button'
+              onClick={()=>{
+                Object.values(applicationData.data.nodes)
+                .filter(n=> n.position !== 'relative' )
+                .forEach(n=> n.dy = 0 )
+                applicationData.set_data(JSON.parse(JSON.stringify(data)))
+              }}>
+              {t('MEP.resetVerticalIntervals')}
+            </Button> */}
+          </Box>
+          <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+          <Box layerStyle='menuconfigpanel_grid' >
+            <h5><center>Noeuds imports exports</center></h5>
+            <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              isChecked={trade_close}
+              onChange={(evt) => {
+                set_trade_close(evt.target.checked)
+              }}
+            >
+              <OSTooltip label={'Prêt du noeud'}>
+                {'Prêt du noeud'}
+              </OSTooltip>
+            </Checkbox>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              isChecked={!trade_close}
+              onChange={(evt) => {
+                //data.parametric_mode = evt.target.checked
+                set_trade_close(!evt.target.checked)
+              }}
+            >
+              <OSTooltip label={'Haut et bas du diagramme'}>
+                {'Haut et bas du diagramme'}
+              </OSTooltip>
+            </Checkbox>
 
-          <OSTooltip label={t('MEP.tooltips.factExpV')} >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.factExpV')}</Box>
-              <InputGroup>
-                <NumberInput
-                  variant='menuconfigpanel_option_numberinput_with_right_addon'
-                  step={0.1}
-                  min={0}
-                  allowMouseWheel
-                  value={stretchFactorV}
-                  onChange={evt=>{
-                    set_stretchFactorV(evt as unknown as number)
-                  }}>
-                  <NumberInputField/>
-                  <NumberInputStepper>
-                    <NumberIncrementStepper/>
-                    <NumberDecrementStepper/>
-                  </NumberInputStepper>
-                </NumberInput>
-                <InputRightAddon>
-                  <Button
-                    variant='menuconfigpanel_option_button'
-                    onClick={()=>applyStretch('v')}>
-                    {t('MEP.stretchV')}
-                  </Button>
-                </InputRightAddon>
-              </InputGroup>
+            <OSTooltip label={'Prêt du noeud'} >
+              <Button
+                variant={'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (trade_close) {
+                    data.style_node['NodeImportStyle'].position = 'relative'
+                    data.style_node['NodeImportStyle'].shape_visible = false
+                    data.style_node['NodeImportStyle'].label_visible = false         
+                    data.style_node['NodeImportStyle'].show_value = false
+
+                    data.style_node['NodeExportStyle'].position = 'relative'
+                    data.style_node['NodeExportStyle'].shape_visible = false
+                    data.style_node['NodeExportStyle'].label_visible = false
+                    data.style_node['NodeExportStyle'].show_value = false
+
+                    data.style_link['LinkImportStyle'].orientation = 'vh'
+                    data.style_link['LinkExportStyle'].orientation = 'hv'
+                    set_data({...data})
+                  } else {
+                    data.style_node['NodeImportStyle'].position = 'parametric'
+                    data.style_node['NodeImportStyle'].shape_visible = false
+                    data.style_node['NodeImportStyle'].node_height = 1
+                    data.style_node['NodeImportStyle'].label_visible = true
+                    data.style_node['NodeImportStyle'].label_horiz = "right" 
+                    data.style_node['NodeImportStyle'].label_horiz_shift = -200                
+                    data.style_node['NodeImportStyle'].show_value = true
+                    data.style_node['NodeImportStyle'].label_horiz_valeur = "left"
+                    data.style_node['NodeImportStyle'].label_vert_valeur = "middle"
+                    data.style_node['NodeImportStyle'].label_horiz_valeur_shift = -20
+  
+                    data.style_node['NodeExportStyle'].position = 'parametric'
+                    data.style_node['NodeExportStyle'].shape_visible = false
+                    data.style_node['NodeExportStyle'].node_height = 1
+                    data.style_node['NodeExportStyle'].label_visible = true
+                    data.style_node['NodeExportStyle'].label_horiz = "left" 
+                    data.style_node['NodeExportStyle'].label_horiz_shift = 200                
+                    data.style_node['NodeExportStyle'].show_value = true
+                    data.style_node['NodeExportStyle'].label_horiz_valeur = "right"
+                    data.style_node['NodeExportStyle'].label_vert_valeur = "middle"
+                    data.style_node['NodeExportStyle'].label_horiz_valeur_shift = 20
+  
+                    data.style_link['LinkImportStyle'].orientation = 'hh'
+                    data.style_link['LinkImportStyle'].label_visible = false
+                    data.style_link['LinkExportStyle'].orientation = 'hh'
+                    data.style_link['LinkExportStyle'].label_visible = false
+                    set_data({...data})                     
+                  }          
+                }}>
+                {'Réinitialiser'}
+              </Button>
+            </OSTooltip>
             </Box>
-          </OSTooltip>
+          </Box>
+
+
+
+
 
           <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -542,7 +592,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
                   applicationData.function_on_wait.current=()=>{
-                    ComputeAutoSankey(applicationData, node_hspace,false)
+                    ComputeAutoSankey(applicationData,false)
                     set_data({ ...data })
                   }
                   dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()

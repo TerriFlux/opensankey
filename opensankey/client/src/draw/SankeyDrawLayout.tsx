@@ -24,6 +24,7 @@ import {
   DesaggregateFuncType,
   computeHorizontalIndexFuncType,
   hasAggregationLinkToNodeFuncType,
+  nodeWidthFType,
   synchronizeNodesandLinksIdFuncType,
   updateLayoutFuncType
 } from './types/SankeyDrawLayoutTypes'
@@ -337,11 +338,15 @@ export const arrangeNodes : arrangeNodesFType = (
 export const nodeHeight : nodeHeightFType = (
   node: SankeyNode,
   applicationData,
-  inv_scale: (t:number)=>number,
-  scale: (t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 ) => {
   const {data}=applicationData
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const res = ComputeTotalOffsets(
     inv_scale,
     node,
@@ -350,7 +355,9 @@ export const nodeHeight : nodeHeightFType = (
     undefined,
     GetLinkValue)
   const [total_offset_height_left, total_offset_height_right] = res
-  const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right,inv_scale(+ReturnValueNode(data,node,'node_height')))
+  let node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
+  node_size_s_height = Math.max(node_size_s_height,inv_scale(+ReturnValueNode(data,node,'node_height')))
+
   //Hauteur des noeuds
   if ((res[0] === 0) &&
       (res[1] === 0) &&
@@ -373,14 +380,19 @@ export const nodeHeight : nodeHeightFType = (
  * @param {Function} scale
  * @param {Function} GetLinkValue
  */
-export const nodeWidth : nodeHeightFType = (
+export const nodeWidth : nodeWidthFType = (
   node: SankeyNode,
   applicationData,
-  inv_scale: (t:number)=>number,
-  scale: (t:number)=>number,
+
   GetLinkValue:GetLinkValueFuncType
 ) => {
   const {data}=applicationData
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const res = ComputeTotalOffsets(
     inv_scale,
     node,
@@ -390,7 +402,9 @@ export const nodeWidth : nodeHeightFType = (
     GetLinkValue)
   const [, , total_offset_width_top, total_offset_width_bottom] = res
 
-  const width = Math.max(total_offset_width_top, total_offset_width_bottom,inv_scale(+ReturnValueNode(data,node,'node_height')))
+  let width = Math.max(total_offset_width_top, total_offset_width_bottom)
+  width = Math.max(width,inv_scale(+ReturnValueNode(data,node,'node_width')))
+
   //Hauteur des noeuds
   if ((res[0] === 0) &&
       (res[1] === 0) &&
@@ -414,7 +428,6 @@ export const nodeWidth : nodeHeightFType = (
  */
 export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   applicationData,
-  h_space : number,
   launched_from_process
 ) => {
   const {data}=applicationData
@@ -442,7 +455,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
   applicationData.display_links=display_links
   // Positionning values
-  const v_space = data.v_space
+
 
   // Calcul de la valeur max des flux
   let max_link_value = 0
@@ -598,8 +611,8 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   }
 
   // Loop on all index "columns"
-  let h_left_margin = h_space
-  let h_right_margin = h_space
+  let h_left_margin = data.style_node['default'].dx
+  let h_right_margin = data.style_node['default'].dx
   const height_cumul_per_indexes: number[] = []
   const height_per_nodes_ids: {[node_id: string]: number} = {}
   const node_id_per_hxv_indexes: string[][] = []
@@ -622,8 +635,6 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         const node_height = nodeHeight(
           node,
           applicationData,
-          v_scale_inv,
-          v_scale,
           GetLinkValue)
         // Coef to verticaly sort nodes - highest coef is upper
         // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
@@ -717,7 +728,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
     // Get horizontal index that need the most of vertical space
     // with vertical spacing between nodes in account
-    height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1)*(v_space)
+    height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1)*(data.style_node['default'].dy)
     if (height_cumul_for_index > max_height_cumul) {
       max_height_cumul = height_cumul_for_index
     }
@@ -734,7 +745,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   // Update horizontal and vertical position of nodes
   // compute total height of nodes that belong to the same column,
   // then compute the spaces between them and their positions.
-  const v_margin = v_space
+  const v_margin = data.style_node['default'].dy
   for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
     // Pass if no nodes for this horizontal_index
     // TODO : if it is the case -> something was wrong before
@@ -744,7 +755,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
     // Loop on horizontal_index node
     const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-    const h_position_for_index = h_left_margin + horizontal_index*h_space
+    const h_position_for_index = h_left_margin + horizontal_index*data.style_node['default'].dx
     const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index])/2
     let upper_node_height_and_margin = v_margin_for_index
     if (center_biggest_nodes === true) {
@@ -789,7 +800,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
     }
   }
 
-  data.width = h_left_margin + max_horizontal_index * h_space + h_right_margin
+  data.width = h_left_margin + max_horizontal_index * data.style_node['default'].dx + h_right_margin
   data.height = v_margin*2 + max_height_cumul
 
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
@@ -812,10 +823,9 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
     column.sort((n1,n2)=>n1.y-n2.y)
     Object.values(data.levelTags).forEach( tagGroup=> {
       let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,n,current_v,tagGroup))
+      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
     })
   })
-  //Object.values(columns).forEach(column=>column.forEach(n=>apply_v_agregate(data,n,n.v)))
 }
 
 export const ComputeParametrization:ComputeParametrizationType = (
@@ -844,10 +854,11 @@ export const ComputeParametrization:ComputeParametrizationType = (
   AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
 
   Object.values(display_nodes).forEach(n=>{
+
     if (ReturnValueNode(data,n,'position') === 'relative' ) {
       return
     }
-    n.u = Math.floor((n.x-smaller_x/2)/data.h_space)
+    n.u = Math.floor((n.x-smaller_x/2)/data.style_node['default'].dx)
     if (!(n.u in columns)) {
       columns[n.u] = [n]
     } else {
@@ -860,7 +871,7 @@ export const ComputeParametrization:ComputeParametrizationType = (
       if (i==0) {
         return
       }
-      const dy = n.y - column[i-1].y - data.style_node[n.style].dy - nodeHeight(column[i-1],applicationData,inv_scale,scale,GetLinkValue)
+      const dy = n.y - column[i-1].y - data.style_node[n.style].dy - nodeHeight(column[i-1],applicationData,GetLinkValue)
       if (dy !== 0) {
         AssignNodeLocalAttribute(n,'dy',dy)
       } else {
@@ -872,11 +883,11 @@ export const ComputeParametrization:ComputeParametrizationType = (
     column.sort((n1,n2)=>n1.y-n2.y)
     if (Object.values(data.levelTags).length == 0) {
       let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,n,current_v,undefined))      
+      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,undefined))      
     }
     Object.values(data.levelTags).forEach( tagGroup=> {
       let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,n,current_v,tagGroup))
+      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
       //column.forEach(n=>apply_v_agregate(data,n,n.v))
     })
   })
@@ -884,9 +895,6 @@ export const ComputeParametrization:ComputeParametrizationType = (
 
 export const apply_v = (
   applicationData:applicationDataType,
-  inv_scale: (t:number)=>number,
-  scale: (t:number)=>number,
-  GetLinkValue:GetLinkValueFuncType,
   node:SankeyNode,
   current_v:number,
   tagGroup:TagsGroup|undefined
@@ -909,21 +917,14 @@ export const apply_v = (
     }
   )
   let new_current_v = current_v
-  let cur_relative_dx = ReturnLocalNodeValue(node,'relative_dx') as number
-  if (!cur_relative_dx) {
-    cur_relative_dx = 0
-  }
-  let current_node_width = 0
+  let current_y = node.y
   dim_desagregate_nodes.forEach(nn=>{
     // parametric
     nn.x = node.x
+    nn.y = current_y
+    current_y = current_y+20
     nn.u = node.u
-    // relative
-    AssignNodeLocalAttribute(nn,'relative_dx',cur_relative_dx+current_node_width)
-    current_node_width += nodeWidth(nn, applicationData, inv_scale, scale, GetLinkValue)
-    cur_relative_dx = cur_relative_dx + (ReturnValueNode(data,nn,'dy') as number)+current_node_width
-
-    new_current_v = apply_v(applicationData,inv_scale,scale,GetLinkValue,nn,new_current_v,tagGroup)
+    new_current_v = apply_v(applicationData,nn,new_current_v,tagGroup)
   })
   return new_current_v+1
 }
@@ -996,15 +997,9 @@ export const desagregation : desagregationFType = (
   if (dim_desagregate_nodes.length == 0) {
     return
   }
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   const nb_desagregated = dim_desagregate_nodes.length
   let nodes_heights = 0
-  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue))
+  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,GetLinkValue))
   dim_desagregate_nodes.forEach(n => {
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
