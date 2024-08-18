@@ -80,7 +80,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
   </>
   const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-    const n_keys = Object.keys(data.nodes)
+    const n_keys = Object.keys(data.nodes).sort(() => Math.random() - 0.5);
     const size_color = n_keys.length
 
     for (const i in d3.range(size_color)) {
