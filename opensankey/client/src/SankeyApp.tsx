@@ -558,7 +558,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 applicationState={applicationState}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 pointer_pos={contextMenu.pointer_pos}
-                additional_link_appearence_items={[]}
+                additional_link_appearence_items={additionalMenus.additional_link_appearence_items}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
               />

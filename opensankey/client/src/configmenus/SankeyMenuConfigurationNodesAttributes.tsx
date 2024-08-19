@@ -49,10 +49,12 @@ import {
   AssignNodeLocalAttribute,
   AssignNodeValueToCorrectVar,
   CutName,
+  GetNodeAttributeValueFromStyle,
   IsAllNodeAttrSameValue,
   IsNodeDisplayingValueLocal,
   OSTooltip,
   ReturnCorrectNodeAttributeValue,
+  ReturnPositionValueNode,
   ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
@@ -131,7 +133,8 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
     'node_arrow_angle_factor',
     'node_arrow_angle_direction',
     'color',
-    'position'
+    'position',
+    'u'
   ] as (keyof SankeyNodeAttrLocal)[]
 
   const list_value=IsAllNodeAttrSameValue(data,selected_parameter, list_of_key, menu_for_style)
@@ -601,6 +604,27 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         </Box>
       </Box>
     </OSTooltip>
+    {/* Ecarts horizontal des noeuds */}
+    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_u')}
+        </Box>
+        <ConfigNodeAttributeNumberInput
+          data={applicationData.data}
+          parameter_to_modify={parameter_to_modify}
+          selected_parameter={selected_parameter}
+          menu_for_style={menu_for_style}
+          local_var_of_node='u'
+          function_onBlur={()=>{
+            updateMenuConfigNode()
+            updateLinkAttachedToNodes()
+          }}
+          stepper={true}
+          unitText='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
     {/* Ecarts horizontal des noeuds */}
     {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -1523,7 +1547,7 @@ export const SankeyWrapperConfigInModalOrMenu : FunctionComponent<SankeyWrapperC
 
 type ConfigLayoutNumberInputType={
   data:SankeyData
-  local_var_of_node: keyof SankeyNodeAttrLocal
+  local_var_of_node: keyof SankeyNodeAttrLocal | 'u'
   parameter_to_modify: {[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}
   selected_parameter: SankeyNodeStyle[] | SankeyNode[]
   menu_for_style:boolean
@@ -1567,8 +1591,14 @@ export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumber
   let val=0
   const variantOfInput=unitText?'menuconfigpanel_option_numberinput_with_right_addon':'menuconfigpanel_option_numberinput'
   
-  if(selected_parameter[0]){
-    val=ReturnCorrectNodeAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
+  if(selected_parameter[0]) {
+    if (local_var_of_node=== 'u' ) {
+      val = (selected_parameter[0] as SankeyNode).u
+    } else if (local_var_of_node=== 'dy' && !menu_for_style) {
+      val=+ReturnPositionValueNode(data,(selected_parameter[0] as SankeyNode),'dy')
+    } else {
+      val=ReturnCorrectNodeAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
+    }
   }
 
   // Add stepper addon if specified
@@ -1591,7 +1621,17 @@ export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumber
         Object
           .values(parameter_to_modify)
           .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-          .forEach(d => AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style))
+          .forEach(d => {
+            if (local_var_of_node === 'u') {
+              d.u = value
+            } else if (local_var_of_node === 'dy' && !menu_for_style) {
+              const n = (d as SankeyNode)
+              const style_dy = +GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'dy')
+              AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value)-style_dy, menu_for_style)
+            } else {
+              AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style)
+            }
+          })
 
         if(!menu_for_style){
           // reset timeout if exist
