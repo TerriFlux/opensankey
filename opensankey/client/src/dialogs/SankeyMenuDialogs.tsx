@@ -530,13 +530,19 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   if (trade_close) {
                     data.style_node['NodeImportStyle'].position = 'relative'
                     data.style_node['NodeImportStyle'].shape_visible = false
+                    data.style_node['NodeImportStyle'].node_height = 40
                     data.style_node['NodeImportStyle'].label_visible = false         
-                    data.style_node['NodeImportStyle'].show_value = false
+                    data.style_node['NodeImportStyle'].show_value = true
+                    data.style_node['NodeImportStyle'].label_horiz_valeur = "middle"
+                    data.style_node['NodeImportStyle'].label_vert_valeur = "top"
 
                     data.style_node['NodeExportStyle'].position = 'relative'
                     data.style_node['NodeExportStyle'].shape_visible = false
+                    data.style_node['NodeExportStyle'].node_height = 40
                     data.style_node['NodeExportStyle'].label_visible = false
-                    data.style_node['NodeExportStyle'].show_value = false
+                    data.style_node['NodeExportStyle'].show_value = true
+                    data.style_node['NodeExportStyle'].label_horiz_valeur = "middle"
+                    data.style_node['NodeExportStyle'].label_vert_valeur = "bottom"
 
                     data.style_link['LinkImportStyle'].orientation = 'vh'
                     data.style_link['LinkExportStyle'].orientation = 'hv'
