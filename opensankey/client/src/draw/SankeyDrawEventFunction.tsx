@@ -818,13 +818,14 @@ export const SvgDragMiddleMouseStart: SvgDragMiddleMouseStartFuncType = () => {
 }
 
 export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => {
-  d3.selectAll('.ggg_nodes').filter(n => ReturnValueNode(data,n as SankeyNode,'position') !== 'relative').attr('transform', (d) => {
-    const n = d as SankeyNode
+  Object.values(data.nodes).forEach(n=>{
     n.x += event.dx
     n.y += event.dy
+  })
+  d3.selectAll('.ggg_nodes').attr('transform', (d) => {
+    const n = d as SankeyNode
     return 'translate(' + n.x + ',' + n.y + ')'
   })
-
   shiftAllLinkPath(event)
 
   shiftAllArrowPath(event)
