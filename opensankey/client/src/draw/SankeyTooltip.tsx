@@ -1,5 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData } from '../types/Types'
-import { ToPrecision, LinkVisible, NodeDisplayed, ReturnValueLink } from '../configmenus/SankeyUtils'
+import { ToPrecision, LinkVisible, NodeDisplayed, ReturnValueLink, ReturnValueNode } from '../configmenus/SankeyUtils'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { TFunction } from 'i18next'
 
@@ -187,7 +187,11 @@ export const NodeTooltipsContent = (
   t += '<div style="padding-left :5px;padding-right :5px">'
 
   // t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.u + ' ' +n.v + ' ' +n.dy + '</p>'
+  t += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+n.u + ' v: ' +n.v + ' dy: ' + ReturnValueNode(data,n,'dy') + ' dy: ' + '</p>'
 
+  t += '<p class="title" style="margin-bottom: 5px;">'  + 'relative_dx: ' + ReturnValueNode(data,n,'relative_dx') +'</p>'
+  t += '<p class="title" style="margin-bottom: 5px;">'  + 'relative_dy: ' + ReturnValueNode(data,n,'relative_dy') +'</p>'
+  
   if (n.tooltip_text) {
     t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>'
   }
@@ -248,6 +252,9 @@ export const NodeTooltipsContent = (
           t += '<td>'+ percent + '%</td>'
           Object.keys(data.fluxTags).forEach(tag_group_key=> {
             const names : string[]= []
+            if (!link_info.tags[tag_group_key]) {
+              return
+            }
             link_info.tags[tag_group_key].forEach(tag=>{
               if (tag==null) {
                 return
@@ -320,6 +327,9 @@ export const NodeTooltipsContent = (
             t += '<td>'+ percent + '%</td>'
             Object.keys(data.fluxTags).forEach(tag_group_key=> {
               const names : string[]= []
+              if (!link_info.tags[tag_group_key]) {
+                return
+              }
               link_info.tags[tag_group_key].forEach(tag=>{
                 if (tag==null) {
                   return
