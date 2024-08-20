@@ -227,7 +227,7 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   resizeCanvas,
 )=> {
   const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
-    AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
+    AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight,false,true)
   }
   const reDrawLegend=()=>{
     DrawLegend(
