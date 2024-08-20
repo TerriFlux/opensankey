@@ -95,8 +95,6 @@ import {
   actualizeDrawAreaFrame
 } from '../draw/SankeyDrawEventFunction'
 
-
-
 const logo_btn_node = <svg xmlns="http://www.w3.org/2000/svg"
   width="24"
   height="24"
@@ -391,6 +389,7 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
+    play_movie:boolean
     sankey: {
       diagram: string,
       sous_filieres: { [key: string]: string }
@@ -455,7 +454,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   applicationDraw
 }) => {
   // tata
-  const { data } = applicationData
+  const { data,display_links } = applicationData
   const { t } = applicationContext
   const { ref_getter_mode_selection, ref_setter_mode_selection } = applicationState
   const { updateComponentToolbar } = ComponentUpdater
@@ -498,7 +497,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   let max_link_value = 0
-  Object.values(data.links).forEach(link => {
+  Object.values(display_links).forEach(link => {
     const new_max_link_value = FindMaxLinkValue(
       max_link_value,
       link.value
@@ -1116,6 +1115,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
           if ( idx === Object.entries(tags_group.tags).length -1) {
             clearTimeout(to)
             set_playing(false)
+            window.play_movie = false
             return
           }
           play_movie()
@@ -1182,8 +1182,9 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
             Object.values(tags_group.tags).forEach(tag => tag.selected = false)
             Object.values(tags_group.tags)[0].selected = true
             applicationData.set_data(JSON.parse(JSON.stringify(applicationData.data)))
-            setTimeout(() => {         
+            setTimeout(() => {
               set_playing(true)
+              window.play_movie = true
             }, 1000)
           }
         }}

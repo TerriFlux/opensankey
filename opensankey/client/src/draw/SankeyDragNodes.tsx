@@ -6,7 +6,7 @@ import { RemoveAnimate, DrawArrows, drawCurveFunction, returnScaleOfDrawArea, si
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { shiftAllArrowPath, shiftAllLinkPath } from './SankeyDrawEventFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
-import { nodeHeight } from './SankeyDrawLayout'
+import { ComputeParametricV, nodeHeight } from './SankeyDrawLayout'
 
 declare const window: Window &
   typeof globalThis & {
@@ -93,25 +93,39 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // Update all links displayed
           if (/*data.parametric_mode &&*/ ReturnValueNode(data,node,'position') === 'parametric') {
-            const same_u = Object.values(applicationData.display_nodes)
-              .filter(n=>ReturnValueNode(data,n,'position') === 'parametric')
-              .filter(n=>n.u === node.u)
-            same_u.sort((n1,n2)=>n1.v-n2.v)
-            const nodes_below = same_u.filter(n=>n.v>node.v).reverse()
-            const node_below= nodes_below.pop()
-            if (node_below) {
-              if (node.y > node_below.y) {
-                const tmp = node_below.v
-                node_below.v = node.v
-                node.v = tmp
-              } else {
-                AssignNodeLocalAttribute(
-                  node_below,
-                  'dy',
-                  node_below.y - node.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') - nodeHeight(node,applicationData,GetLinkValue)
-                )
+            let smaller_x : number = 0
+            Object.values(display_nodes).forEach(n=>{
+              if (smaller_x === undefined) {
+                smaller_x = n.x
               }
-            }
+              if (n.x < smaller_x) {
+                smaller_x = n.x
+              }
+            })
+            const previous_u = node.u
+            node.u = Math.floor((node.x-smaller_x/2)/data.style_node['default'].dx)
+            if (node.u !== previous_u) {
+              ComputeParametricV(applicationData)
+            } else {
+              const same_u = Object.values(applicationData.display_nodes)
+                .filter(n=>ReturnValueNode(data,n,'position') === 'parametric')
+                .filter(n=>n.u === node.u)
+              same_u.sort((n1,n2)=>n1.v-n2.v)
+              const nodes_below = same_u.filter(n=>n.v>node.v).reverse()
+              const node_below= nodes_below.pop()
+              if (node_below) {
+                if (node.y > node_below.y) {
+                  const tmp = node_below.v
+                  node_below.v = node.v
+                  node.v = tmp
+                } else {
+                  AssignNodeLocalAttribute(
+                    node_below,
+                    'dy',
+                    node_below.y - node.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') - nodeHeight(node,applicationData,GetLinkValue)
+                  )
+                }
+              }
             const nodes_above = same_u.filter(n=>n.v<node.v)
             const node_above = nodes_above.pop()
             if (node_above) {
@@ -126,8 +140,10 @@ export const DragGNodeEvent: DragGNodeEventFType = (
                 node.y - node_above.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node.style],'dy') - nodeHeight(node_above,applicationData,GetLinkValue)
               )
             }
-
             node_function.RedrawNodes(same_u)
+          }
+
+
           } else {
             node_function.RedrawNodes([node,...relative_nodes])
           }
@@ -473,3 +489,4 @@ export const DragElements: DragElementsFuncType = (
     })
   }
 }
+

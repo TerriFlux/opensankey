@@ -874,32 +874,7 @@ export const ComputeParametrization:ComputeParametrizationType = (
       columns[n.u].push(n)
     }
   })
-  Object.values(columns).forEach(column=>{
-    column.sort((n1,n2)=>n1.y-n2.y)
-    column.forEach((n,i)=>{
-      if (i==0) {
-        return
-      }
-      const dy = n.y - column[i-1].y - data.style_node[n.style].dy - nodeHeight(column[i-1],applicationData,GetLinkValue)
-      if (dy !== 0) {
-        AssignNodeLocalAttribute(n,'dy',dy)
-      } else {
-        delete n.local!.dy
-      }
-    })
-  })
-  Object.values(columns).forEach(column=>{
-    column.sort((n1,n2)=>n1.y-n2.y)
-    if (Object.values(data.levelTags).length == 0) {
-      let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,undefined))      
-    }
-    Object.values(data.levelTags).forEach( tagGroup=> {
-      let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
-      //column.forEach(n=>apply_v_agregate(data,n,n.v))
-    })
-  })
+  ComputeParametricV(applicationData)
 }
 
 export const apply_v = (
@@ -2040,5 +2015,43 @@ const  getDesagregationNodes = (
   })
   const dim_desagregate_nodes = all_dim_desagregate_nodes.filter(n=>!to_remove.includes(n))
   return dim_desagregate_nodes
+}
+
+export const ComputeParametricV = (applicationData: applicationDataType) => {
+  const { data } = applicationData
+
+  const columns : {[_:number]:SankeyNode[]} = {}
+  Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange').forEach(n=>{
+    if (columns[n.u]) {
+      columns[n.u].push(n)
+    } else {
+      columns[n.u] = [n]
+    }
+  })
+  Object.values(columns).forEach(column => {
+    column.sort((n1, n2) => n1.y - n2.y)
+    column.forEach((n, i) => {
+      if (i == 0) {
+        return
+      }
+      const dy = n.y - column[i - 1].y - data.style_node[n.style].dy - nodeHeight(column[i - 1], applicationData, GetLinkValue)
+      if (dy !== 0) {
+        AssignNodeLocalAttribute(n, 'dy', dy)
+      } else {
+        delete n.local!.dy
+      }
+    })
+  })
+  Object.values(columns).forEach(column => {
+    column.sort((n1, n2) => n1.y - n2.y)
+    if (Object.values(data.levelTags).length == 0) {
+      let current_v = 0
+      column.forEach(n => current_v = apply_v(applicationData, n, current_v, undefined))
+    }
+    let current_v = 0
+    Object.values(data.levelTags).forEach(tagGroup => {
+      column.forEach(n => current_v = apply_v(applicationData, n, current_v, tagGroup))
+    })
+  })
 }
 

@@ -59,7 +59,7 @@ import {
   TooltipValueSurcharge,
 } from './SankeyUtils'
 import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModalOrMenuType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import { nodeHeight, nodeWidth } from '../draw/SankeyDrawLayout'
+import { ComputeParametricV, nodeHeight, nodeWidth } from '../draw/SankeyDrawLayout'
 
 export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
@@ -605,7 +605,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       </Box>
     </OSTooltip>
     {/* Ecarts horizontal des noeuds */}
-    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
+    {!menu_for_style && list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry_u')}
@@ -617,6 +617,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           menu_for_style={menu_for_style}
           local_var_of_node='u'
           function_onBlur={()=>{
+            ComputeParametricV(applicationData)
             updateMenuConfigNode()
             updateLinkAttachedToNodes()
           }}
