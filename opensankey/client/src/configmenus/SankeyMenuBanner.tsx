@@ -1252,7 +1252,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
       >
         <Box
           as='span'
-          layerStyle='menuconfigpanel_option_name'
+          layerStyle='menuconfigpanel_part_title_2'
         >
           {tags_group.group_name}
         </Box>

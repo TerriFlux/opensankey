@@ -40,6 +40,7 @@ import {
   Text,
   FormControl,
   Select,
+  Link,
 } from '@chakra-ui/react'
 import {
   SankeyData,
@@ -324,18 +325,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   }
 
   if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
-  const excel_element = window.sankey && window.sankey.excel ? (
-    <Box
-      margin='0.25rem'
-      alignSelf='center'
-      justifySelf='center'
-    >
-      <Button
-      // href={window.sankey.excel}
-      >{t('Banner.tl')}</Button>
-    </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
 
-  if (window.sankey && window.sankey.excel) ui['excel'] = [(excel_element)]
 
   if (!window.SankeyToolsStatic) {
     ui['file'] = [
@@ -848,6 +838,18 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
     ui[ext_nav[0]] = [ext_nav[1]]
   })
 
+  const excel_element = window.sankey && window.sankey.excel ? (
+    <Box
+      margin='0.25rem'
+      alignSelf='center'
+      justifySelf='center'
+    >
+      <Link href={window.sankey.excel}><Button
+      >{t('Banner.tl')}</Button></Link>
+    </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
+
+  if (window.sankey && window.sankey.excel) ui['excel'] = [(excel_element)]
+
   return ui
 }
 
@@ -1074,7 +1076,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
     'file',
     'edition',
     'diagramme',
-    'excel',
     'filter',
     'view',
     'unit',
@@ -1163,11 +1164,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const show_data = Object.values(data_tags).length > 0
 
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
+  const excel_rem = Object.keys(menus).includes('excel') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
   let menutop_grid_template = 'minmax(7vw, 150px) minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
   if (window.SankeyToolsStatic) {
-    menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem
+    menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem + ' ' + excel_rem
   }
   if (show_data && Object.keys(data_tags).length <=2) {
     DDDT = <DataTagSelector
@@ -1253,6 +1255,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                 margin='0.25rem'
                 alignSelf='center'
                 justifySelf='center'
+                paddingTop='1.5rem'
               >
                 <Text
                   fontStyle='h1'
@@ -1288,6 +1291,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
           >
             {Object.keys(menus).includes('unité') ? <>
               {menus['unité']}
+            </> : <></>}
+          </Box>
+          <Box
+            margin='0.25rem'
+            alignSelf='center'
+            justifySelf='center'
+          >
+            {Object.keys(menus).includes('excel') ? <>
+              {menus['excel']}
             </> : <></>}
           </Box>
 
