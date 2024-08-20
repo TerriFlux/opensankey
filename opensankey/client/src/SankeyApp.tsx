@@ -57,8 +57,9 @@ import { DeleteGNodes } from './draw/SankeyDrawNodes'
 
 declare const window: Window &
   typeof globalThis & {
+    play_movie:boolean,
     sankey: {
-      toolbar: true,
+      toolbar: boolean
     }
   }
 
@@ -514,7 +515,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       )
     }
     setTimeout(() => {
-      applicationDraw.reAdjustSankey()
+      if (!window.play_movie) {
+        applicationDraw.reAdjustSankey()
+      }
     }, 100)
   },[data])
   /*************************************************************************************************/

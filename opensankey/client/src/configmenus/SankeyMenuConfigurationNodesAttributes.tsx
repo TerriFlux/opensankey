@@ -524,6 +524,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       </Box>
     </OSTooltip>
 
+    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+      {t('Noeud.position')}
+    </Box>
+
     {/* Position du noeud */}
     <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
