@@ -1293,15 +1293,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
               {menus['unité']}
             </> : <></>}
           </Box>
-          <Box
+          {Object.keys(menus).includes('excel') ? <Box
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
           >
-            {Object.keys(menus).includes('excel') ? <>
               {menus['excel']}
-            </> : <></>}
-          </Box>
+          </Box>: <></>}
 
           <Box
             margin='0.25rem'
