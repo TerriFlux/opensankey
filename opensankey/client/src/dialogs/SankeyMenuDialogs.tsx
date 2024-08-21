@@ -431,6 +431,12 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 onChange={evt => {
                   set_node_vspace(+evt)
                   data.style_node['default'].dy = +evt
+                  if ( data.style_node['NodeSectorStyle'] ) {
+                    data.style_node['NodeSectorStyle'].dy = +evt
+                  }
+                  if ( data.style_node['NodeProductStyle'] ) {
+                    data.style_node['NodeProductStyle'].dy = +evt
+                  }
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -442,7 +448,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
           </OSTooltip></Box>
         <Box layerStyle='menuconfigpanel_grid' >
         <h5><center>Cas général</center></h5>
-          <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
+          <Box as='span' layerStyle='menuconfigpanel_row_4cols'>
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={parametric}
@@ -480,6 +486,26 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     .forEach(node=>AssignNodeLocalAttribute(node,'position','absolute'))
                 }
                 //applicationData.set_data(JSON.parse(JSON.stringify(data)))
+              }}>
+              {'Calculer'}
+            </Button>
+            <Button
+              variant='menuconfigpanel_option_button'
+              onClick={()=>{
+                if (parametric) {
+                  Object.values(applicationData.data.nodes)
+                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
+                    .forEach(node=>AssignNodeLocalAttribute(node,'position','parametric'))
+                  ComputeParametrization(applicationData)
+                  Object.values(applicationData.data.nodes)
+                  .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
+                  .forEach(node=>{if (node.local) delete node.local.dy})
+                } else {
+                  Object.values(applicationData.data.nodes)
+                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
+                    .forEach(node=>AssignNodeLocalAttribute(node,'position','absolute'))
+                }
+                applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}>
               {'Réinitialiser'}
             </Button>

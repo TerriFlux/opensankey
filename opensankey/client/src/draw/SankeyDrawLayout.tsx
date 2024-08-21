@@ -867,7 +867,7 @@ export const ComputeParametrization:ComputeParametrizationType = (
     if (ReturnValueNode(data,n,'position') === 'relative' ) {
       return
     }
-    n.u = Math.floor((n.x-smaller_x/2)/data.style_node['default'].dx)
+    n.u = Math.floor((n.x-smaller_x/3)/data.style_node['default'].dx)
     if (!(n.u in columns)) {
       columns[n.u] = [n]
     } else {

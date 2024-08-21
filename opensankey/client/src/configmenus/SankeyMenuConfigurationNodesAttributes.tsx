@@ -54,7 +54,6 @@ import {
   IsNodeDisplayingValueLocal,
   OSTooltip,
   ReturnCorrectNodeAttributeValue,
-  ReturnPositionValueNode,
   ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
@@ -518,7 +517,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             updateLinkAttachedToNodes()
           }}
           stepper={true}
-          minimum_value={1}
+          minimum_value={0}
           unitText='pixels'
         />
       </Box>
@@ -1599,8 +1598,6 @@ export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumber
   if(selected_parameter[0]) {
     if (local_var_of_node=== 'u' ) {
       val = (selected_parameter[0] as SankeyNode).u
-    } else if (local_var_of_node=== 'dy' && !menu_for_style) {
-      val=+ReturnPositionValueNode(data,(selected_parameter[0] as SankeyNode),'dy')
     } else {
       val=ReturnCorrectNodeAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
     }

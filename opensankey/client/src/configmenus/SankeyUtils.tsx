@@ -1508,19 +1508,6 @@ const updateLinkValueDepthWithNewDTGrp=(prev_l:SankeyLinkValueDict|SankeyLinkVal
 // Return the value of an attribute from node :
 // - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the node has (a node always has a style )
-export const ReturnPositionValueNode:ReturnValueNodeFuncType=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle): string | number | boolean=>{
-  const value=ReturnLocalNodeValue(n,k as keyof SankeyNodeAttrLocal)
-  const ks=k as keyof SankeyNodeStyle
-  const style_value= n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
-  if(value === undefined || value === null){
-    return style_value
-  }
-  return (+value)+(+style_value)
-}
-
-// Return the value of an attribute from node :
-// - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
-// - Else it return the attribute from the style the node has (a node always has a style )
 export const ReturnValueNode:ReturnValueNodeFuncType=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle): string | number | boolean=>{
   let value=ReturnLocalNodeValue(n,k as keyof SankeyNodeAttrLocal)
   if(value === undefined || value === null){
