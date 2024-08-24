@@ -56,6 +56,7 @@ export class Class_ApplicationData {
   // General attributes for the application
   private _t: TFunction = useTranslation().t //traductor
   private _logo: string // path to logo
+  private _logo_opensankey: string // path to logo
   private _logo_terriflux: string  //path to logo_terriflux
   private _logo_width: number = 100
   private _app_name: string = 'SankeySuite'
@@ -120,19 +121,24 @@ export class Class_ApplicationData {
     }
 
     this._logo = logo
+    this._logo_opensankey = logo
     this._logo_terriflux = logo_terriflux
   }
 
   // PUBLIC METHODS =====================================================================
+  protected new_drawing_area() {
+    return new Class_DrawingArea(
+      initial_window_height,
+      initial_window_width,
+      this
+    )
+  }
 
   public reset() {
     // Reset values of attributes
     // Recreate drawing area
     this.drawing_area.delete()
-    this.drawing_area = new Class_DrawingArea(
-      initial_window_height,
-      initial_window_width,
-      this)
+    this.drawing_area = this.new_drawing_area()
     this.drawing_area.reset()
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
@@ -321,7 +327,7 @@ export class Class_ApplicationData {
   protected set menu_configuration(value: Class_MenuConfig) {this._menu_configuration = value} // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get has_free_account(): boolean { return this._has_free_account }
-  public set has_free_account(value: boolean) {/* TODO */ }
+  public set has_free_account(value: boolean) {this._has_free_account = value }
 
   public get t(): TFunction { return this._t }
 
@@ -330,6 +336,9 @@ export class Class_ApplicationData {
 
   public get logo(): string { return this._logo }
   public set logo(value: string) { this._logo = value }
+
+  public get logo_opensankey(): string { return this._logo_opensankey }
+  public set logo_opensankey(value: string) { this._logo_opensankey = value }
 
   public get logo_terriflux(): string { return this._logo_terriflux }
   public set logo_terriflux(value: string) { this._logo_terriflux = value }

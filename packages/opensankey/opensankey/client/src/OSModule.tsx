@@ -94,7 +94,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
 
 export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
-  applicationData,
+  applicationData
 ) => {
   if (!window.SankeyToolsStatic) {
     additional_menus.additional_nav_item.push(

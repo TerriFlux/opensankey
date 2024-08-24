@@ -1715,6 +1715,7 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
   return <Modal size='full' id='modal_tutoriel' isOpen={show_tuto} onClose={() => set_show_tuto(false)}>
     <ModalContent
       maxWidth='inherit'
+      display='flex'
     >
       <ModalHeader>{t('Menu.formation')}</ModalHeader>
       <ModalCloseButton />
