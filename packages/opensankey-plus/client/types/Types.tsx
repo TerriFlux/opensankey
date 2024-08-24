@@ -14,9 +14,9 @@ import ReactQuill from 'react-quill'
 //   initializeReinitializationType,
   
 // } from 'open-sankey/src/types/Types'
-import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
-import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
-import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
+// import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
+// import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+// import { Class_ApplicationData } from 'open-sankey/dist/types/ApplicationData'
 import { Class_ApplicationDataPlus } from '../src/Types/ApplicationDataPlus'
 import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
 import { applicationDataType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationDataType, initializeReinitializationType, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyNode, SankeyNodeStyle } from 'open-sankey/src/types/LegacyType'

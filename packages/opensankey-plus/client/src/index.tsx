@@ -33,7 +33,6 @@ import {
 // import { DefaultOSPStyleLink } from './SankeyPlusUtils'
 import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
 import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
-import { initializeApplicationData } from 'open-sankey/src/OSModule'
 import { initializeMenuConfiguration } from 'open-sankey/dist/OSModule'
 import { applicationDataType, processFunctionsType, SankeyData } from 'open-sankey/src/types/LegacyType'
 
@@ -146,8 +145,7 @@ root.render(
     }
     initializeReinitialization={
       (
-        applicationData,
-      
+        applicationData
       )=>{
         return () => {
           initializeReinitialization(applicationData)()
@@ -161,7 +159,8 @@ root.render(
       (
         additionalMenus,
         applicationData,
-
+        processFunctions,
+        reinitialization
       )=>{
         if (window.SankeyToolsStatic) {
           // const plus_dict_app_data=applicationData as OSPApplicationDataType
@@ -185,11 +184,16 @@ root.render(
         }
         initializeAdditionalMenus(
           additionalMenus,
-          applicationData
+          applicationData,
+          processFunctions,
+          reinitialization
         )
         OSPInitializeAdditionalMenus(
           additionalMenus,
-          applicationData)
+          applicationData,
+          processFunctions,
+          reinitialization
+        )
       }
     }
     moduleDialogs={

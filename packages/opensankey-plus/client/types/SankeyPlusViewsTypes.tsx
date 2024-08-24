@@ -2,18 +2,12 @@ import { TFunction } from 'i18next'
 import { Diff } from 'deep-diff'
 
 import {
-  OSPApplicationContextType,
-  OSPComponentUpdaterType,
-  OSPElementsSelectedType,
   OSPApplicationDataType,
   OSPData,
   OSPShowMenuComponentsType,
   reDrawOSPLabelsFType
 } from './Types'
 
-import {
-  SankeyLinkValueDict,
-  TagsGroup} from 'open-sankey/src/types/Types'
 import {
   setDiagramFuncType
 } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
@@ -33,12 +27,12 @@ export type ViewToast_update_viewFType = {
   dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType
 }
 
-export type setValueFType = (
-  dataTags: TagsGroup[],
-  v_target: SankeyLinkValueDict,
-  v_source: SankeyLinkValueDict,
-  depth: number
-) => void
+// export type setValueFType = (
+//   dataTags: TagsGroup[],
+//   v_target: SankeyLinkValueDict,
+//   v_source: SankeyLinkValueDict,
+//   depth: number
+// ) => void
 
 export type GetDataFromViewFType =(
   master_data:OSPData| undefined,
@@ -55,23 +49,23 @@ export type RecomputeViewsFType = (
   set_master_data: (d:OSPData | undefined)=>void
 ) => void
 
-export type OSPKeyHandlerFType = (
-  applicationContext:OSPApplicationContextType,
-  e: KeyboardEvent,
-  applicationData:OSPApplicationDataType,
-  applicationState:OSPElementsSelectedType,
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-  reDrawOSPLabels:reDrawOSPLabelsFType,
-  ComponentUpdater:OSPComponentUpdaterType
-) => void
+// export type OSPKeyHandlerFType = (
+//   applicationContext:OSPApplicationContextType,
+//   e: KeyboardEvent,
+//   applicationData:OSPApplicationDataType,
+//   applicationState:OSPElementsSelectedType,
+//   dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
+//   reDrawOSPLabels:reDrawOSPLabelsFType,
+//   ComponentUpdater:OSPComponentUpdaterType
+// ) => void
 
-export type SelecteurViewFType = {
-  applicationData:OSPApplicationDataType,
-  applicationState:OSPElementsSelectedType,
-  t:TFunction,
-  set_view_not_saved:(s:string)=>void,
-  connected:boolean,
-}
+// export type SelecteurViewFType = {
+//   applicationData:OSPApplicationDataType,
+//   applicationState:OSPElementsSelectedType,
+//   t:TFunction,
+//   set_view_not_saved:(s:string)=>void,
+//   connected:boolean,
+// }
 
 export type viewsAccordionFType = (
   applicationData:OSPApplicationDataType,
@@ -99,13 +93,13 @@ export type CheckCurrentViewSavedFType = (
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export type OSPBannerViewFType = {
-  applicationData:OSPApplicationDataType,
-  applicationContext:OSPApplicationContextType,
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-  convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
-  view_selector:JSX.Element
-}
+// export type OSPBannerViewFType = {
+//   applicationData:OSPApplicationDataType,
+//   applicationContext:OSPApplicationContextType,
+//   dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
+//   convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
+//   view_selector:JSX.Element
+// }
 
 export type OSPMenuPreferenceViewFType = (
   t:TFunction,
@@ -125,10 +119,10 @@ export type modal_transparent_view_attrFType = (
   t:TFunction
 )=> JSX.Element
 
-export type MenuEnregistrerViewFType = {
-  t:TFunction,
-  elementsSelected: OSPElementsSelectedType
-}
+// export type MenuEnregistrerViewFType = {
+//   t:TFunction,
+//   elementsSelected: OSPElementsSelectedType
+// }
 
 export type OpenOSPCheckpointButtonFType = (
   master_data:OSPData| undefined,

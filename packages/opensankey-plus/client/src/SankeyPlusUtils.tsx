@@ -21,8 +21,9 @@
 //   OSPNode,
 //   OSPNodeVar,
 // } from '../types/Types'
-// import {
-//   DefaultOSPStyleLinkFType,
+import { DefaultLinkStyle } from 'open-sankey/dist/types/Legacy'
+import {
+   DefaultOSPStyleLinkFType,
 //   ImportImageAsSvgBgFType,
 //   IsAllZdtAttrSameValueFType,
 //   OSPIsAllNodeNotLocalAttrSameValueFType,
@@ -32,15 +33,16 @@
 //   SetSvgBgFType,
 //   ValueOf,
 //   clickSaveSVGFType,
-// } from '../types/SankeyPlusUtilsTypes'
+} from '../types/SankeyPlusUtilsTypes'
+import { OSPLinkStyle } from '../types/Types'
 // import {
-//   AssignLinkValueToCorrectVar,
-//   DefaultLinkStyle,
-//   DefaultNode,
-//   LinkColor,
-//   NodeColor,
-//   OSTooltip,
-//   ReturnValueLink,
+// //   AssignLinkValueToCorrectVar,
+//    DefaultLinkStyle,
+// //   DefaultNode,
+// //   LinkColor,
+// //   NodeColor,
+// //   OSTooltip,
+// //   ReturnValueLink,
 // } from './import/OpenSankey'
 
 // // OpenSankey types
@@ -58,11 +60,11 @@
 
 
 
-// export const DefaultOSPStyleLink: DefaultOSPStyleLinkFType = () => {
-//   const style = DefaultLinkStyle() as OSPLinkStyle
-//   style.gradient = false
-//   return style
-// }
+export const DefaultOSPStyleLink: DefaultOSPStyleLinkFType = () => {
+  const style = DefaultLinkStyle() as OSPLinkStyle
+  style.gradient = false
+  return style
+}
 
 // // export const DragLegendOSP: DragLegendOSPFType = (
 // //   data: OSPData,

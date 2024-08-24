@@ -1,4 +1,4 @@
-import { Class_ApplicationData } from 'open-sankey/dist/types/ApplicationData'
+import { Class_ApplicationData, initial_window_height, initial_window_width } from 'open-sankey/dist/types/ApplicationData'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 
@@ -6,8 +6,8 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 
 export class Class_ApplicationDataPlus extends Class_ApplicationData {
 
-  private _has_sankey_plus: boolean = true // token for sankeyplus (if user is connected with an account)
-
+  protected _has_sankey_plus: boolean = true // token for sankeyplus (if user is connected with an account)
+  private _logo_sankey_plus: string = ''
 
   constructor(published_mode: boolean) {
     super(published_mode)
@@ -17,23 +17,33 @@ export class Class_ApplicationDataPlus extends Class_ApplicationData {
     this.menu_configuration= new Class_MenuConfigPlus()
     this.drawing_area=new Class_DrawingAreaPlus(this.drawing_area.getHeight(), this.drawing_area.getWidth(), this)
     
-    let logo_sankey_plus = ''
+    //let logo_sankey_plus = ''
     try {
       /* eslint-disable */
       // @ts-ignore
-      logo_sankey_plus = require('../css/OSP.png')
+      _logo_sankey_plus = require('../css/OSP.png')
       /* eslint-enable */
       const path = window.location.href
       if (!path.includes('localhost')) {
-        logo_sankey_plus = logo_sankey_plus.replace('static/', 'static/opensankey/')
+        this._logo_sankey_plus = this._logo_sankey_plus.replace('static/', 'static/opensankey/')
       }
     } catch (expt) {
       console.log('terriflux.png not found')
     }
-    this.logo = logo_sankey_plus
+    this.logo = this._logo_sankey_plus
+  }
+
+  public new_drawing_area() {
+    return new Class_DrawingAreaPlus(
+      initial_window_height,
+      initial_window_width,
+      this
+    )
   }
 
   // GETTER & SETTER ==================================
+  public get logo_sankey_plus(): string { return this._logo_sankey_plus }
+  public set logo_sankey_plus(value: string) { this._logo_sankey_plus = value }
 
   public get has_sankey_plus(): boolean { return this._has_sankey_plus }
   public set has_sankey_plus(value: boolean) { this._has_sankey_plus = value }

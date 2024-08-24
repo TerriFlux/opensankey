@@ -62,6 +62,9 @@ export class Class_SankeyPlus extends Class_Sankey {
     id: string = default_main_sankey_id
   ) {
     super(drawing_area, menu_config, id)
+
+    this._labels = {}
+    this._icon_catalog = {}
   }
 
 
