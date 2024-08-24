@@ -57,7 +57,9 @@ import {
   default_label_italic,
   default_label_uppercase,
   default_name_label_horiz,
+  default_name_label_horiz_shift,
   default_name_label_vert,
+  default_name_label_vert_shift,
   default_name_label_visible,
   default_shape_arrow_angle_direction,
   default_shape_arrow_angle_factor,
@@ -68,7 +70,9 @@ import {
   default_shape_type,
   default_shape_visible,
   default_value_label_horiz,
+  default_value_label_horiz_shift,
   default_value_label_vert,
+  default_value_label_vert_shift,
   default_value_label_visible,
   isAttributeOverloaded
 } from '../types/Node'
@@ -175,11 +179,15 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const name_label_box_width = (elements[0]?.name_label_box_width ?? default_label_box_width)
   const name_label_color = (elements[0]?.name_label_color ?? default_label_color)
   const name_label_vert = (elements[0]?.name_label_vert ?? default_name_label_vert)
+  const name_label_vert_shift = (elements[0]?.name_label_vert_shift ?? default_name_label_vert_shift)
   const name_label_horiz = (elements[0]?.name_label_horiz ?? default_name_label_horiz)
+  const name_label_horiz_shift = (elements[0]?.name_label_horiz_shift ?? default_name_label_horiz_shift)
   const name_label_background = (elements[0]?.name_label_background ?? default_label_background)
   const value_label_visible = (elements[0]?.value_label_visible ?? default_value_label_visible)
   const value_label_vert = (elements[0]?.value_label_vert ?? default_value_label_vert)
+  const value_label_vert_shift = (elements[0]?.value_label_vert_shift ?? default_value_label_vert_shift)
   const value_label_horiz = (elements[0]?.value_label_horiz ?? default_value_label_horiz)
+  const value_label_horiz_shift = (elements[0]?.value_label_horiz_shift ?? default_value_label_horiz_shift)
   const value_label_font_size = (elements[0]?.value_label_font_size ?? default_label_font_size)
 
   /**
@@ -757,7 +765,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           {/* Position  du label par rapport au noeud */}
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name' >
-              Position
+              {t('Noeud.labels.anchor')}
             </Box>
 
             <Box layerStyle='options_2cols' >
@@ -888,6 +896,49 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               </Box>
             </Box>
           </Box>
+          {/* Position du label par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {t('Noeud.labels.anchor_dx')}
+                {(!menu_for_style) &&
+                  isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift') ?
+                    TooltipValueSurcharge('node_var', t) :
+                    <></>}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                valueOfAttr={name_label_horiz_shift}
+                menu_for_style={menu_for_style}
+                function_onChange={(_, val) => elements.forEach(element => element.name_label_horiz_shift = val)}
+                function_onBlur={()=>refreshThisAndUpdateRelatedComponents()}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
+
+          {/* Position du label par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {t('Noeud.labels.anchor_dy')}
+                {(!menu_for_style) &&
+                  isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
+                    TooltipValueSurcharge('node_var', t) :
+                    <></>}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                valueOfAttr={name_label_vert_shift}
+                menu_for_style={menu_for_style}
+                function_onChange={(_, val) => elements.forEach(element => element.name_label_vert_shift = val)}
+                function_onBlur={()=>refreshThisAndUpdateRelatedComponents()}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
 
           {advanced_label_content}
         </Box> :
@@ -944,7 +995,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           {/* Position de l'affichage des données par rapport au noeud */}
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name' >
-              Position
+              {t('Noeud.node_value.anchor')}
             </Box>
             <Box layerStyle='options_2cols' >
               {/* Horizontale */}
@@ -1075,6 +1126,53 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             </Box>
             {advanced_label_value_content}
           </Box>
+          {/* Position de la valeur du noeud par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dx')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {t('Noeud.node_value.anchor_dx')}
+                {(!menu_for_style) &&
+                  isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
+                    TooltipValueSurcharge('node_var', t) :
+                    <></>}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                menu_for_style={menu_for_style}
+                valueOfAttr={value_label_horiz_shift}
+                function_onChange={(_, val) => elements.forEach(element => element.value_label_horiz_shift = val)}
+                function_onBlur={() => {
+                  refreshThisAndUpdateRelatedComponents()
+                }}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
+
+          {/* Position de la valeur du noeud par rapport à l'ancre*/}
+          <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dy')}>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {t('Noeud.node_value.anchor_dy')}
+                {(!menu_for_style) &&
+                  isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
+                    TooltipValueSurcharge('node_var', t) :
+                    <></>}
+              </Box>
+
+              <ConfigNodeAttributeNumberInput
+                menu_for_style={menu_for_style}
+                valueOfAttr={value_label_vert_shift}
+                function_onChange={(_, val) => elements.forEach(element => element.value_label_vert_shift = val)}
+                function_onBlur={() => {
+                  refreshThisAndUpdateRelatedComponents()
+                }}
+                stepper={true}
+                unitText='pixels'
+              />
+            </Box>
+          </OSTooltip>
         </Box> :
         <></>
     }

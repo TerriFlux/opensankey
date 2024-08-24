@@ -82,10 +82,14 @@ export const default_label_italic = false
 export const default_label_background = false
 export const default_name_label_visible = true
 export const default_name_label_vert: Type_TextVPos = 'bottom'
+export const default_name_label_vert_shift = 0
 export const default_name_label_horiz: Type_TextHPos = 'middle'
+export const default_name_label_horiz_shift = 0
 export const default_value_label_visible = false
 export const default_value_label_vert: Type_TextVPos = 'top'
+export const default_value_label_vert_shift = 0
 export const default_value_label_horiz: Type_TextHPos = 'middle'
+export const default_value_label_horiz_shift = 0
 export const default_label_box_width = 150
 
 export const default_selected_stroke_width = 3
@@ -533,7 +537,13 @@ export class Class_NodeElement extends Class_Element {
     if (this.name_label_vert !== _.name_label_vert) {
       return false
     }
+    if (this.name_label_vert_shift !== _.name_label_vert_shift) {
+      return false
+    }
     if (this.name_label_horiz !== _.name_label_horiz) {
+      return false
+    }
+    if (this.name_label_horiz_shift !== _.name_label_horiz_shift) {
       return false
     }
     if (this.name_label_background !== _.name_label_background) {
@@ -545,7 +555,13 @@ export class Class_NodeElement extends Class_Element {
     if (this.value_label_vert !== _.value_label_vert) {
       return false
     }
+    if (this.value_label_vert_shift !== _.value_label_vert_shift) {
+      return false
+    }
     if (this.value_label_horiz !== _.value_label_horiz) {
+      return false
+    }
+    if (this.value_label_horiz_shift !== _.value_label_horiz_shift) {
       return false
     }
     if (this.value_label_font_size !== _.value_label_font_size) {
@@ -1627,14 +1643,14 @@ export class Class_NodeElement extends Class_Element {
     } else {
       const shape_width = this.getShapeWidthToUse()
       const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
-      label_pos_x = shape_width + label_pos_dx
+      label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
       if (this.name_label_horiz === 'left') {
-        label_pos_x = -label_pos_dx
+        label_pos_x = -label_pos_dx + this.name_label_horiz_shift
         label_anchor = 'end'
         label_align = 'end'
       }
       else if (this.name_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2
+        label_pos_x = shape_width / 2 + this.name_label_horiz_shift
         label_anchor = 'middle'
         label_align = 'center'
       }
@@ -1644,18 +1660,18 @@ export class Class_NodeElement extends Class_Element {
     const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
     const shape_height = this.getShapeHeightToUse()
 
-    let label_pos_y = label_pos_dy + shape_height
+    let label_pos_y = label_pos_dy + shape_height + this.name_label_vert_shift
     let label_baseline = 'text-before-edge'
     if (this._display.position_y_label! != undefined) {
       label_pos_y = (this._display.position_y_label !== undefined) ? this._display.position_y_label : 0
       label_baseline = 'middle'
     } else {
       if (this.name_label_vert === 'top') {
-        label_pos_y = -label_pos_dy
+        label_pos_y = -label_pos_dy + this.name_label_vert_shift
         label_baseline = 'text-after-edge'
       }
       else if (this.name_label_vert === 'middle') {
-        label_pos_y = shape_height / 2
+        label_pos_y = shape_height / 2 + this.name_label_vert_shift
         label_baseline = 'middle'
       }
     }
@@ -1684,27 +1700,27 @@ export class Class_NodeElement extends Class_Element {
       const shape_width = this.getShapeWidthToUse()
       const shape_height = this.getShapeHeightToUse()
       // Label X position is set by text relative position / shape + text anchor
-      let label_pos_x = shape_width
+      let label_pos_x = shape_width + this.value_label_horiz_shift
       let label_anchor = 'start'
       let label_align = 'start'
       if (this.value_label_horiz === 'left') {
-        label_pos_x = 0
+        label_pos_x = 0 + this.value_label_horiz_shift
         label_anchor = 'end'
         label_align = 'end'
       }
       else if (this.value_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2
+        label_pos_x = shape_width / 2 + + this.value_label_horiz_shift
         label_anchor = 'middle'
         label_align = 'center'
       }
       // Label Y position is only set by text relative position / shape
       const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
-      let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size
+      let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size + this.value_label_vert_shift
       if (this.value_label_vert === 'top') {
-        label_pos_y = -label_pos_dy
+        label_pos_y = -label_pos_dy+this.value_label_vert_shift
       }
       else if (this.value_label_vert === 'middle') {
-        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2)
+        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2)+this.value_label_vert_shift
       }
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
@@ -2951,6 +2967,28 @@ export class Class_NodeElement extends Class_Element {
    * TODO Description
    * @memberof Class_NodeElement
    */
+  public get name_label_vert_shift() {
+    if (this._display.attributes.name_label_vert_shift !== undefined) {
+      return this._display.attributes.name_label_vert_shift
+    } else if (this._display.style.name_label_vert_shift !== undefined) {
+      return this._display.style.name_label_vert_shift
+    }
+    return default_name_label_vert_shift
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set name_label_vert_shift(_: number) {
+    this._display.attributes.name_label_vert_shift = _
+    this.drawNameLabel()
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
   public get name_label_horiz() {
     if (this._display.attributes.name_label_horiz !== undefined) {
       return this._display.attributes.name_label_horiz
@@ -2969,6 +3007,28 @@ export class Class_NodeElement extends Class_Element {
     this._display.attributes.name_label_horiz = _
     this.drawNameLabel()
   }
+
+ /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+ public get name_label_horiz_shift() {
+  if (this._display.attributes.name_label_horiz_shift !== undefined) {
+    return this._display.attributes.name_label_horiz_shift
+  } else if (this._display.style.name_label_horiz_shift !== undefined) {
+    return this._display.style.name_label_horiz_shift
+  }
+  return default_name_label_horiz_shift
+}
+
+/**
+ * TODO Description
+ * @memberof Class_NodeElement
+ */
+public set name_label_horiz_shift(_: number) {
+  this._display.attributes.name_label_horiz_shift = _
+  this.drawNameLabel()
+}
 
   /**
    * TODO Description
@@ -3036,6 +3096,28 @@ export class Class_NodeElement extends Class_Element {
     this.drawValueLabel()
   }
 
+    /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+    public get value_label_vert_shift() {
+      if (this._display.attributes.value_label_vert_shift !== undefined) {
+        return this._display.attributes.value_label_vert_shift
+      } else if (this._display.style.value_label_vert_shift !== undefined) {
+        return this._display.style.value_label_vert_shift
+      }
+      return default_value_label_vert_shift
+    }
+  
+    /** Set value for value_label_vert
+     *
+     TODO Description * @memberof Class_NodeElement
+     */
+    public set value_label_vert_shift(_: number) {
+      this._display.attributes.value_label_vert_shift = _
+      this.drawValueLabel()
+    }
+
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -3058,6 +3140,27 @@ export class Class_NodeElement extends Class_Element {
     this.drawValueLabel()
   }
 
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public get value_label_horiz_shift_shift() {
+    if (this._display.attributes.value_label_horiz_shift !== undefined) {
+      return this._display.attributes.value_label_horiz_shift
+    } else if (this._display.style.value_label_horiz_shift !== undefined) {
+      return this._display.style.value_label_horiz_shift
+    }
+    return default_value_label_horiz_shift
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set value_label_horiz_shift(_: number) {
+    this._display.attributes.value_label_horiz_shift = _
+    this.drawValueLabel()
+  }
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -3398,7 +3501,9 @@ export class Class_NodeAttribute {
   protected _name_label_box_width?: number
   protected _name_label_color?: boolean
   protected _name_label_vert?: Type_TextVPos
+  protected _name_label_vert_shift?: number 
   protected _name_label_horiz?: Type_TextHPos
+  protected _name_label_horiz_shift?: number 
   protected _name_label_background?: boolean
 
   // Parameter of node value label
@@ -3411,7 +3516,9 @@ export class Class_NodeAttribute {
   protected _value_label_box_width?: number
   protected _value_label_color?: boolean
   protected _value_label_vert?: Type_TextVPos
+  protected _value_label_vert_shift?: number
   protected _value_label_horiz?: Type_TextHPos
+  protected _value_label_horiz_shift?: number
   protected _value_label_background?: boolean
 
   // CONSTRUCTOR ========================================================================
@@ -3461,8 +3568,10 @@ export class Class_NodeAttribute {
     if (this._name_label_color !== undefined) json_object['label_color'] = this._name_label_color
     // if (this._name_label_vert !== undefined) json_object['name_label_vert'] = this._name_label_vert
     if (this._name_label_vert !== undefined) json_object['label_vert'] = this._name_label_vert
+    if (this._name_label_vert_shift !== undefined) json_object['name_label_vert_shift'] = this._name_label_vert_shift
     // if (this._name_label_horiz !== undefined) json_object['name_label_horiz'] = this._name_label_horiz
     if (this._name_label_horiz !== undefined) json_object['label_horiz'] = this._name_label_horiz
+    if (this._name_label_horiz_shift !== undefined) json_object['name_label_horiz_shift'] = this._name_label_horiz_shift
     // if (this._name_label_background !== undefined) json_object['name_label_background'] = this._name_label_background
     if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
 
@@ -3479,8 +3588,10 @@ export class Class_NodeAttribute {
     if (this._value_label_color !== undefined) json_object['value_label_color'] = this._value_label_color
     // if (this._value_label_vert !== undefined) json_object['value_label_vert'] = this._value_label_vert
     if (this._value_label_vert !== undefined) json_object['label_vert_valeur'] = this._value_label_vert
+    if (this._value_label_vert_shift !== undefined) json_object['value_label_vert_shift'] = this._value_label_vert_shift
     // if (this._value_label_horiz !== undefined) json_object['value_label_horiz'] = this._value_label_horiz
     if (this._value_label_horiz !== undefined) json_object['label_horiz_valeur'] = this._value_label_horiz
+    if (this._value_label_horiz_shift !== undefined) json_object['value_label_horiz_shift'] = this._value_label_horiz_shift
     if (this._value_label_background !== undefined) json_object['value_label_background'] = this._value_label_background
 
     return json_object
@@ -3509,6 +3620,8 @@ export class Class_NodeAttribute {
     if (json_local_object['label_color'] !== undefined) this._name_label_color = getBooleanFromJSON(json_local_object, 'label_color', default_label_color)
     if (json_local_object['label_vert'] !== undefined) this._name_label_vert = getStringFromJSON(json_local_object, 'label_vert', default_name_label_vert) as Type_TextVPos
     if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = getStringFromJSON(json_local_object, 'label_horiz', default_name_label_horiz) as Type_TextHPos
+    if (json_local_object['name_label_vert_shift'] !== undefined) this._name_label_vert_shift = getNumberFromJSON(json_local_object, 'name_label_vert_shift', default_name_label_vert_shift) as number
+    if (json_local_object['name_label_horiz_shift'] !== undefined) this._name_label_horiz_shift = getNumberFromJSON(json_local_object, 'name_label_horiz_shift', default_name_label_horiz_shift) as number
     if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
 
     if (json_local_object['show_value'] !== undefined) this._value_label_visible = getBooleanFromJSON(json_local_object, 'show_value', default_value_label_visible)
@@ -3521,6 +3634,8 @@ export class Class_NodeAttribute {
     if (json_local_object['value_label_color'] !== undefined) this._value_label_color = getBooleanFromJSON(json_local_object, 'value_label_color', default_label_color)
     if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = getStringFromJSON(json_local_object, 'label_vert_valeur', default_value_label_vert) as Type_TextVPos
     if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'label_horiz_valeur', default_value_label_horiz) as Type_TextHPos
+    if (json_local_object['value_label_vert_shift'] !== undefined) this._value_label_vert_shift = getNumberFromJSON(json_local_object, 'value_label_vert_shift', default_value_label_vert_shift) as number
+    if (json_local_object['value_label_horiz_shift'] !== undefined) this._value_label_horiz_shift = getNumberFromJSON(json_local_object, 'value_label_horiz_shift', default_value_label_horiz_shift) as number
     if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', default_label_background)
   }
 
@@ -3543,6 +3658,9 @@ export class Class_NodeAttribute {
     this._name_label_color = element._name_label_color
     this._name_label_vert = element._name_label_vert
     this._name_label_horiz = element._name_label_horiz
+    this._name_label_vert_shift = element._name_label_vert_shift
+    this._name_label_horiz_shift = element._name_label_horiz_shift
+
     this._name_label_background = element._name_label_background
     this._value_label_visible = element._value_label_visible
     this._value_label_font_family = element._value_label_font_family
@@ -3554,6 +3672,8 @@ export class Class_NodeAttribute {
     this._value_label_color = element._value_label_color
     this._value_label_vert = element._value_label_vert
     this._value_label_horiz = element._value_label_horiz
+    this._value_label_vert_shift = element._value_label_vert_shift
+    this._value_label_horiz_shift = element._value_label_horiz_shift
     this._value_label_background = element._value_label_background
   }
 
@@ -3584,6 +3704,8 @@ export class Class_NodeAttribute {
   public get name_label_color() { return this._name_label_color }
   public get name_label_vert() { return this._name_label_vert }
   public get name_label_horiz() { return this._name_label_horiz }
+  public get name_label_vert_shift() { return this._name_label_vert_shift }
+  public get name_label_horiz_shift() { return this._name_label_horiz_shift }
   public get name_label_background() { return this._name_label_background }
 
   // Parameter of node value label
@@ -3622,6 +3744,8 @@ export class Class_NodeAttribute {
   public set name_label_color(_: boolean | undefined) { this._name_label_color = _; this.update() }
   public set name_label_vert(_: Type_TextVPos | undefined) { this._name_label_vert = _; this.update() }
   public set name_label_horiz(_: Type_TextHPos | undefined) { this._name_label_horiz = _; this.update() }
+  public set name_label_vert_shift(_: number | undefined) { this._name_label_vert_shift = _; this.update() }
+  public set name_label_horiz_shift(_: number | undefined) { this._name_label_horiz_shift = _; this.update() }
   public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
 
   // Parameter of node value label
@@ -3635,6 +3759,8 @@ export class Class_NodeAttribute {
   public set value_label_color(_: boolean | undefined) { this._value_label_color = _; this.update() }
   public set value_label_vert(_: Type_TextVPos | undefined) { this._value_label_vert = _; this.update() }
   public set value_label_horiz(_: Type_TextHPos | undefined) { this._value_label_horiz = _; this.update() }
+  public set value_label_vert_shift(_: number | undefined) { this._value_label_vert_shift = _; this.update() }
+  public set value_label_horiz_shift(_: number | undefined) { this._value_label_horiz_shift = _; this.update() }
   public set value_label_background(_: boolean | undefined) { this._value_label_background = _; this.update() }
 }
 
