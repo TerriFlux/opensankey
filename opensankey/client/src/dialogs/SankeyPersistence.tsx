@@ -46,6 +46,7 @@ import {
 } from '../types/Legacy'
 
 import { Type_JSON } from '../types/Utils'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 
 /* FILE LOADING COMPONENTS *************************************************************/
@@ -545,19 +546,17 @@ export const DownloadExamples: DownloadExamplesFuncType = (
  */
 export const UploadExemple: UploadExempleFuncType = (
   file_name: string,
-  the_url_prefix: string,
-  data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  Reinitialization: () => void,
-  convert_data: ConvertDataFuncType,
-  DefaultSankeyData: DefaultSankeyDataFuncType
+  applicationData: Class_ApplicationData
+  // Reinitialization: () => void,
+  // convert_data: ConvertDataFuncType,
+  // DefaultSankeyData: DefaultSankeyDataFuncType
 ): void => {
   let root = window.location.href
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
   }
 
-  const url = root + the_url_prefix + '/sankey/upload_examples'
+  const url = root + applicationData.url_prefix + '/sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
@@ -565,18 +564,21 @@ export const UploadExemple: UploadExempleFuncType = (
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-      const server_data = JSON.parse(text)
-      const error = server_data['error']
+      const JSON_data = JSON.parse(text)
+      const error = JSON_data['error']
       if (error && error.length != 0) {
         alert(error)
         return
       }
 
       if (!file_name.includes('.xlsx')) {
-        Reinitialization()
-        complete_sankey_data(server_data, DefaultSankeyData, DefaultNode, DefaultLink)
-        convert_data(server_data, DefaultSankeyData)
-        set_data({ ...server_data })
+        // Clear datas & apply read datas
+        applicationData.fromJSON(JSON_data as Type_JSON)
+
+        // Reinitialization()
+        // complete_sankey_data(server_data, DefaultSankeyData, DefaultNode, DefaultLink)
+        // convert_data(server_data, DefaultSankeyData)
+        // set_data({ ...server_data })
       }
     })
   })

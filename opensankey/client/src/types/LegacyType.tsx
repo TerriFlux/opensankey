@@ -493,7 +493,9 @@ export type AdditionalMenusType = {
 
 export type initializeAdditionalMenusType = (
     additional_menus: AdditionalMenusType,
-    applicationData: applicationDataType
+    applicationData: applicationDataType,
+    processFunctions:processFunctionsType,
+    Reinitialization:()=>void
 ) => void
 
 export type module_dialogsType = (
@@ -503,6 +505,10 @@ export type module_dialogsType = (
     processFunctions: processFunctionsType
 ) => JSX.Element[]
 
+export type initializeProcessFunctionsType =
+(
+    applicationData:applicationDataType,
+  )=> processFunctionsType
 /*****************************************************************************/
 
 export type SankeyAppTypes = {

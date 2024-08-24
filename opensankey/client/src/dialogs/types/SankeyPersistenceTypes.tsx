@@ -44,7 +44,10 @@ export type DownloadExamplesFuncType = (file_name: string, the_url_prefix: strin
 
 export type UploadExcelImplFuncType = (set_show_excel_dialog: (b: boolean) => void, input_file: Blob, the_url_prefix: string) => void
 
-export type UploadExempleFuncType = (file_name: string, the_url_prefix: string, data: SankeyData, set_data: (data: SankeyData) => void, Reinitialization: () => void, convert_data: ConvertDataFuncType, DefaultSankeyData: DefaultSankeyDataFuncType) => void
+export type UploadExempleFuncType = (
+  file_name: string,
+  applicationData: Class_ApplicationData
+) => void
 
 export type ClickSaveExcelFuncType = (
   url_prefix: string,
