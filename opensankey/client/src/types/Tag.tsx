@@ -435,7 +435,7 @@ export class Class_LevelTag extends Class_ProtoTag {
       .forEach(tagg => {
         tagg.tags_list
           .forEach(tag => {
-            // Chech children dimensions
+            // Check children dimensions
             tag.dimensions_list_as_tag_for_children
               .filter(dim => !(dim.id in all_existing_dim))
               .forEach(dim => all_existing_dim[dim.id] = dim)

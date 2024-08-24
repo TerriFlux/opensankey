@@ -194,7 +194,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   initializeAdditionalMenus(
     additionalMenus,
-    applicationData
+    applicationData,
+    processFunctions,
+    reinitialization
   )
 
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes

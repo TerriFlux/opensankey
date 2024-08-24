@@ -3,6 +3,7 @@ import React from 'react'
 import { applicationDataType } from '../types/LegacyType'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
+import { UploadExemple } from '../dialogs/SankeyPersistence'
 
 /**
  * Description placeholder
@@ -127,10 +128,11 @@ export const ExempleItem = (
             applicationData.new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
+            } else {
+              UploadExemple(
+                path, applicationData.new_data
+              )
             }
-            // UploadExemple(
-            //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
-            // )
             // UploadExemple(
             //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
             // )}
