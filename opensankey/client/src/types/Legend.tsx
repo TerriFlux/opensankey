@@ -473,7 +473,7 @@ export class Class_Legend extends Class_Element {
       .attr('stroke-dasharray', '3,3')
     // Set explanation text for path as dashed
     dashed_link?.append('text')
-      .text('MEP.legend_dashed_links')
+      .text(this.drawing_area.application_data.t('MEP.legend_dashed_links'))
       .call(this._wrapper)
     // Correct text position // font size
     dashed_link?.select('text')

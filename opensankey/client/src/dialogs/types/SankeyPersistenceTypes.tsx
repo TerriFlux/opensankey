@@ -19,11 +19,9 @@ export type CounterType={
   set_result:(_:string)=>void
 }
 export type ProcessExampleFuncType = (
-  applicationData:applicationDataType,
-    convert_data: ConvertDataFuncType,
-    postProcessLoadExcel: (server_data: SankeyData) => void,
-    DefaultSankeyData: DefaultSankeyDataFuncType
-) => SankeyData
+  applicationData: Class_ApplicationData,
+  postProcessLoadExcel: (server_data: SankeyData) => void,
+) => void
 
 export type RetrieveExcelResultsFuncType = (
   applicationData : applicationDataType,
