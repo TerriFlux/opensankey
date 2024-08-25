@@ -720,8 +720,8 @@ export class Class_Sankey {
         // Set node value to node from JSON
         node.fromJSON(
           node_json as Type_JSON,
-          matching_taggs_id['nodeTags'] ?? {},
-          matching_tags_id['nodeTags'] ?? {}
+          {...matching_taggs_id['nodeTags'],...matching_taggs_id['levelTags']} ?? {},
+          {...matching_tags_id['levelTags'],...matching_tags_id['levelTags']} ?? {}
         )
       })
     // Redo a go throught, but this time create nodes dimension
@@ -1318,6 +1318,17 @@ export class Class_Sankey {
    */
   public get nodes_dict() {
     return this._nodes
+  }
+
+  public sortNodes() {
+    const sorted_nodes = Object.values(this._nodes).sort((n1,n2)=>{
+      if (n1.position_v>=0 || n2.position_v>=0) {
+        return n1.position_v - n2.position_v
+      } else {
+        return n2.position_v - n1.position_v
+      }
+    })
+    this._nodes = Object.assign({}, ...sorted_nodes.map((n) => ({[n.id]: n})))  
   }
 
   /**
