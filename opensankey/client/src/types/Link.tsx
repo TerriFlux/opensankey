@@ -717,14 +717,18 @@ export class Class_LinkElement extends Class_ProtoElement {
     let source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
     if (source_node_id) {
       source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
-      if (this.main_sankey.nodes_dict[source_node_id])
+      if (this.main_sankey.nodes_dict[source_node_id]) {
         this.source = this.main_sankey.nodes_dict[source_node_id]
+        this.shape_is_recycling = false
+      }
     }
     let target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
     if (target_node_id) {
       target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
-      if (this.main_sankey.nodes_dict[target_node_id])
+      if (this.main_sankey.nodes_dict[target_node_id]) {
         this.target = this.main_sankey.nodes_dict[target_node_id]
+        this.shape_is_recycling = false
+      }
     }
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
