@@ -128,14 +128,10 @@ export const ExempleItem = (
             applicationData.new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
-            } else {
-              UploadExemple(
-                path, applicationData.new_data
-              )
-            }
-            // UploadExemple(
-            //   path, url_prefix, data, set_data,Reinitialization,convert_data,get_default_data
-            // )}
+            } 
+            UploadExemple(
+              path, applicationData.new_data
+            )
           }
           }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
             : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')

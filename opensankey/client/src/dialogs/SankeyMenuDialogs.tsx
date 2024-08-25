@@ -482,7 +482,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
                   applicationData.new_data.menu_configuration.function_on_wait.current=()=>{
-                    // ComputeAutoSankey(applicationData, node_hspace,false)
+                    new_data.drawing_area.computeAutoSankey(false)
                     // set_data({ ...data })
                   }
                   applicationData.new_data.menu_configuration.ref_lauchToast.current()
