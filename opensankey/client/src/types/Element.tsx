@@ -258,16 +258,13 @@ export abstract class Class_ProtoElement {
       if (this.drawing_area.isInSelectionMode()) {
         this.d3_selection?.call(
           d3.drag<SVGGElement, this>()
-            .on(
-              'start',
+            .on('start',
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDragStart(event))
-            .on(
-              'drag',
+            .on('drag',
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDrag(event))
-            .on(
-              'end',
+            .on('end',
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDragEnd(event))
         )
