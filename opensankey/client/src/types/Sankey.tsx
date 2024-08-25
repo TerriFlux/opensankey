@@ -721,7 +721,7 @@ export class Class_Sankey {
         node.fromJSON(
           node_json as Type_JSON,
           {...matching_taggs_id['nodeTags'],...matching_taggs_id['levelTags']} ?? {},
-          {...matching_tags_id['levelTags'],...matching_tags_id['levelTags']} ?? {}
+          {...matching_tags_id['nodeTags'],...matching_tags_id['levelTags']} ?? {}
         )
       })
     // Redo a go throught, but this time create nodes dimension
