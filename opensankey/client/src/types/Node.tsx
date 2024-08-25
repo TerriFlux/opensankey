@@ -64,6 +64,11 @@ type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
 
 // SPECIFIC CONSTANTS *******************************************************************
+export const default_position_type = 'absolute'
+export const default_dx = 100
+export const default_dy = 50
+export const default_relative_dx = 100
+export const default_relative_dy = 50
 
 export const default_shape_type: Type_Shape = 'rect'
 export const default_shape_arrow_angle_factor = 30
@@ -111,6 +116,15 @@ export function isAttributeOverloaded(
 ) {
   let overloaded = false
   nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
+  return overloaded
+}
+
+export function isPositionOverloaded(
+  nodes: Class_NodeElement[],
+  attr: keyof Type_ElementPosition
+) {
+  let overloaded = false
+  nodes.forEach(node => overloaded = (overloaded || node.isPositionOverloaded(attr)))
   return overloaded
 }
 
@@ -482,6 +496,10 @@ export class Class_NodeElement extends Class_Element {
 
   public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
     return this._display.attributes[attr] !== undefined
+  }
+
+  public isPositionOverloaded(attr: keyof Type_ElementPosition) {
+    return this._display.position[attr] !== undefined
   }
 
   public isEqual(_: Class_NodeElement) {
@@ -976,6 +994,12 @@ export class Class_NodeElement extends Class_Element {
     json_object['position'] = this.position_type
     json_object['x'] = this.position_x
     json_object['y'] = this.position_y
+    json_object['u'] = this.position_u
+    json_object['v'] = this.position_v
+    if (this._display.position.dx) json_object['dx'] = this._display.position.dx
+    if (this._display.position.dy) json_object['dy'] = this._display.position.dy
+    if (this._display.position.relative_dx) json_object['relative_dx'] = this._display.position.relative_dx
+    if (this._display.position.relative_dy) json_object['relative_dy'] = this._display.position.relative_dy
     if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
     if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
     // Fill style & local attributes
@@ -1030,9 +1054,15 @@ export class Class_NodeElement extends Class_Element {
     super.fromJSON(json_node_object)
     this._name = getStringFromJSON(json_node_object, 'name', this._name)
     // Update displaying values
-    this._display.position.type = getStringFromJSON(json_node_object, 'position', this._display.position.type) as Type_Position
+    this._display.position.type = getStringFromJSON(json_node_object, 'position', this.position_type) as Type_Position
     this._display.position.x = getNumberFromJSON(json_node_object, 'x', this._display.position.x)
     this._display.position.y = getNumberFromJSON(json_node_object, 'y', this._display.position.y)
+    this._display.position.u = getNumberFromJSON(json_node_object, 'u', this._display.position.u)
+    this._display.position.v = getNumberFromJSON(json_node_object, 'v', this._display.position.v)
+    this._display.position.dx = getNumberOrUndefinedFromJSON(json_node_object, 'dx')
+    this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
+    this._display.position.dy = getNumberOrUndefinedFromJSON(json_node_object, 'dy')
+    this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
     this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
@@ -2130,9 +2160,9 @@ export class Class_NodeElement extends Class_Element {
     // if (HasLinksZero(data,node_element_d3)) {
     //   return 'none'
     // }
-    if (this.position_type === 'relative') {
-      return 'none'
-    }
+    // if (this.position_type === 'relative') {
+    //   return 'none'
+    // }
     return 'inline'
   }
 
@@ -2585,6 +2615,115 @@ export class Class_NodeElement extends Class_Element {
     this._display.style = _
     _.addReference(this)
     this.draw()
+  }
+
+  /**
+   * Position type can be parametric absolute or relative
+   * @memberof Class_NodeElement
+   */
+  public get position_type() {
+    if (this._display.position.type !== undefined) {
+      return this._display.position.type
+    }
+    else if (this._display.style.position.type !== undefined) {
+      return this._display.style.position.type
+    }
+    return default_position_type
+  }
+
+  /**
+   * Position type can be parametric absolute or relative
+   * @memberof Class_NodeElement
+   */
+  public set position_type(_:Type_Position) {
+    this._display.position.type = _
+  }
+
+   /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+   public get position_dx() {
+    if (this._display.position.dx !== undefined) {
+      return this._display.position.dx
+    }
+    else if (this._display.style.position.dx !== undefined) {
+      return this._display.style.position.dx
+    }
+    return default_dx
+  }
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set position_dx(_:number) {
+    this._display.position.dx = _
+  }
+
+   /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+   public get position_dy() {
+    if (this._display.position.dy !== undefined) {
+      return this._display.position.dy
+    }
+    else if (this._display.style.position.dy !== undefined) {
+      return this._display.style.position.dy
+    }
+    return default_dy
+  }
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set position_dy(_) {
+    this._display.position.dy = _
+  }
+
+/**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+public get position_relative_dx() {
+  if (this._display.position.relative_dx !== undefined) {
+    return this._display.position.relative_dx
+  }
+  else if (this._display.style.position.relative_dx !== undefined) {
+    return this._display.style.position.relative_dx
+  }
+  return default_relative_dx
+}
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set position_relative_dx(_) {
+    this._display.position.relative_dx = _
+    this.applyPosition()
+  }
+
+ /**
+ * TODO Description
+ * @memberof Class_NodeElement
+ */
+ public get position_relative_dy() {
+  if (this._display.position.relative_dy !== undefined) {
+    return this._display.position.relative_dy
+  }
+  else if (this._display.style.position.relative_dy !== undefined) {
+    return this._display.style.position.relative_dy
+  }
+  return default_relative_dy
+}
+
+  /**
+   * TODO Description
+   * @memberof Class_NodeElement
+   */
+  public set position_relative_dy(_) {
+    this._display.position.relative_dy = _
+    this.applyPosition()
   }
 
   /**
@@ -3480,6 +3619,11 @@ public set name_label_horiz_shift(_: number) {
 export class Class_NodeAttribute {
 
   // PROTECTED ATTRIBUTES ===============================================================
+  // Parameters for geometry
+  protected _dx?: number
+  protected _dy?: number
+  protected _relative_dx?: number
+  protected _relative_dy?: number
 
   // Parameters for shape
   protected _shape_visible?: boolean
@@ -3682,6 +3826,8 @@ export class Class_NodeAttribute {
   protected update() { }
 
   // GETTERS ============================================================================
+  //Parameters for geometry
+
 
   // Parameters for shape
   public get shape_visible() { return this._shape_visible }
@@ -3722,6 +3868,8 @@ export class Class_NodeAttribute {
   public get value_label_background() { return this._value_label_background }
 
   // SETTERS ============================================================================
+  //Parameters for geometry
+
 
   // Parameters for shape
   public set shape_visible(_: boolean | undefined) { this._shape_visible = _; this.update() }
@@ -3785,6 +3933,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _references: { [_: string]: Class_NodeElement } = {}
 
+  private _position : Type_ElementPosition
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
@@ -3802,6 +3951,19 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
     // Set as deletable or not
     this._is_deletable = is_deletable
+
+    // Parameters for geometry
+    this._position = {
+      type: 'absolute',
+      x: 10,
+      y: 10,
+      u: 0,
+      v: 0,
+      dx : default_dx,
+      dy : default_dy,
+      relative_dx : default_relative_dx,
+      relative_dy : default_relative_dy
+    }
 
     // Parameters for shape
     this._shape_visible = default_shape_visible
@@ -3901,6 +4063,9 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    * @memberof Class_NodeStyle
    */
   public set name(_: string) { this._name = _ }
+
+  public get position() {return this._position}
+  public set position(_) {this._position = _}
 }
 
 // CLASS NODE DIMENSION *****************************************************************
