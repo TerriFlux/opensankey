@@ -22,8 +22,7 @@ import {
 import {
   getBooleanFromJSON,
   Type_ElementPosition,
-  Type_JSON,
-  Type_Position
+  Type_JSON
 } from './Utils'
 
 // CONSTANT *****************************************************************************
@@ -592,8 +591,19 @@ export abstract class Class_Element extends Class_ProtoElement {
   public set position_x(_: number) { this._display.position.x = _; this.applyPosition() }
   public get position_y() { return this._display.position.y }
   public set position_y(_: number) { this._display.position.y = _; this.applyPosition() }
-  public get position_type() { return this._display.position.type }
-  public set position_type(_: Type_Position) { this._display.position.type = _; this.applyPosition() }
+  public get position_u() { return this._display.position.u }
+  public set position_u(_: number) { this._display.position.u = _; this.applyPosition() }
+  public get position_v() { return this._display.position.v }
+  public set position_v(_: number) { this._display.position.v = _; this.applyPosition() }
+  public get position_dx() { return this._display.position.dx }
+  public set position_dx(_) { this._display.position.dx = _; this.applyPosition() }
+  public get position_relative_dx() { return this._display.position.relative_dx }
+  public set position_relative_dx(_) { this._display.position.relative_dx = _; this.applyPosition() }
+  public get position_dy() { return this._display.position.dy }
+  public set position_dy(_) { this._display.position.dy = _; this.applyPosition() }
+  public get position_relative_dy() { return this._display.position.relative_dy }
+  public set position_relative_dy(_) { this._display.position.relative_dy = _; this.applyPosition() }
+  public get display() { return this._display}
 }
 
 

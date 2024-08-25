@@ -96,13 +96,22 @@ export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' 
 export type Type_ElementPosition = {
   type: Type_Position,
   x: number,
-  y: number
+  y: number,
+  u: number,
+  v: number,
+  dx?: number,
+  dy?: number,
+  relative_dx?: number,
+  relative_dy?: number
 }
-export type Type_Position = 'absolute' | 'relative'
+
+export type Type_Position = 'absolute' | 'relative' | 'parametric'
 export const default_element_position: Type_ElementPosition = {
   type: 'absolute',
   x: 10,
   y: 10,
+  u: 0,
+  v: 0
 }
 
 export type Type_JSON = { [_: string]: boolean | number | string | string[] | Type_JSON }

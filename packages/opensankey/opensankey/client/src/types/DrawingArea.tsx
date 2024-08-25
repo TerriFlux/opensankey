@@ -1396,12 +1396,10 @@ export class Class_DrawingArea {
     // Update node index
     if (!horizontal_indexes_per_nodes_ids[node.id]) {
       horizontal_indexes_per_nodes_ids[node.id] = starting_index
-      //node.position_u = starting_index
     }
     else {
       if (starting_index > horizontal_indexes_per_nodes_ids[node.id]) {
         horizontal_indexes_per_nodes_ids[node.id] = starting_index
-        //node.position_u = starting_index
       }
     }
     // From current node, use output links to
@@ -1716,8 +1714,6 @@ export class Class_DrawingArea {
         height_per_nodes_ids[node.id] = node_height
         sortcoef_per_nodes_ids[node.id] = node_sortcoef
         vertical_indexes_per_node_id[node.id] = max_vertical_index
-        // node.position_v = max_vertical_index
-        // node.position_dy = 0
         nodes_ids_per_vertical_index.push(node.id)
         if (max_vertical_index > 0) {
           // Bubble sort algo
