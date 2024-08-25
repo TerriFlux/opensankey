@@ -1396,12 +1396,12 @@ export class Class_DrawingArea {
     // Update node index
     if (!horizontal_indexes_per_nodes_ids[node.id]) {
       horizontal_indexes_per_nodes_ids[node.id] = starting_index
-      node.position_u = starting_index
+      //node.position_u = starting_index
     }
     else {
       if (starting_index > horizontal_indexes_per_nodes_ids[node.id]) {
         horizontal_indexes_per_nodes_ids[node.id] = starting_index
-        node.position_u = starting_index
+        //node.position_u = starting_index
       }
     }
     // From current node, use output links to
@@ -1716,8 +1716,8 @@ export class Class_DrawingArea {
         height_per_nodes_ids[node.id] = node_height
         sortcoef_per_nodes_ids[node.id] = node_sortcoef
         vertical_indexes_per_node_id[node.id] = max_vertical_index
-        node.position_v = max_vertical_index
-        node.position_dy = 0
+        // node.position_v = max_vertical_index
+        // node.position_dy = 0
         nodes_ids_per_vertical_index.push(node.id)
         if (max_vertical_index > 0) {
           // Bubble sort algo
@@ -1874,106 +1874,5 @@ export class Class_DrawingArea {
 
   this.sankey.nodes_list.forEach(n=>n.reorganizeIOLinks())
   //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict) 
-  this.ComputeParametrization()
-  }
-
-  public ComputeParametrization() {
-    const columns : {[_:number]:Class_NodeElement[]} = {}
-    let smaller_x : number
-    this.sankey.visible_nodes_list.forEach(n=>{
-      if (smaller_x === undefined) {
-        smaller_x = n.position_x
-      }
-      if (n.position_x < smaller_x) {
-        smaller_x = n.position_x
-      }
-    })
-  
-    // this.sankey.node_styles_dict['default'].position_type = 'parametric'
-    // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
-    // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
-  
-    this.sankey.visible_nodes_list.forEach(n=>{
-      if (n.position_type === 'relative' ) {
-        return
-      }
-      n.position_type = 'parametric'
-      n.display.position.u = Math.floor((n.position_x-smaller_x/2)/this.horizontal_spacing)
-      if (!(n.position_u in columns)) {
-        columns[n.position_u] = [n]
-      } else {
-        columns[n.position_u].push(n)
-      }
-    })
-    Object.values(columns).forEach(column=>{
-      column.sort((n1,n2)=>n1.position_y-n2.position_y)
-      column.forEach((n,i)=>{
-        if (i==0) {
-          return
-        }
-        const style_dy = this.sankey.node_styles_dict[n.style.id].position_dy
-        const dy = n.position_y - column[i-1].position_y - style_dy! - column[i-1].getShapeHeightToUse()
-        if (dy !== 0) {
-          //AssignNodeLocalAttribute(n,'dy',dy)
-          n.position_dy = dy
-        } else {
-          //delete n.local!.dy
-        }
-      })
-    })
-    Object.values(columns).forEach(column=>{
-      column.sort((n1,n2)=>n1.position_y-n2.position_y)
-      if (this.sankey.level_taggs_list.length == 0) {
-        let current_v = 0
-        column.forEach(n=>current_v = this.apply_v(n,current_v,undefined))      
-      }
-      this.sankey.level_taggs_list.forEach( tagGroup=> {
-        let current_v = 0
-        column.forEach(n=>current_v = this.apply_v(n,current_v,tagGroup))
-        //column.forEach(n=>apply_v_agregate(data,n,n.v))
-      })
-    })
-    this.sankey.sortNodes()
-  }
-
-  public apply_v(
-    node:Class_NodeElement,
-    current_v:number,
-    tagGroup:Class_LevelTagGroup|undefined
-  ) {
-    //const {data} = applicationData
-    //const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
-    const all_nodes = this.sankey.nodes_dict
-    //node.position = 'parametric'
-    node.display.position.v = current_v
-    if (!tagGroup) {
-      return current_v+1    
-    }
-    //node.y == undefined
-    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-    if (!nodeDimParent) {
-      return current_v+1
-    }
-
-    let new_current_v = current_v
-    //let cur_relative_dx = ReturnLocalNodeValue(node,'relative_dx') as number
-    let cur_relative_dx = node.position_relative_dx
-    if (!cur_relative_dx) {
-      cur_relative_dx = 0
-    }
-    let current_node_width = 0
-    nodeDimParent.children.forEach(nn=>{
-      // parametric
-      nn.display.position.x = node.position_x
-      nn.display.position.u = node.position_u
-      // relative
-      //AssignNodeLocalAttribute(nn,'relative_dx',cur_relative_dx+current_node_width)
-      node.position_relative_dx = cur_relative_dx+current_node_width
-      current_node_width += nn.getShapeWidthToUse()//nodeWidth(nn, applicationData, inv_scale, scale, GetLinkValue)
-      cur_relative_dx = cur_relative_dx + nn.position_relative_dx+current_node_width
-
-      new_current_v = this.apply_v(nn,new_current_v,tagGroup)
-    })
-    return new_current_v+1
   }
 }
