@@ -19,10 +19,7 @@ import FileSaver from 'file-saver'
 import {
   processFunctionsType,
   applicationDataType,
-  SankeyData,
-  ConvertDataFuncType,
-  DefaultSankeyDataFuncType,
-  DataSuiteType,
+  DataSuiteType
 } from '../types/LegacyType'
 import {
   ClickSaveDiagramFuncType,
@@ -34,16 +31,6 @@ import {
   UploadExcelImplFuncType,
   UploadExempleFuncType
 } from './types/SankeyPersistenceTypes'
-
-
-
-/*************************************************************************************************/
-
-import {
-  DefaultLink,
-  DefaultNode,
-  complete_sankey_data
-} from '../types/Legacy'
 
 import { Type_JSON } from '../types/Utils'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -446,11 +433,8 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 // TODO s'en occuper
 export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
-  convert_data: ConvertDataFuncType,
-  postProcessLoadExcel: (server_data: SankeyData) => void,
-  DefaultSankeyData: () => SankeyData
-
-): SankeyData => {
+  postProcessLoadExcel
+) => {
 //   const {data}=applicationData
 //   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
 //   convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
@@ -504,8 +488,6 @@ export const ProcessExample: ProcessExampleFuncType = (
   //     postProcessLoadExcel(data)
   //   }
   //   d3.select('.loading_auto_compute').remove()
-
-  return DefaultSankeyData()
 }
 
 /**
@@ -576,12 +558,8 @@ export const UploadExemple: UploadExempleFuncType = (
 
       if (!file_name.includes('.xlsx')) {
         // Clear datas & apply read datas
-        applicationData.fromJSON(JSON_data as Type_JSON)
 
-        // Reinitialization()
-        // complete_sankey_data(server_data, DefaultSankeyData, DefaultNode, DefaultLink)
-        // convert_data(server_data, DefaultSankeyData)
-        // set_data({ ...server_data })
+        applicationData.fromJSON(JSON_data as Type_JSON)
       }
     })
   })
