@@ -341,14 +341,18 @@ export class Class_LinkElement extends Class_ProtoElement {
       drawing_area: drawing_area,
       displaying_order: drawing_area.addElement(),
       position_starting: {
-        type: 'relative',
+        type: 'absolute',
         x: 0,
-        y: 0
+        y: 0,
+        u:0,
+        v:0
       },
       position_ending: {
-        type: 'relative',
+        type: 'absolute',
         x: 0,
-        y: 0
+        y: 0,
+        u:0,
+        v:0
       },
       style: drawing_area.sankey.default_link_style,
       attributes: new Class_LinkAttribute()
@@ -457,7 +461,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links')
     // Setup order
-    this.drawing_area.orderElements()
+    //this.drawing_area.orderElements()
     // Draw elements
     this.drawElements()
   }
@@ -2167,6 +2171,17 @@ export class Class_LinkElement extends Class_ProtoElement {
       // Need to update and redraw from source and target also
       this.source.updateOutputValue()
       this.target.updateInputValue()
+
+      if (this.source.position_type == 'parametric') {
+        // if the positioning mode of source is parametric we need to reposition all nodes below 
+        const same_source_u = this.main_sankey.visible_nodes_list.filter(n=>n.position_u == this.source.position_u && n.position_v > this.source.position_v)
+        same_source_u.forEach(n=>n.draw())
+      }
+      if (this.target.position_type == 'parametric') {
+        // if the positioning mode of target is parametric we need to reposition all nodes below 
+        const same_target_u = this.main_sankey.visible_nodes_list.filter(n=>n.position_u == this.target.position_u && n.position_v > this.target.position_v)
+        same_target_u.forEach(n=>n.draw())
+      }
     }
   }
 
