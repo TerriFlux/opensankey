@@ -119,15 +119,15 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
     fetch(url, fetchData).then(response => {
       response.text()
         .then(text => {
-          try {
+          // try {
             RetrieveExcelResults(
               applicationData,
               text
             )
-          }
-          catch(err) {
-            alert(err)
-          }
+          // }
+          // catch(err) {
+          //   alert(err)
+          // }
         })
         .then(()=>{
           set_is_computing(false)
@@ -395,7 +395,10 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     )
   }
 
-  // TODO autocompute sankey
+  applicationData.new_data.menu_configuration.function_on_wait.current=()=>{
+    new_data.drawing_area.computeAutoSankey(false)
+  }
+  applicationData.new_data.menu_configuration.ref_lauchToast.current()
   // TODO adjust sankey zone
 
 }

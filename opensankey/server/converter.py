@@ -56,7 +56,7 @@ def extract_json_from_sankey(sankey: Sankey):
     nodeTags = {}
     levelTags = {}
     fluxTags = {}
-    sankeyToJson.parse_tags(sankey, dataTags, levelTags, nodeTags, fluxTags)
+    sankeyToJson.parse_tags(sankey, dataTags, nodeTags, levelTags, fluxTags)
     # Parser all nodes -> data struct
     nodes = {}
     sankeyToJson.parse_nodes(sankey, nodes, levelTags)

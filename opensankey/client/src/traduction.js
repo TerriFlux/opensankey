@@ -1444,7 +1444,7 @@ export const open_resources = {
         2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
         3:'Bouton permettant de filtrer les noeuds en fonction de leur niveau d\'agrégation',
         4:'Bouton permettant de filtrer la visibilité des flux en fonction de leurs valeurs, ce bouton permet aussi de modifier l\'échelle du diagramme (l\'épaisseur des flux)',
-        5:'Boutons permettant de réajuster la taille de la zone de dessin pour que tous les éléments soient visibles',
+        5:'Bouton permettant de réajuster la taille de la zone de dessin pour que tous les éléments soient visibles',
         6:'Bouton permettant d\'afficher le diagramme sans prendre en compte la valeur des flux',
         7:'Bouton permettant d\'afficher de l\'aide supplémentaire',
         8:'Menu de navigation permettant d\'ouvrir, enregistrer, éditer des sankeys',
