@@ -101,7 +101,7 @@ import {
 /*************************************************************************************************/
 
 
-import SankeyLoad from '../dialogs/SankeyPersistence'
+import SankeyLoad, { UploadExemple } from '../dialogs/SankeyPersistence'
 import {
   ExcelModal,
   ApplyLayoutDialog
@@ -1667,10 +1667,10 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               {/* Button to open directly the JSON file */}
               <Button variant='toolbar_button_6'
                 onClick={() => {
-                  // UploadExemple(
-                  //   ('Formations/Tutoriels/'+(d[0])+'/'+dd), url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
-                  // )
-                  applicationData.set_data({ ...applicationData.data })
+                  UploadExemple(
+                    ('Formations/Tutoriels/'+(d[0])+'/'+dd), applicationData.new_data
+                  )
+                  //applicationData.set_data({ ...applicationData.data })
                   set_show_tuto(false)
                 }}
               >{t('useTutoJSON')}</Button>
@@ -1680,9 +1680,9 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
                 <Button variant='toolbar_button_6'
                   onClick={() => {
                     processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
-                    // UploadExemple(
-                    //   'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
-                    // )
+                    UploadExemple(
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), applicationData.new_data
+                    )
                     set_show_tuto(false)
                   }
                   }
@@ -1693,10 +1693,10 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '_reconciled.xlsx')) ?
                 <Button variant='toolbar_button_6'
                   onClick={() => {
-                    // processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
-                    // UploadExemple(
-                    //   'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
-                    // )
+                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
+                    UploadExemple(
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), applicationData.new_data
+                    )
                     set_show_tuto(false)
                   }
                   }
