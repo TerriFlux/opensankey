@@ -53,7 +53,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
 
     let max_free_label_pos_x = 0
     let max_free_label_pos_y = 0
-    this.sankey_plus.visible_free_labels_list.filter(free_label => free_label.position_type === 'absolute').map(free_label => {
+    this.sankey_plus.visible_free_labels_list.filter(free_label => free_label.display.position.type === 'absolute').map(free_label => {
       const free_label_rightest_pos = free_label.position_x + free_label.label_width
       const free_label_bottomest_pos = free_label.position_y + free_label.label_height
       max_free_label_pos_x = Math.max(max_free_label_pos_x, free_label_rightest_pos)
