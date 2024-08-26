@@ -43,7 +43,6 @@ import { Class_Legend } from './Legend'
 import { Class_Element, Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
 import { convert_data_legacy } from './Legacy'
-import { Class_LevelTagGroup } from './Tag'
 
 // CONSTANTS ****************************************************************************
 const initial_show_structure = 'reconciled'
@@ -1653,7 +1652,7 @@ export class Class_DrawingArea {
         let min_next_horizontal_index = max_horizontal_index+1
         node.output_links_list.forEach(
           (link) => {
-            if ( this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible && 
+            if ( this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
                 this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id].is_visible
             ) {
               const target_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
@@ -1869,6 +1868,6 @@ export class Class_DrawingArea {
   this.setHeight(v_margin*2 + max_height_cumul)
 
   this.sankey.nodes_list.forEach(n=>n.reorganizeIOLinks())
-  //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict) 
+  //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict)
   }
 }

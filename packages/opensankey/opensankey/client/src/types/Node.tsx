@@ -468,7 +468,7 @@ export class Class_NodeElement extends Class_Element {
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
-    this.d3_selection?.style('display', this.getDisplayValue())
+    this.d3_selection?.style('display', 'inline')
     this.d3_selection?.style('font-family', this.name_label_font_family)
     // Draw shape
     this.drawShape()
@@ -1350,7 +1350,7 @@ export class Class_NodeElement extends Class_Element {
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
     if (nodes_selected.length == 0) {
-      // Move all elements so none of them are outside the DA 
+      // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
     } else if (nodes_selected.includes(this)) {
       // Only trigger the drag if we drag a selected node
@@ -1369,7 +1369,7 @@ export class Class_NodeElement extends Class_Element {
               link.target.applyPosition()
             })
           })
-        // Move all elements so none of them are outside the DA 
+        // Move all elements so none of them are outside the DA
         this.drawing_area.recenterElements()
       }
     }
@@ -2151,19 +2151,6 @@ export class Class_NodeElement extends Class_Element {
         shape_color = tags_for_colormap[0].color
     }
     return shape_color
-  }
-
-  // Get display value
-  private getDisplayValue() {
-    // On gere la visibilité directement sur gg_nodes avec un display <inline />
-    // Cela permettra de mieux gérer des zooms sur les éléments visibles
-    // if (HasLinksZero(data,node_element_d3)) {
-    //   return 'none'
-    // }
-    // if (this.position_type === 'relative') {
-    //   return 'none'
-    // }
-    return 'inline'
   }
 
   /**
@@ -3247,7 +3234,7 @@ public set name_label_horiz_shift(_: number) {
       }
       return default_value_label_vert_shift
     }
-  
+
     /** Set value for value_label_vert
      *
      TODO Description * @memberof Class_NodeElement
@@ -3645,9 +3632,9 @@ export class Class_NodeAttribute {
   protected _name_label_box_width?: number
   protected _name_label_color?: boolean
   protected _name_label_vert?: Type_TextVPos
-  protected _name_label_vert_shift?: number 
+  protected _name_label_vert_shift?: number
   protected _name_label_horiz?: Type_TextHPos
-  protected _name_label_horiz_shift?: number 
+  protected _name_label_horiz_shift?: number
   protected _name_label_background?: boolean
 
   // Parameter of node value label
@@ -3826,8 +3813,6 @@ export class Class_NodeAttribute {
   protected update() { }
 
   // GETTERS ============================================================================
-  //Parameters for geometry
-
 
   // Parameters for shape
   public get shape_visible() { return this._shape_visible }
@@ -3868,8 +3853,6 @@ export class Class_NodeAttribute {
   public get value_label_background() { return this._value_label_background }
 
   // SETTERS ============================================================================
-  //Parameters for geometry
-
 
   // Parameters for shape
   public set shape_visible(_: boolean | undefined) { this._shape_visible = _; this.update() }
@@ -3934,7 +3917,9 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   private _references: { [_: string]: Class_NodeElement } = {}
 
   private _position : Type_ElementPosition
+
   // CONSTRUCTOR ========================================================================
+
   constructor(
     id: string,
     name: string,
@@ -3986,6 +3971,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._name_label_color = default_label_color
     this._name_label_vert = default_name_label_vert
     this._name_label_horiz = default_name_label_horiz
+    this._name_label_vert_shift = default_name_label_vert_shift
+    this._name_label_horiz_shift = default_name_label_horiz_shift
     this._name_label_background = default_label_background
 
     // Parameter of node value label
@@ -3999,6 +3986,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._value_label_color = default_label_color
     this._value_label_vert = default_value_label_vert
     this._value_label_horiz = default_value_label_horiz
+    this._value_label_vert_shift = default_value_label_vert_shift
+    this._value_label_horiz_shift = default_value_label_horiz_shift
     this._value_label_background = default_label_background
   }
 
