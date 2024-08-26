@@ -3864,9 +3864,9 @@ export class Class_LinkValueTree {
   ) {
     // All parentality relations are sets via sankey struct with fromJSON + addDataTag
     // So it is not necessary to read datatag group -> it should be the same as in JSON
-    if (this.data_tag_group.id !== json_object['datatag_group'])
-      console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
-    else {
+    // if (this.data_tag_group.id !== json_object['datatag_group'])
+    //   console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
+    // else {
       Object.entries(json_object)
         .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
         .forEach(([id, sub_json_object]) => {
