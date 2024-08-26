@@ -36,6 +36,7 @@ import {
   Type_ElementPosition,
   Type_JSON,
   default_element_color,
+  default_font,
   getBooleanFromJSON,
   getJSONFromJSON,
   getJSONOrUndefinedFromJSON,
@@ -71,10 +72,9 @@ export const default_shape_ending_curve = 0.95
 export const default_shape_starting_tangeant = 0.25
 export const default_shape_ending_tangeant = 0.25
 export const default_shape_middle_recyling = 100
-export const default_shape_vert_shift = 0  // TODO supprimer ce truc -> sert à rien
 export const default_value_label_color = 'black'
 export const default_value_label_custom_digit = false
-export const default_value_label_font_family = 'Arialserif'
+export const default_value_label_font_family = default_font
 export const default_value_label_font_size = 20
 export const default_value_label_is_visible = true
 export const default_value_label_nb_digit = 0
@@ -614,9 +614,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (this.shape_ending_curve !== _.shape_ending_curve) {
       return false
     }
-    if (this.shape_vert_shift !== _.shape_vert_shift) {
-      return false
-    }
     if (this.shape_curvature !== _.shape_curvature) {
       return false
     }
@@ -754,6 +751,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
   public getPathColorToUse() {
+    // TODO revoir : la couleur d'un flux devrait aussi être definie par la couleur de ses noeuds sources / target
     // Default color
     let shape_color = this.shape_color
     // Do we apply color of flux tags ?
@@ -1359,7 +1357,6 @@ export class Class_LinkElement extends Class_ProtoElement {
   }
 
 
-
   /**
    * Return a svg path for link path drawing
    * @private
@@ -1369,7 +1366,6 @@ export class Class_LinkElement extends Class_ProtoElement {
   private getBezierPath() {
     // Update control points
     this.computeControlPoints()
-
 
     // Normal mode
     if (!this.shape_is_recycling) {
@@ -2173,12 +2169,12 @@ export class Class_LinkElement extends Class_ProtoElement {
       this.target.updateInputValue()
 
       if (this.source.position_type == 'parametric') {
-        // if the positioning mode of source is parametric we need to reposition all nodes below 
+        // if the positioning mode of source is parametric we need to reposition all nodes below
         const same_source_u = this.main_sankey.visible_nodes_list.filter(n=>n.position_u == this.source.position_u && n.position_v > this.source.position_v)
         same_source_u.forEach(n=>n.draw())
       }
       if (this.target.position_type == 'parametric') {
-        // if the positioning mode of target is parametric we need to reposition all nodes below 
+        // if the positioning mode of target is parametric we need to reposition all nodes below
         const same_target_u = this.main_sankey.visible_nodes_list.filter(n=>n.position_u == this.target.position_u && n.position_v > this.target.position_v)
         same_target_u.forEach(n=>n.draw())
       }
@@ -2528,25 +2524,6 @@ export class Class_LinkElement extends Class_ProtoElement {
     this.drawPath()
     this.drawControlPoint()
   }
-
-  /**
-   * TODO Description
-   * @memberof Class_LinkElement
-   */
-  public get shape_vert_shift() {
-    if (this._display.attributes.shape_vert_shift !== undefined) {
-      return this._display.attributes.shape_vert_shift
-    } else if (this._display.style.shape_vert_shift !== undefined) {
-      return this._display.style.shape_vert_shift
-    }
-    return default_shape_vert_shift
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_LinkElement
-   */
-  public set shape_vert_shift(_: number) { this._display.attributes.shape_vert_shift = _; this.drawPath() }
 
   /**
    * TODO Description
@@ -3106,7 +3083,6 @@ export class Class_LinkAttribute {
   protected _shape_starting_tangeant?: number
   protected _shape_ending_tangeant?: number
   protected _shape_middle_recycling?: number
-  protected _shape_vert_shift?: number
 
   // Shape's arrow attributes
   protected _shape_is_arrow?: boolean
@@ -3148,7 +3124,6 @@ export class Class_LinkAttribute {
     if (this._shape_orientation !== undefined) json_object['orientation'] = this._shape_orientation
     if (this._shape_starting_curve !== undefined) json_object['left_horiz_shift'] = this._shape_starting_curve
     if (this._shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this._shape_ending_curve
-    if (this._shape_vert_shift !== undefined) json_object['vert_shift'] = this._shape_vert_shift
     if (this._shape_curvature !== undefined) json_object['curvature'] = this._shape_curvature
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
     if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
@@ -3186,7 +3161,6 @@ export class Class_LinkAttribute {
     if (json_local_object['orientation'] !== undefined) this._shape_orientation = getStringFromJSON(json_local_object, 'orientation', default_shape_orientation) as Type_Orientation
     if (json_local_object['left_horiz_shift'] !== undefined) this._shape_starting_curve = getNumberFromJSON(json_local_object, 'left_horiz_shift', default_shape_starting_curve)
     if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
-    if (json_local_object['vert_shift'] !== undefined) this._shape_vert_shift = getNumberFromJSON(json_local_object, 'vert_shift', default_shape_vert_shift)
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
     if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
@@ -3231,7 +3205,6 @@ export class Class_LinkAttribute {
     this._shape_starting_tangeant = element._shape_starting_tangeant
     this._shape_ending_tangeant = element._shape_ending_tangeant
     this._shape_middle_recycling = element._shape_middle_recycling
-    this._shape_vert_shift = element._shape_vert_shift
 
     // Shape's arrow attributes
     this._shape_is_arrow = element._shape_is_arrow
@@ -3279,7 +3252,6 @@ export class Class_LinkAttribute {
   public get shape_starting_tangeant() { return this._shape_starting_tangeant }
   public get shape_ending_tangeant() { return this._shape_ending_tangeant }
   public get shape_middle_recycling() { return this._shape_middle_recycling }
-  public get shape_vert_shift() { return this._shape_vert_shift }
 
   // Shape's arrow attributes
   public get shape_is_arrow() { return this._shape_is_arrow }
@@ -3375,9 +3347,6 @@ export class Class_LinkAttribute {
     this.update()
   }
 
-  // TODO remove
-  public set shape_vert_shift(_: number | undefined) { this._shape_vert_shift = _; this.update() }
-
   // Shape's arrow attributes
   public set shape_is_arrow(_: boolean | undefined) { this._shape_is_arrow = _; this.update() }
   public set shape_arrow_size(_: number | undefined) { this._shape_arrow_size = _; this.update() }
@@ -3460,8 +3429,6 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     this._shape_ending_curve = default_shape_ending_curve
     this._shape_starting_tangeant = default_shape_starting_tangeant
     this._shape_ending_tangeant = default_shape_ending_tangeant
-
-    this._shape_vert_shift = default_shape_vert_shift
 
     this._value_label_color = default_value_label_color
     this._value_label_custom_digit = default_value_label_custom_digit
