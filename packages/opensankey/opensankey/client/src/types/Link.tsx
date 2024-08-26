@@ -461,7 +461,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links')
     // Setup order
-    //this.drawing_area.orderElements()
+    this.drawing_area.orderElements()
     // Draw elements
     this.drawElements()
   }
