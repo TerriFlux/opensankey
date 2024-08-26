@@ -116,7 +116,6 @@ export class Class_Handler extends Class_Element {
     if(this._custom_class!==undefined){
       this.d3_selection?.attr('class', this._custom_class)
     }
-    // this.d3_selection?.style('display', this.getDisplayValue())
     this.d3_selection?.append('rect')
       .attr('x', -this._size / 2)
       .attr('y', -this._size / 2)
