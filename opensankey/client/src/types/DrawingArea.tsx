@@ -139,7 +139,7 @@ export class Class_DrawingArea {
    */
   public static: boolean = false
 
-  // PRIVATE ATTRIBUTES =================================================================
+  // PROTECTED ATTRIBUTES ===============================================================
 
   // Attributes that describe drawing area ----------------------------------------------
 
@@ -167,7 +167,16 @@ export class Class_DrawingArea {
   protected _grid_visible: boolean = default_grid_visible
   protected _grid_size: number = default_grid_size
 
-  // Scale
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Attributes that describe drawing area ----------------------------------------------
+
+  /**
+   * Scaling factor as value = scale * value in pixel
+   * @private
+   * @type {number}
+   * @memberof Class_DrawingArea
+   */
   private _scale: number = default_scale
 
   /**
@@ -179,7 +188,6 @@ export class Class_DrawingArea {
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, default_scale])
     .range([0, 100])
-
 
   // Positionning
   private _horizontal_spacing: number = default_horizontal_spacing
@@ -200,7 +208,6 @@ export class Class_DrawingArea {
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  // Elements that are contained in this area
   protected _sankey: Class_Sankey
   protected _legend: Class_Legend
   private _selection_zone: Class_ZoneSelection
@@ -378,185 +385,6 @@ export class Class_DrawingArea {
     this.selected_nodes_list.forEach(node => node.draw())
   }
 
-  // GETTERS / SETTERS ==================================================================
-
-  // Mode
-  public isInSelectionMode() { return this._mode === 'selection' }
-  public setSelectionMode() { this._mode = 'selection'; this.changeCursor(false) }
-  public isInEditionMode() { return this._mode === 'edition' }
-  public setEditionMode() { this._mode = 'edition'; this.changeCursor(true) }
-  public switchMode() {
-    if (this.isInEditionMode()) this.setSelectionMode()
-    else if (this.isInSelectionMode()) this.setEditionMode()
-    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
-    this._legend.setEventsListeners()
-    this.application_data.menu_configuration.ref_to_toolbar_updater.current()
-  }
-
-  public changeCursor(is_edition: boolean) {
-    this.d3_selection?.classed('edition_mode', is_edition)
-    this.d3_selection?.classed('selection_mode', !is_edition)
-  }
-
-  /**
-   * return sankey
-   *
-   * @readonly
-   * @return {Class_Sankey}
-   * @memberof Class_DrawingArea
-   */
-  public get sankey(): Class_Sankey { return this._sankey }
-
-  // Legend
-  public get legend(): Class_Legend { return this._legend }
-  public set legend(value: Class_Legend) { this._legend = value }
-
-  public set ghost_link(value: Class_GhostLinkElement | null) { this._ghost_link = value }
-
-  // Selections
-  public get selected_nodes_list(): Class_NodeElement[] {
-    return Object.values(this._selection)
-      .filter(element => element instanceof Class_NodeElement)
-      .map(element => element as Class_NodeElement)
-  }
-
-  public get selected_nodes_list_sorted() {
-    return this.selected_nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
-  public get visible_and_selected_nodes_list() {
-    return this.selected_nodes_list
-      .filter(node => node.is_visible)
-  }
-
-  public get visible_and_selected_nodes_list_sorted() {
-    return this.visible_and_selected_nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
-  public get selected_links_list() {
-    return Object.values(this._selection)
-      .filter(element => element instanceof Class_LinkElement)
-      .map(element => element as Class_LinkElement)
-  }
-
-  public get selected_links_list_sorted() {
-    return this.selected_links_list
-      .sort((a, b) => sortLinksElementsByIds(a, b))
-  }
-
-  public get visible_and_selected_links_list() {
-    return this.selected_links_list
-      .filter(link => link.is_visible)
-  }
-
-  public get visible_and_selected_links_list_sorted() {
-    return this.visible_and_selected_links_list
-      .sort((a, b) => sortLinksElementsByIds(a, b))
-  }
-
-  // Size
-  public getWidth() { return this._width }
-  public setWidth(_: number) { this._width = _; this.drawBackground() }
-  public getHeight() { return this._height }
-  public setHeight(_: number) { this._height = _; this.drawBackground() }
-
-  // Number of element
-  public get number_of_element() { return this._number_of_elements }
-
-  /**
-   * Return height of the top nav bar
-   *
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  public getNavBarHeight() {
-    return (document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height) ?? 0
-  }
-
-  // Color
-  public get color() { return this._color }
-  public set color(_: string) { this._color = _; this.drawBackground() } // TODO add regular expression check here
-
-  // Scale
-  public get scale(): number {
-    return this._scale
-  }
-  public set scale(value: number) {
-    if (value > 0) {
-      this._scale = value
-      this._scaleValueToPx.domain([0, value])
-      this.drawElements()
-    }
-  }
-
-  // Grid color
-  public get grid_color() { return this._grid_color }
-  public set grid_color(_: string) { this._grid_color = _; this.drawGrid() }
-
-  // Grid visibility
-  public get grid_visible() { return this._grid_visible }
-  public set grid_visible(_: boolean) { this._grid_visible = _; this.drawGrid() }
-  public setGridVisible() { this.grid_visible = true; this.drawGrid() }
-  public setGridInvisible() { this.grid_visible = false; this.drawGrid() }
-
-  // Grid size
-  public get grid_size() { return this._grid_size }
-  public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
-
-  // Horizontal spacing
-  public get horizontal_spacing() { return this._horizontal_spacing }
-  public set horizontal_spacing(_: number) { this._horizontal_spacing = _ }
-  public get vertical_spacing() { return this._vertical_spacing }
-  public set vertical_spacing(_: number) { this._vertical_spacing = _ }
-
-  public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
-
-  // Node Context menu
-  public get node_contextualised(): Class_NodeElement | undefined { return this._node_contextualied }
-  public set node_contextualised(value: Class_NodeElement | undefined) { this._node_contextualied = value }
-
-  // Link Context menu
-  public get link_contextualised(): Class_LinkElement | undefined { return this._link_contextualied }
-  public set link_contextualised(value: Class_LinkElement | undefined) { this._link_contextualied = value }
-
-  // Mouve pos when we right click an element
-  public get pointer_pos(): [number, number] { return this._pointer_pos }
-  public set pointer_pos(value: [number, number]) { this._pointer_pos = value }
-
-  public get is_drawing_area_contextualised(): boolean { return this._is_drawing_area_contextualised }
-  public set is_drawing_area_contextualised(value: boolean) { this._is_drawing_area_contextualised = value }
-
-  public get maximum_flux(): number | undefined { return this._maximum_flux }
-  public set maximum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._maximum_flux = value
-      this.drawElements()
-    }
-  }
-
-  public get minimum_flux(): number | undefined { return this._minimum_flux }
-  public set minimum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
-      this._minimum_flux = value
-      this.drawElements()
-    }
-  }
-
-  public get scaleValueToPx() { return this._scaleValueToPx }
-
-  public get filter_label(): number { return this._filter_label }
-  public set filter_label(value: number) { this._filter_label = value }
-
-  public get show_structure(): Type_Structure { return this._show_structure }
-  public set show_structure(value: Type_Structure) { this._show_structure = value }
-
-  public get filter_link_value(): number { return this._filter_link_value }
-  public set filter_link_value(value: number) { this._filter_link_value = value }
-
-  // PUBLIC METHODS =====================================================================
-
   public addElement() {
     // We increase by two, in order to easyly swap elements
     // ie : element0 order = 0, element1 order = 2, element3 order = 4
@@ -585,22 +413,6 @@ export class Class_DrawingArea {
     // TODO if necessary
     // Update number of elements
     this._number_of_elements = new_order
-  }
-
-  /**
-   * Test if mouse is over some node
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  private isMouseOverAnExistingNode(): boolean {
-    let node_id: string
-    for (node_id in this.sankey.nodes_dict) {
-      if (this.sankey.nodes_dict[node_id].isMouseOver())
-        return true
-    }
-    return false
   }
 
   /**
@@ -643,6 +455,20 @@ export class Class_DrawingArea {
   public getNodeFromSankey(id: string): Class_NodeElement | null { return this.sankey.getNode(id) }
 
   /**
+   * Delete a given node -> node will not exist anymore
+   * @param {Class_NodeElement} node
+   * @memberof Class_Sankey
+   */
+  public deleteNode(node: Class_NodeElement) {
+    // Remove from selection if necessary
+    this.removeNodeFromSelection(node)
+    // Remove node from sankey
+    this.sankey.deleteNode(node)
+    // Self delete node
+    node.delete()
+  }
+
+  /**
    * Add a new default link to drawing area sankey
    * @return {Class_LinkElement}
    * @memberof Class_DrawingArea
@@ -658,38 +484,17 @@ export class Class_DrawingArea {
   public getLinkFromSankey(id: string): Class_LinkElement | null { return this.sankey.getLink(id) }
 
   /**
-   * Clean selection set of sankey elements
-   * @memberof Class_DrawingArea
+   * Delete a given link -> link will not exist anymore
+   * @param {Class_NodeElement} node
+   * @memberof Class_Sankey
    */
-  public purgeSelection() {
-    // Unselect everything
-    Object.values(this._selection)
-      .forEach((element) => element.setUnSelected())
-    // TODO Unselect other things
-    // Reset selection
-    // TODO reset config menu
-    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-    // Clean selection dict
-    this._selection = {}
-  }
-
-  /**
-   * Remove all link selected
-   * @memberof Class_DrawingArea
-   */
-  public purgeSelectionOfLinks(reset = true) {
-    // Unselect elements
-    this.selected_links_list
-      .forEach(link => {
-        link.setUnSelected()
-        delete this._selection[link.id]
-      })
-    // Reset config menu
-    // Sometime this function is used then updateAllComponentsRelatedToLinks is also called,
-    //  this mean that the hook referenced go from true -> false -> true before the rerender
-    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
-    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  public deleteLink(link: Class_LinkElement) {
+    // Remove link from selection if necessary
+    this.removeLinkFromSelection(link)
+    // Remove link from sankey
+    this.sankey.removeLink(link)
+    // Self delete node
+    link.delete()
   }
 
   /**
@@ -712,20 +517,6 @@ export class Class_DrawingArea {
       delete this._selection[node.id]
       node.setUnSelected()
     }
-  }
-
-  /**
-   * Delete a given node -> node will not exist anymore
-   * @param {Class_NodeElement} node
-   * @memberof Class_Sankey
-   */
-  public deleteNode(node: Class_NodeElement) {
-    // Remove from selection if necessary
-    this.removeNodeFromSelection(node)
-    // Remove node from sankey
-    this.sankey.deleteNode(node)
-    // Self delete node
-    node.delete()
   }
 
   /**
@@ -763,17 +554,20 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Delete a given link -> link will not exist anymore
-   * @param {Class_NodeElement} node
-   * @memberof Class_Sankey
+   * Remove all link selected
+   * @memberof Class_DrawingArea
    */
-  public deleteLink(link: Class_LinkElement) {
-    // Remove link from selection if necessary
-    this.removeLinkFromSelection(link)
-    // Remove link from sankey
-    this.sankey.removeLink(link)
-    // Self delete node
-    link.delete()
+  public purgeSelectionOfLinks(reset = true) {
+    // Unselect elements
+    this.selected_links_list
+      .forEach(link => {
+        this.removeLinkFromSelection(link)
+      })
+    // Reset config menu
+    // Sometime this function is used then updateAllComponentsRelatedToLinks is also called,
+    //  this mean that the hook referenced go from true -> false -> true before the rerender
+    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
+    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
   /**
@@ -787,6 +581,33 @@ export class Class_DrawingArea {
     // Delete each one of them
     selected_links.forEach(link => { this.deleteLink(link) })
     // Then let garbage collector do the rest...
+  }
+
+  /**
+   * Clean selection set of sankey elements
+   * @memberof Class_DrawingArea
+   */
+  public purgeSelection() {
+    // Unselect everything
+    Object.values(this._selection)
+      .forEach((element) => element.setUnSelected())
+    // TODO Unselect other things
+    // Reset selection
+    // TODO reset config menu
+    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    // Clean selection dict
+    this._selection = {}
+  }
+
+  /**
+   * Delete all selected elements
+   *
+   * @memberof Class_DrawingArea
+   */
+  public deleteSelection() {
+    this.deleteSelectedNodes()
+    this.deleteSelectedLinks()
   }
 
   /**
@@ -855,89 +676,6 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Export current drawing area & its contents as json struct
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_DrawingArea
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    redraw: boolean = true,
-    match_and_update: boolean = true,
-  ) {
-    const version = getStringOrUndefinedFromJSON(json_object, 'version')
-    // Only legacy convert old sankey
-    if (
-      (version === undefined) ||
-      (Number(version) < 0.9)
-    ) {
-      convert_data_legacy(json_object) // FIXME
-    }
-    // Update direct attributes
-    this._height = getNumberFromJSON(json_object, 'height', this._height)
-    this._width = getNumberFromJSON(json_object, 'width', this._width)
-    this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
-    this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
-    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
-    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
-    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
-    this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
-    this._scaleValueToPx.domain([0, this._scale])
-    this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
-    this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
-    this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
-    this._filter_link_value = getNumberFromJSON(json_object, 'filter_link_value', 0)
-    // Update legend
-    this._legend.fromJSON(json_object)
-    // Update Sankey
-    this._sankey.fromJSON(json_object, match_and_update)
-    if (redraw) {
-      // Draw
-      this.reset()
-    }
-  }
-
-  /**
-   * Convert current drawing area & all substructure as JSON data
-   * @param {boolean} [only_visible_elements=false]
-   * @param {boolean} [with_values=true]
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  public toJSON(
-    only_visible_elements: boolean = false,
-    with_values: boolean = true
-  ) {
-    // Create json struct
-    const json_object = {} as Type_JSON
-    // Add current version of app
-    json_object['version'] = this.application_data.version
-    // Dump DA attributes
-    json_object['height'] = this._height
-    json_object['width'] = this._width
-    json_object['grid_visible'] = this._grid_visible
-    json_object['grid_square_size'] = this._grid_size
-    json_object['h_space'] = this._horizontal_spacing
-    json_object['v_space'] = this._vertical_spacing
-    json_object['user_scale'] = this._scale
-    json_object['couleur_fond_sankey'] = this._color
-    if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
-    if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
-    json_object['filter_label'] = this._filter_label
-    json_object['filter_link_value'] = this._filter_link_value
-
-    // Dump with json of contained elements
-    return {
-      ...json_object,
-      ...this._legend.toJSON(),
-      ...this._sankey.toJSON(
-        only_visible_elements,
-        with_values
-      )
-    }
-  }
-
-  /**
    * Move all visible elements so that none of them are outside the DA
    *
    * @memberof Class_DrawingArea
@@ -977,403 +715,6 @@ export class Class_DrawingArea {
       true_element.position_y = 0
     }
     this.checkAndUpdateAreaSize()
-  }
-  // PRIVATE METHODS ==================================================================
-
-  /**
-   * Delete html element SVG containing drawing area
-   * @private
-   * @memberof Class_DrawingArea
-   */
-  private unDraw() {
-    if (this.d3_selection_zoom_area) {
-      this.d3_selection_zoom_area.remove()
-      this.d3_selection_zoom_area = null
-    }
-  }
-
-  /**
-   * Draw background for drawing area
-   *
-   * @param {*} drawing_area
-   */
-  private drawBackground() {
-    // Clean if needed
-    this.d3_selection_bg?.selectAll('.bg').remove()
-    // Draw background
-    this.d3_selection_bg?.append('rect')
-      .attr('class', 'bg')
-      .attr('id', 'bg_drawing_area')
-      .attr('fill', this.color)
-      .attr('width', this.getWidth())
-      .attr('height', this.getHeight())
-      .style('stroke-width', 5)
-      .style('stroke', default_black_color)
-    this.changeCursor(true)
-  }
-
-  /**
-   * Draw grid for drawing area
-   * @public
-   * @memberof Class_DrawingArea
-   */
-  public drawGrid() {
-    // Clean if needed
-    this.d3_selection_grid?.selectAll('.line').remove()
-    // Draw only if asked OR outside publishing mode
-    if (this.grid_visible && !this.static) {
-      // Draw horizontal lines
-      const number_of_horizontal_lines = this.getHeight() / this.grid_size
-      for (let row = 0; row < number_of_horizontal_lines; row++) {
-        this.d3_selection_grid?.append('line')
-          .attr('class', 'line line-horiz')
-          .attr('id', 'line_horiz_drawing_area_' + String(row))
-          .attr('x1', '0')
-          .attr('x2', this.getWidth())
-          .attr('y1', row * this.grid_size)
-          .attr('y2', row * this.grid_size)
-          .style('stroke', this.grid_color)
-          .style('stroke-dasharray', 4)
-      }
-      // Draw vertical lines
-      const number_of_vertical_lines = this.getWidth() / this.grid_size
-      for (let column = 0; column < number_of_vertical_lines; column++) {
-        this.d3_selection_grid?.append('line')
-          .attr('class', 'line line-vert')
-          .attr('id', 'line_horiz_drawing_area_' + String(column))
-          .attr('x1', column * this.grid_size)
-          .attr('x2', column * this.grid_size)
-          .attr('y1', 0)
-          .attr('y2', this.getHeight())
-          .style('stroke-dasharray', 4)
-          .style('stroke', this.grid_color)
-      }
-
-      this.d3_selection_grid?.raise()
-    }
-  }
-
-  /**
-   * Set up events related to element d3_element
-   * @private
-   * @memberof Class_DrawingArea
-   */
-  private setEventsListeners() {
-    if (
-      !this.static &&
-      (this.d3_selection !== null)
-    ) {
-      // Right mouse button clicks
-      this.d3_selection?.on(
-        'click',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBCLick(event))
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBCLick(event))
-      // Right mouse button maintained
-      this.d3_selection?.on(
-        'mousedown',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMaintainedClick(event))
-      this.d3_selection?.on(
-        'mouseup',
-        (event: MouseEvent) =>
-          this.eventReleasedClick(event))
-      // Mouse cursor goes over this
-      this.d3_selection?.on(
-        'mouseover',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOver(event))
-      this.d3_selection?.on(
-        'mouseout',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOut(event))
-      // Mouse cursor move
-      this.d3_selection?.on(
-        'mousemove',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseMove(event))
-      // Left mouse button click
-      this.d3_selection?.on(
-        'contextmenu',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event))
-      // Zoom behavior(but can also drag drawing area in scroll zone)
-      this.d3_selection_zoom_area?.call(
-        this.zoomListener
-      )
-        .on('dblclick.zoom', null) // deactivate dbl click zoom
-    }
-  }
-
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-    }
-  }
-
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventDoubleLMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Ajouter déclemenchement editeur nom de noeud
-  }
-
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleRMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-      // SELECTION MODE ===========================================================
-      if (this.isInSelectionMode()) {
-        this.pointer_pos = [event.pageX, event.pageY]
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        this.is_drawing_area_contextualised = true
-        this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-      }
-    }
-  }
-
-  /**
-   * Define maintained left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMaintainedClick(
-    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-      // EDITION MODE =============================================================
-      // event.button==0 check if we use LMB
-      if (this.isInEditionMode() && event.button == 0) {
-        // Get mouse position
-        const mouse_position = d3.pointer(event)
-        // Create default source node
-        const source = this.sankey.addNewDefaultNode()
-        // Position center of source node to pointer pos
-        source.setPosXY(
-          mouse_position[0] - (source.getShapeWidthToUse() / 2),
-          mouse_position[1] - (source.getShapeHeightToUse() / 2))
-        // Create default target node
-        const target = this.sankey.addNewDefaultNode()
-        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
-        // Make target a 'ghost' node
-        target.setInvisible()
-        // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new Class_GhostLinkElement(
-          'ghost_link',
-          source,
-          target,
-          this, this.application_data.menu_configuration)
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      }
-      // SELECTION MODE ===========================================================
-      else if (this.isInSelectionMode()) {
-        if (event.button === 0) {
-          // Close context menus
-          this.node_contextualised = undefined
-          this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-
-          this.link_contextualised = undefined
-          this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
-
-          this.is_drawing_area_contextualised = false
-          this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-
-          // Display the selection zone & set it starting position
-          const mouse_position = d3.pointer(event)
-          this._selection_zone.setVisible()
-          this._selection_zone.starting_x_point = mouse_position[0]
-          this._selection_zone.starting_y_point = mouse_position[1]
-          this._selection_zone.draw()
-        }
-
-      }
-    }
-  }
-
-  /**
-   * Define released left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventReleasedClick(
-    event: MouseEvent
-  ) {
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        // Mouse released on source node
-        if (this._ghost_link.source.isMouseOver()) {
-          // If we release the mouse on the source of the link
-          // then delete the link & target to keep only the source
-          // So we only created 1 node
-          this.deleteNode(this._ghost_link.target)
-        }
-        else if (this.isMouseOverAnExistingNode() === true) {
-          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-          for (node_id in this.sankey.nodes_dict) {
-            if (this.sankey.nodes_dict[node_id].isMouseOver())
-              break //stop the loop when we fint the node hovered
-          }
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source,
-            this.sankey.nodes_dict[node_id]
-          )
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          // Delete old target node
-          this.deleteNode(this._ghost_link?.target)
-        }
-        else {
-          // Make ghost target visible
-          this._ghost_link.target.setVisible()
-
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source,
-            this._ghost_link.target
-          )
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-        }
-        // In case we get there still deref ghost link
-        this._ghost_link.delete()
-        this._ghost_link = null
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
-    } else if (this.isInSelectionMode() && event.button == 0) {
-      if (!event.shiftKey) {
-        this.purgeSelection()
-      }
-      // Select element inside the selection zone & reset it (hide the zone)
-      this._selection_zone.selectElementsInside()
-      this._selection_zone.reset()
-    }
-  }
-
-  /**
-   * Define event when mouse moves over drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOver(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Definir
-  }
-
-  /**
-   * Define event when mouse moves out of drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOut(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO definir
-  }
-
-  /**
-   * Define event when mouse moves in drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseMove(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        // Move ghost target
-        const mouse_position = d3.pointer(event)
-        const target = (this._ghost_link as Class_LinkElement).target
-        target.setPosXY(
-          mouse_position[0] - (target.getShapeWidthToUse() / 2),
-          mouse_position[1] - (target.getShapeHeightToUse() / 2))
-      }
-    } else if (this.isInSelectionMode()) {
-      if (this._selection_zone.is_visible) {
-        // change the size of the selection zone
-
-        const mouse_position = d3.pointer(event)
-
-        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
-        let new_x = this.selection_zone.starting_x_point,
-          new_y = this.selection_zone.starting_y_point
-
-        if (mouse_position[0] > this._selection_zone.position_x) {
-          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
-        } else {
-          this.selection_zone.width = Math.abs(mouse_position[0] - this._selection_zone.starting_x_point)
-          new_x = mouse_position[0]
-        }
-
-        if (mouse_position[1] > this._selection_zone.starting_y_point) {
-          this.selection_zone.height = mouse_position[1] - this._selection_zone.starting_y_point
-        } else {
-          this.selection_zone.height = Math.abs(this._selection_zone.starting_y_point - mouse_position[1])
-          new_y = mouse_position[1]
-        }
-
-        // Update shape on drawing area
-        this.selection_zone.setPosXY(new_x, new_y)
-        this._selection_zone.setSize()
-      }
-    }
-  }
-
-  /**
-   * Define behavior when we scroll in drawing area (or scroll zone around)
-   * && when we drag mouse middle button in drawing area (or scroll zone around)
-   *
-   * @private
-   * @param {*} e
-   * @memberof Class_DrawingArea
-   */
-  private eventZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
-    d3.select('#g_drawing')
-      .transition()
-      .attr('transform', event.transform.toString())
   }
 
   /**
@@ -1804,8 +1145,6 @@ export class Class_DrawingArea {
   max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
 
 
-
-
   // Update horizontal and vertical position of nodes
   // compute total height of nodes that belong to the same column,
   // then compute the spaces between them and their positions.
@@ -1870,4 +1209,682 @@ export class Class_DrawingArea {
   this.sankey.nodes_list.forEach(n=>n.reorganizeIOLinks())
   //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict)
   }
+
+  /**
+   * Export current drawing area & its contents as json struct
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_DrawingArea
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    redraw: boolean = true,
+    match_and_update: boolean = true,
+  ) {
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+    // Only legacy convert old sankey
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      convert_data_legacy(json_object) // FIXME
+    }
+    // Update direct attributes
+    this._height = getNumberFromJSON(json_object, 'height', this._height)
+    this._width = getNumberFromJSON(json_object, 'width', this._width)
+    this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
+    this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
+    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
+    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
+    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
+    this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
+    this._scaleValueToPx.domain([0, this._scale])
+    this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
+    this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
+    this._filter_link_value = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    // Update legend
+    this._legend.fromJSON(json_object)
+    // Update Sankey
+    this._sankey.fromJSON(json_object, match_and_update)
+    if (redraw) {
+      // Draw
+      this.reset()
+    }
+  }
+
+  /**
+   * Convert current drawing area & all substructure as JSON data
+   * @param {boolean} [only_visible_elements=false]
+   * @param {boolean} [with_values=true]
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public toJSON(
+    only_visible_elements: boolean = false,
+    with_values: boolean = true
+  ) {
+    // Create json struct
+    const json_object = {} as Type_JSON
+    // Add current version of app
+    json_object['version'] = this.application_data.version
+    // Dump DA attributes
+    json_object['height'] = this._height
+    json_object['width'] = this._width
+    json_object['grid_visible'] = this._grid_visible
+    json_object['grid_square_size'] = this._grid_size
+    json_object['h_space'] = this._horizontal_spacing
+    json_object['v_space'] = this._vertical_spacing
+    json_object['user_scale'] = this._scale
+    json_object['couleur_fond_sankey'] = this._color
+    if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
+    if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
+    json_object['filter_label'] = this._filter_label
+    json_object['filter_link_value'] = this._filter_link_value
+
+    // Dump with json of contained elements
+    return {
+      ...json_object,
+      ...this._legend.toJSON(),
+      ...this._sankey.toJSON(
+        only_visible_elements,
+        with_values
+      )
+    }
+  }
+
+
+  // GETTERS / SETTERS ==================================================================
+
+  // Mode
+  public isInSelectionMode() { return this._mode === 'selection' }
+  public setSelectionMode() { this._mode = 'selection'; this.changeCursor(false) }
+  public isInEditionMode() { return this._mode === 'edition' }
+  public setEditionMode() { this._mode = 'edition'; this.changeCursor(true) }
+  public switchMode() {
+    if (this.isInEditionMode()) this.setSelectionMode()
+    else if (this.isInSelectionMode()) this.setEditionMode()
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
+    this._legend.setEventsListeners()
+    this.application_data.menu_configuration.ref_to_toolbar_updater.current()
+  }
+
+  public changeCursor(is_edition: boolean) {
+    this.d3_selection?.classed('edition_mode', is_edition)
+    this.d3_selection?.classed('selection_mode', !is_edition)
+  }
+
+  /**
+   * return sankey
+   *
+   * @readonly
+   * @return {Class_Sankey}
+   * @memberof Class_DrawingArea
+   */
+  public get sankey(): Class_Sankey { return this._sankey }
+
+  // Legend
+  public get legend(): Class_Legend { return this._legend }
+  public set legend(value: Class_Legend) { this._legend = value }
+
+  public set ghost_link(value: Class_GhostLinkElement | null) { this._ghost_link = value }
+
+  // Selections
+  public get selected_nodes_list(): Class_NodeElement[] {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_NodeElement)
+      .map(element => element as Class_NodeElement)
+  }
+
+  public get selected_nodes_list_sorted() {
+    return this.selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  public get visible_and_selected_nodes_list() {
+    return this.selected_nodes_list
+      .filter(node => node.is_visible)
+  }
+
+  public get visible_and_selected_nodes_list_sorted() {
+    return this.visible_and_selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+
+  public get selected_links_list() {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_LinkElement)
+      .map(element => element as Class_LinkElement)
+  }
+
+  public get selected_links_list_sorted() {
+    return this.selected_links_list
+      .sort((a, b) => sortLinksElementsByIds(a, b))
+  }
+
+  public get visible_and_selected_links_list() {
+    return this.selected_links_list
+      .filter(link => link.is_visible)
+  }
+
+  public get visible_and_selected_links_list_sorted() {
+    return this.visible_and_selected_links_list
+      .sort((a, b) => sortLinksElementsByIds(a, b))
+  }
+
+  // Size
+  public getWidth() { return this._width }
+  public setWidth(_: number) { this._width = _; this.drawBackground() }
+  public getHeight() { return this._height }
+  public setHeight(_: number) { this._height = _; this.drawBackground() }
+
+  // Number of element
+  public get number_of_element() { return this._number_of_elements }
+
+  /**
+   * Return height of the top nav bar
+   *
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public getNavBarHeight() {
+    return (document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height) ?? 0
+  }
+
+  // Color
+  public get color() { return this._color }
+  public set color(_: string) { this._color = _; this.drawBackground() } // TODO add regular expression check here
+
+  // Scale
+  public get scale(): number {
+    return this._scale
+  }
+  public set scale(value: number) {
+    if (value > 0) {
+      this._scale = value
+      this._scaleValueToPx.domain([0, value])
+      this.drawElements()
+    }
+  }
+
+  // Grid color
+  public get grid_color() { return this._grid_color }
+  public set grid_color(_: string) { this._grid_color = _; this.drawGrid() }
+
+  // Grid visibility
+  public get grid_visible() { return this._grid_visible }
+  public set grid_visible(_: boolean) { this._grid_visible = _; this.drawGrid() }
+  public setGridVisible() { this.grid_visible = true; this.drawGrid() }
+  public setGridInvisible() { this.grid_visible = false; this.drawGrid() }
+
+  // Grid size
+  public get grid_size() { return this._grid_size }
+  public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
+
+  // Horizontal spacing
+  public get horizontal_spacing() { return this._horizontal_spacing }
+  public set horizontal_spacing(_: number) { this._horizontal_spacing = _ }
+  public get vertical_spacing() { return this._vertical_spacing }
+  public set vertical_spacing(_: number) { this._vertical_spacing = _ }
+
+  public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
+
+  // Node Context menu
+  public get node_contextualised(): Class_NodeElement | undefined { return this._node_contextualied }
+  public set node_contextualised(value: Class_NodeElement | undefined) { this._node_contextualied = value }
+
+  // Link Context menu
+  public get link_contextualised(): Class_LinkElement | undefined { return this._link_contextualied }
+  public set link_contextualised(value: Class_LinkElement | undefined) { this._link_contextualied = value }
+
+  // Mouve pos when we right click an element
+  public get pointer_pos(): [number, number] { return this._pointer_pos }
+  public set pointer_pos(value: [number, number]) { this._pointer_pos = value }
+
+  public get is_drawing_area_contextualised(): boolean { return this._is_drawing_area_contextualised }
+  public set is_drawing_area_contextualised(value: boolean) { this._is_drawing_area_contextualised = value }
+
+  public get maximum_flux(): number | undefined { return this._maximum_flux }
+  public set maximum_flux(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._maximum_flux = value
+      this.drawElements()
+    }
+  }
+
+  public get minimum_flux(): number | undefined { return this._minimum_flux }
+  public set minimum_flux(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._minimum_flux = value
+      this.drawElements()
+    }
+  }
+
+  public get scaleValueToPx() { return this._scaleValueToPx }
+
+  public get filter_label(): number { return this._filter_label }
+  public set filter_label(value: number) { this._filter_label = value }
+
+  public get show_structure(): Type_Structure { return this._show_structure }
+  public set show_structure(value: Type_Structure) { this._show_structure = value }
+
+  public get filter_link_value(): number { return this._filter_link_value }
+  public set filter_link_value(value: number) { this._filter_link_value = value }
+
+  // PUBLIC METHODS =====================================================================
+
+  // PRIVATE METHODS ==================================================================
+
+  /**
+   * Delete html element SVG containing drawing area
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private unDraw() {
+    if (this.d3_selection_zoom_area) {
+      this.d3_selection_zoom_area.remove()
+      this.d3_selection_zoom_area = null
+    }
+  }
+
+  /**
+   * Draw background for drawing area
+   *
+   * @param {*} drawing_area
+   */
+  private drawBackground() {
+    // Clean if needed
+    this.d3_selection_bg?.selectAll('.bg').remove()
+    // Draw background
+    this.d3_selection_bg?.append('rect')
+      .attr('class', 'bg')
+      .attr('id', 'bg_drawing_area')
+      .attr('fill', this.color)
+      .attr('width', this.getWidth())
+      .attr('height', this.getHeight())
+      .style('stroke-width', 5)
+      .style('stroke', default_black_color)
+    this.changeCursor(true)
+  }
+
+  /**
+   * Draw grid for drawing area
+   * @public
+   * @memberof Class_DrawingArea
+   */
+  public drawGrid() {
+    // Clean if needed
+    this.d3_selection_grid?.selectAll('.line').remove()
+    // Draw only if asked OR outside publishing mode
+    if (this.grid_visible && !this.static) {
+      // Draw horizontal lines
+      const number_of_horizontal_lines = this.getHeight() / this.grid_size
+      for (let row = 0; row < number_of_horizontal_lines; row++) {
+        this.d3_selection_grid?.append('line')
+          .attr('class', 'line line-horiz')
+          .attr('id', 'line_horiz_drawing_area_' + String(row))
+          .attr('x1', '0')
+          .attr('x2', this.getWidth())
+          .attr('y1', row * this.grid_size)
+          .attr('y2', row * this.grid_size)
+          .style('stroke', this.grid_color)
+          .style('stroke-dasharray', 4)
+      }
+      // Draw vertical lines
+      const number_of_vertical_lines = this.getWidth() / this.grid_size
+      for (let column = 0; column < number_of_vertical_lines; column++) {
+        this.d3_selection_grid?.append('line')
+          .attr('class', 'line line-vert')
+          .attr('id', 'line_horiz_drawing_area_' + String(column))
+          .attr('x1', column * this.grid_size)
+          .attr('x2', column * this.grid_size)
+          .attr('y1', 0)
+          .attr('y2', this.getHeight())
+          .style('stroke-dasharray', 4)
+          .style('stroke', this.grid_color)
+      }
+
+      this.d3_selection_grid?.raise()
+    }
+  }
+
+  /**
+   * Test if mouse is over some node
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  private isMouseOverAnExistingNode(): boolean {
+    let node_id: string
+    for (node_id in this.sankey.nodes_dict) {
+      if (this.sankey.nodes_dict[node_id].isMouseOver())
+        return true
+    }
+    return false
+  }
+
+  /**
+   * Set up events related to element d3_element
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private setEventsListeners() {
+    if (
+      !this.static &&
+      (this.d3_selection !== null)
+    ) {
+      // Right mouse button clicks
+      this.d3_selection?.on(
+        'click',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleLMBCLick(event))
+      this.d3_selection?.on(
+        'dblclick',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventDoubleLMBCLick(event))
+      // Right mouse button maintained
+      this.d3_selection?.on(
+        'mousedown',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMaintainedClick(event))
+      this.d3_selection?.on(
+        'mouseup',
+        (event: MouseEvent) =>
+          this.eventReleasedClick(event))
+      // Mouse cursor goes over this
+      this.d3_selection?.on(
+        'mouseover',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOver(event))
+      this.d3_selection?.on(
+        'mouseout',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOut(event))
+      // Mouse cursor move
+      this.d3_selection?.on(
+        'mousemove',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseMove(event))
+      // Left mouse button click
+      this.d3_selection?.on(
+        'contextmenu',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleRMBCLick(event))
+      // Zoom behavior(but can also drag drawing area in scroll zone)
+      this.d3_selection_zoom_area?.call(
+        this.zoomListener
+      )
+        .on('dblclick.zoom', null) // deactivate dbl click zoom
+    }
+  }
+
+  /**
+   * Deal with simple left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+    }
+  }
+
+  /**
+   * Deal with double left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventDoubleLMBCLick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter déclemenchement editeur nom de noeud
+  }
+
+  /**
+   * Deal with simple right Mouse Button (RMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventSimpleRMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+      // SELECTION MODE ===========================================================
+      if (this.isInSelectionMode()) {
+        this.pointer_pos = [event.pageX, event.pageY]
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        this.is_drawing_area_contextualised = true
+        this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+      }
+    }
+  }
+
+  /**
+   * Define maintained left mouse button click for drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMaintainedClick(
+    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+      // EDITION MODE =============================================================
+      // event.button==0 check if we use LMB
+      if (this.isInEditionMode() && event.button == 0) {
+        // Get mouse position
+        const mouse_position = d3.pointer(event)
+        // Create default source node
+        const source = this.sankey.addNewDefaultNode()
+        // Position center of source node to pointer pos
+        source.setPosXY(
+          mouse_position[0] - (source.getShapeWidthToUse() / 2),
+          mouse_position[1] - (source.getShapeHeightToUse() / 2))
+        // Create default target node
+        const target = this.sankey.addNewDefaultNode()
+        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
+        // Make target a 'ghost' node
+        target.setInvisible()
+        // Ref newly created link this var to be used in other mouse event
+        this._ghost_link = new Class_GhostLinkElement(
+          'ghost_link',
+          source,
+          target,
+          this, this.application_data.menu_configuration)
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      }
+      // SELECTION MODE ===========================================================
+      else if (this.isInSelectionMode()) {
+        if (event.button === 0) {
+          // Close context menus
+          this.node_contextualised = undefined
+          this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+
+          this.link_contextualised = undefined
+          this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
+
+          this.is_drawing_area_contextualised = false
+          this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+
+          // Display the selection zone & set it starting position
+          const mouse_position = d3.pointer(event)
+          this._selection_zone.setVisible()
+          this._selection_zone.starting_x_point = mouse_position[0]
+          this._selection_zone.starting_y_point = mouse_position[1]
+          this._selection_zone.draw()
+        }
+
+      }
+    }
+  }
+
+  /**
+   * Define released left mouse button click for drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventReleasedClick(
+    event: MouseEvent
+  ) {
+    // EDITION MODE =============================================================
+    if (this.isInEditionMode()) {
+      // When we are creating a link with LMB
+      if (this._ghost_link !== null) {
+        // Mouse released on source node
+        if (this._ghost_link.source.isMouseOver()) {
+          // If we release the mouse on the source of the link
+          // then delete the link & target to keep only the source
+          // So we only created 1 node
+          this.deleteNode(this._ghost_link.target)
+        }
+        else if (this.isMouseOverAnExistingNode() === true) {
+          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
+          for (node_id in this.sankey.nodes_dict) {
+            if (this.sankey.nodes_dict[node_id].isMouseOver())
+              break //stop the loop when we fint the node hovered
+          }
+          // Create new link
+          this.sankey.addNewLink(
+            this._ghost_link.source,
+            this.sankey.nodes_dict[node_id]
+          )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
+          // Delete old target node
+          this.deleteNode(this._ghost_link?.target)
+        }
+        else {
+          // Make ghost target visible
+          this._ghost_link.target.setVisible()
+
+          // Create new link
+          this.sankey.addNewLink(
+            this._ghost_link.source,
+            this._ghost_link.target
+          )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
+        }
+        // In case we get there still deref ghost link
+        this._ghost_link.delete()
+        this._ghost_link = null
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      }
+    } else if (this.isInSelectionMode() && event.button == 0) {
+      if (!event.shiftKey) {
+        this.purgeSelection()
+      }
+      // Select element inside the selection zone & reset it (hide the zone)
+      this._selection_zone.selectElementsInside()
+      this._selection_zone.reset()
+    }
+  }
+
+  /**
+   * Define event when mouse moves over drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseOver(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Definir
+  }
+
+  /**
+   * Define event when mouse moves out of drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseOut(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO definir
+  }
+
+  /**
+   * Define event when mouse moves in drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseMove(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // EDITION MODE =============================================================
+    if (this.isInEditionMode()) {
+      // When we are creating a link with LMB
+      if (this._ghost_link !== null) {
+        // Move ghost target
+        const mouse_position = d3.pointer(event)
+        const target = (this._ghost_link as Class_LinkElement).target
+        target.setPosXY(
+          mouse_position[0] - (target.getShapeWidthToUse() / 2),
+          mouse_position[1] - (target.getShapeHeightToUse() / 2))
+      }
+    } else if (this.isInSelectionMode()) {
+      if (this._selection_zone.is_visible) {
+        // change the size of the selection zone
+
+        const mouse_position = d3.pointer(event)
+
+        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
+        let new_x = this.selection_zone.starting_x_point,
+          new_y = this.selection_zone.starting_y_point
+
+        if (mouse_position[0] > this._selection_zone.position_x) {
+          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
+        } else {
+          this.selection_zone.width = Math.abs(mouse_position[0] - this._selection_zone.starting_x_point)
+          new_x = mouse_position[0]
+        }
+
+        if (mouse_position[1] > this._selection_zone.starting_y_point) {
+          this.selection_zone.height = mouse_position[1] - this._selection_zone.starting_y_point
+        } else {
+          this.selection_zone.height = Math.abs(this._selection_zone.starting_y_point - mouse_position[1])
+          new_y = mouse_position[1]
+        }
+
+        // Update shape on drawing area
+        this.selection_zone.setPosXY(new_x, new_y)
+        this._selection_zone.setSize()
+      }
+    }
+  }
+
+  /**
+   * Define behavior when we scroll in drawing area (or scroll zone around)
+   * && when we drag mouse middle button in drawing area (or scroll zone around)
+   *
+   * @private
+   * @param {*} e
+   * @memberof Class_DrawingArea
+   */
+  private eventZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
+    d3.select('#g_drawing')
+      .transition()
+      .attr('transform', event.transform.toString())
+  }
+
 }

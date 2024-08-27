@@ -20,6 +20,16 @@ import { textForToastPromiseType, dict_hook_ref_setter_show_dialog_componentsTyp
  */
 export class Class_MenuConfig {
 
+  // PROTECTED  ATTRIBUTES ==============================================================
+
+  /**
+   *   List of accordions to show
+   * @protected
+   * @type {string[]}
+   * @memberof Class_MenuConfig
+   */
+  protected _accordions_to_show: string[] = []
+
   // PRIVATE ATTRIBUTES =================================================================
 
   // Update component Menu
@@ -34,7 +44,6 @@ export class Class_MenuConfig {
   // Ref to launch _function_on_wait & create a toast with a spinner to show we have to wait
   // Optional arguments to show custom message while loading & when finished
   private _ref_lauchToast: MutableRefObject<(intake?: textForToastPromiseType) => void>
-
 
   /* ========================================
    Ref to button on the configuration menu in the app
@@ -55,13 +64,6 @@ export class Class_MenuConfig {
   /* ========================================
     Updater of component in the configuration menu
     ========================================*/
-  /**
-   *   List of accordions to show
-   * @protected
-   * @type {string[]}
-   * @memberof Class_MenuConfig
-   */
-  protected _accordions_to_show: string[] = []
 
   // Update component OpenSankeyConfigurationsMenus
   private _ref_to_menu_config_updater: MutableRefObject<() => void>
@@ -70,39 +72,39 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
 
   // Update component SankeyNodeEdition
-  private _ref_to_menu_config_node_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_selection_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
-  private _ref_to_menu_config_node_apparence_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_apparence_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
-  private _ref_to_menu_config_node_apparence_style_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_styles_updater: MutableRefObject<() => void>
 
   // update SankeyMenuConfigurationNodesTags
-  private _ref_to_menu_config_node_tags_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_tags_updater: MutableRefObject<() => void>
 
   // Update component SankeyMenuConfigurationNodesIO
-  private _ref_to_menu_config_node_io_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_config_nodes_io_updater: MutableRefObject<(() => void)>
 
   // Update component SankeyMenuConfigurationNodesTooltip
-  private _ref_to_menu_config_node_tooltips_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_config_nodes_tooltips_updater: MutableRefObject<(() => void)>
 
   // Update component SankeyMenuConfigurationLinks
-  private _ref_to_menu_config_link_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_selection_updater: MutableRefObject<() => void>
 
   // Update componenet MenuConfigurationLinksData
-  private _ref_to_menu_config_link_data_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_data_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationLinksAttributes
-  private _ref_to_menu_config_link_apparence_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_apparence_updater: MutableRefObject<() => void>
 
-  private _ref_to_menu_config_link_apparence_style_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_styles_updater: MutableRefObject<() => void>
 
   // Update MenuConfigurationLinksTags
-  private _ref_to_menu_config_link_tags_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_tags_updater: MutableRefObject<() => void>
 
   // Update component MenuConfigurationLinksTooltip
-  private _ref_to_menu_config_link_tooltips_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_tooltips_updater: MutableRefObject<() => void>
 
   // Update component SankeySettingsEditionElementTags
   private _ref_to_menu_config_tags_updater: { [_: string]: MutableRefObject<() => void> } = {}
@@ -153,11 +155,19 @@ export class Class_MenuConfig {
 
   // Ref to style of currently selected node(s)
   private _ref_selected_style_node: MutableRefObject<string> = useRef('default')
+
   // Ref to style of currently selected link(s)
   private _ref_selected_style_link: MutableRefObject<string> = useRef('default')
 
   // Var to hide welcome menu when we relaucnh application
   private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAggainWelcome') === '1'))
+
+  /* ========================================
+    Timeout dict
+  =========================================== */
+
+  private _waiting_processes: {[id: string]: NodeJS.Timeout} = {}
+  private _waiting_time_for_processes: number = 500 // ms
 
   // CONSTRUCTOR ========================================================================
 
@@ -186,20 +196,20 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_layout_updater = useRef(() => null)
 
     // Nodes
-    this._ref_to_menu_config_node_updater = useRef(() => null)
-    this._ref_to_menu_config_node_apparence_updater = useRef(() => null)
-    this._ref_to_menu_config_node_apparence_style_updater = useRef(() => null)
-    this._ref_to_menu_config_node_tags_updater = useRef(() => null)
-    this._ref_to_menu_config_node_io_updater = useRef(() => null)
-    this._ref_to_menu_config_node_tooltips_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_apparence_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_styles_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_tags_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_io_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_tooltips_updater = useRef(() => null)
 
     // Links
-    this._ref_to_menu_config_link_updater = useRef(() => null)
-    this._ref_to_menu_config_link_data_updater = useRef(() => null)
-    this._ref_to_menu_config_link_apparence_updater = useRef(() => null)
-    this._ref_to_menu_config_link_apparence_style_updater = useRef(() => null)
-    this._ref_to_menu_config_link_tags_updater = useRef(() => null)
-    this._ref_to_menu_config_link_tooltips_updater = useRef(() => null)
+    this._ref_to_menu_config_links_selection_updater = useRef(() => null)
+    this._ref_to_menu_config_links_data_updater = useRef(() => null)
+    this._ref_to_menu_config_links_apparence_updater = useRef(() => null)
+    this._ref_to_menu_config_links_styles_updater = useRef(() => null)
+    this._ref_to_menu_config_links_tags_updater = useRef(() => null)
+    this._ref_to_menu_config_links_tooltips_updater = useRef(() => null)
 
     // Tags
     this._ref_to_menu_config_tags_updater['node_taggs'] = useRef(() => null)
@@ -224,6 +234,7 @@ export class Class_MenuConfig {
     this._ref_to_datatag_filter_updater = useRef(() => null)
 
     // Init dict of setter show dialog -------------------------------------------------
+
     this._dict_setter_show_dialog = {
       // Config menu - Nodes
       ref_setter_show_menu_node_apparence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -258,7 +269,6 @@ export class Class_MenuConfig {
       // Trigger Waiting spinner
       ref_trigger_waiting_spinner_toast: useRef<() => void>(() => null),
     }
-
   }
 
   // PUBLIC METHODS =====================================================================
@@ -431,12 +441,183 @@ export class Class_MenuConfig {
     }, 500)
   }
 
+  // Menu config updaters methods -------------------------------------------------------
+
   /**
-   *
-   *
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLayoutApparence() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLayoutApparence',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_layout_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesSelection() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesSelection',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_selection_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesApparence() {
+    this._add_waiting_process(
+      'updateMenuConfigNodeApparence',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_apparence_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesStyles() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesStyles',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_styles_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesTags() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesTags',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_tags_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesIO() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesIO',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_io_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesTooltips() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesTooltips',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_tooltips_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLinksSelection() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksSelection',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_links_selection_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLinksData() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksData',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_links_data_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLinksApparence() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksApparence',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_links_apparence_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLinksStyles() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksStyles',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_links_styles_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLinksTags() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksTags',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_links_tags_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToLinksTooltips() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksTooltips',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_links_tooltips_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update all menus using related refs to update function
    * @memberof Class_MenuConfig
    */
   public updateAllMenuComponents() {
+    this.updateComponentRelatedToLayoutApparence()
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
     this._ref_to_toolbar_updater.current()
@@ -454,7 +635,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodes() {
-    this._ref_to_menu_config_node_updater.current()
+    this.updateComponentRelatedToNodesSelection()
     this.updateAllComponentsRelatedToNodesConfig()
   }
 
@@ -467,11 +648,10 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodesConfig() {
-    this._ref_to_menu_config_node_apparence_updater.current()
-    this._ref_to_menu_config_node_apparence_style_updater.current()
-    this._ref_to_menu_config_node_tags_updater.current()
-    this._ref_to_menu_config_node_io_updater.current()
-    this._ref_to_menu_config_node_tooltips_updater.current()
+    this.updateComponentRelatedToNodesApparence()
+    this.updateComponentRelatedToNodesTags()
+    this.updateComponentRelatedToNodesIO()
+    this.updateComponentRelatedToNodesTooltips()
   }
 
   /**
@@ -483,7 +663,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToLinks() {
-    this._ref_to_menu_config_link_updater.current()
+    this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
   }
 
@@ -495,19 +675,29 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToLinksConfig() {
-    this._ref_to_menu_config_link_data_updater.current()
-    this._ref_to_menu_config_link_apparence_updater.current()
-    this._ref_to_menu_config_link_apparence_style_updater.current()
-    this._ref_to_menu_config_link_tags_updater.current()
-    this._ref_to_menu_config_link_tooltips_updater.current()
+    this.updateComponentRelatedToLinksData()
+    this.updateComponentRelatedToLinksApparence()
+    this.updateComponentRelatedToLinksStyles()
+    this.updateComponentRelatedToLinksTags()
+    this.updateComponentRelatedToLinksTooltips()
   }
 
+  /**
+   * Re-render all submenus for tags config
+   * - SankeyMenuConfigurationNodes
+   * - OpenSankeyConfigurationNodesTags
+   * - SankeyMenuConfigurationLinks
+   * - OpenSankeyConfigurationLinksTags
+   * - OpenSankeyConfigurationLinksData
+   * - ToolbarBuilder
+   * @memberof Class_MenuConfig
+   */
   public updateAllComponentsRelatedToTags() {
-    this._ref_to_menu_config_node_updater.current()
-    this._ref_to_menu_config_node_tags_updater.current()
-    this._ref_to_menu_config_link_updater.current()
-    this._ref_to_menu_config_link_tags_updater.current()
-    this._ref_to_menu_config_link_data_updater.current()
+    this.updateComponentRelatedToNodesSelection()
+    this.updateComponentRelatedToNodesTags()
+    this.updateComponentRelatedToLinksSelection()
+    this.updateComponentRelatedToLinksTags()
+    this.updateComponentRelatedToLinksData()
     this._ref_to_toolbar_updater.current()
   }
 
@@ -518,20 +708,20 @@ export class Class_MenuConfig {
   public updateAllComponentsRelatedToNodeTags() {
     this._ref_to_nodetag_filter_updater.current()
     this._ref_to_leveltag_filter_updater.current()
-    this._ref_to_menu_config_node_tags_updater.current()
+    this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
   }
 
   public updateAllComponentsRelatedToFluxTags() {
     this._ref_to_fluxtag_filter_updater.current()
-    this._ref_to_menu_config_link_tags_updater.current()
+    this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['flux_taggs'].current()
   }
 
   public updateAllComponentsRelatedToDataTags() {
     this._ref_to_datatag_filter_updater.current()
-    this._ref_to_menu_config_link_data_updater.current()
-    this._ref_to_menu_config_link_tags_updater.current()
+    this.updateComponentRelatedToLinksData()
+    this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['data_taggs'].current()
   }
 
@@ -562,6 +752,44 @@ export class Class_MenuConfig {
    */
   public positionToolBar() {
     d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current ? menu_config_width : 0)) + 'px')
+  }
+
+  // PRIVATE METHODS ====================================================================
+
+  /**
+   * Create a timed out process - Used to avoid multiple reloading of components
+   *
+   * The process_func is meant to be use by setTimeout(),
+   * and inside setTimeOut 'this' keyword has another meaning,
+   * so the current object must be passed directly as an argument.
+   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
+   *
+   * @private
+   * @param {string} process_id
+   * @param {(_: Class_MenuConfig) => void} process_func
+   * @memberof Class_MenuConfig
+   */
+  private _add_waiting_process(
+    process_id: string,
+    process_func: (_: Class_MenuConfig) => void
+  ) {
+    this._cancel_waiting_process(process_id)
+    this._waiting_processes[process_id] = setTimeout(
+      (_this) => { process_func(_this) },
+      this._waiting_time_for_processes,
+      this
+    )
+  }
+
+  /**
+   * Cancel a timed out process - It wont happen
+   * @private
+   * @param {string} process_id
+   * @memberof Class_MenuConfig
+   */
+  private _cancel_waiting_process(process_id: string) {
+    if (this._waiting_processes[process_id] !== undefined)
+      clearTimeout(this._waiting_processes[process_id])
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -627,31 +855,31 @@ export class Class_MenuConfig {
 
   // Nodes menus ------------------------------------------------------------------------
 
-  public get ref_to_menu_config_node_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_node_updater
+  public get ref_to_menu_config_nodes_selection_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_selection_updater
   }
 
-  public get ref_to_menu_config_node_apparence_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_node_apparence_updater
+  public get ref_to_menu_config_nodes_apparence_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_apparence_updater
   }
 
-  public get ref_to_menu_config_node_apparence_style_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_node_apparence_style_updater
+  public get ref_to_menu_config_nodes_styles_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_styles_updater
   }
 
-  public get ref_to_menu_config_node_tags_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_node_tags_updater
+  public get ref_to_menu_config_nodes_tags_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_tags_updater
   }
 
-  public get ref_to_menu_config_node_io_updater(): MutableRefObject<(() => void)> {
-    return this._ref_to_menu_config_node_io_updater
+  public get ref_to_menu_config_nodes_io_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_config_nodes_io_updater
   }
 
-  public get ref_to_menu_config_node_tooltips_updater(): MutableRefObject<(() => void)> {
-    return this._ref_to_menu_config_node_tooltips_updater
+  public get ref_to_menu_config_nodes_tooltips_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_config_nodes_tooltips_updater
   }
 
-  // Nodes context menu
+  // Nodes context menu -----------------------------------------------------------------
 
   public get ref_to_menu_context_nodes_updater(): MutableRefObject<(() => void)> {
     return this._ref_to_menu_context_nodes_updater
@@ -659,28 +887,28 @@ export class Class_MenuConfig {
 
   // Links menus ------------------------------------------------------------------------
 
-  public get ref_to_menu_config_link_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_link_updater
+  public get ref_to_menu_config_links_selection_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_selection_updater
   }
 
-  public get ref_to_menu_config_link_data_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_link_data_updater
+  public get ref_to_menu_config_links_data_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_data_updater
   }
 
-  public get ref_to_menu_config_link_apparence_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_link_apparence_updater
+  public get ref_to_menu_config_links_apparence_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_apparence_updater
   }
 
-  public get ref_to_menu_config_link_apparence_style_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_link_apparence_style_updater
+  public get ref_to_menu_config_links_styles_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_styles_updater
   }
 
-  public get ref_to_menu_config_link_tags_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_link_tags_updater
+  public get ref_to_menu_config_links_tags_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_tags_updater
   }
 
-  public get ref_to_menu_config_link_tooltips_updater(): MutableRefObject<(() => void)> {
-    return this._ref_to_menu_config_link_tooltips_updater
+  public get ref_to_menu_config_links_tooltips_updater(): MutableRefObject<(() => void)> {
+    return this._ref_to_menu_config_links_tooltips_updater
   }
 
   // Link context menu

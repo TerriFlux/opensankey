@@ -107,7 +107,7 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
   }
 
   // Link with new_data components updater
-  new_data.menu_configuration.ref_to_menu_config_node_tooltips_updater.current = resetTextEditor
+  new_data.menu_configuration.ref_to_menu_config_nodes_tooltips_updater.current = resetTextEditor
 
   // JSX Components ---------------------------------------------------------------------
 

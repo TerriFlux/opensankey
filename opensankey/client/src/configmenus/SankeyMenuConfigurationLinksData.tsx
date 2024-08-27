@@ -72,7 +72,7 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
     setCount(a=>a+1)
   }
 
-  new_data.menu_configuration.ref_to_menu_config_link_data_updater.current = () => {
+  new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = () => {
     updateInputsValues()
     setCount(a=>a+1)
   }
@@ -250,7 +250,7 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
-    new_data.menu_configuration.ref_to_menu_config_link_data_updater.current()
+    new_data.menu_configuration.updateComponentRelatedToLinksData()
     // And update this menu also
     setCount(a=>a+1)
     updateInputsValues()
