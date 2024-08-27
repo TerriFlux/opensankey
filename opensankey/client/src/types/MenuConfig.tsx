@@ -122,9 +122,6 @@ export class Class_MenuConfig {
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
 
-  // Update component ToolbarBuilder
-  private _updateToolbar: MutableRefObject<(() => void)>
-
   /* ========================================
     Updater of filtering components
   =========================================== */
@@ -144,8 +141,8 @@ export class Class_MenuConfig {
   /* ========================================
     Dict of ref of setter of dialogs menu
   =========================================== */
-  private _dict_setter_show_dialog: dict_hook_ref_setter_show_dialog_componentsType
 
+  private _dict_setter_show_dialog: dict_hook_ref_setter_show_dialog_componentsType
 
   /* ========================================
     Visible Nodes / Links selectors
@@ -212,7 +209,6 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._ref_to_toolbar_updater = useRef(() => null)
-    this._updateToolbar = useRef(() => null)
 
     // Init context menu components updater ---------------------------------------------
 
@@ -229,38 +225,49 @@ export class Class_MenuConfig {
 
     // Init dict of setter show dialog -------------------------------------------------
     this._dict_setter_show_dialog = {
+      // Config menu - Nodes
       ref_setter_show_menu_node_apparence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_menu_node_io: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_menu_node_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_menu_node_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      // Config menu - Links
       ref_setter_show_menu_link_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_menu_link_data: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_menu_link_appearence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_menu_link_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      // Config menu - Layout
       ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      // Modal - Welcome
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modale_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modale_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_excel_dialog: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_save_json: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_getter_show_save_json: useRef(false),
-      ref_setter_show_style_node: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_style_link: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-
-      ref_setter_show_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      // Modal - Saving & Loading
+      ref_setter_show_modal_excel_loader: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_excel_reading_process: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_json_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
+      ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
+      // Modal - Style & Layout
+      ref_setter_show_modal_styles_nodes: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_links: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_template: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_load: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_lauchToast: useRef<() => void>(() => null),
-      ref_setter_show_resolution_save_png: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_png_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
-      ref_setter_png_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null)
+      ref_setter_show_modal_templates_lib: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      // Trigger Waiting spinner
+      ref_trigger_waiting_spinner_toast: useRef<() => void>(() => null),
     }
 
   }
 
   // PUBLIC METHODS =====================================================================
 
+  /**
+   * Add accordion to menu config
+   * @param {string} _
+   * @memberof Class_MenuConfig
+   */
   public addToAccordionsToShow(_: string) {
     if (!this.isGivenAccordionShowed(_)) {
       this._accordions_to_show.push(_)
@@ -268,6 +275,11 @@ export class Class_MenuConfig {
     }
   }
 
+  /**
+   * Remove accordion to menu config
+   * @param {string} _
+   * @memberof Class_MenuConfig
+   */
   public removeFromAccordionsToShow(_: string) {
     if (this.isGivenAccordionShowed(_)) {
       this._accordions_to_show = this._accordions_to_show
@@ -276,6 +288,13 @@ export class Class_MenuConfig {
     }
   }
 
+  /**
+   * In menu config :
+   * If accordion exists - remove it
+   * It it does not exist - add it
+   * @param {string} _
+   * @memberof Class_MenuConfig
+   */
   public toggleGivenAccordion(_: string) {
     if (this.isGivenAccordionShowed(_))
       this.removeFromAccordionsToShow(_)
@@ -283,15 +302,43 @@ export class Class_MenuConfig {
       this.addToAccordionsToShow(_)
   }
 
+  /**
+   * Check if given accordion is displayed in menu config
+   * @param {string} _
+   * @return {*}
+   * @memberof Class_MenuConfig
+   */
   public isGivenAccordionShowed(_: string) {
     return this._accordions_to_show.includes(_)
+  }
+
+  public closeAllMenus() {
+    // Close config menu
+    this.closeConfigMenu()
+    // Close all modals
+    // -- Welcome
+    this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_tuto.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
+    // -- Saving & Loading
+    this._dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_json_saver.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
+    // -- Style & Layout
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_links.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
+    // -- Other modals
+    this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
   }
 
   /**
    * Open menu configuration
    * @memberof Class_MenuConfig
    */
-  public OpenConfigMenu() {
+  public openConfigMenu() {
     // Check if we linked the ref to the button to toggle the menu
     // and if _ref_to_btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
     if (
@@ -307,7 +354,7 @@ export class Class_MenuConfig {
    * Open menu configuration
    * @memberof Class_MenuConfig
    */
-  public CloseConfigMenu() {
+  public closeConfigMenu() {
     // Check if we linked the ref to the button to toggle the menu
     // and if _ref_to_btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
     if (
@@ -326,9 +373,9 @@ export class Class_MenuConfig {
    *
    * @memberof Class_MenuConfig
    */
-  public OpenConfigMenuElements() {
+  public openConfigMenuElements() {
     // Config menu must be opened first
-    this.OpenConfigMenu()
+    this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
       // Open Element accordion
@@ -348,9 +395,9 @@ export class Class_MenuConfig {
    *
    * @memberof Class_MenuConfig
    */
-  public OpenConfigMenuElementsNodes() {
+  public openConfigMenuElementsNodes() {
     // Element config men umust be opened first
-    this.OpenConfigMenuElements()
+    this.openConfigMenuElements()
     // Leave enough time for menus to open
     setTimeout(() => {
       // Open Node element menu
@@ -370,9 +417,9 @@ export class Class_MenuConfig {
    *
    * @memberof Class_MenuConfig
    */
-  public OpenConfigMenuElementsLinks() {
+  public openConfigMenuElementsLinks() {
     // Element config men umust be opened first
-    this.OpenConfigMenuElements()
+    this.openConfigMenuElements()
     // Leave enough time for menus to open
     setTimeout(() => {
       if (
@@ -529,7 +576,7 @@ export class Class_MenuConfig {
     return this._ref_menu_opened
   }
 
-  public get ref_lauchToast(): MutableRefObject<(intake?: textForToastPromiseType) => void> {
+  public get ref_trigger_waiting_spinner_toast(): MutableRefObject<(intake?: textForToastPromiseType) => void> {
     return this._ref_lauchToast
   }
 
@@ -658,10 +705,6 @@ export class Class_MenuConfig {
     return this._ref_to_toolbar_updater
   }
 
-
-  public get updateToolbar(): MutableRefObject<(() => void)> {
-    return this._updateToolbar
-  }
 
   // Filtering components ---------------------------------------------------------------
 

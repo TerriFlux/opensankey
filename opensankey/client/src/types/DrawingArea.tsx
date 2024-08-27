@@ -1254,7 +1254,7 @@ export class Class_DrawingArea {
           )
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-          this.application_data.menu_configuration.OpenConfigMenuElementsLinks()
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target)
         }
@@ -1269,7 +1269,7 @@ export class Class_DrawingArea {
           )
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-          this.application_data.menu_configuration.OpenConfigMenuElementsLinks()
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
         // In case we get there still deref ghost link
         this._ghost_link.delete()

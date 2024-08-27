@@ -177,7 +177,7 @@ export class Class_ApplicationData {
   /**
    * Function to create custom application behavior when we press a key,
    *
-   * even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
+   * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
    *
    * @private
    * @param {Class_ApplicationData} app_ref
@@ -217,18 +217,18 @@ export class Class_ApplicationData {
           })
         }
 
-        // Move all elements so none of them are outside the DA 
+        // Move all elements so none of them are outside the DA
         this.drawing_area.recenterElements()
       }
       else if (evt.key == 'Escape') {
         // Set app in selection mode
-        if (this.drawing_area.isInEditionMode()) this.drawing_area.switchMode()
+        app_ref.drawing_area.setSelectionMode()
 
         // Deselect all element
         app_ref.drawing_area.purgeSelection()
 
         // Close all menus
-        // app_ref.menu_configuration.closeAllMenus() // TODO
+        app_ref.menu_configuration.closeAllMenus() // TODO
       }
       // Event to delete all selected elements --------------------------------------------------------------
       else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {

@@ -220,20 +220,18 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
   const { data, new_data } = applicationData
   const _load_json = useRef<HTMLInputElement>(null)
 
-  const { ref_setter_show_style_node, ref_setter_show_style_link,
-    ref_setter_show_modal_template,
-    ref_setter_show_excel_dialog,
-    ref_setter_show_save_json,
-    ref_setter_png_res_h,
-    ref_setter_png_res_v,
-    ref_setter_show_resolution_save_png,
+  const { ref_setter_show_modal_styles_nodes, ref_setter_show_modal_styles_links,
+    ref_setter_show_modal_templates_lib,
+    ref_setter_show_modal_excel_loader,
+    ref_setter_show_modal_json_saver,
+    ref_setter_png_saver_res_h,
+    ref_setter_png_saver_res_v,
+    ref_setter_show_modal_png_saver,
     ref_setter_show_modal_preference,
-    ref_setter_show_apply_layout,
+    ref_setter_show_modal_apply_layout,
     ref_setter_show_modal_welcome,
-    ref_setter_show_modale_tuto,
-    ref_setter_show_modale_support,
-
-
+    ref_setter_show_modal_tuto,
+    ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
 
   const logo_tempalte = <svg
@@ -391,7 +389,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
           </MenuItem>
 
           <MenuItem
-            onClick={() => { ref_setter_show_modal_template.current!(true) }}
+            onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}
           >
             {logo_tempalte}
             {t('Menu.from_model')}
@@ -469,7 +467,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               }}
             />
             <MenuItem
-              onClick={() => ref_setter_show_excel_dialog.current!(true)}
+              onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
             >
               <FontAwesomeIcon
                 style={{ 'height': '1rem', 'width': '1rem' }}
@@ -518,7 +516,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         </OSTooltip>
         <MenuList>
           <MenuItem onClick={() => {
-            ref_setter_show_save_json.current!(true)
+            ref_setter_show_modal_json_saver.current!(true)
           }} >
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}
@@ -576,9 +574,9 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         </OSTooltip>
         <MenuList>
           <MenuItem onClick={() => {
-            ref_setter_png_res_h.current(parseInt(String(data.width)))
-            ref_setter_png_res_v.current(parseInt(String(data.height)))
-            ref_setter_show_resolution_save_png.current!(true)
+            ref_setter_png_saver_res_h.current(parseInt(String(data.width)))
+            ref_setter_png_saver_res_v.current(parseInt(String(data.height)))
+            ref_setter_show_modal_png_saver.current!(true)
           }}>
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}
@@ -640,7 +638,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       >
         <Button
           variant='menutop_button'
-          onClick={() => ref_setter_show_apply_layout.current!(true)}
+          onClick={() => ref_setter_show_modal_apply_layout.current!(true)}
         >
           <Box
             layerStyle='menutop_button_style'
@@ -703,14 +701,14 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         </OSTooltip>
 
         <MenuList>
-          <MenuItem onClick={() => { ref_setter_show_style_node.current(true) }}>
+          <MenuItem onClick={() => { ref_setter_show_modal_styles_nodes.current(true) }}>
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faShapes}
             />
             {t('Menu.esn')}
           </MenuItem>
-          <MenuItem onClick={() => { ref_setter_show_style_link.current(true) }}>
+          <MenuItem onClick={() => { ref_setter_show_modal_styles_links.current(true) }}>
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faShareNodes}
@@ -759,7 +757,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       >
         <Button
           variant='menutop_button'
-          onClick={() => ref_setter_show_modale_tuto.current!(true)}
+          onClick={() => ref_setter_show_modal_tuto.current!(true)}
         >
           <Box
             layerStyle='menutop_button_style'
@@ -811,7 +809,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
       >
         <Button
           variant='menutop_button'
-          onClick={() => ref_setter_show_modale_support.current!(true)}
+          onClick={() => ref_setter_show_modal_support.current!(true)}
         >
           <Box
             layerStyle='menutop_button_style'
@@ -847,8 +845,8 @@ export const Modale_resolution_png: Modale_resolution_pngFType = (
   const [h, set_h] = useState<number>()
   const [v, set_v] = useState<number>()
   const valid_input = (h === undefined && v === undefined) || (v !== undefined && h !== undefined && !isNaN(+v) && !isNaN(+h))
-  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_res_h.current = set_h
-  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_res_v.current = set_v
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_h.current = set_h
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_v.current = set_v
   const content = <>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
@@ -914,7 +912,7 @@ export const Modale_resolution_png: Modale_resolution_pngFType = (
         applicationData.new_data.menu_configuration.function_on_wait.current = () => {
           clickSavePNG(h, v)
         }
-        applicationData.new_data.menu_configuration.ref_lauchToast.current()
+        applicationData.new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
       }}
     >
       Save
@@ -923,7 +921,7 @@ export const Modale_resolution_png: Modale_resolution_pngFType = (
 
   return <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_resolution_save_png'}
+    dialog_name={'ref_setter_show_modal_png_saver'}
     content={content}
     title={t('Menu.setResolutionPNG')}
   />
@@ -1001,13 +999,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
   }
 ) => {
   const { t, url_prefix, logo, app_name, logo_terriflux } = applicationData.new_data
-  const { ref_setter_show_modale_tuto, ref_setter_show_modal_template } = applicationData.new_data.menu_configuration.dict_setter_show_dialog
+  const { ref_setter_show_modal_tuto, ref_setter_show_modal_templates_lib } = applicationData.new_data.menu_configuration.dict_setter_show_dialog
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
   const [show_template, set_show_template] = useState(false)
   const [, setCount] = useState(0)
-  ref_setter_show_modale_tuto.current = set_show_tuto
-  ref_setter_show_modal_template.current = set_show_template
+  ref_setter_show_modal_tuto.current = set_show_tuto
+  ref_setter_show_modal_templates_lib.current = set_show_template
   const { new_data } = applicationData
   new_data.menu_configuration.ref_to_menu_updater.current = ()=>setCount(a=>a+1)
   new_data.menu_configuration.ref_menu_opened.current = show_nav
@@ -1115,7 +1113,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   const modal_support = <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_modale_support'}
+    dialog_name={'ref_setter_show_modal_support'}
     content={content_support}
     title={t('Menu.c_support')}
   />
