@@ -5,20 +5,30 @@
 // ==================================================================================================
 
 // Import
-import * as d3 from 'd3'
 import LZString from 'lz-string'
 
 // Local types
 import { Class_DrawingArea } from './DrawingArea'
 import { Type_JSON } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
-import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
+import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
+
+function isDrawingAreaActive() {
+  const inputs = ['input', 'textarea'];
+  if (
+    document.activeElement &&
+    inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
+  ) {
+      return false;
+  }
+  return true
+}
 
 /**
  * Class that contains all elements to make the application work
@@ -189,7 +199,7 @@ export class Class_ApplicationData {
       // Event to move all selected nodes with keyboard arrows --------------------------
       if (
         ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
-        (document.activeElement?.className === "chakra-ui-light")  // Avoid using this hotkey in text-inputs
+        isDrawingAreaActive() // Avoid using this hotkey in text-inputs
       ) {
         // Deplace les noeuds sélectionné avec les flèches du clavier
         if (evt.key == 'ArrowUp') {
@@ -212,6 +222,10 @@ export class Class_ApplicationData {
         // Move all elements so none of them are outside the DA
         this.drawing_area.recenterElements()
       }
+      // Open config menu ---------------------------------------------------------------
+      else if (evt.key == 'Tab') {
+        app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+      }
       // Event to restore application display as neutral --------------------------------
       else if (evt.key == 'Escape') {
         // Set app in selection mode
@@ -226,29 +240,12 @@ export class Class_ApplicationData {
       // Event to delete all selected elements ------------------------------------------
       else if (
         (evt.key === 'Delete') &&
-        (document.activeElement?.className === "chakra-ui-light" )  // Avoid using this hotkey in text-inputs
+        isDrawingAreaActive()  // Avoid using this hotkey in text-inputs
       ) {
         // Delete selected elements
         app_ref.drawing_area.deleteSelection()
-
-        // Update component
-        app_ref.menu_configuration.updateAllComponentsRelatedToNodes()
-        app_ref.menu_configuration.updateAllComponentsRelatedToLinks()
       }
-      // Event to select all visible elements -------------------------------------------
-      else if (evt.key == 'a' && evt.ctrlKey) {
-        // Prevent default event on ctrl + a
-        evt.preventDefault()
-
-        // Select all node & links
-        app_ref.drawing_area.sankey.nodes_list.forEach(n => app_ref.drawing_area.addNodeToSelection(n))
-        app_ref.drawing_area.sankey.links_list.forEach(l => app_ref.drawing_area.addLinkToSelection(l))
-
-        // Update component
-        app_ref.menu_configuration.updateAllComponentsRelatedToNodes()
-        app_ref.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
-      // Event to blur the input we are currently focused on
+      // Event to blur the input we are currently focused on ----------------------------
       // (It's in adequation with event on input that update drawing area when we blur input)
       // TODO surement à supprimer lorsque les inputs se feront avec menuConfigurationTextInput && menuConfigurationNumberInput
       else if (
@@ -258,11 +255,21 @@ export class Class_ApplicationData {
       ) {
         (document.activeElement as HTMLInputElement).blur()
       }
-      // Event to save current diagram in cache
+      // Event to select all visible elements -------------------------------------------
+      else if (evt.key == 'a' && evt.ctrlKey) {
+        // Prevent default event on ctrl + a
+        evt.preventDefault()
+
+        // Select all node & links
+        app_ref.drawing_area.addAllVisibleNodesToSelection()
+        app_ref.drawing_area.addAllVisibleLinksToSelection()
+      }
+      // Event to save current diagram in cache -----------------------------------------
       else if (
-        (evt.key == 's') &&
+        ((evt.key === 's') || (evt.key === 'S')) &&
         (evt.ctrlKey) &&
-        (!evt.shiftKey)
+        (!evt.shiftKey) &&
+        (!evt.altKey)
       ) {
         // Prevent default event on ctrl + s
         evt.preventDefault()
@@ -272,33 +279,45 @@ export class Class_ApplicationData {
         // Update logo save in cache
         app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       }
-      // event to download current sankey in JSON
+      // event to download current sankey in JSON --------------------------------------
       else if (
-        (evt.key == 's' && evt.ctrlKey && evt.shiftKey) ||
-        (evt.key == 'S' && evt.ctrlKey && evt.shiftKey)
+        ((evt.key === 's') || (evt.key === 'S')) &&
+        (evt.ctrlKey) &&
+        (evt.shiftKey) &&
+        (!evt.altKey)
       ) {
         // Prevent default event on ctrl + shift + s
         evt.preventDefault()
+        // Trigger saving via JSON saving button
         ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
       }
-      // Fullscreen
+      // event to download current sankey in Excel -------------------------------------
+      else if (
+        ((evt.key === 's') || (evt.key === 'S')) &&
+        (evt.ctrlKey) &&
+        (!evt.shiftKey) &&
+        (evt.altKey)
+      ) {
+        // Prevent default event on ctrl + shift + s
+        evt.preventDefault()
+        // Trigger saving via Excel saving button
+        ClickSaveExcel('/opensankey/', app_ref.toJSON())
+      }
+      // Fullscreen --------------------------------------------------------------------
       else if (
         (evt.key === 'f') &&
-        (!evt.ctrlKey) &&
-        (document.activeElement?.tagName !== 'INPUT')
+        (evt.ctrlKey) &&
+        isDrawingAreaActive()  // Avoid using this hotkey in text-inputs
       ) {
-        if ((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))) {
-          evt.preventDefault()
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen()
-          } else if (document.exitFullscreen) {
-            document.exitFullscreen()
-          }
+        // Prevent default event
+        evt.preventDefault()
+        // Toggle fullscreen
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen()
         }
-      }
-      // Open config menu
-      else if (evt.key == 'Tab') {
-        app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+        else if (document.exitFullscreen) {
+          document.exitFullscreen()
+        }
       }
     }
   }

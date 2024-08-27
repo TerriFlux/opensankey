@@ -444,7 +444,9 @@ export class Class_DrawingArea {
    * @return {Class_NodeElement}
    * @memberof Class_DrawingArea
    */
-  public addNewDefaultNodeToSankey(): Class_NodeElement { return this.sankey.addNewDefaultNode() }
+  public addNewDefaultNodeToSankey(): Class_NodeElement {
+    return this.sankey.addNewDefaultNode()
+  }
 
   /**
    * Retrieve node by id from sankey struct
@@ -466,6 +468,8 @@ export class Class_DrawingArea {
     this.sankey.deleteNode(node)
     // Self delete node
     node.delete()
+    // Update related menus
+    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
   }
 
   /**
@@ -495,32 +499,55 @@ export class Class_DrawingArea {
     this.sankey.removeLink(link)
     // Self delete node
     link.delete()
+    // Update related menus
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
   /**
    * Add a node to selection set
+   * Update menu accordingly
    * @param {Class_NodeElement} node
    * @memberof Class_DrawingArea
    */
   public addNodeToSelection(node: Class_NodeElement) {
+    // Update selection list
     this._selection[node.id] = node as Class_ProtoElement
+    // Update selection attribute on given node
     node.setSelected()
+    // Update related menus
+    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+  }
+
+  /**
+   * Add all nodes to selection set
+   * Update menu accordingly
+   * @memberof Class_DrawingArea
+   */
+  public addAllVisibleNodesToSelection() {
+    this.sankey.visible_nodes_list
+      .forEach(node => this.addNodeToSelection(node))
   }
 
   /**
    * remove a node from a selection set
+   * Update menu accordingly
    * @param {Class_NodeElement} node
    * @memberof Class_DrawingArea
    */
   public removeNodeFromSelection(node: Class_NodeElement) {
     if (this._selection[node.id] !== undefined) {
+      // Update selection list
       delete this._selection[node.id]
+      // Update selection attribute on given node
       node.setUnSelected()
+      // Update related menus
+      this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
   }
 
   /**
    * Permanently delete selected nodes
+   * Update menu accordingly
    * @memberof Class_DrawingArea
    */
   public deleteSelectedNodes() {
@@ -533,12 +560,27 @@ export class Class_DrawingArea {
 
   /**
    * Add a link to selection set
+   * Update menu accordingly
    * @param {Class_LinkElement} link
    * @memberof Class_DrawingArea
    */
   public addLinkToSelection(link: Class_LinkElement) {
+    // Update selection list
     this._selection[link.id] = link as Class_ProtoElement
+    // Update selection attribute on given link
     link.setSelected()
+    // Update related menus
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  }
+
+  /**
+   * Add all links to selection set
+   * Update menu accordingly
+   * @memberof Class_DrawingArea
+   */
+  public addAllVisibleLinksToSelection() {
+    this.sankey.visible_links_list
+      .forEach(link => this.addLinkToSelection(link))
   }
 
   /**
@@ -548,8 +590,12 @@ export class Class_DrawingArea {
    */
   public removeLinkFromSelection(link: Class_LinkElement) {
     if (this._selection[link.id] !== undefined) {
+      // Update selection list
       delete this._selection[link.id]
+      // Update selection attribute on given link
       link.setUnSelected()
+      // Update related menus
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     }
   }
 
