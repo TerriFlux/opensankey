@@ -24,7 +24,7 @@ export   const os_all_element_to_transform = [
 
 /**
  *
- * @param {ApplyLayoutDialogTypes} { ref_setter_show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
+ * @param {ApplyLayoutDialogTypes} { ref_setter_show_modal_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
 export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
@@ -55,7 +55,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   const applyStretch=(param:string)=>{
     const attr=param=='h'?'position_x':'position_y'
     const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
-    
+
     let min=new_data.drawing_area.sankey.visible_nodes_list[0][attr]
     // Cheche la position en y du noeud le plus en haut à gauche
     new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>{
@@ -485,7 +485,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                     new_data.drawing_area.computeAutoSankey(false)
                     // set_data({ ...data })
                   }
-                  applicationData.new_data.menu_configuration.ref_lauchToast.current()
+                  applicationData.new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
                 }}>
                 {t('MEP.PA')}
               </Button>
@@ -509,7 +509,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   </Tabs>
   const dragLayout= <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_apply_layout'}
+    dialog_name={'ref_setter_show_modal_apply_layout'}
     content={content_modal_layout}
     title={t('Menu.Transformation.title')}
   />
@@ -519,7 +519,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
 
 /**
  *
- * @type {{ ref_setter_show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
+ * @type {{ ref_setter_show_modal_json_saver: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
  */
 export type ApplySaveJSONTypes = {
   t : TFunction
@@ -530,7 +530,7 @@ export type ApplySaveJSONTypes = {
 
 /**
  *
- * @param {ApplySaveJSONTypes} { ref_setter_show_save_json, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
+ * @param {ApplySaveJSONTypes} { ref_setter_show_modal_json_saver, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
  * @returns {*}
  */
 export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
@@ -544,7 +544,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
   const [show_save_json_modal,set_show_save_json_modal]=useState(false)
-  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_save_json.current=set_show_save_json_modal
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_json_saver.current=set_show_save_json_modal
   return <Modal
     isOpen={show_save_json_modal}
     onClose={() => set_show_save_json_modal(false)}
@@ -648,7 +648,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ applicationData
             Reinitialization()
             launch((input_file_name as unknown as {[name:string]:string}).name)
             UploadExcelImpl(
-              applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_excel_dialog.current,input_file_name as Blob,url_prefix
+              applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current,input_file_name as Blob,url_prefix
             )
           }
         }
@@ -657,7 +657,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ applicationData
   </Box>
   return <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_excel_dialog'}
+    dialog_name={'ref_setter_show_modal_excel_loader'}
     content={content}
     title={t('Menu.open_excel_file')}
   />

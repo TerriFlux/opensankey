@@ -66,7 +66,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
 
   const [value,setValue] = useState([1,2])
   const [show_load_dialog,set_show_load_dialog] = useState(false)
-  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_load.current=set_show_load_dialog
+  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current=set_show_load_dialog
   const [result,set_result] = useState('')
   ref_result.current = set_result
   const [processing,set_processing] = useState(false)
@@ -385,7 +385,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData.new_data.menu_configuration.function_on_wait.current=()=>{
     new_data.drawing_area.computeAutoSankey(false)
   }
-  applicationData.new_data.menu_configuration.ref_lauchToast.current()
+  applicationData.new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
   // TODO adjust sankey zone
 
 }

@@ -219,7 +219,7 @@ export const initializeProcessFunctions : (
       RetrieveExcelResults,
       launch:(cur_path:string)=>{
         _.path.current = cur_path
-        applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_load.current!(true)
+        applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
         _.ref_setter_processing.current(true)
         _.failure.current = true
         _.not_started.current = false

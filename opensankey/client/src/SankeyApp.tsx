@@ -83,7 +83,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const { new_data } = applicationData
 
 
-  new_data.menu_configuration.ref_lauchToast.current=(intake)=>{
+  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current=(intake)=>{
     launchToastConstructor(applicationData,toast,intake)
   }
 

@@ -111,7 +111,7 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
           new_data.drawing_area.sankey.deleteNodeStyle(node_styles_dict[selected_node_style_id])
           // Fallback to default style
           new_data.menu_configuration.ref_selected_style_node.current = default_style_id
-          new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current() 
+          new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
           new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current()
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
@@ -165,7 +165,7 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
 
   return <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_style_node'}
+    dialog_name={'ref_setter_show_modal_styles_nodes'}
     content={content}
     title={t('Menu.esn')}
   />
@@ -206,7 +206,7 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
           ref_selected_style_link.current = new_style.id
           new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current()
           new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current()
-          
+
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
           // Update this component
@@ -313,7 +313,7 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
 
   return <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_style_link'}
+    dialog_name={'ref_setter_show_modal_styles_links'}
     content={content}
     title={t('Menu.esf')}
   />

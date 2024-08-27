@@ -325,31 +325,39 @@ export type textForToastPromiseType = {
 }
 
 export interface dict_hook_ref_setter_show_dialog_componentsType {
+    // Config menu - Nodes
     ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     ref_setter_show_menu_node_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     ref_setter_show_menu_node_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    // Config menu - Links
     ref_setter_show_menu_link_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     ref_setter_show_menu_link_data: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     ref_setter_show_menu_link_appearence: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     ref_setter_show_menu_link_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    // Config menu - Layout
     ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    // Modal - Welcome
     ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modale_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modale_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_excel_dialog: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_save_json: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_getter_show_save_json: MutableRefObject<boolean>,
-    ref_setter_show_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    // Modal - Saving & Loading
+    ref_setter_show_modal_excel_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>,
+    ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>,
+    // Modal - Style & Layout
+    ref_setter_show_modal_styles_nodes: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_styles_links: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    // Other modals
     ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_template: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_style_node: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_style_link: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_load: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_lauchToast: MutableRefObject<(intake?: textForToastPromiseType) => void>,
-    ref_setter_show_resolution_save_png: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_png_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>,
-    ref_setter_png_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>,
+    ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+    // Trigger Waiting spinner
+    ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: textForToastPromiseType) => void>,
+
 }
 
 

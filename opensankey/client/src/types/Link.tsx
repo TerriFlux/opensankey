@@ -844,7 +844,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
-      drawing_area.application_data.menu_configuration.CloseConfigMenu()
+      drawing_area.application_data.menu_configuration.closeConfigMenu()
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode()) {
@@ -853,7 +853,7 @@ export class Class_LinkElement extends Class_ProtoElement {
         // Add link to selection
         drawing_area.addLinkToSelection(this)
         // Open related menu
-        this.menu_config.OpenConfigMenuElementsLinks()
+        this.menu_config.openConfigMenuElementsLinks()
         // Update components related to link edition
         this.menu_config.updateAllComponentsRelatedToLinks()
       }

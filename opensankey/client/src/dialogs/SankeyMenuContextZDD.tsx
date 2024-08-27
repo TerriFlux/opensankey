@@ -151,7 +151,7 @@ export const ContextMenuZdd: FunctionComponent<ContextMenuZddFType> = ({
 
             indicateSankeyToSaveInCache()
           }
-          applicationData.new_data.menu_configuration.ref_lauchToast.current({ success: 'Layout Updated' })
+          applicationData.new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
 
         }}>
         {t('MEP.PA_action')}
