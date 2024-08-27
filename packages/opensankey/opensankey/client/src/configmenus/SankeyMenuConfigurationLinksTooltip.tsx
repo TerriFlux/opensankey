@@ -105,7 +105,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
   }
 
   // Link with new_data components updater
-  new_data.menu_configuration.ref_to_menu_config_link_tooltips_updater.current = resetTextEditor
+  new_data.menu_configuration.ref_to_menu_config_links_tooltips_updater.current = resetTextEditor
 
   // JSX Components ---------------------------------------------------------------------
 

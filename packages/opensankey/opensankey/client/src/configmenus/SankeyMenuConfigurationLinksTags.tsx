@@ -60,7 +60,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<MenuConfigurationLink
     else
       setFluxTaggEntryIndex(0)
   }
-  new_data.menu_configuration.ref_to_menu_config_link_tags_updater.current = updateThis
+  new_data.menu_configuration.ref_to_menu_config_links_tags_updater.current = updateThis
 
   /**
    * Function used to reset menu UI

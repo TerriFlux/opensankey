@@ -63,7 +63,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<SankeyMenuConfi
     else
       setNodeTaggEntryIndex(0)
   }
-  new_data.menu_configuration.ref_to_menu_config_node_tags_updater.current = updateThis
+  new_data.menu_configuration.ref_to_menu_config_nodes_tags_updater.current = updateThis
 
   /**
    * Function used to reset menu UI
