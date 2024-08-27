@@ -238,9 +238,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current = () => setCount(a => a + 1)
+    new_data.menu_configuration.ref_to_menu_config_links_apparence_updater.current = () => setCount(a => a + 1)
   } else {
-    new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current = () => setCountStyle(a => a + 1)
+    new_data.menu_configuration.ref_to_menu_config_links_styles_updater.current = () => setCountStyle(a => a + 1)
   }
 
   // Link to ConfigMenuNumberInput state variable
@@ -269,12 +269,12 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
     if (menu_for_style) {
       new_data.menu_configuration.updateAllComponentsRelatedToLinks()
       // Update menus for link's apparence in case we use this for style
-      new_data.menu_configuration.ref_to_menu_config_link_apparence_style_updater.current()
+      new_data.menu_configuration.updateComponentRelatedToLinksStyles()
       // Redraw all visible nodes if we modifie link style
       new_data.drawing_area.sankey.visible_links_list.forEach(link => link.draw())
     }
     // And update this menu also
-    new_data.menu_configuration.ref_to_menu_config_link_apparence_updater.current()
+    new_data.menu_configuration.updateComponentRelatedToLinksApparence()
   }
 
 

@@ -974,7 +974,8 @@ export class Class_NodeElement extends Class_Element {
     this.d3_selection?.select('.name_label_fo_input').style('display', 'none')
     this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
     this.drawNameLabel()
-    this.menu_config.ref_to_menu_config_node_updater.current()
+    // Update selection menu for nodes
+    this.menu_config.updateComponentRelatedToNodesSelection()
   }
 
   // JSON files read / write related methods --------------------------------------------

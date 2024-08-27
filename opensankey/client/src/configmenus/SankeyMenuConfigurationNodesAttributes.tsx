@@ -215,11 +215,12 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Boolean used to force this component to reload
   const [,setCount]=useState(0)
   const [,setCountStyle]=useState(0)
+
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current = ()=>setCount(a=>a+1)
+    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current = ()=>setCount(a=>a+1)
   }else{
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current = ()=>setCountStyle(a=>a+1)
+    new_data.menu_configuration.ref_to_menu_config_nodes_styles_updater.current = ()=>setCountStyle(a=>a+1)
   }
 
   /**
@@ -230,13 +231,12 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     if (menu_for_style) {
     // Update menus for node's apparence in case we use this for style
-      new_data.menu_configuration.ref_to_menu_config_node_apparence_style_updater.current()
+      new_data.menu_configuration.updateComponentRelatedToNodesStyles()
       // Redraw all visible nodes if we modifie node style
       new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
     }
     // And update this menu also
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
-
+    new_data.menu_configuration.updateComponentRelatedToNodesApparence()
   }
 
   // JSX menu components ---------------------------------------------------------------

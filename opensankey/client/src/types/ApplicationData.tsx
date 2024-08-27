@@ -186,19 +186,12 @@ export class Class_ApplicationData {
    */
   private keyboardEventListener(app_ref: Class_ApplicationData) {
     return (evt: KeyboardEvent) => {
+      // Event to move all selected nodes with keyboard arrows --------------------------
       if (
         ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
-        (
-          (
-            (document.activeElement?.tagName === 'INPUT') ?
-              d3.select(document.activeElement).attr('value') === 'menuConfigButton' :
-              true
-          ) &&
-          (!document.activeElement?.className.includes('ql-editor'))
-        )
+        (document.activeElement?.className === "chakra-ui-light")  // Avoid using this hotkey in text-inputs
       ) {
-        // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
-        // (exemples : le input de la largeur minimal d'un noeud)
+        // Deplace les noeuds sélectionné avec les flèches du clavier
         if (evt.key == 'ArrowUp') {
           app_ref.drawing_area.selected_nodes_list.forEach(node => {
             node.position_y -= app_ref.drawing_area.grid_size
@@ -216,10 +209,10 @@ export class Class_ApplicationData {
             node.position_x += app_ref.drawing_area.grid_size
           })
         }
-
         // Move all elements so none of them are outside the DA
         this.drawing_area.recenterElements()
       }
+      // Event to restore application display as neutral --------------------------------
       else if (evt.key == 'Escape') {
         // Set app in selection mode
         app_ref.drawing_area.setSelectionMode()
@@ -228,30 +221,22 @@ export class Class_ApplicationData {
         app_ref.drawing_area.purgeSelection()
 
         // Close all menus
-        app_ref.menu_configuration.closeAllMenus() // TODO
+        app_ref.menu_configuration.closeAllMenus()
       }
-      // Event to delete all selected elements --------------------------------------------------------------
-      else if (evt.key == 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
+      // Event to delete all selected elements ------------------------------------------
+      else if (
+        (evt.key === 'Delete') &&
+        (document.activeElement?.className === "chakra-ui-light" )  // Avoid using this hotkey in text-inputs
+      ) {
+        // Delete selected elements
+        app_ref.drawing_area.deleteSelection()
 
-        // Check if we are not in an input so we don't modify the value of it
-        if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') == 'menuConfigButton') {
-
-          // Delete selected elements
-          app_ref.drawing_area.selected_nodes_list.forEach(node => app_ref.drawing_area.deleteNode(node))
-          app_ref.drawing_area.selected_links_list.forEach(link => app_ref.drawing_area.deleteLink(link))
-
-          // Redraw remaining elements since their presence shape their appearence one another
-          app_ref.drawing_area.sankey.nodes_list.forEach(node => node.draw())
-          app_ref.drawing_area.sankey.links_list.forEach(link => link.draw())
-
-          // Update component
-          app_ref.menu_configuration.ref_to_menu_config_node_updater.current()
-          app_ref.menu_configuration.ref_to_menu_config_link_updater.current()
-        }
+        // Update component
+        app_ref.menu_configuration.updateAllComponentsRelatedToNodes()
+        app_ref.menu_configuration.updateAllComponentsRelatedToLinks()
       }
+      // Event to select all visible elements -------------------------------------------
       else if (evt.key == 'a' && evt.ctrlKey) {
-        // Event to select all elements
-
         // Prevent default event on ctrl + a
         evt.preventDefault()
 
@@ -260,8 +245,8 @@ export class Class_ApplicationData {
         app_ref.drawing_area.sankey.links_list.forEach(l => app_ref.drawing_area.addLinkToSelection(l))
 
         // Update component
-        app_ref.menu_configuration.ref_to_menu_config_node_updater.current()
-        app_ref.menu_configuration.ref_to_menu_config_link_updater.current()
+        app_ref.menu_configuration.updateAllComponentsRelatedToNodes()
+        app_ref.menu_configuration.updateAllComponentsRelatedToLinks()
       }
       // Event to blur the input we are currently focused on
       // (It's in adequation with event on input that update drawing area when we blur input)

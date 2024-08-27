@@ -81,7 +81,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // Boolean used to force this component to reload
   const [, setCount] = useState(0)
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_node_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_menu_config_nodes_selection_updater.current = ()=>setCount(a=>a+1)
 
   // Function used to reset menu UI -----------------------------------------------------
 
