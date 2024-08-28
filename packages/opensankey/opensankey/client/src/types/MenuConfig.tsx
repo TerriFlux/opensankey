@@ -98,6 +98,7 @@ export class Class_MenuConfig {
   // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_links_apparence_updater: MutableRefObject<() => void>
 
+  // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_links_styles_updater: MutableRefObject<() => void>
 
   // Update MenuConfigurationLinksTags

@@ -426,6 +426,26 @@ export class Class_DrawingArea {
     this.selected_nodes_list.forEach(node => node.draw())
   }
 
+  public closeAllMenus() {
+    this.application_data.menu_configuration.closeAllMenus()
+    this.closeAllContextMenus()
+  }
+
+  /**
+   * Context menus are directly diplayed in drawing area when deal with them directly here
+   * @memberof Class_DrawingArea
+   */
+  public closeAllContextMenus() {
+    // Reset contextulised elements
+    this.node_contextualised = undefined
+    this.link_contextualised = undefined
+    this.is_drawing_area_contextualised = false
+    // Update components
+    this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
+    this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+  }
+
   public addElement() {
     // We increase by two, in order to easyly swap elements
     // ie : element0 order = 0, element1 order = 2, element3 order = 4
@@ -1532,7 +1552,6 @@ export class Class_DrawingArea {
       d3.selectAll('.sankey-tooltip').remove()
       // SELECTION MODE ===========================================================
       if (this.isInSelectionMode()) {
-        this.pointer_pos = [event.pageX, event.pageY]
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         this.is_drawing_area_contextualised = true
         this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
@@ -1556,6 +1575,10 @@ export class Class_DrawingArea {
       // EDITION MODE =============================================================
       // event.button==0 check if we use LMB
       if (this.isInEditionMode() && event.button == 0) {
+        // No more elements must be in selection
+        this.purgeSelection()
+        // Close all menus
+        this.closeAllMenus()
         // Get mouse position
         const mouse_position = d3.pointer(event)
         // Create default source node
@@ -1581,15 +1604,7 @@ export class Class_DrawingArea {
       else if (this.isInSelectionMode()) {
         if (event.button === 0) {
           // Close context menus
-          this.node_contextualised = undefined
-          this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-
-          this.link_contextualised = undefined
-          this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
-
-          this.is_drawing_area_contextualised = false
-          this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-
+          this.closeAllContextMenus()
           // Display the selection zone & set it starting position
           const mouse_position = d3.pointer(event)
           this._selection_zone.setVisible()
@@ -1658,7 +1673,7 @@ export class Class_DrawingArea {
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
-      if (!event.shiftKey) {
+      if ((!event.shiftKey) && (!event.ctrlKey)) {
         this.purgeSelection()
       }
       // Select element inside the selection zone & reset it (hide the zone)
@@ -1700,6 +1715,8 @@ export class Class_DrawingArea {
   private eventMouseMove(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    // Save pointer pos for external access
+    this.pointer_pos = [event.pageX, event.pageY]
     // EDITION MODE =============================================================
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
