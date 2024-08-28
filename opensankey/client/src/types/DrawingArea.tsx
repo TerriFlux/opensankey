@@ -257,10 +257,10 @@ export class Class_DrawingArea {
   private zoomListener = d3.zoom<SVGSVGElement, unknown>()
     // only trigger zoom event when we scroll (which == 0) &&
     // and drag mouse middle button (which == 2)
-    .filter(evt => (evt.which == 2 || evt.which == 0))
+    .filter(evt => (evt.which === 2 || evt.which === 0))
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
-    .on('zoom', this.eventZoom)
+    .on('zoom', (event) => {this.eventZoom(event)})
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
@@ -339,6 +339,7 @@ export class Class_DrawingArea {
       .attr('id', 'draw_zoom')
       .attr('width', window.innerWidth)
       .attr('height', window.innerHeight)
+      .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
     // Init drawing area
     this.d3_selection = this.d3_selection_zoom_area
@@ -363,6 +364,46 @@ export class Class_DrawingArea {
 
     // Added events listeners
     this.setEventsListeners()
+  }
+
+  /**
+   * Draw grid for drawing area
+   * @public
+   * @memberof Class_DrawingArea
+   */
+  public drawGrid() {
+    // Clean if needed
+    this.d3_selection_grid?.selectAll('.line').remove()
+    // Draw only if asked OR outside publishing mode
+    if (this.grid_visible && !this.static) {
+      // Draw horizontal lines
+      const number_of_horizontal_lines = this.getHeight() / this.grid_size
+      for (let row = 0; row < number_of_horizontal_lines; row++) {
+        this.d3_selection_grid?.append('line')
+          .attr('class', 'line line-horiz')
+          .attr('id', 'line_horiz_drawing_area_' + String(row))
+          .attr('x1', '0')
+          .attr('x2', this.getWidth())
+          .attr('y1', row * this.grid_size)
+          .attr('y2', row * this.grid_size)
+          .style('stroke', this.grid_color)
+          .style('stroke-dasharray', 4)
+      }
+      // Draw vertical lines
+      const number_of_vertical_lines = this.getWidth() / this.grid_size
+      for (let column = 0; column < number_of_vertical_lines; column++) {
+        this.d3_selection_grid?.append('line')
+          .attr('class', 'line line-vert')
+          .attr('id', 'line_horiz_drawing_area_' + String(column))
+          .attr('x1', column * this.grid_size)
+          .attr('x2', column * this.grid_size)
+          .attr('y1', 0)
+          .attr('y2', this.getHeight())
+          .style('stroke-dasharray', 4)
+          .style('stroke', this.grid_color)
+      }
+      this.d3_selection_grid?.raise()
+    }
   }
 
   /**
@@ -1339,6 +1380,423 @@ export class Class_DrawingArea {
     }
   }
 
+  // PRIVATE METHODS ==================================================================
+
+  /**
+   * Delete html element SVG containing drawing area
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private unDraw() {
+    if (this.d3_selection_zoom_area) {
+      this.d3_selection_zoom_area.remove()
+      this.d3_selection_zoom_area = null
+    }
+  }
+
+  /**
+   * Draw background for drawing area
+   *
+   * @param {*} drawing_area
+   */
+  private drawBackground() {
+    // Clean if needed
+    this.d3_selection_bg?.selectAll('.bg').remove()
+    // Draw background
+    this.d3_selection_bg?.append('rect')
+      .attr('class', 'bg')
+      .attr('id', 'bg_drawing_area')
+      .attr('fill', this.color)
+      .attr('width', this.getWidth())
+      .attr('height', this.getHeight())
+      .style('stroke-width', 5)
+      .style('stroke', default_black_color)
+    this.changeCursor(true)
+  }
+
+  /**
+   * Test if mouse is over some node
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  private isMouseOverAnExistingNode(): boolean {
+    let node_id: string
+    for (node_id in this.sankey.nodes_dict) {
+      if (this.sankey.nodes_dict[node_id].isMouseOver())
+        return true
+    }
+    return false
+  }
+
+  /**
+   * Set up events related to element d3_element
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private setEventsListeners() {
+    if (
+      !this.static &&
+      (this.d3_selection !== null)
+    ) {
+      // Right mouse button clicks
+      this.d3_selection?.on(
+        'click',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleLMBCLick(event))
+      this.d3_selection?.on(
+        'dblclick',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventDoubleLMBCLick(event))
+      // Right mouse button maintained
+      this.d3_selection?.on(
+        'mousedown',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMaintainedClick(event))
+      this.d3_selection?.on(
+        'mouseup',
+        (event: MouseEvent) =>
+          this.eventReleasedClick(event))
+      // Mouse cursor goes over this
+      this.d3_selection?.on(
+        'mouseover',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOver(event))
+      this.d3_selection?.on(
+        'mouseout',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseOut(event))
+      // Mouse cursor move
+      this.d3_selection?.on(
+        'mousemove',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventMouseMove(event))
+      // Left mouse button click
+      this.d3_selection?.on(
+        'contextmenu',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventSimpleRMBCLick(event))
+      // Zoom behavior(but can also drag drawing area in scroll zone)
+      this.d3_selection_zoom_area?.call(
+        this.zoomListener)
+        .on('dblclick.zoom', null) // deactivate dbl click zoom
+      // Mouse cursor move
+      this.d3_selection_zoom_area?.on(
+        'wheel',
+        (event: WheelEvent) =>
+          this.eventMouseScroll(event))
+  }
+  }
+
+  /**
+   * Deal with simple left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+    }
+  }
+
+  /**
+   * Deal with double left Mouse Button (LMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventDoubleLMBCLick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter déclemenchement editeur nom de noeud
+  }
+
+  /**
+   * Deal with simple right Mouse Button (RMB) click on given element
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventSimpleRMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+      // SELECTION MODE ===========================================================
+      if (this.isInSelectionMode()) {
+        this.pointer_pos = [event.pageX, event.pageY]
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        this.is_drawing_area_contextualised = true
+        this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+      }
+    }
+  }
+
+  /**
+   * Define maintained left mouse button click for drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMaintainedClick(
+    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    event.preventDefault()
+    if (this.eventsEnabled()) {
+      // Clear tooltips presents
+      d3.selectAll('.sankey-tooltip').remove()
+      // EDITION MODE =============================================================
+      // event.button==0 check if we use LMB
+      if (this.isInEditionMode() && event.button == 0) {
+        // Get mouse position
+        const mouse_position = d3.pointer(event)
+        // Create default source node
+        const source = this.sankey.addNewDefaultNode()
+        // Position center of source node to pointer pos
+        source.setPosXY(
+          mouse_position[0] - (source.getShapeWidthToUse() / 2),
+          mouse_position[1] - (source.getShapeHeightToUse() / 2))
+        // Create default target node
+        const target = this.sankey.addNewDefaultNode()
+        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
+        // Make target a 'ghost' node
+        target.setInvisible()
+        // Ref newly created link this var to be used in other mouse event
+        this._ghost_link = new Class_GhostLinkElement(
+          'ghost_link',
+          source,
+          target,
+          this, this.application_data.menu_configuration)
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      }
+      // SELECTION MODE ===========================================================
+      else if (this.isInSelectionMode()) {
+        if (event.button === 0) {
+          // Close context menus
+          this.node_contextualised = undefined
+          this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+
+          this.link_contextualised = undefined
+          this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
+
+          this.is_drawing_area_contextualised = false
+          this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+
+          // Display the selection zone & set it starting position
+          const mouse_position = d3.pointer(event)
+          this._selection_zone.setVisible()
+          this._selection_zone.starting_x_point = mouse_position[0]
+          this._selection_zone.starting_y_point = mouse_position[1]
+          this._selection_zone.draw()
+        }
+      }
+    }
+  }
+
+  /**
+   * Define released left mouse button click for drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventReleasedClick(
+    event: MouseEvent
+  ) {
+    // EDITION MODE =============================================================
+    if (this.isInEditionMode()) {
+      // When we are creating a link with LMB
+      if (this._ghost_link !== null) {
+        // Mouse released on source node
+        if (this._ghost_link.source.isMouseOver()) {
+          // If we release the mouse on the source of the link
+          // then delete the link & target to keep only the source
+          // So we only created 1 node
+          this.deleteNode(this._ghost_link.target)
+        }
+        else if (this.isMouseOverAnExistingNode() === true) {
+          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
+          for (node_id in this.sankey.nodes_dict) {
+            if (this.sankey.nodes_dict[node_id].isMouseOver())
+              break //stop the loop when we fint the node hovered
+          }
+          // Create new link
+          this.sankey.addNewLink(
+            this._ghost_link.source,
+            this.sankey.nodes_dict[node_id]
+          )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
+          // Delete old target node
+          this.deleteNode(this._ghost_link?.target)
+        }
+        else {
+          // Make ghost target visible
+          this._ghost_link.target.setVisible()
+
+          // Create new link
+          this.sankey.addNewLink(
+            this._ghost_link.source,
+            this._ghost_link.target
+          )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
+        }
+        // In case we get there still deref ghost link
+        this._ghost_link.delete()
+        this._ghost_link = null
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      }
+    } else if (this.isInSelectionMode() && event.button == 0) {
+      if (!event.shiftKey) {
+        this.purgeSelection()
+      }
+      // Select element inside the selection zone & reset it (hide the zone)
+      this._selection_zone.selectElementsInside()
+      this._selection_zone.reset()
+    }
+  }
+
+  /**
+   * Define event when mouse moves over drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseOver(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Definir
+  }
+
+  /**
+   * Define event when mouse moves out of drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseOut(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO definir
+  }
+
+  /**
+   * Define event when mouse moves in drawing area
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseMove(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // EDITION MODE =============================================================
+    if (this.isInEditionMode()) {
+      // When we are creating a link with LMB
+      if (this._ghost_link !== null) {
+        // Move ghost target
+        const mouse_position = d3.pointer(event)
+        const target = (this._ghost_link as Class_LinkElement).target
+        target.setPosXY(
+          mouse_position[0] - (target.getShapeWidthToUse() / 2),
+          mouse_position[1] - (target.getShapeHeightToUse() / 2))
+      }
+    } else if (this.isInSelectionMode()) {
+      if (this._selection_zone.is_visible) {
+        // change the size of the selection zone
+
+        const mouse_position = d3.pointer(event)
+
+        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
+        let new_x = this.selection_zone.starting_x_point,
+          new_y = this.selection_zone.starting_y_point
+
+        if (mouse_position[0] > this._selection_zone.position_x) {
+          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
+        } else {
+          this.selection_zone.width = Math.abs(mouse_position[0] - this._selection_zone.starting_x_point)
+          new_x = mouse_position[0]
+        }
+
+        if (mouse_position[1] > this._selection_zone.starting_y_point) {
+          this.selection_zone.height = mouse_position[1] - this._selection_zone.starting_y_point
+        } else {
+          this.selection_zone.height = Math.abs(this._selection_zone.starting_y_point - mouse_position[1])
+          new_y = mouse_position[1]
+        }
+
+        // Update shape on drawing area
+        this.selection_zone.setPosXY(new_x, new_y)
+        this._selection_zone.setSize()
+      }
+    }
+  }
+
+  /**
+   * Define event when mouse scrolls in drawing area
+   * Note : Under the hood, this calls eventZoom method throught this.zoomListener
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_DrawingArea
+   */
+  private eventMouseScroll(
+    event: WheelEvent
+  ) {
+    if (
+      this.d3_selection_zoom_area &&
+      (Math.abs(event.deltaY) > 0)
+    ) {
+      // Zoom in / out
+      if (event.ctrlKey) {
+        // Avoid CTRL + Scroll default behavior in Browser
+        event.preventDefault()
+        // Get Scrolling factor ; either 1.1 or 0.9
+        let scale = 1 + (event.deltaY/Math.abs(event.deltaY))/10
+        // Apply scaling
+        this.zoomListener.scaleBy(
+          this.d3_selection_zoom_area,
+          scale,
+          [event.x, event.y]
+        )
+      }
+      // Horizontal displacement
+      else if (event.shiftKey) {
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, event.deltaY, 0)
+      }
+      // Vertical displacement
+      else  {
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, event.deltaY)
+      }
+    }
+  }
+
+  /**
+   * Define behavior when we scroll in drawing area (or scroll zone around)
+   * && when we drag mouse middle button in drawing area (or scroll zone around)
+   *
+   * @private
+   * @param {*} e
+   * @memberof Class_DrawingArea
+   */
+  private eventZoom(
+    event: d3.D3ZoomEvent<SVGSVGElement, unknown>
+  ) {
+    if (this.d3_selection) {
+      // Apply translation
+      this.d3_selection
+        .attr('transform', event.transform.toString())
+    }
+  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -1517,420 +1975,5 @@ export class Class_DrawingArea {
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
 
-  // PUBLIC METHODS =====================================================================
-
-  // PRIVATE METHODS ==================================================================
-
-  /**
-   * Delete html element SVG containing drawing area
-   * @private
-   * @memberof Class_DrawingArea
-   */
-  private unDraw() {
-    if (this.d3_selection_zoom_area) {
-      this.d3_selection_zoom_area.remove()
-      this.d3_selection_zoom_area = null
-    }
-  }
-
-  /**
-   * Draw background for drawing area
-   *
-   * @param {*} drawing_area
-   */
-  private drawBackground() {
-    // Clean if needed
-    this.d3_selection_bg?.selectAll('.bg').remove()
-    // Draw background
-    this.d3_selection_bg?.append('rect')
-      .attr('class', 'bg')
-      .attr('id', 'bg_drawing_area')
-      .attr('fill', this.color)
-      .attr('width', this.getWidth())
-      .attr('height', this.getHeight())
-      .style('stroke-width', 5)
-      .style('stroke', default_black_color)
-    this.changeCursor(true)
-  }
-
-  /**
-   * Draw grid for drawing area
-   * @public
-   * @memberof Class_DrawingArea
-   */
-  public drawGrid() {
-    // Clean if needed
-    this.d3_selection_grid?.selectAll('.line').remove()
-    // Draw only if asked OR outside publishing mode
-    if (this.grid_visible && !this.static) {
-      // Draw horizontal lines
-      const number_of_horizontal_lines = this.getHeight() / this.grid_size
-      for (let row = 0; row < number_of_horizontal_lines; row++) {
-        this.d3_selection_grid?.append('line')
-          .attr('class', 'line line-horiz')
-          .attr('id', 'line_horiz_drawing_area_' + String(row))
-          .attr('x1', '0')
-          .attr('x2', this.getWidth())
-          .attr('y1', row * this.grid_size)
-          .attr('y2', row * this.grid_size)
-          .style('stroke', this.grid_color)
-          .style('stroke-dasharray', 4)
-      }
-      // Draw vertical lines
-      const number_of_vertical_lines = this.getWidth() / this.grid_size
-      for (let column = 0; column < number_of_vertical_lines; column++) {
-        this.d3_selection_grid?.append('line')
-          .attr('class', 'line line-vert')
-          .attr('id', 'line_horiz_drawing_area_' + String(column))
-          .attr('x1', column * this.grid_size)
-          .attr('x2', column * this.grid_size)
-          .attr('y1', 0)
-          .attr('y2', this.getHeight())
-          .style('stroke-dasharray', 4)
-          .style('stroke', this.grid_color)
-      }
-
-      this.d3_selection_grid?.raise()
-    }
-  }
-
-  /**
-   * Test if mouse is over some node
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  private isMouseOverAnExistingNode(): boolean {
-    let node_id: string
-    for (node_id in this.sankey.nodes_dict) {
-      if (this.sankey.nodes_dict[node_id].isMouseOver())
-        return true
-    }
-    return false
-  }
-
-  /**
-   * Set up events related to element d3_element
-   * @private
-   * @memberof Class_DrawingArea
-   */
-  private setEventsListeners() {
-    if (
-      !this.static &&
-      (this.d3_selection !== null)
-    ) {
-      // Right mouse button clicks
-      this.d3_selection?.on(
-        'click',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBCLick(event))
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBCLick(event))
-      // Right mouse button maintained
-      this.d3_selection?.on(
-        'mousedown',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMaintainedClick(event))
-      this.d3_selection?.on(
-        'mouseup',
-        (event: MouseEvent) =>
-          this.eventReleasedClick(event))
-      // Mouse cursor goes over this
-      this.d3_selection?.on(
-        'mouseover',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOver(event))
-      this.d3_selection?.on(
-        'mouseout',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOut(event))
-      // Mouse cursor move
-      this.d3_selection?.on(
-        'mousemove',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseMove(event))
-      // Left mouse button click
-      this.d3_selection?.on(
-        'contextmenu',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event))
-      // Zoom behavior(but can also drag drawing area in scroll zone)
-      this.d3_selection_zoom_area?.call(
-        this.zoomListener
-      )
-        .on('dblclick.zoom', null) // deactivate dbl click zoom
-    }
-  }
-
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-    }
-  }
-
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventDoubleLMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Ajouter déclemenchement editeur nom de noeud
-  }
-
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleRMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-      // SELECTION MODE ===========================================================
-      if (this.isInSelectionMode()) {
-        this.pointer_pos = [event.pageX, event.pageY]
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        this.is_drawing_area_contextualised = true
-        this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-      }
-    }
-  }
-
-  /**
-   * Define maintained left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMaintainedClick(
-    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-      // EDITION MODE =============================================================
-      // event.button==0 check if we use LMB
-      if (this.isInEditionMode() && event.button == 0) {
-        // Get mouse position
-        const mouse_position = d3.pointer(event)
-        // Create default source node
-        const source = this.sankey.addNewDefaultNode()
-        // Position center of source node to pointer pos
-        source.setPosXY(
-          mouse_position[0] - (source.getShapeWidthToUse() / 2),
-          mouse_position[1] - (source.getShapeHeightToUse() / 2))
-        // Create default target node
-        const target = this.sankey.addNewDefaultNode()
-        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
-        // Make target a 'ghost' node
-        target.setInvisible()
-        // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new Class_GhostLinkElement(
-          'ghost_link',
-          source,
-          target,
-          this, this.application_data.menu_configuration)
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      }
-      // SELECTION MODE ===========================================================
-      else if (this.isInSelectionMode()) {
-        if (event.button === 0) {
-          // Close context menus
-          this.node_contextualised = undefined
-          this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-
-          this.link_contextualised = undefined
-          this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
-
-          this.is_drawing_area_contextualised = false
-          this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-
-          // Display the selection zone & set it starting position
-          const mouse_position = d3.pointer(event)
-          this._selection_zone.setVisible()
-          this._selection_zone.starting_x_point = mouse_position[0]
-          this._selection_zone.starting_y_point = mouse_position[1]
-          this._selection_zone.draw()
-        }
-
-      }
-    }
-  }
-
-  /**
-   * Define released left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventReleasedClick(
-    event: MouseEvent
-  ) {
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        // Mouse released on source node
-        if (this._ghost_link.source.isMouseOver()) {
-          // If we release the mouse on the source of the link
-          // then delete the link & target to keep only the source
-          // So we only created 1 node
-          this.deleteNode(this._ghost_link.target)
-        }
-        else if (this.isMouseOverAnExistingNode() === true) {
-          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-          for (node_id in this.sankey.nodes_dict) {
-            if (this.sankey.nodes_dict[node_id].isMouseOver())
-              break //stop the loop when we fint the node hovered
-          }
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source,
-            this.sankey.nodes_dict[node_id]
-          )
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          // Delete old target node
-          this.deleteNode(this._ghost_link?.target)
-        }
-        else {
-          // Make ghost target visible
-          this._ghost_link.target.setVisible()
-
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source,
-            this._ghost_link.target
-          )
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-        }
-        // In case we get there still deref ghost link
-        this._ghost_link.delete()
-        this._ghost_link = null
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
-    } else if (this.isInSelectionMode() && event.button == 0) {
-      if (!event.shiftKey) {
-        this.purgeSelection()
-      }
-      // Select element inside the selection zone & reset it (hide the zone)
-      this._selection_zone.selectElementsInside()
-      this._selection_zone.reset()
-    }
-  }
-
-  /**
-   * Define event when mouse moves over drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOver(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Definir
-  }
-
-  /**
-   * Define event when mouse moves out of drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOut(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO definir
-  }
-
-  /**
-   * Define event when mouse moves in drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseMove(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        // Move ghost target
-        const mouse_position = d3.pointer(event)
-        const target = (this._ghost_link as Class_LinkElement).target
-        target.setPosXY(
-          mouse_position[0] - (target.getShapeWidthToUse() / 2),
-          mouse_position[1] - (target.getShapeHeightToUse() / 2))
-      }
-    } else if (this.isInSelectionMode()) {
-      if (this._selection_zone.is_visible) {
-        // change the size of the selection zone
-
-        const mouse_position = d3.pointer(event)
-
-        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
-        let new_x = this.selection_zone.starting_x_point,
-          new_y = this.selection_zone.starting_y_point
-
-        if (mouse_position[0] > this._selection_zone.position_x) {
-          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
-        } else {
-          this.selection_zone.width = Math.abs(mouse_position[0] - this._selection_zone.starting_x_point)
-          new_x = mouse_position[0]
-        }
-
-        if (mouse_position[1] > this._selection_zone.starting_y_point) {
-          this.selection_zone.height = mouse_position[1] - this._selection_zone.starting_y_point
-        } else {
-          this.selection_zone.height = Math.abs(this._selection_zone.starting_y_point - mouse_position[1])
-          new_y = mouse_position[1]
-        }
-
-        // Update shape on drawing area
-        this.selection_zone.setPosXY(new_x, new_y)
-        this._selection_zone.setSize()
-      }
-    }
-  }
-
-  /**
-   * Define behavior when we scroll in drawing area (or scroll zone around)
-   * && when we drag mouse middle button in drawing area (or scroll zone around)
-   *
-   * @private
-   * @param {*} e
-   * @memberof Class_DrawingArea
-   */
-  private eventZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
-    d3.select('#g_drawing')
-      .transition()
-      .attr('transform', event.transform.toString())
-  }
 
 }
