@@ -903,8 +903,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.labels.anchor_dx')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -925,8 +925,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.labels.anchor_dy')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -1133,8 +1133,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.node_value.anchor_dx')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -1157,8 +1157,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.node_value.anchor_dy')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
