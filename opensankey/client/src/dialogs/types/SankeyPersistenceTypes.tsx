@@ -3,38 +3,37 @@ import { SankeyData, applicationDataType } from '../../types/LegacyType'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
 
-import { ConvertDataFuncType,DefaultSankeyDataFuncType } from '../../types/LegacyType'
-
 /**
  * Description placeholder
  *
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export type CounterType={
-  url_prefix:string,
-  finishReconciliation:(x:boolean)=>void,
-  value:number[],
-  result:string,
-  set_result:(_:string)=>void
+export type CounterType = {
+  url_prefix: string,
+  finishReconciliation: (x: boolean) => void,
+  value: number[],
+  result: string,
+  set_result: (_: string) => void
 }
+
 export type ProcessExampleFuncType = (
   applicationData: Class_ApplicationData,
   postProcessLoadExcel: (server_data: SankeyData) => void,
 ) => void
 
 export type RetrieveExcelResultsFuncType = (
-  applicationData : applicationDataType,
+  applicationData: applicationDataType,
   text: string,
 ) => void
 
 export type SaveDiagramOptionsType = {
-  mode_save : boolean,
+  mode_save: boolean,
   mode_visible_element: boolean
 }
 
 export type ClickSaveDiagramFuncType = (
-  ApplicationClass:Class_ApplicationData,
+  ApplicationClass: Class_ApplicationData,
   options: SaveDiagramOptionsType
 ) => void
 

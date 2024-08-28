@@ -1,9 +1,6 @@
 import React, {
-  Dispatch,
   FunctionComponent,
-  SetStateAction,
   useEffect,
-  useRef,
   useState
 } from 'react'
 import i18next from 'i18next'
@@ -12,10 +9,8 @@ import { ChakraProvider, useToast } from '@chakra-ui/react'
 /*************************************************************************************************/
 import {
   AdditionalMenusType,
-  agregationType,
   SankeyAppTypes,
   SankeyData,
-  SankeyNode
 } from './types/LegacyType'
 
 import { ToolbarBuilder } from './configmenus/SankeyMenuBanner'
@@ -47,7 +42,7 @@ declare const window: Window &
   }
 
 /*************************************************************************************************/
-export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
+export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
   initial_sankey_data,
   get_default_data,
   initializeApplicationData,
@@ -60,7 +55,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
-  const toast=useToast()
+  const toast = useToast()
 
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
@@ -82,31 +77,26 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
   const { new_data } = applicationData
 
-
-  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current=(intake)=>{
-    launchToastConstructor(applicationData,toast,intake)
+  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current = (intake) => {
+    launchToastConstructor(applicationData, toast, intake)
   }
-
-
-
 
   const processFunctions = initializeProcessFunctions(applicationData)
 
   /*************************************************************************************************/
 
-
   // If leveltags are present Primaire is desactivated
   if ('Primaire' in applicationData.data.levelTags && applicationData.data.levelTags['Primaire'].activated === true) {
-    Object.values(applicationData.data.levelTags).forEach(tag_group=> {
+    Object.values(applicationData.data.levelTags).forEach(tag_group => {
       if (tag_group.siblings && tag_group.siblings.length > 0) {
         return
       }
       tag_group.activated = true
     })
-    Object.values(applicationData.data.levelTags).forEach(tag_group=> {
-      if (tag_group.siblings && tag_group.siblings.length > 0 && tag_group.activated ) {
-        tag_group.siblings.forEach(sibling=>{
-          applicationData.data.levelTags[sibling].activated=false
+    Object.values(applicationData.data.levelTags).forEach(tag_group => {
+      if (tag_group.siblings && tag_group.siblings.length > 0 && tag_group.activated) {
+        tag_group.siblings.forEach(sibling => {
+          applicationData.data.levelTags[sibling].activated = false
         })
       }
     })
@@ -117,22 +107,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*************************************************************************************************/
 
-  const agregation : agregationType = {
-    showAgregationRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([]),
-    isAgregationRef : useRef<boolean>(true),
-    agregationNode : useRef<SankeyNode>()
-  }
-
-  /*************************************************************************************************/
-
-  /*************************************************************************************************/
   const mode_pref = sessionStorage.getItem('modepref')
   const menu_config = new_data.menu_configuration
   if (
     (mode_pref) &&
     (mode_pref === 'expert') &&
     menu_config.accordions_to_show.length !== 6
-  ){
+  ) {
     menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
   }
 
@@ -141,26 +122,26 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const reinitialization = initializeReinitialization(applicationData)
 
-  const additionalMenus : AdditionalMenusType = {
+  const additionalMenus: AdditionalMenusType = {
 
     // Top Menu
     external_edition_item: [],
     external_file_item: [],
     external_file_export_item: [],
     externale_save_item: [],
-    externale_navbar_item:{},
+    externale_navbar_item: {},
 
     // Mise en page
     extra_background_element: <></>,
-    apply_transformation_additional_elements:[<></>],
+    apply_transformation_additional_elements: [<></>],
 
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
     advanced_label_value_content: [],
-    additional_menu_configuration_nodes:{},
-    additional_context_element_menu:[],
-    additional_context_element_other:[],
+    additional_menu_configuration_nodes: {},
+    additional_context_element_menu: [],
+    additional_context_element_other: [],
 
     // Links
     additional_data_element: [],
@@ -171,25 +152,25 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     additional_preferences: [],
 
     // Configuration Menu
-    additional_configuration_menus : [],
+    additional_configuration_menus: [],
 
     // menu_style_add_node_appearence_attr : [],
     // menu_style_add_node_label : [],
     // menu_style_add_node_label_value : [],
 
-    additional_edition_item : [],
-    additional_file_save_json_option : [],
-    additional_file_item : [],
-    additional_file_export_item : [],
+    additional_edition_item: [],
+    additional_file_save_json_option: [],
+    additional_file_item: [],
+    additional_file_export_item: [],
 
-    sankey_menus : {},
+    sankey_menus: {},
 
-    additional_nav_item:[],
+    additional_nav_item: [],
 
-    example_menu:{},
-    formations_menu:{},
+    example_menu: {},
+    formations_menu: {},
 
-    cards_template:<></>
+    cards_template: <></>
   }
 
   initializeAdditionalMenus(
@@ -235,20 +216,20 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     (window.sankey.toolbar === undefined) ||
     (window.sankey.toolbar === true)
   ) {
-    sankey_menus['toolbar']= <ToolbarBuilder
+    sankey_menus['toolbar'] = <ToolbarBuilder
       applicationData={applicationData}
       url_prefix={applicationData.new_data.url_prefix}
       additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
     />
   }
 
-  Object.assign(sankey_menus,additionalMenus.sankey_menus)
+  Object.assign(sankey_menus, additionalMenus.sankey_menus)
 
   const regular_ui = OpenSankeyDefaultModalePreferenceContent(
     applicationData,
     i18next,
   )
-  regular_ui['form'] = [...regular_ui['form'],...additionalMenus.additional_preferences]
+  regular_ui['form'] = [...regular_ui['form'], ...additionalMenus.additional_preferences]
 
   const menu_configuration = initializeMenuConfiguration(
     applicationData,
@@ -276,15 +257,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*************************************************************************************************/
   return <ChakraProvider theme={opensankey_theme}>
-    <div id='sankey_app' style={{ 'backgroundColor' : 'WhiteSmoke' }}>
-      <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
+    <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
+      <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
         {
           moduleDialogs(
             applicationData,
             additionalMenus,
             menu_configuration_nodes_attributes,
             processFunctions
-          ).map(e=>e)
+          ).map(e => e)
         }
         <>
           <Menu
@@ -309,12 +290,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                     advanced_label_content={additionalMenus.advanced_label_content}
                     advanced_label_value_content={additionalMenus.advanced_label_value_content}
                   />
-                }/>
+                } />
               </React.Fragment>,
               <React.Fragment key={'modale_preference'}>
                 <ModalPreference
                   applicationData={applicationData}
-                  ui={Object.values(regular_ui).map(d=>{
+                  ui={Object.values(regular_ui).map(d => {
                     return <>
                       {d}
                       <hr
@@ -341,7 +322,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             }
             apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
             DiagramSelector={initializeDiagrammSelector(applicationData)}
-            // postProcessLoadExcel={node_function.postProcessLoadExcel}
+          // postProcessLoadExcel={node_function.postProcessLoadExcel}
           />
         </>
         <ApplySaveJSONDialog
@@ -353,16 +334,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       </div>
 
       <ContextMenuNode
-        applicationData = {applicationData}
-        agregation = {agregation}
-        additional_context_element_menu = {additionalMenus.additional_context_element_menu}
-        additional_context_element_other = {additionalMenus.additional_context_element_other}
+        applicationData={applicationData}
+        additional_context_element_menu={additionalMenus.additional_context_element_menu}
+        additional_context_element_other={additionalMenus.additional_context_element_other}
       />
       <ContextMenuLink
-        applicationData = {applicationData}
+        applicationData={applicationData}
       />
       <ContextMenuZdd
-        applicationData = {applicationData}
+        applicationData={applicationData}
       />
 
     </div>

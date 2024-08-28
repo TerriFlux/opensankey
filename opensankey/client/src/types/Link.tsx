@@ -3834,16 +3834,16 @@ export class Class_LinkValueTree {
     // if (this.data_tag_group.id !== json_object['datatag_group'])
     //   console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
     // else {
-      Object.entries(json_object)
-        .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
-        .forEach(([id, sub_json_object]) => {
-          if (typeof sub_json_object === 'object')
-            this.children[id]?.fromJSON(
+    Object.entries(json_object)
+      .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
+      .forEach(([id, sub_json_object]) => {
+        if (typeof sub_json_object === 'object')
+          this.children[id]?.fromJSON(
               sub_json_object as Type_JSON,
               matching_taggs_id,
               matching_tags_id
-            )
-        })
+          )
+      })
     //}
   }
 

@@ -29,7 +29,6 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
   {
     applicationData,
-    agregation,
     additional_context_element_menu,
     additional_context_element_other
   }

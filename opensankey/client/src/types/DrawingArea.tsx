@@ -994,326 +994,326 @@ export class Class_DrawingArea {
     })
     linksMaxValue += 1 // Protection if all values are at 0
 
-  // // Get scale from max value
-  if (launched_from_process) {
-     this._scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue): linksMaxValue
-  }
-  // this.sankey.node_styles_dict['default'].position_type = 'parametric'
-  // if ('NodeSectorStyle' in this.sankey.node_styles_dict) {
-  //   this.sankey.node_styles_dict['NodeSectorStyle'].position_type = 'parametric'
-  // }
-  // if ('NodeProductStyle' in this.sankey.node_styles_dict) {
-  //   this.sankey.node_styles_dict['NodeProductStyle'].position_type = 'parametric'
-  // }
+    // // Get scale from max value
+    if (launched_from_process) {
+      this._scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue): linksMaxValue
+    }
+    // this.sankey.node_styles_dict['default'].position_type = 'parametric'
+    // if ('NodeSectorStyle' in this.sankey.node_styles_dict) {
+    //   this.sankey.node_styles_dict['NodeSectorStyle'].position_type = 'parametric'
+    // }
+    // if ('NodeProductStyle' in this.sankey.node_styles_dict) {
+    //   this.sankey.node_styles_dict['NodeProductStyle'].position_type = 'parametric'
+    // }
 
-  // // Reset input / ouput links id for each node
-  // compute_default_input_outputLinksId(data.nodes, this.sankey.links_dict)
+    // // Reset input / ouput links id for each node
+    // compute_default_input_outputLinksId(data.nodes, this.sankey.links_dict)
 
-  // // Get list of all visible nodes
-  // //  /!\ the nodes of this list will be the only nodes
-  // //      that are going to be positionned
-  // const visible_nodes_ids = Object.values(data.nodes)
-  //   .filter(n => NodeDisplayed(data, n) && (n.position !== 'relative'))
-  //   .map(n=>n.idNode)
+    // // Get list of all visible nodes
+    // //  /!\ the nodes of this list will be the only nodes
+    // //      that are going to be positionned
+    // const visible_nodes_ids = Object.values(data.nodes)
+    //   .filter(n => NodeDisplayed(data, n) && (n.position !== 'relative'))
+    //   .map(n=>n.idNode)
 
-  // // Compute positionning indexes
-  const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-  const possible_recycling_links_ids: string[] = []
-  this._sankey.visible_nodes_list
-    .forEach(node => {
-  //     const node = data.nodes[node_id]
-      if (!node.hasInputLinks() && node.hasOutputLinks() )
-      {
-        // get current node horizontal index (eg longest branch length)
-        const starting_index = 0
-        this.computeHorizontalIndex(
-          node,
-          starting_index,
-          [],
-          possible_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        )
-      }
-      else {
-        // Lone node case
-        if (!node.hasInputLinks() && !node.hasOutputLinks())
+    // // Compute positionning indexes
+    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
+    const possible_recycling_links_ids: string[] = []
+    this._sankey.visible_nodes_list
+      .forEach(node => {
+        //     const node = data.nodes[node_id]
+        if (!node.hasInputLinks() && node.hasOutputLinks() )
         {
-          horizontal_indexes_per_nodes_ids[node.id] = 0
-        }
-      }
-  })
-
-  // Double check recycling links
-  const checked_recycling_links_ids: string[] = []
-  Object.values(possible_recycling_links_ids)
-    .forEach(link_id =>
-      this.compute_recycling_horizontal_index(
-        this.sankey.links_dict[link_id],
-        checked_recycling_links_ids,
-        horizontal_indexes_per_nodes_ids
-      ))
-
-  // Use results from previous index computing
-  // TODO : maybe possible to speed up here overall computing with getting
-  //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
-  let max_horizontal_index = 0
-  const nodes_per_horizontal_indexes: {[index: number]: Class_NodeElement[]} = {}
-  this.sankey.visible_nodes_list.forEach(node => {
-    // Previously computed index for given node
-    const node_index = horizontal_indexes_per_nodes_ids[node.id]
-    // Update reversed dict index-> nodes
-    if (!nodes_per_horizontal_indexes[node_index]) {
-      nodes_per_horizontal_indexes[node_index] = []
-    }
-    nodes_per_horizontal_indexes[node_index].push(this.sankey.nodes_dict[node.id])
-    // Update max horizontal index
-    if (node_index > max_horizontal_index) {
-      max_horizontal_index = node_index
-    }
-    // Set recycling links
-    Object.values(this.sankey.nodes_dict[node.id].output_links_list)
-      .forEach(link => {
-        // Get id for source and target
-        const target_node_id = this.sankey.links_dict[link.id].target.id
-        // Compute only if indexes for source >= index for target
-        // which can not be the case if these nodes have been reprocessed
-        // by this same function
-        if (node_index >= horizontal_indexes_per_nodes_ids[target_node_id]) {
-          this.sankey.links_dict[link.id].shape_is_recycling = true
+        // get current node horizontal index (eg longest branch length)
+          const starting_index = 0
+          this.computeHorizontalIndex(
+            node,
+            starting_index,
+            [],
+            possible_recycling_links_ids,
+            horizontal_indexes_per_nodes_ids
+          )
         }
         else {
-          this.sankey.links_dict[link.id].shape_is_recycling = false
-        }
-      })
-  })
-  // for the node which have no input links they should stick to the next output node and
-  // have an horizontal index equal to output node horizontal index minus one
-  for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
-    // Pass if no nodes for this horizontal_index
-    // TODO : if it is the case -> something was wrong before
-    if (!nodes_per_horizontal_indexes[horizontal_index]) {
-      continue
-    }
-    const to_splice : Class_NodeElement[] = []
-    nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
-      if (!node.hasInputLinks()) {
-        let min_next_horizontal_index = max_horizontal_index+1
-        node.output_links_list.forEach(
-          (link) => {
-            if ( this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
-                this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id].is_visible
-            ) {
-              const target_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
-              if (target_node === undefined ) {
-                return
-              }
-              if (horizontal_indexes_per_nodes_ids[target_node.id] < horizontal_indexes_per_nodes_ids[node.id]) {
-                return
-              }
-              if (horizontal_indexes_per_nodes_ids[target_node.id]<min_next_horizontal_index) {
-                min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.id]
-              }
-            }
-          })
-        if (horizontal_indexes_per_nodes_ids[node.id]<min_next_horizontal_index-1) {
-          to_splice.push(node)
-          // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
-          // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
-          horizontal_indexes_per_nodes_ids[node.id] = min_next_horizontal_index - 1
-          if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
-            nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
-          }
-          nodes_per_horizontal_indexes[min_next_horizontal_index - 1].push(node)
-        }
-      }
-    })
-    to_splice.forEach(node=>nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node),1))
-  }
-
-  // Loop on all index "columns"
-  let h_left_margin = this._horizontal_spacing
-  let h_right_margin = this._horizontal_spacing
-  const height_cumul_per_indexes: number[] = []
-  const height_per_nodes_ids: {[node_id: string]: number} = {}
-  const node_id_per_hxv_indexes: string[][] = []
-  let max_height_cumul = 0
-  for (let h_index=0; h_index<=max_horizontal_index; h_index++) {
-    // Pass if no nodes for this index
-    if (!nodes_per_horizontal_indexes[h_index]) {
-      continue
-    }
-
-    // Loop on nodes from computed horizontal index
-    let height_cumul_for_index = 0
-    let max_vertical_index = 0
-    const sortcoef_per_nodes_ids: {[node_id: string]: number} = {}
-    const vertical_indexes_per_node_id: {[node_id: string]: number} = {}
-    const nodes_ids_per_vertical_index: string[] = []
-    nodes_per_horizontal_indexes[h_index]
-      .forEach(node => {
-        // Node height
-        const node_height = node.getShapeHeightToUse()
-        // Coef to verticaly sort nodes - highest coef is upper
-        // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
-        const node_sortcoef = node_height * (0.8 + 0.2/(node.output_links_list.length + node.input_links_list.length))
-
-        // Verticaly sort nodes accordingly to their height
-        height_per_nodes_ids[node.id] = node_height
-        sortcoef_per_nodes_ids[node.id] = node_sortcoef
-        vertical_indexes_per_node_id[node.id] = max_vertical_index
-        nodes_ids_per_vertical_index.push(node.id)
-        if (max_vertical_index > 0) {
-          // Bubble sort algo
-          for (let v_index=max_vertical_index; v_index>0; v_index--) {
-            // Prev node infos
-            const prev_v_index = v_index-1
-            const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
-            const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
-            if (prev_node_sortcoef < node_sortcoef) {
-              // Update referencing for bubble node
-              vertical_indexes_per_node_id[node.id] = prev_v_index
-              nodes_ids_per_vertical_index[prev_v_index] = node.id
-              // Update referencing for prev node
-              vertical_indexes_per_node_id[prev_node_id] = v_index
-              nodes_ids_per_vertical_index[v_index] = prev_node_id
-            }
-            else {
-              break
-            }
-          }
-        }
-        max_vertical_index += 1
-
-        // Compute cumulative height for given index
-        height_cumul_for_index += node_height
-
-        // Compute left horizontal margin
-        if (h_index == 0) {
-          const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
-          const needed_margin = this.grid_size + node_label_width
-          if (needed_margin > h_left_margin) {
-            h_left_margin = needed_margin
-          }
-        }
-
-        // Compute right horizontal margin
-        // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
-        if (h_index == max_horizontal_index) {
-          const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
-          const needed_margin = this.grid_size + node_label_width
-          if (needed_margin > h_right_margin) {
-            h_right_margin = needed_margin
-          }
-        }
-
-        // If we launched the function from process example
-        // then we assume we need to place node label according to some parameters
-        if(launched_from_process){
-        // Place labels accordingly
-        // If node is lone, source, sink or in the middle
+        // Lone node case
           if (!node.hasInputLinks() && !node.hasOutputLinks())
           {
-          // Node is lone node
-            node.name_label_horiz = 'middle'
-            node.name_label_vert = 'middle'
-            node.name_label_background =  true
-          }
-          else if (node.input_links_list.length === 0) {
-          // Node is a source : no input link
-            node.name_label_horiz = 'left'
-            node.name_label_vert = 'middle'
-          }
-          else if (node.output_links_list.length === 0) {
-          // Node is a sink : no output link
-            node.name_label_horiz = 'right'
-            node.name_label_vert = 'middle'
-          }
-          else {
-          // Node is in the middle of the sankey
-            node.name_label_horiz = 'left'
-            node.name_label_vert = 'middle'
-            node.name_label_background = true
+            horizontal_indexes_per_nodes_ids[node.id] = 0
           }
         }
-
       })
 
-    // Get horizontal index that need the most of vertical space
-    // with vertical spacing between nodes in account
-    height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1)*(this.vertical_spacing)
-    if (height_cumul_for_index > max_height_cumul) {
-      max_height_cumul = height_cumul_for_index
-    }
-    height_cumul_per_indexes.push(height_cumul_for_index)
+    // Double check recycling links
+    const checked_recycling_links_ids: string[] = []
+    Object.values(possible_recycling_links_ids)
+      .forEach(link_id =>
+        this.compute_recycling_horizontal_index(
+          this.sankey.links_dict[link_id],
+          checked_recycling_links_ids,
+          horizontal_indexes_per_nodes_ids
+        ))
 
-    // Update global indexing table
-    node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
-  }
-  max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
-
-
-  // Update horizontal and vertical position of nodes
-  // compute total height of nodes that belong to the same column,
-  // then compute the spaces between them and their positions.
-  const v_margin = this.vertical_spacing
-  for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
+    // Use results from previous index computing
+    // TODO : maybe possible to speed up here overall computing with getting
+    //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
+    let max_horizontal_index = 0
+    const nodes_per_horizontal_indexes: {[index: number]: Class_NodeElement[]} = {}
+    this.sankey.visible_nodes_list.forEach(node => {
+    // Previously computed index for given node
+      const node_index = horizontal_indexes_per_nodes_ids[node.id]
+      // Update reversed dict index-> nodes
+      if (!nodes_per_horizontal_indexes[node_index]) {
+        nodes_per_horizontal_indexes[node_index] = []
+      }
+      nodes_per_horizontal_indexes[node_index].push(this.sankey.nodes_dict[node.id])
+      // Update max horizontal index
+      if (node_index > max_horizontal_index) {
+        max_horizontal_index = node_index
+      }
+      // Set recycling links
+      Object.values(this.sankey.nodes_dict[node.id].output_links_list)
+        .forEach(link => {
+        // Get id for source and target
+          const target_node_id = this.sankey.links_dict[link.id].target.id
+          // Compute only if indexes for source >= index for target
+          // which can not be the case if these nodes have been reprocessed
+          // by this same function
+          if (node_index >= horizontal_indexes_per_nodes_ids[target_node_id]) {
+            this.sankey.links_dict[link.id].shape_is_recycling = true
+          }
+          else {
+            this.sankey.links_dict[link.id].shape_is_recycling = false
+          }
+        })
+    })
+    // for the node which have no input links they should stick to the next output node and
+    // have an horizontal index equal to output node horizontal index minus one
+    for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
     // Pass if no nodes for this horizontal_index
     // TODO : if it is the case -> something was wrong before
-    if (!node_id_per_hxv_indexes[horizontal_index]) {
-      continue
+      if (!nodes_per_horizontal_indexes[horizontal_index]) {
+        continue
+      }
+      const to_splice : Class_NodeElement[] = []
+      nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
+        if (!node.hasInputLinks()) {
+          let min_next_horizontal_index = max_horizontal_index+1
+          node.output_links_list.forEach(
+            (link) => {
+              if ( this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
+                this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id].is_visible
+              ) {
+                const target_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
+                if (target_node === undefined ) {
+                  return
+                }
+                if (horizontal_indexes_per_nodes_ids[target_node.id] < horizontal_indexes_per_nodes_ids[node.id]) {
+                  return
+                }
+                if (horizontal_indexes_per_nodes_ids[target_node.id]<min_next_horizontal_index) {
+                  min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.id]
+                }
+              }
+            })
+          if (horizontal_indexes_per_nodes_ids[node.id]<min_next_horizontal_index-1) {
+            to_splice.push(node)
+            // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
+            // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
+            horizontal_indexes_per_nodes_ids[node.id] = min_next_horizontal_index - 1
+            if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
+              nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
+            }
+            nodes_per_horizontal_indexes[min_next_horizontal_index - 1].push(node)
+          }
+        }
+      })
+      to_splice.forEach(node=>nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node),1))
     }
 
-    // Loop on horizontal_index node
-    const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-    const h_position_for_index = h_left_margin + horizontal_index*this.horizontal_spacing
-    const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index])/2
-    let upper_node_height_and_margin = v_margin_for_index
-    if (center_biggest_nodes === true) {
-      // From the bottom to the top : plot node every two index
-      let last_index = (node_id_per_hxv_indexes[horizontal_index].length-1)
-      for (let index=last_index; index>=0; index-=2) {
-        const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-        // Node position
-        this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-        this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-        // Update upper margin for next node
-        const node_height = height_per_nodes_ids[node_id]
-        upper_node_height_and_margin += node_height + v_margin
-        // Update last index
-        last_index = index
+    // Loop on all index "columns"
+    let h_left_margin = this._horizontal_spacing
+    let h_right_margin = this._horizontal_spacing
+    const height_cumul_per_indexes: number[] = []
+    const height_per_nodes_ids: {[node_id: string]: number} = {}
+    const node_id_per_hxv_indexes: string[][] = []
+    let max_height_cumul = 0
+    for (let h_index=0; h_index<=max_horizontal_index; h_index++) {
+    // Pass if no nodes for this index
+      if (!nodes_per_horizontal_indexes[h_index]) {
+        continue
       }
-      // From the top to the bottom : remaining index
-      if (last_index == 0)
-        last_index = 1
-      else
-        last_index = 0
-      for (let index=last_index; index<node_id_per_hxv_indexes[horizontal_index].length; index+=2) {
-        const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-        // Node position
-        this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-        this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-        // Update upper margin for next node
-        const node_height = height_per_nodes_ids[node_id]
-        upper_node_height_and_margin += node_height + v_margin
+
+      // Loop on nodes from computed horizontal index
+      let height_cumul_for_index = 0
+      let max_vertical_index = 0
+      const sortcoef_per_nodes_ids: {[node_id: string]: number} = {}
+      const vertical_indexes_per_node_id: {[node_id: string]: number} = {}
+      const nodes_ids_per_vertical_index: string[] = []
+      nodes_per_horizontal_indexes[h_index]
+        .forEach(node => {
+        // Node height
+          const node_height = node.getShapeHeightToUse()
+          // Coef to verticaly sort nodes - highest coef is upper
+          // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
+          const node_sortcoef = node_height * (0.8 + 0.2/(node.output_links_list.length + node.input_links_list.length))
+
+          // Verticaly sort nodes accordingly to their height
+          height_per_nodes_ids[node.id] = node_height
+          sortcoef_per_nodes_ids[node.id] = node_sortcoef
+          vertical_indexes_per_node_id[node.id] = max_vertical_index
+          nodes_ids_per_vertical_index.push(node.id)
+          if (max_vertical_index > 0) {
+          // Bubble sort algo
+            for (let v_index=max_vertical_index; v_index>0; v_index--) {
+            // Prev node infos
+              const prev_v_index = v_index-1
+              const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
+              const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
+              if (prev_node_sortcoef < node_sortcoef) {
+              // Update referencing for bubble node
+                vertical_indexes_per_node_id[node.id] = prev_v_index
+                nodes_ids_per_vertical_index[prev_v_index] = node.id
+                // Update referencing for prev node
+                vertical_indexes_per_node_id[prev_node_id] = v_index
+                nodes_ids_per_vertical_index[v_index] = prev_node_id
+              }
+              else {
+                break
+              }
+            }
+          }
+          max_vertical_index += 1
+
+          // Compute cumulative height for given index
+          height_cumul_for_index += node_height
+
+          // Compute left horizontal margin
+          if (h_index == 0) {
+            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const needed_margin = this.grid_size + node_label_width
+            if (needed_margin > h_left_margin) {
+              h_left_margin = needed_margin
+            }
+          }
+
+          // Compute right horizontal margin
+          // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
+          if (h_index == max_horizontal_index) {
+            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const needed_margin = this.grid_size + node_label_width
+            if (needed_margin > h_right_margin) {
+              h_right_margin = needed_margin
+            }
+          }
+
+          // If we launched the function from process example
+          // then we assume we need to place node label according to some parameters
+          if(launched_from_process){
+            // Place labels accordingly
+            // If node is lone, source, sink or in the middle
+            if (!node.hasInputLinks() && !node.hasOutputLinks())
+            {
+              // Node is lone node
+              node.name_label_horiz = 'middle'
+              node.name_label_vert = 'middle'
+              node.name_label_background =  true
+            }
+            else if (node.input_links_list.length === 0) {
+              // Node is a source : no input link
+              node.name_label_horiz = 'left'
+              node.name_label_vert = 'middle'
+            }
+            else if (node.output_links_list.length === 0) {
+              // Node is a sink : no output link
+              node.name_label_horiz = 'right'
+              node.name_label_vert = 'middle'
+            }
+            else {
+              // Node is in the middle of the sankey
+              node.name_label_horiz = 'left'
+              node.name_label_vert = 'middle'
+              node.name_label_background = true
+            }
+          }
+
+        })
+
+      // Get horizontal index that need the most of vertical space
+      // with vertical spacing between nodes in account
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1)*(this.vertical_spacing)
+      if (height_cumul_for_index > max_height_cumul) {
+        max_height_cumul = height_cumul_for_index
       }
+      height_cumul_per_indexes.push(height_cumul_for_index)
+
+      // Update global indexing table
+      node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
     }
-    else {
-      node_id_per_hxv_indexes[horizontal_index]
-        .forEach(node_id => {
+    max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
+
+
+    // Update horizontal and vertical position of nodes
+    // compute total height of nodes that belong to the same column,
+    // then compute the spaces between them and their positions.
+    const v_margin = this.vertical_spacing
+    for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
+    // Pass if no nodes for this horizontal_index
+    // TODO : if it is the case -> something was wrong before
+      if (!node_id_per_hxv_indexes[horizontal_index]) {
+        continue
+      }
+
+      // Loop on horizontal_index node
+      const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
+      const h_position_for_index = h_left_margin + horizontal_index*this.horizontal_spacing
+      const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index])/2
+      let upper_node_height_and_margin = v_margin_for_index
+      if (center_biggest_nodes === true) {
+      // From the bottom to the top : plot node every two index
+        let last_index = (node_id_per_hxv_indexes[horizontal_index].length-1)
+        for (let index=last_index; index>=0; index-=2) {
+          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
           // Node position
           this.sankey.nodes_dict[node_id].position_x = h_position_for_index
           this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
-        })
+          // Update last index
+          last_index = index
+        }
+        // From the top to the bottom : remaining index
+        if (last_index == 0)
+          last_index = 1
+        else
+          last_index = 0
+        for (let index=last_index; index<node_id_per_hxv_indexes[horizontal_index].length; index+=2) {
+          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
+          // Node position
+          this.sankey.nodes_dict[node_id].position_x = h_position_for_index
+          this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+          // Update upper margin for next node
+          const node_height = height_per_nodes_ids[node_id]
+          upper_node_height_and_margin += node_height + v_margin
+        }
+      }
+      else {
+        node_id_per_hxv_indexes[horizontal_index]
+          .forEach(node_id => {
+          // Node position
+            this.sankey.nodes_dict[node_id].position_x = h_position_for_index
+            this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+            // Update upper margin for next node
+            const node_height = height_per_nodes_ids[node_id]
+            upper_node_height_and_margin += node_height + v_margin
+          })
+      }
     }
-  }
 
-  this.setWidth(h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
-  this.setHeight(v_margin*2 + max_height_cumul)
+    this.setWidth(h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
+    this.setHeight(v_margin*2 + max_height_cumul)
 
-  this.sankey.nodes_list.forEach(n=>n.reorganizeIOLinks())
+    this.sankey.nodes_list.forEach(n=>n.reorganizeIOLinks())
   //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict)
   }
 
@@ -1506,7 +1506,7 @@ export class Class_DrawingArea {
         'wheel',
         (event: WheelEvent) =>
           this.eventMouseScroll(event))
-  }
+    }
   }
 
   /**
@@ -1778,7 +1778,7 @@ export class Class_DrawingArea {
         // Avoid CTRL + Scroll default behavior in Browser
         event.preventDefault()
         // Get Scrolling factor ; either 1.1 or 0.9
-        let scale = 1 + (event.deltaY/Math.abs(event.deltaY))/10
+        const scale = 1 + (event.deltaY/Math.abs(event.deltaY))/10
         // Apply scaling
         this.zoomListener.scaleBy(
           this.d3_selection_zoom_area,

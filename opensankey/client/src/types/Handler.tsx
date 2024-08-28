@@ -49,7 +49,7 @@ export class Class_Handler extends Class_Element {
 
   // CONSTRUCTOR ========================================================================
 
- /**
+  /**
   * Creates an instance of Class_Handler.
   * @param {string} id
   * @param {Class_DrawingArea} drawing_area
@@ -62,7 +62,7 @@ export class Class_Handler extends Class_Element {
   * @param {(Class_LinkElement | Class_NodeElement)} [ref_optional]
   * @memberof Class_Handler
   */
- constructor(
+  constructor(
     id: string,
     drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
