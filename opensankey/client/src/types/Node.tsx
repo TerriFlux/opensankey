@@ -2627,11 +2627,11 @@ export class Class_NodeElement extends Class_Element {
     this._display.position.type = _
   }
 
-   /**
+  /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-   public get position_dx() {
+  public get position_dx() {
     if (this._display.position.dx !== undefined) {
       return this._display.position.dx
     }
@@ -2648,11 +2648,11 @@ export class Class_NodeElement extends Class_Element {
     this._display.position.dx = _
   }
 
-   /**
+  /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-   public get position_dy() {
+  public get position_dy() {
     if (this._display.position.dy !== undefined) {
       return this._display.position.dy
     }
@@ -2669,19 +2669,19 @@ export class Class_NodeElement extends Class_Element {
     this._display.position.dy = _
   }
 
-/**
+  /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-public get position_relative_dx() {
-  if (this._display.position.relative_dx !== undefined) {
-    return this._display.position.relative_dx
+  public get position_relative_dx() {
+    if (this._display.position.relative_dx !== undefined) {
+      return this._display.position.relative_dx
+    }
+    else if (this._display.style.position.relative_dx !== undefined) {
+      return this._display.style.position.relative_dx
+    }
+    return default_relative_dx
   }
-  else if (this._display.style.position.relative_dx !== undefined) {
-    return this._display.style.position.relative_dx
-  }
-  return default_relative_dx
-}
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -2691,19 +2691,19 @@ public get position_relative_dx() {
     this.applyPosition()
   }
 
- /**
+  /**
  * TODO Description
  * @memberof Class_NodeElement
  */
- public get position_relative_dy() {
-  if (this._display.position.relative_dy !== undefined) {
-    return this._display.position.relative_dy
+  public get position_relative_dy() {
+    if (this._display.position.relative_dy !== undefined) {
+      return this._display.position.relative_dy
+    }
+    else if (this._display.style.position.relative_dy !== undefined) {
+      return this._display.style.position.relative_dy
+    }
+    return default_relative_dy
   }
-  else if (this._display.style.position.relative_dy !== undefined) {
-    return this._display.style.position.relative_dy
-  }
-  return default_relative_dy
-}
 
   /**
    * TODO Description
@@ -3135,27 +3135,27 @@ public get position_relative_dx() {
     this.drawNameLabel()
   }
 
- /**
+  /**
    * TODO Description
    * @memberof Class_NodeElement
    */
- public get name_label_horiz_shift() {
-  if (this._display.attributes.name_label_horiz_shift !== undefined) {
-    return this._display.attributes.name_label_horiz_shift
-  } else if (this._display.style.name_label_horiz_shift !== undefined) {
-    return this._display.style.name_label_horiz_shift
+  public get name_label_horiz_shift() {
+    if (this._display.attributes.name_label_horiz_shift !== undefined) {
+      return this._display.attributes.name_label_horiz_shift
+    } else if (this._display.style.name_label_horiz_shift !== undefined) {
+      return this._display.style.name_label_horiz_shift
+    }
+    return default_name_label_horiz_shift
   }
-  return default_name_label_horiz_shift
-}
 
-/**
+  /**
  * TODO Description
  * @memberof Class_NodeElement
  */
-public set name_label_horiz_shift(_: number) {
-  this._display.attributes.name_label_horiz_shift = _
-  this.drawNameLabel()
-}
+  public set name_label_horiz_shift(_: number) {
+    this._display.attributes.name_label_horiz_shift = _
+    this.drawNameLabel()
+  }
 
   /**
    * TODO Description
@@ -3223,27 +3223,27 @@ public set name_label_horiz_shift(_: number) {
     this.drawValueLabel()
   }
 
-    /**
+  /**
    * TODO Description
    * @memberof Class_NodeElement
    */
-    public get value_label_vert_shift() {
-      if (this._display.attributes.value_label_vert_shift !== undefined) {
-        return this._display.attributes.value_label_vert_shift
-      } else if (this._display.style.value_label_vert_shift !== undefined) {
-        return this._display.style.value_label_vert_shift
-      }
-      return default_value_label_vert_shift
+  public get value_label_vert_shift() {
+    if (this._display.attributes.value_label_vert_shift !== undefined) {
+      return this._display.attributes.value_label_vert_shift
+    } else if (this._display.style.value_label_vert_shift !== undefined) {
+      return this._display.style.value_label_vert_shift
     }
+    return default_value_label_vert_shift
+  }
 
-    /** Set value for value_label_vert
+  /** Set value for value_label_vert
      *
      TODO Description * @memberof Class_NodeElement
      */
-    public set value_label_vert_shift(_: number) {
-      this._display.attributes.value_label_vert_shift = _
-      this.drawValueLabel()
-    }
+  public set value_label_vert_shift(_: number) {
+    this._display.attributes.value_label_vert_shift = _
+    this.drawValueLabel()
+  }
 
   /**
    * TODO Description

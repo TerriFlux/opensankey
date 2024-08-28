@@ -357,18 +357,12 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
     ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
     // Trigger Waiting spinner
     ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: textForToastPromiseType) => void>,
-
 }
-
-
-
 
 export type initializeCloseAllMenuContextType = (
     tagContext: RefObject<[string | undefined, Dispatch<SetStateAction<string | undefined>>][]>,
     showContextZDDRef: MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>] | undefined>
 ) => () => void
-
-
 
 export type processFunctionsType = {
     ref_processing: MutableRefObject<boolean>,
@@ -502,8 +496,8 @@ export type AdditionalMenusType = {
 export type initializeAdditionalMenusType = (
     additional_menus: AdditionalMenusType,
     applicationData: applicationDataType,
-    processFunctions:processFunctionsType,
-    Reinitialization:()=>void
+    processFunctions: processFunctionsType,
+    Reinitialization: () => void
 ) => void
 
 export type module_dialogsType = (
@@ -514,9 +508,9 @@ export type module_dialogsType = (
 ) => JSX.Element[]
 
 export type initializeProcessFunctionsType =
-(
-    applicationData:applicationDataType,
-  )=> processFunctionsType
+    (
+        applicationData: applicationDataType,
+    ) => processFunctionsType
 /*****************************************************************************/
 
 export type SankeyAppTypes = {
@@ -772,7 +766,7 @@ export type convert_tagsFuncType = (data: SankeyData) => void
 export interface DataSuiteType {
     is_catalog?: boolean,
     view?: { id: string, view_data: object, nom: string, details: string }[],
-  }
+}
 
-export type getterConfigType=()=>Class_MenuConfig
-export type setterConfigType=(_:Class_MenuConfig)=>void
+export type getterConfigType = () => Class_MenuConfig
+export type setterConfigType = (_: Class_MenuConfig) => void

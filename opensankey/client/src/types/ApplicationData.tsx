@@ -20,12 +20,12 @@ export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 b
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
 
 function isDrawingAreaActive() {
-  const inputs = ['input', 'textarea'];
+  const inputs = ['input', 'textarea']
   if (
     document.activeElement &&
     inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
   ) {
-      return false;
+    return false
   }
   return true
 }
