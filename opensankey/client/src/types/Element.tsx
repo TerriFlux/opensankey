@@ -34,7 +34,7 @@ const const_default_position_y = 50
 
 // Nothing ...
 
-// CLASS ELEMENT ************************************************************************
+// CLASS PROTO ELEMENT ******************************************************************
 
 /**
  * Class that define a meta element to display on drawing area
@@ -133,7 +133,6 @@ export abstract class Class_ProtoElement {
    * @memberof Class_Element
    */
   private _is_currently_deleted = false
-
 
   /**
    * Config menu ref to html element & function to update it

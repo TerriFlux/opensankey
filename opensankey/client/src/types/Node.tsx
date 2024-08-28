@@ -55,8 +55,6 @@ import {
   Class_Handler
 } from './Handler'
 
-
-
 // SPECIFIC TYPES ***********************************************************************
 
 type Type_Shape = 'ellipse' | 'rect' | 'arrow'
@@ -64,6 +62,7 @@ type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
 
 // SPECIFIC CONSTANTS *******************************************************************
+
 export const default_position_type = 'absolute'
 export const default_dx = 100
 export const default_dy = 50
@@ -3607,6 +3606,7 @@ export class Class_NodeElement extends Class_Element {
 export class Class_NodeAttribute {
 
   // PROTECTED ATTRIBUTES ===============================================================
+
   // Parameters for geometry
   protected _dx?: number
   protected _dy?: number
@@ -3654,6 +3654,7 @@ export class Class_NodeAttribute {
   protected _value_label_background?: boolean
 
   // CONSTRUCTOR ========================================================================
+
   constructor() { }
 
   // PUBLIC METHODS =====================================================================
