@@ -1274,7 +1274,7 @@ export class Class_NodeElement extends Class_Element {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
-      drawing_area.application_data.menu_configuration.closeConfigMenu()
+      drawing_area.closeAllMenus()
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode() && event.button === 0) {

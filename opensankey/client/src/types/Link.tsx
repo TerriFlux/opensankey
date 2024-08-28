@@ -844,7 +844,7 @@ export class Class_LinkElement extends Class_ProtoElement {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
-      drawing_area.application_data.menu_configuration.closeConfigMenu()
+      drawing_area.closeAllMenus()
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode()) {

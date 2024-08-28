@@ -236,6 +236,7 @@ export class Class_ApplicationData {
 
         // Close all menus
         app_ref.menu_configuration.closeAllMenus()
+        app_ref.drawing_area.closeAllContextMenus()
       }
       // Event to delete all selected elements ------------------------------------------
       else if (
