@@ -288,7 +288,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
   /**
    * Value of link
    * @private
-   * @type {Class_Data}
+   * @type {Class_LinkValueTree | Class_LinkValue}
    * @memberof Class_LinkElement
    */
   private _values: Class_LinkValueTree | Class_LinkValue

@@ -4,12 +4,15 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
+// External imports
 import React, { FunctionComponent } from 'react'
-import { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { Tooltip } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+
+// Local imports
+import { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
 
 // CONSTANTS ****************************************************************************
 
