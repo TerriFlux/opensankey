@@ -9,7 +9,7 @@ import {
 
 // Local types
 import { Class_Tag } from '../types/Tag'
-import { Class_NodeElement } from '../types/Node'
+import { Type_NodeElement } from '../types/Node'
 import {
   SankeyMenuConfigurationNodesTagsFType
 } from './types/SankeyMenuConfigurationNodesTagsTypes'
@@ -42,7 +42,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<SankeyMenuConfi
 
   // Selected nodes ---------------------------------------------------------------------
 
-  let selected_nodes: Class_NodeElement[]
+  let selected_nodes: Type_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted

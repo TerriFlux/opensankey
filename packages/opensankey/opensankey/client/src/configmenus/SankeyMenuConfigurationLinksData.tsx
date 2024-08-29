@@ -16,7 +16,7 @@ import {
 import {
   OSTooltip
 } from '../types/Utils'
-import { Class_LinkElement, default_value_label_unit } from '../types/Link'
+import { Type_LinkElement, default_value_label_unit } from '../types/Link'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
@@ -34,7 +34,7 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
 
   // Selected links --------------------------------------------------------------------
 
-  let selected_links: Class_LinkElement[]
+  let selected_links: Type_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted
@@ -223,7 +223,7 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
 
   // Selected links --------------------------------------------------------------------
 
-  let selected_links: Class_LinkElement[]
+  let selected_links: Type_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

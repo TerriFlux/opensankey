@@ -18,7 +18,7 @@ import { Type_ElementPosition, default_element_position } from './Utils'
  * @class Class_ZoneSelection
  * @extends {Class_Element}
  */
-export class Class_ZoneSelection extends Class_Element {
+export class Class_ZoneSelection extends Class_Element<Class_DrawingArea> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
