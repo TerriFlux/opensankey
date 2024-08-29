@@ -90,7 +90,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
           {
             Object
               .keys(data.style_node)
-              .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' )
+              .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' && data.style_node[key].idNode !== 'NodeImportStyle' && data.style_node[key].idNode !== 'NodeExportStyle' )
               .map((d,i) => {
                 return (
                   <MenuItem

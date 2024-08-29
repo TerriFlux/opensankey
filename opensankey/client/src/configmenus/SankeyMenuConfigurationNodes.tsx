@@ -95,6 +95,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
       applicationData={applicationData}
       applicationState={applicationState}
       node_function={node_function}
+      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       menu_for_modal={false}
     />

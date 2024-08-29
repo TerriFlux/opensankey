@@ -23,6 +23,7 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
   applicationData,
   applicationState,
   node_function,
+  link_function,
   ComponentUpdater,
   menu_for_modal
 })=> {
@@ -102,8 +103,10 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                             }else if (tags[0]==='echange') {
                               if (d.inputLinksId.length === 0 ) {
                                 d.style='NodeImportStyle'
+                                d.outputLinksId.forEach(lid=>data.links[lid].style='LinkImportStyle')
                               } else {
                                 d.style='NodeExportStyle'
+                                d.inputLinksId.forEach(lid=>data.links[lid].style='LinkExportStyle')
                               }
                             }
                           }
@@ -127,8 +130,10 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                             } else if (tags[0]==='echange') {
                               if (d.inputLinksId.length === 0 ) {
                                 d.style='NodeImportStyle'
+                                d.outputLinksId.forEach(lid=>data.links[lid].style='LinkImportStyle')
                               } else {
                                 d.style='NodeExportStyle'
+                                d.inputLinksId.forEach(lid=>data.links[lid].style='LinkExportStyle')
                               }
                             }
                           }
@@ -136,6 +141,16 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                       })
                     setForceUpdate(!forceUpdate)
                     node_function.RedrawNodes(multi_selected_nodes.current)
+                    let link_to_update:string[]=[]
+                    multi_selected_nodes.current.forEach(n=>{
+                      link_to_update=link_to_update.concat(n.outputLinksId)
+                      link_to_update=link_to_update.concat(n.inputLinksId)
+                    })
+                    link_to_update=[...new Set(link_to_update)]
+                  
+                    link_function.RedrawLinks(
+                      Object.values(applicationData.display_links).filter(l=>link_to_update.includes(l.idLink))
+                    )
                     ComponentUpdater.updateComponenSaveInCache.current(false)
                   }}
                 >

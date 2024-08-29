@@ -187,7 +187,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   contextMenu.ref_setter_contextualised_link.current!(undefined)
   contextMenu.tagContext.current![0][1](undefined)
   contextMenu.showContextZDDRef.current![1](false)
-  applicationData.set_data(new_data)
+  applicationData.set_data(JSON.parse(JSON.stringify(new_data)))
   sessionStorage.setItem('dismiss_warning_sankey_plus','0')
   sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
 }
@@ -662,6 +662,7 @@ export const moduleDialogs : module_dialogsType = (
       applicationData={applicationData}
       applicationState={applicationState}
       node_function={node_function}
+      link_function={link_function}
       ComponentUpdater={ComponentUpdater}
       menu_for_modal={true}
     />,

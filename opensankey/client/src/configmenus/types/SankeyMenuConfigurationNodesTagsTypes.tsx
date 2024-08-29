@@ -1,4 +1,4 @@
-import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContextType, applicationDataType, applicationStateType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyNode, applicationContextType, applicationDataType, applicationStateType } from '../../types/Types'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -12,6 +12,7 @@ export type SankeyMenuConfigurationNodesTagsFType = {
   applicationData : applicationDataType,
   applicationState : applicationStateType,
   node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   menu_for_modal:boolean
 }
