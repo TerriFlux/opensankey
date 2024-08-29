@@ -1788,7 +1788,7 @@ export const AssignLinkLocalAttribute:AssignLinkLocalAttributeFuncType=(l:Sankey
 export const AssignLinkStyleAttribute:AssignLinkStyleAttributeFuncType=(l:SankeyLinkStyle,k:keyof SankeyLinkStyle,v:boolean|string|number)=>{
   (l[k] as unknown)=v
 }
-export const NodeContextHasAggregate:NodeContextHasAggregateFuncType = (n:SankeyNode,data:SankeyData)=>{
+export const NodeContextHasAggregate:NodeContextHasAggregateFuncType = (n:SankeyNode)=>{
   if (!n.dimensions) {
     return false
   }

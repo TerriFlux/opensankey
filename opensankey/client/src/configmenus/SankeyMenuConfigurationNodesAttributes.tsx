@@ -523,12 +523,12 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       </Box>
     </OSTooltip>
 
-    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+    { list_value['position'][0] == 'parametric' ? <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Noeud.position')}
-    </Box>
+    </Box>:<></>}
 
     {/* Position du noeud */}
-    <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
+    {menu_for_style ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry')}
@@ -570,7 +570,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             {t('Noeud.apparence.geometry_parametric')}
           </Button>
 
-          <Button
+          { selected_parameter[0].idNode == 'NodeExportStyle' || selected_parameter[0].idNode == 'NodeImportStyle' ? <Button
             variant={
               list_value['position'][0]==='relative'?
                 'menuconfigpanel_option_button_activated':
@@ -603,10 +603,10 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             }}
           >
             {t('Noeud.apparence.geometry_relative')}
-          </Button>
+          </Button> : <></>}
         </Box>
       </Box>
-    </OSTooltip>
+    </OSTooltip>:<></>}
     {/* Ecarts horizontal des noeuds */}
     {!menu_for_style && list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -629,7 +629,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         />
       </Box>
     </OSTooltip> : <></>}
-    {/* Ecarts horizontal des noeuds */}
+    {/* Ecarts horizontal des noeuds
     {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
@@ -649,9 +649,9 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           unitText='pixels'
         />
       </Box>
-    </OSTooltip> : <></>}
+    </OSTooltip> : <></>} */}
     {/* Ecarts vertical des noeuds */}
-    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
+    {menu_for_style && list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry_dy')}
@@ -672,7 +672,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       </Box>
     </OSTooltip> : <></>}
     {/* Ecarts vertical des noeuds */}
-    {list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dx')}>
+    {menu_for_style && list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dx')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry_relative_dx')}
@@ -692,7 +692,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         />
       </Box>
     </OSTooltip> : <></>}
-    {list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dy')}>
+    {menu_for_style && list_value['position'][0] == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dy')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry_relative_dy')}
@@ -1628,8 +1628,8 @@ export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumber
               d.u = value
             } else if (local_var_of_node === 'dy' && !menu_for_style) {
               const n = (d as SankeyNode)
-              const style_dy = +GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'dy')
-              AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value)-style_dy, menu_for_style)
+              //const style_dy = +GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'dy')
+              AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style)
             } else {
               AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style)
             }

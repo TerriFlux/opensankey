@@ -21,8 +21,7 @@ import { ComputeTotalOffsets,
   ReturnValueNode,
   ReturnValueLink,
   AssignLinkLocalAttribute,
-  ToPrecision,
-  GetNodeAttributeValueFromStyle
+  ToPrecision
 } from '../configmenus/SankeyUtils'
 import {
   DragLinkCenterHandleEvent,
@@ -156,12 +155,6 @@ export const nodeTransform : nodeTransformFType = (
   drag
 )=>{
   const {data, display_nodes, display_links} = applicationData
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   if (ReturnValueNode(data,d,'position') === 'relative') {
     if (d.inputLinksId.length > 0) {
       // Exportations
@@ -206,8 +199,7 @@ export const nodeTransform : nodeTransformFType = (
       if (node_above) {
         d.y = node_above.y + 
         nodeHeight(node_above, applicationData, link_function.GetLinkValue) + 
-        + GetNodeAttributeValueFromStyle(data,data.style_node[d.style],'dy') 
-        + (d.local && d.local!.dy ? d.local!.dy : 0)
+        + +ReturnValueNode(data,d,'dy')
       } /*else {
         const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
         d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
@@ -220,8 +212,7 @@ export const nodeTransform : nodeTransformFType = (
       if (node_below) {
         d.y = node_below.y 
         - nodeHeight(d, applicationData, link_function.GetLinkValue) 
-        - + GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') 
-        - (node_below.local && node_below.local!.dy ? node_below.local!.dy : 0)
+        - +ReturnValueNode(data,node_below,'dy')
       } /*else {
         const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
         d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
@@ -546,7 +537,7 @@ export const DrawArrows : DrawArrowsType = (
             }
             const nx = ReturnValueNode(data,n,'position') === 'relative' ? source.x+ +ReturnValueNode(data,n,'relative_dx') + dx: n.x
             const ny = ReturnValueNode(data,n,'position') === 'relative' ? source.y+ +ReturnValueNode(data,n,'relative_dy') + dy: n.y
-          // If link come horizontally to the node
+            // If link come horizontally to the node
             if (nx <= source_node.x && recy || nx > source_node.x && !recy) {
               // If node source of the link is to his left (arrow pointing right)
               xt = +nx

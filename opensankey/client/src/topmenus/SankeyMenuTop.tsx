@@ -1298,7 +1298,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
             alignSelf='center'
             justifySelf='center'
           >
-              {menus['excel']}
+            {menus['excel']}
           </Box>: <></>}
 
           <Box

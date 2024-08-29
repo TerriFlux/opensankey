@@ -3,7 +3,7 @@ import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, 
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, CounterType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
-import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
+
 import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink, DefaultNode, DefaultSankeyData, GetRandomInt, SetNodeStyleToTypeNode, layout_type, list_palette_color } from '../configmenus/SankeyUtils'
 import FileSaver from 'file-saver'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'

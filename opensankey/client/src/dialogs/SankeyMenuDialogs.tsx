@@ -1,16 +1,15 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, } from '../types/Types'
+import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { AssignNodeLocalAttribute, DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
-import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { arrangeNodes, ComputeAutoSankey, ComputeParametrization } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
-import { Box, Checkbox, Button, NumberInput, Input, NumberDecrementStepper, NumberIncrementStepper, NumberInputField, NumberInputStepper, InputGroup, InputRightAddon, TabList, Tab, Tabs, TabPanels, TabPanel, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@chakra-ui/react'
+import { Box, Checkbox, Button, NumberInput, Input, NumberDecrementStepper, NumberIncrementStepper, NumberInputField, NumberInputStepper, TabList, Tab, Tabs, TabPanels, TabPanel, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@chakra-ui/react'
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
@@ -42,10 +41,11 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   const {data,set_data,dataVarToUpdate}=applicationData
   const [prev_sankey_data,set_prev_sankey_data] = useState(data)
   const [forceUpdate,setForceUpdate] = useState(true)
-  const [stretchFactorH,set_stretchFactorH]=useState(1)
-  const [stretchFactorV,set_stretchFactorV]=useState(1)
+  // const [stretchFactorH,]=useState(1)
+  // const [stretchFactorV,]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
-  const [parametric,set_parametric]=useState(true)
+  const [parametric,set_parametric]=useState(data.style_node['default'].position == 'parametric')
+
   const [trade_close,set_trade_close]=useState(true)
   const [node_hspace,set_node_hspace] = useState(data.style_node['default'].dx)
   const [node_vspace,set_node_vspace] = useState(data.style_node['default'].dy)
@@ -55,7 +55,10 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   if ( node_vspace !== data.style_node['default'].dy) {
     set_node_vspace(data.style_node['default'].dy)
   }
-  const node_visible=NodeVisibleOnsSvg()
+  if ( parametric !== (data.style_node['default'].position == 'parametric')) {
+    set_parametric(data.style_node['default'].position== 'parametric')
+  }
+  // const node_visible=NodeVisibleOnsSvg()
   const simple_element_to_transform = [
     'posNode', 'posFlux',
     'attrNode', 'attrFlux',
@@ -67,23 +70,75 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
     'attrGeneral'
   ]
 
-  const applyStretch=(param:string)=>{
-    const attr=param=='h'?'x':'y'
-    const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
-    let min=Object.values(data.nodes)[0][attr]
-    // Cheche la position en y du noeud le plus en haut à gauche
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
-      min=(n[attr]<min)?n[attr]:min
-    })
-
-    // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
-    // applique le delta mutiplié par le facteur au noeud
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
-      const delta=n[attr]-min
-      n[attr]=min+(delta*stretchFactor)
-    })
-    set_data({...data})
+  const setTrade = (trade_close: boolean) => {
+    if (trade_close) {
+      data.style_node['NodeImportStyle'].position = 'relative'
+      data.style_node['NodeImportStyle'].shape_visible = false
+      data.style_node['NodeImportStyle'].node_height = 40
+      data.style_node['NodeImportStyle'].label_visible = false
+      data.style_node['NodeImportStyle'].show_value = true
+      data.style_node['NodeImportStyle'].label_horiz_valeur = 'middle'
+      data.style_node['NodeImportStyle'].label_vert_valeur = 'top'
+  
+      data.style_node['NodeExportStyle'].position = 'relative'
+      data.style_node['NodeExportStyle'].shape_visible = false
+      data.style_node['NodeExportStyle'].node_height = 40
+      data.style_node['NodeExportStyle'].label_visible = false
+      data.style_node['NodeExportStyle'].show_value = true
+      data.style_node['NodeExportStyle'].label_horiz_valeur = 'middle'
+      data.style_node['NodeExportStyle'].label_vert_valeur = 'bottom'
+  
+      data.style_link['LinkImportStyle'].orientation = 'vh'
+      data.style_link['LinkExportStyle'].orientation = 'hv'
+      set_data({ ...data })
+    } else {
+      data.style_node['NodeImportStyle'].position = 'parametric'
+      data.style_node['NodeImportStyle'].shape_visible = false
+      data.style_node['NodeImportStyle'].node_height = 1
+      data.style_node['NodeImportStyle'].label_visible = true
+      data.style_node['NodeImportStyle'].label_horiz = 'right'
+      data.style_node['NodeImportStyle'].label_horiz_shift = -200
+      data.style_node['NodeImportStyle'].show_value = true
+      data.style_node['NodeImportStyle'].label_horiz_valeur = 'left'
+      data.style_node['NodeImportStyle'].label_vert_valeur = 'middle'
+      data.style_node['NodeImportStyle'].label_horiz_valeur_shift = -20
+  
+      data.style_node['NodeExportStyle'].position = 'parametric'
+      data.style_node['NodeExportStyle'].shape_visible = false
+      data.style_node['NodeExportStyle'].node_height = 1
+      data.style_node['NodeExportStyle'].label_visible = true
+      data.style_node['NodeExportStyle'].label_horiz = 'left'
+      data.style_node['NodeExportStyle'].label_horiz_shift = 200
+      data.style_node['NodeExportStyle'].show_value = true
+      data.style_node['NodeExportStyle'].label_horiz_valeur = 'right'
+      data.style_node['NodeExportStyle'].label_vert_valeur = 'middle'
+      data.style_node['NodeExportStyle'].label_horiz_valeur_shift = 20
+  
+      data.style_link['LinkImportStyle'].orientation = 'hh'
+      data.style_link['LinkImportStyle'].label_visible = false
+      data.style_link['LinkExportStyle'].orientation = 'hh'
+      data.style_link['LinkExportStyle'].label_visible = false
+      set_data({ ...data })
+    }
   }
+
+  // const applyStretch=(param:string)=>{
+  //   const attr=param=='h'?'x':'y'
+  //   const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
+  //   let min=Object.values(data.nodes)[0][attr]
+  //   // Cheche la position en y du noeud le plus en haut à gauche
+  //   Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
+  //     min=(n[attr]<min)?n[attr]:min
+  //   })
+
+  //   // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
+  //   // applique le delta mutiplié par le facteur au noeud
+  //   Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
+  //     const delta=n[attr]-min
+  //     n[attr]=min+(delta*stretchFactor)
+  //   })
+  //   set_data({...data})
+  // }
   const content_modal_layout=  <Tabs>
     <TabList>
       <Box layerStyle='submenuconfig_tab' >
@@ -392,10 +447,10 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
 
       {/* Geometry */}
       <TabPanel>
-      <Box layerStyle='menuconfigpanel_grid' >
-      <h5><center>Grille pour le positionnement</center></h5>
-               {/* Ecart horizontal */}
-               <OSTooltip label={t('MEP.tooltips.EEN_h')} >
+        <Box layerStyle='menuconfigpanel_grid' >
+          <h5><center>{t('MEP.columnsParameters')}</center></h5>
+          {/* Ecart horizontal */}
+          <OSTooltip label={t('MEP.tooltips.EEN_h')} >
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.Horizontal')}</Box>
               <NumberInput
@@ -447,171 +502,96 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
             </Box>
           </OSTooltip></Box>
         <Box layerStyle='menuconfigpanel_grid' >
-        <h5><center>Cas général</center></h5>
+          <h5><center>{t('MEP.positioningMode')}</center></h5>
           <Box as='span' layerStyle='menuconfigpanel_row_4cols'>
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={parametric}
               onChange={(evt) => {
                 set_parametric(evt.target.checked)
+                if (evt.target.checked) {
+                  Object.values(data.style_node)
+                    .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
+                    .forEach(style=>style.position = 'parametric')
+                  ComputeParametrization(applicationData)
+                } else {
+                  Object.values(data.style_node)
+                    .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
+                    .forEach(style=>style.position = 'absolute')
+                }
+                applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}
             >
-              <OSTooltip label={'Positionnement vertical ajusté'}>
-                {'Intervalles verticaux constants'}
+              <OSTooltip label={t('MEP.tooltips.parametricMode')}>
+                {t('MEP.parametricMode')}
               </OSTooltip>
             </Checkbox>
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={!parametric}
               onChange={(evt) => {
-                //data.parametric_mode = evt.target.checked
                 set_parametric(!evt.target.checked)
-              }}
-            >
-              <OSTooltip label={'Positions constantes'}>
-                {'Positions constantes'}
-              </OSTooltip>
-            </Checkbox>
-            <Button
-              variant='menuconfigpanel_option_button'
-              onClick={()=>{
-                if (parametric) {
-                  Object.values(applicationData.data.nodes)
-                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
-                    .forEach(node=>AssignNodeLocalAttribute(node,'position','parametric'))
+                if (!evt.target.checked) {
+                  Object.values(data.style_node)
+                    .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
+                    .forEach(style=>style.position = 'parametric')
                   ComputeParametrization(applicationData)
                 } else {
-                  Object.values(applicationData.data.nodes)
-                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
-                    .forEach(node=>AssignNodeLocalAttribute(node,'position','absolute'))
+                  Object.values(data.style_node)
+                    .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
+                    .forEach(style=>style.position = 'absolute')
                 }
-                //applicationData.set_data(JSON.parse(JSON.stringify(data)))
-              }}>
-              {'Calculer'}
-            </Button>
-            <Button
+                applicationData.set_data(JSON.parse(JSON.stringify(data)))
+              }}
+            >
+              <OSTooltip label={t('MEP.tooltips.absoluteMode')}>
+                {t('MEP.absoluteMode')}
+              </OSTooltip>
+            </Checkbox>
+            {parametric ? <Button
               variant='menuconfigpanel_option_button'
               onClick={()=>{
                 if (parametric) {
-                  Object.values(applicationData.data.nodes)
-                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
-                    .forEach(node=>AssignNodeLocalAttribute(node,'position','parametric'))
-                  ComputeParametrization(applicationData)
                   Object.values(applicationData.data.nodes)
                   .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
                   .forEach(node=>{if (node.local) delete node.local.dy})
-                } else {
-                  Object.values(applicationData.data.nodes)
-                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
-                    .forEach(node=>AssignNodeLocalAttribute(node,'position','absolute'))
                 }
                 applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}>
-              {'Réinitialiser'}
-            </Button>
-
-            {/* <Button
-              variant='menuconfigpanel_option_button'
-              onClick={()=>{
-                Object.values(applicationData.data.nodes)
-                .filter(n=> n.position !== 'relative' )
-                .forEach(n=> n.dy = 0 )
-                applicationData.set_data(JSON.parse(JSON.stringify(data)))
-              }}>
-              {t('MEP.resetVerticalIntervals')}
-            </Button> */}
+              {t('MEP.reInitDY')}
+            </Button> : <></>}
           </Box>
           <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
           <Box layerStyle='menuconfigpanel_grid' >
-            <h5><center>Noeuds imports exports</center></h5>
+            <h5><center>{t('MEP.importExport')}</center></h5>
             <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={trade_close}
-              onChange={(evt) => {
-                set_trade_close(evt.target.checked)
-              }}
-            >
-              <OSTooltip label={'Prêt du noeud'}>
-                {'Prêt du noeud'}
-              </OSTooltip>
-            </Checkbox>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={!trade_close}
-              onChange={(evt) => {
-                //data.parametric_mode = evt.target.checked
-                set_trade_close(!evt.target.checked)
-              }}
-            >
-              <OSTooltip label={'Haut et bas du diagramme'}>
-                {'Haut et bas du diagramme'}
-              </OSTooltip>
-            </Checkbox>
-
-            <OSTooltip label={'Prêt du noeud'} >
-              <Button
-                variant={'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (trade_close) {
-                    data.style_node['NodeImportStyle'].position = 'relative'
-                    data.style_node['NodeImportStyle'].shape_visible = false
-                    data.style_node['NodeImportStyle'].node_height = 40
-                    data.style_node['NodeImportStyle'].label_visible = false         
-                    data.style_node['NodeImportStyle'].show_value = true
-                    data.style_node['NodeImportStyle'].label_horiz_valeur = "middle"
-                    data.style_node['NodeImportStyle'].label_vert_valeur = "top"
-
-                    data.style_node['NodeExportStyle'].position = 'relative'
-                    data.style_node['NodeExportStyle'].shape_visible = false
-                    data.style_node['NodeExportStyle'].node_height = 40
-                    data.style_node['NodeExportStyle'].label_visible = false
-                    data.style_node['NodeExportStyle'].show_value = true
-                    data.style_node['NodeExportStyle'].label_horiz_valeur = "middle"
-                    data.style_node['NodeExportStyle'].label_vert_valeur = "bottom"
-
-                    data.style_link['LinkImportStyle'].orientation = 'vh'
-                    data.style_link['LinkExportStyle'].orientation = 'hv'
-                    set_data({...data})
-                  } else {
-                    data.style_node['NodeImportStyle'].position = 'parametric'
-                    data.style_node['NodeImportStyle'].shape_visible = false
-                    data.style_node['NodeImportStyle'].node_height = 1
-                    data.style_node['NodeImportStyle'].label_visible = true
-                    data.style_node['NodeImportStyle'].label_horiz = "right" 
-                    data.style_node['NodeImportStyle'].label_horiz_shift = -200                
-                    data.style_node['NodeImportStyle'].show_value = true
-                    data.style_node['NodeImportStyle'].label_horiz_valeur = "left"
-                    data.style_node['NodeImportStyle'].label_vert_valeur = "middle"
-                    data.style_node['NodeImportStyle'].label_horiz_valeur_shift = -20
-  
-                    data.style_node['NodeExportStyle'].position = 'parametric'
-                    data.style_node['NodeExportStyle'].shape_visible = false
-                    data.style_node['NodeExportStyle'].node_height = 1
-                    data.style_node['NodeExportStyle'].label_visible = true
-                    data.style_node['NodeExportStyle'].label_horiz = "left" 
-                    data.style_node['NodeExportStyle'].label_horiz_shift = 200                
-                    data.style_node['NodeExportStyle'].show_value = true
-                    data.style_node['NodeExportStyle'].label_horiz_valeur = "right"
-                    data.style_node['NodeExportStyle'].label_vert_valeur = "middle"
-                    data.style_node['NodeExportStyle'].label_horiz_valeur_shift = 20
-  
-                    data.style_link['LinkImportStyle'].orientation = 'hh'
-                    data.style_link['LinkImportStyle'].label_visible = false
-                    data.style_link['LinkExportStyle'].orientation = 'hh'
-                    data.style_link['LinkExportStyle'].label_visible = false
-                    set_data({...data})                     
-                  }          
-                }}>
-                {'Réinitialiser'}
-              </Button>
-            </OSTooltip>
+              <Checkbox
+                variant='menuconfigpanel_option_checkbox'
+                isChecked={trade_close}
+                onChange={(evt) => {
+                  set_trade_close(evt.target.checked)
+                  setTrade(evt.target.checked)
+                }}
+              >
+                <OSTooltip label={t('MEP.tooltips.importExportClose')}>
+                  {t('MEP.importExportClose')}
+                </OSTooltip>
+              </Checkbox>
+              <Checkbox
+                isDisabled={!parametric}
+                variant='menuconfigpanel_option_checkbox'
+                isChecked={!trade_close}
+                onChange={(evt) => {
+                  set_trade_close(!evt.target.checked)
+                  setTrade(!evt.target.checked)   
+                }}
+              >
+                <OSTooltip label={t('MEP.tooltips.importExportAboveBelow')}>
+                  {t('MEP.importExportAboveBelow')}
+                </OSTooltip>
+              </Checkbox>
             </Box>
           </Box>
-
-
-
-
 
           <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -869,6 +849,8 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
     </Box>
   </Box>
 }
+
+
 
 // export const PopoverSelectorDetailNodes:FunctionComponent<popoverSelectorDetailNodesFType>=({
 //   applicationContext,

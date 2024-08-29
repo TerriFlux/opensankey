@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { ReturnValueNode, AssignNodeLocalAttribute, GetNodeAttributeValueFromStyle } from '../configmenus/SankeyUtils'
+import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { applicationDataType, applicationStateType, SankeyNode, SankeyData } from '../types/Types'
 import { RemoveAnimate, DrawArrows, drawCurveFunction, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid, nodeTransform } from './SankeyDrawFunction'
@@ -103,7 +103,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
               }
             })
             const previous_u = node.u
-            node.u = Math.floor((node.x-smaller_x/2)/data.style_node['default'].dx)
+            node.u = Math.floor((node.x-smaller_x/3)/data.style_node['default'].dx)
             if (node.u !== previous_u) {
               ComputeParametricV(applicationData)
             } else {
@@ -122,26 +122,26 @@ export const DragGNodeEvent: DragGNodeEventFType = (
                   AssignNodeLocalAttribute(
                     node_below,
                     'dy',
-                    node_below.y - node.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node_below.style],'dy') - nodeHeight(node,applicationData,GetLinkValue)
+                    node_below.y - node.y - nodeHeight(node,applicationData,GetLinkValue)
                   )
                 }
               }
-            const nodes_above = same_u.filter(n=>n.v<node.v)
-            const node_above = nodes_above.pop()
-            if (node_above) {
-              if (node.y < node_above.y) {
-                const tmp = node_above.v
-                node_above.v = node.v
-                node.v = tmp
+              const nodes_above = same_u.filter(n=>n.v<node.v)
+              const node_above = nodes_above.pop()
+              if (node_above) {
+                if (node.y < node_above.y) {
+                  const tmp = node_above.v
+                  node_above.v = node.v
+                  node.v = tmp
+                }
+                AssignNodeLocalAttribute(
+                  node,
+                  'dy',
+                  node.y - node_above.y - nodeHeight(node_above,applicationData,GetLinkValue)
+                )
               }
-              AssignNodeLocalAttribute(
-                node,
-                'dy',
-                node.y - node_above.y - +GetNodeAttributeValueFromStyle(data,data.style_node[node.style],'dy') - nodeHeight(node_above,applicationData,GetLinkValue)
-              )
+              node_function.RedrawNodes(same_u)
             }
-            node_function.RedrawNodes(same_u)
-          }
 
 
           } else {
@@ -417,14 +417,14 @@ export const DragElements: DragElementsFuncType = (
       AssignNodeLocalAttribute(n,'relative_dx',+ReturnValueNode(data,n,'relative_dx')+ event.dx)
       AssignNodeLocalAttribute(n,'relative_dy',+ReturnValueNode(data,n,'relative_dy')+ event.dy)
     } //else {
-      n.x += event.dx
-      n.y += event.dy
-      if (n.x < 0) {
-        n.x = 0
-      }
-      if (n.y < 0) {
-        n.y = 0
-      }
+    n.x += event.dx
+    n.y += event.dy
+    if (n.x < 0) {
+      n.x = 0
+    }
+    if (n.y < 0) {
+      n.y = 0
+    }
     //}
 
     const pos_n = sizeOfNodeInDrawArea(n, applicationData)

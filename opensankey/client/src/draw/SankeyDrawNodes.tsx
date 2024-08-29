@@ -372,18 +372,18 @@ export const drawAddNodes : drawNodeShapeFType = (
   const {t} = applicationContext
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
   const columns : {[_:number]:SankeyNode[]} = {}
-  if (/*!data.parametric_mode*/false) {
-    columns[0] = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
-  } else {
-    Object.values(display_nodes).forEach(n=>{
-      if (columns[n.u]) {
-        columns[n.u].push(n)
-      } else {
-        columns[n.u] = [n]
-      }
-    })
-    d3.selectAll(' .opensankey #g_nodes g').remove()   
-  }
+  // if (/*!data.parametric_mode*/false) {
+  //   columns[0] = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
+  // } else {
+  Object.values(display_nodes).forEach(n=>{
+    if (columns[n.u]) {
+      columns[n.u].push(n)
+    } else {
+      columns[n.u] = [n]
+    }
+  })
+  d3.selectAll(' .opensankey #g_nodes g').remove()   
+  // }
   Object.values(columns).forEach(column=>{
     column.sort((n1, n2) => {
       if (n1.v>=0 || n2.v>=0) {

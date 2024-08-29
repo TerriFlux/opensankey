@@ -58,9 +58,7 @@ import {
   ReturnValueLink,
   DeleteNode,
   DeleteLink,
-  AddDataTags,
-  AssignNodeStyleAttribute,
-  ReturnLocalNodeValue
+  AddDataTags
 } from '../configmenus/SankeyUtils'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
@@ -440,14 +438,14 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
       })
     }, {}) as {[idNode:string]:SankeyNode}
   applicationData.display_nodes=display_nodes
-  AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
+  // AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
 
-  if ( data.style_node['NodeSectorStyle'] ) {
-    AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
-  }
-  if ( data.style_node['NodeProductStyle'] ) {
-    AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
-  }
+  // if ( data.style_node['NodeSectorStyle'] ) {
+  //   AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
+  // }
+  // if ( data.style_node['NodeProductStyle'] ) {
+  //   AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
+  // }
   // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
   // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
   const display_links=Object.keys(data.links)
@@ -478,14 +476,6 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   if (launched_from_process) {
     data.user_scale = data.maximum_flux ? Math.min(data.maximum_flux, max_link_value): max_link_value
   }
-
-  // Define vertical scaling functions
-  const v_scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
-  const v_scale_inv = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
 
   // Reset input / ouput links id for each node
   compute_default_input_outputLinksId(data.nodes, data.links)
@@ -809,12 +799,6 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   data.height = v_margin*2 + max_height_cumul
 
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   const columns : {[_:number]:SankeyNode[]} = {}
   Object.values(display_nodes).filter(n => NodeDisplayed(data, n) && !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange').forEach(n=>{
     if (columns[n.u]) {
@@ -838,12 +822,6 @@ export const ComputeParametrization:ComputeParametrizationType = (
 ) => {
   const { display_nodes,data } = applicationData
   const columns : {[_:number]:SankeyNode[]} = {}
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   let smaller_x : number
   Object.values(display_nodes).forEach(n=>{
     if (smaller_x === undefined) {
@@ -853,14 +831,6 @@ export const ComputeParametrization:ComputeParametrizationType = (
       smaller_x = n.x
     }
   })
-
-  AssignNodeStyleAttribute(data.style_node['default'],'position','parametric')
-  if ( data.style_node['NodeSectorStyle'] ) {
-    AssignNodeStyleAttribute(data.style_node['NodeSectorStyle'],'position','parametric')
-  }
-  if ( data.style_node['NodeProductStyle'] ) {
-    AssignNodeStyleAttribute(data.style_node['NodeProductStyle'],'position','parametric')
-  }
 
   Object.values(display_nodes).forEach(n=>{
 
@@ -913,34 +883,34 @@ export const apply_v = (
   return new_current_v+1
 }
 
-const apply_v_agregate = (
-  data:SankeyData,
-  node:SankeyNode,
-  current_v:number 
-) => {
-  const all_nodes = data.nodes //Object.assign({},data.nodes,data.additional_nodes)
-  //node.position = 'parametric'
-  node.v = current_v
-  // node.dy = 0
-  //node.y == undefined
-  const dim_agregate_nodes = Object.values(all_nodes).filter( 
-    nn => {
-      let is_parent = false
-      Object.values(data.levelTags).forEach( tagGroup=> {
-        if (node.dimensions[tagGroup.group_name] && node.dimensions[tagGroup.group_name].parent_name === nn.idNode) {
-          is_parent = true
-        }
-      })
-      return is_parent
-    }
-  )
-  dim_agregate_nodes.forEach((nn,i)=>{
-    nn.x = node.x
-    nn.u = node.u
-    current_v = apply_v_agregate(data,nn,current_v+i)
-  })
-  return current_v
-}
+// const apply_v_agregate = (
+//   data:SankeyData,
+//   node:SankeyNode,
+//   current_v:number 
+// ) => {
+//   const all_nodes = data.nodes //Object.assign({},data.nodes,data.additional_nodes)
+//   //node.position = 'parametric'
+//   node.v = current_v
+//   // node.dy = 0
+//   //node.y == undefined
+//   const dim_agregate_nodes = Object.values(all_nodes).filter( 
+//     nn => {
+//       let is_parent = false
+//       Object.values(data.levelTags).forEach( tagGroup=> {
+//         if (node.dimensions[tagGroup.group_name] && node.dimensions[tagGroup.group_name].parent_name === nn.idNode) {
+//           is_parent = true
+//         }
+//       })
+//       return is_parent
+//     }
+//   )
+//   dim_agregate_nodes.forEach((nn,i)=>{
+//     nn.x = node.x
+//     nn.u = node.u
+//     current_v = apply_v_agregate(data,nn,current_v+i)
+//   })
+//   return current_v
+// }
 
 /**
  * Reorganize vertically all input / output position
@@ -981,7 +951,6 @@ export const desagregation : desagregationFType = (
   if (dim_desagregate_nodes.length == 0) {
     return
   }
-  const nb_desagregated = dim_desagregate_nodes.length
   let nodes_heights = 0
   dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,GetLinkValue))
   dim_desagregate_nodes.forEach(n => {
@@ -1995,7 +1964,7 @@ const  getDesagregationNodes = (
     let node_tags_attr : string[]|undefined = undefined
     let all_same = true
     let tagg_to_remove : SankeyNode[] = []
-    all_dim_desagregate_nodes.filter((n,i)=> {
+    all_dim_desagregate_nodes.filter(n=> {
       if (node_tags_attr && n.tags[tagg.group_name] && JSON.stringify(node_tags_attr) !== JSON.stringify(n.tags[tagg.group_name])) {
         all_same = false
       }
@@ -2006,7 +1975,6 @@ const  getDesagregationNodes = (
       if ( node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length == 0) {
         tagg_to_remove.push(n)
       }
-
     })
     if (all_same) {
       tagg_to_remove = []
@@ -2034,7 +2002,7 @@ export const ComputeParametricV = (applicationData: applicationDataType) => {
       if (i == 0) {
         return
       }
-      const dy = n.y - column[i - 1].y - data.style_node[n.style].dy - nodeHeight(column[i - 1], applicationData, GetLinkValue)
+      const dy = n.y - column[i - 1].y - nodeHeight(column[i - 1], applicationData, GetLinkValue)
       if (dy !== 0) {
         AssignNodeLocalAttribute(n, 'dy', dy)
       } else {
