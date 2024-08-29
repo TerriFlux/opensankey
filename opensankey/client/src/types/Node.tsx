@@ -7,8 +7,9 @@
 // External imports
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
+
+// Local imports
 import * as SankeyShapes from '../draw/SankeyDrawShapes'
-// Local types
 import {
   Type_ElementPosition,
   Type_JSON,
@@ -37,7 +38,6 @@ import {
 } from './Sankey'
 import {
   Class_Element,
-  Class_ProtoElement
 } from './Element'
 import {
   Class_Tag,

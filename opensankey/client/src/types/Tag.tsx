@@ -8,8 +8,14 @@
 import { Class_LinkElement, Class_LinkValue } from './Link'
 import { Class_NodeDimension, Class_NodeElement } from './Node'
 import { Class_Sankey } from './Sankey'
-import { Type_JSON, default_grey_color, getBooleanFromJSON, getStringFromJSON, getStringListFromJSON, makeId } from './Utils'
-
+import {
+  Type_JSON,
+  default_grey_color,
+  getBooleanFromJSON,
+  getStringFromJSON,
+  getStringListFromJSON,
+  makeId
+} from './Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -19,7 +25,6 @@ type Type_GenericSankey = Class_Sankey<any, any, Class_LinkElement<any>>
 type Type_GenericNodeElement = Class_NodeElement<any>
 type Type_TagReference = Type_GenericNodeElement | Class_LinkValue
 type Type_DataTagReference = Class_LinkElement<any>
-
 
 // CLASS PROTO TAG ***********************************************************************
 /**

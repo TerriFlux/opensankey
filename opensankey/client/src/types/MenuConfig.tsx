@@ -7,6 +7,8 @@
 // External imports
 import * as d3 from 'd3'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+
+// Local imports
 import { Type_MacroTagGroup } from './Sankey'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
 import { textForToastPromiseType, dict_hook_ref_setter_show_dialog_componentsType } from './LegacyType'
