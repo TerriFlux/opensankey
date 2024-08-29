@@ -9,7 +9,7 @@ import {
 
 // Local types
 import { Class_Tag } from '../types/Tag'
-import { Class_LinkElement } from '../types/Link'
+import { Type_LinkElement } from '../types/Link'
 import {
   MenuConfigurationLinksTagsFType
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
@@ -39,7 +39,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<MenuConfigurationLink
 
   // Selected links ---------------------------------------------------------------------
 
-  let selected_links: Class_LinkElement[]
+  let selected_links: Type_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

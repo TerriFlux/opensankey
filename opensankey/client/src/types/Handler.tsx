@@ -14,9 +14,10 @@ import {
 import {
   Class_DrawingArea
 } from './DrawingArea'
-import { Class_Element, Class_ProtoElement } from './Element'
-import { Class_LinkElement } from './Link'
-import { Class_NodeElement } from './Node'
+import {
+  Class_Element,
+  Class_ProtoElement
+} from './Element'
 import {
   default_element_position,
   Type_ElementPosition,
@@ -30,12 +31,16 @@ import {
  * @class Class_Handler
  * @extends {Class_Element}
  */
-export class Class_Handler extends Class_Element {
+export class Class_Handler
+<
+  Type_GenericDrawingArea extends Class_DrawingArea
+>
+extends Class_Element<Type_GenericDrawingArea> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected _display: {
-      drawing_area: Class_DrawingArea,
+      drawing_area: Type_GenericDrawingArea,
       position: Type_ElementPosition,
     }
 
@@ -44,15 +49,15 @@ export class Class_Handler extends Class_Element {
   private _color: string = 'black'
   private _filled: boolean = true
   private _custom_class: string|undefined
-  private _ref_element: Class_ProtoElement
-  private _ref_element_optional?: Class_LinkElement | Class_NodeElement | undefined
+  private _ref_element: Class_ProtoElement<Type_GenericDrawingArea>
+  private _ref_element_optional?: Class_ProtoElement<Type_GenericDrawingArea> | undefined
 
   // CONSTRUCTOR ========================================================================
 
   /**
   * Creates an instance of Class_Handler.
   * @param {string} id
-  * @param {Class_DrawingArea} drawing_area
+  * @param {Type_GenericDrawingArea} drawing_area
   * @param {Class_MenuConfig} menu_config
   * @param {(Class_LinkElement | Class_NodeElement)} ref
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragStart_function
@@ -64,20 +69,20 @@ export class Class_Handler extends Class_Element {
   */
   constructor(
     id: string,
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
-    ref: Class_ProtoElement,
+    ref: Class_ProtoElement<Type_GenericDrawingArea>,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     options?: {class?:string, size?: number, color?: string, filled?: boolean },
-    ref_optional?: Class_LinkElement | Class_NodeElement,
+    ref_optional?: Class_ProtoElement<Type_GenericDrawingArea>,
 
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_handlers')
     this._ref_element = ref
-    this._ref_element_optional=ref_optional
+    this._ref_element_optional = ref_optional
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
@@ -127,7 +132,7 @@ export class Class_Handler extends Class_Element {
       .attr('fill-opacity', this._filled ? 1 : 0)
   }
 
-  public copyFrom(element: Class_Handler) {
+  public copyFrom(element: this) {
     this._size = element._size
     this._color = element._color
     this._filled = element._filled
@@ -144,10 +149,18 @@ export class Class_Handler extends Class_Element {
      * @memberof Class_Handler
      */
   public get is_visible() {
-    return ( this._ref_element.is_visible  && this._ref_element.is_selected && this._is_visible && (this._ref_element_optional?.is_visible??true) )
+    return (
+      this._ref_element.is_visible  &&
+      this._ref_element.is_selected &&
+      this._is_visible &&
+      (this._ref_element_optional?.is_visible ?? true) )
   }
 
-  public get ref_element(): Class_ProtoElement { return this._ref_element }
+  public get ref_element(): Class_ProtoElement<Type_GenericDrawingArea> {
+    return this._ref_element
+  }
 
-  public get ref_element_optional(): Class_LinkElement | Class_NodeElement | undefined {return this._ref_element_optional}
+  public get ref_element_optional(): Class_ProtoElement<Type_GenericDrawingArea> | undefined {
+    return this._ref_element_optional
+  }
 }

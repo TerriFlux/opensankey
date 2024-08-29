@@ -16,7 +16,7 @@ import {
   Class_DrawingArea
 } from './DrawingArea'
 import {
-  Class_Sankey,
+  Type_Sankey,
   default_main_sankey_id
 } from './Sankey'
 import {
@@ -24,6 +24,11 @@ import {
   Type_ElementPosition,
   Type_JSON
 } from './Utils'
+
+// SPECIFIC TYPES ***********************************************************************
+
+export type Type_ProtoElement = Class_ProtoElement<Class_DrawingArea>
+export type Type_Element = Class_Element<Class_DrawingArea>
 
 // CONSTANT *****************************************************************************
 
@@ -41,7 +46,8 @@ const const_default_position_y = 50
  *
  * @class Class_ProtoElement
  */
-export abstract class Class_ProtoElement {
+export abstract class Class_ProtoElement <Type_DrawingArea extends Class_DrawingArea>
+{
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -50,7 +56,7 @@ export abstract class Class_ProtoElement {
    * @type {(d3.Selection<SVGGElement, Class_Element, SVGGElement, unknown> | null)}
    * @memberof Class_Element
    */
-  public d3_selection: d3.Selection<SVGGElement, this, SVGGElement, unknown> | null = null
+  public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -59,12 +65,12 @@ export abstract class Class_ProtoElement {
    * @protected
    * @abstract
    * @type {{
-   *     drawing_area: Class_DrawingArea,
+   *     drawing_area: Type_DrawingArea,
    *   }}
    * @memberof Class_ProtoElement
    */
   protected abstract _display: {
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_DrawingArea,
   }
 
   /**
@@ -79,10 +85,18 @@ export abstract class Class_ProtoElement {
    * List of Sankey in which element appear
    *
    * @private
-   * @type {Class_Sankey[]}
+   * @type {Type_Sankey[]}
    * @memberof Class_ProtoElement
    */
-  protected _sankeys: {[_: string]: Class_Sankey} = {}
+  protected _sankeys: {[_: string]: Type_Sankey}
+
+  /**
+   * Config menu ref to html element & function to update it
+   * @protected
+   * @type {string}
+   * @memberof Class_Element
+   */
+  protected _menu_config: Class_MenuConfig
 
   /**
    * Is element currently visually selected
@@ -134,20 +148,12 @@ export abstract class Class_ProtoElement {
    */
   private _is_currently_deleted = false
 
-  /**
-   * Config menu ref to html element & function to update it
-   * @protected
-   * @type {string}
-   * @memberof Class_Element
-   */
-  private _menu_config: Class_MenuConfig
-
   // CONSTRUCTOR ========================================================================
 
   /**
    * Creates an instance of Class_Element.
    * @param {string} id
-   * @param {Class_DrawingArea} drawing_area
+   * @param {Type_DrawingArea} drawing_area
    * @param {string} svg_group
    * @memberof Class_Element
    */
@@ -159,6 +165,8 @@ export abstract class Class_ProtoElement {
     this._id = id
     this._svg_group = svg_group
     this._menu_config = menu_config
+    // Other attributes with default initializing
+    this._sankeys = {}
   }
 
   /**
@@ -197,7 +205,7 @@ export abstract class Class_ProtoElement {
         if (this.is_visible) {
           // Set d3 selection
           this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-            .datum(this)
+            // .datum(this)
             .append('g')
             .attr('id', 'gg_' + this._id)
           // Add events listeners
@@ -255,7 +263,7 @@ export abstract class Class_ProtoElement {
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       if (this.drawing_area.isInSelectionMode()) {
         this.d3_selection?.call(
-          d3.drag<SVGGElement, this>()
+          d3.drag<SVGGElement, unknown>()
             .on('start',
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDragStart(event))
@@ -499,7 +507,11 @@ export abstract class Class_ProtoElement {
  *
  * @class Class_Element
  */
-export abstract class Class_Element extends Class_ProtoElement {
+export abstract class Class_Element
+  <
+    Type_DrawingArea extends Class_DrawingArea
+  >
+extends Class_ProtoElement<Type_DrawingArea> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -507,13 +519,13 @@ export abstract class Class_Element extends Class_ProtoElement {
    * Display attributes for element
    * @protected
    * @type {{
-   *     drawing_area: Class_DrawingArea,
+   *     drawing_area: Type_DrawingArea,
    *     position: Type_ElementPosition,
    *   }}
    * @memberof Class_Element
    */
   protected abstract _display: {
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_DrawingArea,
     position: Type_ElementPosition,
   }
 
@@ -522,7 +534,7 @@ export abstract class Class_Element extends Class_ProtoElement {
   /**
    * Creates an instance of Class_Element.
    * @param {string} id
-   * @param {Class_DrawingArea} drawing_area
+   * @param {Type_DrawingArea} drawing_area
    * @param {string} svg_group
    * @memberof Class_Element
    */

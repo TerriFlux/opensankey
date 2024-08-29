@@ -30,7 +30,7 @@ import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
-import { Class_LinkElement } from '../types/Link'
+import { Type_LinkElement } from '../types/Link'
 
 
 /*************************************************************************************************/
@@ -50,8 +50,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   // Links to display in selection menus ------------------------------------------------
 
-  let links: Class_LinkElement[]
-  let selected_links: Class_LinkElement[]
+  let links: Type_LinkElement[]
+  let selected_links: Type_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     links = new_data.drawing_area.sankey.links_list
