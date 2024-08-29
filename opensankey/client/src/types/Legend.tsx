@@ -33,7 +33,7 @@ import {
  * @class Class_Legend
  * @extends {Class_Element}
  */
-export class Class_Legend extends Class_Element {
+export class Class_Legend extends Class_Element<Class_DrawingArea> {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -517,7 +517,7 @@ export class Class_Legend extends Class_Element {
 
 
     // Add drag event for the scale representation
-    g_draggable?.call(d3.drag<SVGGElement, this, unknown>()
+    g_draggable?.call(d3.drag<SVGGElement, unknown, unknown>()
       .subject(Object)
       .on('drag', function (event) {
         g_draggable.style('transform', 'translate(' + (event.x) + 'px,' + (event.y) + 'px)')

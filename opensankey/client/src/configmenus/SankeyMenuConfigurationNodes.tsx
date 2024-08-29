@@ -31,7 +31,7 @@ import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { Class_NodeElement } from '../types/Node'
+import { Type_NodeElement } from '../types/Node'
 
 
 /*************************************************************************************************/
@@ -61,8 +61,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
   // Nodes to select --------------------------------------------------------------------
 
-  let nodes: Class_NodeElement[]
-  let selected_nodes: Class_NodeElement[]
+  let nodes: Type_NodeElement[]
+  let selected_nodes: Type_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted

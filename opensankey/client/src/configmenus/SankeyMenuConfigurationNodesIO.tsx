@@ -16,13 +16,13 @@ import {
 
 /*************************************************************************************************/
 
-import { Class_LinkElement, Type_Side } from '../types/Link'
+import { Type_LinkElement, Type_Side } from '../types/Link'
 import { SankeyMenuConfigurationNodesIOFType } from './types/SankeyMenuConfigurationNodesIOTypes'
 
 /*************************************************************************************************/
 
 import { OSTooltip } from '../types/Utils'
-import { Class_NodeElement } from '../types/Node'
+import { Type_NodeElement } from '../types/Node'
 
 /*************************************************************************************************/
 
@@ -48,7 +48,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<SankeyMenuConfigu
 
   // Nodes to modify --------------------------------------------------------------------
 
-  let selected_nodes: Class_NodeElement[]
+  let selected_nodes: Type_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
@@ -107,7 +107,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<SankeyMenuConfigu
 
   // Set list of links to reorganize ----------------------------------------------------
 
-  const links_to_reorganize: { [_ in Type_Side]: Class_LinkElement[] } = {
+  const links_to_reorganize: { [_ in Type_Side]: Type_LinkElement[] } = {
     'right': [], 'left': [], 'top': [], 'bottom': []
   }
   if (unique_node_selected && direction_selected && side_selected) {

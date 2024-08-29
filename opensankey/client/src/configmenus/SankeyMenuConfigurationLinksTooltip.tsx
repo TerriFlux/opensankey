@@ -12,7 +12,7 @@ import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurat
 
 // Local functions
 import { OSTooltip } from '../types/Utils'
-import { Class_LinkElement } from '../types/Link'
+import { Type_LinkElement } from '../types/Link'
 
 // MENU COMPONENT ***********************************************************************
 
@@ -39,7 +39,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
 
   // Selected links ---------------------------------------------------------------------
 
-  let selected_links: Class_LinkElement[]
+  let selected_links: Type_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

@@ -31,8 +31,8 @@ import {
 /*************************************************************************************************/
 
 import {
-  Class_LinkElement,
   Class_LinkStyle,
+  Type_LinkElement,
   default_shape_arrow_size,
   default_shape_color,
   default_shape_ending_curve,
@@ -165,7 +165,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Class_LinkElement[]
+  let elements: Class_LinkStyle[] | Type_LinkElement[]
   if (menu_for_style) {
     elements = [new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
@@ -178,10 +178,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
-   * @param {Class_LinkElement} curr
+   * @param {Type_LinkElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Class_LinkElement) => {
+  const check_indeterminate = (curr: Type_LinkElement) => {
     return (selected_links[0].isEqual(curr))
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)

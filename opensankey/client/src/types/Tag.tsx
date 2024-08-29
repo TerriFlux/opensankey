@@ -15,8 +15,10 @@ import { Type_JSON, default_grey_color, getBooleanFromJSON, getStringFromJSON, g
 
 export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
 
-type Type_TagReference = Class_NodeElement | Class_LinkValue
-type Type_DataTagReference = Class_LinkElement
+type Type_GenericSankey = Class_Sankey<any, any, Class_LinkElement<any>>
+type Type_GenericNodeElement = Class_NodeElement<any>
+type Type_TagReference = Type_GenericNodeElement | Class_LinkValue
+type Type_DataTagReference = Class_LinkElement<any>
 
 
 // CLASS PROTO TAG ***********************************************************************
@@ -55,7 +57,7 @@ export abstract class Class_ProtoTag {
   protected abstract _group: Class_ProtoTagGroup
 
   // Sankey in which it applies
-  protected _ref_sankey: Class_Sankey
+  protected _ref_sankey: Type_GenericSankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -67,7 +69,7 @@ export abstract class Class_ProtoTag {
    */
   constructor(
     name: string,
-    sankey: Class_Sankey,
+    sankey: Type_GenericSankey,
     id: string | undefined = undefined
   ) {
     this._id = id ?? makeId(name)
@@ -209,7 +211,7 @@ export class Class_Tag extends Class_ProtoTag {
   constructor(
     name: string,
     group: Class_TagGroup,
-    sankey: Class_Sankey,
+    sankey: Type_GenericSankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -306,14 +308,14 @@ export class Class_DataTag extends Class_ProtoTag {
    * Creates an instance of Class_DataTag.
    * @param {string} name
    * @param {Class_TagGroup} group
-   * @param {Class_Sankey} sankey
+   * @param {Type_GenericSankey} sankey
    * @param {(string | undefined)} [id=undefined]
    * @memberof Class_DataTag
    */
   constructor(
     name: string,
     group: Class_DataTagGroup,
-    sankey: Class_Sankey,
+    sankey: Type_GenericSankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -393,7 +395,7 @@ export class Class_LevelTag extends Class_ProtoTag {
   constructor(
     name: string,
     group: Class_LevelTagGroup,
-    sankey: Class_Sankey,
+    sankey: Type_GenericSankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -593,8 +595,8 @@ export class Class_LevelTag extends Class_ProtoTag {
   }
 
   public getOrCreateLowerDimension(
-    parent: Class_NodeElement,
-    child: Class_NodeElement,
+    parent: Type_GenericNodeElement,
+    child: Type_GenericNodeElement,
     child_tags: Class_LevelTag[]
   ) {
     // First check if tags are from the same group
@@ -733,7 +735,7 @@ export abstract class Class_ProtoTagGroup {
 
   protected abstract _tags: { [id: string]: Class_ProtoTag }
 
-  protected _ref_sankey: Class_Sankey
+  protected _ref_sankey: Type_GenericSankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -743,7 +745,7 @@ export abstract class Class_ProtoTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string, sankey: Class_Sankey) {
+  constructor(id: string, name: string, sankey: Type_GenericSankey) {
     this._id = id
     this._name = name
     this._ref_sankey = sankey
@@ -1014,7 +1016,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Class_Sankey,
+    sankey: Type_GenericSankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
@@ -1132,7 +1134,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Class_Sankey,
+    sankey: Type_GenericSankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)

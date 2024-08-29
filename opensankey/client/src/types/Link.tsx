@@ -21,7 +21,8 @@ import {
   default_style_id
 } from './Sankey'
 import {
-  Class_NodeElement
+  Class_NodeElement,
+  Type_NodeElement
 } from './Node'
 import {
   Class_DataTag,
@@ -50,6 +51,8 @@ import {
 } from './Utils'
 
 // SPECIFIC TYPES ***********************************************************************
+
+export type Type_LinkElement = Class_LinkElement<Class_DrawingArea>
 
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
@@ -97,8 +100,8 @@ const side_order: { [_ in Type_Side]: number } = {
 // SPECIFIC FUNCTIONS ********************************************************************
 
 export function defaultLinkId(
-  source: Class_NodeElement,
-  target: Class_NodeElement
+  source: Type_NodeElement,
+  target: Type_NodeElement
 ) {
   // TODO ajouter makeID pour crer id unique
   return source.name + ' --> ' + target.name
@@ -106,13 +109,13 @@ export function defaultLinkId(
 /**
  * Allows to sort links alphabethically per id
  * @export
- * @param {(Class_LinkElement | Class_LinkStyle)} a
- * @param {(Class_LinkElement | Class_LinkStyle)} b
+ * @param {(Class_LinkElement<any> | Class_LinkStyle)} a
+ * @param {(Class_LinkElement<any> | Class_LinkStyle)} b
  * @return {*}
  */
 export function sortLinksElementsByIds(
-  a: Class_LinkElement | Class_LinkStyle,
-  b: Class_LinkElement | Class_LinkStyle
+  a: Class_LinkElement<any> | Class_LinkStyle,
+  b: Class_LinkElement<any> | Class_LinkStyle
 ) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
@@ -122,13 +125,13 @@ export function sortLinksElementsByIds(
 /**
  * Allow to sort links by their z-ordre on the drawing area
  * @export
- * @param {Class_LinkElement} a
- * @param {Class_LinkElement} b
+ * @param {Class_LinkElement<any>} a
+ * @param {Class_LinkElement<any>} b
  * @return {*}
  */
 export function sortLinksElementsByDisplayingOrders(
-  a: Class_LinkElement,
-  b: Class_LinkElement
+  a: Class_LinkElement<any>,
+  b: Class_LinkElement<any>
 ) {
   if (a.displaying_order > b.displaying_order) return 1
   else if (a.displaying_order < b.displaying_order) return -1
@@ -138,15 +141,15 @@ export function sortLinksElementsByDisplayingOrders(
 /**
  * Allows to sort links of a given node by comparing their source / target relatives positions
  * @export
- * @param {Class_LinkElement} link_a
- * @param {Class_LinkElement} link_b
- * @param {Class_NodeElement} node
+ * @param {Class_LinkElement<any>} link_a
+ * @param {Class_LinkElement<any>} link_b
+ * @param {Type_NodeElement} node
  * @return {*}
  */
 export function sortLinksElementsByRelativeNodesPositions(
-  link_a: Class_LinkElement,
-  link_b: Class_LinkElement,
-  node: Class_NodeElement
+  link_a: Class_LinkElement<any>,
+  link_b: Class_LinkElement<any>,
+  node: Type_NodeElement
 ) {
   // Check relation between reference node and the two links
   const is_node_source_for_link_a = (link_a.source === node)
@@ -160,8 +163,8 @@ export function sortLinksElementsByRelativeNodesPositions(
   )
     return 0 // Dont move - somethings is wrong
   // Get nodes that we need to compare
-  let node_a: Class_NodeElement
-  let node_b: Class_NodeElement
+  let node_a: Type_NodeElement
+  let node_b: Type_NodeElement
   let side_a: Type_Side
   let side_b: Type_Side
   if (is_node_source_for_link_a) {
@@ -213,12 +216,12 @@ export function sortLinksElementsByRelativeNodesPositions(
 /**
  * Check if given attribute is overloaded in at least one link
  * @export
- * @param {Class_LinkElement[]} links
+ * @param {Class_LinkElement<any>[]} links
  * @param {keyof Class_LinkAttribute} attr
  * @return {*}
  */
 export function isAttributeOverloaded(
-  links: Class_LinkElement[],
+  links: Class_LinkElement<any>[],
   attr: keyof Class_LinkAttribute
 ) {
   let overloaded = false
@@ -233,7 +236,11 @@ export function isAttributeOverloaded(
  *
  * @class Class_LinkElement
  */
-export class Class_LinkElement extends Class_ProtoElement {
+export class Class_LinkElement
+<
+  Type_GenericDrawingArea extends Class_DrawingArea
+>
+extends Class_ProtoElement<Type_GenericDrawingArea> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -241,7 +248,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * Display attributes for link
    * @protected
    * @type {{
-  *     drawing_area: Class_DrawingArea,
+  *     drawing_area: Type_GenericDrawingArea,
   *     position: Type_ElementPosition,
   *     local: Class_LinkAttribute,
   *     style: Class_LinkStyle
@@ -249,7 +256,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   * @memberof Class_LinkElement
   */
   protected _display: {
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -265,18 +272,18 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
   * Node from which link starts
   * @private
-  * @type {Class_NodeElement}
+  * @type {Class_NodeElement<Type_GenericDrawingArea>}
   * @memberof Class_LinkElement
   */
-  private _source: Class_NodeElement
+  private _source: Class_NodeElement<Type_GenericDrawingArea>
 
   /**
    * Node to which link arrives
    * @private
-   * @type {Class_NodeElement}
+   * @type {Class_NodeElement<Type_GenericDrawingArea>}
    * @memberof Class_LinkElement
    */
-  private _target: Class_NodeElement
+  private _target: Class_NodeElement<Type_GenericDrawingArea>
 
   /**
    * Value of link
@@ -308,11 +315,11 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @memberof Class_LinkElement
    */
   private _control_points: {
-    starting_curve_point: Class_Handler,
-    ending_curve_point: Class_Handler,
-    starting_bezier_point: Class_Handler,
-    ending_bezier_point: Class_Handler,
-    middle_recycling_point: Class_Handler,
+    starting_curve_point: Class_Handler<Type_GenericDrawingArea>,
+    ending_curve_point: Class_Handler<Type_GenericDrawingArea>,
+    starting_bezier_point: Class_Handler<Type_GenericDrawingArea>,
+    ending_bezier_point: Class_Handler<Type_GenericDrawingArea>,
+    middle_recycling_point: Class_Handler<Type_GenericDrawingArea>,
     is_dragged: boolean
   }
 
@@ -324,14 +331,14 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Creates an instance of Class_LinkElement.
    * @param {string} id
-   * @param {Class_DrawingArea} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @memberof Class_LinkElement
    */
   constructor(
     id: string,
-    source: Class_NodeElement,
-    target: Class_NodeElement,
-    drawing_area: Class_DrawingArea,
+    source: Class_NodeElement<Type_GenericDrawingArea>,
+    target: Class_NodeElement<Type_GenericDrawingArea>,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
@@ -361,47 +368,47 @@ export class Class_LinkElement extends Class_ProtoElement {
     this._display.style.addReference(this)
     // Add control points
     this._control_points = {
-      starting_curve_point: new Class_Handler(
+      starting_curve_point: new Class_Handler<Type_GenericDrawingArea>(
         'cp_start_' + id,
         drawing_area,
         menu_config,
-        this as Class_ProtoElement,
+        this,
         this.dragHandleStart(),
         this.startCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_start' }),
-      ending_curve_point: new Class_Handler(
+      ending_curve_point: new Class_Handler<Type_GenericDrawingArea>(
         'cp_end_' + id,
         drawing_area,
         menu_config,
-        this as Class_ProtoElement,
+        this,
         this.dragHandleStart(),
         this.endCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_end' }),
-      starting_bezier_point: new Class_Handler(
+      starting_bezier_point: new Class_Handler<Type_GenericDrawingArea>(
         'bz_start_' + id,
         drawing_area,
         menu_config,
-        this as Class_ProtoElement,
+        this,
         this.dragHandleStart(),
         this.startTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_start' }),
-      ending_bezier_point: new Class_Handler(
+      ending_bezier_point: new Class_Handler<Type_GenericDrawingArea>(
         'bz_end_' + id,
         drawing_area,
         menu_config,
-        this as Class_ProtoElement,
+        this,
         this.dragHandleStart(),
         this.endTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_end' }),
-      middle_recycling_point: new Class_Handler(
+      middle_recycling_point: new Class_Handler<Type_GenericDrawingArea>(
         'recy_middle_' + id,
         drawing_area,
         menu_config,
-        this as Class_ProtoElement,
+        this,
         this.dragHandleStart(),
         this.middleRecyclingDragEvent(),
         this.dragHandleEnd(),
@@ -604,7 +611,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     return this._display.attributes[attr] !== undefined
   }
 
-  public isEqual(_: Class_LinkElement) {
+  public isEqual(_: this) {
     if (this.shape_orientation !== _.shape_orientation) {
       return false
     }
@@ -719,7 +726,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (source_node_id) {
       source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
       if (this.main_sankey.nodes_dict[source_node_id]) {
-        this.source = this.main_sankey.nodes_dict[source_node_id]
+        this.source = this.main_sankey.nodes_dict[source_node_id] as Class_NodeElement<Type_GenericDrawingArea>
         this.shape_is_recycling = false
       }
     }
@@ -727,7 +734,7 @@ export class Class_LinkElement extends Class_ProtoElement {
     if (target_node_id) {
       target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
       if (this.main_sankey.nodes_dict[target_node_id]) {
-        this.target = this.main_sankey.nodes_dict[target_node_id]
+        this.target = this.main_sankey.nodes_dict[target_node_id] as Class_NodeElement<Type_GenericDrawingArea>
         this.shape_is_recycling = false
       }
     }
@@ -779,7 +786,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @param {Class_LinkElement} element
    * @memberof Class_LinkElement
    */
-  public copyFrom(element: Class_LinkElement) {
+  public copyFrom(element: Class_LinkElement<Type_GenericDrawingArea>) {
 
     // this._display.position = structuredClone(element._display.position)
     this._display.position_x_label = element._display.position_x_label
@@ -1017,7 +1024,7 @@ export class Class_LinkElement extends Class_ProtoElement {
             this.updateTextPathOffset()
 
             if (!this.drawing_area.static) {
-              d3_textpath_selection?.call(d3.drag<SVGTextPathElement, this>()
+              d3_textpath_selection?.call(d3.drag<SVGTextPathElement, unknown>()
                 .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
                 .on('start', ev => this.dragTextPathStart(ev))
                 .on('drag', ev => this.dragTextPathMove(ev))
@@ -1033,7 +1040,7 @@ export class Class_LinkElement extends Class_ProtoElement {
               .attr('method', 'align')
 
             if (!this.drawing_area.static) {
-              d3_text_selection?.call(d3.drag<SVGTextElement, this>()
+              d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
                 .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
                 .on('start', ev => this.dragTextStart(ev))
                 .on('drag', ev => this.dragTextMove(ev))
@@ -1115,20 +1122,17 @@ export class Class_LinkElement extends Class_ProtoElement {
       }
 
     }
-
-
-
-
     return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
   }
+
   /**
    * Function triggered when we start dragging node name label when it follow the link path, it initialise relative position if undefined
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
+   * @param {d3.D3DragEvent<SVGTextPathElement,Unknown,Unknown>} event
    * @memberof Class_LinkElement
    */
-  private dragTextPathStart(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
+  private dragTextPathStart(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     if (this._display.position_offset_label === undefined) {
       const [label_offset,] = this.getTextPathOffset()
@@ -1143,17 +1147,17 @@ export class Class_LinkElement extends Class_ProtoElement {
    * Function triggered when we move the node name label when it follow the link path, it update relative node position & redraw the name slabel
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextPathElement,Class_LinkElement,Class_LinkElement>} event
+   * @param {d3.D3DragEvent<SVGTextPathElement,unknown,unknown>} event
    * @memberof Class_LinkElement
    */
-  private dragTextPathMove(event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
+  private dragTextPathMove(event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this._display.position_offset_label = ((this._display.position_offset_label !== undefined) ? this._display.position_offset_label : 0) + event.dx
     if (this._display.position_offset_label < 0) this._display.position_offset_label = 0
     else if (this._display.position_offset_label > 100) this._display.position_offset_label = 100
     this.updateTextPathOffset()
   }
 
-  private dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, Class_LinkElement, Class_LinkElement>) {
+  private dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
@@ -1233,10 +1237,10 @@ export class Class_LinkElement extends Class_ProtoElement {
    * Function triggered when we start dragging node name label, it initialise relative position if undefined
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextElement,Class_LinkElement,Class_LinkElement>} event
+   * @param {d3.D3DragEvent<SVGTextElement,unknown,unknown>} event
    * @memberof Class_LinkElement
    */
-  private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, Class_LinkElement, Class_LinkElement>) {
+  private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     const [label_pos, label_ortho_pos,] = this.getTextXYPos()
 
@@ -1259,13 +1263,13 @@ export class Class_LinkElement extends Class_ProtoElement {
    * @param {d3.D3DragEvent<SVGTextElement,Class_LinkElement,Class_LinkElement>} event
    * @memberof Class_LinkElement
    */
-  private dragTextMove(event: d3.D3DragEvent<SVGTextElement, Class_LinkElement, Class_LinkElement>) {
+  private dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this._display.position_x_label = ((this._display.position_x_label !== undefined) ? this._display.position_x_label : 0) + event.dx
     this._display.position_y_label = ((this._display.position_y_label !== undefined) ? this._display.position_y_label : 0) + event.dy
     this.updateTextXYPosition()
   }
 
-  private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, Class_LinkElement, Class_LinkElement>) {
+  private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
@@ -1995,7 +1999,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * Get source node
    * @memberof Class_LinkElement
    */
-  public get source(): Class_NodeElement {
+  public get source(): Class_NodeElement<Type_GenericDrawingArea> {
     return this._source
   }
 
@@ -2003,7 +2007,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * set source node
    * @memberof Class_LinkElement
    */
-  public set source(_: Class_NodeElement) {
+  public set source(_: Class_NodeElement<Type_GenericDrawingArea>) {
     if (this.source !== _) {
       const old_source = this._source
       this._source = _
@@ -2064,7 +2068,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * get destination node
    * @memberof Class_LinkElement
    */
-  public get target(): Class_NodeElement {
+  public get target(): Class_NodeElement<Type_GenericDrawingArea> {
     return this._target
   }
 
@@ -2072,7 +2076,7 @@ export class Class_LinkElement extends Class_ProtoElement {
    * Set destination node
    * @memberof Class_LinkElement
    */
-  public set target(_: Class_NodeElement) {
+  public set target(_: Class_NodeElement<Type_GenericDrawingArea>) {
     if (this.target !== _) {
       const old_target = this._target
       this._target = _
@@ -2241,7 +2245,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Dict as [id: tag] of tags related to link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_tags_dict() {
     const value = this.value
@@ -2253,7 +2257,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Array of tags related to link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_tags_list() {
     const value = this.value
@@ -2265,7 +2269,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Dict as [id: tag group] of tag groups related to link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_taggs_dict() {
     const value = this.value
@@ -2277,7 +2281,7 @@ export class Class_LinkElement extends Class_ProtoElement {
   /**
    * Array of tag groups related to link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
@@ -3394,7 +3398,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private _is_deletable: boolean
 
-  private _references: { [_: string]: Class_LinkElement } = {}
+  private _references: { [_: string]: Class_LinkElement<any> } = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(
@@ -3458,13 +3462,13 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   // PUBLIC METHODS =====================================================================
 
-  public addReference(_: Class_LinkElement) {
+  public addReference(_: Class_LinkElement<any>) {
     if (!this._references[_.id]) {
       this._references[_.id] = _
     }
   }
 
-  public removeReference(_: Class_LinkElement) {
+  public removeReference(_: Class_LinkElement<any>) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
     }
@@ -3520,7 +3524,7 @@ export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | Class_LinkElement
+  public parent: Class_LinkValueTree | Class_LinkElement<any>
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
   public data_tag_group: Class_DataTagGroup
@@ -3538,7 +3542,7 @@ export class Class_LinkValueTree {
    * @memberof Class_LinkValueTree
    */
   constructor(
-    parent: Class_LinkValueTree | Class_LinkElement,
+    parent: Class_LinkValueTree | Class_LinkElement<any>,
     data_tag_group: Class_DataTagGroup
   ) {
     // Instanciate parent
@@ -3940,7 +3944,7 @@ export class Class_LinkValueTree {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get link(): Class_LinkElement | null {
+  public get link(): Class_LinkElement<any> | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
@@ -3959,13 +3963,12 @@ export class Class_LinkValueTree {
  *
  * @export
  * @class Class_LinkValue
- * @extends {Class_LinkValueTree}
  */
 export class Class_LinkValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | Class_LinkElement
+  public parent: Class_LinkValueTree | Class_LinkElement<any>
   public data_value: number | null = null
   public text_value: string | null = null
 
@@ -3988,7 +3991,7 @@ export class Class_LinkValue {
 
   // CONSTRUCTOR ========================================================================
 
-  constructor(parent: Class_LinkValueTree | Class_LinkElement) {
+  constructor(parent: Class_LinkValueTree | Class_LinkElement<any>) {
     // Parents / Children relations
     this.parent = parent
     // Id
@@ -4152,7 +4155,7 @@ export class Class_LinkValue {
     // where 'key_grp_tag' represent the id of a flux tag group
     // &  '[key_tag, ...]' represent the array of id of tag selected
     // for that flux tag group
-    const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
+    const flux_taggs_dict = ((this.link?.drawing_area as Class_DrawingArea).sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([id, list]) => {
         const tagg_id = matching_taggs_id[id] ?? id
@@ -4188,7 +4191,7 @@ export class Class_LinkValue {
    * @type {(Class_LinkElement | null)}
    * @memberof Class_LinkValue
    */
-  public get link(): Class_LinkElement | null {
+  public get link(): Class_LinkElement<any> | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
@@ -4196,7 +4199,7 @@ export class Class_LinkValue {
   /**
    * Dict as [id: tag] of flux tags related to this value
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_tags_dict() {
     return this._flux_tags
@@ -4205,7 +4208,7 @@ export class Class_LinkValue {
   /**
    * Array of flux tags related to this value
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_tags_list() {
     return Object.values(this._flux_tags)
@@ -4214,7 +4217,7 @@ export class Class_LinkValue {
   /**
    * Dict as [id: tag group] of tag groups related to link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_taggs_dict() {
     const taggs: { [_: string]: Class_TagGroup } = {}
@@ -4229,7 +4232,7 @@ export class Class_LinkValue {
   /**
    * Array of tag groups related to link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof Class_LinkElement
    */
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
@@ -4259,7 +4262,15 @@ export class Class_LinkValue {
 
 // CLASS GHOST LINK *********************************************************************
 
-export class Class_GhostLinkElement extends Class_LinkElement {
+export class Class_GhostLinkElement
+<
+  Type_GenericDrawingArea extends Class_DrawingArea,
+>
+extends Class_LinkElement
+<
+  Type_GenericDrawingArea
+>
+{
 
   // GETTER / SETTER ====================================================================
   public get is_visible() { return this._is_visible }

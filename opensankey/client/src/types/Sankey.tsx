@@ -16,6 +16,7 @@ import {
 import {
   Class_LinkElement,
   Class_LinkStyle,
+  Type_LinkElement,
   defaultLinkId,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
@@ -23,6 +24,7 @@ import {
 import {
   Class_NodeElement,
   Class_NodeStyle,
+  Type_NodeElement,
   sortNodesElements
 } from './Node'
 import {
@@ -41,6 +43,7 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
+export type Type_Sankey = Class_Sankey<Class_DrawingArea, Type_NodeElement, Type_LinkElement>
 export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
 
 // SPECIFIC CONSTANTS *******************************************************************
@@ -56,16 +59,22 @@ export const default_style_name = 'Style par default'
  * @export
  * @class Class_Sankey
  */
-export class Class_Sankey {
+export class Class_Sankey
+  <
+    Type_GenericDrawingArea extends Class_DrawingArea,
+    Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea>,
+    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea>,
+  >
+{
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   /**
    * Drawing area where sankey belongs
-   * @type {Class_DrawingArea}
+   * @type {Type_GenericDrawingArea}
    * @memberof Class_Sankey
    */
-  public drawing_area: Class_DrawingArea
+  public drawing_area: Type_GenericDrawingArea
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -92,13 +101,13 @@ export class Class_Sankey {
    * Nodes
    *
    * @protected
-   * @type {{ [_: string]: Class_NodeElement }}
+   * @type {{ [_: string]: Type_GenericNodeElement }}
    * @memberof Class_Sankey
    */
-  protected _nodes: { [_: string]: Class_NodeElement } = {}
+  protected _nodes: { [_: string]: Type_GenericNodeElement } = {}
 
   // Links
-  private _links: { [_: string]: Class_LinkElement } = {}
+  private _links: { [_: string]: Type_GenericLinkElement } = {}
 
   // Existing styles
   private _link_styles: { [_: string]: Class_LinkStyle } = {}
@@ -120,11 +129,11 @@ export class Class_Sankey {
 
   /**
    * Creates an instance of Class_Sankey.
-   * @param {Class_DrawingArea} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @memberof Class_Sankey
    */
   constructor(
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
     id: string = default_main_sankey_id
   ) {
@@ -186,14 +195,14 @@ export class Class_Sankey {
    * @return {Class_Node}
    * @memberof Class_Sankey
    */
-  public addNewNode(id: string, name: string): Class_NodeElement {
+  public addNewNode(id: string, name: string): Type_GenericNodeElement {
     if (!this._nodes[id]) {
       // Create node
-      const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)
+      const node = new Class_NodeElement<Type_GenericDrawingArea>(id, name, this.drawing_area, this._menu_config) as Type_GenericNodeElement
       // Set node to default position
       node.initDefaultPosXY()
       // Update registry of nodes
-      this._addNode(node)
+      this._addNode(node as Type_GenericNodeElement)
       return node
     }
     else {
@@ -231,7 +240,7 @@ export class Class_Sankey {
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  public deleteNode(node: Class_NodeElement) {
+  public deleteNode(node: Type_GenericNodeElement) {
     if (this._nodes[node.id] !== undefined) {
       // if we remove a node we also have to remove it link attached to it
       node.input_links_list.forEach(l => this.drawing_area.deleteLink(l))
@@ -249,14 +258,14 @@ export class Class_Sankey {
   /**
    * Create a new link from source to target
    *
-   * @param {Class_NodeElement} source
-   * @param {Class_NodeElement} target
-   * @return {*}  {Class_LinkElement}
+   * @param {Type_GenericNodeElement} source
+   * @param {Type_GenericNodeElement} target
+   * @return {*}  {Type_GenericLinkElement}
    * @memberof Class_Sankey
    */
   public addNewLink(
-    source: Class_NodeElement,
-    target: Class_NodeElement,
+    source: Type_GenericNodeElement,
+    target: Type_GenericNodeElement,
   ) {
     return this._addNewLink(
       defaultLinkId(source, target),
@@ -271,8 +280,8 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public addNewDefaultLink() {
-    let source: Class_NodeElement
-    let target: Class_NodeElement
+    let source: Type_GenericNodeElement
+    let target: Type_GenericNodeElement
     if (this.nodes_list.length > 2) {
       source = this.nodes_list[0]
       target = this.nodes_list[1]
@@ -306,10 +315,10 @@ export class Class_Sankey {
 
   /**
    * Remove a given link from sankey
-   * @param {Class_LinkElement} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_Sankey
    */
-  public removeLink(link: Class_LinkElement) {
+  public removeLink(link: Type_GenericLinkElement) {
     delete this._links[link.id]
   }
 
@@ -751,7 +760,7 @@ export class Class_Sankey {
         )
       })
     // Order links io position in each nodes
-    // In nodes of the json_object links_order is a string array of links id but we want it as a Class_LinkElement
+    // In nodes of the json_object links_order is a string array of links id but we want it as a Type_GenericLinkElement
     if (json_node_object)
       this.nodes_list
         .forEach(node => {
@@ -875,7 +884,7 @@ export class Class_Sankey {
   }
 
   public updateLayoutFromJSON(
-    new_layout: Class_DrawingArea,
+    new_layout: Type_GenericDrawingArea,
     mode: string[],
   ) {
 
@@ -1117,7 +1126,9 @@ export class Class_Sankey {
           const similar_src_curr = this.nodes_dict[link.source.id]
           const similar_trgt_curr = this.nodes_dict[link.target.id]
           if (similar_src_curr && similar_trgt_curr)
-            this.addNewLink(link.source, link.target)
+            this.addNewLink(
+              link.source as Type_GenericNodeElement,
+              link.target as Type_GenericNodeElement)
         })
     }
 
@@ -1218,16 +1229,16 @@ export class Class_Sankey {
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  private _addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
+  protected _addNode(node: Type_GenericNodeElement) { this._nodes[node.id] = node }
 
   // Links related ----------------------------------------------------------------------
 
   /**
    * Add a given link to Sankey
-   * @param {Class_LinkElement} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_Sankey
    */
-  private _addLink(link: Class_LinkElement) {
+  private _addLink(link: Type_GenericLinkElement) {
     this._links[link.id] = link
   }
 
@@ -1237,23 +1248,23 @@ export class Class_Sankey {
    *
    * @private
    * @param {string} id
-   * @param {Class_NodeElement} source
-   * @param {Class_NodeElement} target
-   * @return {*}  {Class_LinkElement}
+   * @param {Type_GenericNodeElement} source
+   * @param {Type_GenericNodeElement} target
+   * @return {*}  {Type_GenericLinkElement}
    * @memberof Class_Sankey
    */
   private _addNewLink(
     id: string,
-    source: Class_NodeElement,
-    target: Class_NodeElement,
-  ): Class_LinkElement {
+    source: Type_GenericNodeElement,
+    target: Type_GenericNodeElement,
+  ): Type_GenericLinkElement {
     if (!this._links[id]) {
-      const link = new Class_LinkElement(
+      const link = new Class_LinkElement<Type_GenericDrawingArea>(
         id,
         source,
         target,
         this.drawing_area,
-        this._menu_config)
+        this._menu_config) as Type_GenericLinkElement
       this._addLink(link)
       return link
     }
