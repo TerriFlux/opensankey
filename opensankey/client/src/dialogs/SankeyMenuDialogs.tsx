@@ -2,7 +2,7 @@ import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { AssignNodeLocalAttribute, DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
+import { DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
 import { arrangeNodes, ComputeAutoSankey, ComputeParametrization } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
@@ -553,8 +553,8 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
               onClick={()=>{
                 if (parametric) {
                   Object.values(applicationData.data.nodes)
-                  .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
-                  .forEach(node=>{if (node.local) delete node.local.dy})
+                    .filter(node=>ReturnValueNode(data,node,'position') !== 'relative')
+                    .forEach(node=>{if (node.local) delete node.local.dy})
                 }
                 applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}>

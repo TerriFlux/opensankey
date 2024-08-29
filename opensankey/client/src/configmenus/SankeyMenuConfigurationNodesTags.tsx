@@ -118,6 +118,12 @@ export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConf
                               d.style='NodeProductStyle'
                             } else if (tags[0]==='produit'){
                               d.style='NodeSectorStyle'
+                            } else if (tags[0]==='echange') {
+                              if (d.inputLinksId.length === 0 ) {
+                                d.style='NodeImportStyle'
+                              } else {
+                                d.style='NodeExportStyle'
+                              }
                             }
                           }
                         }

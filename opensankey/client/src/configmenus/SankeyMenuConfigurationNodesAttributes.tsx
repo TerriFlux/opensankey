@@ -49,7 +49,6 @@ import {
   AssignNodeLocalAttribute,
   AssignNodeValueToCorrectVar,
   CutName,
-  GetNodeAttributeValueFromStyle,
   IsAllNodeAttrSameValue,
   IsNodeDisplayingValueLocal,
   OSTooltip,
@@ -1449,7 +1448,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       </MenuButton>
       <MenuList>
         {Object.keys(data.style_node)
-          .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' )
+          .filter(key=>has_product_or_sector ? true : data.style_node[key].idNode !== 'NodeSectorStyle' && data.style_node[key].idNode !== 'NodeProductStyle' && data.style_node[key].idNode !== 'NodeImportStyle' && data.style_node[key].idNode !== 'NodeExportStyle')
           .map((d,i)=> {
             return (
               <MenuItem
@@ -1627,8 +1626,6 @@ export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumber
             if (local_var_of_node === 'u') {
               d.u = value
             } else if (local_var_of_node === 'dy' && !menu_for_style) {
-              const n = (d as SankeyNode)
-              //const style_dy = +GetNodeAttributeValueFromStyle(data,data.style_node[n.style],'dy')
               AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style)
             } else {
               AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style)
