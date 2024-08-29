@@ -519,14 +519,16 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data:
   let url = root + url_prefix + 'sankey/save_excel'
 
   const cpy = JSON.parse(JSON.stringify(data)) as SankeyData
-  cpy.nodes = JSON.parse(JSON.stringify(data.initial_nodes))
-  cpy.links = JSON.parse(JSON.stringify(data.initial_links))  
-  delete cpy.initial_nodes
-  delete cpy.initial_links
-  delete cpy.additional_nodes
-  delete cpy.additional_links
-  delete cpy.removed_nodes
-  delete cpy.removed_links
+  if ( data.initial_nodes && Object.values(data.initial_nodes).length > 0) {
+    cpy.nodes = JSON.parse(JSON.stringify(data.initial_nodes))
+    cpy.links = JSON.parse(JSON.stringify(data.initial_links))  
+    delete cpy.initial_nodes
+    delete cpy.initial_links
+    delete cpy.additional_nodes
+    delete cpy.additional_links
+    delete cpy.removed_nodes
+    delete cpy.removed_links
+  }
 
   const fetchData = {
     method: 'POST',
