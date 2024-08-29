@@ -1849,14 +1849,27 @@ export const NodeContextHasDesaggregate:NodeContextHasDesaggregateFuncType = (n:
 }
 
 export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (
-  multi_selected_nodes:{current:SankeyNode[]},
-  node_function
+  applicationData,
+  multi_selected_nodes,
+  node_function,
+  link_function
 ) => {
   multi_selected_nodes.current.map(d => {
     // Delete local value so the used value come from the style
     delete d.local
   })
   node_function.RedrawNodes(multi_selected_nodes.current)
+
+  let link_to_update:string[]=[]
+  multi_selected_nodes.current.forEach(n=>{
+    link_to_update=link_to_update.concat(n.outputLinksId)
+    link_to_update=link_to_update.concat(n.inputLinksId)
+  })
+  link_to_update=[...new Set(link_to_update)]
+
+  link_function.RedrawLinks(
+    Object.values(applicationData.display_links).filter(l=>link_to_update.includes(l.idLink))
+  )
 
 }
 
@@ -1886,7 +1899,7 @@ export const AddNewNode:AddNewNodeFuncType = (applicationData,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  ApplyStyleToNodes(multi_selected_nodes,node_function)
+  //ApplyStyleToNodes(applicationData,multi_selected_nodes,node_function,link_function)
   applicationData.display_nodes[node.idNode]=node
   node_function.CreateNodesOnSVG([node])
 }

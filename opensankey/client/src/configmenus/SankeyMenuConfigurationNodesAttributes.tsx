@@ -1458,7 +1458,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
                   multi_selected_nodes.current.map(n => {
                     n.style = d
                   })
-                  ApplyStyleToNodes(multi_selected_nodes,node_function)
+                  ApplyStyleToNodes(applicationData,multi_selected_nodes,node_function,link_function)
                   setForceUpdate(!forceUpdate)
                   ComponentUpdater.updateComponenSaveInCache.current(false)
                 }}
@@ -1473,7 +1473,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       <Button
         variant='menuconfigpanel_option_button'
         onClick={() => {
-          ApplyStyleToNodes(multi_selected_nodes,node_function)
+          ApplyStyleToNodes(applicationData,multi_selected_nodes,node_function,link_function)
           ComponentUpdater.updateComponenSaveInCache.current(false)
         }}
       >

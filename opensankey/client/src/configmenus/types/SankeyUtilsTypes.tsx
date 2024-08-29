@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, applicationDataType } from '../../types/Types'
+import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, applicationDataType } from '../../types/Types'
 import { PlacementWithLogical } from '@chakra-ui/react'
 import { ReactNode } from 'react'
 
@@ -138,8 +138,10 @@ export type NodeContextHasAggregateFuncType = (n:SankeyNode,data:SankeyData)=>bo
 export type  NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyData) => boolean
 
 export type ApplyStyleToNodesFuncType = (
+  applicationData:applicationDataType,
   multi_selected_nodes: {current: SankeyNode[];},
-  node_function:NodeFunctionTypes
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
     ) => void
 
 export type AddNewNodeFuncType = (applicationData:applicationDataType, multi_selected_nodes: {current: SankeyNode[];},

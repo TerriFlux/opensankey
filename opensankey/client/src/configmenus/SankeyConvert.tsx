@@ -503,10 +503,10 @@ export const convert_tags:convert_tagsFuncType = (
     if(!Object.keys(data.style_node).includes('NodeExportStyle')){
       data.style_node['NodeExportStyle']=DefaultNodeExportStyle()
     }
-    if(!Object.keys(data.style_node).includes('LinkImportStyle')){
+    if(!Object.keys(data.style_link).includes('LinkImportStyle')){
       data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
     }
-    if(!Object.keys(data.style_node).includes('LinkExportStyle')){
+    if(!Object.keys(data.style_link).includes('LinkExportStyle')){
       data.style_link['LinkExportStyle']=DefaultLinkExportStyle()
     }
   }
