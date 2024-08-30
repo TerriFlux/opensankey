@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import { OSPApplicationDataType, OSPData, OSPLabel, OSPLink, OSPLinkAttrLocal, OSPLinkStyle, OSPNode } from './Types'
-// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-// import { ComponentUpdaterType } from 'open-sankey/src/types/Types'
+// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
+// import { ComponentUpdaterType } from './deps/OpenSankey/types/Types'
 
 export type DefaultOSPStyleLinkFType = () => OSPLinkStyle
 
@@ -59,4 +59,3 @@ export type OSPIsAllNodeNotLocalAttrSameValueFType = (
 
 
 export type clickSaveSVGFType = () => void
-  

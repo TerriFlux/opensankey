@@ -1,7 +1,7 @@
 // import { TFunction } from 'i18next'
 import { OSPApplicationDataType, OSPData, OSPLabel, OSPNode, OSPShowMenuComponentsType } from './Types'
-// import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-// import { applicationDataType, applicationDrawType } from 'open-sankey/src/types/Types'
+// import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
+// import { applicationDataType, applicationDrawType } from './deps/OpenSankey/types/Types'
 // import { MutableRefObject } from 'react'
 
 

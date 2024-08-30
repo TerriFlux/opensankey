@@ -12,9 +12,9 @@
 // import { NodeDisplayed } from './import/OpenSankey'
 
 // // OpenSankey types
-// import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-// import { OSTooltip } from 'open-sankey/dist/configmenus/SankeyUtils'
+// import { NodeTooltipsContentFType } from './deps/OpenSankey/draw/types/SankeyTooltipTypes'
+// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
+// import { OSTooltip } from './deps/OpenSankey/configmenus/SankeyUtils'
 
 
 // declare const window: Window &

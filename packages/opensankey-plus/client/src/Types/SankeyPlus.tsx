@@ -1,41 +1,82 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
-// Date : 29/05/2024
+// Authors :
+//  - Vincent CLAVEL
+//  - Julien ALAPETITE
+//  - Vincent LE DOZE
+// Date : 28/08/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-// External imports
-import { Class_Sankey } from 'open-sankey/dist/types/Sankey'
+// OpenSankey imports
+import {
+  Class_Sankey,
+  default_main_sankey_id
+} from '../deps/OpenSankey/types/Sankey'
+
+// Local imports
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Class_NodePlusElement } from './NodePlus'
-import { Class_FreeLabel } from './FreeLabel'
+import { Class_NodeElementPlus } from './NodePlus'
+import { Class_ContainerElement } from './FreeLabel'
 import { ViewType } from '../../types/Types'
+import { Class_NodeElement } from '../deps/OpenSankey/types/Node'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
 
-// SPECIFIC TYPES ***********************************************************************
+// CLASS SANKEY PLUS *********************************************************************
 
-export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
-
-// SPECIFIC CONSTANTS *******************************************************************
-
-export const default_main_sankey_id = 'sankey_maitre'
-export const default_style_id = 'default'
-export const default_style_name = 'Style par default'
-
-// CLASS SANKEY *************************************************************************
 /**
  * Contains all necessary elements to draw a Sankey
  *
  * @export
  * @class Class_Sankey
  */
-export class Class_SankeyPlus extends Class_Sankey {
+export class Class_SankeyPlus extends Class_Sankey
+  <
+    Class_DrawingAreaPlus,
+    Class_NodeElementPlus,
+    Class_LinkElement<Class_DrawingAreaPlus>
+  >
+{
 
   // PUBLIC ATTRIBUTES ==================================================================
 
+  // /**
+  //  * Drawing area where sankey belongs
+  //  * @type {Class_DrawingArea}
+  //  * @memberof Class_Sankey
+  //  */
+  // declare public drawing_area: Class_DrawingAreaPlus
+
   // PROTECTED ATTRIBUTES ===============================================================
-  // Nodes
-  protected _labels: { [_: string]: Class_FreeLabel } = {}
+
+  /**
+   * Config menu ref to html element & function to update it
+   * @protected
+   * @type {Class_MenuConfig}
+   * @memberof Class_Sankey
+   */
+  protected _menu_config: Class_MenuConfigPlus
+
+  // /**
+  //  * Nodes
+  //  *
+  //  * @protected
+  //  * @type {{ [_: string]: Class_NodeElement }}
+  //  * @memberof Class_Sankey
+  //  */
+  // declare protected _nodes: { [_: string]: Class_NodeElementPlus }
+
+  /**
+   * Contains dict of Free Labels elements
+   * @protected
+   * @type {{ [_: string]: Class_ContainerElement }}
+   * @memberof Class_SankeyPlus
+   */
+  protected _labels: { [_: string]: Class_ContainerElement } = {}
+
+  // PRIVATE ATTRIBUTES =================================================================
+
   private _icon_catalog: { [x: string]: string | null | undefined } = {}
 
   private _view: ViewType[] = []
@@ -44,16 +85,11 @@ export class Class_SankeyPlus extends Class_Sankey {
   private _show_background_image: boolean = false
   private _is_catalog: boolean = false
 
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-
-
   // CONSTRUCTOR ========================================================================
 
   /**
    * Creates an instance of Class_Sankey.
-   * @param {Class_DrawingArea} drawing_area
+   * @param {Class_DrawingAreaPlus} drawing_area
    * @memberof Class_Sankey
    */
   constructor(
@@ -61,22 +97,52 @@ export class Class_SankeyPlus extends Class_Sankey {
     menu_config: Class_MenuConfigPlus,
     id: string = default_main_sankey_id
   ) {
+    // Heritance
     super(drawing_area, menu_config, id)
-
+    // Overrides
+    this._menu_config = menu_config
+    // this._nodes = {}
+    // New attributes
     this._labels = {}
     this._icon_catalog = {}
   }
 
-
   // PUBLIC METHODS =====================================================================
+
+  // Overrides --------------------------------------------------------------------------
+
+  public override addNewDefaultNode(): Class_NodeElementPlus {
+    const n = String(Object.values(this._nodes).length)
+    const id = 'node' + n
+    const name = 'Node ' + n
+    return this.addNewNode(id, name)
+  }
+
+  public override addNewNode(id: string, name: string): Class_NodeElementPlus {
+    if (!this._nodes[id]) {
+      // Create node
+      const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
+      // Set node to default position
+      node.initDefaultPosXY()
+      // Update registry of nodes
+      this._addNode(node)
+      return node
+    }
+    else {
+      return this.addNewNode(id + '_0', name + '_0')
+    }
+  }
+
+  // New --------------------------------------------------------------------------------
+
   /**
    * Add a given zdt to Sankey
-   * @param {Class_FreeLabel} node
+   * @param {Class_ContainerElement} node
    * @memberof Class_Sankey
    */
-  private _addLabel(zdt: Class_FreeLabel) { this._labels[zdt.id] = zdt }
+  private _addLabel(zdt: Class_ContainerElement) { this._labels[zdt.id] = zdt }
 
-  public moveUpFreeLabelOrder = (zdt: Class_FreeLabel) => {
+  public moveUpFreeLabelOrder = (zdt: Class_ContainerElement) => {
     const list_zdt = Object.entries(this._labels)
     // Get idx of element to move up
     const posElemt = list_zdt.indexOf([zdt.id, zdt])
@@ -92,10 +158,9 @@ export class Class_SankeyPlus extends Class_Sankey {
 
     // Redraw all free labels
     this.free_labels_list.map(zdt => zdt.draw())
-
   }
 
-  public moveDownFreeLabelOrder = (zdt: Class_FreeLabel) => {
+  public moveDownFreeLabelOrder = (zdt: Class_ContainerElement) => {
     const list_zdt = Object.entries(this._labels)
     // Get idx of element to move up
     const posElemt = list_zdt.indexOf([zdt.id, zdt])
@@ -111,7 +176,6 @@ export class Class_SankeyPlus extends Class_Sankey {
 
     // Redraw all free labels
     this.free_labels_list.map(zdt => zdt.draw())
-
   }
 
   /**
@@ -121,10 +185,13 @@ export class Class_SankeyPlus extends Class_Sankey {
    * @return {Class_Node}
    * @memberof Class_Sankey
    */
-  public addNewFreeLabel(id: string): Class_FreeLabel {
+  public addNewFreeLabel(id: string): Class_ContainerElement {
     if (!this._labels[id]) {
       // Create node
-      const zdt = new Class_FreeLabel(id, this._menu_config as Class_MenuConfigPlus, this.drawing_area as Class_DrawingAreaPlus)
+      const zdt = new Class_ContainerElement(
+        id,
+        this._menu_config as Class_MenuConfigPlus,
+        this.drawing_area as Class_DrawingAreaPlus)
       // Set node to default position
       zdt.initDefaultPosXY()
       // Update registry of nodes
@@ -154,18 +221,18 @@ export class Class_SankeyPlus extends Class_Sankey {
    */
   public deleteSelectedFreeLabels() {
     // Get copy of selected nodes
-    const selected_nodes = (this.drawing_area as Class_DrawingAreaPlus).selected_free_labels_list
+    const selected_labels = this.drawing_area.selected_free_labels_list
     // Delete each one of them
-    selected_nodes.forEach(zdt => { this.deleteFreeLabel(zdt) })
+    selected_labels.forEach(selected_label => { this.deleteFreeLabel(selected_label) })
     // Then let garbage collector do the rest...
   }
 
   /**
  * Delete a given zdt from Sankey -> zdt may still exist somewhere
- * @param {Class_FreeLabel} zdt
+ * @param {Class_ContainerElement} zdt
  * @memberof Class_SankeyPlus
  */
-  public deleteFreeLabel(zdt: Class_FreeLabel) {
+  public deleteFreeLabel(zdt: Class_ContainerElement) {
     if (this._labels[zdt.id] !== undefined) {
       // Delete node in sankey
       const _ = this._labels[zdt.id]
@@ -175,10 +242,10 @@ export class Class_SankeyPlus extends Class_Sankey {
   }
 
   /**
-   * Return the path of the icon, if it doesn't exist return an empty string 
+   * Return the path of the icon, if it doesn't exist return an empty string
    *
    * @param {string} id_icon
-   * @return {*} 
+   * @return {*}
    * @memberof Class_SankeyPlus
    */
   public getIconFromCatalog(id_icon: string) {
@@ -189,33 +256,30 @@ export class Class_SankeyPlus extends Class_Sankey {
     return ''
   }
 
-  public addNewDefaultNode() {
-    const n = String(Object.values(this._nodes).length)
-    const id = 'node' + n
-    const name = 'Node ' + n
-    return this.addNewNode(id, name)
-  }
+  // PROTECTED METHODS ==================================================================
 
-  public addNewNode(id: string, name: string): Class_NodePlusElement {
-    if (!this._nodes[id]) {
-      // Create node
-      const node = new Class_NodePlusElement(id, name, this.drawing_area, this._menu_config)
-      // Set node to default position
-      node.initDefaultPosXY()
-      // Update registry of nodes
-      this._addNode(node)
-      return node
-    }
-    else {
-      return this.addNewNode(id + '_0', name + '_0')
-    }
-  }
+  // Overrides --------------------------------------------------------------------------
+
+  /**
+   * Add a given node to Sankey
+   * @param {Class_Node} node
+   * @memberof Class_Sankey
+   */
+  protected override _addNode(node: Class_NodeElementPlus) { this._nodes[node.id] = node}
 
   // GETTERS / SETTERS ==================================================================
-  public get nodes_list_plus(): Class_NodePlusElement[] {
-    return this.nodes_list as unknown as Class_NodePlusElement[]
-  }
 
+  // // Overrides --------------------------------------------------------------------------
+
+  // public override get nodes_dict(): {[_: string]: Class_NodeElementPlus}; // {
+  // //   return this._nodes
+  // // }
+
+  // public override get nodes_list() {
+  //   return Object.values(this._nodes)
+  // }
+
+  // New --------------------------------------------------------------------------------
 
   public get free_labels_dict() { return this._labels }
 

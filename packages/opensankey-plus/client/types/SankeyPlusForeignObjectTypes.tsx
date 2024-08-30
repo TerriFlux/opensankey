@@ -1,8 +1,8 @@
 import { TFunction } from 'i18next'
 import { OSPData, OSPNode } from './Types'
-//import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-// import { applicationStateType } from 'open-sankey/src/types/Types'
+//import { NodeTooltipsContentFType } from './deps/OpenSankey/draw/types/SankeyTooltipTypes'
+// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
+// import { applicationStateType } from './deps/OpenSankey/types/Types'
 
 // export type OSPNodeFOFType = {
 //   t:TFunction,

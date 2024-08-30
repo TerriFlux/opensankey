@@ -21,7 +21,7 @@
 //   OSPNode,
 //   OSPNodeVar,
 // } from '../types/Types'
-import { DefaultLinkStyle } from 'open-sankey/dist/types/Legacy'
+import { DefaultLinkStyle } from './deps/OpenSankey/types/Legacy'
 import {
    DefaultOSPStyleLinkFType,
 //   ImportImageAsSvgBgFType,
@@ -46,11 +46,11 @@ import { OSPLinkStyle } from '../types/Types'
 // } from './import/OpenSankey'
 
 // // OpenSankey types
-// import { SankeyLinkAttrLocal, SankeyLinkStyle } from 'open-sankey/src/types/Types'
-// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+// import { SankeyLinkAttrLocal, SankeyLinkStyle } from './deps/OpenSankey/types/Types'
+// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 
-// // OpenSankey js-code
-// import { pre_process_export_svg, post_process_export_svg } from 'open-sankey/dist/topmenus/SankeyMenuTop'
+// // OpenSankey ts-code
+// import { pre_process_export_svg, post_process_export_svg } from './deps/OpenSankey/topmenus/SankeyMenuTop'
 
 
 
@@ -249,7 +249,7 @@ export const DefaultOSPStyleLink: DefaultOSPStyleLinkFType = () => {
 //  * @param {OSPLink} l link sabot to color
 //  * @param {OSPData} data sankey data
 //  * @param {GetLinkValueFuncType} GetLinkValue
-//  * @return {string} color (hex) to use 
+//  * @return {string} color (hex) to use
 //  */
 // export const OSPLinkSabotColor: OSPLinkSabotColorFType = (
 //   l: OSPLink,

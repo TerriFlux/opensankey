@@ -34,10 +34,6 @@ import {
 // import {
 //   OSPReturnValueLink
 // } from './SankeyPlusUtils'
-import {
-  
-  OSTooltip,
-} from './import/OpenSankey'
 
 // OpenSankey types
 // import {
@@ -46,17 +42,17 @@ import {
 //   SankeyNode,
 //   applicationDrawType,
 //   uiElementsRefType
-// } from 'open-sankey/src/types/Types'
+// } from './deps/OpenSankey/types/Types'
 // import {
 //   GetLinkValueFuncType,
 //   GetSankeyMinWidthAndHeightFuncType
-// } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-// import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
+// } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
+// import { NodeTooltipsContentFType } from './deps/OpenSankey/draw/types/SankeyTooltipTypes'
 
-// OpenSankey js-code
-// import { TooltipValueSurcharge } from 'open-sankey/dist/configmenus/SankeyUtils'
-import { default_shape_visible, isAttributeOverloaded } from 'open-sankey/dist/types/Node'
-import { TooltipValueSurcharge } from 'open-sankey/dist/types/Utils'
+// OpenSankey ts-code
+// import { TooltipValueSurcharge } from './deps/OpenSankey/configmenus/SankeyUtils'
+import { default_shape_visible, isAttributeOverloaded } from './deps/OpenSankey/types/Node'
+import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
 
 
 declare const window: Window &
@@ -73,7 +69,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   const is_activated = new_data.has_sankey_plus
   const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(false)
-  const selected_nodes = new_data.drawing_area.sankey.nodes_list_plus
+  const selected_nodes = new_data.drawing_area.sankey.nodes_list
   new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
 
   const redrawIllustrationAndRefresh = () => {
@@ -82,7 +78,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   }
 
   const redrawAndRefresh = () => {
-    new_data.menu_configuration.ref_to_menu_config_node_apparence_updater.current()
+    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current()
     selected_nodes.forEach(zdt => zdt.draw())
     setForceUpdate(!forceUpdate)
   }

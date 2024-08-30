@@ -17,7 +17,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
 }
 )=>{
   const {new_data}=applicationData
-  const list_nodes_selected=new_data.drawing_area.selected_nodes_list_plus
+  const list_nodes_selected=new_data.drawing_area.selected_nodes_list
   const {t}=new_data
   const imported_icon=localStorage.getItem('icon_imported')
   const init_imported_svg:{[s:string]:{path:string,Vb:string}}=imported_icon != null && imported_icon!=='' ? JSON.parse(imported_icon) : {}

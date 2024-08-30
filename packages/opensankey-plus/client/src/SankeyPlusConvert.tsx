@@ -43,8 +43,8 @@
 // } from './import/OpenSankey'
 
 // // OpenSankey types
-// import { SankeyData } from 'open-sankey/src/types/Types'
-// import { updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
+// import { SankeyData } from './deps/OpenSankey/types/Types'
+// import { updateLayoutFuncType } from './deps/OpenSankey/draw/types/SankeyDrawLayoutTypes'
 
 
 // interface OSPLabelToConvert extends OSPLabel{

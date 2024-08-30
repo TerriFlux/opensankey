@@ -8,33 +8,23 @@ import LZString from 'lz-string'
 import './traduction'
 
 
-import {
-  // convert_data, DefaultNode, DefaultLink, 
-  // initializeApplicationData, 
-  initializeReinitialization, 
-  // moduleDialogs, 
-  DefaultSankeyData,
-  // complete_sankey_data,
-  SankeyApp,
-  initializeAdditionalMenus,
-  moduleDialogs,
-  // initializeMenuConfiguration,
-  ClickSaveDiagram,
-  OpenSankeyDiagramSelector
-} from './import/OpenSankey'
 import { OSPApplicationDataType, OSPData, OSPDataVar, OSPLink, OSPNode } from '../types/Types'
 import {
-  OSPInitializeApplicationData, 
+  OSPInitializeApplicationData,
   OSPInitializeReinitialization,
-  
+
   OSPInitializeAdditionalMenus, OSPModuleDialogs
 } from './OSPModule'
 // import { OSPDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 // import { DefaultOSPStyleLink } from './SankeyPlusUtils'
-import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
-import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
-import { initializeMenuConfiguration } from 'open-sankey/dist/OSModule'
-import { applicationDataType, processFunctionsType, SankeyData } from 'open-sankey/src/types/LegacyType'
+import { SaveDiagramOptionsType } from './deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
+import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
+import { initializeAdditionalMenus, initializeMenuConfiguration, initializeReinitialization, moduleDialogs } from './deps/OpenSankey/OSModule'
+import { applicationDataType, processFunctionsType, SankeyData } from './deps/OpenSankey/types/LegacyType'
+import SankeyApp from './deps/OpenSankey/SankeyApp'
+import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
+import { ClickSaveDiagram } from './deps/OpenSankey/dialogs/SankeyPersistence'
+import { DefaultSankeyData } from './deps/OpenSankey/types/Legacy'
 
 declare const window: Window &
 typeof globalThis & {
@@ -108,7 +98,7 @@ root.render(
   <SankeyApp
     initial_sankey_data={data as OSPData}
     get_default_data={get_default_data}
-    
+
     initializeApplicationData={
       (
         data,
@@ -119,7 +109,7 @@ root.render(
         return {
           // ...initializeApplicationData(data,set_data,get_default_data,initial_data),
           ...OSPInitializeApplicationData(data,set_data,get_default_data,initial_data) as unknown as applicationDataType
-        } 
+        }
       }
     }
 
@@ -153,7 +143,7 @@ root.render(
         }
       }
     }
-  
+
 
     initializeAdditionalMenus={
       (

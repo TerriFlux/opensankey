@@ -30,12 +30,12 @@
 //   SankeyLinkAttrLocal,
 //   SankeyNode,
 //   display_styleType
-// } from 'open-sankey/src/types/Types'
-// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+// } from './deps/OpenSankey/types/Types'
+// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 
-// // OpenSankey js-code
-// import {TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
-// import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+// // OpenSankey ts-code
+// import {TooltipValueSurcharge} from './deps/OpenSankey/configmenus/SankeyUtils'
+// import { DrawArrowsType } from './deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
 
 
 // export const MenuConfLinkApparenceGradient : FunctionComponent<MenuConfLinkApparenceGradientFType> =({

@@ -1,5 +1,5 @@
 import { OSPApplicationDataType, OSPData } from './Types'
-import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
+import { OpenSankeyDiagramSelectorFType } from './deps/OpenSankey/dialogs/types/SankeyMenuDialogsTypes'
 
 export type plus_convert_dataFType = (
   data:OSPData,

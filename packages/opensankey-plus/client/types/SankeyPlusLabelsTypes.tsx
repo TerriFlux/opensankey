@@ -1,9 +1,9 @@
-// import { LinkFunctionTypes, applicationDataType } from 'open-sankey/src/types/Types'
-import { 
-  OSPApplicationDataType, OSPData, 
+// import { LinkFunctionTypes, applicationDataType } from './deps/OpenSankey/types/Types'
+import {
+  OSPApplicationDataType, OSPData,
   OSPLabel, OSPLink, OSPNode
 } from './Types'
-//import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+//import { GetSankeyMinWidthAndHeightFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
 

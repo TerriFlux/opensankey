@@ -12,15 +12,15 @@ import ReactQuill from 'react-quill'
 //   initializeAdditionalMenusType,
 //   initializeApplicationDataType,
 //   initializeReinitializationType,
-  
-// } from 'open-sankey/src/types/Types'
+
+// } from './deps/OpenSankey/types/Types'
 // import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
-// import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
-// import { Class_ApplicationData } from 'open-sankey/dist/types/ApplicationData'
+// import { DrawArrowsType } from './deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
+// import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
 import { Class_ApplicationDataPlus } from '../src/Types/ApplicationDataPlus'
-import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
-import { applicationDataType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationDataType, initializeReinitializationType, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyNode, SankeyNodeStyle } from 'open-sankey/src/types/LegacyType'
-// import { applicationDataType } from 'open-sankey/src/types/Legacy'
+import { applicationDataType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationDataType, initializeReinitializationType, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyNode, SankeyNodeStyle } from '../src/deps/OpenSankey/types/LegacyType'
+import { setDiagramFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
+// import { applicationDataType } from './deps/OpenSankey/types/Legacy'
 
 
 export type DiffType = {
@@ -112,7 +112,7 @@ export interface differenceType {
   item: { kind: string, lhs?: object }
 }
 
-export type OSPShowMenuComponentsType = dict_hook_ref_setter_show_dialog_componentsType & OSPShowMenuComponentsVarType 
+export type OSPShowMenuComponentsType = dict_hook_ref_setter_show_dialog_componentsType & OSPShowMenuComponentsVarType
 
 export type OSPShowMenuComponentsVarType={
   ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -126,11 +126,11 @@ export type OSPConvertDataFuncType = (data: OSPData, DefaultSankeyData: OSPGetDe
 
 // OSP type that overwrite or add variable to for applicationDataType
 export interface OSPApplicationDataVarType  {
-  // Recast some OS var to OSP type 
+  // Recast some OS var to OSP type
   // data: OSPData,
   // get_default_data: OSPGetDefaultData
   // new_data:Class_ApplicationDataPlus
-  // // Exclusive OSP var 
+  // // Exclusive OSP var
   // master_data: OSPData | undefined,
   // set_master_data: (_: OSPData | undefined) => void,
   // view: string,
@@ -214,7 +214,7 @@ type paramInitializeAdditionalMenusType=Parameters<initializeAdditionalMenusType
 // return because sub-module initialiser add element to already existing variable
 type paramOSPInitializeAdditionalMenusType=[...paramInitializeAdditionalMenusType]
 
-// Recast function return type as exclusive or recasted parameter from OSP 
+// Recast function return type as exclusive or recasted parameter from OSP
 // Exemple for dict of elements selected : it return recasted multi_selected_nodes,multi_selected_links,
 // and exclusive OSP var type : multi_selected_label,r_setter_editor_content_fo_node,r_setter_editor_content_fo_zdt,r_setter_value_editor_name_view
 // (some function from OS take no parameters and return void but we still create an override in the event of change in OS)

@@ -42,7 +42,7 @@
 // } from '@chakra-ui/react'
 
 // // OpenSankey Libs
-// import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
+// import { SankeyLinkValueDict, TagsGroup} from './deps/OpenSankey/types/Types'
 
 // // Local libs
 // import {

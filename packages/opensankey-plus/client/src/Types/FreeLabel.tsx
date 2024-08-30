@@ -1,15 +1,68 @@
-import { Class_Element } from 'open-sankey/dist/types/Element'
+// ==================================================================================================
+// Authors :
+//  - Vincent CLAVEL
+//  - Julien ALAPETITE
+//  - Vincent LE DOZE
+// Date : 28/08/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
+// OpenSankey imports
+import { Class_Element, Class_ProtoElement } from '../deps/OpenSankey/types/Element'
+import { Type_ElementPosition } from '../deps/OpenSankey/types/Utils'
+import { default_element_position } from '../deps/OpenSankey/types/Utils'
+import { default_selected_stroke_width } from '../deps/OpenSankey/types/Node'
+import { Class_Handler } from '../deps/OpenSankey/types/Handler'
+
+// Local imports
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Type_ElementPosition } from 'open-sankey/src/types/Utils'
-import { default_element_position } from 'open-sankey/dist/types/Utils'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
-import { default_selected_stroke_width } from 'open-sankey/dist/types/Node'
-import { Class_Handler } from 'open-sankey/dist/types/Handler'
+import { Class_SankeyPlus } from './SankeyPlus'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 
+// CLASS FREE LABEL ELEMENT *************************************************************
 
+export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
+{
 
-export class Class_FreeLabel extends Class_Element {
-  // Attributes ========================
+  // PUBLIC ATTRIBUTES ==================================================================
+
+  // Nothing ...
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  /**
+   * Display attributes
+   * @protected
+   * @type {{
+   *     drawing_area: Class_DrawingAreaPlus,
+   *     position: Type_ElementPosition,
+   *   }}
+   * @memberof Class_ContainerElement
+   */
+  protected _display: {
+    drawing_area: Class_DrawingAreaPlus,
+    position: Type_ElementPosition,
+  }
+
+  /**
+   * List of Sankey in which element appear
+   *
+   * @private
+   * @type {Class_Sankey[]}
+   * @memberof Class_ProtoElement
+   */
+  declare protected _sankeys: { [_: string]: Class_SankeyPlus }
+
+  /**
+   * Config menu ref to html element & function to update it
+   * @protected
+   * @type {string}
+   * @memberof Class_Element
+   */
+  declare protected _menu_config: Class_MenuConfigPlus
+
+  // PRIVATE ATTRIBUTES =================================================================
 
   private _title: string
   private _content: string
@@ -23,41 +76,32 @@ export class Class_FreeLabel extends Class_Element {
 
   private _label_height: number
 
-
-
-  //   label_width: number,
-  //   label_height: number,
-
-  //   x: number,
-  //   y: number,
-
-
-
-  protected _display: {
-    drawing_area: Class_DrawingAreaPlus,
-    position: Type_ElementPosition,
-
-  }
-
   private _drag_handler: {
-    top: Class_Handler,
-    bottom: Class_Handler,
-    left: Class_Handler,
-    right: Class_Handler,
+    top: Class_Handler<Class_DrawingAreaPlus>,
+    bottom: Class_Handler<Class_DrawingAreaPlus>,
+    left: Class_Handler<Class_DrawingAreaPlus>,
+    right: Class_Handler<Class_DrawingAreaPlus>,
   }
 
-  // Constructor ====================================
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_ContainerElement.
+   * @param {string} id
+   * @param {Class_MenuConfigPlus} menu_config
+   * @param {Class_DrawingAreaPlus} drawing_area
+   * @memberof Class_ContainerElement
+   */
   constructor(id: string,
     menu_config: Class_MenuConfigPlus,
     drawing_area: Class_DrawingAreaPlus,
-
   ) {
     super(id, menu_config, 'g_labels')
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position as Type_ElementPosition),
     }
-    // Free labels attributs 
+    // Free labels attributs
     this._title = 'Zone de texte ' + this.id
     this._content = 'Text Label ...'
     this._label_width = 100
@@ -70,18 +114,18 @@ export class Class_FreeLabel extends Class_Element {
     this._is_image = false
     this._image_src = ''
 
-    // Free labels drag handlers 
+    // Free labels drag handlers
     this._drag_handler = {
-      top: new Class_Handler(
+      top: new Class_Handler<Class_DrawingAreaPlus>(
         'zdt_top_handle_' + id,
         drawing_area,
         menu_config,
-        this,
+        this ,
         this.dragHandleStart(),
         this.dragTopHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_top_handle' }),
-      bottom: new Class_Handler(
+      bottom: new Class_Handler<Class_DrawingAreaPlus>(
         'zdt_bottom_handle_' + id,
         drawing_area,
         menu_config,
@@ -90,7 +134,7 @@ export class Class_FreeLabel extends Class_Element {
         this.dragBottomHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_bottom_handle' }),
-      left: new Class_Handler(
+      left: new Class_Handler<Class_DrawingAreaPlus>(
         'zdt_left_handle_' + id,
         drawing_area,
         menu_config,
@@ -99,7 +143,7 @@ export class Class_FreeLabel extends Class_Element {
         this.dragLeftHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_left_handle' }),
-      right: new Class_Handler(
+      right: new Class_Handler<Class_DrawingAreaPlus>(
         'zdt_right_handle_' + id,
         drawing_area,
         menu_config,
@@ -111,7 +155,8 @@ export class Class_FreeLabel extends Class_Element {
     }
   }
 
-  // PUBLIC METHOD ==========================
+  // PUBLIC METHODS =====================================================================
+
   public draw() {
     super.draw()
     // Update class attributes
@@ -123,7 +168,7 @@ export class Class_FreeLabel extends Class_Element {
   /**
    * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
    *
-   * @memberof Class_FreeLabel
+   * @memberof Class_ContainerElement
    */
   public drawShape() {
     // Clean previous shape
@@ -148,7 +193,7 @@ export class Class_FreeLabel extends Class_Element {
   /**
    * Draw the content of the ZDT wich can be formated text or image
    *
-   * @memberof Class_FreeLabel
+   * @memberof Class_ContainerElement
    */
   public drawContent() {
     // Clean svg group before (re)drawing zdt content
@@ -164,22 +209,22 @@ export class Class_FreeLabel extends Class_Element {
   /**
    * Function triggered when element is (un)selected
    *
-   * @memberof Class_FreeLabel
+   * @memberof Class_ContainerElement
    */
   public drawAsSelected() {
     this.drawShape()
     this.drawDragHandlers()
   }
 
-  // PRIVATE METHODS ======================
+  // PRIVATE METHODS ====================================================================
 
   /**
    * Draw the content of the zdt when it is a formated text
-   * 
+   *
    * (Souldn't be called outside this class, to draw content use drawContent() )
    *
    * @private
-   * @memberof Class_FreeLabel
+   * @memberof Class_ContainerElement
    */
   private drawContentText() {
     this.d3_selection?.append('foreignObject')
@@ -196,11 +241,11 @@ export class Class_FreeLabel extends Class_Element {
 
   /**
    * Draw the content of the zdt when it is an image
-   * 
+   *
    * (Souldn't be called outside this class, to draw content use drawContent() )
    *
    * @private
-   * @memberof Class_FreeLabel
+   * @memberof Class_ContainerElement
    */
   private drawContentImage() {
     this.d3_selection?.append('image')
@@ -213,25 +258,24 @@ export class Class_FreeLabel extends Class_Element {
       .attr('href', this._image_src)
   }
 
-
   /**
- * Activate the control points alignement guide
- *
- * @private
- * @return {*}
- * @memberof Class_LinkElement
- */
+   * Activate the control points alignement guide
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_LinkElement
+   */
   private dragHandleStart() {
     return () => {
     }
   }
 
   /**
-  * Deactivate the control points alignement guide
-  * @private
-  * @return {*}
-  * @memberof Class_LinkElement
-  */
+    * Deactivate the control points alignement guide
+    * @private
+    * @return {*}
+    * @memberof Class_LinkElement
+    */
   private dragHandleEnd() {
     return () => {
       this.menu_config.ref_to_menu_config_free_label_updater.current()
@@ -242,13 +286,13 @@ export class Class_FreeLabel extends Class_Element {
    * Event when we drag the top handle
    *
    * @private
-   * @return {*} 
-   * @memberof Class_FreeLabel
+   * @return {*}
+   * @memberof Class_ContainerElement
    */
   private dragTopHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_width -= event.dy
-      this.setPosXY(this.position_y + event.dy)
+      this.setPosXY(this.position_x, this.position_y + event.dy)
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -260,12 +304,13 @@ export class Class_FreeLabel extends Class_Element {
    * Event when we drag the bottom handle
    *
    * @private
-   * @return {*} 
-   * @memberof Class_FreeLabel
+   * @return {*}
+   * @memberof Class_ContainerElement
    */
   private dragBottomHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_height += event.dy
+      this.setPosXY(this.position_x, this.position_y + event.dy)
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -277,13 +322,13 @@ export class Class_FreeLabel extends Class_Element {
    * Event when we drag the left handle
    *
    * @private
-   * @return {*} 
-   * @memberof Class_FreeLabel
+   * @return {*}
+   * @memberof Class_ContainerElement
    */
   private dragLeftHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_width -= event.dx
-      this.setPosXY(this.position_x + event.dx)
+      this.setPosXY(this.position_x + event.dx, this.position_y)
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -295,12 +340,13 @@ export class Class_FreeLabel extends Class_Element {
    * Event when we drag the right handle
    *
    * @private
-   * @return {*} 
-   * @memberof Class_FreeLabel
+   * @return {*}
+   * @memberof Class_ContainerElement
    */
   private dragRightHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_width += event.dx
+      this.setPosXY(this.position_x + event.dx, this.position_y)
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -324,21 +370,19 @@ export class Class_FreeLabel extends Class_Element {
     // left handle pos
     this._drag_handler.left.position_x = this.position_x + 0
     this._drag_handler.left.position_y = this.position_y + this._label_height / 2
-
   }
 
   private computeRightHandlerPos() {
     // right handle pos
     this._drag_handler.right.position_x = this.position_x + this._label_width
     this._drag_handler.right.position_y = this.position_y + this._label_height / 2
-
   }
 
   /**
    * Draw all control points
    *
    * @private
-   * @memberof Class_FreeLabel
+   * @memberof Class_ContainerElement
    */
   private drawDragHandlers() {
 
@@ -352,11 +396,11 @@ export class Class_FreeLabel extends Class_Element {
     this._drag_handler.bottom.draw()
     this._drag_handler.left.draw()
     this._drag_handler.right.draw()
-
   }
 
+  // PROTECTED METHODS ==================================================================
 
-  // MOUSE EVENT ======================
+  // Mouse Events -----------------------------------------------------------------------
 
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
@@ -376,23 +420,23 @@ export class Class_FreeLabel extends Class_Element {
       // Purge selection list
       drawing_area.purgeSelection()
       // Close all menus
-      drawing_area.application_data.menu_configuration.CloseConfigMenu()
+      drawing_area.closeAllMenus()
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
-        drawing_area.addFreeLabelToSelection(this)
+        (drawing_area as Class_DrawingAreaPlus).addFreeLabelToSelection(this)
         // Open related menu
-        this.menu_config.OpenConfigMenuElementsFreeLabels()
+        this.menu_config.openConfigMenuElementsFreeLabels()
         // Update components related to free label edition
         this.menu_config.ref_to_menu_config_free_label_updater.current()
       }
       // CTRL
       else if (event.ctrlKey) {
         // Add free label to selection
-        drawing_area.addFreeLabelToSelection(this)
+        (drawing_area as Class_DrawingAreaPlus).addFreeLabelToSelection(this)
         // Update components related to free label edition
         this.menu_config.ref_to_menu_config_free_label_updater.current()
       }
@@ -400,9 +444,9 @@ export class Class_FreeLabel extends Class_Element {
       else {
         // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
         // Purge selection list
-        drawing_area.purgeSelection()
+        drawing_area.purgeSelection();
         // Add free label to selection
-        drawing_area.addFreeLabelToSelection(this)
+        (drawing_area as Class_DrawingAreaPlus).addFreeLabelToSelection(this)
       }
     }
   }
@@ -441,7 +485,6 @@ export class Class_FreeLabel extends Class_Element {
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMaintainedClick(_event)
-
   }
 
   /**
@@ -525,7 +568,8 @@ export class Class_FreeLabel extends Class_Element {
         this.drawDragHandlers()
         this.drawing_area.checkAndUpdateAreaSize()
       }
-    } else if (zdt_selected.includes(this)) { // Only trigger the drag if we drag a selected free label
+    }
+    else if (zdt_selected.includes(this)) { // Only trigger the drag if we drag a selected free label
       // EDITION MODE ===========================================================
       if (drawing_area.isInEditionMode()) {
         // /* TODO définir  */
@@ -557,10 +601,15 @@ export class Class_FreeLabel extends Class_Element {
     }
   }
 
-  // ============GETTER && SETTER ==================
 
-  override get menu_config() { return super.menu_config as Class_MenuConfigPlus }
-  override get drawing_area() { return super.drawing_area as Class_DrawingAreaPlus }
+  // GETTERS / SETTERS ==================================================================
+
+  // Overrides --------------------------------------------------------------------------
+
+  public override get menu_config() { return this._menu_config }
+  // public override get drawing_area() { return this._display.drawing_area }
+
+  // New --------------------------------------------------------------------------------
 
   public get is_visible() { return super.is_visible }
 
@@ -593,6 +642,5 @@ export class Class_FreeLabel extends Class_Element {
 
   public get label_height(): number { return this._label_height }
   public set label_height(value: number) { this._label_height = value }
-
 
 }

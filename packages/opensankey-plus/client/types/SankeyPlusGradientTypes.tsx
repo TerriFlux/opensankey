@@ -1,8 +1,8 @@
 import { OSPApplicationDataType, OSPData, OSPLink, OSPNode } from './Types'
-// import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-// import { SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
+// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
+// import { SankeyNode, display_styleType } from './deps/OpenSankey/types/Types'
 import { MutableRefObject } from 'react'
-// import { LinkStrokeFType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+// import { LinkStrokeFType } from './deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
 
 // export type MenuConfLinkApparenceGradientFType={
 //   applicationContext:OSPApplicationContextType,

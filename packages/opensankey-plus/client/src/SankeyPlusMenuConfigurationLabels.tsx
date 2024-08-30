@@ -27,6 +27,11 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
+// OpenSankey ts-code
+// import { preferenceCheck } from './deps/OpenSankey/dialogs/SankeyMenuPreferences'
+import { Type_MenuSelectionEntry } from './deps/OpenSankey/topmenus/SankeyMenuTop'
+import { OSTooltip } from './deps/OpenSankey/types/Utils'
+
 // Local libs
 // import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import {
@@ -36,12 +41,8 @@ import {
   context_zdtFType,
   ZDTMenuAsAccordeonItemType
 } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
-import { OSTooltip } from './import/OpenSankey'
+import { Class_ContainerElement } from './Types/FreeLabel'
 
-// OpenSankey js-code
-// import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
-import { Class_FreeLabel } from './Types/FreeLabel'
-import { Type_MenuSelectionEntry } from 'open-sankey/src/topmenus/SankeyMenuTop'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -61,7 +62,7 @@ export const OSPMenuPreferenceLabels: FunctionComponent<OSPMenuPreferenceLabelsF
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
     defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('MEP')} onChange={() => {
-      new_data.menu_configuration.toggleGivenAccordion('MEP')     
+      new_data.menu_configuration.toggleGivenAccordion('MEP')
       updateMenus[1](!updateMenus[0])
     }}>
     {new_data.t('Menu.LL')}
@@ -101,13 +102,13 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
   // }
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
-  const handleUplabel = (i: Class_FreeLabel) => {
+  const handleUplabel = (i: Class_ContainerElement) => {
     new_data.drawing_area.sankey.moveUpFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après
-  const handleDownlabel = (i: Class_FreeLabel) => {
+  const handleDownlabel = (i: Class_ContainerElement) => {
     new_data.drawing_area.sankey.moveDownFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
@@ -674,7 +675,7 @@ export const blur_ZDT_wysiwyg: blur_ZDT_wysiwygFType = (
 *   applicationData,
 *   content_menu_zdt
 * }
-* @return {*} 
+* @return {*}
 */
 export const ZDTMenuAsAccordeonItem: FunctionComponent<ZDTMenuAsAccordeonItemType> = ({
   applicationData,

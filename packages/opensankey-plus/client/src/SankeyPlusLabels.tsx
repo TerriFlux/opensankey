@@ -25,10 +25,10 @@
 // } from './import/OpenSankey'
 
 // // OpenSankey types
-// import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+// import { GetSankeyMinWidthAndHeightFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 
 // // OpenSankey jscode
-// import { GetVerticalMarginForSankeyZone } from 'open-sankey/dist/configmenus/SankeyUtils'
+// import { GetVerticalMarginForSankeyZone } from './deps/OpenSankey/configmenus/SankeyUtils'
 
 // declare const window: Window &
 // typeof globalThis & {

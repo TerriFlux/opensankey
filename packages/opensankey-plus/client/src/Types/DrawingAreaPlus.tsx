@@ -1,31 +1,94 @@
-import { Class_DrawingArea } from 'open-sankey/dist/types/DrawingArea'
+// ==================================================================================================
+// Authors :
+//  - Vincent CLAVEL
+//  - Julien ALAPETITE
+//  - Vincent LE DOZE
+// Date : 28/08/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
+// OpenSankey imports
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import {
+  initial_window_width,
+  initial_window_height,
+  Class_ApplicationData
+} from '../deps/OpenSankey/types/ApplicationData'
+
+// Local imports
 import { Class_SankeyPlus } from './SankeyPlus'
 import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
-import { Class_NodePlusElement } from './NodePlus'
-import { initial_window_width, initial_window_height, Class_ApplicationData } from 'open-sankey/dist/types/ApplicationData'
-import { Class_FreeLabel } from './FreeLabel'
-import { Class_Sankey } from 'open-sankey/dist/types/Sankey'
+import { Class_NodeElementPlus } from './NodePlus'
+import { Class_ContainerElement } from './FreeLabel'
+import { Class_Element } from '../deps/OpenSankey/types/Element'
+import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
 
+// CLASS DRAWING AREA PLUS **************************************************************
 
-export class Class_DrawingAreaPlus extends Class_DrawingArea {
+/**
+ * Override OpenSankey's class to take in account specifities of OpenSankey+ app
+ *
+ * @export
+ * @class Class_DrawingAreaPlus
+ * @extends {Class_DrawingArea}
+ */
+export class Class_DrawingAreaPlus extends Class_DrawingArea
+<
+  Class_NodeElementPlus,
+  Class_LinkElement<Class_DrawingAreaPlus>
+>
+{
 
-  private _contextualised_free_label: Class_FreeLabel | undefined = undefined
+  // TODO Faire le menage ?
   // override _sankey:Class_SankeyPlus
-  // private _sankey_plus:Class_SankeyPlus=this._sankey
+  // private _sankey_plus:Class_SankeyPlus=this.sankey
+
+  // PUBLIC ATTRIBUTES ==================================================================
 
   /**
-   * d3 selection of svg group that contains drawing area free labels
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * Application object which relates to this drawing area
+   * @type {Class_ApplicationData}
    * @memberof Class_DrawingArea
    */
+  public application_data: Class_ApplicationDataPlus
+
+  /**
+     * d3 selection of svg group that contains drawing area free labels
+     * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+     * @memberof Class_DrawingArea
+     */
   public d3_selection_free_label: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  constructor(height: number, width: number, application_data: Class_ApplicationDataPlus) {
-    super(height, width, application_data as Class_ApplicationData)
-    this._sankey = (new Class_SankeyPlus(this, this.application_data.menu_configuration)) as unknown as Class_Sankey
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _sankey: Class_SankeyPlus
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _contextualised_free_label: Class_ContainerElement | undefined = undefined
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_DrawingAreaPlus.
+   * @param {number} height
+   * @param {number} width
+   * @param {Class_ApplicationDataPlus} application_data
+   * @memberof Class_DrawingAreaPlus
+   */
+  constructor(
+    height: number,
+    width: number,
+    application_data: Class_ApplicationDataPlus
+  ) {
+    // Heritance
+    super(height, width, application_data)
+    // Overrides
+    this.application_data = application_data
+    this._sankey = new Class_SankeyPlus(this, this.application_data.menu_configuration, this.sankey.id)
   }
 
-
-  // Public Method =======================
+  // PUBLIC METHODS ====================================================================
 
   /**
    * Override Reset drawing area from OS
@@ -38,9 +101,14 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
     this.drawElements()
   }
 
+  /**
+   *
+   *
+   * @memberof Class_DrawingAreaPlus
+   */
   public drawElements(): void {
     super.drawElements()
-    this.sankey_plus.free_labels_list.forEach(zdt => zdt.draw())
+    this.sankey.free_labels_list.forEach(zdt => zdt.draw())
   }
 
   /**
@@ -53,7 +121,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
 
     let max_free_label_pos_x = 0
     let max_free_label_pos_y = 0
-    this.sankey_plus.visible_free_labels_list.filter(free_label => free_label.display.position.type === 'absolute').map(free_label => {
+    this.sankey.visible_free_labels_list.filter(free_label => free_label.display.position.type === 'absolute').map(free_label => {
       const free_label_rightest_pos = free_label.position_x + free_label.label_width
       const free_label_bottomest_pos = free_label.position_y + free_label.label_height
       max_free_label_pos_x = Math.max(max_free_label_pos_x, free_label_rightest_pos)
@@ -79,25 +147,25 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
   /**
    * add a free labels from a selection set
    *
-   * @param {Class_FreeLabel} zdt
+   * @param {Class_ContainerElement} zdt
    * @memberof Class_DrawingAreaPlus
    */
-  public addFreeLabelToSelection(zdt: Class_FreeLabel) {
-    this._selection[zdt.id] = zdt
+  public addFreeLabelToSelection(zdt: Class_ContainerElement) {
+    // this._selection[zdt.id] = zdt
     zdt.setSelected()
   }
 
-  public addNewDefaultNodeToSankey() {
-    return this.sankey.addNewDefaultNode()
-  }
+  // public addNewDefaultNodeToSankey() {
+  //   return this.sankey.addNewDefaultNode()
+  // }
 
 
   /**
    * remove a zdt from a selection set
-   * @param {Class_FreeLabel} node
+   * @param {Class_ContainerElement} node
    * @memberof Class_DrawingAreaPlus
    */
-  public removeFreeLabelFromSelection(zdt: Class_FreeLabel) {
+  public removeFreeLabelFromSelection(zdt: Class_ContainerElement) {
     if (this._selection[zdt.id] !== undefined) {
       delete this._selection[zdt.id]
       zdt.setUnSelected()
@@ -109,26 +177,31 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea {
    *
    * @memberof Class_DrawingAreaPlus
    */
-  override purgeSelection() {
+  public purgeSelection() {
     super.purgeSelection()
-    this.application_data_plus.menu_configuration.ref_to_menu_config_free_label_updater.current()
+    this.application_data.menu_configuration.ref_to_menu_config_free_label_updater.current()
 
   }
-  // ============GETTER && SETTER ==================
 
-  public get sankey_plus() { return this._sankey as unknown as Class_SankeyPlus }
-  override get sankey() { return this._sankey as Class_SankeyPlus }
-  override set sankey(_: Class_SankeyPlus) { this._sankey = _ }
+  // GETTERS / SETTERS ==================================================================
 
-  public get application_data_plus():Class_ApplicationDataPlus{
-    return this.application_data as Class_ApplicationDataPlus
-  }
+  // Overrides --------------------------------------------------------------------------
 
-  public get selected_nodes_list_plus(): Class_NodePlusElement[] { return this.selected_nodes_list as unknown as Class_NodePlusElement[] }
+  public override get sankey(): Class_SankeyPlus { return this._sankey }
+  public override set sankey(_: Class_SankeyPlus) { this.sankey = _ }
 
-  public get selected_free_labels_list() { return this.sankey_plus.free_labels_list.filter(zdt => zdt.is_selected) }
+  // New --------------------------------------------------------------------------------
+
+  // TODO MEnage
+  // public get application_data_plus(): Class_ApplicationDataPlus{
+  //   return this.application_data as Class_ApplicationDataPlus
+  // }
+
+  // public get selected_nodes_list_plus(): Class_NodeElementPlus[] { return this.selected_nodes_list as unknown as Class_NodeElementPlus[] }
+
+  public get selected_free_labels_list() { return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) }
   public get selected_free_labels_list_sorted() { return this.selected_free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 
-  public get contextualised_free_label(): Class_FreeLabel | undefined { return this._contextualised_free_label }
-  public set contextualised_free_label(value: Class_FreeLabel | undefined) { this._contextualised_free_label = value }
+  public get contextualised_free_label(): Class_ContainerElement | undefined { return this._contextualised_free_label }
+  public set contextualised_free_label(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
 }

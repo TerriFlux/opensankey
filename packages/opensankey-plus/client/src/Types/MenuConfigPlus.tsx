@@ -1,16 +1,46 @@
-import { Class_MenuConfig } from 'open-sankey/dist/types/MenuConfig'
-import { MutableRefObject, Dispatch, SetStateAction, useRef, RefObject } from 'react'
-import { OSPShowMenuComponentsVarType } from '../../types/Types'
-import * as d3 from 'd3'
+// ==================================================================================================
+// Authors :
+//  - Vincent CLAVEL
+//  - Julien ALAPETITE
+//  - Vincent LE DOZE
+// Date : 28/08/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
 
+// External imports
+import * as d3 from 'd3'
+import { MutableRefObject, useRef, RefObject } from 'react'
+
+// OpenSankey imports
+import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
+
+// Local imports
+import { OSPShowMenuComponentsVarType } from '../../types/Types'
+
+// CLASS MENU CONFIG PLUS ***************************************************************
+
+/**
+ * Override OpenSankey's Class_MenuConfig to take in account specifities of OpenSankey+ app
+ *
+ * @export
+ * @class Class_MenuConfigPlus
+ * @extends {Class_MenuConfig}
+ */
 export class Class_MenuConfigPlus extends Class_MenuConfig {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
   private _ref_to_menu_config_free_label_updater: MutableRefObject<(() => void)>
   // Button that open the sub menu links of elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
 
+  // CONSTRUCTOR ========================================================================
 
-
+  /**
+   * Creates an instance of Class_MenuConfigPlus.
+   * @memberof Class_MenuConfigPlus
+   */
   constructor() {
     super()
 
@@ -23,13 +53,13 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
       ref_setter_show_modal_import_icons: useRef(() => null),
       ref_setter_show_menu_zdt: useRef(() => null),
       ref_setter_show_modal_transparent_view_attr: useRef<() => void>(() => null),
-
     }
   }
 
-  //PUBLIC METHODS =====================================
-  public OpenConfigMenuElementsFreeLabels() {
-    this.OpenConfigMenuElements()
+  // PUBLIC METHODS ====================================================================
+
+  public openConfigMenuElementsFreeLabels() {
+    this.openConfigMenuElements()
     this._zdt_accordion_ref.current?.click()
     // Leave enough time for menus to open
     setTimeout(() => {
@@ -44,7 +74,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   }
 
 
-  // ============GETTER && SETTER ==================
+  // GETTERS / SETTERS ==================================================================
 
   public get zdt_accordion_ref(): RefObject<HTMLButtonElement> { return this._zdt_accordion_ref }
 

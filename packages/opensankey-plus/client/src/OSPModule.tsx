@@ -1,9 +1,18 @@
 import React, { useRef } from 'react'
+
+import { t } from 'i18next'
+import { Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger, Button, PopoverArrow, PopoverCloseButton, Box, Input } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
+
 import {
   dict_hook_ref_setter_show_dialog_componentsType,
   module_dialogsType,
   InitalizeSelectorDetailNodesType
-} from 'open-sankey/src/types/LegacyType'
+} from './deps/OpenSankey/types/LegacyType'
+import { AddAllDropDownNode, setDiagram } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
+import { MenuDraggable } from './deps/OpenSankey/topmenus/SankeyMenuTop'
+
 import {
   OSPApplicationDataType,
   OSPApplicationDataVarType,
@@ -15,11 +24,7 @@ import {
   OSPUpdateMenuConfType
 } from '../types/Types'
 
-import {
-  MenuDraggable, 
-  setDiagram,
-  AddAllDropDownNode} from './import/OpenSankey'
-// import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
+// import { os_all_element_to_transform } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
 // import { OSPDrawNodesFO, OSPNodeFO } from './SankeyPlusForeignObject'
 // import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 // import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
@@ -36,10 +41,6 @@ import {OSPNodeIcon} from './SankeyPlusNodes'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
-import { t } from 'i18next'
-import { Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger, Button, PopoverArrow, PopoverCloseButton, Box, Input } from '@chakra-ui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
 
 declare const window: Window &
@@ -162,7 +163,7 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 
   // TODO : re implement OSPBannerView with class
 
-  // const has_views = OSPApplicationData.master_data &&  OSPApplicationData.master_data.view.length > 0 
+  // const has_views = OSPApplicationData.master_data &&  OSPApplicationData.master_data.view.length > 0
   // if (!window.SankeyToolsStatic || has_views ) {
   //   additionalMenus.externale_navbar_item['view']=<OSPBannerView
   //     applicationData={applicationData as OSPApplicationDataType}
