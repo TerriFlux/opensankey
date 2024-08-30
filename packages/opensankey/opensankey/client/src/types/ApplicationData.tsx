@@ -8,12 +8,14 @@
 import LZString from 'lz-string'
 
 // Local types
-import { Class_DrawingArea } from './DrawingArea'
+import { Class_DrawingArea, Type_DrawingArea } from './DrawingArea'
 import { Type_JSON } from './Utils'
 import { Class_MenuConfig } from './MenuConfig'
 import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
+import { Type_NodeElement } from './Node'
+import { Type_LinkElement } from './Link'
 
 
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
@@ -50,7 +52,7 @@ export class Class_ApplicationData {
    * @type {Class_DrawingArea}
    * @memberof Class_ApplicationData
    */
-  protected _drawing_area: Class_DrawingArea
+  protected _drawing_area: Type_DrawingArea
 
   /**
    *Configuration Menu
@@ -91,10 +93,7 @@ export class Class_ApplicationData {
     // Deals with UI menu updates / each modifications
     this._menu_configuration = new Class_MenuConfig
     // Contains all drawn objects
-    this._drawing_area = new Class_DrawingArea(
-      initial_window_height,
-      initial_window_width,
-      this)
+    this._drawing_area = this.new_drawing_area()
     // Link keyboard listener with app key down detection
     document.onkeydown = this.keyboardEventListener(this)
     // For published mode only
@@ -136,8 +135,9 @@ export class Class_ApplicationData {
   }
 
   // PUBLIC METHODS =====================================================================
+
   protected new_drawing_area() {
-    return new Class_DrawingArea(
+    return new Class_DrawingArea<Type_NodeElement, Type_LinkElement>(
       initial_window_height,
       initial_window_width,
       this
@@ -325,14 +325,16 @@ export class Class_ApplicationData {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get drawing_area(): Class_DrawingArea {return this._drawing_area}
-  protected set drawing_area(value: Class_DrawingArea) {this._drawing_area = value} // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
+  public get is_static(): boolean { return this._drawing_area.static }
 
-  public get menu_configuration(): Class_MenuConfig {return this._menu_configuration}
-  protected set menu_configuration(value: Class_MenuConfig) {this._menu_configuration = value} // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
+  public get drawing_area(): Type_DrawingArea { return this._drawing_area }
+  protected set drawing_area(value: Type_DrawingArea) { this._drawing_area = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
+
+  public get menu_configuration(): Class_MenuConfig { return this._menu_configuration }
+  protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get has_free_account(): boolean { return this._has_free_account }
-  public set has_free_account(value: boolean) {this._has_free_account = value }
+  public set has_free_account(value: boolean) { this._has_free_account = value }
 
   public get t(): TFunction { return this._t }
 

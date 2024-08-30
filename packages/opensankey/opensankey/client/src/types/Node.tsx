@@ -57,7 +57,7 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_NodeElement = Class_NodeElement<Class_DrawingArea>
+export type Type_NodeElement = Class_NodeElement<Class_DrawingArea<Type_NodeElement, any>>
 
 type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
@@ -139,7 +139,7 @@ export function isPositionOverloaded(
  */
 export class Class_NodeElement
 <
-  Type_GenericDrawingArea extends Class_DrawingArea
+  Type_GenericDrawingArea extends Class_DrawingArea<Class_NodeElement<Type_GenericDrawingArea>, any>
 >
 extends Class_Element<Type_GenericDrawingArea> {
 
@@ -4104,7 +4104,7 @@ export class Class_NodeDimension
 
   /**
    * Creates an instance of Class_NodeDimension.
-   * @param {Class_NodeElement<Class_DrawingArea>} parent
+   * @param {Class_NodeElement<Type_GenericDrawingArea>} parent
    * @param {Class_NodeElement[]} children
    * @param {Class_LevelTag} parent_level_tag
    * @param {Class_LevelTag} children_level_tag
@@ -4228,13 +4228,13 @@ export class Class_NodeDimension
       .forEach(tag => this.removeTagFromChildrenLevelTag(tag))
   }
 
-  public removeNodeAsParent(_: Class_NodeElement<Class_DrawingArea>) {
+  public removeNodeAsParent(_: Class_NodeElement<any>) {
     if (this._parent === _) {
       this.delete()  // Simply delete because dimension can not exist without parent
     }
   }
 
-  public addNodeAsChild(_: Class_NodeElement<Class_DrawingArea>) {
+  public addNodeAsChild(_: Class_NodeElement<any>) {
     if (
       (this._parent !== _) &&
       !(this._children.includes(_))
@@ -4244,7 +4244,7 @@ export class Class_NodeDimension
     }
   }
 
-  public removeNodeFromChildren(_: Class_NodeElement<Class_DrawingArea>) {
+  public removeNodeFromChildren(_: Class_NodeElement<any>) {
     const idx = this._children.indexOf(_)
     if (idx !== undefined) {
       this._children.splice(idx, 1)
@@ -4333,7 +4333,7 @@ export class Class_NodeDimension
   public get children_level_tagg() { return this._children_level_tags[0]?.group ?? undefined }
 
   public get parent() { return this._parent }
-  public set parent(_: Class_NodeElement<Class_DrawingArea>) {
+  public set parent(_: Class_NodeElement<any>) {
     if (
       (this._parent !== _) &&
       !(this._children.includes(_))

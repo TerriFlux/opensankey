@@ -5,10 +5,12 @@
 // ==================================================================================================
 
 // Local types
-import { Class_DrawingArea } from './DrawingArea'
+import { Type_AnyDrawingArea } from './DrawingArea'
 import { Class_Element } from './Element'
 import { Class_MenuConfig } from './MenuConfig'
 import { Type_ElementPosition, default_element_position } from './Utils'
+
+// SPECIFIC TYPES ***********************************************************************
 
 // CLASS ZONE SELECTION *****************************************************************
 
@@ -18,12 +20,12 @@ import { Type_ElementPosition, default_element_position } from './Utils'
  * @class Class_ZoneSelection
  * @extends {Class_Element}
  */
-export class Class_ZoneSelection extends Class_Element<Class_DrawingArea> {
+export class Class_ZoneSelection extends Class_Element<Type_AnyDrawingArea> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected _display: {
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_AnyDrawingArea,
     position: Type_ElementPosition,
   }
 
@@ -38,12 +40,12 @@ export class Class_ZoneSelection extends Class_Element<Class_DrawingArea> {
 
   /**
    * Creates an instance of Class_ZoneSelection.
-   * @param {Class_DrawingArea} drawing_area
+   * @param {Type_AnyDrawingArea} drawing_area
    * @param {Class_MenuConfig} menu_config
    * @memberof Class_ZoneSelection
    */
   constructor(
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_AnyDrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes

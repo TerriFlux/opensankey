@@ -11,7 +11,8 @@ import {
   Class_MenuConfig
 } from './MenuConfig'
 import {
-  Class_DrawingArea
+  Class_DrawingArea,
+  Type_DrawingArea
 } from './DrawingArea'
 import {
   Class_LinkElement,
@@ -43,7 +44,7 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_Sankey = Class_Sankey<Class_DrawingArea, Type_NodeElement, Type_LinkElement>
+export type Type_Sankey = Class_Sankey<Type_DrawingArea, Type_NodeElement, Type_LinkElement>
 export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
 
 // SPECIFIC CONSTANTS *******************************************************************
@@ -61,7 +62,7 @@ export const default_style_name = 'Style par default'
  */
 export class Class_Sankey
   <
-    Type_GenericDrawingArea extends Class_DrawingArea,
+    Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericNodeElement, Type_GenericLinkElement>,
     Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea>,
     Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea>,
   >
@@ -243,8 +244,8 @@ export class Class_Sankey
   public deleteNode(node: Type_GenericNodeElement) {
     if (this._nodes[node.id] !== undefined) {
       // if we remove a node we also have to remove it link attached to it
-      node.input_links_list.forEach(l => this.drawing_area.deleteLink(l))
-      node.output_links_list.forEach(l => this.drawing_area.deleteLink(l))
+      node.input_links_list.forEach(l => this.drawing_area.deleteLink(l as Type_GenericLinkElement))
+      node.output_links_list.forEach(l => this.drawing_area.deleteLink(l as Type_GenericLinkElement))
 
       // Delete node in sankey
       const _ = this._nodes[node.id]

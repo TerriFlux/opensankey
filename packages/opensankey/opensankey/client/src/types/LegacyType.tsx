@@ -408,7 +408,7 @@ export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
 
 export type initializeReinitializationType = (
     applicationData: applicationDataType
-) => () => void
+) => (() => void)
 
 /*****************************************************************************/
 // Data
