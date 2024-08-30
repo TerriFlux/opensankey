@@ -26,11 +26,13 @@ import {
 } from './Sankey'
 import {
   Class_NodeElement,
+  Type_NodeElement,
   sortNodesElements
 } from './Node'
 import {
   Class_GhostLinkElement,
   Class_LinkElement,
+  Type_LinkElement,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from './Link'
@@ -43,6 +45,11 @@ import { Class_Legend } from './Legend'
 import { Class_Element, Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
 import { convert_data_legacy } from './Legacy'
+
+// SPECIFIC TYPES ***********************************************************************
+
+export type Type_DrawingArea = Class_DrawingArea<Type_NodeElement, Type_LinkElement>
+export type Type_AnyDrawingArea = Class_DrawingArea<any, any>
 
 // CONSTANTS ****************************************************************************
 
@@ -59,7 +66,12 @@ const default_scale = 50
  *
  * @class Class_DrawingArea
  */
-export class Class_DrawingArea {
+export class Class_DrawingArea
+<
+  Type_GenericNodeElement extends Class_NodeElement<any>,
+  Type_GenericLinkElement extends Class_LinkElement<any>
+>
+{
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -170,7 +182,7 @@ export class Class_DrawingArea {
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  protected _sankey: Class_Sankey<this, Class_NodeElement<this>, Class_LinkElement<this>>
+  protected _sankey: Class_Sankey<any, Type_GenericNodeElement, Type_GenericLinkElement>
   protected _legend: Class_Legend
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -243,12 +255,12 @@ export class Class_DrawingArea {
    * @type {{ [id: string]: Class_ProtoElement }}
    * @memberof Class_DrawingArea
    */
-  protected _selection: { [id: string]: Class_ProtoElement<Class_DrawingArea> } = {}
+  protected _selection: { [id: string]: Class_ProtoElement<any> } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
-  private _node_contextualied: Class_NodeElement<this> | undefined = undefined
-  private _link_contextualied: Class_LinkElement<this> | undefined = undefined
+  private _node_contextualied: Type_GenericNodeElement | undefined = undefined
+  private _link_contextualied: Type_GenericLinkElement | undefined = undefined
   private _is_drawing_area_contextualised: boolean = false
 
   /**
@@ -301,7 +313,7 @@ export class Class_DrawingArea {
     this._link_contextualied = undefined
     this._node_contextualied = undefined
     // Clean Elements
-    this._sankey.delete()
+    this.sankey.delete()
     this._legend.delete()
     this._selection_zone.delete()
     // Clean drawing area
@@ -418,7 +430,7 @@ export class Class_DrawingArea {
     // Draw grid
     this.drawGrid()
     // Draw all nodes
-    this._sankey.draw()
+    this.sankey.draw()
     // Draw legend
     this._legend.draw()
   }
@@ -509,7 +521,7 @@ export class Class_DrawingArea {
    * @return {Class_NodeElement}
    * @memberof Class_DrawingArea
    */
-  public addNewDefaultNodeToSankey(): Class_NodeElement<this> {
+  public addNewDefaultNodeToSankey(): Type_GenericNodeElement {
     return this.sankey.addNewDefaultNode()
   }
 
@@ -519,7 +531,7 @@ export class Class_DrawingArea {
    * @return {Class_NodeElement | null}
    * @memberof Class_DrawingArea
    */
-  public getNodeFromSankey(id: string): Class_NodeElement<this> | null {
+  public getNodeFromSankey(id: string): Type_GenericNodeElement | null {
     return this.sankey.getNode(id)
   }
 
@@ -528,7 +540,7 @@ export class Class_DrawingArea {
    * @param {Class_NodeElement} node
    * @memberof Class_DrawingArea
    */
-  public deleteNode(node: Class_NodeElement<this>) {
+  public deleteNode(node: Type_GenericNodeElement) {
     // Remove from selection if necessary
     this.removeNodeFromSelection(node)
     // Remove node from sankey
@@ -541,27 +553,27 @@ export class Class_DrawingArea {
 
   /**
    * Add a new default link to drawing area sankey
-   * @return {Class_LinkElement<this>}
+   * @return {Type_GenericLinkElement}
    * @memberof Class_DrawingArea
    */
-  public addNewDefaultLinkToSankey(): Class_LinkElement<this> {
+  public addNewDefaultLinkToSankey(): Type_GenericLinkElement {
     return this.sankey.addNewDefaultLink()
   }
 
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
-   * @return {Class_LinkElement<this> | null}
+   * @return {Type_GenericLinkElement | null}
    * @memberof Class_DrawingArea
    */
-  public getLinkFromSankey(id: string): Class_LinkElement<this> | null { return this.sankey.getLink(id) }
+  public getLinkFromSankey(id: string): Type_GenericLinkElement | null { return this.sankey.getLink(id) }
 
   /**
    * Delete a given link -> link will not exist anymore
    * @param {Class_NodeElement} node
    * @memberof Class_DrawingArea
    */
-  public deleteLink(link: Class_LinkElement<this>) {
+  public deleteLink(link: Type_GenericLinkElement) {
     // Remove link from selection if necessary
     this.removeLinkFromSelection(link)
     // Remove link from sankey
@@ -578,7 +590,7 @@ export class Class_DrawingArea {
    * @param {Class_NodeElement} node
    * @memberof Class_DrawingArea
    */
-  public addNodeToSelection(node: Class_NodeElement<this>) {
+  public addNodeToSelection(node: Type_GenericNodeElement) {
     // Update selection list
     this._selection[node.id] = node as Class_ProtoElement<this>
     // Update selection attribute on given node
@@ -600,10 +612,10 @@ export class Class_DrawingArea {
   /**
    * remove a node from a selection set
    * Update menu accordingly
-   * @param {Class_NodeElement<this>} node
+   * @param {Type_GenericNodeElement} node
    * @memberof Class_DrawingArea
    */
-  public removeNodeFromSelection(node: Class_NodeElement<this>) {
+  public removeNodeFromSelection(node: Type_GenericNodeElement) {
     if (this._selection[node.id] !== undefined) {
       // Update selection list
       delete this._selection[node.id]
@@ -630,10 +642,10 @@ export class Class_DrawingArea {
   /**
    * Add a link to selection set
    * Update menu accordingly
-   * @param {Class_LinkElement<this>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_DrawingArea
    */
-  public addLinkToSelection(link: Class_LinkElement<this>) {
+  public addLinkToSelection(link: Type_GenericLinkElement) {
     // Update selection list
     this._selection[link.id] = link as Class_ProtoElement<this>
     // Update selection attribute on given link
@@ -657,7 +669,7 @@ export class Class_DrawingArea {
    * @param {Class_LinkElement} link
    * @memberof Class_DrawingArea
    */
-  public removeLinkFromSelection(link: Class_LinkElement<this>) {
+  public removeLinkFromSelection(link: Type_GenericLinkElement) {
     if (this._selection[link.id] !== undefined) {
       // Update selection list
       delete this._selection[link.id]
@@ -815,7 +827,7 @@ export class Class_DrawingArea {
       const true_element = element_min_x as Class_Element<this>
       // If element is on the left of the DA move all elements to 'x' pixel to the right
       // (x being the absolute value of element position x )
-      this._sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
         node.position_x += Math.abs(true_element.position_x)
       })
       true_element.position_x = 0
@@ -824,7 +836,7 @@ export class Class_DrawingArea {
       const true_element = element_min_y as Class_Element<this>
       // If element is on top of the DA move all elements to 'y' pixel to the bottom
       // (y being the absolute value of element position y )
-      this._sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
         node.position_y += Math.abs(true_element.position_y)
       })
       true_element.position_y = 0
@@ -842,7 +854,7 @@ export class Class_DrawingArea {
    * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
    */
   public computeHorizontalIndex (
-    node: Class_NodeElement<this>,
+    node: Type_GenericNodeElement,
     starting_index: number,
     visited_nodes_ids: string[],
     recycling_links_ids: string[],
@@ -864,7 +876,7 @@ export class Class_DrawingArea {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target) &&
+        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -935,7 +947,7 @@ export class Class_DrawingArea {
    * @param {object} nodes
    */
   public compute_recycling_horizontal_index (
-    link: Class_LinkElement<this>,
+    link: Type_GenericLinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
   ) {
@@ -991,7 +1003,7 @@ export class Class_DrawingArea {
   ) {
     // Calcul de la valeur max des flux
     let linksMaxValue = 0
-    this._sankey.links_list.forEach(link => {
+    this.sankey.links_list.forEach(link => {
       // We use a function to max value for each link because
       // each link can have multiple values
       const linkMaxValue = link.getMaxValue()
@@ -1027,7 +1039,7 @@ export class Class_DrawingArea {
     // // Compute positionning indexes
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
     const possible_recycling_links_ids: string[] = []
-    this._sankey.visible_nodes_list
+    this.sankey.visible_nodes_list
       .forEach(node => {
         //     const node = data.nodes[node_id]
         if (!node.hasInputLinks() && node.hasOutputLinks() )
@@ -1102,7 +1114,7 @@ export class Class_DrawingArea {
       if (!nodes_per_horizontal_indexes[horizontal_index]) {
         continue
       }
-      const to_splice : Class_NodeElement<this>[] = []
+      const to_splice : Type_GenericNodeElement[] = []
       nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
         if (!node.hasInputLinks()) {
           let min_next_horizontal_index = max_horizontal_index+1
@@ -1124,7 +1136,7 @@ export class Class_DrawingArea {
               }
             })
           if (horizontal_indexes_per_nodes_ids[node.id]<min_next_horizontal_index-1) {
-            to_splice.push(node)
+            to_splice.push(node as Type_GenericNodeElement)
             // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
             // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
             horizontal_indexes_per_nodes_ids[node.id] = min_next_horizontal_index - 1
@@ -1361,7 +1373,7 @@ export class Class_DrawingArea {
     // Update legend
     this._legend.fromJSON(json_object)
     // Update Sankey
-    this._sankey.fromJSON(json_object, match_and_update)
+    this.sankey.fromJSON(json_object, match_and_update)
     if (redraw) {
       // Draw
       this.reset()
@@ -1401,7 +1413,7 @@ export class Class_DrawingArea {
     return {
       ...json_object,
       ...this._legend.toJSON(),
-      ...this._sankey.toJSON(
+      ...this.sankey.toJSON(
         only_visible_elements,
         with_values
       )
@@ -1642,7 +1654,7 @@ export class Class_DrawingArea {
           // If we release the mouse on the source of the link
           // then delete the link & target to keep only the source
           // So we only created 1 node
-          this.deleteNode(this._ghost_link.target)
+          this.deleteNode(this._ghost_link.target as Type_GenericNodeElement)
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -1652,14 +1664,14 @@ export class Class_DrawingArea {
           }
           // Create new link
           this.sankey.addNewLink(
-            this._ghost_link.source,
+            this._ghost_link.source as Type_GenericNodeElement,
             this.sankey.nodes_dict[node_id]
           )
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
-          this.deleteNode(this._ghost_link?.target)
+          this.deleteNode(this._ghost_link?.target as Type_GenericNodeElement)
         }
         else {
           // Make ghost target visible
@@ -1667,8 +1679,8 @@ export class Class_DrawingArea {
 
           // Create new link
           this.sankey.addNewLink(
-            this._ghost_link.source,
-            this._ghost_link.target
+            this._ghost_link.source as Type_GenericNodeElement,
+            this._ghost_link.target as Type_GenericNodeElement
           )
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
@@ -1731,7 +1743,7 @@ export class Class_DrawingArea {
       if (this._ghost_link !== null) {
         // Move ghost target
         const mouse_position = d3.pointer(event)
-        const target = (this._ghost_link as Class_LinkElement<this>).target
+        const target = (this._ghost_link as Type_GenericLinkElement).target
         target.setPosXY(
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
@@ -1847,10 +1859,10 @@ export class Class_DrawingArea {
    * return sankey
    *
    * @readonly
-   * @return {Class_Sankey<this, Class_NodeElement<this>, Class_LinkElement<this>>}
+   * @return {Class_Sankey<any, Class_NodeElement<any>, Type_GenericLinkElement>}
    * @memberof Class_DrawingArea
    */
-  public get sankey(): Class_Sankey<this, Class_NodeElement<this>, Class_LinkElement<this>> { return this._sankey }
+  public get sankey() { return this._sankey }
 
   // Legend
   public get legend(): Class_Legend { return this._legend }
@@ -1859,44 +1871,44 @@ export class Class_DrawingArea {
   public set ghost_link(value: Class_GhostLinkElement<this> | null) { this._ghost_link = value }
 
   // Selections
-  public get selected_nodes_list(): Class_NodeElement<this>[] {
+  public get selected_nodes_list() {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_NodeElement)
-      .map(element => element as Class_NodeElement<this>)
+      .map(element => element as Type_GenericNodeElement)
   }
 
-  public get selected_nodes_list_sorted(): Class_NodeElement<this>[] {
+  public get selected_nodes_list_sorted(): Type_GenericNodeElement[] {
     return this.selected_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
 
-  public get visible_and_selected_nodes_list(): Class_NodeElement<this>[] {
+  public get visible_and_selected_nodes_list(): Type_GenericNodeElement[] {
     return this.selected_nodes_list
       .filter(node => node.is_visible)
   }
 
-  public get visible_and_selected_nodes_list_sorted(): Class_NodeElement<this>[] {
+  public get visible_and_selected_nodes_list_sorted(): Type_GenericNodeElement[] {
     return this.visible_and_selected_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
 
-  public get selected_links_list(): Class_LinkElement<this>[] {
+  public get selected_links_list(): Type_GenericLinkElement[] {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_LinkElement)
-      .map(element => element as Class_LinkElement<this>)
+      .map(element => element as Type_GenericLinkElement)
   }
 
-  public get selected_links_list_sorted(): Class_LinkElement<this>[] {
+  public get selected_links_list_sorted(): Type_GenericLinkElement[] {
     return this.selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
-  public get visible_and_selected_links_list(): Class_LinkElement<this>[] {
+  public get visible_and_selected_links_list(): Type_GenericLinkElement[] {
     return this.selected_links_list
       .filter(link => link.is_visible)
   }
 
-  public get visible_and_selected_links_list_sorted(): Class_LinkElement<this>[] {
+  public get visible_and_selected_links_list_sorted(): Type_GenericLinkElement[] {
     return this.visible_and_selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
@@ -1959,12 +1971,12 @@ export class Class_DrawingArea {
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
   // Node Context menu
-  public get node_contextualised(): Class_NodeElement<this> | undefined { return this._node_contextualied }
-  public set node_contextualised(value: Class_NodeElement<this> | undefined) { this._node_contextualied = value }
+  public get node_contextualised(): Type_GenericNodeElement | undefined { return this._node_contextualied }
+  public set node_contextualised(value: Type_GenericNodeElement | undefined) { this._node_contextualied = value }
 
   // Link Context menu
-  public get link_contextualised(): Class_LinkElement<this> | undefined { return this._link_contextualied }
-  public set link_contextualised(value: Class_LinkElement<this> | undefined) { this._link_contextualied = value }
+  public get link_contextualised(): Type_GenericLinkElement | undefined { return this._link_contextualied }
+  public set link_contextualised(value: Type_GenericLinkElement | undefined) { this._link_contextualied = value }
 
   // Mouve pos when we right click an element
   public get pointer_pos(): [number, number] { return this._pointer_pos }
