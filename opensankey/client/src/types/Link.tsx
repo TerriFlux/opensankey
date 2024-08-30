@@ -15,7 +15,9 @@ import {
   Class_MenuConfig
 } from './MenuConfig'
 import {
-  Class_DrawingArea
+  Class_DrawingArea,
+  Type_AnyDrawingArea,
+  Type_DrawingArea
 } from './DrawingArea'
 import {
   default_style_id
@@ -52,7 +54,7 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_LinkElement = Class_LinkElement<Class_DrawingArea>
+export type Type_LinkElement = Class_LinkElement<Type_DrawingArea>
 
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
@@ -238,7 +240,7 @@ export function isAttributeOverloaded(
  */
 export class Class_LinkElement
 <
-  Type_GenericDrawingArea extends Class_DrawingArea
+  Type_GenericDrawingArea extends Class_DrawingArea<any, Class_LinkElement<Type_GenericDrawingArea>>
 >
 extends Class_ProtoElement<Type_GenericDrawingArea> {
 
@@ -4155,7 +4157,7 @@ export class Class_LinkValue {
     // where 'key_grp_tag' represent the id of a flux tag group
     // &  '[key_tag, ...]' represent the array of id of tag selected
     // for that flux tag group
-    const flux_taggs_dict = ((this.link?.drawing_area as Class_DrawingArea).sankey.flux_taggs_dict ?? {})
+    const flux_taggs_dict = ((this.link?.drawing_area as Type_AnyDrawingArea).sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([id, list]) => {
         const tagg_id = matching_taggs_id[id] ?? id
@@ -4264,7 +4266,7 @@ export class Class_LinkValue {
 
 export class Class_GhostLinkElement
 <
-  Type_GenericDrawingArea extends Class_DrawingArea,
+  Type_GenericDrawingArea extends Type_AnyDrawingArea,
 >
 extends Class_LinkElement
 <

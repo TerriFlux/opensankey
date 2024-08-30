@@ -12,7 +12,7 @@ import {
   Class_MenuConfig
 } from './MenuConfig'
 import {
-  Class_DrawingArea
+  Type_AnyDrawingArea
 } from './DrawingArea'
 import {
   Class_Element,
@@ -33,7 +33,7 @@ import {
  */
 export class Class_Handler
 <
-  Type_GenericDrawingArea extends Class_DrawingArea
+  Type_GenericDrawingArea extends Type_AnyDrawingArea
 >
 extends Class_Element<Type_GenericDrawingArea> {
 

@@ -10,7 +10,7 @@ import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
 // Local imports
-import { Class_DrawingArea } from './DrawingArea'
+import { Class_DrawingArea, Type_AnyDrawingArea } from './DrawingArea'
 import { Class_Element } from './Element'
 import { Class_MenuConfig } from './MenuConfig'
 import {
@@ -33,7 +33,7 @@ import {
  * @class Class_Legend
  * @extends {Class_Element}
  */
-export class Class_Legend extends Class_Element<Class_DrawingArea> {
+export class Class_Legend extends Class_Element<Type_AnyDrawingArea> {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -87,14 +87,14 @@ export class Class_Legend extends Class_Element<Class_DrawingArea> {
    * @memberof Class_Legend
    */
   protected _display: {
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_AnyDrawingArea,
     position: Type_ElementPosition,
   }
 
   // CONSTRUCTOR ========================================================================
 
   constructor(
-    drawing_area: Class_DrawingArea,
+    drawing_area: Type_AnyDrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes

@@ -16,7 +16,7 @@ import {
   Class_DrawingArea
 } from './DrawingArea'
 import {
-  Type_Sankey,
+  Class_Sankey,
   default_main_sankey_id
 } from './Sankey'
 import {
@@ -27,8 +27,7 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_ProtoElement = Class_ProtoElement<Class_DrawingArea>
-export type Type_Element = Class_Element<Class_DrawingArea>
+// Nothing
 
 // CONSTANT *****************************************************************************
 
@@ -46,7 +45,7 @@ const const_default_position_y = 50
  *
  * @class Class_ProtoElement
  */
-export abstract class Class_ProtoElement <Type_DrawingArea extends Class_DrawingArea>
+export abstract class Class_ProtoElement <Type_DrawingArea extends Class_DrawingArea<any, any>>
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -85,10 +84,10 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
    * List of Sankey in which element appear
    *
    * @private
-   * @type {Type_Sankey[]}
+   * @type {Class_Sankey[]}
    * @memberof Class_ProtoElement
    */
-  protected _sankeys: {[_: string]: Type_Sankey}
+  protected _sankeys: {[_: string]: Class_Sankey<any, any, any>}
 
   /**
    * Config menu ref to html element & function to update it
@@ -509,7 +508,7 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
  */
 export abstract class Class_Element
   <
-    Type_DrawingArea extends Class_DrawingArea
+    Type_DrawingArea extends Class_DrawingArea<any, any>
   >
 extends Class_ProtoElement<Type_DrawingArea> {
 
