@@ -23,13 +23,7 @@ build:
     # Prepare env
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Install and link open-sankey node module
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/su-model/opensankey.git
-    - cd opensankey
-    - bash build_client.sh -I -D
-    - cd ..
-    - export OPENSANKEY=`pwd`/opensankey/opensankey/client
     # Build OpenSankey+ node module
-    - bash build_client.sh -I -L -B -D -K $OPENSANKEY
+    - bash build_client.sh -I -L -B -D
   except:
     - schedules

@@ -15,8 +15,6 @@ install=false
 linter=false
 build=false
 dist=false
-link=false
-link_dirs=()
 skip_gdeps=false
 
 while [[ $# -gt 0 ]]; do
@@ -37,12 +35,6 @@ while [[ $# -gt 0 ]]; do
       dist=true
       shift # past argument
       ;;
-    --link | -K)
-      link=true
-      link_dirs+=("$2") # save positional arg
-      shift # past argument
-      shift # past value
-      ;;
     --skip_gdeps)
       skip_gdeps=true
       shift # past argument
@@ -53,7 +45,6 @@ while [[ $# -gt 0 ]]; do
       echo '--linter | -L : Run linter'
       echo '--build | -B : Run build'
       echo '--dist | -D : Compile dist'
-      echo '--link | -K : Link to node package manager'
       echo '--skip_gdeps : Skip install of global deps'
       exit 1
       ;;
@@ -65,7 +56,6 @@ while [[ $# -gt 0 ]]; do
       echo '--linter | -L : Run linter'
       echo '--build | -B : Run build'
       echo '--dist | -D : Compile dist'
-      echo '--link | -K : Link to node package manager'
       echo '--skip_gdeps : Skip install of global deps'
       exit 1
       ;;
@@ -89,10 +79,6 @@ if [ "$install" = true ] ; then
 fi
 if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
-fi
-if [ "$link" = true ] ; then
-  printf ">>> Link with other modules \n" && pnpm link ${link_dirs[@]} || exit_if_error $?
-  printf "\n"
 fi
 if [ "$build" = true ] ; then
   printf ">>> Build standalone\n" && CI= pnpm run build || exit_if_error $?
