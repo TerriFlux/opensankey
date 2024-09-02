@@ -13,14 +13,14 @@ import ReactQuill from 'react-quill'
 //   initializeApplicationDataType,
 //   initializeReinitializationType,
 
-// } from './deps/OpenSankey/types/Types'
+// } from '../src/deps/OpenSankey/types/Types'
 // import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
-// import { DrawArrowsType } from './deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
-// import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
+// import { DrawArrowsType } from '../src/deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
+// import { Class_ApplicationData } from '../src/deps/OpenSankey/types/ApplicationData'
 import { Class_ApplicationDataPlus } from '../src/Types/ApplicationDataPlus'
 import { applicationDataType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationDataType, initializeReinitializationType, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyNode, SankeyNodeStyle } from '../src/deps/OpenSankey/types/LegacyType'
 import { setDiagramFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
-// import { applicationDataType } from './deps/OpenSankey/types/Legacy'
+// import { applicationDataType } from '../src/deps/OpenSankey/types/Legacy'
 
 
 export type DiffType = {
