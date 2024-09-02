@@ -3,8 +3,6 @@ import {
   FaAlignLeft,
   FaAlignCenter,
   FaAlignRight,
-  FaEyeSlash,
-  FaEye,
   FaChevronDown,
   FaUndo
 } from 'react-icons/fa'
@@ -65,6 +63,7 @@ import {
   default_style_id
 } from '../types/Sankey'
 import {
+  CustomFaEyeCheckIcon,
   font_families
 } from '../types/Utils'
 import {
@@ -669,7 +668,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
 
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={value_label_is_visible ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         isIndeterminate={is_indeterminate}
         isChecked={value_label_is_visible}
         onChange={(evt) => {
@@ -788,7 +787,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       {/* Ajout une unité au label de flux */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
-        icon={value_label_unit_visible ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         isChecked={value_label_unit_visible}
         onChange={(evt) => {
           elements.forEach(element => element.value_label_unit_visible = evt.target.checked)

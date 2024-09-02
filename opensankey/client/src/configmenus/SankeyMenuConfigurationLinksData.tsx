@@ -55,10 +55,17 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
   const ref_set_data_value_input = useRef((_: number | null | undefined) => null)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
+    // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
+    // so selected_links can have the list of previous selected links wich can lead to incorrect links value 
+    const updated_selected_links = !new_data.menu_configuration.is_selector_only_for_visible_links ? 
+      new_data.drawing_area.selected_links_list_sorted : new_data.drawing_area.visible_and_selected_links_list_sorted
+
+    const value_update = updated_selected_links[0]?.value
+
     // Update input data value
-    ref_set_data_value_input.current(value?.data_value ?? null)
+    ref_set_data_value_input.current(value_update?.data_value ?? null)
     // Update input text value
-    ref_set_text_value_input.current(value?.text_value ?? null)
+    ref_set_text_value_input.current(value_update?.text_value ?? null)
   }
 
   // Function used to force this component to reload
@@ -69,7 +76,7 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setCount(a=>a+1)
+    setCount(a => a + 1)
   }
 
   new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = () => {
@@ -198,8 +205,6 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
 
   </Box>
 
-  // Update input values
-  updateInputsValues()
 
   // Return JSX component
   return content
@@ -252,11 +257,11 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
     // Update data menu for link
     new_data.menu_configuration.updateComponentRelatedToLinksData()
     // And update this menu also
-    setCount(a=>a+1)
+    setCount(a => a + 1)
     updateInputsValues()
   }
 
-  const content = <ConfigMenuNumberInput
+  return <ConfigMenuNumberInput
     ref_to_set_value={ref_set_data_value_input}
     default_value={value?.data_value ?? null}
     function_on_blur={(_) => {
@@ -279,6 +284,4 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
         undefined
     }
   />
-
-  return content
 }

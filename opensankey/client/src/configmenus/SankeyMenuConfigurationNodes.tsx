@@ -1,5 +1,4 @@
 import React, { FunctionComponent, useState } from 'react'
-import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 
@@ -376,8 +375,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               {
                 Object
                   .keys(ui)
-                  .map((key) => {
-                    return <Tab>
+                  .map((key,i) => {
+                    return <Tab key={'submenuconfig_tab_'+i}>
                       <Box layerStyle='submenuconfig_tab' >
                         {t(key)}
                       </Box>
@@ -390,9 +389,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               {
                 Object
                   .values(ui)
-                  .map((c: ReactElementLike) => {
-                    return c
-                  })
+                  .map((c,i) => <React.Fragment key={'panel'+i}>{c}</React.Fragment>)
               }
             </TabPanels>
           </Tabs> :

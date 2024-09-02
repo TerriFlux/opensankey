@@ -6,10 +6,6 @@ import {
 import {
   MultiSelect
 } from 'react-multi-select-component'
-import {
-  FaEye,
-  FaEyeSlash
-} from 'react-icons/fa'
 
 import {
   Checkbox,
@@ -67,6 +63,7 @@ import {
 
 // Internal functions / Components
 import {
+  CustomFaEyeCheckIcon,
   OSTooltip
 } from '../types/Utils'
 import {
@@ -301,11 +298,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
           alignSelf='center'
           variant='activate_antagonist_checkbox'
           isChecked={level_tagg.activated}
-          icon={
-            level_tagg.activated ?
-              <FaEye style={{ fill: 'rgb(120, 194, 173)' }} /> :
-              <FaEyeSlash />
-          }
+          icon={<CustomFaEyeCheckIcon/>}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
             const first_antagonist_level_tagg = level_taggs[level_tagg.siblings[0]]
@@ -724,7 +717,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
+  const max_link_value = Math.max(0,...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
 
   const redrawNodeLinkLegend = () => {
     sankey.draw()
