@@ -6,10 +6,11 @@
 
 // External imports
 import React, { FunctionComponent } from 'react'
-import { Tooltip } from '@chakra-ui/react'
+import { CheckboxProps, Tooltip } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 // Local imports
 import { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
@@ -289,13 +290,21 @@ export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
   if (label === undefined) {
     return <>{children}</>
   }
+  const element_key = label.split(' ').join('_')
   return <Tooltip
-    key={label.split(' ').join('_')}
+    key={element_key}
     openDelay={delay}
     placement={placement}
     label={label}
     closeDelay={100}
   >
-    {children}
+    <>
+      {children}
+    </>
   </Tooltip>
+}
+
+export const CustomFaEyeCheckIcon=(props:CheckboxProps)=>{
+  const { isChecked } = props
+  return isChecked?<FaEye/>:<FaEyeSlash/>
 }
