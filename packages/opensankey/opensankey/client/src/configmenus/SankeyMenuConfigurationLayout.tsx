@@ -1,5 +1,4 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
   Checkbox,
@@ -7,7 +6,7 @@ import {
 } from '@chakra-ui/react'
 
 import { OpenSankeyMenuConfigurationLayoutFType } from './types/SankeyMenuConfigurationLayoutTypes'
-import { OSTooltip } from '../types/Utils'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 // MENU COMPONENT ***********************************************************************
@@ -103,7 +102,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
         isChecked={new_data.drawing_area.grid_visible}
-        icon={new_data.drawing_area.grid_visible ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         onChange={(evt) => {
           new_data.drawing_area.grid_visible = evt.target.checked
           refreshThisAndUpdateRelatedComponents()
@@ -268,7 +267,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
     >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={!new_data.drawing_area.legend.masked ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         isChecked={!new_data.drawing_area.legend.masked}
         onChange={() => {
           new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
