@@ -9,8 +9,6 @@ import {
   FaArrowRight,
   FaArrowUp,
   FaBold,
-  FaEye,
-  FaEyeSlash,
   FaItalic,
   FaLock,
   FaLockOpen,
@@ -77,6 +75,7 @@ import {
   isAttributeOverloaded
 } from '../types/Node'
 import {
+  CustomFaEyeCheckIcon,
   font_families
 } from '../types/Utils'
 import {
@@ -253,7 +252,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={(shape_visible) ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         isChecked={shape_visible}
         isIndeterminate={
           is_indeterminated
@@ -568,7 +567,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={name_label_visible ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         isIndeterminate={is_indeterminated}
         isChecked={name_label_visible}
         onChange={(evt) => {
@@ -903,8 +902,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.labels.anchor_dx')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -925,8 +924,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.labels.anchor_dy')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -951,7 +950,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={value_label_visible ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         isIndeterminate={is_indeterminated}
         isChecked={value_label_visible}
         onChange={(evt) => {
@@ -1133,8 +1132,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.node_value.anchor_dx')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput
@@ -1157,8 +1156,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Noeud.node_value.anchor_dy')}
                 {(!menu_for_style) &&
                   isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-                    TooltipValueSurcharge('node_var', t) :
-                    <></>}
+                  TooltipValueSurcharge('node_var', t) :
+                  <></>}
               </Box>
 
               <ConfigNodeAttributeNumberInput

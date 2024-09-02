@@ -107,10 +107,10 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
       response.text()
         .then(text => {
           // try {
-            RetrieveExcelResults(
-              applicationData,
-              text
-            )
+          RetrieveExcelResults(
+            applicationData,
+            text
+          )
           // }
           // catch(err) {
           //   alert(err)
