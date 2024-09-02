@@ -265,7 +265,7 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
             additionalMenus,
             menu_configuration_nodes_attributes,
             processFunctions
-          ).map(e => e)
+          ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         <>
           <Menu
@@ -296,8 +296,17 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
                 <ModalPreference
                   applicationData={applicationData}
                   ui={Object.values(regular_ui).map(d => {
+                    // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
+                    let content
+                    if (Array.isArray(d)) {
+                      content = <React.Fragment>{d.map((el, i) => {
+                        return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
+                      })}</React.Fragment>
+                    } else {
+                      content = <React.Fragment key={'content_ui_pref'}>{d}</React.Fragment>
+                    }
                     return <>
-                      {d}
+                      {content}
                       <hr
                         style={{
                           borderStyle: 'none',
@@ -332,7 +341,6 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
-
       <ContextMenuNode
         applicationData={applicationData}
         additional_context_element_menu={additionalMenus.additional_context_element_menu}
@@ -344,7 +352,6 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
       <ContextMenuZdd
         applicationData={applicationData}
       />
-
     </div>
 
   </ChakraProvider>

@@ -1007,7 +1007,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ref_setter_show_modal_tuto.current = set_show_tuto
   ref_setter_show_modal_templates_lib.current = set_show_template
   const { new_data } = applicationData
-  new_data.menu_configuration.ref_to_menu_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   new_data.menu_configuration.ref_menu_opened.current = show_nav
   new_data.menu_configuration.positionToolBar()
 
@@ -1028,7 +1028,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-  const ordered_menu: { [s: string]: JSX.Element[] | JSX.Element } = {}
+  const ordered_menu: { [s: string]: JSX.Element } = {}
   const ordered_key: string[] = [
     'file',
     'edition',
@@ -1040,11 +1040,30 @@ export const Menu: FunctionComponent<MenuTypes> = (
     'afm',
     'demo',
     'aide']
-  ordered_key.forEach(key => {
+
+  // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
+  ordered_key.forEach((key) => {
     if (Object.keys(menus).includes(key)) {
-      ordered_menu[key] = menus[key]
+      let content_menu
+      if (Array.isArray(menus[key])) {
+        content_menu = <React.Fragment>{menus[key].map((el, i) => {
+          return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
+        })}</React.Fragment>
+      } else {
+        content_menu = <React.Fragment key={'content_ui_pref'}>{menus[key]}</React.Fragment>
+      }
+      ordered_menu[key] = content_menu
     }
   })
+
+  // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
+  const constent_additional_nav_item = <>
+    {
+      additional_nav_item.map((el, i) => {
+        return <React.Fragment key={'add_menu' + i}>{el}</React.Fragment>
+      })
+    }
+  </>
 
   const modal_tuto = <ModalTuto
     applicationData={applicationData}
@@ -1085,9 +1104,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
         })}
       </TabList>
       <TabPanels>
-        {Object.values(ordered_menu).map((m, i) => {
+        {Object.values(ordered_menu).map((element, i) => {
           return <TabPanel key={'menutop_item_' + i}>
-            {m}
+            {element}
           </TabPanel>
         })}
       </TabPanels>
@@ -1135,6 +1154,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
     />
   }
   const modal_resolution_png = Modale_resolution_png(t, applicationData)
+
+  // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
+  const content_menu_unity = Array.isArray(menus['unité']) ? <React.Fragment key={'content_ui_pref'}>{menus['unité'].map((el, i) => {
+    return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
+  })}</React.Fragment> : <React.Fragment key={'content_ui_pref'}>{menus['unité']}</React.Fragment>
+
   return (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
@@ -1227,9 +1252,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
             alignSelf='center'
             justifySelf='center'
           >
-            {Object.keys(menus).includes('unité') ? <>
-              {menus['unité']}
-            </> : <></>}
+            {content_menu_unity}
+
           </Box>
 
           <Box
@@ -1240,7 +1264,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
             gridTemplateColumns='1fr 1fr'
             gridColumnGap='0.25rem'
           >
-            {additional_nav_item}
+            {constent_additional_nav_item}
           </Box>
         </Box>
       </Box>
@@ -1403,13 +1427,16 @@ export const MenuDraggable: FunctionComponent<MenuDraggableFType> = ({
   title }
 ) => {
   const [display_menu, set_display_menu] = useState(false)
+  const nodeRef = useRef(null) // nodeRef as node from DOM (not Sankey node)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
   return <Draggable
+    nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 4 }}
     bounds={{ left: 0, top: 0 }}
   >
     <Box
+      ref={nodeRef}
       layerStyle='menucontext_layout'
       hidden={!display_menu}
       position='absolute'
@@ -1666,7 +1693,7 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               <Button variant='toolbar_button_6'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/Tutoriels/'+(d[0])+'/'+dd), applicationData.new_data
+                    ('Formations/Tutoriels/' + (d[0]) + '/' + dd), applicationData.new_data
                   )
                   //applicationData.set_data({ ...applicationData.data })
                   set_show_tuto(false)
