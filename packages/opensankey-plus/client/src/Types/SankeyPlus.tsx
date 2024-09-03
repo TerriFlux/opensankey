@@ -19,8 +19,6 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { ViewType } from '../../types/Types'
-import { Class_NodeElement } from '../deps/OpenSankey/types/Node'
-import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
 
 // CLASS SANKEY PLUS *********************************************************************
@@ -211,7 +209,6 @@ export class Class_SankeyPlus extends Class_Sankey
   public addNewDefaultFreeLabel() {
     const n = String(Object.values(this._labels).length)
     const id = 'free_label' + n
-    const name = 'Zone de texte ' + n
     return this.addNewFreeLabel(id)
   }
 

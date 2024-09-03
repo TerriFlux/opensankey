@@ -2,6 +2,13 @@
 // import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 // import * as d3 from 'd3'
 
+import { Box, Textarea, TabPanel, Checkbox, Button } from '@chakra-ui/react'
+import React, { FunctionComponent, useState, useRef, MutableRefObject } from 'react'
+import ReactQuill from 'react-quill'
+import { OSTooltip } from './deps/OpenSankey/types/Utils'
+import { OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
+import { Class_NodeElementPlus } from './Types/NodePlus'
+
 // import ReactQuill from 'react-quill'
 // import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
@@ -22,219 +29,224 @@
 //   SankeyToolsStatic: boolean
 // }
 
-// export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
-//   t,
-//   data,
-//   multi_selected_nodes,
-//   is_activated,
-//   applicationState,
-//   node_function
-// })=> {
-//   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
-//   const [forceUpdate, setForceUpdate] = useState(false)
+export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
+  applicationData,
+  is_activated,
+})=> {
+  const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
+  const [,setCount]=useState(0)
 
-//   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
-//   applicationState.r_setter_editor_content_fo_node.current = sEditorContentFoNode
+  const {new_data}=applicationData
+  const {drawing_area,t}=new_data
+  const selected_nodes=drawing_area.selected_nodes_list
 
-//   let s_tmp_editor_content_changed = false
-//   if (multi_selected_nodes.current.length>0) {
-//     if (multi_selected_nodes.current[0].FO_content !== s_editor_content_fo_node) {
-//       s_tmp_editor_content_changed = true
-//     }
-//   }
+  let s_tmp_editor_content_fo_node = s_editor_content_fo_node
+  new_data.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
+
+  let s_tmp_editor_content_changed = false
+  if (selected_nodes.length>0) {
+    if (selected_nodes[0].FO_content !== s_editor_content_fo_node) {
+      s_tmp_editor_content_changed = true
+    }
+  }
+
+  const modules = {
+    toolbar: [
+      [{ 'font': [] }],
+      ['bold', 'italic', 'underline','strike'],
+      [{ 'size': [] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      [{'align':[]}],
+
+      ['clean'],
+    ],
+  }
+
+  const formats = ['font','size',
+    'bold', 'italic', 'underline', 'strike','color','background',
+    'list', 'bullet','align'
+  ]
 
 
+  /**
+   *
+   * function that go throught all Type_NodeElement of an array & check if they're all equals
+   * (to the first )
+   *
+   * @param {Type_NodeElement} curr
+   * @return {*}
+   */
+  const check_indeterminate = (curr: Class_NodeElementPlus,) => {
+    return (selected_nodes[0].isEqual(curr))
+  }
+  const is_indeterminated = !selected_nodes.every(check_indeterminate)
+  //   const value_of_key = OSPIsAllNodeNotLocalAttrSameValue(data,selected_nodes,['has_FO','is_FO_raw'])
 
-//   const modules = {
-//     toolbar: [
-//       [{ 'font': [] }],
-//       ['bold', 'italic', 'underline','strike'],
-//       [{ 'size': [] }],
-//       [{ 'color': [] }, { 'background': [] }],
-//       [{'list': 'ordered'}, {'list': 'bullet'}],
-//       [{'align':[]}],
+  //Create 2 editor :
+  // - one in an editor when we can apply layout width buttons
+  // - one with raw html in case the editor can't do exactly what we want
+  const editor_fo=<Box style={{'height':'300px'}}>
+    <ReactQuill
+      className='quill_editor'
+      value={s_editor_content_fo_node}
+      onChange={(evt, _, s) => {
+        if(s==='user'){
+          s_tmp_editor_content_fo_node = evt
+          if (!s_tmp_editor_content_changed) {
+            sEditorContentFoNode(s_tmp_editor_content_fo_node)
+          }
+        }
+      }}
+      onBlur={()=>{
+        sEditorContentFoNode(s_tmp_editor_content_fo_node)
+      }}
+      theme="snow"
+      modules={modules}
+      formats={formats}
+      readOnly={!is_activated}
+      style={{
+        color:(!is_activated || !selected_nodes[0].has_FO )?'#666666':'',
+        backgroundColor:(!is_activated || !selected_nodes[0].has_FO)?'#cccccc':'',
+        overflowY: 'scroll'
+      }}
+    />
+  </Box>
 
-//       ['clean'],
-//     ],
-//   }
+  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
+  const editor_fo_raw=<Textarea
+    rows={5}
+    color={(!is_activated || !selected_nodes[0].has_FO)?'#666666':''}
+    backgroundColor={(!is_activated || !selected_nodes[0].has_FO)?'#cccccc':''}
+    disabled={!is_activated}
+    ref={inputRef}
+    defaultValue={s_editor_content_fo_node}
+    onChange={(evt) => {
+      s_tmp_editor_content_fo_node = evt.target.value
+      if (!s_tmp_editor_content_changed) {
+        sEditorContentFoNode(s_tmp_editor_content_fo_node)
+      }
+    }}
+    onBlur={()=>{
+      sEditorContentFoNode(s_tmp_editor_content_fo_node)
+    }}
+  />
 
-//   const formats = ['font','size',
-//     'bold', 'italic', 'underline', 'strike','color','background',
-//     'list', 'bullet','align'
-//   ]
+  return <TabPanel>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+    >
 
-//   const value_of_key = OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isDisabled={!is_activated}
+        isIndeterminate={is_indeterminated}
+        isChecked={selected_nodes[0].has_FO}
+        onChange={(evt) => {
+          selected_nodes
+            .forEach(d => {
+              d.has_FO = evt.target.checked
+              d.draw()
+            })
+          setCount(a=>a+1)
+        }}
+      >
+        {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
+      </Checkbox>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isDisabled={!is_activated}
+        isIndeterminate={is_indeterminated}
+        isChecked={selected_nodes[0].is_FO_raw}
+        onChange={(evt) => {
+          selected_nodes
+            .forEach(d => {
+              d.is_FO_raw = evt.target.checked
+              d.draw()
+            })
+          setCount(a=>a+1)
+        }}
+      >
+        {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
+      </Checkbox>
 
-//   //Create 2 editor :
-//   // - one in an editor when we can apply layout width buttons
-//   // - one with raw html in case the editor can't do exactly what we want
-//   const editor_fo=<Box style={{'height':'300px'}}>
-//     <ReactQuill
-//       className='quill_editor'
-//       value={s_editor_content_fo_node}
-//       onChange={(evt, _, s) => {
-//         if(s==='user'){
-//           s_tmp_editor_content_fo_node = evt
-//           if (!s_tmp_editor_content_changed) {
-//             sEditorContentFoNode(s_tmp_editor_content_fo_node)
-//           }
-//         }
-//       }}
-//       onBlur={()=>{
-//         sEditorContentFoNode(s_tmp_editor_content_fo_node)
-//       }}
-//       theme="snow"
-//       modules={modules}
-//       formats={formats}
-//       readOnly={!is_activated}
-//       style={{
-//         color:(!is_activated || !value_of_key['has_FO'][0] )?'#666666':'',
-//         backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':'',
-//         overflowY: 'scroll'
-//       }}
-//     />
-//   </Box>
+      {
+        (selected_nodes.length>0)?
 
-//   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
-//   const editor_fo_raw=<Textarea
-//     rows={5}
-//     color={(!is_activated || !value_of_key['has_FO'][0])?'#666666':''}
-//     backgroundColor={(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}
-//     disabled={!is_activated}
-//     ref={inputRef}
-//     defaultValue={s_editor_content_fo_node}
-//     onChange={(evt) => {
-//       s_tmp_editor_content_fo_node = evt.target.value
-//       if (!s_tmp_editor_content_changed) {
-//         sEditorContentFoNode(s_tmp_editor_content_fo_node)
-//       }
-//     }}
-//     onBlur={()=>{
-//       sEditorContentFoNode(s_tmp_editor_content_fo_node)
-//     }}
-//   />
+          <OSTooltip label={is_activated?(!selected_nodes[0].has_FO?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyOSPDisabled')}>
+            {
+              (selected_nodes[0].is_FO_raw)?
+                editor_fo_raw:
+                editor_fo
+            }
+          </OSTooltip>
+          :<></>
+      }
 
-//   return <TabPanel>
-//     <Box
-//       layerStyle='menuconfigpanel_grid'
-//     >
-
-//       <Checkbox
-//         variant='menuconfigpanel_option_checkbox'
-//         isDisabled={!is_activated}
-//         isIndeterminate={value_of_key['has_FO'][1]}
-//         isChecked={value_of_key['has_FO'][0] as boolean}
-//         onChange={(evt) => {
-//           Object
-//             .values(data.nodes)
-//             .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-//             .forEach(d => {
-//               d.has_FO = evt.target.checked
-//             })
-//           node_function.RedrawNodes(multi_selected_nodes.current)
-//           setForceUpdate(!forceUpdate)
-//         }}
-//       >
-//         {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
-//       </Checkbox>
-//       <Checkbox
-//         variant='menuconfigpanel_option_checkbox'
-//         isDisabled={!is_activated}
-//         isIndeterminate={value_of_key['is_FO_raw'][1]}
-//         isChecked={value_of_key['is_FO_raw'][0] as boolean}
-//         onChange={(evt) => {
-//           Object
-//             .values(data.nodes)
-//             .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-//             .forEach(d => {
-//               d.is_FO_raw = evt.target.checked
-//             })
-//           node_function.RedrawNodes(multi_selected_nodes.current)
-//           setForceUpdate(!forceUpdate)
-//         }}
-//       >
-//         {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
-//       </Checkbox>
-
-//       {
-//         (multi_selected_nodes.current.length>0)?
-
-//           <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyOSPDisabled')}>
-//             {
-//               (multi_selected_nodes.current[0].is_FO_raw)?
-//                 editor_fo_raw:
-//                 editor_fo
-//             }
-//           </OSTooltip>
-//           :<></>
-//       }
-
-//       <Box
-//         as='span'
-//         layerStyle='options_2cols'
-//       >
-//         <Button
-//           variant='menuconfigpanel_option_button_left'
-//           isDisabled={!is_activated || !s_tmp_editor_content_changed}
-//           backgroundColor='red.200'
-//           onClick={() => {
-//             if (multi_selected_nodes.current.length>0) {
-//               if ( typeof multi_selected_nodes.current[0].FO_content !== 'undefined' ) {
-//                 // Reset textaera
-//                 if ( typeof inputRef.current !== 'undefined' ) {
-//                   if (inputRef.current !== null) {
-//                     inputRef.current.value = multi_selected_nodes.current[0].FO_content
-//                   }
-//                 }
-//                 // Reset state value
-//                 sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
-//               }
-//               else {
-//                 // Reset textaera
-//                 if (typeof inputRef.current !== 'undefined') {
-//                   if (inputRef.current !== null) {
-//                     inputRef.current.value = ''
-//                   }
-//                 }
-//                 // Reset state value
-//                 sEditorContentFoNode('')
-//               }
-//             }
-//             else {
-//               // Reset textaera
-//               if (typeof inputRef.current !== 'undefined') {
-//                 if (inputRef.current !== null) {
-//                   inputRef.current.value = ''
-//                 }
-//               }
-//               // Reset state value
-//               sEditorContentFoNode('')
-//             }
-//             setForceUpdate(!forceUpdate)
-//           }}
-//         >
-//           {t('Noeud.FO.cancel')}
-//         </Button>
-//         <Button
-//           variant='menuconfigpanel_option_button_right'
-//           isDisabled={!is_activated || !s_tmp_editor_content_changed}
-//           onClick={() => {
-//             Object
-//               .values(data.nodes)
-//               .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-//               .map(d => {
-//                 d.FO_content = s_tmp_editor_content_fo_node
-//               })
-//             node_function.RedrawNodes(multi_selected_nodes.current)
-//             sEditorContentFoNode(s_tmp_editor_content_fo_node)
-//           }}
-//         >
-//           {t('Noeud.FO.submit')}
-//         </Button>
-//       </Box>
-//     </Box>
-//   </TabPanel>
-// }
+      <Box
+        as='span'
+        layerStyle='options_2cols'
+      >
+        <Button
+          variant='menuconfigpanel_option_button_left'
+          isDisabled={!is_activated || !s_tmp_editor_content_changed}
+          backgroundColor='red.200'
+          onClick={() => {
+            if (selected_nodes.length>0) {
+              if ( typeof selected_nodes[0].FO_content !== 'undefined' ) {
+                // Reset textaera
+                if ( typeof inputRef.current !== 'undefined' ) {
+                  if (inputRef.current !== null) {
+                    inputRef.current.value = selected_nodes[0].FO_content
+                  }
+                }
+                // Reset state value
+                sEditorContentFoNode(selected_nodes[0].FO_content)
+              }
+              else {
+                // Reset textaera
+                if (typeof inputRef.current !== 'undefined') {
+                  if (inputRef.current !== null) {
+                    inputRef.current.value = ''
+                  }
+                }
+                // Reset state value
+                sEditorContentFoNode('')
+              }
+            }
+            else {
+              // Reset textaera
+              if (typeof inputRef.current !== 'undefined') {
+                if (inputRef.current !== null) {
+                  inputRef.current.value = ''
+                }
+              }
+              // Reset state value
+              sEditorContentFoNode('')
+            }
+            setCount(a=>a+1)
+          }}
+        >
+          {t('Noeud.FO.cancel')}
+        </Button>
+        <Button
+          variant='menuconfigpanel_option_button_right'
+          isDisabled={!is_activated || !s_tmp_editor_content_changed}
+          onClick={() => {
+            selected_nodes
+              .forEach(d => {
+                d.FO_content = s_tmp_editor_content_fo_node
+                d.draw()
+              })
+            sEditorContentFoNode(s_tmp_editor_content_fo_node)
+          }}
+        >
+          {t('Noeud.FO.submit')}
+        </Button>
+      </Box>
+    </Box>
+  </TabPanel>
+}
 
 
 // export const OSPDrawNodesFO : OSPDrawNodesFOFType = (

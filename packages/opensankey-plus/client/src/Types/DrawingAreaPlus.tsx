@@ -20,7 +20,6 @@ import { Class_SankeyPlus } from './SankeyPlus'
 import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
-import { Class_Element } from '../deps/OpenSankey/types/Element'
 import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
 
 // CLASS DRAWING AREA PLUS **************************************************************
@@ -116,13 +115,13 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     this.sankey.free_labels_list.forEach(zdt => zdt.draw())
   }
 
-/**
+  /**
  * Functon that add an image in in the background of the svg,
  * the image is imported in the config menu 
  *
  * @memberof Class_DrawingAreaPlus
  */
-public drawBgImage() {
+  public drawBgImage() {
     this.d3_selection_bg?.select('#bg_image').remove()
 
     if (this._show_background_image) {

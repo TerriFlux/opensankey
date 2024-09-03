@@ -8,7 +8,7 @@ import LZString from 'lz-string'
 import './traduction'
 
 
-import { OSPApplicationDataType, OSPData, OSPDataVar, OSPLink, OSPNode } from '../types/Types'
+import { OSPApplicationDataType, OSPData } from '../types/Types'
 import {
   OSPInitializeApplicationData,
   OSPInitializeReinitialization,

@@ -20,8 +20,8 @@ import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
+  ContextNodeIconFType,
   OSPHyperLinkFType,
-  // ContextNodeIconFType,
   // node_icon_fill_colorFType,
   // node_icon_pathFType,
   // OpposingDragElementsPlusFType,
@@ -422,7 +422,7 @@ export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
               placeholder={node_hyperlink}
               onChange={(evt) => {
                 selected_nodes
-                .forEach(d => d.hyperlink = evt.target.value)
+                  .forEach(d => d.hyperlink = evt.target.value)
                 setCount(a=>a+1)
               }}
             />
@@ -639,23 +639,22 @@ export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
 //   }
 //   return max
 
-// export const ContextNodeIcon: ContextNodeIconFType = (
-//   contextMenu,
-//   dict_hook_ref_setter_show_dialog_components,
-//   t: TFunction
-// ) => {
-//   const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
-//   return <Button
-//     variant='menuconfigpanel_option_button'
-//     onClick={() => {
-//       dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current!(true)
-//       contextMenu.ref_setter_contextualised_node.current!(undefined)
-//     }}
-//   >
-//     {t('Noeud.icon.icon')}
-//     {icon_open_modal}
-//   </Button>
-// }
+export const ContextNodeIcon: ContextNodeIconFType = (
+  application_data
+) => {
+  const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
+  return <Button
+    variant='menuconfigpanel_option_button'
+    onClick={() => {
+      application_data.new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current!(true)
+      application_data.new_data.drawing_area.node_contextualised=undefined // unselect contextualised node
+      application_data.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current() // update context menu node, it should close because there no more contextualised node
+    }}
+  >
+    {application_data.new_data.t('Noeud.icon.icon')}
+    {icon_open_modal}
+  </Button>
+}
 // /**
 //  * Shift all elements (ZDT/Nodes) not selected to the opposing direction of the event
 //  *

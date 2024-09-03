@@ -45,6 +45,7 @@ import {
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
 import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
+import { OSPNodeFO } from './SankeyPlusForeignObject'
 
 declare const window: Window &
   typeof globalThis & {
@@ -70,7 +71,7 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
   data,
   set_data,
   get_default_data,
-  initial_data
+  _initial_data
 ) => {
   const data_plus = data as OSPData
   // const [master_data, set_master_data] = useState<OSPData>() // useState OK
@@ -123,7 +124,7 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
 // export const OSPcloseAllMenu = closeAllMenu
 
 export const OSPInitializeReinitialization: OSPInitializeReinitializationType = (
-  applicationData
+  _applicationData
 ) => () => {
   // const recast_selected_dict=applicationState as OSPElementsSelectedType
   // recast_selected_dict.multi_selected_label.current = []
@@ -181,15 +182,10 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
     menu_for_modal={false}
 
   />
-  // TODO : re implement OSPNodeFO with class
-  // additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo']= <OSPNodeFO
-  //   t={applicationContext.t}
-  //   data={applicationData.data as OSPData}
-  //   multi_selected_nodes={applicationState.multi_selected_nodes as { current: OSPNode[]; }}
-  //   is_activated={true}
-  //   applicationState={applicationState as OSPElementsSelectedType}
-  //   node_function={node_function as OSPNodeFuntionType}
-  // />
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <OSPNodeFO
+    applicationData={plus_dict_app_data}
+    is_activated={true}
+  />
 
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl'] = <OSPHyperLink
     applicationData={plus_dict_app_data}
@@ -267,10 +263,6 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 // we don't need to recast it ( and don't need additionnal parameters for OSP dialogs)
 export const OSPModuleDialogs: module_dialogsType = (
   applicationData,
-  additional_menus,
-  menu_configuration_nodes_attributes,
-  processFunctions
-
 ) => {
   const OSP_dict_app_data = applicationData as unknown as OSPApplicationDataType
   const { new_data } = OSP_dict_app_data
@@ -309,7 +301,7 @@ export const OSPModuleDialogs: module_dialogsType = (
 
 
 export const OSPUpdateMenuConf: OSPUpdateMenuConfType = (menu_conf,
-  applicationData
+  _applicationData
 ) => {
 
   // TODO : re implement viewsAccordion with class

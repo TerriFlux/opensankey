@@ -1,5 +1,5 @@
 // import { TFunction } from 'i18next'
-import { OSPApplicationDataType, OSPData, OSPLabel, OSPNode, OSPShowMenuComponentsType } from './Types'
+import { OSPApplicationDataType } from './Types'
 // import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 // import { applicationDataType, applicationDrawType } from '../src/deps/OpenSankey/types/Types'
 // import { MutableRefObject } from 'react'
@@ -40,10 +40,9 @@ export type OSPHyperLinkFType={
 // application_data:OSPApplicationDataType
 // ) => void
 
-// export type ContextNodeIconFType = (
-//   application_data:OSPApplicationDataType
-
-// )=> JSX.Element
+export type ContextNodeIconFType = (
+  application_data:OSPApplicationDataType
+)=> JSX.Element
 
 // export type OpposingDragElementsPlusFType = (
 //   application_data:OSPApplicationDataType

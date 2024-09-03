@@ -1,4 +1,3 @@
-import { TFunction } from 'i18next'
 import { OSPApplicationDataType, OSPData, OSPLabel, OSPLink, OSPLinkAttrLocal, OSPLinkStyle, OSPNode } from './Types'
 // import { GetLinkValueFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 // import { ComponentUpdaterType } from '../src/deps/OpenSankey/types/Types'

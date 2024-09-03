@@ -20,14 +20,8 @@ import {
   Type_ElementPosition
 } from '../deps/OpenSankey/types/Utils'
 import {
-  Class_DrawingArea
-} from '../deps/OpenSankey/types/DrawingArea'
-import {
   default_main_sankey_id
 } from '../deps/OpenSankey/types/Sankey'
-import {
-  Class_MenuConfig
-} from '../deps/OpenSankey/types/MenuConfig'
 
 // Local imports
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
@@ -71,7 +65,7 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
    * @type {Class_SankeyPlus[]}
    * @memberof Class_ProtoElement
    */
-  protected _sankeys: {[_: string]: Class_SankeyPlus}
+  protected _sankeys: { [_: string]: Class_SankeyPlus }
 
   /**
    * Config menu ref to html element & function to update it
@@ -146,6 +140,50 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   public override draw() {
     super.draw()
     this.drawIllustration()
+    this.drawFO()
+  }
+
+
+  public override isEqual(_: Class_NodeElementPlus): boolean {
+    const super_equal = super.isEqual(_)
+    if (super_equal == false) {
+      return false
+    }
+
+    if (this._iconName != _._iconName) {
+      return false
+    }
+    if (this._iconColor != _._iconColor) {
+      return false
+    }
+    if (this._iconVisible != _._iconVisible) {
+      return false
+    }
+    if (this._iconViewBox != _._iconViewBox) {
+      return false
+    }
+    if (this._iconColorSustainable != _._iconColorSustainable) {
+      return false
+    }
+    if (this._has_FO != _._has_FO) {
+      return false
+    }
+    if (this._is_FO_raw != _._is_FO_raw) {
+      return false
+    }
+    if (this._FO_content != _._FO_content) {
+      return false
+    }
+    if (this._is_image != _._is_image) {
+      return false
+    }
+    if (this._image_src != _._image_src) {
+      return false
+    }
+    if (this._hyperlink != _._hyperlink) {
+      return false
+    }
+    return true
   }
 
   // New --------------------------------------------------------------------------------
@@ -160,14 +198,27 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     }
   }
 
+  public drawFO() {
+    this.d3_selection_plus?.select('.node_fo').remove()
+
+    this.d3_selection_plus?.append('foreignObject')
+      .attr('id', this.id + '_fo')
+      .attr('class', 'node_fo')
+      .attr('width', this.getShapeWidthToUse())
+      .attr('height', this.getShapeHeightToUse())
+      .append('xhtml:div')
+      .attr('class', 'ql-editor')
+      .html(this._FO_content)
+  }
+
   // PROTECTED METHODS ====================================================================
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Apply parent behavior first
     super.eventSimpleLMBCLick(event)
-    if(this._display.drawing_area.static){
-      if(this._hyperlink!=''){
+    if (this._display.drawing_area.static) {
+      if (this._hyperlink != '') {
         window.open(this._hyperlink)
       }
     }
@@ -179,8 +230,8 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
       .attr('id', n => 'image_node_' + n.id)
       .attr('class', 'illustration')
       .attr('href', n => n.image_src)
-      .attr('height', n => this.getShapeHeightToUse())
-      .attr('width', n => this.getShapeWidthToUse())
+      .attr('height', this.getShapeHeightToUse())
+      .attr('width', this.getShapeWidthToUse())
   }
 
   private drawIllustrationIcon() {
@@ -220,7 +271,7 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   public get iconName(): string { return this._iconName }
   public set iconName(value: string) { this._iconName = value }
 
-  public get d3_selection_plus(){ return this.d3_selection as d3.Selection<SVGGElement, this, SVGGElement, unknown> | null}
+  public get d3_selection_plus() { return this.d3_selection as d3.Selection<SVGGElement, this, SVGGElement, unknown> | null }
 
   public get iconColor(): string { return this._iconColor }
   public set iconColor(value: string) { this._iconColor = value }
@@ -240,7 +291,16 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   public get image_src(): string { return this._image_src }
   public set image_src(value: string) { this._image_src = value }
 
-  public get hyperlink(): string {return this._hyperlink}
-  public set hyperlink(value: string) {this._hyperlink = value}
+  public get hyperlink(): string { return this._hyperlink }
+  public set hyperlink(value: string) { this._hyperlink = value }
+
+  public get has_FO(): boolean { return this._has_FO }
+  public set has_FO(value: boolean) { this._has_FO = value }
+
+  public get is_FO_raw(): boolean { return this._is_FO_raw }
+  public set is_FO_raw(value: boolean) { this._is_FO_raw = value }
+
+  public get FO_content(): string { return this._FO_content }
+  public set FO_content(value: string) { this._FO_content = value }
 
 }

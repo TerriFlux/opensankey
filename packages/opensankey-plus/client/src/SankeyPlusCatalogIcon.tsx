@@ -1,9 +1,8 @@
 import React, { FunctionComponent, useState, useRef, ChangeEvent } from 'react'
 import { Box, Card, CardBody, Divider, Heading, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import * as d3 from 'd3'
-import { TFunction } from 'i18next'
 import { FaPlus } from 'react-icons/fa'
-import { OSPApplicationDataType, OSPShowMenuComponentsType, OSPNode } from '../types/Types'
+import { OSPApplicationDataType } from '../types/Types'
 import SankeyListIcons from './icons/lib_of_icons.json'
 
 export type ModalSelectionIconsType={

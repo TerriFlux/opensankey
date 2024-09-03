@@ -1,5 +1,4 @@
-import { TFunction } from 'i18next'
-import {   OSPApplicationDataType, OSPData, OSPShowMenuComponentsType, reDrawOSPLabelsFType } from './Types'
+import {   OSPApplicationDataType } from './Types'
 import ReactQuill from 'react-quill'
 
 export type OSPMenuPreferenceLabelsFType={

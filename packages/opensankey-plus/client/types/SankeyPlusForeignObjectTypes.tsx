@@ -1,17 +1,12 @@
-import { TFunction } from 'i18next'
-import { OSPData, OSPNode } from './Types'
+import { OSPApplicationDataType } from './Types'
 //import { NodeTooltipsContentFType } from '../src/deps/OpenSankey/draw/types/SankeyTooltipTypes'
 // import { GetLinkValueFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 // import { applicationStateType } from '../src/deps/OpenSankey/types/Types'
 
-// export type OSPNodeFOFType = {
-//   t:TFunction,
-//   data:OSPData,
-//   multi_selected_nodes:{current:OSPNode[]},
-//   is_activated:boolean,
-//   applicationState:OSPElementsSelectedType,
-//   node_function:OSPNodeFuntionType
-//  }
+export type OSPNodeFOFType = {
+    applicationData:OSPApplicationDataType,
+  is_activated:boolean,
+ }
 
 // export type OSPDrawNodesFOFType = (
 //   data:OSPData,

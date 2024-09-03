@@ -5,7 +5,6 @@ import {
   OSPApplicationDataType,
   OSPData,
   OSPShowMenuComponentsType,
-  reDrawOSPLabelsFType
 } from './Types'
 
 import {

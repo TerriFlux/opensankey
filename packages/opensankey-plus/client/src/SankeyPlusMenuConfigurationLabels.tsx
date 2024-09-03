@@ -1,5 +1,5 @@
 // Standard libs
-import React, { Ref, useState, ChangeEvent, FunctionComponent, useRef } from 'react'
+import React, { useState, ChangeEvent, FunctionComponent, useRef } from 'react'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
@@ -613,9 +613,8 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
   }
 
-  const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
-  const valAllLabelBorderTransparentIndeterminate = !selected_zdt.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
+  const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
 
   const btn_mask_border = <Button onClick={() => {
     selected_zdt.forEach(zdt => zdt.transparent_border = !valAllLabelBorderTransparent)

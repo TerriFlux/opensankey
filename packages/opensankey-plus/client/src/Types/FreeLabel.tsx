@@ -8,7 +8,7 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { Class_Element, Class_ProtoElement } from '../deps/OpenSankey/types/Element'
+import { Class_Element } from '../deps/OpenSankey/types/Element'
 import { Type_ElementPosition } from '../deps/OpenSankey/types/Utils'
 import { default_element_position } from '../deps/OpenSankey/types/Utils'
 import { default_selected_stroke_width } from '../deps/OpenSankey/types/Node'
@@ -18,7 +18,6 @@ import { Class_Handler } from '../deps/OpenSankey/types/Handler'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_SankeyPlus } from './SankeyPlus'
-import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 
 // CLASS FREE LABEL ELEMENT *************************************************************
 
