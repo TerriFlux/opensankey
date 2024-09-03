@@ -10,10 +10,10 @@ export type OSPNodeIconFType = {
   menu_for_modal:boolean,
 }
 
-// export type OSPHyperLinkFType={
-//   applicationData:OSPApplicationDataType,
-//   is_activated:boolean,
-// }
+export type OSPHyperLinkFType={
+  applicationData:OSPApplicationDataType,
+  is_activated:boolean,
+}
 
 // export type OSPNodeClickEventFType=(
 //   applicaTionData:OSPApplicationDataType,

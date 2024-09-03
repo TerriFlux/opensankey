@@ -29,9 +29,10 @@ import {
 // import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 // import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT } from './SankeyPlusMenuConfigurationLabels'
-import {OSPNodeIcon} from './SankeyPlusNodes'
-import {  ImportImageAsSvgBg,
-   } from './SankeyPlusUtils'
+import { OSPHyperLink, OSPNodeIcon } from './SankeyPlusNodes'
+import {
+  ImportImageAsSvgBg,
+} from './SankeyPlusUtils'
 
 // import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 // import {
@@ -101,8 +102,8 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
     data: data_plus,
     set_data: set_data_plus,
     get_default_data: plus_get_defaut_data,
-    new_data:new Class_ApplicationDataPlus(false),
-    dataVarToUpdate:useRef(['']),
+    new_data: new Class_ApplicationDataPlus(false),
+    dataVarToUpdate: useRef(['']),
     // convert_data : (data:SankeyData,DefaultSankeyData:()=>SankeyData) => {
     //   plus_convert_data(data as OSPData,DefaultSankeyData as ()=> OSPData)
     //   convert_data(data,DefaultSankeyData)
@@ -190,15 +191,10 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   //   node_function={node_function as OSPNodeFuntionType}
   // />
 
-  // TODO : re implement OSPHyperLink with class
-  // additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl']=<OSPHyperLink
-  //   t={applicationContext.t}
-  //   data={applicationData.data as OSPData}
-  //   multi_selected_nodes={applicationState.multi_selected_nodes as { current: OSPNode[]; }}
-  //   is_activated={true}
-  //   node_function={node_function as OSPNodeFuntionType}
-  // />
-
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl'] = <OSPHyperLink
+    applicationData={plus_dict_app_data}
+    is_activated={true}
+  />
   //Links
   // TODO : re implement MenuConfLinkApparenceGradient with class
   // additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
@@ -283,9 +279,9 @@ export const OSPModuleDialogs: module_dialogsType = (
   />
   return [
     <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog_plus as unknown as dict_hook_ref_setter_show_dialog_componentsType }
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog_plus as unknown as dict_hook_ref_setter_show_dialog_componentsType}
       dialog_name={'ref_setter_show_menu_zdt' as keyof dict_hook_ref_setter_show_dialog_componentsType}
-      content={content_draggable_menu_zdt }
+      content={content_draggable_menu_zdt}
       title={new_data.t('Menu.LL')}
     />,
     <ContextZDT

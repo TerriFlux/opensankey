@@ -12,13 +12,15 @@ import {
   Button,
   Checkbox,
   TabPanel,
-  Input} from '@chakra-ui/react'
-import { faIcons } from '@fortawesome/free-solid-svg-icons'
+  Input,
+  InputGroup} from '@chakra-ui/react'
+import { faIcons, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
+  OSPHyperLinkFType,
   // ContextNodeIconFType,
   // node_icon_fill_colorFType,
   // node_icon_pathFType,
@@ -380,83 +382,83 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   </TabPanel>
 }
 
-// export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
-//   t,
-//   data,
-//   multi_selected_nodes,
-//   is_activated,
-//   node_function
-// }) => {
-//   const multi_selected_nodes_plus = multi_selected_nodes as { current: OSPNode[] }
-//   const hasHyperLink = () => {
-//     let visible = ''
-//     visible = selected_nodes[0]?.hyperlink ?? ''
-//     return visible
-//   }
-//   const node_hyperlink = hasHyperLink()
-//   const data_plus = data as OSPData
-//   const content_image_tab = selected_nodes.length > 0 ?
-//     <Box
-//       layerStyle='menuconfigpanel_grid'
-//     >
-//       <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
+export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
+  applicationData,
+  is_activated,
+}) => {
+  const {new_data}=applicationData
+  const {drawing_area,t}=new_data
+  const selected_nodes=drawing_area.selected_nodes_list
 
-//         <Box
-//           as='span'
-//           layerStyle='menuconfigpanel_row_2cols'
-//         >
-//           <Box
-//             as='span'
-//             layerStyle='menuconfigpanel_option_name'
-//           >
-//             {t('Noeud.HL')}
-//           </Box>
-//           <InputGroup
-//             variant='menuconfigpanel_option_input'
-//           >
-//             <Input
-//               placeholder={node_hyperlink}
-//               onChange={(evt) => {
-//                 Object
-//                   .values(data_plus.nodes)
-//                   .filter(f => selected_nodes.map(d => d.idNode).includes(f.idNode))
-//                   .forEach(d => d.hyperlink = evt.target.value)
-//                 node_function.reDrawOSPNodeEvent(selected_nodes)
-//               }}
-//             />
-//           </InputGroup>
-//         </Box>
-//       </OSTooltip>
+  const [,setCount]=useState(0)
 
-//       {/* Open Hyperlink */}
-//       <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
-//         <Box
-//           as='span'
-//           layerStyle='menuconfigpanel_row_2cols'
-//         >
-//           <Box
-//             as='span'
-//             layerStyle='menuconfigpanel_option_name'
-//           >
-//             {t('Noeud.open_HL')}
-//           </Box>
-//           <Button
-//             variant='menuconfigpanel_option_button'
-//             onClick={() => {
-//               window.open(node_hyperlink)
-//             }}
-//           >
-//             <FontAwesomeIcon icon={faUpRightFromSquare} />
-//           </Button>
-//         </Box>
-//       </OSTooltip>
-//     </Box> :
-//     <></>
+  const hasHyperLink = () => {
+    let visible = ''
+    visible = selected_nodes[0]?.hyperlink ?? ''
+    return visible
+  }
+  const node_hyperlink = hasHyperLink()
+  // const data_plus = data as OSPData
+  const content_image_tab = selected_nodes.length > 0 ?
+    <Box
+      layerStyle='menuconfigpanel_grid'
+    >
+      <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
 
-//   return <TabPanel>
-//     {content_image_tab}
-//   </TabPanel>
-// }
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {t('Noeud.HL')}
+          </Box>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <Input
+              placeholder={node_hyperlink}
+              onChange={(evt) => {
+                selected_nodes
+                .forEach(d => d.hyperlink = evt.target.value)
+                setCount(a=>a+1)
+              }}
+            />
+          </InputGroup>
+        </Box>
+      </OSTooltip>
+
+      {/* Open Hyperlink */}
+      <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {t('Noeud.open_HL')}
+          </Box>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              window.open(node_hyperlink)
+            }}
+          >
+            <FontAwesomeIcon icon={faUpRightFromSquare} />
+          </Button>
+        </Box>
+      </OSTooltip>
+    </Box> :
+    <></>
+
+  return <TabPanel>
+    {content_image_tab}
+  </TabPanel>
+}
 
 
 // const node_mouse_click = (
@@ -636,167 +638,6 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
 //     })
 //   }
 //   return max
-// }
-
-// export const OSPNodeClickEvent: OSPNodeClickEventFType = (
-//   applicationData,
-//   applicationState,
-//   uiElementsRef,
-//   animating,
-//   accept_simple_click,
-//   GetLinkValue,
-//   ComponentUpdater,
-//   nodes_to_update
-// ) => {
-//   (d3.selectAll(' .opensankey .ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>).filter(n => nodes_to_update.length > 0 ? nodes_to_update.includes(n) : true)
-//     .on('click', (event, d) => {
-//       // Apply some style change to element before starting the animation
-//       node_mouse_click(
-//         applicationData, applicationState, uiElementsRef,
-//         animating,
-//         event,
-//         (d as OSPNode),
-//         accept_simple_click,
-//         GetLinkValue,
-//         ComponentUpdater,
-//       )
-//     })
-// }
-
-// export const node_icon_fill_color: node_icon_fill_colorFType = (
-//   data,
-//   n
-// ) => {
-//   if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-//     const selected_tag = n.tags[n.colorTag][0]
-//     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-//     if (tag && !ReturnValueNode(data, n, 'shape_visible') && !n.iconColorSustainable) {
-//       return tag.color as string
-//     }
-//   }
-//   return (n as OSPNode).iconColor
-// }
-
-// export const node_icon_path: node_icon_pathFType = (
-//   data: SankeyData,
-//   n: SankeyNode
-// ) => {
-//   const icon = (data as OSPData).icon_catalog[(n as OSPNode).iconName]
-//   if (icon !== undefined && icon !== null) {
-//     return icon
-//   }
-//   return ''
-// }
-
-// export const OSPDrawNodesIllustration: OSPDrawNodesIllustrationFType = (
-//   data: OSPData,
-//   node_to_update: OSPNode[],
-//   applicationState,
-//   NodeTooltipsContent: NodeTooltipsContentFType,
-//   GetLinkValue: GetLinkValueFuncType,
-//   trad
-// ) => {
-//   const { ref_getter_mode_selection } = applicationState
-//   const local_displayed_node = {} as { [x: string]: OSPNode }
-//   node_to_update.forEach(n => local_displayed_node[n.idNode] = n)
-//   const node_mouse_over = (data: SankeyData, t: d3.BaseType, event: React.MouseEvent<HTMLButtonElement>, d: unknown) => {
-//     d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's') ? 'pointer' : 'unset')
-//     if ((window.SankeyToolsStatic || event.shiftKey)) {
-//       const sankeyTooltip = d3.select('.sankey-tooltip')
-
-//       sankeyTooltip
-//         .style('opacity', 1)
-//         .html(NodeTooltipsContent((data as OSPData), local_displayed_node, d as OSPNode, GetLinkValue, trad))
-//     }
-//   }
-
-//   const node_mouse_move = (event: React.MouseEvent<HTMLButtonElement>) => {
-//     if ((window.SankeyToolsStatic || event.shiftKey)) {
-//       const sankeyTooltip = d3.select('.sankey-tooltip')
-
-//       const h_tooltip = Number(sankeyTooltip.style('height').replace('px', ''))
-//       let pos_tooltip_y = event.clientY
-//       const size_browser = window.innerHeight
-//       pos_tooltip_y = ((h_tooltip + pos_tooltip_y) > size_browser) ? event.pageY + (size_browser - (pos_tooltip_y + h_tooltip)) - 5 : event.pageY
-
-//       const w_tooltip = Number(sankeyTooltip.style('width').replace('px', ''))
-//       let pos_tooltip_x = event.clientX
-//       const size_browser_w = window.innerWidth
-//       pos_tooltip_x = ((w_tooltip + pos_tooltip_x) > size_browser_w) ? event.pageX - w_tooltip - 30 : event.pageX + 30
-
-//       sankeyTooltip
-//         .style('top', pos_tooltip_y + 'px')
-//         .style('left', pos_tooltip_x + 'px')
-//     }
-//   }
-
-//   const add_nodes_icon = (
-//   ) => {
-//     //----------------ICON-----------------
-//     // Add icon to node (if there is one associated to it)
-//     // then apply selected parameter
-//     const sankeyTooltip = (d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
-
-//     const ggg_nodes = (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>).filter(n => node_to_update.length > 0 ? node_to_update.includes(n) : true)
-//     ggg_nodes.selectAll('.icon_node').remove()
-//     ggg_nodes.selectAll('.image_node').remove()
-
-//     ggg_nodes
-//       .filter(d => d.iconName !== 'none' && d.iconVisible)
-//       .append('svg')
-//       .attr('id', n => 'icon_node_' + n.idNode)
-//       .attr('class', 'icon_node')
-//       .attr('viewBox', d => d.iconViewBox ? d.iconViewBox : '0 0 1000 1000')
-//       .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
-//       .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
-//       .attr('x', 0)
-//       .append('g')
-//       .append('path')
-//       .on('mouseover', function (event, d) {
-//         node_mouse_over(data, this, event, d)
-//       })
-//       .on('mousemove', function (event) {
-//         node_mouse_move(event)
-//       })
-//       .on('mouseout', function () {
-//         sankeyTooltip.style('opacity', 0)
-//       })
-//       .style('fill', n => node_icon_fill_color(data, n))
-//       .attr('d', n => node_icon_path(data, n))
-//   }
-
-//   const add_nodes_image = (
-//   ) => {
-//     //----------------ICON-----------------
-//     // Add icon to node (if there is one associated to it)
-//     // then apply selected parameter
-//     const sankeyTooltip = (d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
-
-//     const ggg_nodes = (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>).filter(n => node_to_update.length > 0 ? node_to_update.includes(n) : true)
-//     ggg_nodes.filter(d => d.is_image).selectAll('.icon_node').remove()
-//     ggg_nodes.filter(d => d.is_image).selectAll('.image_node').remove()
-
-//     ggg_nodes
-//       .filter(d => d.is_image)
-//       .append('image')
-//       .attr('id', n => 'image_node_' + n.idNode)
-//       .attr('class', 'image_node')
-//       .attr('href', n => n.image_src)
-//       .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
-//       .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
-//       .on('mouseover', function (event, d) {
-//         node_mouse_over(data, this, event, d)
-//       })
-//       .on('mousemove', function (event) {
-//         node_mouse_move(event)
-//       })
-//       .on('mouseout', function () {
-//         sankeyTooltip.style('opacity', 0)
-//       })
-//   }
-//   add_nodes_icon()
-//   add_nodes_image()
-// }
 
 // export const ContextNodeIcon: ContextNodeIconFType = (
 //   contextMenu,

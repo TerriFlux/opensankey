@@ -160,6 +160,18 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     }
   }
 
+  // PROTECTED METHODS ====================================================================
+  protected eventSimpleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Apply parent behavior first
+    super.eventSimpleLMBCLick(event)
+    if(this._display.drawing_area.static){
+      if(this._hyperlink!=''){
+        window.open(this._hyperlink)
+      }
+    }
+  }
   // PRIVATE METHODS ====================================================================
 
   private drawIllustrationImage() {
@@ -227,5 +239,8 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
 
   public get image_src(): string { return this._image_src }
   public set image_src(value: string) { this._image_src = value }
+
+  public get hyperlink(): string {return this._hyperlink}
+  public set hyperlink(value: string) {this._hyperlink = value}
 
 }
