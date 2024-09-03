@@ -33,11 +33,10 @@ import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
  * @extends {Class_DrawingArea}
  */
 export class Class_DrawingAreaPlus extends Class_DrawingArea
-<
-  Class_NodeElementPlus,
-  Class_LinkElement<Class_DrawingAreaPlus>
->
-{
+  <
+    Class_NodeElementPlus,
+    Class_LinkElement<Class_DrawingAreaPlus>
+  > {
 
   // TODO Faire le menage ?
   // override _sankey:Class_SankeyPlus
@@ -66,6 +65,11 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
   // PRIVATE ATTRIBUTES =================================================================
 
   private _contextualised_free_label: Class_ContainerElement | undefined = undefined
+
+  // Attribute for background image
+  private _show_background_image: boolean = false
+  private _background_image: string = ''
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -97,7 +101,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
   public reset() {
     super.reset()
     // Add specific groups for free_labels, link and others
-    this.d3_selection_free_label = this.d3_selection?.insert('g','#g_links').attr('id','g_labels') ?? null
+    this.d3_selection_free_label = this.d3_selection?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
     this.drawElements()
   }
 
@@ -108,7 +112,29 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
    */
   public drawElements(): void {
     super.drawElements()
+    this.drawBgImage()
     this.sankey.free_labels_list.forEach(zdt => zdt.draw())
+  }
+
+/**
+ * Functon that add an image in in the background of the svg,
+ * the image is imported in the config menu 
+ *
+ * @memberof Class_DrawingAreaPlus
+ */
+public drawBgImage() {
+    this.d3_selection_bg?.select('#bg_image').remove()
+
+    if (this._show_background_image) {
+      this.d3_selection_bg
+        ?.append('image')
+        .attr('id', 'bg_image')
+        .attr('width', this.getWidth())
+        .attr('height', this.getHeight())
+        .attr('href', this._background_image)
+        .style('background-size', 'contain')
+        .style('background-repeat', 'no-repeat')
+    }
   }
 
   /**
@@ -204,4 +230,10 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
 
   public get contextualised_free_label(): Class_ContainerElement | undefined { return this._contextualised_free_label }
   public set contextualised_free_label(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
+
+  public get show_background_image(): boolean { return this._show_background_image }
+  public set show_background_image(value: boolean) { this._show_background_image = value }
+
+  public get background_image(): string { return this._background_image }
+  public set background_image(value: string) { this._background_image = value }
 }

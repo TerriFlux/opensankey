@@ -30,7 +30,9 @@ import {
 // import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT } from './SankeyPlusMenuConfigurationLabels'
 import {OSPNodeIcon} from './SankeyPlusNodes'
-// import { DefaultOSPStyleLink, ImportImageAsSvgBg, OSPItemExport, OSPLinkSabotColor, SetSvgBg } from './SankeyPlusUtils'
+import {  ImportImageAsSvgBg,
+   } from './SankeyPlusUtils'
+
 // import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 // import {
 //   GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView,
@@ -154,12 +156,10 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 
   // Page settings
   // TODO : re implement ImportImageAsSvgBg with class
-  // additionalMenus.extra_background_element = <ImportImageAsSvgBg
-  //   t={applicationContext.t}
-  //   data={applicationData.data as OSPData}
-  //   set_data={applicationData.set_data as (_:OSPData)=>void}
-  //   has_open_sankey_plus={true}
-  // />
+  additionalMenus.extra_background_element = <ImportImageAsSvgBg
+    applicationData={plus_dict_app_data}
+    has_open_sankey_plus={true}
+  />
 
   // TODO : re implement OSPBannerView with class
 

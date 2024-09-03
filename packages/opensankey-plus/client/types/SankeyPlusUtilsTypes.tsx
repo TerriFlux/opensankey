@@ -15,8 +15,7 @@ export type DefaultOSPStyleLinkFType = () => OSPLinkStyle
 // ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
 export type ImportImageAsSvgBgFType = {
-  t:TFunction,
-  data:OSPData,set_data:(d:OSPData)=>void,
+  applicationData:OSPApplicationDataType,
   has_open_sankey_plus:boolean
 }
 
