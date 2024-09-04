@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
 import {
-  dict_hook_ref_setter_show_dialog_componentsType,
   module_dialogsType,
   InitalizeSelectorDetailNodesType
 } from './deps/OpenSankey/types/LegacyType'
@@ -24,8 +23,6 @@ import {
   OSPUpdateMenuConfType
 } from '../types/Types'
 
-// import { os_all_element_to_transform } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
-// import { OSPDrawNodesFO, OSPNodeFO } from './SankeyPlusForeignObject'
 // import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 // import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT } from './SankeyPlusMenuConfigurationLabels'
@@ -46,6 +43,7 @@ import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
 import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
 import { OSPNodeFO } from './SankeyPlusForeignObject'
+import { dict_hook_ref_setter_show_dialog_componentsType } from './deps/OpenSankey/types/MenuConfig'
 
 declare const window: Window &
   typeof globalThis & {

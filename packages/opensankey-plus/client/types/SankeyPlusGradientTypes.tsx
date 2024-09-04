@@ -1,18 +1,13 @@
-import { OSPData, OSPLink, OSPNode } from './Types'
+import { OSPApplicationDataType, OSPData, OSPLink, OSPNode } from './Types'
 // import { GetLinkValueFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
 // import { SankeyNode, display_styleType } from '../src/deps/OpenSankey/types/Types'
 // import { LinkStrokeFType } from '../src/deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
 
-// export type MenuConfLinkApparenceGradientFType={
-//   applicationContext:OSPApplicationContextType,
-//   ComponentUpdater:OSPComponentUpdaterType,
-//   multi_selected_links:{current:OSPLink[]},
-//   data:OSPData,
-//   link_function:OSPLinkFuntionType,
-//   is_activated:boolean,
-//   menu_for_style:boolean,
-//   selected_style_link:MutableRefObject<string>,
-// }
+export type MenuConfLinkApparenceGradientFType={
+  applicationData:OSPApplicationDataType,
+  is_activated:boolean,
+  menu_for_style:boolean,
+}
 
 // export type OSPLinkStrokeFType = LinkStrokeFType
 

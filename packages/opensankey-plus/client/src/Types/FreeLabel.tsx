@@ -21,7 +21,7 @@ import { Class_SankeyPlus } from './SankeyPlus'
 
 // CLASS FREE LABEL ELEMENT *************************************************************
 
-export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
+export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,Class_SankeyPlus>
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -76,10 +76,10 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
   private _label_height: number
 
   private _drag_handler: {
-    top: Class_Handler<Class_DrawingAreaPlus>,
-    bottom: Class_Handler<Class_DrawingAreaPlus>,
-    left: Class_Handler<Class_DrawingAreaPlus>,
-    right: Class_Handler<Class_DrawingAreaPlus>,
+    top: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
+    bottom: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
+    left: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
+    right: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
   }
 
   // CONSTRUCTOR ========================================================================
@@ -115,7 +115,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
 
     // Free labels drag handlers
     this._drag_handler = {
-      top: new Class_Handler<Class_DrawingAreaPlus>(
+      top: new Class_Handler(
         'zdt_top_handle_' + id,
         drawing_area,
         menu_config,
@@ -124,7 +124,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
         this.dragTopHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_top_handle' }),
-      bottom: new Class_Handler<Class_DrawingAreaPlus>(
+      bottom: new Class_Handler(
         'zdt_bottom_handle_' + id,
         drawing_area,
         menu_config,
@@ -133,7 +133,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
         this.dragBottomHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_bottom_handle' }),
-      left: new Class_Handler<Class_DrawingAreaPlus>(
+      left: new Class_Handler(
         'zdt_left_handle_' + id,
         drawing_area,
         menu_config,
@@ -142,7 +142,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus>
         this.dragLeftHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_left_handle' }),
-      right: new Class_Handler<Class_DrawingAreaPlus>(
+      right: new Class_Handler(
         'zdt_right_handle_' + id,
         drawing_area,
         menu_config,

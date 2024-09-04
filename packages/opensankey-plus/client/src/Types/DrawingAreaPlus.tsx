@@ -20,7 +20,7 @@ import { Class_SankeyPlus } from './SankeyPlus'
 import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
-import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
+import { Class_LinkElementPlus } from './LinkPlus'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -32,9 +32,10 @@ import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
  * @extends {Class_DrawingArea}
  */
 export class Class_DrawingAreaPlus extends Class_DrawingArea
-  <
+  < Class_SankeyPlus,
     Class_NodeElementPlus,
-    Class_LinkElement<Class_DrawingAreaPlus>
+    Class_LinkElementPlus
+    
   > {
 
   // TODO Faire le menage ?
@@ -91,6 +92,10 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     this._sankey = new Class_SankeyPlus(this, this.application_data.menu_configuration, this.sankey.id)
   }
 
+  // PROTECTED METHODS ====================================================================
+  protected createNewSankey(): Class_SankeyPlus {
+    return new Class_SankeyPlus(this,this.application_data.menu_configuration)
+  }
   // PUBLIC METHODS ====================================================================
 
   /**

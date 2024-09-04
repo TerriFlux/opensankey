@@ -17,16 +17,16 @@ import {
   Class_NodeStyle
 } from '../deps/OpenSankey/types/Node'
 import {
+  default_main_sankey_id,
   Type_ElementPosition
 } from '../deps/OpenSankey/types/Utils'
-import {
-  default_main_sankey_id
-} from '../deps/OpenSankey/types/Sankey'
+
 
 // Local imports
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_SankeyPlus } from './SankeyPlus'
+import { Class_LinkElementPlus } from './LinkPlus'
 
 // CLASS NODE ELEMENT PLUS **************************************************************
 
@@ -36,7 +36,7 @@ import { Class_SankeyPlus } from './SankeyPlus'
  * @class Class_NodeElementPlus
  * @extends {Class_NodeElement}
  */
-export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPlus> {
+export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPlus,Class_SankeyPlus,Class_LinkElementPlus> {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -141,6 +141,28 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     super.draw()
     this.drawIllustration()
     this.drawFO()
+  }
+
+  public copyInputLink(link: Class_LinkElementPlus): Class_LinkElementPlus {
+    const new_link = new Class_LinkElementPlus(
+      link.id,
+      this.main_sankey.nodes_dict[link.source.id] as Class_NodeElementPlus,
+      this,
+      this.drawing_area,
+      this.menu_config as Class_MenuConfigPlus
+    )
+    return new_link
+  }
+
+  public copyOutputLink(link: Class_LinkElementPlus): Class_LinkElementPlus {
+    const new_link = new Class_LinkElementPlus(
+      link.id,
+      this,
+      this.main_sankey.nodes_dict[link.target.id] as Class_NodeElementPlus,
+      this.drawing_area,
+      this.menu_config as Class_MenuConfigPlus
+    )
+    return new_link
   }
 
 
@@ -255,13 +277,6 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   // // DrawingArea
   // public override get drawing_area() { return this._display.drawing_area }
 
-  // Sankey
-  public override get main_sankey(): Class_SankeyPlus {
-    if (!this._sankeys[default_main_sankey_id]) {
-      this._sankeys[default_main_sankey_id] = this.drawing_area.sankey
-    }
-    return this._sankeys[default_main_sankey_id]
-  }
 
   // Get application config menu
   protected override get menu_config(): Class_MenuConfigPlus { return this._menu_config }

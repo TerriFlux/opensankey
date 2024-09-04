@@ -9,8 +9,7 @@
 
 // OpenSankey imports
 import {
-  Class_Sankey,
-  default_main_sankey_id
+  Class_Sankey
 } from '../deps/OpenSankey/types/Sankey'
 
 // Local imports
@@ -19,7 +18,10 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { ViewType } from '../../types/Types'
-import { Class_LinkElement } from '../deps/OpenSankey/types/Link'
+import { Class_LinkElement, Class_LinkStyle } from '../deps/OpenSankey/types/Link'
+import { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
+import { Class_LinkElementOS, Class_NodeElementOS } from '../deps/OpenSankey/types/TypesOS'
+import { default_main_sankey_id, default_style_id, default_style_name } from '../deps/OpenSankey/types/Utils'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -33,7 +35,7 @@ export class Class_SankeyPlus extends Class_Sankey
   <
     Class_DrawingAreaPlus,
     Class_NodeElementPlus,
-    Class_LinkElement<Class_DrawingAreaPlus>
+    Class_LinkElementPlus
   >
 {
 
@@ -55,6 +57,8 @@ export class Class_SankeyPlus extends Class_Sankey
    * @memberof Class_Sankey
    */
   protected _menu_config: Class_MenuConfigPlus
+
+  protected _link_styles:{[_:string]:Class_LinkStylePlus} 
 
   // /**
   //  * Nodes
@@ -101,6 +105,8 @@ export class Class_SankeyPlus extends Class_Sankey
     this._menu_config = menu_config
     // this._nodes = {}
     // New attributes
+    this._link_styles={}
+    this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id,default_style_name,false)
     this._labels = {}
     this._icon_catalog = {}
   }
@@ -254,7 +260,29 @@ export class Class_SankeyPlus extends Class_Sankey
   }
 
   // PROTECTED METHODS ==================================================================
-
+    /**
+   * Specific node creation method for this Sankey
+   * @param {string} id
+   * @param {string} name
+   * @return {Class_Node}
+   * @memberof Class_Sankey
+   */
+    protected createNewNode(id: string, name: string): Class_NodeElementPlus {
+      // Create node
+      const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
+      return node
+    }
+  
+    protected createNewLink(id: string, source: Class_NodeElementPlus, target: Class_NodeElementPlus): Class_LinkElementPlus {
+      // Create link
+      const link = new Class_LinkElementPlus(id, source, target, this.drawing_area, this._menu_config)
+      return link
+    }
+    
+  protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
+    const style= new Class_LinkStylePlus(id,name,is_deletable)
+    return style
+  }
   // Overrides --------------------------------------------------------------------------
 
   /**
@@ -287,4 +315,10 @@ export class Class_SankeyPlus extends Class_Sankey
 
   public get icon_catalog(): { [x: string]: string | null | undefined } { return this._icon_catalog }
   public set icon_catalog(value: { [x: string]: string | null | undefined }) { this._icon_catalog = value }
+
+  public get default_link_style()  {return this._link_styles[default_style_id]}
+
+  public get link_styles_dict(){
+    return this._link_styles
+  }
 }

@@ -1,6 +1,12 @@
 // // External imports
-// import React, { FunctionComponent, useState } from 'react'
 // import * as d3 from 'd3'
+
+import React,{ FunctionComponent, useState } from "react"
+import { MenuConfLinkApparenceGradientFType } from "../types/SankeyPlusGradientTypes"
+import { Class_LinkElementPlus, Class_LinkStylePlus } from "./Types/LinkPlus"
+import { OSTooltip, TooltipValueSurcharge } from "./deps/OpenSankey/types/Utils"
+import { Checkbox } from "@chakra-ui/react"
+import { isAttributeOverloaded } from "./deps/OpenSankey/types/Link"
 
 // import { Checkbox } from '@chakra-ui/react'
 
@@ -38,55 +44,74 @@
 // import { DrawArrowsType } from './deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
 
 
-// export const MenuConfLinkApparenceGradient : FunctionComponent<MenuConfLinkApparenceGradientFType> =({
-//   applicationContext,
-//   ComponentUpdater,
-//   multi_selected_links,
-//   data,
-//   link_function,
-//   is_activated,
-//   menu_for_style,
-//   selected_style_link
-// })=>{
-//   const {t}=applicationContext
-//   const [forceUpdate,setForceUpdate]=useState(false)
-//   // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink
-//   // who re-render MenuConfigurationLinksAppearence
-//   // but MenuConfLinkApparenceGradient is rendered outside the scope of SankeyModalStyleLink
-//   // so selected_style_link can be out of sync with the real selected_style_link
-//   if(menu_for_style && !Object.keys(data.style_link).includes(selected_style_link.current)){
-//     selected_style_link.current=(Object.keys(data.style_link)[0])
-//   }
-//   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
-//   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link.current]]:multi_selected_links.current
+export const MenuConfLinkApparenceGradient: FunctionComponent<MenuConfLinkApparenceGradientFType> = ({
+  applicationData,
+  is_activated,
+  menu_for_style,
+}) => {
 
-//   const k_list=['gradient'] as unknown as (keyof SankeyLinkAttrLocal)[]
-//   const gradChecked=IsAllLinkAttrSameValue(data,selected_parameter,k_list,menu_for_style)['gradient'] as boolean[]
-//   return <>
+    // Get data
+    const { new_data } = applicationData
+    const { ref_selected_style_link } = new_data.menu_configuration
+  
+  const { t } = new_data
+  const [forceUpdate, setForceUpdate] = useState(false)
+  // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink
+  // who re-render MenuConfigurationLinksAppearence
+  // but MenuConfLinkApparenceGradient is rendered outside the scope of SankeyModalStyleLink
+  // so selected_style_link can be out of sync with the real selected_style_link
+  // if (menu_for_style && !Object.keys(data.style_link).includes(selected_style_link.current)) {
+  //   selected_style_link.current = (Object.keys(data.style_link)[0])
+  // }
 
-//     <OSTooltip label={!is_activated?t('Menu.sankeyOSPDisabled'):''} >
-//       <Checkbox
-//         variant='menuconfigpanel_option_checkbox'
-//         isDisabled={!is_activated}
-//         isIndeterminate={gradChecked[1]}
-//         isChecked={gradChecked[0]}
-//         iconColor={gradChecked[1]?'#78C2AD':'white'}
-//         onChange={(evt) => {
-//           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-//             OSPAssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
-//           })
-//           link_function.RedrawLinks(multi_selected_links.current)
-//           ComponentUpdater.updateComponenSaveInCache.current(false)
+  // Selected links
+  let selected_links
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    selected_links = new_data.drawing_area.selected_links_list_sorted
+  }
+  else {
+    // Only visible links
+    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
+  }
 
-//           setForceUpdate(!forceUpdate)
-//         }}>
-//         {t('Flux.apparence.grad')}
-//         {(IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?TooltipValueSurcharge('link_plus_var_',t):<></>)}
+  // Elements on which menu modification applies
+  let elements: Class_LinkStylePlus[] | Class_LinkElementPlus[]
+  if (menu_for_style) {
+    elements = [new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
+  }
+  else {
+    elements = selected_links
+  }
+  const check_indeterminate = (curr: Class_LinkElementPlus) => {
+    return (selected_links[0].shape_is_gradient== curr.shape_is_gradient)
+  }
+  const is_indeterminate = !selected_links.every(check_indeterminate)
 
-//       </Checkbox>
-//     </OSTooltip>
-//   </>
-// }
+  const gradChecked = elements[0]
+  return (<OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isDisabled={!is_activated}
+        isIndeterminate={is_indeterminate}
+        isChecked={elements[0].shape_is_gradient}
+        iconColor={is_indeterminate ? '#78C2AD' : 'white'}
+        onChange={(evt) => {
+
+          elements.forEach(element => element.shape_is_gradient = evt.target.checked)
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+          setForceUpdate(!forceUpdate)
+        }}>
+        {t('Flux.apparence.grad')}
+        {(!menu_for_style) &&
+            isAttributeOverloaded(selected_links, 'value_label_on_path') ?
+            TooltipValueSurcharge('link_var_', t) :
+            <></>}
+      </Checkbox>
+    </OSTooltip>)
+  
+}
 
 // export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,GetLinkValue:GetLinkValueFuncType)=>{
 //   const data_plus=data as OSPData

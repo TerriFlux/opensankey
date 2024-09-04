@@ -25,6 +25,8 @@ import SankeyApp from './deps/OpenSankey/SankeyApp'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './deps/OpenSankey/dialogs/SankeyPersistence'
 import { DefaultSankeyData } from './deps/OpenSankey/types/Legacy'
+import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
+import { Class_ApplicationDataOS, Type_GenericApplicationDataOS } from './deps/OpenSankey/types/TypesOS'
 
 declare const window: Window &
 typeof globalThis & {
@@ -226,7 +228,7 @@ root.render(
     }
     ClickSaveDiagram={
       (
-        applicationData: Class_ApplicationData,
+        ApplicationClass: Type_GenericApplicationDataOS,
         // applicationState:applicationStateType,
         options:SaveDiagramOptionsType
       ) => {
@@ -242,11 +244,11 @@ root.render(
         //   }
         // }
         ClickSaveDiagram(
-          applicationData,
+          ApplicationClass,
           options
         )
       }
-    }
+    } 
 
   />
 )
