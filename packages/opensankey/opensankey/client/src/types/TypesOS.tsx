@@ -45,7 +45,7 @@ export class Class_NodeElementOS
   extends Class_NodeElement<
     Class_DrawingAreaOS, Class_SankeyOS, Class_LinkElementOS
   > {
-  public copyInputLink(link: Class_LinkElement<any, any, any>): Class_LinkElementOS {
+  public copyInputLink(link: Class_LinkElement<Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS>): Class_LinkElementOS {
     const new_link = new Class_LinkElementOS(
       link.id,
       this.main_sankey.nodes_dict[link.source.id] as Class_NodeElementOS,
@@ -56,7 +56,7 @@ export class Class_NodeElementOS
     return new_link
   }
 
-  public copyOutputLink(link: Class_LinkElement<any, any, any>): Class_LinkElementOS {
+  public copyOutputLink(link: Class_LinkElement<Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS>): Class_LinkElementOS {
     const new_link = new Class_LinkElementOS(
       link.id,
       this,
