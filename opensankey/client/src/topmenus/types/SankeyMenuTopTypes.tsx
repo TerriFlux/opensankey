@@ -4,10 +4,10 @@ import { TFunction } from 'i18next'
 
 import {
   SankeyData,
-  dict_hook_ref_setter_show_dialog_componentsType,
   applicationDataType,
   processFunctionsType
 } from '../../types/LegacyType'
+import { dict_hook_ref_setter_show_dialog_componentsType } from '../../types/MenuConfig'
 
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 

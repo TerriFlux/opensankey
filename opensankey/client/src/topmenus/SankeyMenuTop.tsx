@@ -83,9 +83,10 @@ import {
 import {
   SankeyData,
   MenuTypes,
-  applicationDataType,
+  applicationDataType} from '../types/LegacyType'
+import {
   textForToastPromiseType
-} from '../types/LegacyType'
+} from '../types/MenuConfig'
 import {
   MenuDraggableFType,
   ModalTutoType,
@@ -317,8 +318,8 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               setDiagram(diagram_path, applicationData)
             }}
             value={s_diagram_2}>
-            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)) : (<React.Fragment></React.Fragment>)}
-          </Select></FormControl>) : (<React.Fragment />)
+            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)) : (<React.Fragment key={'dshfjhfsdkjh'}></React.Fragment>)}
+          </Select></FormControl>) : (<React.Fragment key={'sqtyutsugh'} />)
       }
     </Box>
   }
@@ -1009,7 +1010,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const { new_data } = applicationData
   new_data.menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   new_data.menu_configuration.ref_menu_opened.current = show_nav
-  new_data.menu_configuration.positionToolBar()
+  new_data.menu_configuration.positionToolBar(menu_config_width)
 
 
   const [update, setUpdate] = useState(false)

@@ -4,11 +4,21 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-// Local types
-import { Type_AnyDrawingArea } from './DrawingArea'
-import { Class_Element } from './Element'
-import { Class_MenuConfig } from './MenuConfig'
-import { Type_ElementPosition, default_element_position } from './Utils'
+// Local types definitions
+import type {
+  Class_MenuConfig
+} from './MenuConfig'
+import type {
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey
+} from './Abstract'
+
+// Local modules imports
+import {
+  Class_Element
+} from './Element'
+import { Type_ElementPosition } from './Utils'
+import { default_element_position } from './Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -20,12 +30,21 @@ import { Type_ElementPosition, default_element_position } from './Utils'
  * @class Class_ZoneSelection
  * @extends {Class_Element}
  */
-export class Class_ZoneSelection extends Class_Element<Type_AnyDrawingArea> {
+export class Class_ZoneSelection
+<
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey
+>
+extends Class_Element
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey
+> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected _display: {
-    drawing_area: Type_AnyDrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     position: Type_ElementPosition,
   }
 
@@ -40,12 +59,12 @@ export class Class_ZoneSelection extends Class_Element<Type_AnyDrawingArea> {
 
   /**
    * Creates an instance of Class_ZoneSelection.
-   * @param {Type_AnyDrawingArea} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @param {Class_MenuConfig} menu_config
    * @memberof Class_ZoneSelection
    */
   constructor(
-    drawing_area: Type_AnyDrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes

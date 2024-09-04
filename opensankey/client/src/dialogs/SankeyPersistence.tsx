@@ -16,12 +16,12 @@ import FileSaver from 'file-saver'
 
 /*************************************************************************************************/
 
-import {
+import type {
   processFunctionsType,
   applicationDataType,
   DataSuiteType
 } from '../types/LegacyType'
-import {
+import type {
   ClickSaveDiagramFuncType,
   ClickSaveExcelFuncType,
   CounterType,
@@ -32,8 +32,8 @@ import {
   UploadExempleFuncType
 } from './types/SankeyPersistenceTypes'
 
-import { Type_JSON } from '../types/Utils'
-import { Class_ApplicationData } from '../types/ApplicationData'
+import type { Type_JSON } from '../types/Utils'
+import type { Type_GenericApplicationDataOS } from '../types/TypesOS'
 
 
 /* FILE LOADING COMPONENTS *************************************************************/
@@ -531,7 +531,7 @@ export const DownloadExamples: DownloadExamplesFuncType = (
  */
 export const UploadExemple: UploadExempleFuncType = (
   file_name: string,
-  applicationData: Class_ApplicationData
+  applicationData: Type_GenericApplicationDataOS
   // Reinitialization: () => void,
   // convert_data: ConvertDataFuncType,
   // DefaultSankeyData: DefaultSankeyDataFuncType

@@ -5,9 +5,24 @@
 // ==================================================================================================
 
 // Local types
-import { Class_LinkElement, Class_LinkValue } from './Link'
-import { Class_NodeDimension, Class_NodeElement } from './Node'
-import { Class_Sankey } from './Sankey'
+import {
+  Class_NodeDimension
+} from './NodeDimension'
+import {
+  Class_AbstractDrawingArea,
+  Class_AbstractLevelTag,
+  Class_AbstractLevelTagGroup,
+  Class_AbstractSankey,
+  Class_AbstractTag,
+  Class_AbstractTagGroup
+} from './Abstract'
+import {
+  Class_AbstractNodeElement
+} from "./AbstractNode"
+import {
+    Class_AbstractLinkElement,
+    Class_AbstractLinkValue
+} from "./AbstractLink"
 import {
   Type_JSON,
   default_grey_color,
@@ -21,17 +36,16 @@ import {
 
 export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
 
-type Type_GenericSankey = Class_Sankey<any, any, Class_LinkElement<any>>
-type Type_GenericNodeElement = Class_NodeElement<any>
-type Type_TagReference = Type_GenericNodeElement | Class_LinkValue
-type Type_DataTagReference = Class_LinkElement<any>
+type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type Type_TagReference = Type_AbstractNodeElement | Class_AbstractLinkValue
+type Type_DataTagReference = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
 // CLASS PROTO TAG ***********************************************************************
 /**
  * Class that define a Tag object
  * @class Class_Tag
  */
-export abstract class Class_ProtoTag {
+export abstract class Class_ProtoTag extends Class_AbstractTag {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -62,7 +76,7 @@ export abstract class Class_ProtoTag {
   protected abstract _group: Class_ProtoTagGroup
 
   // Sankey in which it applies
-  protected _ref_sankey: Type_GenericSankey
+  protected _ref_sankey: Class_AbstractSankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -74,9 +88,10 @@ export abstract class Class_ProtoTag {
    */
   constructor(
     name: string,
-    sankey: Type_GenericSankey,
+    sankey: Class_AbstractSankey,
     id: string | undefined = undefined
   ) {
+    super()
     this._id = id ?? makeId(name)
     this._name = name
     this._ref_sankey = sankey
@@ -216,7 +231,7 @@ export class Class_Tag extends Class_ProtoTag {
   constructor(
     name: string,
     group: Class_TagGroup,
-    sankey: Type_GenericSankey,
+    sankey: Class_AbstractSankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -313,14 +328,14 @@ export class Class_DataTag extends Class_ProtoTag {
    * Creates an instance of Class_DataTag.
    * @param {string} name
    * @param {Class_TagGroup} group
-   * @param {Type_GenericSankey} sankey
+   * @param {Class_AbstractSankey} sankey
    * @param {(string | undefined)} [id=undefined]
    * @memberof Class_DataTag
    */
   constructor(
     name: string,
     group: Class_DataTagGroup,
-    sankey: Type_GenericSankey,
+    sankey: Class_AbstractSankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -372,9 +387,171 @@ export class Class_DataTag extends Class_ProtoTag {
   public get group() { return this._group }
 }
 
+// CLASS PROTO LEVEL TAG ****************************************************************
+/**
+ * Class that define a Tag object
+ * @class Class_Tag
+ */
+export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Unique ID
+  private _id: string
+
+  // Name
+  private _name: string
+
+  // Color of tag
+  private _color: string = default_grey_color
+
+  // Boolean
+  private _is_selected: boolean = false
+
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid cross calls of delete() method
+   * @private
+   * @memberof Class_Tag
+   */
+  private _is_currently_deleted = false
+
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  // Group where it belong
+  protected abstract _group: Class_ProtoLevelTagGroup
+
+  // Sankey in which it applies
+  protected _ref_sankey: Class_AbstractSankey
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_ProtoTag.
+   * @param {string} name
+   * @param {(string | undefined)} [id=undefined]
+   * @memberof Class_ProtoTag
+   */
+  constructor(
+    name: string,
+    sankey: Class_AbstractSankey,
+    id: string | undefined = undefined
+  ) {
+    super()
+    this._id = id ?? makeId(name)
+    this._name = name
+    this._ref_sankey = sankey
+  }
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  public delete() {
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Unref this from tag group
+      this.group.removeTag(this)
+      // Clean the rest
+      this.cleanForDeletion()
+      // Garbage collection will do the rest
+    }
+  }
+
+  // PUBLIC METHODES ==================================================================
+
+  public abstract update(): void
+
+  public copyFrom(element: Class_ProtoLevelTag) {
+    this._name = element._name
+    this._color = element._color
+    this._is_selected = element._is_selected
+    this._ref_sankey = element._ref_sankey
+    // Groups are switched from related group class
+  }
+
+  public setSelected() {
+    // Avoid useless update
+    if (this._is_selected === false) {
+      // Set attributes
+      this._is_selected = true
+      // Redraw all related elements
+      this.update()
+    }
+  }
+
+  public setUnSelected() {
+    // Avoid useless update
+    if (this._is_selected === true) {
+      // Set attributes
+      this._is_selected = false
+      // Redraw all related elements
+      this.update()
+    }
+  }
+
+  public toogleSelected() {
+    // Set attributes
+    this._is_selected = !this._is_selected
+    // Redraw all related elements
+    this.update()
+  }
+
+  public toJSON() {
+    const json_object = {} as Type_JSON
+    json_object['name'] = this._name
+    json_object['selected'] = this._is_selected
+    json_object['color'] = this._color
+    return json_object
+  }
+
+  /**
+   *Set Tag value from JSON
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_Tag
+   */
+  public fromJSON(json_object: Type_JSON) {
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
+    this._color = getStringFromJSON(json_object, 'color', this._color)
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected abstract cleanForDeletion(): void
+
+  // GETTERS / SETTERS ==================================================================
+
+  public get id() { return this._id }
+
+  public get name() { return this._name }
+  public set name(value: string) { this._name = value }
+
+  public get color() { return this._color }
+  public set color(value: string) {
+    // Avoid useless updates
+    if (this._color !== value) {
+      // Set attributes
+      this._color = value
+      // Redraw all related elements
+      this.update()
+    }
+  }
+
+  // Selection
+  public get is_selected() { return this._is_selected }
+  public set is_selected(_: boolean) { this._is_selected = _ }
+
+  // Group
+  public abstract get group(): Class_ProtoLevelTagGroup
+}
+
 // CLASS LEVELTAG ***********************************************************************
 
-export class Class_LevelTag extends Class_ProtoTag {
+export class Class_LevelTag extends Class_ProtoLevelTag {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -400,7 +577,7 @@ export class Class_LevelTag extends Class_ProtoTag {
   constructor(
     name: string,
     group: Class_LevelTagGroup,
-    sankey: Type_GenericSankey,
+    sankey: Class_AbstractSankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -440,7 +617,7 @@ export class Class_LevelTag extends Class_ProtoTag {
     const all_existing_dim: {[_: string]: Class_NodeDimension} = {}
     this._ref_sankey.level_taggs_list
       .forEach(tagg => {
-        tagg.tags_list
+        (tagg as Class_LevelTagGroup).tags_list
           .forEach(tag => {
             // Check children dimensions
             tag.dimensions_list_as_tag_for_children
@@ -489,8 +666,8 @@ export class Class_LevelTag extends Class_ProtoTag {
         const new_dim = new Class_NodeDimension(
           parent,
           children,
-          parent_level_tag,
-          [this],
+          parent_level_tag as Class_AbstractLevelTag,
+          [this] as Class_AbstractLevelTag[],
           dim.id
         )
         this.addAsChildrenLevel(new_dim)
@@ -548,7 +725,7 @@ export class Class_LevelTag extends Class_ProtoTag {
         const new_dim = new Class_NodeDimension(
           parent,
           children,
-          this,
+          this as Class_AbstractLevelTag,
           children_level_tag,
           dim.id
         )
@@ -600,8 +777,8 @@ export class Class_LevelTag extends Class_ProtoTag {
   }
 
   public getOrCreateLowerDimension(
-    parent: Type_GenericNodeElement,
-    child: Type_GenericNodeElement,
+    parent: Type_AbstractNodeElement,
+    child: Type_AbstractNodeElement,
     child_tags: Class_LevelTag[]
   ) {
     // First check if tags are from the same group
@@ -618,8 +795,10 @@ export class Class_LevelTag extends Class_ProtoTag {
         .forEach(dimension => {
           // Check if children tag list contains the same tags as in dimensions children tag list
           let ok_children_level_tags = true
-          dimension.children_level_tags.forEach(tag => ok_children_level_tags = ok_children_level_tags && child_tags.includes(tag))
-          child_tags.forEach(tag => ok_children_level_tags = ok_children_level_tags && dimension.children_level_tags.includes(tag))
+          dimension.children_level_tags
+            .forEach(tag => ok_children_level_tags = ok_children_level_tags && child_tags.includes(tag as Class_LevelTag))
+          child_tags
+            .forEach(tag => ok_children_level_tags = ok_children_level_tags && dimension.children_level_tags.includes(tag))
           // Match dimension if all these conditions are true
           // - Parent are the same
           // - Parent level tags are the same
@@ -641,7 +820,7 @@ export class Class_LevelTag extends Class_ProtoTag {
         dimension_found = new Class_NodeDimension(
           parent,
           [child],
-          this,
+          this as Class_AbstractLevelTag,
           child_tags
         )
       }
@@ -714,7 +893,7 @@ export class Class_LevelTag extends Class_ProtoTag {
  * @export
  * @class Class_TagGroup
  */
-export abstract class Class_ProtoTagGroup {
+export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -740,7 +919,7 @@ export abstract class Class_ProtoTagGroup {
 
   protected abstract _tags: { [id: string]: Class_ProtoTag }
 
-  protected _ref_sankey: Type_GenericSankey
+  protected _ref_sankey: Class_AbstractSankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -750,7 +929,8 @@ export abstract class Class_ProtoTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string, sankey: Type_GenericSankey) {
+  constructor(id: string, name: string, sankey: Class_AbstractSankey) {
+    super()
     this._id = id
     this._name = name
     this._ref_sankey = sankey
@@ -1021,7 +1201,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Type_GenericSankey,
+    sankey: Class_AbstractSankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
@@ -1139,7 +1319,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Type_GenericSankey,
+    sankey: Class_AbstractSankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
@@ -1248,6 +1428,294 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 }
 
+// CLASS PROTO TAGGROUP *****************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGroup {
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  // Name
+  private _id: string
+  private _name: string
+
+  // List of tags
+  private _tag_count: number = 0
+
+  // Type of banne
+  private _banner: tag_banner_type = 'one'
+
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid infinite calls of delete() method
+   * @private
+   * @memberof Class_TagGroup
+   */
+  private _is_currently_deleted = false
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected abstract _tags: { [id: string]: Class_ProtoLevelTag }
+
+  protected _ref_sankey: Class_AbstractSankey
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(id: string, name: string, sankey: Class_AbstractSankey) {
+    super()
+    this._id = id
+    this._name = name
+    this._ref_sankey = sankey
+  }
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_ProtoTagGroup
+   */
+  public delete() {
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Delete all tags properly
+      Object.values(this._tags)
+        .forEach(tag => {
+          tag.delete()
+        })
+      this._tags = {}
+      // Garbage collection will do the rest ...
+    }
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public addTag(
+    name: string,
+    id: string | undefined = undefined
+  ): Class_ProtoLevelTag
+  {
+    const tag = this.createTag(name, id)
+    this._tags[tag.id] = tag
+    this._tag_count = this._tag_count + 1
+    return tag
+  }
+
+  public addDefaultTag(): Class_ProtoLevelTag
+  {
+    const n = String(this._tag_count)
+    const name = 'Etiquette ' + n
+    return this.addTag(name)
+  }
+
+  public removeTag(_: Class_ProtoLevelTag) {
+    if (this._tags[_.id] !== undefined) {
+      _.delete()
+      delete this._tags[_.id]
+    }
+  }
+
+  public selectTagsFromId(
+    id: string
+  ) {
+    this.tags_list
+      .forEach(tag => {
+        if (tag.id === id) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
+  }
+
+  public selectTagsFromIds(
+    ids: string[]
+  ) {
+    this.tags_list
+      .forEach(tag => {
+        if (ids.includes(tag.id)) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
+  }
+
+  public updateTagsReferences() {
+    Object.values(this._tags)
+      .forEach(tag => tag.update())
+  }
+
+  public toJSON() {
+    // Create empty structs
+    const json_object = {} as Type_JSON
+    const json_object_tags = {} as Type_JSON
+    // Fill group attributes
+    json_object['name'] = this._name
+    json_object['banner'] = this._banner
+    // Update tags infos
+    this.tags_list
+      .forEach(tag => {
+        json_object_tags[tag.id] = tag.toJSON()
+      })
+    json_object['tags'] = json_object_tags
+    // Out
+    return json_object
+  }
+
+  /**
+   * Set Tag_group value & substructure from JSON
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_TagGroup
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_tags_id: {[id: string]: string} = {}
+  ) {
+    // Read legacy JSON
+    this.fromLegacyJSON(json_object)
+    // Read group attributes
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    // Create new tags & read their attributes
+    Object.entries(json_object['tags'])
+      .forEach(([_, tag_json]) => {
+        // Get or Create tag
+        const tag_id = matching_tags_id[_] ?? _
+        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
+        // Update tag with json
+        tag.fromJSON(tag_json as Type_JSON)
+      })
+  }
+
+  public copyFrom(
+    element: Class_ProtoLevelTagGroup,
+    tags_synchro=true
+  ) {
+    // Common attributes
+    this._name = element._name
+    this._banner = element._banner
+    this._tag_count = element._tag_count
+
+    // Synchronize tags
+    if(tags_synchro) {
+
+      // Delete tags not present in new layout but present in curr
+      this.tags_list
+        .filter(tag => !(tag.id in element.tags_dict))
+        .forEach(tag => {
+          this.removeTag(tag)
+        })
+
+      // Transfer tags attr present in new layout and in curr
+      this.tags_list
+        .filter(tag => (tag.id in element.tags_dict))
+        .forEach(tag => {
+          tag.copyFrom(element.tags_dict[tag.id])
+        })
+
+      // Add tag present in element but not this
+      element.tags_list
+        .filter(tag => !(tag.id in this.tags_dict))
+        .forEach(tag => {
+          this.addTag(tag.name, tag.id).copyFrom(tag)
+        })
+    }
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected abstract createTag(
+    name: string,
+    id: string | undefined
+  ): Class_ProtoLevelTag
+
+  // PRIVATE METHODS ====================================================================
+
+  private fromLegacyJSON(json_object: Type_JSON) {
+    this._name = getStringFromJSON(json_object, 'group_name', this._name)
+  }
+
+  // GETTERS ============================================================================
+
+  /**
+   * Id of tag group
+   * @readonly
+   * @type {string}
+   * @memberof Class_ProtoTagGroup
+   */
+  public get id(): string { return this._id }
+
+  /**
+   * Name of tag group (!= id)
+   * @type {string}
+   * @memberof Class_ProtoTagGroup
+   */
+  public get name(): string { return this._name }
+
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_ProtoLevelTag }}
+   * @memberof Class_ProtoTagGroup
+   */
+  public abstract get tags_dict(): { [id: string]: Class_ProtoLevelTag }
+
+  /**
+  * Return list tag from the current group
+  * @readonly
+  * @memberof Class_ProtoTagGroup
+  */
+  public abstract get tags_list(): Class_ProtoLevelTag[]
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_ProtoTagGroup
+   */
+  public abstract get selected_tags_list(): Class_ProtoLevelTag[]
+
+  /**
+   * True if tag group has tags
+   * @readonly
+   * @memberof Class_ProtoTagGroup
+   */
+  public get has_tags() { return this.tags_list.length > 0 }
+
+  /**
+   * True if tag group has tags selected
+   * @readonly
+   * @memberof Class_ProtoTagGroup
+   */
+  public get has_selected_tags() { return this.selected_tags_list.length > 0 }
+
+  public get first_selected_tags() {
+    if (this.has_tags)
+      if (this.has_selected_tags)
+        return this.selected_tags_list[0]
+      else
+        return this.tags_list[0]
+    else
+      return undefined
+  }
+
+  public get banner(): tag_banner_type { return this._banner }
+
+  // SETTERS ============================================================================
+
+  public set name(value: string) { this._name = value }
+  public set banner(value: tag_banner_type) { this._banner = value }
+}
+
 // CLASS LEVEL TAGGROUP *****************************************************************
 /**
  * Tag group for node level
@@ -1256,7 +1724,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
  * @class Class_LevelTagGroup
  * @extends {Class_TagGroup}
  */
-export class Class_LevelTagGroup extends Class_ProtoTagGroup {
+export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -1296,7 +1764,8 @@ export class Class_LevelTagGroup extends Class_ProtoTagGroup {
   protected createTag(
     name: string,
     id: string | undefined = undefined
-  ) {
+  ): Class_LevelTag
+  {
     const tag = new Class_LevelTag(name, this, this._ref_sankey, id)
     tag.setUnSelected()
     return tag

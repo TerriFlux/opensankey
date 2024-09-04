@@ -24,7 +24,7 @@ import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfi
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
-import { default_style_id } from '../types/Sankey'
+import { default_style_id } from '../types/Utils'
 
 
 export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> = ({
