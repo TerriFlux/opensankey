@@ -67,7 +67,7 @@ export abstract class Class_DrawingArea
   Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
   Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>
 >
-extends Class_AbstractDrawingArea
+  extends Class_AbstractDrawingArea
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -825,12 +825,13 @@ extends Class_AbstractDrawingArea
         }
       })
 
+    // TODO true element appears as never -> fix this
     // if (element_min_x) {
     //   const true_element = element_min_x
     //   // If element is on the left of the DA move all elements to 'x' pixel to the right
     //   // (x being the absolute value of element position x )
-    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-    //     node.position_x += Math.abs(true_element.position_x)
+    //   this.sankey.visible_nodes_list.filter(el => el !== element_min_x).forEach(node => {
+    //     node.position_x += Math.abs(element_min_x.position_x)
     //   })
     //   true_element.position_x = 0
     // }
@@ -1422,7 +1423,7 @@ extends Class_AbstractDrawingArea
     }
   }
 
-  public updateLayoutFrom(other: Class_DrawingArea<any, any, any>) {
+  public updateLayoutFrom(other: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     this.color = other.color
     this.grid_size = other.grid_size
     this.grid_visible = other.grid_visible

@@ -25,12 +25,12 @@ import {
 } from './Abstract'
 import {
   Class_AbstractNodeElement
-} from "./AbstractNode"
+} from './AbstractNode'
 import {
-    Class_AbstractLinkStyle,
-    Class_AbstractLinkElement,
-    Class_AbstractLinkValue
-} from "./AbstractLink"
+  Class_AbstractLinkStyle,
+  Class_AbstractLinkElement,
+  Class_AbstractLinkValue
+} from './AbstractLink'
 import {
   Class_Handler
 } from './Handler'
@@ -59,8 +59,8 @@ export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'start' | 'middle' | 'end'
 export type Type_PathLabelVPosition = 'dragged' | 'above' | 'middle' | 'below'
 
-type Type_AnyLinkElement = Class_LinkElement<any, any, any>
-type Type_AnyAbstractNodeElement = Class_AbstractNodeElement<any, any>
+type Type_AnyLinkElement = Class_LinkElement<Class_AbstractDrawingArea, Class_AbstractSankey, Type_AnyAbstractNodeElement>
+type Type_AnyAbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -246,7 +246,7 @@ export class Class_LinkElement
   Type_GenericSankey extends Class_AbstractSankey,
   Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
 >
-extends Class_AbstractLinkElement
+  extends Class_AbstractLinkElement
 <
   Type_GenericDrawingArea,
   Type_GenericSankey
@@ -4287,7 +4287,7 @@ export class Class_GhostLinkElement
   Type_GenericSankey extends Class_AbstractSankey,
   Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
 >
-extends Class_LinkElement
+  extends Class_LinkElement
 <
   Type_GenericDrawingArea,
   Type_GenericSankey,

@@ -56,7 +56,7 @@ export abstract class Class_Sankey
     Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
     Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>,
   >
-extends Class_AbstractSankey
+  extends Class_AbstractSankey
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -1332,7 +1332,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get nodes_list() {
+  public get nodes_list(): Type_GenericNodeElement[] {
     return Object.values(this._nodes)
   }
 
@@ -1341,7 +1341,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get nodes_list_sorted() {
+  public get nodes_list_sorted(): Type_GenericNodeElement[] {
     return this.nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
@@ -1351,7 +1351,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get visible_nodes_list() {
+  public get visible_nodes_list(): Type_GenericNodeElement[] {
     return Object.values(this._nodes)
       .filter(node => node.is_visible)
   }
@@ -1361,7 +1361,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get visible_nodes_list_sorted() {
+  public get visible_nodes_list_sorted(): Type_GenericNodeElement[] {
     return this.visible_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
@@ -1382,7 +1382,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get links_list() {
+  public get links_list(): Type_GenericLinkElement[] {
     return Object.values(this._links)
   }
 
@@ -1391,7 +1391,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get links_list_sorted() {
+  public get links_list_sorted(): Type_GenericLinkElement[] {
     return this.links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
@@ -1401,7 +1401,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get visible_links_list() {
+  public get visible_links_list(): Type_GenericLinkElement[] {
     return Object.values(this._links)
       .filter(node => node.is_visible)
   }
@@ -1411,7 +1411,7 @@ extends Class_AbstractSankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get visible_links_list_sorted() {
+  public get visible_links_list_sorted(): Type_GenericLinkElement[] {
     return this.visible_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
