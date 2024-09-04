@@ -10,7 +10,7 @@ import { Box, Checkbox, Button, NumberInput, Input, NumberDecrementStepper, Numb
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
-import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_DrawingAreaOS } from '../types/TypesOS'
 import { OSTooltip } from '../types/Utils'
 
 export   const os_all_element_to_transform = [
@@ -696,7 +696,7 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
                   if (result) {
                     result = String(result)
                     const new_layout = JSON.parse(result)
-                    const tmp_DA=new Class_DrawingArea(0,0,new_data)
+                    const tmp_DA = new Class_DrawingAreaOS(0,0,new_data)
                     tmp_DA.fromJSON(new_layout, false)
                     new_data.drawing_area.sankey.updateLayoutFromJSON(tmp_DA,dataVarToUpdate.current)
                     new_data.drawing_area.drawElements()

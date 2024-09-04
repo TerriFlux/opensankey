@@ -43,9 +43,13 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
+import type {
+  OpenSankeyConfigurationNodesAttributesFType,
+  SankeyWrapperConfigInModalOrMenuType
+} from './types/SankeyMenuConfigurationNodesAttributesTypes'
+import type { Type_GenericNodeElementOS } from '../types/TypesOS'
 import {
-  Type_NodeElement,
-  Class_NodeStyle,
+  type Class_NodeStyle,
   default_label_background,
   default_label_bold,
   default_label_box_width,
@@ -78,10 +82,6 @@ import {
   CustomFaEyeCheckIcon,
   font_families
 } from '../types/Utils'
-import {
-  OpenSankeyConfigurationNodesAttributesFType,
-  SankeyWrapperConfigInModalOrMenuType
-} from './types/SankeyMenuConfigurationNodesAttributesTypes'
 
 // Local functions
 import {
@@ -89,7 +89,7 @@ import {
   OSTooltip,
   TooltipValueSurcharge,
 } from '../types/Utils'
-import { default_style_id } from '../types/Sankey'
+import { default_style_id } from '../types/Utils'
 
 /*************************************************************************************************/
 
@@ -126,7 +126,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
 
   // Elements on which this menu applies ------------------------------------------------
 
-  let selected_nodes: Type_NodeElement[]
+  let selected_nodes: Type_GenericNodeElementOS[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
@@ -137,7 +137,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   }
 
   // Elements on which menu modification applies
-  let elements: Class_NodeStyle[] | Type_NodeElement[]
+  let elements: Class_NodeStyle[] | Type_GenericNodeElementOS[]
   if (menu_for_style) {
     elements = [new_data.drawing_area.sankey.node_styles_dict[new_data.menu_configuration.ref_selected_style_node.current]]
   }
@@ -149,13 +149,13 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
 
   /**
    *
-   * function that go throught all Type_NodeElement of an array & check if they're all equals
+   * function that go throught all Type_GenericNodeElementOS of an array & check if they're all equals
    * (to the first )
    *
-   * @param {Type_NodeElement} curr
+   * @param {Type_GenericNodeElementOS} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_NodeElement,) => {
+  const check_indeterminate = (curr: Type_GenericNodeElementOS,) => {
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)

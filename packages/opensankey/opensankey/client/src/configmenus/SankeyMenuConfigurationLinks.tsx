@@ -23,13 +23,15 @@ import {
 import {
   OSTooltip
 } from '../types/Utils'
+import {
+  Type_GenericLinkElementOS
+} from '../types/TypesOS'
 
 /*************************************************************************************************/
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
-import { Type_LinkElement } from '../types/Link'
 
 
 /*************************************************************************************************/
@@ -49,8 +51,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   // Links to display in selection menus ------------------------------------------------
 
-  let links: Type_LinkElement[]
-  let selected_links: Type_LinkElement[]
+  let links: Type_GenericLinkElementOS[]
+  let selected_links: Type_GenericLinkElementOS[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     links = new_data.drawing_area.sankey.links_list

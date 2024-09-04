@@ -9,18 +9,27 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
-// Local imports
-import { Class_DrawingArea, Type_AnyDrawingArea } from './DrawingArea'
-import { Class_Element } from './Element'
-import { Class_MenuConfig } from './MenuConfig'
+// Local types imports
+import type {
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey
+} from './Abstract'
+import type {
+  Class_MenuConfig
+} from './MenuConfig'
+
+// Local modules imports
+import {
+  Class_Element
+} from './Element'
 import {
   Type_ElementPosition,
-  Type_JSON,
-  default_element_color,
   default_element_position,
+  default_element_color,
   getBooleanFromJSON,
   getNumberFromJSON,
-  getStringFromJSON
+  getStringFromJSON,
+  Type_JSON,
 } from './Utils'
 
 
@@ -33,7 +42,16 @@ import {
  * @class Class_Legend
  * @extends {Class_Element}
  */
-export class Class_Legend extends Class_Element<Type_AnyDrawingArea> {
+export class Class_Legend
+<
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey
+>
+extends Class_Element
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey
+> {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -81,20 +99,20 @@ export class Class_Legend extends Class_Element<Type_AnyDrawingArea> {
    * Display attributes for legend
    * @protected
    * @type {{
-   *     drawing_area: Class_DrawingArea,
+   *     drawing_area: Type_GenericDrawingArea,
    *     position: Type_ElementPosition,
    *   }}
    * @memberof Class_Legend
    */
   protected _display: {
-    drawing_area: Type_AnyDrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     position: Type_ElementPosition,
   }
 
   // CONSTRUCTOR ========================================================================
 
   constructor(
-    drawing_area: Type_AnyDrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes

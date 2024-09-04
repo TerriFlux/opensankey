@@ -12,8 +12,43 @@ import { TFunction } from 'i18next'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
-// Local imports
-import { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
+// Local type imports
+import type { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
+
+// SPECIFIC TYPES ************************************************************************
+
+/**
+ * Define necessary properties for a position
+ * @type Type_ElementPosition
+ */
+export type Type_ElementPosition = {
+  type: Type_Position
+  x: number
+  y: number
+  u: number
+  v: number
+  dx?: number
+  dy?: number
+  relative_dx?: number
+  relative_dy?: number
+}
+export type Type_Position = 'absolute' | 'relative' | 'parametric'
+
+/**
+ * Define type properties for Sankey structure
+ * @type Type_Structure
+ */
+export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
+
+export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
+
+/**
+ * Define type properties for Sankey JSON Saving format
+ * @type Type_JSON
+ */
+export type Type_JSON = { [_: string]: boolean | number | string | string[] | Type_JSON }
+
+
 
 // CONSTANTS ****************************************************************************
 
@@ -82,43 +117,24 @@ export const font_families = [
   'Zapf Chancery,cursive',
 ]
 
+export const default_main_sankey_id = 'sankey_maitre'
 
-// DEDICATED TYPES **********************************************************************
-
-/**
- * Define type properties for Sankey structure
- *
- * @type Type_Structure
- */
-export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
-
-/**
- * Define necessary properties for a position
- *
- * @type Type_ElementPosition
- */
-export type Type_ElementPosition = {
-  type: Type_Position,
-  x: number,
-  y: number,
-  u: number,
-  v: number,
-  dx?: number,
-  dy?: number,
-  relative_dx?: number,
-  relative_dy?: number
-}
-
-export type Type_Position = 'absolute' | 'relative' | 'parametric'
+export const const_default_position_x = 50
+export const const_default_position_y = 50
 export const default_element_position: Type_ElementPosition = {
   type: 'absolute',
-  x: 10,
-  y: 10,
+  x: const_default_position_x,
+  y: const_default_position_y,
   u: 0,
   v: 0
 }
 
-export type Type_JSON = { [_: string]: boolean | number | string | string[] | Type_JSON }
+export const default_style_id = 'default'
+export const default_style_name = 'Style par default'
+
+
+// DEDICATED TYPES **********************************************************************
+
 
 // DEDICATED FUNCTIONS *******************************************************************
 
@@ -308,3 +324,5 @@ export const CustomFaEyeCheckIcon=(props:CheckboxProps)=>{
   const { isChecked } = props
   return isChecked?<FaEye/>:<FaEyeSlash/>
 }
+
+
