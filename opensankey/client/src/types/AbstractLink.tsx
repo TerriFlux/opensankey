@@ -10,8 +10,8 @@ import {
   Class_AbstractDrawingArea,
   Class_AbstractSankey,
   Class_AbstractTag
-} from "./Abstract";
-import { Class_ProtoElement } from "./Element";
+} from './Abstract'
+import { Class_ProtoElement } from './Element'
 
 
 export abstract class Class_AbstractLinkElement
@@ -19,7 +19,7 @@ export abstract class Class_AbstractLinkElement
     Type_GenericDrawingArea extends Class_AbstractDrawingArea,
     Type_GenericSankey extends Class_AbstractSankey
   >
-extends Class_ProtoElement
+  extends Class_ProtoElement
   <
     Type_GenericDrawingArea,
     Type_GenericSankey

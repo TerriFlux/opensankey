@@ -18,11 +18,11 @@ import {
 } from './Abstract'
 import {
   Class_AbstractNodeElement
-} from "./AbstractNode"
+} from './AbstractNode'
 import {
-    Class_AbstractLinkElement,
-    Class_AbstractLinkValue
-} from "./AbstractLink"
+  Class_AbstractLinkElement,
+  Class_AbstractLinkValue
+} from './AbstractLink'
 import {
   Type_JSON,
   default_grey_color,

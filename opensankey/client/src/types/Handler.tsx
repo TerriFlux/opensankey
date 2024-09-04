@@ -37,7 +37,7 @@ export class Class_Handler
   Type_GenericDrawingArea extends Class_AbstractDrawingArea,
   Type_GenericSankey extends Class_AbstractSankey
 >
-extends Class_Element
+  extends Class_Element
 <
   Type_GenericDrawingArea,
   Type_GenericSankey

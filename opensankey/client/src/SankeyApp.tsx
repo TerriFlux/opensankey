@@ -1,7 +1,6 @@
 import React, {
   FunctionComponent,
   useEffect,
-  useState
 } from 'react'
 import i18next from 'i18next'
 import LZString from 'lz-string'

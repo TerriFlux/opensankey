@@ -1,13 +1,13 @@
 import {
   Class_AbstractLinkElement
-} from "./AbstractLink";
+} from './AbstractLink'
 import {
   Class_AbstractSankey,
   Class_AbstractTag,
   Class_AbstractDrawingArea,
   Class_AbstractLevelTag
-} from "./Abstract";
-import { Class_Element } from "./Element";
+} from './Abstract'
+import { Class_Element } from './Element'
 
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
@@ -17,7 +17,7 @@ export abstract class Class_AbstractNodeElement
   Type_GenericDrawingArea extends Class_AbstractDrawingArea,
   Type_GenericSankey extends Class_AbstractSankey
 >
-extends Class_Element
+  extends Class_Element
 <
   Type_GenericDrawingArea,
   Type_GenericSankey
@@ -59,8 +59,8 @@ export abstract class Class_AbstractNodeDimension {
   public abstract get id(): string;
   public abstract get parent_level_tag(): Class_AbstractLevelTag;
   public abstract get children_level_tags(): Class_AbstractLevelTag[];
-  public abstract get parent(): Class_AbstractNodeElement<any, any>
-  public abstract get children(): Class_AbstractNodeElement<any, any>[];
+  public abstract get parent(): Type_AbstractNodeElement
+  public abstract get children(): Type_AbstractNodeElement[];
 }
 
 export abstract class Class_AbstractNodeStyle {

@@ -66,7 +66,8 @@ type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
 
-type Type_AnyNodeElement = Class_NodeElement<any, any, any>
+type Type_AnyLinkElement = Class_LinkElement<Class_AbstractDrawingArea, Class_AbstractSankey, Type_AnyNodeElement>
+type Type_AnyNodeElement = Class_NodeElement<Class_AbstractDrawingArea, Class_AbstractSankey, Type_AnyLinkElement>
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -148,7 +149,7 @@ export abstract class Class_NodeElement
   Type_GenericSankey extends Class_AbstractSankey,
   Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
 >
-extends Class_AbstractNodeElement
+  extends Class_AbstractNodeElement
 <
   Type_GenericDrawingArea,
   Type_GenericSankey

@@ -6,10 +6,11 @@
 // This file is used to avoid cycling dependancies inside each Class definition files.
 // ==================================================================================================
 
-import type { TFunction } from "i18next"
-import type { Class_AbstractLinkElement, Class_AbstractLinkStyle } from "./AbstractLink"
-import type { Class_AbstractNodeElement, Class_AbstractNodeStyle, Class_AbstractNodeDimension } from "./AbstractNode"
-import type { Class_MenuConfig } from "./MenuConfig"
+import * as d3 from 'd3'
+import type { TFunction } from 'i18next'
+import type { Class_AbstractLinkElement, Class_AbstractLinkStyle } from './AbstractLink'
+import type { Class_AbstractNodeElement, Class_AbstractNodeStyle, Class_AbstractNodeDimension } from './AbstractNode'
+import type { Class_MenuConfig } from './MenuConfig'
 
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
@@ -25,7 +26,7 @@ export abstract class Class_AbstractApplicationData {
 export abstract class Class_AbstractDrawingArea {
   // Mandatory attributes
   public abstract application_data: Class_AbstractApplicationData
-  public abstract d3_selection: any
+  public abstract d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract static: boolean
   // Mandatory methods
   public abstract isInSelectionMode(): boolean

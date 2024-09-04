@@ -51,7 +51,7 @@ export abstract class Class_ApplicationData
   Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
   Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
 >
-extends Class_AbstractApplicationData {
+  extends Class_AbstractApplicationData {
 
   // PUBLIC ATTRIBUTES =================================================================
 
