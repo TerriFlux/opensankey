@@ -1046,12 +1046,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ordered_key.forEach((key) => {
     if (Object.keys(menus).includes(key)) {
       let content_menu
-      if (Array.isArray(menus[key])) {
-        content_menu = <React.Fragment>{menus[key].map((el, i) => {
+      const menu_curr=menus[key]
+      if (Array.isArray(menu_curr)) {
+        content_menu = <React.Fragment>{(menu_curr).map((el, i) => {
           return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
         })}</React.Fragment>
       } else {
-        content_menu = <React.Fragment key={'content_ui_pref'}>{menus[key]}</React.Fragment>
+        content_menu = <React.Fragment key={'content_ui_pref'}>{menu_curr}</React.Fragment>
       }
       ordered_menu[key] = content_menu
     }

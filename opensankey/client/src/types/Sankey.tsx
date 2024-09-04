@@ -102,7 +102,7 @@ export abstract class Class_Sankey
   private _links: { [_: string]: Type_GenericLinkElement } = {}
 
   // Existing styles
-  private _link_styles: { [_: string]: Class_LinkStyle } = {}
+  protected abstract _link_styles: { [_: string]: Class_LinkStyle } 
   private _node_styles: { [_: string]: Class_NodeStyle } = {}
 
   // Tags
@@ -134,7 +134,6 @@ export abstract class Class_Sankey
     this._menu_config = menu_config
     this._id = id
     this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
-    this._link_styles[default_style_id] = new Class_LinkStyle(default_style_id, default_style_name, false)
     this._color_map = 'no_colormap'
     this._nodes_color_map = 'no_colormap'
     this._links_color_map = 'no_colormap'
@@ -172,7 +171,7 @@ export abstract class Class_Sankey
 
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
-
+  protected abstract creacteNewLinkStyle(id:string,name:string,is_deletable?:boolean):Class_LinkStyle
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
@@ -1469,9 +1468,7 @@ export abstract class Class_Sankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public get default_link_style() {
-    return this._link_styles[default_style_id]
-  }
+  public abstract get default_link_style():Class_LinkStyle
 
   /**
    * Return all the style as a list

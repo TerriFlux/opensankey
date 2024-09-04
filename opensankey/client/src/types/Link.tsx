@@ -240,7 +240,7 @@ export function isAttributeOverloaded(
  *
  * @class Class_LinkElement
  */
-export class Class_LinkElement
+export abstract class  Class_LinkElement
 <
   Type_GenericDrawingArea extends Class_AbstractDrawingArea,
   Type_GenericSankey extends Class_AbstractSankey,
@@ -266,7 +266,7 @@ export class Class_LinkElement
   *   }}
   * @memberof Class_LinkElement
   */
-  protected _display: {
+  protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
     displaying_order: number,
     position_starting: Type_ElementPosition,
@@ -354,29 +354,7 @@ export class Class_LinkElement
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_links')
-    // Display
-    this._display = {
-      drawing_area: drawing_area,
-      displaying_order: drawing_area.addElement(),
-      position_starting: {
-        type: 'absolute',
-        x: 0,
-        y: 0,
-        u:0,
-        v:0
-      },
-      position_ending: {
-        type: 'absolute',
-        x: 0,
-        y: 0,
-        u:0,
-        v:0
-      },
-      style: drawing_area.sankey.default_link_style as Class_LinkStyle,
-      attributes: new Class_LinkAttribute()
-    }
-    // Link with style
-    this._display.style.addReference(this)
+    
     // Add control points
     this._control_points = {
       starting_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
@@ -1992,6 +1970,10 @@ export class Class_LinkElement
       this.is_value_above_threshold &&
       this._is_visible
     )
+  }
+
+  public get display(){
+     return this._display
   }
 
   /**
@@ -4294,6 +4276,50 @@ export class Class_GhostLinkElement
   Type_GenericNodeElement
 >
 {
+
+  
+  protected _display: {
+    drawing_area: Type_GenericDrawingArea,
+    displaying_order: number,
+    position_starting: Type_ElementPosition,
+    position_ending: Type_ElementPosition,
+    style: Class_LinkStyle,
+    attributes: Class_LinkAttribute
+    position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_offset_label?: number // optional var used when label is dragged (if label follow link path)
+  }
+
+  constructor(id: string,
+    source: Type_GenericNodeElement,
+    target: Type_GenericNodeElement,
+    drawing_area: Type_GenericDrawingArea,
+    menu_config: Class_MenuConfig,){
+    super(id,source,target,drawing_area,menu_config)
+    // Display
+  this._display = {
+    drawing_area: drawing_area,
+    displaying_order: drawing_area.addElement(),
+    position_starting: {
+      type: 'absolute',
+      x: 0,
+      y: 0,
+      u:0,
+      v:0
+    },
+    position_ending: {
+      type: 'absolute',
+      x: 0,
+      y: 0,
+      u:0,
+      v:0
+    },
+    style: drawing_area.sankey.default_link_style as Class_LinkStyle,
+    attributes: new Class_LinkAttribute()
+  }
+  // Link with style
+  this._display.style.addReference(this)
+  }
 
   // GETTER / SETTER ====================================================================
   public get is_visible() { return this._is_visible }
