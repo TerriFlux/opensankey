@@ -26,30 +26,25 @@ import {
 } from './Sankey'
 import {
   Class_NodeElement,
-  Type_NodeElement,
   sortNodesElements
 } from './Node'
 import {
   Class_GhostLinkElement,
   Class_LinkElement,
-  Type_LinkElement,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from './Link'
 import {
-  Class_ApplicationData,
   initial_window_height,
   initial_window_width
 } from './ApplicationData'
 import { Class_Legend } from './Legend'
-import { Class_Element, Class_ProtoElement } from './Element'
 import { Class_ZoneSelection } from './Selection_Zone'
 import { convert_data_legacy } from './Legacy'
-
-// SPECIFIC TYPES ***********************************************************************
-
-export type Type_DrawingArea = Class_DrawingArea<Type_NodeElement, Type_LinkElement>
-export type Type_AnyDrawingArea = Class_DrawingArea<any, any>
+import {
+  Class_AbstractDrawingArea,
+  Class_AbstractApplicationData,
+} from './Abstract'
 
 // CONSTANTS ****************************************************************************
 
@@ -66,21 +61,23 @@ const default_scale = 50
  *
  * @class Class_DrawingArea
  */
-export class Class_DrawingArea
+export abstract class Class_DrawingArea
 <
-  Type_GenericNodeElement extends Class_NodeElement<any>,
-  Type_GenericLinkElement extends Class_LinkElement<any>
+  Type_GenericSankey extends Class_Sankey<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>
 >
+extends Class_AbstractDrawingArea
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   /**
    * Application object which relates to this drawing area
-   * @type {Class_ApplicationData}
+   * @type {Class_AbstractApplicationData}
    * @memberof Class_DrawingArea
    */
-  public application_data: Class_ApplicationData
+  public application_data: Class_AbstractApplicationData
 
   /**
  * d3 svg element containing all sub svg elements, it is also wher we can zoom with scroll wheel
@@ -182,8 +179,8 @@ export class Class_DrawingArea
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  protected _sankey: Class_Sankey<any, Type_GenericNodeElement, Type_GenericLinkElement>
-  protected _legend: Class_Legend
+  protected _sankey: Type_GenericSankey
+  protected _legend: Class_Legend<this, Type_GenericSankey>
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -226,7 +223,7 @@ export class Class_DrawingArea
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  private _selection_zone: Class_ZoneSelection
+  private _selection_zone: Class_ZoneSelection<this, Type_GenericSankey>
   private _number_of_elements: number = 0
 
   // Context attributes for drawing area ------------------------------------------------
@@ -246,7 +243,7 @@ export class Class_DrawingArea
    * @type {boolean}
    * @memberof Class_DrawingArea
    */
-  private _ghost_link: Class_GhostLinkElement<this> | null = null
+  private _ghost_link: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null = null
 
   /**
    *Elements that are selected in this area
@@ -255,7 +252,7 @@ export class Class_DrawingArea
    * @type {{ [id: string]: Class_ProtoElement }}
    * @memberof Class_DrawingArea
    */
-  protected _selection: { [id: string]: Class_ProtoElement<any> } = {}
+  protected _selection: { [id: string]: Type_GenericNodeElement | Type_GenericLinkElement } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
@@ -286,20 +283,21 @@ export class Class_DrawingArea
    * Creates an instance of Class_DrawingArea.
    * @param {number} _height
    * @param {number} _width
-   * @param {Class_ApplicationData} application_data
+   * @param {Class_AbstractApplicationData} application_data
    * @memberof Class_DrawingArea
    */
   constructor(
     _height: number,
     _width: number,
-    application_data: Class_ApplicationData
+    application_data: Class_AbstractApplicationData
   ) {
+    super()
     this.application_data = application_data
     // Init attributes
     this._height = _height
     this._width = _width
-    this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
-    this._legend = new Class_Legend(this, this.application_data.menu_configuration)
+    this._sankey = this.createNewSankey()
+    this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = new Class_ZoneSelection(this, this.application_data.menu_configuration)
   }
 
@@ -320,14 +318,18 @@ export class Class_DrawingArea
     this.unDraw()
   }
 
+  // ABSTRACT METHODS ==================================================================
+
+  protected abstract createNewSankey(): Type_GenericSankey
+
   // PUBLIC METHODS ====================================================================
 
   public reinit() {
     // Delete everything
     this.delete()
     // Recreate everything
-    this._sankey = new Class_Sankey(this, this.application_data.menu_configuration)
-    this._legend = new Class_Legend(this, this.application_data.menu_configuration)
+    this._sankey = this.createNewSankey()
+    this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = new Class_ZoneSelection(this, this.application_data.menu_configuration)
     // Redraw
     this.reset()
@@ -592,7 +594,7 @@ export class Class_DrawingArea
    */
   public addNodeToSelection(node: Type_GenericNodeElement) {
     // Update selection list
-    this._selection[node.id] = node as Class_ProtoElement<this>
+    this._selection[node.id] = node
     // Update selection attribute on given node
     node.setSelected()
     // Update related menus
@@ -647,7 +649,7 @@ export class Class_DrawingArea
    */
   public addLinkToSelection(link: Type_GenericLinkElement) {
     // Update selection list
-    this._selection[link.id] = link as Class_ProtoElement<this>
+    this._selection[link.id] = link
     // Update selection attribute on given link
     link.setSelected()
     // Update related menus
@@ -808,39 +810,39 @@ export class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public recenterElements() {
-    let element_min_x: Class_Element<this> | undefined = undefined
-    let element_min_y: Class_Element<this> | undefined = undefined
+    let element_min_x: Type_GenericNodeElement | undefined = undefined
+    let element_min_y: Type_GenericNodeElement| undefined = undefined
 
     this.sankey.visible_nodes_list
       .forEach(n => {
         // Search for node with position x inf. to 0 and to element with minimum x position value
-        if (n.position_x < 0 && n.position_x < (element_min_x?.position_x ?? 0)) {
-          element_min_x = n as Class_Element<this>
+        if ((n.position_x < 0) && (n.position_x < (element_min_x?.position_x ?? 0))) {
+          element_min_x = n
         }
         // Search for node with position y inf. to 0 and to element with minimum y position value
-        if (n.position_y < 0 && n.position_y < (element_min_x?.position_y ?? 0)) {
-          element_min_y = n as Class_Element<this>
+        if ((n.position_y < 0) && (n.position_y < (element_min_x?.position_y ?? 0))) {
+          element_min_y = n
         }
       })
 
-    if (element_min_x !== undefined) {
-      const true_element = element_min_x as Class_Element<this>
-      // If element is on the left of the DA move all elements to 'x' pixel to the right
-      // (x being the absolute value of element position x )
-      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-        node.position_x += Math.abs(true_element.position_x)
-      })
-      true_element.position_x = 0
-    }
-    if (element_min_y !== undefined) {
-      const true_element = element_min_y as Class_Element<this>
-      // If element is on top of the DA move all elements to 'y' pixel to the bottom
-      // (y being the absolute value of element position y )
-      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-        node.position_y += Math.abs(true_element.position_y)
-      })
-      true_element.position_y = 0
-    }
+    // if (element_min_x) {
+    //   const true_element = element_min_x
+    //   // If element is on the left of the DA move all elements to 'x' pixel to the right
+    //   // (x being the absolute value of element position x )
+    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+    //     node.position_x += Math.abs(true_element.position_x)
+    //   })
+    //   true_element.position_x = 0
+    // }
+    // if (element_min_y !== undefined) {
+    //   const true_element = element_min_y
+    //   // If element is on top of the DA move all elements to 'y' pixel to the bottom
+    //   // (y being the absolute value of element position y )
+    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+    //     node.position_y += Math.abs(true_element.position_y)
+    //   })
+    //   true_element.position_y = 0
+    // }
     this.checkAndUpdateAreaSize()
   }
 
@@ -1077,7 +1079,7 @@ export class Class_DrawingArea
     // TODO : maybe possible to speed up here overall computing with getting
     //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
     let max_horizontal_index = 0
-    const nodes_per_horizontal_indexes: {[index: number]: Class_NodeElement<any>[]} = {}
+    const nodes_per_horizontal_indexes: {[index: number]: Type_GenericNodeElement[]} = {}
     this.sankey.visible_nodes_list.forEach(node => {
     // Previously computed index for given node
       const node_index = horizontal_indexes_per_nodes_ids[node.id]
@@ -1420,6 +1422,24 @@ export class Class_DrawingArea
     }
   }
 
+  public updateLayoutFrom(other: Class_DrawingArea<any, any, any>) {
+    this.color = other.color
+    this.grid_size = other.grid_size
+    this.grid_visible = other.grid_visible
+
+    // Transfer legend attribute from new layout
+    this.legend.masked = other.legend.masked
+    this.legend.display_legend_scale = other.legend.display_legend_scale
+    this.legend.legend_police = other.legend.legend_police
+    this.legend.legend_bg_border = other.legend.legend_bg_border
+    this.legend.legend_bg_color = other.legend.legend_bg_color
+    this.legend.legend_bg_opacity = other.legend.legend_bg_opacity
+    this.legend.legend_show_dataTags = other.legend.legend_show_dataTags
+    this.legend.node_label_separator = other.legend.node_label_separator
+    this.legend.width = other.legend.width
+  }
+
+
   // PRIVATE METHODS ==================================================================
 
   /**
@@ -1613,11 +1633,12 @@ export class Class_DrawingArea
         // Make target a 'ghost' node
         target.setInvisible()
         // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new Class_GhostLinkElement<this>(
+        this._ghost_link = new Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
           'ghost_link',
           source,
           target,
-          this, this.application_data.menu_configuration)
+          this,
+          this.application_data.menu_configuration)
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
       }
       // SELECTION MODE ===========================================================
@@ -1743,7 +1764,7 @@ export class Class_DrawingArea
       if (this._ghost_link !== null) {
         // Move ghost target
         const mouse_position = d3.pointer(event)
-        const target = (this._ghost_link as Type_GenericLinkElement).target
+        const target = this._ghost_link.target
         target.setPosXY(
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
@@ -1859,22 +1880,22 @@ export class Class_DrawingArea
    * return sankey
    *
    * @readonly
-   * @return {Class_Sankey<any, Class_NodeElement<any>, Type_GenericLinkElement>}
+   * @return {Class_Sankey<any, Type_GenericNodeElement, Type_GenericLinkElement>}
    * @memberof Class_DrawingArea
    */
   public get sankey() { return this._sankey }
 
   // Legend
-  public get legend(): Class_Legend { return this._legend }
-  public set legend(value: Class_Legend) { this._legend = value }
+  public get legend(): Class_Legend<this, Type_GenericSankey> { return this._legend }
+  public set legend(value: Class_Legend<this, Type_GenericSankey>) { this._legend = value }
 
-  public set ghost_link(value: Class_GhostLinkElement<this> | null) { this._ghost_link = value }
+  public get ghost_link() { return this._ghost_link }
+  public set ghost_link(value: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
 
   // Selections
-  public get selected_nodes_list() {
+  public get selected_nodes_list(): Type_GenericNodeElement[] {
     return Object.values(this._selection)
-      .filter(element => element instanceof Class_NodeElement)
-      .map(element => element as Type_GenericNodeElement)
+      .filter(element => element instanceof Class_NodeElement) as Type_GenericNodeElement[]
   }
 
   public get selected_nodes_list_sorted(): Type_GenericNodeElement[] {
@@ -1894,8 +1915,7 @@ export class Class_DrawingArea
 
   public get selected_links_list(): Type_GenericLinkElement[] {
     return Object.values(this._selection)
-      .filter(element => element instanceof Class_LinkElement)
-      .map(element => element as Type_GenericLinkElement)
+      .filter(element => element instanceof Class_LinkElement) as Type_GenericLinkElement[]
   }
 
   public get selected_links_list_sorted(): Type_GenericLinkElement[] {
@@ -1968,7 +1988,7 @@ export class Class_DrawingArea
   public get vertical_spacing() { return this._vertical_spacing }
   public set vertical_spacing(_: number) { this._vertical_spacing = _ }
 
-  public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
+  public get selection_zone(): Class_ZoneSelection<this, Type_GenericSankey> { return this._selection_zone }
 
   // Node Context menu
   public get node_contextualised(): Type_GenericNodeElement | undefined { return this._node_contextualied }

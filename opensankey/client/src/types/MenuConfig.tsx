@@ -9,12 +9,51 @@ import * as d3 from 'd3'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
 // Local imports
-import { Type_MacroTagGroup } from './Sankey'
-import { menu_config_width } from '../topmenus/SankeyMenuTop'
-import { textForToastPromiseType, dict_hook_ref_setter_show_dialog_componentsType } from './LegacyType'
+import { Type_MacroTagGroup } from './Utils'
 
+// SPECIFIC TYPES **********************************************************************/
 
-// CLASS MENU CONFIG ********************************************************************
+export type textForToastPromiseType = {
+  success?: string
+  loading?: string
+}
+
+export interface dict_hook_ref_setter_show_dialog_componentsType {
+  // Config menu - Nodes
+  ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_menu_node_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_menu_node_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Config menu - Links
+  ref_setter_show_menu_link_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_menu_link_data: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_menu_link_appearence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_menu_link_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Config menu - Layout
+  ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Modal - Welcome
+  ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Modal - Saving & Loading
+  ref_setter_show_modal_excel_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
+  ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
+  // Modal - Style & Layout
+  ref_setter_show_modal_styles_nodes: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_links: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Other modals
+  ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Trigger Waiting spinner
+  ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: textForToastPromiseType) => void>
+}
+
+// CLASS MENU CONFIG *******************************************************************/
 /**
  * Define shortcut to update menu components
  * @export
@@ -753,7 +792,7 @@ export class Class_MenuConfig {
    * Function to position horizontally the toolbar, it's position depend if the configuration menu is opened
    * @memberof Class_MenuConfig
    */
-  public positionToolBar() {
+  public positionToolBar(menu_config_width: number) {
     d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current ? menu_config_width : 0)) + 'px')
   }
 
@@ -980,3 +1019,4 @@ export class Class_MenuConfig {
     return this._never_see_again
   }
 }
+

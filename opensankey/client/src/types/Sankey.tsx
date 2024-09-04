@@ -6,18 +6,17 @@
 
 // External imports
 
-// Local types
+// Local imports
 import {
   Class_MenuConfig
 } from './MenuConfig'
 import {
-  Class_DrawingArea,
-  Type_DrawingArea
-} from './DrawingArea'
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey
+} from './Abstract'
 import {
   Class_LinkElement,
   Class_LinkStyle,
-  Type_LinkElement,
   defaultLinkId,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
@@ -25,13 +24,11 @@ import {
 import {
   Class_NodeElement,
   Class_NodeStyle,
-  Type_NodeElement,
   sortNodesElements
 } from './Node'
 import {
   Class_DataTag,
   Class_DataTagGroup,
-  Class_ProtoTagGroup,
   Class_TagGroup,
   Class_LevelTagGroup
 } from './Tag'
@@ -39,19 +36,12 @@ import {
   Type_JSON,
   getJSONFromJSON,
   getStringFromJSON,
-  getStringOrUndefinedFromJSON
+  getStringOrUndefinedFromJSON,
+  default_main_sankey_id ,
+  default_style_id,
+  default_style_name,
+  Type_MacroTagGroup
 } from './Utils'
-
-// SPECIFIC TYPES ***********************************************************************
-
-export type Type_Sankey = Class_Sankey<Type_DrawingArea, Type_NodeElement, Type_LinkElement>
-export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
-
-// SPECIFIC CONSTANTS *******************************************************************
-
-export const default_main_sankey_id = 'sankey_maitre'
-export const default_style_id = 'default'
-export const default_style_name = 'Style par default'
 
 // CLASS SANKEY *************************************************************************
 /**
@@ -60,12 +50,13 @@ export const default_style_name = 'Style par default'
  * @export
  * @class Class_Sankey
  */
-export class Class_Sankey
+export abstract class Class_Sankey
   <
-    Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea>,
-    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea>,
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>,
   >
+extends Class_AbstractSankey
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -138,6 +129,7 @@ export class Class_Sankey
     menu_config: Class_MenuConfig,
     id: string = default_main_sankey_id
   ) {
+    super()
     this.drawing_area = drawing_area
     this._menu_config = menu_config
     this._id = id
@@ -176,6 +168,11 @@ export class Class_Sankey
     this._level_taggs = {}
   }
 
+  // ABSTRACT METHODS ===================================================================
+
+  protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
+  protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
+
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
@@ -199,11 +196,11 @@ export class Class_Sankey
   public addNewNode(id: string, name: string): Type_GenericNodeElement {
     if (!this._nodes[id]) {
       // Create node
-      const node = new Class_NodeElement<Type_GenericDrawingArea>(id, name, this.drawing_area, this._menu_config) as Type_GenericNodeElement
+      const node = this.createNewNode(id, name)
       // Set node to default position
       node.initDefaultPosXY()
       // Update registry of nodes
-      this._addNode(node as Type_GenericNodeElement)
+      this._addNode(node)
       return node
     }
     else {
@@ -216,7 +213,7 @@ export class Class_Sankey
    * @return {*}
    * @memberof Class_Sankey
    */
-  public addNewDefaultNode() {
+  public addNewDefaultNode(): Type_GenericNodeElement {
     const n = String(Object.values(this._nodes).length)
     const id = 'node' + n
     const name = 'Node ' + n
@@ -502,11 +499,14 @@ export class Class_Sankey
   /**
    * Properly remove tag group
    * @param {Type_MacroTagGroup} type_group
-   * @param {Class_TagGroup} _
+   * @param {Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
    * @memberof Class_Sankey
    */
-  public removeTagGroup(type_group: Type_MacroTagGroup, _: Class_ProtoTagGroup) {
-    this.removeTagGroupWithId(type_group, _.id)
+  public removeTagGroup(
+    type_group: Type_MacroTagGroup,
+    tagg: Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup
+  ) {
+    this.removeTagGroupWithId(type_group, tagg.id)
   }
 
   /**
@@ -891,11 +891,11 @@ export class Class_Sankey
 
     const list_curr_nodes = this.nodes_list
     const list_curr_nodes_id = list_curr_nodes.map(n => n.id)
-    const list_new_nodes = new_layout.sankey.nodes_list
+    const list_new_nodes = new_layout.sankey.nodes_list as Type_GenericNodeElement[]
     const list_new_nodes_id = list_new_nodes.map(n => n.id)
 
     const list_curr_links = this.links_list
-    const list_new_links = new_layout.sankey.links_list
+    const list_new_links = new_layout.sankey.links_list as Type_GenericLinkElement[]
     const list_new_links_id = list_new_links.map(n => n.id)
 
     // Transfer DA attribut from new layout to current (+ nodes/links style)
@@ -903,7 +903,7 @@ export class Class_Sankey
 
       // Transfer node style from new_layout style node  to corresponding style in current
       const list_curr_nodes_style = this.node_styles_list
-      const list_new_nodes_style = new_layout.sankey.node_styles_list
+      const list_new_nodes_style = new_layout.sankey.node_styles_list as Class_NodeStyle[]
       const list_new_nodes_style_id = list_new_nodes_style.map(ns => ns.id)
 
       list_curr_nodes_style
@@ -923,7 +923,7 @@ export class Class_Sankey
 
       // Transfer link style from new_layout style link  to corresponding style in current
       const list_curr_links_style = this.link_styles_list
-      const list_new_links_style = new_layout.sankey.link_styles_list
+      const list_new_links_style = new_layout.sankey.link_styles_list as Class_LinkStyle[]
       const list_new_links_style_id = list_new_links_style.map(ns => ns.id)
 
       list_curr_links_style
@@ -941,20 +941,7 @@ export class Class_Sankey
         })
 
       // Transfer DA attribute from new layout
-      this.drawing_area.color = new_layout.color
-      this.drawing_area.grid_size = new_layout.grid_size
-      this.drawing_area.grid_visible = new_layout.grid_visible
-
-      // Transfer legend attribute from new layout
-      this.drawing_area.legend.masked = new_layout.legend.masked
-      this.drawing_area.legend.display_legend_scale = new_layout.legend.display_legend_scale
-      this.drawing_area.legend.legend_police = new_layout.legend.legend_police
-      this.drawing_area.legend.legend_bg_border = new_layout.legend.legend_bg_border
-      this.drawing_area.legend.legend_bg_color = new_layout.legend.legend_bg_color
-      this.drawing_area.legend.legend_bg_opacity = new_layout.legend.legend_bg_opacity
-      this.drawing_area.legend.legend_show_dataTags = new_layout.legend.legend_show_dataTags
-      this.drawing_area.legend.node_label_separator = new_layout.legend.node_label_separator
-      this.drawing_area.legend.width = new_layout.legend.width
+      this.drawing_area.updateLayoutFrom(new_layout)
     }
 
     // Update level_tag_dict
@@ -978,7 +965,7 @@ export class Class_Sankey
         .filter(id_nt => !curr_level_taggs_list_id.includes(id_nt))
         .forEach(id_nt => {
           this.addNodeTagGroup(id_nt, new_layout.sankey.level_taggs_dict[id_nt].name)
-          this.level_taggs_dict[id_nt].copyFrom(new_layout.sankey.level_taggs_dict[id_nt])
+          this.level_taggs_dict[id_nt].copyFrom(new_layout.sankey.level_taggs_dict[id_nt] as Class_LevelTagGroup)
         })
     }
 
@@ -1003,13 +990,13 @@ export class Class_Sankey
         .filter(id_nt => !curr_node_taggs_list_id.includes(id_nt))
         .forEach(id_nt => {
           this.addNodeTagGroup(id_nt, new_layout.sankey.node_taggs_dict[id_nt].name)
-          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt])
+          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt] as Class_TagGroup)
         })
 
       new_node_taggs_list_id
         .filter(id_nt => curr_node_taggs_list_id.includes(id_nt))
         .forEach(id_nt => {
-          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt])
+          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt] as Class_TagGroup)
         })
     }
 
@@ -1035,14 +1022,14 @@ export class Class_Sankey
         .filter(id_ft => !curr_flux_taggs_list_id.includes(id_ft))
         .forEach(id_ft => {
           this.addFluxTagGroup(id_ft, new_layout.sankey.flux_taggs_dict[id_ft].name)
-          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft])
+          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft] as Class_TagGroup)
         })
 
       // Updtae flux_taggs group present in current layout and this
       new_flux_taggs_list_id
         .filter(id_ft => curr_flux_taggs_list_id.includes(id_ft))
         .forEach(id_ft => {
-          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft])
+          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft] as Class_TagGroup)
         })
     }
 
@@ -1068,13 +1055,13 @@ export class Class_Sankey
         .filter(id_ft => !curr_data_taggs_list_id.includes(id_ft))
         .forEach(id_ft => {
           this.addDataTagGroup(id_ft, new_layout.sankey.data_taggs_dict[id_ft].name)
-          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft])
+          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft] as Class_DataTagGroup)
         })
       // update data_taggs group present in current layout and this
       new_data_taggs_list_id
         .filter(id_ft => curr_data_taggs_list_id.includes(id_ft))
         .forEach(id_ft => {
-          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft])
+          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft] as Class_DataTagGroup)
         })
     }
 
@@ -1105,7 +1092,8 @@ export class Class_Sankey
         })
       })
       // Apply same node-tag relationship from new_layout to current sankey's nodes
-      new_layout.sankey.nodes_list
+      const nodes_list = new_layout.sankey.nodes_list as Type_GenericNodeElement[]
+      nodes_list
         .filter(node => this.nodes_dict[node.id] !== undefined)
         .forEach(node => {
           node.tags_list
@@ -1155,7 +1143,8 @@ export class Class_Sankey
         })
       })
       // Apply same flux-tag relationship from new_layout to current sankey's fluxs
-      new_layout.sankey.links_list
+      const links_list = new_layout.sankey.links_list as Type_GenericLinkElement[]
+      links_list
         .filter(link => this.links_dict[link.id] !== undefined)
         .forEach(link => {
           const new_values = link.getAllValues()
@@ -1184,7 +1173,8 @@ export class Class_Sankey
     // Apply links values from new layout to current links
     // /!\ new layout must but an ancient version of the current sankey because each link value has an unique id
     if (mode.includes('Values')) {
-      new_layout.sankey.links_list
+      const links_list = new_layout.sankey.links_list as Type_GenericLinkElement[]
+      links_list
         .filter(link => this.links_dict[link.id] !== undefined)
         .forEach(link => {
           const new_values = link.getAllValues()
@@ -1260,12 +1250,7 @@ export class Class_Sankey
     target: Type_GenericNodeElement,
   ): Type_GenericLinkElement {
     if (!this._links[id]) {
-      const link = new Class_LinkElement<Type_GenericDrawingArea>(
-        id,
-        source,
-        target,
-        this.drawing_area,
-        this._menu_config) as Type_GenericLinkElement
+      const link = this.createNewLink(id, source, target)
       this._addLink(link)
       return link
     }
@@ -1436,7 +1421,7 @@ export class Class_Sankey
   /**
    * Return the object containing all the style
    * @readonly
-   * @memberof Class_ApplicationData
+   * @memberof Class_Sankey
    */
   public get node_styles_dict() {
     return this._node_styles
@@ -1454,7 +1439,7 @@ export class Class_Sankey
   /**
    * Return all the style as a list
    * @readonly
-   * @memberof Class_ApplicationData
+   * @memberof Class_Sankey
    */
   public get node_styles_list() {
     return Object.values(this._node_styles)
@@ -1463,7 +1448,7 @@ export class Class_Sankey
   /**
    * Return all the style as a sorted list
    * @readonly
-   * @memberof Class_ApplicationData
+   * @memberof Class_Sankey
    */
   public get node_styles_list_sorted() {
     return this.node_styles_list
@@ -1473,7 +1458,7 @@ export class Class_Sankey
   /**
    * Return the object containing all the style
    * @readonly
-   * @memberof Class_ApplicationData
+   * @memberof Class_Sankey
    */
   public get link_styles_dict() {
     return this._link_styles
@@ -1491,7 +1476,7 @@ export class Class_Sankey
   /**
    * Return all the style as a list
    * @readonly
-   * @memberof Class_ApplicationData
+   * @memberof Class_Sankey
    */
   public get link_styles_list() {
     return Object.values(this._link_styles)
@@ -1500,7 +1485,7 @@ export class Class_Sankey
   /**
    * Return all the style as a sorted list
    * @readonly
-   * @memberof Class_ApplicationData
+   * @memberof Class_Sankey
    */
   public get link_styles_list_sorted() {
     return this.link_styles_list

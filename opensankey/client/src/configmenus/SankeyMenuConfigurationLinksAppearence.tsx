@@ -30,7 +30,6 @@ import {
 
 import {
   Class_LinkStyle,
-  Type_LinkElement,
   default_shape_arrow_size,
   default_shape_color,
   default_shape_ending_curve,
@@ -60,9 +59,10 @@ import {
   isAttributeOverloaded,
 } from '../types/Link'
 import {
-  default_style_id
-} from '../types/Sankey'
+  Type_GenericLinkElementOS
+} from '../types/TypesOS'
 import {
+  default_style_id,
   CustomFaEyeCheckIcon,
   font_families
 } from '../types/Utils'
@@ -164,7 +164,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Type_LinkElement[]
+  let elements: Class_LinkStyle[] | Type_GenericLinkElementOS[]
   if (menu_for_style) {
     elements = [new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
@@ -177,10 +177,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
-   * @param {Type_LinkElement} curr
+   * @param {Type_GenericLinkElementOS} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_LinkElement) => {
+  const check_indeterminate = (curr: Type_GenericLinkElementOS) => {
     return (selected_links[0].isEqual(curr))
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)

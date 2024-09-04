@@ -8,15 +8,46 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-// Local imports
-import * as SankeyShapes from '../draw/SankeyDrawShapes'
+// Local types imports
+import type {
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey
+} from './Abstract'
+import type {
+  Type_Side
+} from './Link'
+import type {
+  Class_NodeDimension
+} from './NodeDimension'
+import type {
+  Class_Tag,
+  Class_TagGroup,
+  Class_LevelTagGroup,
+  Class_LevelTag
+} from './Tag'
+import type {
+  Class_MenuConfig
+} from './MenuConfig'
+
+// Local modules imports
+import {
+  Class_Handler
+} from './Handler'
+import {
+  Class_LinkElement,
+  Class_GhostLinkElement,
+  sortLinksElementsByRelativeNodesPositions
+} from './Link'
+import {
+  Class_AbstractNodeElement
+} from './AbstractNode'
 import {
   Type_ElementPosition,
-  Type_JSON,
   Type_Position,
-  default_element_color,
   default_element_position,
+  default_element_color,
   default_font,
+  default_style_id,
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberFromJSON,
@@ -25,43 +56,17 @@ import {
   getStringListFromJSON,
   getStringListOrUndefinedFromJSON,
   getStringOrUndefinedFromJSON,
-  makeId,
+  Type_JSON,
 } from './Utils'
-import {
-  Class_MenuConfig
-} from './MenuConfig'
-import {
-  Class_DrawingArea
-} from './DrawingArea'
-import {
-  default_style_id
-} from './Sankey'
-import {
-  Class_Element,
-} from './Element'
-import {
-  Class_Tag,
-  Class_TagGroup,
-  Class_LevelTagGroup,
-  Class_LevelTag
-} from './Tag'
-import {
-  Class_LinkElement,
-  Type_Side,
-  Class_GhostLinkElement,
-  sortLinksElementsByRelativeNodesPositions
-} from './Link'
-import {
-  Class_Handler
-} from './Handler'
+import * as SankeyShapes from '../draw/SankeyDrawShapes'
 
 // SPECIFIC TYPES ***********************************************************************
-
-export type Type_NodeElement = Class_NodeElement<Class_DrawingArea<Type_NodeElement, any>>
 
 type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
+
+type Type_AnyNodeElement = Class_NodeElement<any, any, any>
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -103,8 +108,8 @@ export const default_selected_stroke_width = 3
 // SPECIFIC FUNCTIONS *******************************************************************
 
 export function sortNodesElements(
-  a: Class_NodeElement<any> | Class_NodeStyle,
-  b: Class_NodeElement<any> | Class_NodeStyle
+  a: Type_AnyNodeElement | Class_NodeStyle,
+  b: Type_AnyNodeElement | Class_NodeStyle
 ) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
@@ -112,7 +117,7 @@ export function sortNodesElements(
 }
 
 export function isAttributeOverloaded(
-  nodes: Class_NodeElement<any>[],
+  nodes: Type_AnyNodeElement[],
   attr: keyof Class_NodeAttribute
 ) {
   let overloaded = false
@@ -121,7 +126,7 @@ export function isAttributeOverloaded(
 }
 
 export function isPositionOverloaded(
-  nodes: Class_NodeElement<any>[],
+  nodes: Type_AnyNodeElement[],
   attr: keyof Type_ElementPosition
 ) {
   let overloaded = false
@@ -135,13 +140,20 @@ export function isPositionOverloaded(
  * Class that define a node element and how to interact with it
  *
  * @class Class_NodeElement
- * @extends {Class_Element}
+ * @extends {Class_AbstractNodeElement}
  */
-export class Class_NodeElement
+export abstract class Class_NodeElement
 <
-  Type_GenericDrawingArea extends Class_DrawingArea<Class_NodeElement<Type_GenericDrawingArea>, any>
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey,
+  Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
 >
-extends Class_Element<Type_GenericDrawingArea> {
+extends Class_AbstractNodeElement
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey
+>
+{
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -169,19 +181,19 @@ extends Class_Element<Type_GenericDrawingArea> {
   private _name_label_separator: string = ''
 
   // Related IO links
-  private _input_links: { [id: string]: Class_LinkElement<Type_GenericDrawingArea> } = {}
-  private _output_links: { [id: string]: Class_LinkElement<Type_GenericDrawingArea> } = {}
+  private _input_links: { [id: string]: Type_GenericLinkElement } = {}
+  private _output_links: { [id: string]: Type_GenericLinkElement } = {}
 
   // Ordering for related IO Links
-  private _links_order: Class_LinkElement<Type_GenericDrawingArea>[] = []
+  private _links_order: Type_GenericLinkElement[] = []
 
   // Value of node
   private _input_data_value: number = 0
   private _output_data_value: number = 0
 
   // Handles used to move related IO links relativly to eachother
-  private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea> } = {}
-  private _handle_output_links: { [x: string]: Class_Handler<Type_GenericDrawingArea> } = {}
+  private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _handle_output_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
 
   // Node tags
   private _tags: { [id: string]: Class_Tag } = {}
@@ -191,7 +203,7 @@ extends Class_Element<Type_GenericDrawingArea> {
   private _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
 
   // Reference to link dragged when we drag a handle
-  private _link_dragged: Class_LinkElement<Type_GenericDrawingArea> | undefined
+  private _link_dragged: Type_GenericLinkElement | undefined
 
   // Tooltips
   private _tooltip_text?: string
@@ -218,7 +230,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     this._display = {
       drawing_area: drawing_area,
       position: structuredClone(default_element_position),
-      style: drawing_area.sankey.default_node_style,
+      style: drawing_area.sankey.default_node_style as Class_NodeStyle,
       attributes: new Class_NodeAttribute()
     }
     // Link with default style
@@ -256,15 +268,20 @@ extends Class_Element<Type_GenericDrawingArea> {
     this.style.removeReference(this)
   }
 
+  // ABSTRACT METHODS ===================================================================
+
+  public abstract copyInputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
+  public abstract copyOutputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
+
   // PUBLIC METHODS =====================================================================
 
   /**
    * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
    *
-   * @param {Class_NodeElement<Type_GenericDrawingArea>} node_to_copy
+   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node_to_copy
    * @memberof Class_NodeElement
    */
-  public copyFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea>) {
+  public copyFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Copy attributes ------------------------------------------------------------------
     // Name
     this._name = node_to_copy.name
@@ -278,7 +295,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     // Set node style to node_to_copy style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
     if (this.drawing_area.sankey.node_styles_list.map(ns => ns.id).includes(node_to_copy._display.style.id)) {
       const new_style_id = this.drawing_area.sankey.node_styles_list.map(ns => ns.id).filter(ns => ns.includes(node_to_copy._display.style.id))[0]
-      this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id]
+      this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id] as Class_NodeStyle
       this._display.style.addReference(this)
     }
     // Copy input links ------------------------------------------------------------------
@@ -292,7 +309,7 @@ extends Class_Element<Type_GenericDrawingArea> {
       })
       .forEach(link => {
         this.addInputLink(
-          this.main_sankey.links_dict[link.id] as Class_LinkElement<Type_GenericDrawingArea>)
+          this.main_sankey.links_dict[link.id] as Type_GenericLinkElement)
       })
     // Create missing input link from existing source node
     node_to_copy.input_links_list
@@ -303,14 +320,7 @@ extends Class_Element<Type_GenericDrawingArea> {
         )
       })
       .forEach(link => {
-        const new_link = new Class_LinkElement<Type_GenericDrawingArea>(
-          link.id,
-          this.main_sankey.nodes_dict[link.source.id] as Class_NodeElement<Type_GenericDrawingArea>,
-          this,
-          this.drawing_area,
-          this.menu_config
-        )
-        this.addInputLink(new_link)
+        this.addInputLink(this.copyInputLink(link))
       })
     // Remove input link that are not input links on node to copy from
     this.input_links_list
@@ -330,7 +340,8 @@ extends Class_Element<Type_GenericDrawingArea> {
         )
       })
       .forEach(link => {
-        this.addOutputLink(this.main_sankey.links_dict[link.id] as Class_LinkElement<Type_GenericDrawingArea>)
+        this.addOutputLink(
+          this.main_sankey.links_dict[link.id] as Type_GenericLinkElement)
       })
     // Create missing input link from existing source node
     node_to_copy.output_links_list
@@ -341,14 +352,7 @@ extends Class_Element<Type_GenericDrawingArea> {
         )
       })
       .forEach(link => {
-        const new_link = new Class_LinkElement<Type_GenericDrawingArea>(
-          link.id,
-          this,
-          this.main_sankey.nodes_dict[link.target.id] as this,
-          this.drawing_area,
-          this.menu_config
-        )
-        this.addInputLink(new_link)
+        this.addOutputLink(this.copyOutputLink(link))
       })
     // Remove input link that are not input links on node to copy from
     this.output_links_list
@@ -364,7 +368,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     node_to_copy._links_order
       .filter(link_to_copy => link_to_copy.id in this.drawing_area.sankey.links_dict)
       .forEach(link_to_copy => {
-        const link = this.drawing_area.sankey.links_dict[link_to_copy.id]
+        const link = this.drawing_area.sankey.links_dict[link_to_copy.id] as Type_GenericLinkElement
         if (!this._links_order.includes(link))
           this._links_order.push(link)
       })
@@ -374,7 +378,7 @@ extends Class_Element<Type_GenericDrawingArea> {
       .forEach(tagg => {
         all_existing_tags = {
           ...all_existing_tags,
-          ...tagg.tags_dict
+          ...(tagg as Class_TagGroup).tags_dict
         }
       })
     // Add missing tags
@@ -401,7 +405,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
     this.main_sankey.level_taggs_list
       .forEach(tagg => {
-        tagg.tags_list
+        (tagg as Class_LevelTagGroup).tags_list
           .forEach(tag => {
             // Chech children dimensions
             tag.dimensions_list_as_tag_for_children
@@ -492,7 +496,7 @@ extends Class_Element<Type_GenericDrawingArea> {
   // Styles / attributes related methods ------------------------------------------------
 
   public useDefaultStyle() {
-    this.style = this.main_sankey.default_node_style
+    this.style = this.main_sankey.default_node_style as Class_NodeStyle
   }
 
   public resetAttributes() {
@@ -508,7 +512,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     return this._display.position[attr] !== undefined
   }
 
-  public isEqual(_: Class_NodeElement<Type_GenericDrawingArea>) {
+  public isEqual(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
 
     if (this.shape_visible !== _.shape_visible) {
       return false
@@ -735,10 +739,10 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Add given link as input
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  public addInputLink(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  public addInputLink(link: Type_GenericLinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
@@ -752,10 +756,10 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Add given link as output
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  public addOutputLink(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  public addOutputLink(link: Type_GenericLinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
@@ -769,10 +773,10 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Remove and delete given input link if it exists
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  public deleteInputLink(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  public deleteInputLink(link: Type_GenericLinkElement) {
     if (this._input_links[link.id] !== undefined) {
       this.removeInputLink(link)
       link.delete()
@@ -782,10 +786,10 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Remove and delete given output link if it exists
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  public deleteOutputLink(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  public deleteOutputLink(link: Type_GenericLinkElement) {
     if (this._output_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       link.delete()
@@ -795,13 +799,13 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Move given input link to a given node
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
-   * @param {Class_NodeElement<Type_GenericDrawingArea>} node
+   * @param {Type_GenericLinkElement} link
+   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node
    * @memberof Class_NodeElement
    */
   public swapInputLink(
-    link: Class_LinkElement<Type_GenericDrawingArea>,
-    node: Class_NodeElement<Type_GenericDrawingArea>
+    link: Type_GenericLinkElement,
+    node: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
   ) {
     if (this._input_links[link.id] !== undefined) {
       this.removeInputLink(link)
@@ -814,11 +818,11 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Move given output link to a given node
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
-   * @param {Class_NodeElement<Type_GenericDrawingArea>} node
+   * @param {Type_GenericLinkElement} link
+   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node
    * @memberof Class_NodeElement
    */
-  public swapOutputLink(link: Class_LinkElement<Type_GenericDrawingArea>, node: Class_NodeElement<Type_GenericDrawingArea>) {
+  public swapOutputLink(link: Type_GenericLinkElement, node: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     if (this._output_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       node.addOutputLink(link)
@@ -882,13 +886,13 @@ extends Class_Element<Type_GenericDrawingArea> {
   /**
    * Place first link just before target link
    *
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link_to_move
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link_target_pos
+   * @param {Type_GenericLinkElement} link_to_move
+   * @param {Type_GenericLinkElement} link_target_pos
    * @memberof Class_NodeElement
    */
   public moveLinkToPositionInOrderBefore(
-    link_to_move: Class_LinkElement<Type_GenericDrawingArea>,
-    link_target_pos: Class_LinkElement<Type_GenericDrawingArea>
+    link_to_move: Type_GenericLinkElement,
+    link_target_pos: Type_GenericLinkElement
   ) {
     // Check we don't try to swap 2 links that aren"t connected to the same node
     if (
@@ -910,13 +914,13 @@ extends Class_Element<Type_GenericDrawingArea> {
   /**
    * Place first link just after target link
    *
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link_to_move
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link_target_pos
+   * @param {Type_GenericLinkElement} link_to_move
+   * @param {Type_GenericLinkElement} link_target_pos
    * @memberof Class_NodeElement
    */
   public moveLinkToPositionInOrderAfter(
-    link_to_move: Class_LinkElement<Type_GenericDrawingArea>,
-    link_target_pos: Class_LinkElement<Type_GenericDrawingArea>
+    link_to_move: Type_GenericLinkElement,
+    link_target_pos: Type_GenericLinkElement
   ) {
     // Check we don't try to swap 2 links that aren"t connected to the same node
     if (
@@ -1077,7 +1081,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
     const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-    this._display.style = this.main_sankey.node_styles_dict[style_id]
+    this._display.style = this.main_sankey.node_styles_dict[style_id] as Class_NodeStyle
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -1101,7 +1105,7 @@ extends Class_Element<Type_GenericDrawingArea> {
       .forEach(([_tagg_id, _tag_ids]) => {
         const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
         const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
-        const tagg = this.main_sankey.node_taggs_dict[tagg_id]
+        const tagg = this.main_sankey.node_taggs_dict[tagg_id] as Class_TagGroup
         tagg.tags_list
           .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
@@ -1123,14 +1127,14 @@ extends Class_Element<Type_GenericDrawingArea> {
     input_link_ids
       .forEach(_ => {
         const link_id = matching_links_id[_] ?? _
-        this.addInputLink(this.main_sankey.links_dict[link_id] as Class_LinkElement<Type_GenericDrawingArea>)
+        this.addInputLink(this.main_sankey.links_dict[link_id] as Type_GenericLinkElement)
       })
     // Output links
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
     output_link_ids
       .forEach(_ => {
         const link_id = matching_links_id[_] ?? _
-        this.addOutputLink(this.main_sankey.links_dict[link_id] as Class_LinkElement<Type_GenericDrawingArea>)
+        this.addOutputLink(this.main_sankey.links_dict[link_id] as Type_GenericLinkElement)
       })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
@@ -1139,7 +1143,7 @@ extends Class_Element<Type_GenericDrawingArea> {
         .map(_ => {
           const link_id = matching_links_id[_] ?? _
           return this.main_sankey.links_dict[link_id]
-        }) as Class_LinkElement<Type_GenericDrawingArea>[]
+        }) as Type_GenericLinkElement[]
     }
   }
 
@@ -1165,7 +1169,7 @@ extends Class_Element<Type_GenericDrawingArea> {
           const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, _)
           if (dimension_as_json) {
             // Get level tag group from id
-            const tagg = this.main_sankey.level_taggs_dict[tagg_id]
+            const tagg = this.main_sankey.level_taggs_dict[tagg_id] as Class_LevelTagGroup
             // Continue only in level tag group exists
             if (tagg) {
               // Continue only if we can find related parent
@@ -1358,7 +1362,7 @@ extends Class_Element<Type_GenericDrawingArea> {
     super.eventMouseDragEnd(event)
     // Get related elements in drawing area
     const drawing_area = this.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list
+    const nodes_selected = drawing_area.selected_nodes_list as this[]
     if (nodes_selected.length == 0) {
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
@@ -1404,12 +1408,12 @@ extends Class_Element<Type_GenericDrawingArea> {
       // Create default source node
       // Position center of source node to pointer pos
       // Create default target node
-      const target = this.main_sankey.addNewDefaultNode()
+      const target = this.main_sankey.addNewDefaultNode() as this
       target.setPosXY(this.position_x, this.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
       // Ref newly created link this var to be used in other mouse event
-      this.drawing_area.ghost_link = new Class_GhostLinkElement<Type_GenericDrawingArea>(
+      this.drawing_area.ghost_link = new Class_GhostLinkElement<Type_GenericDrawingArea, Type_GenericSankey, this>(
         'ghost_link',
         this,
         target as this,
@@ -2202,10 +2206,10 @@ extends Class_Element<Type_GenericDrawingArea> {
    * /!\ Keep as private method. This can create dangling ref for links
    *
    * @private
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  private removeInputLink(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  private removeInputLink(link: Type_GenericLinkElement) {
     this._handle_input_links[link.id]?.delete()
     delete this._handle_input_links[link.id]
     delete this._input_links[link.id]
@@ -2216,10 +2220,10 @@ extends Class_Element<Type_GenericDrawingArea> {
    * Remove link reference from all related attributes it this node.
    * /!\ Keep as private method. This can create dangling ref for links
    * @private
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  private removeOutputLink(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  private removeOutputLink(link: Type_GenericLinkElement) {
     this._handle_output_links[link.id]?.delete()
     delete this._handle_output_links[link.id]
     delete this._output_links[link.id]
@@ -2230,10 +2234,10 @@ extends Class_Element<Type_GenericDrawingArea> {
    * Remove link from ordering list
    * /!\ Keep as private method. This can create dangling ref for links
    * @private
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  private removeLinkFromOrderingLinksList(link: Class_LinkElement<Type_GenericDrawingArea>) {
+  private removeLinkFromOrderingLinksList(link: Type_GenericLinkElement) {
     const idx = this._links_order.indexOf(link)
     if (idx !== undefined) {
       this._links_order.splice(idx, 1)
@@ -2243,15 +2247,15 @@ extends Class_Element<Type_GenericDrawingArea> {
   /**
    * Create a handler element able to drag position of link
    * @private
-   * @param {Class_LinkElement<Type_GenericDrawingArea>} link
+   * @param {Type_GenericLinkElement} link
    * @param {boolean} input
    * @memberof Class_NodeElement
    */
   private addMovingHandleForGivenLink(
-    link: Class_LinkElement<Type_GenericDrawingArea>,
+    link: Type_GenericLinkElement,
     type: 'input' | 'output'
   ) {
-    const handle = new Class_Handler<Type_GenericDrawingArea>(
+    const handle = new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
       ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
       this.menu_config,
@@ -2275,23 +2279,23 @@ extends Class_Element<Type_GenericDrawingArea> {
   /**
    * Event listener for drag start on link moving handler
    * This method will not be called inside a Class_NodeElement object,
-   * but instead inside Class_Handler<Type_GenericDrawingArea> object
+   * but instead inside Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> object
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
    * @memberof Class_NodeElement
    */
   private dragHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    // Since we pass this func to a Class_Handler<Type_GenericDrawingArea> (without executing it)
+    // Since we pass this func to a Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> (without executing it)
     // 'this' take the scope of the handler so we have to cast it here for compilation
-    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea>
+    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     // Get node from the handler
-    const node_ref = handler.ref_element as Class_NodeElement<Type_GenericDrawingArea>
+    const node_ref = handler.ref_element as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
     if (
       (node_ref.link_dragged) &&
       (event.dy !== 0 || event.dx !== 0)
     ) {
       // Get link currently dragged
-      const link_dragged = (node_ref.link_dragged as Class_LinkElement<Type_GenericDrawingArea>)
+      const link_dragged = (node_ref.link_dragged as Type_GenericLinkElement)
       // Search if handler is for a link incoming or outcoming from the node
       const handle_src_or_trgt = (link_dragged.target === node_ref) ? 'target' : 'source'
       const dragged_side = (handle_src_or_trgt === 'target') ? link_dragged.target_side : link_dragged.source_side
@@ -2347,21 +2351,21 @@ extends Class_Element<Type_GenericDrawingArea> {
   }
 
   private dragStartHandlerMoveLink(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea>
+    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     const node_ref_handler = handler.ref_element as this
     const link_ref = (handler.ref_element as this).getLinkFromHandler(handler)
     if (link_ref && link_ref instanceof Class_LinkElement) {
-      node_ref_handler.link_dragged = link_ref
+      node_ref_handler.link_dragged = link_ref as Type_GenericLinkElement
     }
   }
 
   private dragEndHandlerMoveLink(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea>
+    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     const node_ref_handler = handler.ref_element as this
     node_ref_handler.link_dragged = undefined
   }
 
-  private getLinkFromHandler(handler: Class_Handler<Type_GenericDrawingArea>) {
+  private getLinkFromHandler(handler: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
     return handler.ref_element_optional
   }
 
@@ -2411,7 +2415,7 @@ extends Class_Element<Type_GenericDrawingArea> {
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get links_order_visible(): Class_LinkElement<Type_GenericDrawingArea>[] {
+  public get links_order_visible(): Type_GenericLinkElement[] {
     return this._links_order.filter(link => link.is_visible)
   }
 
@@ -2470,13 +2474,13 @@ extends Class_Element<Type_GenericDrawingArea> {
     const level_tags_dict: { [id: string]: Class_LevelTag } = {}
     Object.values(this._dimensions_as_parent)
       .forEach(dimension => {
-        level_tags_dict[dimension.parent_level_tag.id] = dimension.parent_level_tag
+        level_tags_dict[dimension.parent_level_tag.id] = dimension.parent_level_tag as Class_LevelTag
       })
     Object.values(this._dimensions_as_child)
       .forEach(dimension => {
         dimension.children_level_tags
           .forEach(children_level_tag => {
-            level_tags_dict[children_level_tag.id] = children_level_tag
+            level_tags_dict[children_level_tag.id] = children_level_tag as Class_LevelTag
           })
       })
     return level_tags_dict
@@ -2580,16 +2584,16 @@ extends Class_Element<Type_GenericDrawingArea> {
 
   /**
    * Get current link element that is dragged through a link handler
-   * @type {(Class_LinkElement<Type_GenericDrawingArea> | undefined)}
+   * @type {(Type_GenericLinkElement | undefined)}
    * @memberof Class_NodeElement
    */
-  public get link_dragged(): Class_LinkElement<Type_GenericDrawingArea> | undefined { return this._link_dragged }
+  public get link_dragged(): Type_GenericLinkElement | undefined { return this._link_dragged }
 
   /**
    * Indicate that a given link element is dragged through a link handler
    * @memberof Class_NodeElement
    */
-  public set link_dragged(value: Class_LinkElement<Type_GenericDrawingArea> | undefined) { this._link_dragged = value }
+  public set link_dragged(value: Type_GenericLinkElement | undefined) { this._link_dragged = value }
 
   // Style / Local attributes related ---------------------------------------------------
 
@@ -3925,7 +3929,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _is_deletable: boolean
 
-  private _references: { [_: string]: Class_NodeElement<any> } = {}
+  private _references: { [_: string]: Type_AnyNodeElement } = {}
 
   private _position : Type_ElementPosition
 
@@ -4018,13 +4022,13 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   // PUBLIC METHODS =======================================================================
 
-  public addReference(_: Class_NodeElement<any>) {
+  public addReference(_: Type_AnyNodeElement) {
     if (!this._references[_.id]) {
       this._references[_.id] = _
     }
   }
 
-  public removeReference(_: Class_NodeElement<any>) {
+  public removeReference(_: Type_AnyNodeElement) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
     }
@@ -4070,297 +4074,4 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public set position(_) {this._position = _}
 }
 
-// CLASS NODE DIMENSION *****************************************************************
 
-export class Class_NodeDimension
-{
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  // Unique id
-  private _id: string
-
-  // Structure
-  private _parent: Class_NodeElement<any>
-  private _children: Class_NodeElement<any>[]
-
-  // Tags relations
-  private _parent_level_tag: Class_LevelTag
-  private _children_level_tags: Class_LevelTag[]
-
-  // Dimension selected
-  private _show_parent: boolean = false
-  private _show_children: boolean = false
-
-  /**
-   * True if element is currently on a deletion process
-   * Avoid cross calls of delete() method
-   * @private
-   * @memberof Class_Element
-   */
-  private _is_currently_deleted = false
-
-  // CONSTRUCTOR ========================================================================
-
-  /**
-   * Creates an instance of Class_NodeDimension.
-   * @param {Class_NodeElement<Type_GenericDrawingArea>} parent
-   * @param {Class_NodeElement[]} children
-   * @param {Class_LevelTag} parent_level_tag
-   * @param {Class_LevelTag} children_level_tag
-   * @memberof Class_NodeDimension
-   */
-  constructor(
-    parent: Class_NodeElement<any>,
-    children: Class_NodeElement<any>[],
-    parent_level_tag: Class_LevelTag,
-    children_level_tags: Class_LevelTag[],
-    id?: string
-  ) {
-    // Create unique id
-    if (id)
-      this._id = id
-    else
-      this._id = makeId(
-        parent_level_tag.id +
-        '_' +
-        children_level_tags
-          .map(_ => _.id)
-          .join('')
-      )
-    // Set parenthood reference
-    this._parent = parent
-    this._children = children
-    this._parent.addNewDimensionAsParent(this)
-    this._children
-      .forEach(_ => _.addNewDimensionAsChild(this))
-    // Set leveltags references
-    this._parent_level_tag = parent_level_tag
-    this._parent_level_tag.addAsParentLevel(this)
-    this._children_level_tags = children_level_tags
-    this._children_level_tags
-      .forEach(_ => _.addAsChildrenLevel(this))
-    // Sanity checks
-    // Immediatly delete for any of this conditions :
-    // - Parent is in children list
-    // - Children tag are not of the same group
-    // - Parent & children tags groups are not the same
-    // - Children list is empty
-    let same_group: boolean = true
-    let prev_group: undefined | Class_LevelTagGroup = undefined
-    this._children_level_tags
-      .forEach(tag => {
-        if (prev_group)
-          same_group = (same_group && (tag.group === prev_group))
-        prev_group = tag.group
-      })
-    if (
-      (children.includes(parent)) ||
-      (!same_group) ||
-      (parent_level_tag.group !== this.children_level_tagg) ||
-      (!this.has_children)
-    ) {
-      this.delete()
-    }
-  }
-
-  /**
-   * Define deletion behavior
-   * @memberof Class_NodeDimension
-   */
-  public delete() {
-    // Cross-calls protection
-    if (!this._is_currently_deleted) {
-      this._is_currently_deleted = true
-      // Remove cross references with nodes
-      this._parent.removeDimensionAsParent(this)
-      this._children
-        .forEach(_ => _.removeDimensionAsChild(this))
-      this._children = []
-      // Remove cross references with leveltags
-      this._parent_level_tag.removeParentLevel(this)
-      this._children_level_tags
-        .forEach(_ => _.removeChildrenLevel(this))
-      this._children_level_tags = []
-      // Garbage collector will do the rest ...
-    }
-  }
-
-  // PUBLIC METHODS =====================================================================
-
-  public synchroWith(dim: Class_NodeDimension) {
-    // Get list of all nodes
-    const nodes_dict = this.parent.main_sankey.nodes_dict
-    const level_taggs_dict = this.parent.main_sankey.level_taggs_dict
-    // Sync references with parent nodes
-    if (dim.parent.id in nodes_dict) {
-      this.parent = nodes_dict[dim.parent.id]
-    }
-    else { // parent node does not exits -> delete this
-      this.delete()
-    }
-    // Sync reference with parent tag
-    if (
-      (dim.parent_level_tag.group.id in level_taggs_dict) &&
-      (dim.parent_level_tag.id in level_taggs_dict[dim.parent_level_tag.group.id].tags_dict)
-    ) {
-      this.parent_level_tag = level_taggs_dict[dim.parent_level_tag.group.id].tags_dict[dim.parent_level_tag.id]
-    }
-    else { // parent level tag does not exits -> delete this
-      this.delete()
-    }
-    // Sync references with children
-    dim._children  // Append all missing children
-      .filter(child => child.id in nodes_dict)
-      .forEach(child => this.addNodeAsChild(nodes_dict[child.id]))
-    this._children // Remove all unnecessary children
-      .filter(child => !(dim._children.map(_ => _.id).includes(child.id)))
-      .forEach(child => this.removeNodeFromChildren(child))
-    // Sync reference with children tags
-    dim._children_level_tags // Append all missing children tags
-      .filter(tag => {
-        (tag.group.id in level_taggs_dict) &&
-          (tag.id in level_taggs_dict[tag.group.id].tags_dict)
-      })
-      .forEach(tag => this.addTagAsChildrenLevelTag(level_taggs_dict[tag.group.id].tags_dict[tag.id]))
-    this._children_level_tags
-      .filter(tag => !(dim._children_level_tags.map(_ => _.id).includes(tag.id)))
-      .forEach(tag => this.removeTagFromChildrenLevelTag(tag))
-  }
-
-  public removeNodeAsParent(_: Class_NodeElement<any>) {
-    if (this._parent === _) {
-      this.delete()  // Simply delete because dimension can not exist without parent
-    }
-  }
-
-  public addNodeAsChild(_: Class_NodeElement<any>) {
-    if (
-      (this._parent !== _) &&
-      !(this._children.includes(_))
-    ) {
-      this._children.push(_)
-      _.addNewDimensionAsChild(this)
-    }
-  }
-
-  public removeNodeFromChildren(_: Class_NodeElement<any>) {
-    const idx = this._children.indexOf(_)
-    if (idx !== undefined) {
-      this._children.splice(idx, 1)
-      // If all children has been deleted, clear this
-      if (!this.has_children)
-        this.delete()
-    }
-  }
-
-  public getLevel() {
-    if (!this._parent_level_tag.has_upper_dimensions) {
-      return 1
-    }
-    else {
-      let level = 2
-      this._parent_level_tag.dimensions_list_as_tag_for_children
-        .forEach(upper_dimension => level = Math.max(level, upper_dimension.getLevel() + 1))
-      return level
-    }
-  }
-
-  public addTagAsChildrenLevelTag(_: Class_LevelTag) {
-    if (
-      !this._children_level_tags.includes(_) &&
-      _.group === this.children_level_tagg
-    ) {
-      this._children_level_tags.push(_)
-      _.addAsChildrenLevel(this)
-    }
-  }
-
-  public removeTagFromChildrenLevelTag(_: Class_LevelTag) {
-    const idx = this._children_level_tags.indexOf(_)
-    if (idx !== undefined) {
-      this._children_level_tags.splice(idx, 1)
-      // If all children level tags has been deleted, clear this
-      if (!(this._children_level_tags.length > 0))
-        this.delete()
-    }
-  }
-
-  public forceShowParent() {
-    this._show_parent = true
-    this._show_children = false
-    this.drawElements()
-  }
-
-  public forceShowChildren() {
-    this._show_parent = false
-    this._show_children = true
-    this.drawElements()
-  }
-
-  public showFromLevelTags() {
-    this._show_parent = false
-    this._show_children = false
-    this.drawElements()
-  }
-
-  // PRIVATE METHODS ====================================================================
-
-  private drawElements() {
-    this._parent.draw()
-    this._children.forEach(child => child.draw())
-  }
-
-  // GETTERS / SETTERS ==================================================================
-
-  public get id() { return this._id }
-
-  public get parent_level_tag() { return this._parent_level_tag }
-  public set parent_level_tag(_: Class_LevelTag) {
-    // Do modification only if there is a change & if parent/children tag group are matching
-    if (
-      (_ !== this._parent_level_tag) &&
-      (this.children_level_tagg === _.group)
-    ) {
-      const old = this._parent_level_tag
-      this._parent_level_tag = _
-      _.addAsParentLevel(this)
-      old.removeParentLevel(this)
-    }
-  }
-
-  public get children_level_tags() { return this._children_level_tags }
-  public get children_level_tagg() { return this._children_level_tags[0]?.group ?? undefined }
-
-  public get parent() { return this._parent }
-  public set parent(_: Class_NodeElement<any>) {
-    if (
-      (this._parent !== _) &&
-      !(this._children.includes(_))
-    ) {
-      const old_parent = this._parent
-      this._parent = _
-      _.addNewDimensionAsParent(this)
-      old_parent.removeDimensionAsParent(this)
-    }
-  }
-
-  public get has_children() { return (this._children.length > 0) }
-  public get children() { return this._children }
-
-  public get show_parent() {
-    return (
-      (!this._show_children) &&
-      ((this._show_parent) || (this.parent_level_tag.is_selected))
-    )
-  }
-  public get show_children() {
-    let ok_children_level_tags = false
-    this.children_level_tags
-      .forEach(tag => ok_children_level_tags = (ok_children_level_tags || tag.is_selected))
-    return (
-      (!this._show_parent) &&
-      ((this._show_children) || (ok_children_level_tags))
-    )
-  }
-}

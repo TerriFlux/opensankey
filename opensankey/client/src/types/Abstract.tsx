@@ -1,0 +1,142 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Date : 29/05/2024
+// All rights reserved for TerriFlux SARL
+//
+// This file is used to avoid cycling dependancies inside each Class definition files.
+// ==================================================================================================
+
+import type { TFunction } from "i18next"
+import type { Class_AbstractLinkElement, Class_AbstractLinkStyle } from "./AbstractLink"
+import type { Class_AbstractNodeElement, Class_AbstractNodeStyle, Class_AbstractNodeDimension } from "./AbstractNode"
+import type { Class_MenuConfig } from "./MenuConfig"
+
+type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+
+export abstract class Class_AbstractApplicationData {
+  // Mandatory attributes
+  public abstract version: string
+  // Mandatory getters
+  public abstract get t(): TFunction
+  public abstract get menu_configuration(): Class_MenuConfig
+}
+
+export abstract class Class_AbstractDrawingArea {
+  // Mandatory attributes
+  public abstract application_data: Class_AbstractApplicationData
+  public abstract d3_selection: any
+  public abstract static: boolean
+  // Mandatory methods
+  public abstract isInSelectionMode(): boolean
+  public abstract isInEditionMode(): boolean
+  public abstract addElement(): number
+  public abstract recenterElements(): void
+  public abstract checkAndUpdateAreaSize(): void
+  public abstract deleteNode(_: Type_AbstractNodeElement): void
+  public abstract deleteLink(_: Type_AbstractLinkElement): void
+  public abstract addNodeToSelection(_: Type_AbstractNodeElement): void
+  public abstract addLinkToSelection(_: Type_AbstractLinkElement): void
+  public abstract purgeSelection(): void
+  public abstract closeAllMenus(): void
+  public abstract updateLayoutFrom(_: Class_AbstractDrawingArea): void
+  // Mandatory getters
+  public abstract get sankey(): Class_AbstractSankey
+  public abstract get scale(): number
+  public abstract get scaleValueToPx(): (_: number) => number
+  public abstract get minimum_flux(): number | undefined
+  public abstract get maximum_flux(): number | undefined
+  public abstract get filter_link_value(): number
+  public abstract get selected_nodes_list(): Type_AbstractNodeElement[]
+  public abstract get node_contextualised(): Type_AbstractNodeElement | undefined
+  public abstract set node_contextualised(_: Type_AbstractNodeElement | undefined)
+  public abstract get selected_links_list(): Type_AbstractLinkElement[]
+  public abstract get link_contextualised(): Type_AbstractLinkElement | undefined
+  public abstract set link_contextualised(_: Type_AbstractLinkElement | undefined)
+  public abstract get ghost_link(): Type_AbstractLinkElement | null
+  public abstract set ghost_link(_: Type_AbstractLinkElement | null)
+  public abstract get pointer_pos(): [number, number]
+  public abstract set pointer_pos(_: [number, number])
+  public abstract get filter_label(): number
+  public abstract set filter_label(_: number)
+}
+
+export abstract class Class_AbstractSankey {
+  // Mandatory getters
+  public abstract get color_map(): string
+  public abstract get nodes_color_map(): string
+  public abstract get links_color_map(): string
+  public abstract get nodes_dict(): { [_: string]: Type_AbstractNodeElement }
+  public abstract get nodes_list(): Type_AbstractNodeElement[]
+  public abstract get nodes_list_sorted(): Type_AbstractNodeElement[]
+  public abstract get visible_nodes_list(): Type_AbstractNodeElement[]
+  public abstract get visible_nodes_list_sorted(): Type_AbstractNodeElement[]
+  public abstract get links_dict(): { [_: string]: Type_AbstractLinkElement }
+  public abstract get links_list(): Type_AbstractLinkElement[]
+  public abstract get links_list_sorted(): Type_AbstractLinkElement[]
+  public abstract get visible_links_list(): Type_AbstractLinkElement[]
+  public abstract get visible_links_list_sorted(): Type_AbstractLinkElement[]
+  public abstract get node_styles_dict(): { [id: string]: Class_AbstractNodeStyle }
+  public abstract get default_node_style(): Class_AbstractNodeStyle
+  public abstract get node_styles_list(): Class_AbstractNodeStyle[]
+  public abstract get node_styles_list_sorted(): Class_AbstractNodeStyle[]
+  public abstract get link_styles_dict(): { [id: string]: Class_AbstractLinkStyle }
+  public abstract get default_link_style(): Class_AbstractLinkStyle
+  public abstract get link_styles_list(): Class_AbstractLinkStyle[]
+  public abstract get link_styles_list_sorted(): Class_AbstractLinkStyle[]
+  public abstract get node_taggs_dict(): { [id: string]: Class_AbstractTagGroup }
+  public abstract get node_taggs_list(): Class_AbstractTagGroup[]
+  public abstract get flux_taggs_dict(): { [id: string]: Class_AbstractTagGroup }
+  public abstract get flux_taggs_list(): Class_AbstractTagGroup[]
+  public abstract get data_taggs_dict(): { [id: string]: Class_AbstractTagGroup }
+  public abstract get data_taggs_list(): Class_AbstractTagGroup[]
+  public abstract get data_taggs_entries(): [string, Class_AbstractTagGroup][]
+  public abstract get selected_data_tags_list(): Class_AbstractTag[]
+  public abstract get selected_data_tags_entries(): { [id: string]: Class_AbstractTag }
+  public abstract get list_combinatorial_data_taggs_path(): string[][]
+  public abstract get level_taggs_dict(): { [id: string]: Class_AbstractLevelTagGroup }
+  public abstract get level_taggs_list(): Class_AbstractLevelTagGroup[]
+  // Mandatory methods
+  public abstract addNewDefaultNode(): Type_AbstractNodeElement
+}
+
+export abstract class Class_AbstractTagGroup {
+  public abstract get id(): string
+  public abstract get name(): string
+  public abstract get tags_dict(): { [id: string]: Class_AbstractTag }
+  public abstract get tags_list(): Class_AbstractTag[]
+  public abstract get selected_tags_list(): Class_AbstractTag[]
+  public abstract get show_legend(): boolean
+}
+
+export abstract class Class_AbstractLevelTagGroup {
+  public abstract get id(): string
+  public abstract get name(): string
+  public abstract get tags_dict(): { [id: string]: Class_AbstractLevelTag }
+  public abstract get tags_list(): Class_AbstractLevelTag[]
+  public abstract get selected_tags_list(): Class_AbstractLevelTag[]
+}
+
+export abstract class Class_AbstractTag {
+  public abstract get id(): string
+  public abstract get name(): string
+  public abstract get color(): string
+  public abstract get group(): Class_AbstractTagGroup
+}
+
+export abstract class Class_AbstractLevelTag {
+  public abstract get id(): string
+  public abstract get name(): string
+  public abstract get color(): string
+  public abstract get group(): Class_AbstractLevelTagGroup
+  public abstract get is_selected(): boolean
+  public abstract get has_upper_dimensions(): boolean
+  public abstract get dimensions_list_as_tag_for_children(): Class_AbstractNodeDimension[]
+  public abstract get dimensions_list_as_tag_for_parent(): Class_AbstractNodeDimension[]
+  public abstract addAsParentLevel(_: Class_AbstractNodeDimension): void
+  public abstract removeParentLevel(_: Class_AbstractNodeDimension): void
+  public abstract addAsChildrenLevel(_: Class_AbstractNodeDimension): void
+  public abstract removeChildrenLevel(_: Class_AbstractNodeDimension): void
+}
+
+

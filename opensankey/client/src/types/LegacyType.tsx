@@ -2,7 +2,7 @@ import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
 import { ClickSaveDiagramFuncType, RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
 import { initializeDiagrammSelectorFType, OpenSankeyDiagramSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { setDiagramFuncType } from '../configmenus/types/SankeyMenuBannerTypes'
-import { Class_ApplicationData } from './ApplicationData'
+import { Type_GenericApplicationDataOS } from './TypesOS'
 import { Type_JSON } from './Utils'
 import { TFunction } from 'i18next'
 import { Class_MenuConfig } from './MenuConfig'
@@ -319,46 +319,6 @@ export interface treeFolderType {
     checked?: 1 | 0.5 | 0
 }
 
-export type textForToastPromiseType = {
-    success?: string,
-    loading?: string
-}
-
-export interface dict_hook_ref_setter_show_dialog_componentsType {
-    // Config menu - Nodes
-    ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_menu_node_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_menu_node_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    // Config menu - Links
-    ref_setter_show_menu_link_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_menu_link_data: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_menu_link_appearence: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_menu_link_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    // Config menu - Layout
-    ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    // Modal - Welcome
-    ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    // Modal - Saving & Loading
-    ref_setter_show_modal_excel_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>,
-    ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>,
-    // Modal - Style & Layout
-    ref_setter_show_modal_styles_nodes: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_styles_links: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    // Other modals
-    ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    // Trigger Waiting spinner
-    ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: textForToastPromiseType) => void>,
-}
-
 export type initializeCloseAllMenuContextType = (
     tagContext: RefObject<[string | undefined, Dispatch<SetStateAction<string | undefined>>][]>,
     showContextZDDRef: MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>] | undefined>
@@ -424,7 +384,7 @@ export type applicationDataType = {
     // min_link_thickness: number,
     dataVarToUpdate: MutableRefObject<string[]>,
     setDiagram: setDiagramFuncType,
-    new_data: Class_ApplicationData
+    new_data: Type_GenericApplicationDataOS
 }
 
 export type initializeApplicationDataType = (
@@ -532,7 +492,6 @@ export type initializeMenuConfigurationFuncType = (
     config_link_attr: JSX.Element,
     menu_configuration_nodes_attributes: JSX.Element,
 ) => JSX.Element
-
 
 
 export type InitalizeSelectorDetailNodesType = (

@@ -8,9 +8,9 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import { Class_Tag } from '../types/Tag'
-import { Type_LinkElement } from '../types/Link'
-import {
+import type { Class_Tag } from '../types/Tag'
+import type { Type_GenericLinkElementOS } from '../types/TypesOS'
+import type {
   MenuConfigurationLinksTagsFType
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
@@ -39,7 +39,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<MenuConfigurationLink
 
   // Selected links ---------------------------------------------------------------------
 
-  let selected_links: Type_LinkElement[]
+  let selected_links: Type_GenericLinkElementOS[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

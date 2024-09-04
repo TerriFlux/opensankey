@@ -6,17 +6,20 @@ import {
   Select,
 } from '@chakra-ui/react'
 
-// Local types
-import {
+// Local types imports
+import type {
   MenuContextLinksDataType,
   MenuConfigurationLinksDataFType
 } from './types/SankeyMenuConfigurationLinksDataTypes'
+import type {
+  Type_GenericLinkElementOS
+} from '../types/TypesOS'
 
 // Local components or functions
 import {
   OSTooltip
 } from '../types/Utils'
-import { Type_LinkElement, default_value_label_unit } from '../types/Link'
+import { default_value_label_unit } from '../types/Link'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
@@ -34,7 +37,7 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
 
   // Selected links --------------------------------------------------------------------
 
-  let selected_links: Type_LinkElement[]
+  let selected_links: Type_GenericLinkElementOS[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted
@@ -56,8 +59,8 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
-    // so selected_links can have the list of previous selected links wich can lead to incorrect links value 
-    const updated_selected_links = !new_data.menu_configuration.is_selector_only_for_visible_links ? 
+    // so selected_links can have the list of previous selected links wich can lead to incorrect links value
+    const updated_selected_links = !new_data.menu_configuration.is_selector_only_for_visible_links ?
       new_data.drawing_area.selected_links_list_sorted : new_data.drawing_area.visible_and_selected_links_list_sorted
 
     const value_update = updated_selected_links[0]?.value
@@ -228,7 +231,7 @@ export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> =
 
   // Selected links --------------------------------------------------------------------
 
-  let selected_links: Type_LinkElement[]
+  let selected_links: Type_GenericLinkElementOS[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

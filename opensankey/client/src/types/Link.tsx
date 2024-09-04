@@ -8,35 +8,35 @@
 import * as d3 from 'd3'
 
 // Local types
-import {
-  Class_ProtoElement
-} from './Element'
-import {
+import type {
   Class_MenuConfig
 } from './MenuConfig'
-import {
-  Class_DrawingArea,
-  Type_AnyDrawingArea,
-  Type_DrawingArea
-} from './DrawingArea'
-import {
-  default_style_id
-} from './Sankey'
-import {
-  Class_NodeElement,
-  Type_NodeElement
-} from './Node'
-import {
+import type {
   Class_DataTag,
   Class_DataTagGroup,
   Class_Tag,
   Class_TagGroup,
 } from './Tag'
+
+// Local modules
+import {
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey,
+} from './Abstract'
+import {
+  Class_AbstractNodeElement
+} from "./AbstractNode"
+import {
+    Class_AbstractLinkStyle,
+    Class_AbstractLinkElement,
+    Class_AbstractLinkValue
+} from "./AbstractLink"
 import {
   Class_Handler
 } from './Handler'
 import {
   Type_ElementPosition,
+  default_style_id,
   Type_JSON,
   default_element_color,
   default_font,
@@ -54,12 +54,13 @@ import {
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type Type_LinkElement = Class_LinkElement<Type_DrawingArea>
-
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'start' | 'middle' | 'end'
 export type Type_PathLabelVPosition = 'dragged' | 'above' | 'middle' | 'below'
+
+type Type_AnyLinkElement = Class_LinkElement<any, any, any>
+type Type_AnyAbstractNodeElement = Class_AbstractNodeElement<any, any>
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -102,22 +103,23 @@ const side_order: { [_ in Type_Side]: number } = {
 // SPECIFIC FUNCTIONS ********************************************************************
 
 export function defaultLinkId(
-  source: Type_NodeElement,
-  target: Type_NodeElement
+  source: Type_AnyAbstractNodeElement,
+  target: Type_AnyAbstractNodeElement
 ) {
   // TODO ajouter makeID pour crer id unique
   return source.name + ' --> ' + target.name
 }
+
 /**
  * Allows to sort links alphabethically per id
  * @export
- * @param {(Class_LinkElement<any> | Class_LinkStyle)} a
- * @param {(Class_LinkElement<any> | Class_LinkStyle)} b
+ * @param {(Type_AnyLinkElement | Class_LinkStyle)} a
+ * @param {(Type_AnyLinkElement | Class_LinkStyle)} b
  * @return {*}
  */
 export function sortLinksElementsByIds(
-  a: Class_LinkElement<any> | Class_LinkStyle,
-  b: Class_LinkElement<any> | Class_LinkStyle
+  a: Type_AnyLinkElement | Class_LinkStyle,
+  b: Type_AnyLinkElement | Class_LinkStyle
 ) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
@@ -127,13 +129,13 @@ export function sortLinksElementsByIds(
 /**
  * Allow to sort links by their z-ordre on the drawing area
  * @export
- * @param {Class_LinkElement<any>} a
- * @param {Class_LinkElement<any>} b
+ * @param {Type_AnyLinkElement} a
+ * @param {Type_AnyLinkElement} b
  * @return {*}
  */
 export function sortLinksElementsByDisplayingOrders(
-  a: Class_LinkElement<any>,
-  b: Class_LinkElement<any>
+  a: Type_AnyLinkElement,
+  b: Type_AnyLinkElement
 ) {
   if (a.displaying_order > b.displaying_order) return 1
   else if (a.displaying_order < b.displaying_order) return -1
@@ -143,15 +145,15 @@ export function sortLinksElementsByDisplayingOrders(
 /**
  * Allows to sort links of a given node by comparing their source / target relatives positions
  * @export
- * @param {Class_LinkElement<any>} link_a
- * @param {Class_LinkElement<any>} link_b
- * @param {Type_NodeElement} node
+ * @param {Type_AnyLinkElement} link_a
+ * @param {Type_AnyLinkElement} link_b
+ * @param {Type_AnyAbstractNodeElement} node
  * @return {*}
  */
 export function sortLinksElementsByRelativeNodesPositions(
-  link_a: Class_LinkElement<any>,
-  link_b: Class_LinkElement<any>,
-  node: Type_NodeElement
+  link_a: Type_AnyLinkElement,
+  link_b: Type_AnyLinkElement,
+  node: Type_AnyAbstractNodeElement
 ) {
   // Check relation between reference node and the two links
   const is_node_source_for_link_a = (link_a.source === node)
@@ -165,8 +167,8 @@ export function sortLinksElementsByRelativeNodesPositions(
   )
     return 0 // Dont move - somethings is wrong
   // Get nodes that we need to compare
-  let node_a: Type_NodeElement
-  let node_b: Type_NodeElement
+  let node_a: Type_AnyAbstractNodeElement
+  let node_b: Type_AnyAbstractNodeElement
   let side_a: Type_Side
   let side_b: Type_Side
   if (is_node_source_for_link_a) {
@@ -218,12 +220,12 @@ export function sortLinksElementsByRelativeNodesPositions(
 /**
  * Check if given attribute is overloaded in at least one link
  * @export
- * @param {Class_LinkElement<any>[]} links
+ * @param {Type_AnyLinkElement[]} links
  * @param {keyof Class_LinkAttribute} attr
  * @return {*}
  */
 export function isAttributeOverloaded(
-  links: Class_LinkElement<any>[],
+  links: Type_AnyLinkElement[],
   attr: keyof Class_LinkAttribute
 ) {
   let overloaded = false
@@ -240,9 +242,16 @@ export function isAttributeOverloaded(
  */
 export class Class_LinkElement
 <
-  Type_GenericDrawingArea extends Class_DrawingArea<any, Class_LinkElement<Type_GenericDrawingArea>>
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey,
+  Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
 >
-extends Class_ProtoElement<Type_GenericDrawingArea> {
+extends Class_AbstractLinkElement
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey
+>
+{
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -274,18 +283,18 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
   /**
   * Node from which link starts
   * @private
-  * @type {Class_NodeElement<Type_GenericDrawingArea>}
+  * @type {Type_GenericNodeElement}
   * @memberof Class_LinkElement
   */
-  private _source: Class_NodeElement<Type_GenericDrawingArea>
+  private _source: Type_GenericNodeElement
 
   /**
    * Node to which link arrives
    * @private
-   * @type {Class_NodeElement<Type_GenericDrawingArea>}
+   * @type {Type_GenericNodeElement}
    * @memberof Class_LinkElement
    */
-  private _target: Class_NodeElement<Type_GenericDrawingArea>
+  private _target: Type_GenericNodeElement
 
   /**
    * Value of link
@@ -317,11 +326,11 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    * @memberof Class_LinkElement
    */
   private _control_points: {
-    starting_curve_point: Class_Handler<Type_GenericDrawingArea>,
-    ending_curve_point: Class_Handler<Type_GenericDrawingArea>,
-    starting_bezier_point: Class_Handler<Type_GenericDrawingArea>,
-    ending_bezier_point: Class_Handler<Type_GenericDrawingArea>,
-    middle_recycling_point: Class_Handler<Type_GenericDrawingArea>,
+    starting_curve_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    ending_curve_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    starting_bezier_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    ending_bezier_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    middle_recycling_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
     is_dragged: boolean
   }
 
@@ -338,8 +347,8 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    */
   constructor(
     id: string,
-    source: Class_NodeElement<Type_GenericDrawingArea>,
-    target: Class_NodeElement<Type_GenericDrawingArea>,
+    source: Type_GenericNodeElement,
+    target: Type_GenericNodeElement,
     drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
   ) {
@@ -363,14 +372,14 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
         u:0,
         v:0
       },
-      style: drawing_area.sankey.default_link_style,
+      style: drawing_area.sankey.default_link_style as Class_LinkStyle,
       attributes: new Class_LinkAttribute()
     }
     // Link with style
     this._display.style.addReference(this)
     // Add control points
     this._control_points = {
-      starting_curve_point: new Class_Handler<Type_GenericDrawingArea>(
+      starting_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'cp_start_' + id,
         drawing_area,
         menu_config,
@@ -379,7 +388,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
         this.startCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_start' }),
-      ending_curve_point: new Class_Handler<Type_GenericDrawingArea>(
+      ending_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'cp_end_' + id,
         drawing_area,
         menu_config,
@@ -388,7 +397,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
         this.endCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_end' }),
-      starting_bezier_point: new Class_Handler<Type_GenericDrawingArea>(
+      starting_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'bz_start_' + id,
         drawing_area,
         menu_config,
@@ -397,7 +406,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
         this.startTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_start' }),
-      ending_bezier_point: new Class_Handler<Type_GenericDrawingArea>(
+      ending_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'bz_end_' + id,
         drawing_area,
         menu_config,
@@ -406,7 +415,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
         this.endTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_end' }),
-      middle_recycling_point: new Class_Handler<Type_GenericDrawingArea>(
+      middle_recycling_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'recy_middle_' + id,
         drawing_area,
         menu_config,
@@ -421,7 +430,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
     this._values = new Class_LinkValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
-        this._values = this._values.expand(data_tagg)
+        this._values = this._values.expand(data_tagg as Class_DataTagGroup)
       })
     // Source
     this._source = source
@@ -605,7 +614,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
   }
 
   public useDefaultStyle() {
-    this.style = this.main_sankey.default_link_style
+    this.style = this.main_sankey.default_link_style as Class_LinkStyle
     this.drawElements()
   }
 
@@ -728,7 +737,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
     if (source_node_id) {
       source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
       if (this.main_sankey.nodes_dict[source_node_id]) {
-        this.source = this.main_sankey.nodes_dict[source_node_id] as Class_NodeElement<Type_GenericDrawingArea>
+        this.source = this.main_sankey.nodes_dict[source_node_id] as Type_GenericNodeElement
         this.shape_is_recycling = false
       }
     }
@@ -736,13 +745,13 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
     if (target_node_id) {
       target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
       if (this.main_sankey.nodes_dict[target_node_id]) {
-        this.target = this.main_sankey.nodes_dict[target_node_id] as Class_NodeElement<Type_GenericDrawingArea>
+        this.target = this.main_sankey.nodes_dict[target_node_id] as Type_GenericNodeElement
         this.shape_is_recycling = false
       }
     }
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-    this._display.style = this.main_sankey.link_styles_dict[style_id]
+    this._display.style = this.main_sankey.link_styles_dict[style_id] as Class_LinkStyle
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -788,7 +797,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    * @param {Class_LinkElement} element
    * @memberof Class_LinkElement
    */
-  public copyFrom(element: Class_LinkElement<Type_GenericDrawingArea>) {
+  public copyFrom(element: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
 
     // this._display.position = structuredClone(element._display.position)
     this._display.position_x_label = element._display.position_x_label
@@ -809,7 +818,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
       const new_style_id = this.drawing_area.sankey.link_styles_list
         .map(ls => ls.id)
         .filter(ls => ls.includes(element._display.style.id))[0]
-      this._display.style = this.drawing_area.sankey.link_styles_dict[new_style_id]
+      this._display.style = this.drawing_area.sankey.link_styles_dict[new_style_id] as Class_LinkStyle
       this._display.style.addReference(this)
     }
 
@@ -2001,7 +2010,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    * Get source node
    * @memberof Class_LinkElement
    */
-  public get source(): Class_NodeElement<Type_GenericDrawingArea> {
+  public get source(): Type_GenericNodeElement {
     return this._source
   }
 
@@ -2009,7 +2018,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    * set source node
    * @memberof Class_LinkElement
    */
-  public set source(_: Class_NodeElement<Type_GenericDrawingArea>) {
+  public set source(_: Type_GenericNodeElement) {
     if (this.source !== _) {
       const old_source = this._source
       this._source = _
@@ -2070,7 +2079,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    * get destination node
    * @memberof Class_LinkElement
    */
-  public get target(): Class_NodeElement<Type_GenericDrawingArea> {
+  public get target(): Type_GenericNodeElement {
     return this._target
   }
 
@@ -2078,7 +2087,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
    * Set destination node
    * @memberof Class_LinkElement
    */
-  public set target(_: Class_NodeElement<Type_GenericDrawingArea>) {
+  public set target(_: Type_GenericNodeElement) {
     if (this.target !== _) {
       const old_target = this._target
       this._target = _
@@ -2145,7 +2154,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(this.main_sankey.selected_data_tags_list)
+      return this._values.getValueForDataTags(this.main_sankey.selected_data_tags_list as Class_DataTag[])
   }
 
   /**
@@ -3073,7 +3082,7 @@ extends Class_ProtoElement<Type_GenericDrawingArea> {
  * @export
  * @class Class_LinkAttribute
  */
-export class Class_LinkAttribute {
+export class Class_LinkAttribute extends Class_AbstractLinkStyle {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -3119,7 +3128,7 @@ export class Class_LinkAttribute {
 
   // CONSTRUCTOR ========================================================================
 
-  constructor() { }
+  constructor() { super() }
 
   // PUBLIC METHODES ====================================================================
 
@@ -3245,6 +3254,13 @@ export class Class_LinkAttribute {
   protected update() { }
 
   // GETTERS ============================================================================
+
+  /**
+   * Reserved
+   * @readonly
+   * @memberof Class_LinkAttributes
+   */
+  public get id() { return 'undefined' }
 
   // Shape type
   public get shape_is_curved() { return this._shape_is_curved }
@@ -3400,7 +3416,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private _is_deletable: boolean
 
-  private _references: { [_: string]: Class_LinkElement<any> } = {}
+  private _references: { [_: string]: Type_AnyLinkElement } = {}
 
   // CONSTRUCTOR ========================================================================
   constructor(
@@ -3464,13 +3480,13 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   // PUBLIC METHODS =====================================================================
 
-  public addReference(_: Class_LinkElement<any>) {
+  public addReference(_: Type_AnyLinkElement) {
     if (!this._references[_.id]) {
       this._references[_.id] = _
     }
   }
 
-  public removeReference(_: Class_LinkElement<any>) {
+  public removeReference(_: Type_AnyLinkElement) {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
     }
@@ -3526,7 +3542,7 @@ export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | Class_LinkElement<any>
+  public parent: Class_LinkValueTree | Type_AnyLinkElement
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
   public data_tag_group: Class_DataTagGroup
@@ -3544,7 +3560,7 @@ export class Class_LinkValueTree {
    * @memberof Class_LinkValueTree
    */
   constructor(
-    parent: Class_LinkValueTree | Class_LinkElement<any>,
+    parent: Class_LinkValueTree | Type_AnyLinkElement,
     data_tag_group: Class_DataTagGroup
   ) {
     // Instanciate parent
@@ -3946,7 +3962,7 @@ export class Class_LinkValueTree {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get link(): Class_LinkElement<any> | null {
+  public get link(): Type_AnyLinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
@@ -3966,11 +3982,11 @@ export class Class_LinkValueTree {
  * @export
  * @class Class_LinkValue
  */
-export class Class_LinkValue {
+export class Class_LinkValue extends Class_AbstractLinkValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | Class_LinkElement<any>
+  public parent: Class_LinkValueTree | Type_AnyLinkElement
   public data_value: number | null = null
   public text_value: string | null = null
 
@@ -3993,7 +4009,8 @@ export class Class_LinkValue {
 
   // CONSTRUCTOR ========================================================================
 
-  constructor(parent: Class_LinkValueTree | Class_LinkElement<any>) {
+  constructor(parent: Class_LinkValueTree | Type_AnyLinkElement) {
+    super()
     // Parents / Children relations
     this.parent = parent
     // Id
@@ -4157,7 +4174,7 @@ export class Class_LinkValue {
     // where 'key_grp_tag' represent the id of a flux tag group
     // &  '[key_tag, ...]' represent the array of id of tag selected
     // for that flux tag group
-    const flux_taggs_dict = ((this.link?.drawing_area as Type_AnyDrawingArea).sankey.flux_taggs_dict ?? {})
+    const flux_taggs_dict = ((this.link?.drawing_area as Class_AbstractDrawingArea).sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([id, list]) => {
         const tagg_id = matching_taggs_id[id] ?? id
@@ -4168,7 +4185,7 @@ export class Class_LinkValue {
       })
       .forEach(([id, list]) => {
         const tagg_id = matching_taggs_id[id] ?? id
-        const tagg = flux_taggs_dict[tagg_id]
+        const tagg = flux_taggs_dict[tagg_id] as Class_TagGroup
         const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
         tagg.tags_list
           .filter(tag => tag_ids.includes(tag.id))
@@ -4193,7 +4210,7 @@ export class Class_LinkValue {
    * @type {(Class_LinkElement | null)}
    * @memberof Class_LinkValue
    */
-  public get link(): Class_LinkElement<any> | null {
+  public get link(): Type_AnyLinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
     else return this.parent
   }
@@ -4266,11 +4283,15 @@ export class Class_LinkValue {
 
 export class Class_GhostLinkElement
 <
-  Type_GenericDrawingArea extends Type_AnyDrawingArea,
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey,
+  Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
 >
 extends Class_LinkElement
 <
-  Type_GenericDrawingArea
+  Type_GenericDrawingArea,
+  Type_GenericSankey,
+  Type_GenericNodeElement
 >
 {
 

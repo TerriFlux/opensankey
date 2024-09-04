@@ -26,8 +26,16 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
-import { Class_ProtoTag, Class_ProtoTagGroup, tag_banner_type } from '../types/Tag'
+import type { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
+import type {
+  Class_Tag,
+  Class_TagGroup,
+  tag_banner_type,
+  Class_LevelTag,
+  Class_DataTag,
+  Class_LevelTagGroup,
+  Class_DataTagGroup
+} from '../types/Tag'
 
 // Local functions / components
 
@@ -65,7 +73,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 }) => {
   const { new_data } = applicationData
   const { t } = new_data
-  
+
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
@@ -180,9 +188,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   /**
    * Button handler for tag deletion
-   * @param {Class_ProtoTag} tag
+   * @param {Class_Tag | Class_LevelTag | Class_DataTag} tag
    */
-  const handleDelTag = (tag: Class_ProtoTag) => {
+  const handleDelTag = (tag: Class_Tag | Class_LevelTag | Class_DataTag) => {
     // Delete given tag
     tag.delete()
     // Update menus
@@ -192,9 +200,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   /**
    * Button handler for tag group deletion
    *
-   * @param {Class_TagGroup} tagg
+   * @param {Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
    */
-  const handleDelGroupTag = (tagg: Class_ProtoTagGroup) => {
+  const handleDelGroupTag = (tagg: Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup) => {
     // Delete given tag group
     new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tagg)
     // Update menus
@@ -203,11 +211,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   /**
    * Button handler for tag group banner modification
-   * @param {Class_ProtoTagGroup} tag_group
+   * @param {Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup} tag_group
    * @param {tag_banner_type} new_banner_type
    */
   const handleBanner = (
-    tag_group: Class_ProtoTagGroup,
+    tag_group: Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup,
     new_banner_type: tag_banner_type
   ) => {
     // UPdate banner for given tag group

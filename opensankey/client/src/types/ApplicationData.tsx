@@ -4,22 +4,27 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-// Import
+// External imports
 import LZString from 'lz-string'
-
-// Local types
-import { Class_DrawingArea, Type_DrawingArea } from './DrawingArea'
-import { Type_JSON } from './Utils'
-import { Class_MenuConfig } from './MenuConfig'
-import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
-import { Type_NodeElement } from './Node'
-import { Type_LinkElement } from './Link'
 
+// Local imports
+import { Class_MenuConfig } from './MenuConfig'
+import { Class_AbstractApplicationData } from './Abstract'
+import { Class_DrawingArea } from './DrawingArea'
+import { Type_JSON } from './Utils'
+import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
+import { Class_NodeElement } from './Node'
+import { Class_LinkElement } from './Link'
+import { Class_Sankey } from './Sankey'
+
+// SPECIFIC CONSTANTS ******************************************************************/
 
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
+
+// SPECIFIC FUNCTIONS ******************************************************************/
 
 function isDrawingAreaActive() {
   const inputs = ['input', 'textarea']
@@ -32,12 +37,21 @@ function isDrawingAreaActive() {
   return true
 }
 
+// CLASS APPLICATION DATA **************************************************************/
+
 /**
  * Class that contains all elements to make the application work
  *
  * @class Class_ApplicationData
  */
-export class Class_ApplicationData {
+export abstract class Class_ApplicationData
+<
+  Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericSankey extends Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+>
+extends Class_AbstractApplicationData {
 
   // PUBLIC ATTRIBUTES =================================================================
 
@@ -52,7 +66,7 @@ export class Class_ApplicationData {
    * @type {Class_DrawingArea}
    * @memberof Class_ApplicationData
    */
-  protected _drawing_area: Type_DrawingArea
+  protected _drawing_area: Type_GenericDrawingArea
 
   /**
    *Configuration Menu
@@ -90,10 +104,11 @@ export class Class_ApplicationData {
     * @memberof Class_ApplicationData
     */
   constructor(published_mode: boolean) {
+    super()
     // Deals with UI menu updates / each modifications
     this._menu_configuration = new Class_MenuConfig
     // Contains all drawn objects
-    this._drawing_area = this.new_drawing_area()
+    this._drawing_area = this.createNewDrawingArea()
     // Link keyboard listener with app key down detection
     document.onkeydown = this.keyboardEventListener(this)
     // For published mode only
@@ -134,21 +149,17 @@ export class Class_ApplicationData {
     this._logo_terriflux = logo_terriflux
   }
 
-  // PUBLIC METHODS =====================================================================
+  // ABSTRACT METHODS ===================================================================
 
-  protected new_drawing_area() {
-    return new Class_DrawingArea<Type_NodeElement, Type_LinkElement>(
-      initial_window_height,
-      initial_window_width,
-      this
-    )
-  }
+  protected abstract createNewDrawingArea(): Type_GenericDrawingArea
+
+  // PUBLIC METHODS =====================================================================
 
   public reset() {
     // Reset values of attributes
     // Recreate drawing area
     this.drawing_area.delete()
-    this.drawing_area = this.new_drawing_area()
+    this.drawing_area = this.createNewDrawingArea()
     this.drawing_area.reset()
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
@@ -194,7 +205,7 @@ export class Class_ApplicationData {
    * @return {*}
    * @memberof Class_ApplicationData
    */
-  private keyboardEventListener(app_ref: Class_ApplicationData) {
+  private keyboardEventListener(app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     return (evt: KeyboardEvent) => {
       // Event to move all selected nodes with keyboard arrows --------------------------
       if (
@@ -327,8 +338,8 @@ export class Class_ApplicationData {
 
   public get is_static(): boolean { return this._drawing_area.static }
 
-  public get drawing_area(): Type_DrawingArea { return this._drawing_area }
-  protected set drawing_area(value: Type_DrawingArea) { this._drawing_area = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
+  public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
+  protected set drawing_area(value: Type_GenericDrawingArea) { this._drawing_area = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get menu_configuration(): Class_MenuConfig { return this._menu_configuration }
   protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
@@ -356,3 +367,4 @@ export class Class_ApplicationData {
   public get app_name(): string { return this._app_name }
   public set app_name(value: string) { this._app_name = value }
 }
+

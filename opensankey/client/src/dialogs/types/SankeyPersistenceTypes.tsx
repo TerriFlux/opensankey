@@ -1,6 +1,6 @@
 
 import { SankeyData, applicationDataType } from '../../types/LegacyType'
-import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 import { Type_JSON } from '../../types/Utils'
 
 
@@ -19,7 +19,7 @@ export type CounterType = {
 }
 
 export type ProcessExampleFuncType = (
-  applicationData: Class_ApplicationData,
+  applicationData: Type_GenericApplicationDataOS,
   postProcessLoadExcel: (server_data: SankeyData) => void,
 ) => void
 
@@ -34,7 +34,7 @@ export type SaveDiagramOptionsType = {
 }
 
 export type ClickSaveDiagramFuncType = (
-  ApplicationClass: Class_ApplicationData,
+  ApplicationClass: Type_GenericApplicationDataOS,
   options: SaveDiagramOptionsType
 ) => void
 
@@ -44,7 +44,7 @@ export type UploadExcelImplFuncType = (set_show_excel_dialog: (b: boolean) => vo
 
 export type UploadExempleFuncType = (
   file_name: string,
-  applicationData: Class_ApplicationData
+  applicationData: Type_GenericApplicationDataOS
 ) => void
 
 export type ClickSaveExcelFuncType = (

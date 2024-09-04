@@ -8,35 +8,24 @@
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
 
-// Local imports
-import {
+// Local types imports
+import type {
   Class_MenuConfig
 } from './MenuConfig'
-import {
-  Class_DrawingArea
-} from './DrawingArea'
-import {
-  Class_Sankey,
-  default_main_sankey_id
-} from './Sankey'
+import type {
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey
+} from './Abstract'
+
+// LOcal constants
 import {
   getBooleanFromJSON,
-  Type_ElementPosition,
-  Type_JSON
+  Type_JSON,
+  default_main_sankey_id,
+  const_default_position_x,
+  const_default_position_y,
+  Type_ElementPosition
 } from './Utils'
-
-// SPECIFIC TYPES ***********************************************************************
-
-// Nothing
-
-// CONSTANT *****************************************************************************
-
-const const_default_position_x = 50
-const const_default_position_y = 50
-
-// SPECIFIC FUNCTIONS *******************************************************************
-
-// Nothing ...
 
 // CLASS PROTO ELEMENT ******************************************************************
 
@@ -45,7 +34,11 @@ const const_default_position_y = 50
  *
  * @class Class_ProtoElement
  */
-export abstract class Class_ProtoElement <Type_DrawingArea extends Class_DrawingArea<any, any>>
+export abstract class Class_ProtoElement
+<
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey
+>
 {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -64,12 +57,12 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
    * @protected
    * @abstract
    * @type {{
-   *     drawing_area: Type_DrawingArea,
+   *     drawing_area: Type_GenericDrawingArea,
    *   }}
    * @memberof Class_ProtoElement
    */
   protected abstract _display: {
-    drawing_area: Type_DrawingArea,
+    drawing_area: Type_GenericDrawingArea,
   }
 
   /**
@@ -84,10 +77,10 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
    * List of Sankey in which element appear
    *
    * @private
-   * @type {Class_Sankey[]}
+   * @type {Type_GenericSankey[]}
    * @memberof Class_ProtoElement
    */
-  protected _sankeys: {[_: string]: Class_Sankey<any, any, any>}
+  protected _sankeys: {[_: string]: Type_GenericSankey}
 
   /**
    * Config menu ref to html element & function to update it
@@ -152,7 +145,7 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
   /**
    * Creates an instance of Class_Element.
    * @param {string} id
-   * @param {Type_DrawingArea} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @param {string} svg_group
    * @memberof Class_Element
    */
@@ -489,7 +482,7 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
   // Sankey
   public get main_sankey() {
     if (!this._sankeys[default_main_sankey_id]) {
-      this._sankeys[default_main_sankey_id] = this.drawing_area.sankey
+      this._sankeys[default_main_sankey_id] = this.drawing_area.sankey as Type_GenericSankey
     }
     return this._sankeys[default_main_sankey_id]
   }
@@ -508,9 +501,10 @@ export abstract class Class_ProtoElement <Type_DrawingArea extends Class_Drawing
  */
 export abstract class Class_Element
   <
-    Type_DrawingArea extends Class_DrawingArea<any, any>
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey
   >
-extends Class_ProtoElement<Type_DrawingArea> {
+extends Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -518,13 +512,13 @@ extends Class_ProtoElement<Type_DrawingArea> {
    * Display attributes for element
    * @protected
    * @type {{
-   *     drawing_area: Type_DrawingArea,
+   *     drawing_area: Type_GenericDrawingArea,
    *     position: Type_ElementPosition,
    *   }}
    * @memberof Class_Element
    */
   protected abstract _display: {
-    drawing_area: Type_DrawingArea,
+    drawing_area: Type_GenericDrawingArea,
     position: Type_ElementPosition,
   }
 
@@ -533,7 +527,7 @@ extends Class_ProtoElement<Type_DrawingArea> {
   /**
    * Creates an instance of Class_Element.
    * @param {string} id
-   * @param {Type_DrawingArea} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @param {string} svg_group
    * @memberof Class_Element
    */
@@ -615,5 +609,3 @@ extends Class_ProtoElement<Type_DrawingArea> {
   public set position_relative_dy(_) { this._display.position.relative_dy = _; this.applyPosition() }
   public get display() { return this._display}
 }
-
-

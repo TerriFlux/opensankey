@@ -32,7 +32,7 @@ import {
   module_dialogsType,
   processFunctionsType,
 } from './types/LegacyType'
-import { Class_ApplicationData } from './types/ApplicationData'
+import { Class_ApplicationDataOS } from './types/TypesOS'
 import { RetrieveExcelResults } from './dialogs/SankeyPersistence'
 import { MenuDraggable, OpenSankeySaveButton } from './topmenus/SankeyMenuTop'
 import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
@@ -62,7 +62,7 @@ export const initializeReinitialization: initializeReinitializationType = (
     localStorage.removeItem('initial_data')
     localStorage.removeItem('icon_imported')
 
-    // Reset Class_ApplicationData instance
+    // Reset Class_ApplicationDataOS instance
     applicationData.new_data.reset()
 
     sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
@@ -78,7 +78,7 @@ export const initializeApplicationData: initializeApplicationDataType = (
   initial_data
 ) => {
 
-  const application_data = new Class_ApplicationData(false)
+  const application_data = new Class_ApplicationDataOS(false)
   if (initial_data !== undefined) {
     application_data.fromJSON(initial_data)
   }

@@ -8,9 +8,9 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import { Class_Tag } from '../types/Tag'
-import { Type_NodeElement } from '../types/Node'
-import {
+import type { Class_Tag } from '../types/Tag'
+import type { Type_GenericNodeElementOS } from '../types/TypesOS'
+import type {
   SankeyMenuConfigurationNodesTagsFType
 } from './types/SankeyMenuConfigurationNodesTagsTypes'
 
@@ -42,7 +42,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<SankeyMenuConfi
 
   // Selected nodes ---------------------------------------------------------------------
 
-  let selected_nodes: Type_NodeElement[]
+  let selected_nodes: Type_GenericNodeElementOS[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted

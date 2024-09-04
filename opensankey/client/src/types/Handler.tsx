@@ -7,21 +7,22 @@
 // External imports
 import * as d3 from 'd3'
 
-// Local imports
-import {
+// Local types imports
+import type {
   Class_MenuConfig
 } from './MenuConfig'
-import {
-  Type_AnyDrawingArea
-} from './DrawingArea'
+import type {
+  Class_AbstractDrawingArea,
+  Class_AbstractSankey
+} from './Abstract'
+
+// Local modules imports
 import {
   Class_Element,
   Class_ProtoElement
 } from './Element'
-import {
-  default_element_position,
-  Type_ElementPosition,
-} from './Utils'
+import { Type_ElementPosition } from './Utils'
+import { default_element_position } from './Utils'
 
 // CLASS HANDLER ************************************************************************
 
@@ -33,9 +34,15 @@ import {
  */
 export class Class_Handler
 <
-  Type_GenericDrawingArea extends Type_AnyDrawingArea
+  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+  Type_GenericSankey extends Class_AbstractSankey
 >
-extends Class_Element<Type_GenericDrawingArea> {
+extends Class_Element
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey
+>
+{
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -49,8 +56,8 @@ extends Class_Element<Type_GenericDrawingArea> {
   private _color: string = 'black'
   private _filled: boolean = true
   private _custom_class: string|undefined
-  private _ref_element: Class_ProtoElement<Type_GenericDrawingArea>
-  private _ref_element_optional?: Class_ProtoElement<Type_GenericDrawingArea> | undefined
+  private _ref_element: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>
+  private _ref_element_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined
 
   // CONSTRUCTOR ========================================================================
 
@@ -71,13 +78,12 @@ extends Class_Element<Type_GenericDrawingArea> {
     id: string,
     drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
-    ref: Class_ProtoElement<Type_GenericDrawingArea>,
+    ref: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     options?: {class?:string, size?: number, color?: string, filled?: boolean },
-    ref_optional?: Class_ProtoElement<Type_GenericDrawingArea>,
-
+    ref_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_handlers')
@@ -148,7 +154,7 @@ extends Class_Element<Type_GenericDrawingArea> {
      * @readonly
      * @memberof Class_Handler
      */
-  public get is_visible() {
+  public get is_visible(): boolean {
     return (
       this._ref_element.is_visible  &&
       this._ref_element.is_selected &&
@@ -156,11 +162,11 @@ extends Class_Element<Type_GenericDrawingArea> {
       (this._ref_element_optional?.is_visible ?? true) )
   }
 
-  public get ref_element(): Class_ProtoElement<Type_GenericDrawingArea> {
+  public get ref_element(): Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
     return this._ref_element
   }
 
-  public get ref_element_optional(): Class_ProtoElement<Type_GenericDrawingArea> | undefined {
+  public get ref_element_optional(): Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined {
     return this._ref_element_optional
   }
 }

@@ -15,10 +15,10 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 // COMPONENTS ===========================================================================
 
-export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
+export const OpenSankeyDefaultModalePreferenceContent: OpenSankeyDefaultModalePreferenceContentFType = (
   applicationData,
   trad,
-)=>{
+) => {
   // Data -------------------------------------------------------------------------------
   const { t } = applicationData.new_data
   const { new_data, data } = applicationData
@@ -26,7 +26,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
   // Component updater ------------------------------------------------------------------
 
   const menus = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-  const checkbox_refs: {[_: string]: RefObject<HTMLInputElement>} = {}
+  const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
   menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
 
   const update_checkboxes = (menu_to_show: string[]) => {
@@ -44,14 +44,14 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
 
   // JSX Component ----------------------------------------------------------------------
 
-  const ui={
-    'lang':  <Box layerStyle='menuconfigpanel_row_2cols' >
+  const ui = {
+    'lang': <Box layerStyle='menuconfigpanel_row_2cols' >
 
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.lang')}</Box>
       <Select
         variant='menuconfigpanel_option_select'
         value={trad.language}
-        onChange={evt=>{
+        onChange={evt => {
           trad.changeLanguage((evt.target.value))
         }}
       >
@@ -60,9 +60,10 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Select>
     </Box>,
 
-    'form':[
-      <h4>{t('Menu.pref_title_sub_menu')}</h4>,
+    'form': [
+      <Box key={1}>{t('Menu.pref_title_sub_menu')}</Box>,
       <Box
+        key={2}
         layerStyle='menuconfigpanel_grid'
       >
         <Box layerStyle='options_2cols' >
@@ -77,7 +78,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           </Button>
           <Button variant='menuconfigpanel_option_button_right'
             onClick={() => {
-              sessionStorage.setItem('modepref','expert')
+              sessionStorage.setItem('modepref', 'expert')
               update_checkboxes(['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis'])
             }}
           >
@@ -87,6 +88,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Box>,
 
       <Checkbox
+        key={3}
         ref={checkbox_refs['MEP']}
         variant='menuconfigpanel_option_checkbox'
         defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('MEP')}
@@ -98,6 +100,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Checkbox>,
 
       <Checkbox
+        key={4}
         variant='menuconfigpanel_option_checkbox'
         isChecked
         disabled
@@ -106,6 +109,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Checkbox>,
 
       <Checkbox
+        key={5}
         ref={checkbox_refs['EN']}
         variant='menuconfigpanel_option_checkbox'
         defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EN')}
@@ -116,6 +120,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Checkbox>,
 
       <Checkbox
+        key={6}
         variant='menuconfigpanel_option_checkbox'
         isChecked
         disabled
@@ -124,6 +129,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Checkbox>,
 
       <Checkbox
+        key={7}
         ref={checkbox_refs['EF']}
         variant='menuconfigpanel_option_checkbox'
         defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EF')}
@@ -134,6 +140,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Checkbox>,
 
       <Checkbox
+        key={8}
         ref={checkbox_refs['ED']}
         variant='menuconfigpanel_option_checkbox'
         defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('ED')}
@@ -143,17 +150,18 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         {t('Menu.ED')}
       </Checkbox>,
     ],
-    'node_label_sep':<OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+    'node_label_sep': <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
       <Box layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
         <Input
           variant='menuconfigpanel_option_input' value={data.node_label_separator}
-          onChange={evt=>{
+          onChange={evt => {
             data.node_label_separator = evt.target.value  // TODO passer dans new_data
           }}
-          onBlur={()=>new_data.drawing_area.sankey.visible_nodes_list.forEach(node=>node.draw())}
+          onBlur={() => new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())}
         />
-      </Box></OSTooltip>,
+      </Box>
+    </OSTooltip>,
   }
   return ui
 }
@@ -165,9 +173,9 @@ export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
     ui,
     t
   }
-)=>{
+) => {
   const content = <>
-    {Object.values(ui).map((d,i)=>{
+    {Object.values(ui).map((d, i) => {
       return <React.Fragment key={i}>{d}</React.Fragment>
     })}
   </>

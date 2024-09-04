@@ -104,8 +104,8 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
         {
           new_data.drawing_area.sankey.flux_taggs_list
             .filter(tagg => tagg.has_tags)
-            .map(tagg => {
-              return <Menu placement='end'>
+            .map((tagg, i) => {
+              return <Menu key={i} placement='end'>
                 <MenuButton
                   variant='contextmenu_button'
                   as={Button}

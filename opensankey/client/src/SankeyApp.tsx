@@ -54,7 +54,8 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
   ClickSaveDiagram,
 }) => {
 
-  const [data, set_data] = useState<SankeyData>(initial_sankey_data)
+  // const [data, set_data] = useState<SankeyData>(initial_sankey_data)
+  const data = initial_sankey_data
   const toast = useToast()
 
   // Search if a data is stored in localStorage of the navigator
@@ -71,7 +72,8 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
   // Data, displayed data, default data
   const applicationData = initializeApplicationData(
     data,
-    set_data,
+    (_: SankeyData) => {},
+    // set_data,
     get_default_data,
     inital_data
   )
@@ -319,7 +321,6 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
                     </>
                   })}
                   t={new_data.t}
-
                 />
               </React.Fragment>,
               <></>
