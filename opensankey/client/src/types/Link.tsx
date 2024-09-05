@@ -413,11 +413,11 @@ export abstract class  Class_LinkElement
     // Source
     this._source = source
     this._target = target// Target
-    this._source.addOutputLink(this)
-    this._target.addInputLink(this)// Target
-    // Instanciate display on svg
-    this.computeControlPoints()
-    this.draw()
+    // this._source.addOutputLink(this)
+    // this._target.addInputLink(this)// Target
+    // // Instanciate display on svg
+    // this.computeControlPoints()
+    // this.draw()
   }
 
   // CLEANING ===========================================================================
@@ -1750,7 +1750,7 @@ export abstract class  Class_LinkElement
     this._control_points.middle_recycling_point.setPosXY(x_mid, y_mid)
   }
 
-  private computeControlPoints() {
+  public computeControlPoints() {
     this.computeStartingCurvePoint()
     this.computeEndingCurvePoint()
     this.computeStartingBezierPoint()
@@ -4278,6 +4278,7 @@ export class Class_GhostLinkElement
 {
 
   
+  
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
     displaying_order: number,
@@ -4297,26 +4298,26 @@ export class Class_GhostLinkElement
     menu_config: Class_MenuConfig,){
     super(id,source,target,drawing_area,menu_config)
     // Display
-  this._display = {
-    drawing_area: drawing_area,
-    displaying_order: drawing_area.addElement(),
-    position_starting: {
-      type: 'absolute',
-      x: 0,
-      y: 0,
-      u:0,
-      v:0
-    },
-    position_ending: {
-      type: 'absolute',
-      x: 0,
-      y: 0,
-      u:0,
-      v:0
-    },
-    style: drawing_area.sankey.default_link_style as Class_LinkStyle,
-    attributes: new Class_LinkAttribute()
-  }
+    this._display = {
+      drawing_area: drawing_area,
+      displaying_order: drawing_area.addElement(),
+      position_starting: {
+        type: 'absolute',
+        x: 0,
+        y: 0,
+        u:0,
+        v:0
+      },
+      position_ending: {
+        type: 'absolute',
+        x: 0,
+        y: 0,
+        u:0,
+        v:0
+      },
+      style: drawing_area.sankey.default_link_style as Class_LinkStyle,
+      attributes: new Class_LinkAttribute()
+    }
   // Link with style
   this._display.style.addReference(this)
   }
