@@ -8,7 +8,7 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { default_main_sankey_id, default_style_id } from '../deps/OpenSankey/types/Utils'
+import { Type_JSON, default_main_sankey_id, default_style_id, getJSONFromJSON } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
 import type { ViewType } from '../../types/Types'
@@ -142,7 +142,7 @@ extends Class_AbstractSankeyPlus
     return json_entry
   }
 
-  public updateLayoutFromJSON(new_layout: Class_DrawingAreaPlus, mode: string[]): void {
+  public updateLayoutFromJSON(new_layout: Type_GenericDrawingArea, mode: string[]): void {
     super.updateLayoutFromJSON(new_layout, mode)
 
     // Update Containers
