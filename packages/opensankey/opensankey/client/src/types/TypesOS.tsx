@@ -15,12 +15,11 @@ import { Class_ZoneSelection } from './Selection_Zone'
 
 // STANDARD TYPES FOR OPENSANKEY AND MORE *********************************************************
 
-export type Type_GenericApplicationDataOS = Class_ApplicationData<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS,Type_GenericSelectionZone>
-export type Type_GenericDrawingAreaOS = Class_DrawingArea<Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS,Type_GenericSelectionZone>
+export type Type_GenericApplicationDataOS = Class_ApplicationData<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
+export type Type_GenericDrawingAreaOS = Class_DrawingArea<Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
 export type Type_GenericSankeyOS = Class_Sankey<Type_GenericDrawingAreaOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
 export type Type_GenericNodeElementOS = Class_NodeElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericLinkElementOS>
 export type Type_GenericLinkElementOS = Class_LinkElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS>
-export type Type_GenericSelectionZone = Class_ZoneSelection<Type_GenericDrawingAreaOS, Type_GenericSankeyOS>
 
 
 // STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
@@ -29,7 +28,7 @@ export type Type_GenericSelectionZone = Class_ZoneSelection<Type_GenericDrawingA
 
 export class Class_ApplicationDataOS
   extends Class_ApplicationData<
-    Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS,Class_ZoneSelectionOS
+    Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
   > {
   public createNewDrawingArea(): Class_DrawingAreaOS {
     const drawing_area = new Class_DrawingAreaOS(
@@ -44,7 +43,7 @@ export class Class_ApplicationDataOS
 // DRAWING AREA ===================================================================================
 export class Class_DrawingAreaOS
   extends Class_DrawingArea<
-    Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS,Class_ZoneSelectionOS
+    Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
   > {
 
   constructor(_height: number,
