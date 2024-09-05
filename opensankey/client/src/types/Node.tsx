@@ -2143,11 +2143,11 @@ export abstract class Class_NodeElement
 
   /**
    * Select the right color to use for this node (attribute / style / tags / ...)
-   * @protected
+   * @public
    * @return {*}
    * @memberof Class_NodeElement
    */
-  protected getShapeColorToUse() {
+  public getShapeColorToUse() {
     // Default color
     let shape_color = this.shape_color
     // Is the color defined by tags
