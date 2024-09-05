@@ -11,14 +11,16 @@ import { Class_LinkAttribute, Class_LinkElement, Class_LinkStyle } from './Link'
 import { Class_NodeElement } from './Node'
 import { Class_MenuConfig } from './MenuConfig'
 import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from './Utils'
+import { Class_ZoneSelection } from './Selection_Zone'
 
 // STANDARD TYPES FOR OPENSANKEY AND MORE *********************************************************
 
-export type Type_GenericApplicationDataOS = Class_ApplicationData<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
-export type Type_GenericDrawingAreaOS = Class_DrawingArea<Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
+export type Type_GenericApplicationDataOS = Class_ApplicationData<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS,Type_GenericSelectionZone>
+export type Type_GenericDrawingAreaOS = Class_DrawingArea<Type_GenericSankeyOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS,Type_GenericSelectionZone>
 export type Type_GenericSankeyOS = Class_Sankey<Type_GenericDrawingAreaOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
 export type Type_GenericNodeElementOS = Class_NodeElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericLinkElementOS>
 export type Type_GenericLinkElementOS = Class_LinkElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS>
+export type Type_GenericSelectionZone = Class_ZoneSelection<Type_GenericDrawingAreaOS, Type_GenericSankeyOS>
 
 
 // STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
@@ -27,9 +29,9 @@ export type Type_GenericLinkElementOS = Class_LinkElement<Type_GenericDrawingAre
 
 export class Class_ApplicationDataOS
   extends Class_ApplicationData<
-    Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
+    Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS,Class_ZoneSelectionOS
   > {
-  protected createNewDrawingArea(): Class_DrawingAreaOS {
+  public createNewDrawingArea(): Class_DrawingAreaOS {
     const drawing_area = new Class_DrawingAreaOS(
       initial_window_height,
       initial_window_width,
@@ -42,11 +44,29 @@ export class Class_ApplicationDataOS
 // DRAWING AREA ===================================================================================
 export class Class_DrawingAreaOS
   extends Class_DrawingArea<
-    Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
+    Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS,Class_ZoneSelectionOS
   > {
+
+  constructor(_height: number,
+    _width: number,
+    application_data: Class_ApplicationDataOS) {
+    super(_height, _width, application_data)
+  }
+
   protected createNewSankey() {
     const sankey = new Class_SankeyOS(this, this.application_data.menu_configuration)
     return sankey
+  }
+
+  protected createNewSelectionZone():Class_ZoneSelection<Type_GenericDrawingAreaOS,Class_SankeyOS>{
+    return new Class_ZoneSelectionOS(this, this.application_data.menu_configuration)
+  }
+
+}
+
+export class Class_ZoneSelectionOS extends Class_ZoneSelection<Class_DrawingAreaOS,Class_SankeyOS>{
+  constructor(drawing_area:Class_DrawingAreaOS,menu_config:Class_MenuConfig){
+    super(drawing_area,menu_config)
   }
 }
 
