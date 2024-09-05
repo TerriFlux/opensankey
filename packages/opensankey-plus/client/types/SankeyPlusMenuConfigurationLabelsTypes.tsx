@@ -3,7 +3,6 @@ import ReactQuill from 'react-quill'
 
 export type OSPMenuPreferenceLabelsFType={
   applicationData:OSPApplicationDataType,
-  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 
 export interface selected_type  {'label':string;'value':string}

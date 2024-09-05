@@ -17,7 +17,11 @@ import {
   Class_NodeStyle
 } from '../deps/OpenSankey/types/Node'
 import {
-  Type_ElementPosition
+  getBooleanFromJSON,
+  getStringFromJSON,
+  getStringOrUndefinedFromJSON,
+  Type_ElementPosition,
+  Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 
 
@@ -35,7 +39,7 @@ import { Class_LinkElementPlus } from './LinkPlus'
  * @class Class_NodeElementPlus
  * @extends {Class_NodeElement}
  */
-export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPlus,Class_SankeyPlus,Class_LinkElementPlus> {
+export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPlus, Class_SankeyPlus, Class_LinkElementPlus> {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -164,6 +168,52 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     return new_link
   }
 
+  /**
+   *Extract node attributes from json
+   *
+   * @param {Type_JSON} json_node_object
+   * @param {{ [_: string]: string }} [matching_taggs_id]
+   * @param {{ [_: string]: { [_: string]: string } }} [matching_tags_id]
+   * @memberof Class_NodeElementPlus
+   */
+  public override fromJSON(json_node_object: Type_JSON, matching_taggs_id?: { [_: string]: string }, matching_tags_id?: { [_: string]: { [_: string]: string } }): void {
+    super.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
+    this._iconName = getStringFromJSON(json_node_object, 'iconName', this._iconName)
+    this._iconColor = getStringFromJSON(json_node_object, 'iconColor', this._iconColor)
+    this._iconVisible = getBooleanFromJSON(json_node_object, 'iconVisible', this._iconVisible)
+    this._iconViewBox = getStringOrUndefinedFromJSON(json_node_object, 'iconViewBox')
+    this._iconColorSustainable = getBooleanFromJSON(json_node_object, 'iconColorSustainable', this._iconColorSustainable)
+    this._has_FO = getBooleanFromJSON(json_node_object, 'has_FO', this._has_FO)
+    this._is_FO_raw = getBooleanFromJSON(json_node_object, 'is_FO_raw', this._is_FO_raw)
+    this._FO_content = getStringFromJSON(json_node_object, 'FO_content', this._FO_content)
+    this._is_image = getBooleanFromJSON(json_node_object, 'is_image', this._is_image)
+    this._image_src = getStringFromJSON(json_node_object, 'image_src', this._image_src)
+    this._hyperlink = getStringFromJSON(json_node_object, 'hyperlink', this._hyperlink)
+  }
+
+  /**
+   * Convert node to JSON
+   *
+   * @return {*}  {Type_JSON}
+   * @memberof Class_NodeElementPlus
+   */
+  public override toJSON(): Type_JSON {
+    const json_entry = super.toJSON()
+
+    json_entry['iconName'] = this._iconName
+    json_entry['iconColor'] = this._iconColor
+    json_entry['iconVisible'] = this._iconVisible
+    if (this._iconViewBox) json_entry['iconViewBox'] = this._iconViewBox
+    json_entry['iconColorSustainable'] = this._iconColorSustainable
+    json_entry['has_FO'] = this._has_FO
+    json_entry['is_FO_raw'] = this._is_FO_raw
+    json_entry['FO_content'] = this._FO_content
+    json_entry['is_image'] = this._is_image
+    json_entry['image_src'] = this._image_src
+    json_entry['hyperlink'] = this._hyperlink
+
+    return json_entry
+  }
 
   public override isEqual(_: Class_NodeElementPlus): boolean {
     const super_equal = super.isEqual(_)
@@ -257,16 +307,16 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
 
   private drawIllustrationIcon() {
     this.d3_selection_plus?.append('svg')
-      .attr('id', n => 'icon_node_' + n.id)
+      .attr('id', 'icon_node_' + this.id)
       .attr('class', 'icon_node')
-      .attr('viewBox', d => d.iconViewBox ? d.iconViewBox : '0 0 1000 1000')
-      .attr('height', n => n.getShapeHeightToUse())
-      .attr('width', n => n.getShapeWidthToUse())
+      .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
+      .attr('height', this.getShapeHeightToUse())
+      .attr('width', this.getShapeWidthToUse())
       .attr('x', 0)
       .append('g')
       .append('path')
       .style('fill', this.iconColor)
-      .attr('d', n => this.main_sankey.getIconFromCatalog(n.iconName))
+      .attr('d', this.main_sankey.getIconFromCatalog(this.iconName))
   }
 
   // GETTERS / SETTERS ==================================================================

@@ -24,8 +24,7 @@ import {
 } from '../types/Types'
 
 // import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
-// import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
-import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT } from './SankeyPlusMenuConfigurationLabels'
+import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, OSPMenuPreferenceLabels } from './SankeyPlusMenuConfigurationLabels'
 import { OSPHyperLink, OSPNodeIcon } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
@@ -98,11 +97,18 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
   //   }
   // }
 
+  const class_dataplus=new Class_ApplicationDataPlus(false)
+
+  // Read data from cache if it exist
+  if (_initial_data !== undefined) {
+    class_dataplus.fromJSON(_initial_data)
+  }
+
   return {
     data: data_plus,
     set_data: set_data_plus,
     get_default_data: plus_get_defaut_data,
-    new_data: new Class_ApplicationDataPlus(false),
+    new_data:class_dataplus ,
     dataVarToUpdate: useRef(['']),
     // convert_data : (data:SankeyData,DefaultSankeyData:()=>SankeyData) => {
     //   plus_convert_data(data as OSPData,DefaultSankeyData as ()=> OSPData)
@@ -199,13 +205,11 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 
   //Preferences
   // TODO : re implement OSPMenuPreferenceLabels with class
-  // additionalMenus.additional_preferences.push(
-  //   <OSPMenuPreferenceLabels
-  //     t={applicationContext.t}
-  //     data={applicationData.data as OSPData}
-  //     updateMenus={ComponentUpdater.updateMenus}
-  //   />
-  // )
+  additionalMenus.additional_preferences.push(
+    <OSPMenuPreferenceLabels
+      applicationData={plus_dict_app_data}
+    />
+  )
 
   // TODO : re implement OSPMenuPreferenceView with class
   // additionalMenus.additional_preferences.push(

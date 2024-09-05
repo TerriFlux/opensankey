@@ -9,7 +9,7 @@
 
 // OpenSankey imports
 import { Class_Element } from '../deps/OpenSankey/types/Element'
-import { Type_ElementPosition } from '../deps/OpenSankey/types/Utils'
+import { getBooleanFromJSON, getNumberFromJSON, getStringFromJSON, Type_ElementPosition, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { default_element_position } from '../deps/OpenSankey/types/Utils'
 import { default_selected_stroke_width } from '../deps/OpenSankey/types/Node'
 import { Class_Handler } from '../deps/OpenSankey/types/Handler'
@@ -21,8 +21,7 @@ import { Class_SankeyPlus } from './SankeyPlus'
 
 // CLASS FREE LABEL ELEMENT *************************************************************
 
-export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,Class_SankeyPlus>
-{
+export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus, Class_SankeyPlus> {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -76,10 +75,10 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
   private _label_height: number
 
   private _drag_handler: {
-    top: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
-    bottom: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
-    left: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
-    right: Class_Handler<Class_DrawingAreaPlus,Class_SankeyPlus>,
+    top: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
+    bottom: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
+    left: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
+    right: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
   }
 
   // CONSTRUCTOR ========================================================================
@@ -119,7 +118,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
         'zdt_top_handle_' + id,
         drawing_area,
         menu_config,
-        this ,
+        this,
         this.dragHandleStart(),
         this.dragTopHandler(),
         this.dragHandleEnd(),
@@ -213,6 +212,49 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
   public drawAsSelected() {
     this.drawShape()
     this.drawDragHandlers()
+  }
+
+  /**
+   * Extract container attributes form JSON
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_ContainerElement
+   */
+  public fromJSON(json_object: Type_JSON) {
+
+    this._title = getStringFromJSON(json_object, 'title', this.title)
+    this._content = getStringFromJSON(json_object, 'content', this.content)
+    this._opacity = getNumberFromJSON(json_object, 'opacity', this.opacity)
+    this._color = getStringFromJSON(json_object, 'color', this.color)
+    this._color_border = getStringFromJSON(json_object, 'color_border', this.color_border)
+    this._transparent_border = getBooleanFromJSON(json_object, 'transparent_border', this.transparent_border)
+    this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
+    this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
+    this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
+    this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
+  }
+
+  /**
+   * Setting value of container from JSON
+   *
+   * @return {*} 
+   * @memberof Class_ContainerElement
+   */
+  public toJSON() {
+    const json_object: Type_JSON = {}
+
+    json_object['title'] = this._title
+    json_object['content'] = this._content
+    json_object['opacity'] = this._opacity
+    json_object['color'] = this._color
+    json_object['color_border'] = this._color_border
+    json_object['transparent_border'] = this._transparent_border
+    json_object['is_image'] = this._is_image
+    json_object['image_src'] = this._image_src
+    json_object['label_width'] = this._label_width
+    json_object['label_height'] = this._label_height
+
+    return json_object
   }
 
   // PRIVATE METHODS ====================================================================

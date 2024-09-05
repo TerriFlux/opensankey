@@ -55,15 +55,15 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
  *
  */
 export const OSPMenuPreferenceLabels: FunctionComponent<OSPMenuPreferenceLabelsFType> = ({
-  applicationData,
-  updateMenus
+  applicationData
 }) => {
   const {new_data}=applicationData
+  const [,setCount]=useState(0)
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
     defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('MEP')} onChange={() => {
       new_data.menu_configuration.toggleGivenAccordion('MEP')
-      updateMenus[1](!updateMenus[0])
+      setCount(a=>a+1)
     }}>
     {new_data.t('Menu.LL')}
   </Checkbox>

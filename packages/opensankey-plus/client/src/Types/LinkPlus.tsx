@@ -16,6 +16,7 @@ import {
   Class_LinkStyle
 } from '../deps/OpenSankey/types/Link'
 import {
+  getBooleanFromJSON,
   Type_ElementPosition,
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
@@ -308,15 +309,18 @@ export class Class_LinkAttributePlus extends Class_LinkAttribute {
 
   public toJSON() {
     const json_object = super.toJSON()
+    if (this._shape_is_gradient !== undefined) json_object['gradient'] = this._shape_is_gradient
     return json_object
   }
 
   public fromJSON(json_local_object: Type_JSON) {
     super.fromJSON(json_local_object)
+    this._shape_is_gradient = getBooleanFromJSON(json_local_object, 'gradient', default_shape_shape_is_gradient) as boolean
   }
 
   public copyFrom(element: Class_LinkAttributePlus) {
     super.copyFrom(element)
+    this._shape_is_gradient = element._shape_is_gradient
   }
 
   // PROTECTED METHODS ==================================================================

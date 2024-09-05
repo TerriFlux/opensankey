@@ -21,6 +21,7 @@ import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_LinkElementPlus } from './LinkPlus'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
+import { getBooleanFromJSON, getStringFromJSON, Type_JSON } from '../deps/OpenSankey/types/Utils'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -32,7 +33,7 @@ import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
  * @extends {Class_DrawingArea}
  */
 export class Class_DrawingAreaPlus extends Class_DrawingArea
-  < Class_SankeyPlus,
+  <Class_SankeyPlus,
     Class_NodeElementPlus,
     Class_LinkElementPlus,
     Class_ZoneSelectionPlus
@@ -92,11 +93,11 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
 
   // PROTECTED METHODS ====================================================================
   protected createNewSankey(): Class_SankeyPlus {
-    return new Class_SankeyPlus(this,this.application_data.menu_configuration)
+    return new Class_SankeyPlus(this, this.application_data.menu_configuration)
   }
 
   protected createNewSelectionZone(): Class_ZoneSelectionPlus {
-    return new Class_ZoneSelectionPlus(this,this.application_data.menu_configuration)
+    return new Class_ZoneSelectionPlus(this, this.application_data.menu_configuration)
   }
   // PUBLIC METHODS ====================================================================
 
@@ -187,8 +188,39 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     this._selection[zdt.id] = zdt
     zdt.setSelected()
   }
+  
+  /**
+   * Extract Drawing area attributes from JSON 
+   *
+   * @param {Type_JSON} json_object
+   * @param {boolean} [redraw]
+   * @param {boolean} [match_and_update]
+   * @memberof Class_DrawingAreaPlus
+   */
+  public fromJSON(json_object: Type_JSON, redraw?: boolean, match_and_update?: boolean): void {
+    super.fromJSON(json_object, redraw, match_and_update)
 
+    // New attributes
+    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
+    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
+  }
 
+  /**
+   * Setting value of drawing area and substructur from JSON
+   *
+   * @param {boolean} [only_visible_elements]
+   * @param {boolean} [with_values]
+   * @return {*} 
+   * @memberof Class_DrawingAreaPlus
+   */
+  public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
+    const json_entry = super.toJSON(only_visible_elements, with_values)
+
+    json_entry['show_background_image'] = this._show_background_image
+    json_entry['background_image'] = this._background_image
+
+    return json_entry
+  }
 
   /**
    * remove a zdt from a selection set

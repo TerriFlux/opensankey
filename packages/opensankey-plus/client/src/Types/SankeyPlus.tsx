@@ -19,7 +19,7 @@ import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { ViewType } from '../../types/Types'
 import { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
-import { default_main_sankey_id, default_style_id, default_style_name } from '../deps/OpenSankey/types/Utils'
+import { default_main_sankey_id, default_style_id, default_style_name, getJSONFromJSON, Type_JSON } from '../deps/OpenSankey/types/Utils'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -34,8 +34,7 @@ export class Class_SankeyPlus extends Class_Sankey
     Class_DrawingAreaPlus,
     Class_NodeElementPlus,
     Class_LinkElementPlus
-  >
-{
+  > {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -56,7 +55,7 @@ export class Class_SankeyPlus extends Class_Sankey
    */
   protected _menu_config: Class_MenuConfigPlus
 
-  protected _link_styles:{[_:string]:Class_LinkStylePlus} 
+  protected _link_styles: { [_: string]: Class_LinkStylePlus }
 
   // /**
   //  * Nodes
@@ -77,7 +76,7 @@ export class Class_SankeyPlus extends Class_Sankey
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _icon_catalog: { [x: string]: string | null | undefined } = {}
+  private _icon_catalog: { [x: string]: string } = {}
 
   private _view: ViewType[] = []
   private _current_view: string = 'none'
@@ -103,8 +102,8 @@ export class Class_SankeyPlus extends Class_Sankey
     this._menu_config = menu_config
     // this._nodes = {}
     // New attributes
-    this._link_styles={}
-    this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id,default_style_name,false)
+    this._link_styles = {}
+    this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id, default_style_name, false)
     this._labels = {}
     this._icon_catalog = {}
   }
@@ -133,6 +132,53 @@ export class Class_SankeyPlus extends Class_Sankey
     else {
       return this.addNewNode(id + '_0', name + '_0')
     }
+  }
+  /**
+   * Extract sankey as a JSON struct
+   *
+   * @param {Type_JSON} json_object
+   * @param {boolean} [match_and_update]
+   * @memberof Class_SankeyPlus
+   */
+  public fromJSON(json_object: Type_JSON, match_and_update?: boolean): void {
+    super.fromJSON(json_object, match_and_update)
+
+    // Class container
+    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
+    Object.entries(json_container_object)
+      .forEach(([_, container_json]) => {
+        const container = this.addNewFreeLabel(_)
+        // Set container value to node from JSON
+        container.fromJSON(container_json as Type_JSON)
+      })
+
+    // Icon catalog
+    this._icon_catalog = getJSONFromJSON(json_object, 'icon_catalog', this._icon_catalog) as { [x: string]: string }
+  }
+
+  /**
+   * Setting value of sankey and substructur from JSON
+   *
+   * @param {boolean} [only_visible_elements]
+   * @param {boolean} [with_values]
+   * @return {*}  {Type_JSON}
+   * @memberof Class_SankeyPlus
+   */
+  public toJSON(only_visible_elements?: boolean, with_values?: boolean): Type_JSON {
+    const json_entry = super.toJSON(only_visible_elements, with_values)
+    const json_object_labels = {} as Type_JSON
+
+    // Class container
+    json_entry['labels'] = json_object_labels
+    this.free_labels_list.forEach(obj => {
+      json_object_labels[obj.id] = obj.toJSON()
+    })
+
+    // Icon catalog
+    json_entry['icon_catalog'] = this._icon_catalog as Type_JSON
+
+
+    return json_entry
   }
 
   // New --------------------------------------------------------------------------------
@@ -270,15 +316,15 @@ export class Class_SankeyPlus extends Class_Sankey
     const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
     return node
   }
-  
+
   protected createNewLink(id: string, source: Class_NodeElementPlus, target: Class_NodeElementPlus): Class_LinkElementPlus {
     // Create link
     const link = new Class_LinkElementPlus(id, source, target, this.drawing_area, this._menu_config)
     return link
   }
-    
+
   protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
-    const style= new Class_LinkStylePlus(id,name,is_deletable)
+    const style = new Class_LinkStylePlus(id, name, is_deletable)
     return style
   }
   // Overrides --------------------------------------------------------------------------
@@ -288,7 +334,7 @@ export class Class_SankeyPlus extends Class_Sankey
    * @param {Class_Node} node
    * @memberof Class_Sankey
    */
-  protected override _addNode(node: Class_NodeElementPlus) { this._nodes[node.id] = node}
+  protected override _addNode(node: Class_NodeElementPlus) { this._nodes[node.id] = node }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -311,12 +357,12 @@ export class Class_SankeyPlus extends Class_Sankey
 
   public get visible_free_labels_list() { return this.free_labels_list.filter(zdt => zdt.is_visible) }
 
-  public get icon_catalog(): { [x: string]: string | null | undefined } { return this._icon_catalog }
-  public set icon_catalog(value: { [x: string]: string | null | undefined }) { this._icon_catalog = value }
+  public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
+  public set icon_catalog(value: { [x: string]: string }) { this._icon_catalog = value }
 
-  public get default_link_style()  {return this._link_styles[default_style_id]}
+  public get default_link_style() { return this._link_styles[default_style_id] }
 
-  public get link_styles_dict(){
+  public get link_styles_dict() {
     return this._link_styles
   }
 }
