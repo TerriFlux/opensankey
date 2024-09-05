@@ -1077,7 +1077,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   />
 
   // Create the menu nav that can be slightly different if it in static
-  const menu_nav = <Box>
+  const menu_nav = <Box layerStyle='menuconfigpanel_grid'>
     <Tabs variant={'tabs_navbar'}>
       <TabList>
         {Object.keys(ordered_menu).map((m, i) => {
