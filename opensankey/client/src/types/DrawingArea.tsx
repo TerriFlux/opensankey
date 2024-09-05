@@ -46,7 +46,6 @@ import {
   Class_AbstractApplicationData,
 } from './Abstract'
 import { Class_ProtoElement } from './Element'
-import { Type_GenericDrawingAreaOS } from './TypesOS'
 
 // CONSTANTS ****************************************************************************
 
@@ -225,7 +224,7 @@ export abstract class Class_DrawingArea
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  public _selection_zone: Class_ZoneSelection<Type_GenericDrawingAreaOS, Type_GenericSankey>
+  public _selection_zone: Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
   private _number_of_elements: number = 0
 
   // Context attributes for drawing area ------------------------------------------------
@@ -254,7 +253,7 @@ export abstract class Class_DrawingArea
    * @type {{ [id: string]: Class_ProtoElement }}
    * @memberof Class_DrawingArea
    */
-  protected _selection: { [id: string]: Class_ProtoElement<Type_GenericDrawingAreaOS,Type_GenericSankey> } = {}
+  protected _selection: { [id: string]: Class_ProtoElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,Type_GenericSankey> } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
@@ -323,7 +322,8 @@ export abstract class Class_DrawingArea
   // ABSTRACT METHODS ==================================================================
 
   protected abstract createNewSankey(): Type_GenericSankey
-  protected abstract createNewSelectionZone():Class_ZoneSelection<Type_GenericDrawingAreaOS,Type_GenericSankey>
+  protected abstract createNewSelectionZone(): Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
+
   // PUBLIC METHODS ====================================================================
 
   public reinit() {
@@ -332,7 +332,7 @@ export abstract class Class_DrawingArea
     // Recreate everything
     this._sankey = this.createNewSankey()
     this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
-    this._selection_zone =this.createNewSelectionZone()
+    this._selection_zone = this.createNewSelectionZone()
     // Redraw
     this.reset()
   }
@@ -1991,7 +1991,7 @@ export abstract class Class_DrawingArea
   public get vertical_spacing() { return this._vertical_spacing }
   public set vertical_spacing(_: number) { this._vertical_spacing = _ }
 
-  public get selection_zone(): Class_ZoneSelection<Type_GenericDrawingAreaOS, Type_GenericSankey> { return this._selection_zone }
+  public get selection_zone(): Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._selection_zone }
 
   // Node Context menu
   public get node_contextualised(): Type_GenericNodeElement | undefined { return this._node_contextualied }
