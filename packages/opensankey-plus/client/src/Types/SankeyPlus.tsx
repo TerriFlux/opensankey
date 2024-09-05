@@ -103,7 +103,7 @@ export class Class_SankeyPlus extends Class_Sankey
     // this._nodes = {}
     // New attributes
     this._link_styles = {}
-    this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id, default_style_name, false)
+    this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
     this._labels = {}
     this._icon_catalog = {}
   }
@@ -179,6 +179,41 @@ export class Class_SankeyPlus extends Class_Sankey
 
 
     return json_entry
+  }
+
+  public updateLayoutFromJSON(new_layout: Class_DrawingAreaPlus, mode: string[]): void {
+    super.updateLayoutFromJSON(new_layout, mode)
+
+    // Update Containers
+    const list_curr_container = this.free_labels_list
+    const list_new_container = new_layout.sankey.free_labels_list
+    if (mode.includes('freeLabels')) {
+      // Add new container present in new but not current
+      list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
+        .forEach(cont => {
+          this.addNewFreeLabel(cont.id)
+          this.free_labels_dict[cont.id].copyFrom(cont)
+        })
+
+      // Delete container present in current but not new 
+      list_curr_container.filter(curr_cont => !list_new_container.map(new_cont => new_cont.id).includes(curr_cont.id))
+        .forEach(cont => {
+          this.deleteFreeLabel(cont)
+        })
+
+      // Update container in current that are also in new
+      list_new_container.filter(new_cont => list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
+        .forEach(cont => {
+          this.free_labels_dict[cont.id].copyFrom(cont)
+        })
+    }
+
+    // Update icon catalog
+    if (mode.includes('icon_catalog')) {
+      Object.entries(new_layout.sankey.icon_catalog).filter(icon => icon[0] && icon[1]).forEach(icon => {
+        this.icon_catalog[icon[0]] = icon[1]
+      })
+    }
   }
 
   // New --------------------------------------------------------------------------------
@@ -323,7 +358,7 @@ export class Class_SankeyPlus extends Class_Sankey
     return link
   }
 
-  protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
+  protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
     const style = new Class_LinkStylePlus(id, name, is_deletable)
     return style
   }

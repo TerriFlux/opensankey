@@ -1,7 +1,7 @@
-import { Class_ZoneSelection } from "../deps/OpenSankey/types/Selection_Zone"
-import { Class_DrawingAreaPlus } from "./DrawingAreaPlus"
-import { Class_MenuConfigPlus } from "./MenuConfigPlus"
-import { Class_SankeyPlus } from "./SankeyPlus"
+import { Class_ZoneSelection } from '../deps/OpenSankey/types/Selection_Zone'
+import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
+import { Class_MenuConfigPlus } from './MenuConfigPlus'
+import { Class_SankeyPlus } from './SankeyPlus'
 
 /**
  * Class that helps to create a selection zone for elements on the drawing area
@@ -10,7 +10,7 @@ import { Class_SankeyPlus } from "./SankeyPlus"
  * @extends {Class_Element}
  */
 export class Class_ZoneSelectionPlus extends Class_ZoneSelection<Class_DrawingAreaPlus, Class_SankeyPlus>
- {
+{
 
   // PROTECTED ATTRIBUTES ===============================================================
 

@@ -2,6 +2,14 @@
 // import React, { FunctionComponent, MutableRefObject, useState } from 'react'
 // import { Box, Button, Input, Select } from '@chakra-ui/react'
 
+import { Box, Button } from '@chakra-ui/react'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { FunctionComponent, useState } from 'react'
+import { FaCheck } from 'react-icons/fa'
+import { OSPTransformationElementsFType } from '../types/SankeyPlusConvertTypes'
+import { OSTooltip } from './deps/OpenSankey/types/Utils'
+
 // import { FaCheck } from 'react-icons/fa'
 // import { TFunction } from 'i18next'
 // import {
@@ -345,80 +353,83 @@
 //   return OSPDiagramSelectorInner
 // }
 
-// export const OSPTransformationElements : FunctionComponent<OSPTransformationElementsFType> = ({
-//   applicationData,
-//   applicationContext,
-//   ComponentUpdater
-// }) => {
-//   const {dataVarToUpdate}=applicationData
-//   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
-//   const is_master=applicationData.view==='none'
-//   const [forceUpdate,setForceUpdate]=useState(false)
-//   const {updateComponentBtnUpdateLayout}=ComponentUpdater
-//   updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
-//   if (!applicationContext.has_open_sankey_plus) {
-//     return <></>
-//   }
-//   return <>
-//     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//       <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.freeLabels')}</Box>
-//       <Box layerStyle='options_4cols' >
-//         <Button
-//           variant={dataVarToUpdate.current.includes('freeLabels')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-//           onClick={() => {
-//             if(!dataVarToUpdate.current.includes('freeLabels')){
-//               dataVarToUpdate.current.push('freeLabels')
-//               setForceUpdate(!forceUpdate)
-//             }else{
-//               dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'),1)
-//               setForceUpdate(!forceUpdate)
-//             }}
-//           }
-//         >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-//       </Box>
-//     </Box>
+export const OSPTransformationElements: FunctionComponent<OSPTransformationElementsFType> = ({
+  applicationData,
 
-//     <OSTooltip label={!is_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
-//       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//         <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.Views')}</Box>
-//         <Box layerStyle='options_4cols' >
-//           <Button
-//             isDisabled={!is_master}
-//             variant={is_master && dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-//             onClick={() => {
-//               if(!dataVarToUpdate.current.includes('Views')){
-//                 dataVarToUpdate.current.push('Views')
-//                 setForceUpdate(!forceUpdate)
-//               }else{
-//                 dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
-//                 setForceUpdate(!forceUpdate)
-//               }}
-//             }
-//           >{is_master && dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-//         </Box>
-//       </Box>
-//     </OSTooltip>
+}) => {
+  const { dataVarToUpdate, new_data } = applicationData
+  const { t } = new_data
+  // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
+  //   const is_master=applicationData.view==='none'
+  const [forceUpdate, setForceUpdate] = useState(false)
+  //   const {updateComponentBtnUpdateLayout}=ComponentUpdater
+  //   updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
+  if (!new_data.has_sankey_plus) {
+    return <></>
+  }
+  return <>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.freeLabels')}</Box>
+      <Box layerStyle='options_4cols' >
+        <Button
+          variant={dataVarToUpdate.current.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => {
+            if (!dataVarToUpdate.current.includes('freeLabels')) {
+              dataVarToUpdate.current.push('freeLabels')
+              setForceUpdate(!forceUpdate)
+            } else {
+              dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'), 1)
+              setForceUpdate(!forceUpdate)
+            }
+          }
+          }
+        >{dataVarToUpdate.current.includes('freeLabels') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
+      </Box>
+    </Box>
 
-//     <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
-//       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//         <Box layerStyle='menuconfigpanel_option_name'>{applicationContext.t('Menu.Transformation.list_icon')}</Box>
-//         <Box layerStyle='options_4cols' >
-//           <Button
-//             variant={dataVarToUpdate.current.includes('icon_catalog')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-//             onClick={() => {
-//               if(!dataVarToUpdate.current.includes('icon_catalog')){
-//                 dataVarToUpdate.current.push('icon_catalog')
-//                 setForceUpdate(!forceUpdate)
-//               }else{
-//                 dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'),1)
-//                 setForceUpdate(!forceUpdate)
-//               }}
-//             }
-//           >{dataVarToUpdate.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-//         </Box>
-//       </Box>
-//     </OSTooltip></>
-// }
+    {/* TODO : re implent this when view will be implemented with view */}
+    {/* <OSTooltip label={!is_master?t('Menu.Transformation.disabled_view'):''} >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Views')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            isDisabled={!is_master}
+            variant={is_master && dataVarToUpdate.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!dataVarToUpdate.current.includes('Views')){
+                dataVarToUpdate.current.push('Views')
+                setForceUpdate(!forceUpdate)
+              }else{
+                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{is_master && dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        </Box>
+      </Box>
+    </OSTooltip> */}
+
+    <OSTooltip label={t('Menu.Transformation.list_icon_tooltip')} >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.list_icon')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            variant={dataVarToUpdate.current.includes('icon_catalog') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              if (!dataVarToUpdate.current.includes('icon_catalog')) {
+                dataVarToUpdate.current.push('icon_catalog')
+                setForceUpdate(!forceUpdate)
+              } else {
+                dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'), 1)
+                setForceUpdate(!forceUpdate)
+              }
+            }
+            }
+          >{dataVarToUpdate.current.includes('icon_catalog') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
+        </Box>
+      </Box>
+    </OSTooltip></>
+}
 
 // export const plus_sankey_layout : plus_sankey_layoutFType =(
 //   data:OSPData,

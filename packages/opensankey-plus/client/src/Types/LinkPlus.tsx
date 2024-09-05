@@ -25,7 +25,6 @@ import {
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_SankeyPlus } from './SankeyPlus'
-import { Class_NodeElement } from '../deps/OpenSankey/types/Node'
 import { Class_NodeElementPlus } from './NodePlus'
 
 export const default_shape_shape_is_gradient = false

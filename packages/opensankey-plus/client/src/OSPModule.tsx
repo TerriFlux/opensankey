@@ -44,6 +44,7 @@ import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
 import { OSPNodeFO } from './SankeyPlusForeignObject'
 import { dict_hook_ref_setter_show_dialog_componentsType } from './deps/OpenSankey/types/MenuConfig'
 import { MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
+import { OSPTransformationElements } from './SankeyPlusConvert'
 
 declare const window: Window &
   typeof globalThis & {
@@ -245,15 +246,10 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
 
-  // TODO : re implement OSPTransformationElements with class
-  // const component_apply_transfor_OSP= <OSPTransformationElements
-  //   applicationData={plusData}
-  //   applicationContext={applicationContext as OSPApplicationContextType}
-  //   ComponentUpdater={ComponentUpdater as OSPComponentUpdaterType}
-  // />
-
   // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
-  // additionalMenus.apply_transformation_additional_elements.push(component_apply_transfor_OSP)
+  additionalMenus.apply_transformation_additional_elements.push( <OSPTransformationElements
+    applicationData={plusData}
+  />)
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type

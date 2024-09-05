@@ -35,8 +35,7 @@ import { getBooleanFromJSON, getStringFromJSON, Type_JSON } from '../deps/OpenSa
 export class Class_DrawingAreaPlus extends Class_DrawingArea
   <Class_SankeyPlus,
     Class_NodeElementPlus,
-    Class_LinkElementPlus,
-    Class_ZoneSelectionPlus
+    Class_LinkElementPlus
   > {
 
   // TODO Faire le menage ?
@@ -188,7 +187,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     this._selection[zdt.id] = zdt
     zdt.setSelected()
   }
-  
+
   /**
    * Extract Drawing area attributes from JSON 
    *
@@ -199,7 +198,6 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
    */
   public fromJSON(json_object: Type_JSON, redraw?: boolean, match_and_update?: boolean): void {
     super.fromJSON(json_object, redraw, match_and_update)
-
     // New attributes
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
@@ -220,6 +218,19 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     json_entry['background_image'] = this._background_image
 
     return json_entry
+  }
+
+  /**
+   * Copy attributes from a given Class_DrawingAreaPlus & create/copy attributes to current sankey
+   *
+   * @param {Class_DrawingAreaPlus} other
+   * @memberof Class_DrawingAreaPlus
+   */
+  public updateLayoutFrom(other: Class_DrawingAreaPlus): void {
+    super.updateLayoutFrom(other)
+
+    this._show_background_image = other._show_background_image
+    this._background_image = other._background_image
   }
 
   /**

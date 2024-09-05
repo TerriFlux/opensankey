@@ -257,6 +257,25 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
     return json_object
   }
 
+  /**
+ * Extract attribute from another Class_ContainerElement
+ *
+ * @param {Class_ContainerElement} _
+ * @memberof Class_ContainerElement
+ */
+  public copyFrom(_:Class_ContainerElement){
+    // Since container attributes are primary type (number,string,boolean) there is no need to do deep clone
+    this._title=_._title
+    this._content=_._content
+    this._opacity=_._opacity
+    this._color=_._color
+    this._color_border=_._color_border
+    this._transparent_border=_._transparent_border
+    this._is_image=_._is_image
+    this._image_src=_._image_src
+    this._label_width=_._label_width
+    this._label_height=_._label_height
+  }
   // PRIVATE METHODS ====================================================================
 
   /**

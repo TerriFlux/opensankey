@@ -20,7 +20,6 @@ import { Class_LinkElementPlus } from './LinkPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_SankeyPlus } from './SankeyPlus'
-import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 
 // CLASS APPLICATION DATA PLUS **********************************************************
 
@@ -30,7 +29,7 @@ import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
  * @class Class_ApplicationDataPlus
  * @extends {Class_ApplicationData}
  */
-export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_DrawingAreaPlus, Class_SankeyPlus, Class_NodeElementPlus, Class_LinkElementPlus,Class_ZoneSelectionPlus> {
+export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_DrawingAreaPlus, Class_SankeyPlus, Class_NodeElementPlus, Class_LinkElementPlus> {
 
   // PUBLIC ATTRIBUTES =================================================================
 

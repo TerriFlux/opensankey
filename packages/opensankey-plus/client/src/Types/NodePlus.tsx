@@ -214,6 +214,28 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
 
     return json_entry
   }
+  
+  /**
+   * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
+   *
+   * @param {Class_NodeElementPlus} node_to_copy
+   * @memberof Class_NodeElementPlus
+   */
+  public copyFrom(node_to_copy: Class_NodeElementPlus): void {
+    super.copyFrom(node_to_copy)
+
+    this._iconName = node_to_copy._iconName
+    this._iconColor = node_to_copy._iconColor
+    this._iconVisible = node_to_copy._iconVisible
+    this._iconViewBox = node_to_copy._iconViewBox
+    this._iconColorSustainable = node_to_copy._iconColorSustainable
+    this._has_FO = node_to_copy._has_FO
+    this._is_FO_raw = node_to_copy._is_FO_raw
+    this._FO_content = node_to_copy._FO_content
+    this._is_image = node_to_copy._is_image
+    this._image_src = node_to_copy._image_src
+    this._hyperlink = node_to_copy._hyperlink
+  }
 
   public override isEqual(_: Class_NodeElementPlus): boolean {
     const super_equal = super.isEqual(_)

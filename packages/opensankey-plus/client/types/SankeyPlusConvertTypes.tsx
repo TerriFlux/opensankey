@@ -10,11 +10,10 @@ export type OSPDiagramSelectorFType = (
   applicationData:OSPApplicationDataType,
 ) => OpenSankeyDiagramSelectorFType
 
-// export type OSPTransformationElementsFType = {
-//   applicationData:OSPApplicationDataType,
-//   applicationContext:OSPApplicationContextType,
-//   ComponentUpdater:OSPComponentUpdaterType
-// }
+export type OSPTransformationElementsFType = {
+  applicationData:OSPApplicationDataType,
+
+}
 
 export type plus_sankey_layoutFType=(
   data:OSPData,
