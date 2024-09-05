@@ -654,7 +654,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
       }
     </Checkbox>
 
-    {additional_link_appearence_items}
+    {additional_link_appearence_items.map((el,i)=><React.Fragment key={'additional_config_link_'+i}>{el}</React.Fragment>)}
 
   </Box>
 
