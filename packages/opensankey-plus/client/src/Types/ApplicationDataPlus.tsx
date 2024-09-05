@@ -20,6 +20,7 @@ import { Class_LinkElementPlus } from './LinkPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_SankeyPlus } from './SankeyPlus'
+import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 
 // CLASS APPLICATION DATA PLUS **********************************************************
 
@@ -29,7 +30,7 @@ import { Class_SankeyPlus } from './SankeyPlus'
  * @class Class_ApplicationDataPlus
  * @extends {Class_ApplicationData}
  */
-export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_DrawingAreaPlus, Class_SankeyPlus, Class_NodeElementPlus, Class_LinkElementPlus> {
+export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_DrawingAreaPlus, Class_SankeyPlus, Class_NodeElementPlus, Class_LinkElementPlus,Class_ZoneSelectionPlus> {
 
   // PUBLIC ATTRIBUTES =================================================================
 
@@ -97,7 +98,7 @@ export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_Drawi
 
   // PROTECTED METHODS ====================================================================
 
-  protected createNewDrawingArea(): Class_DrawingAreaPlus {
+  public createNewDrawingArea(): Class_DrawingAreaPlus {
     const drawing_area = new Class_DrawingAreaPlus(
       initial_window_height,
       initial_window_width,

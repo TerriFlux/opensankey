@@ -20,6 +20,7 @@ import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_LinkElementPlus } from './LinkPlus'
+import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -33,8 +34,8 @@ import { Class_LinkElementPlus } from './LinkPlus'
 export class Class_DrawingAreaPlus extends Class_DrawingArea
   < Class_SankeyPlus,
     Class_NodeElementPlus,
-    Class_LinkElementPlus
-    
+    Class_LinkElementPlus,
+    Class_ZoneSelectionPlus
   > {
 
   // TODO Faire le menage ?
@@ -59,8 +60,6 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
   public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   // PROTECTED ATTRIBUTES ===============================================================
-
-  protected _sankey: Class_SankeyPlus
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -89,12 +88,15 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     super(height, width, application_data)
     // Overrides
     this.application_data = application_data
-    this._sankey = new Class_SankeyPlus(this, this.application_data.menu_configuration, this.sankey.id)
   }
 
   // PROTECTED METHODS ====================================================================
   protected createNewSankey(): Class_SankeyPlus {
     return new Class_SankeyPlus(this,this.application_data.menu_configuration)
+  }
+
+  protected createNewSelectionZone(): Class_ZoneSelectionPlus {
+    return new Class_ZoneSelectionPlus(this,this.application_data.menu_configuration)
   }
   // PUBLIC METHODS ====================================================================
 
@@ -182,13 +184,10 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
    * @memberof Class_DrawingAreaPlus
    */
   public addFreeLabelToSelection(zdt: Class_ContainerElement) {
-    // this._selection[zdt.id] = zdt
+    this._selection[zdt.id] = zdt
     zdt.setSelected()
   }
 
-  // public addNewDefaultNodeToSankey() {
-  //   return this.sankey.addNewDefaultNode()
-  // }
 
 
   /**
