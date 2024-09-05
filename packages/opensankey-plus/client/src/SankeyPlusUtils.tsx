@@ -1,7 +1,6 @@
 // // External libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 // import * as d3 from 'd3'
-// import { FaEye, FaEyeSlash, FaFileImport } from 'react-icons/fa'
 // import FileSaver from 'file-saver'
 // import {
 //   Box,
@@ -14,55 +13,15 @@ import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 
 
 // // Internal imports
-// import {
-//   OSPData,
-//   OSPLabel,
-//   OSPLink,
-//   OSPLinkAttrLocal,
-//   OSPLinkStyle,
-//   OSPNode,
-//   OSPNodeVar,
-// } from '../types/Types'
 import { DefaultLinkStyle } from './deps/OpenSankey/types/Legacy'
 import {
   DefaultOSPStyleLinkFType,
   ImportImageAsSvgBgFType,
-  //   IsAllZdtAttrSameValueFType,
-  //   OSPIsAllNodeNotLocalAttrSameValueFType,
-  //   OSPAssignLinkValueToCorrectVarFType,
-  //   OSPLinkSabotColorFType,
-  //   OSPReturnValueLinkFType,
-  //   SetSvgBgFType,
-  //   ValueOf,
-  //   clickSaveSVGFType,
 } from '../types/SankeyPlusUtilsTypes'
 import { OSPLinkStyle } from '../types/Types'
 import { Box, Checkbox, Button, Input } from '@chakra-ui/react'
-import { FaEye, FaEyeSlash, FaFileImport } from 'react-icons/fa'
-import { OSTooltip } from './deps/OpenSankey/types/Utils'
-// import {
-// //   AssignLinkValueToCorrectVar,
-//    DefaultLinkStyle,
-// //   DefaultNode,
-// //   LinkColor,
-// //   NodeColor,
-// //   OSTooltip,
-// //   ReturnValueLink,
-// } from './import/OpenSankey'
-
-// // OpenSankey types
-// import { SankeyLinkAttrLocal, SankeyLinkStyle } from './deps/OpenSankey/types/Types'
-// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
-
-// // OpenSankey ts-code
-// import { pre_process_export_svg, post_process_export_svg } from './deps/OpenSankey/topmenus/SankeyMenuTop'
-
-
-
-// // Local imports
-// // import { OSPData,OSPNode, } from './types'
-// import SankeyListIcons from './icons/lib_of_icons.json'
-
+import { FaFileImport } from 'react-icons/fa'
+import { CustomFaEyeCheckIcon, OSTooltip } from './deps/OpenSankey/types/Utils'
 
 
 export const DefaultOSPStyleLink: DefaultOSPStyleLinkFType = () => {
@@ -118,7 +77,7 @@ export const ImportImageAsSvgBg: FunctionComponent<ImportImageAsSvgBgFType> = ({
         variant='menuconfigpanel_option_checkbox'
         isChecked={drawing_area.show_background_image}
         isDisabled={!has_open_sankey_plus}
-        icon={drawing_area.show_background_image ? <FaEye /> : <FaEyeSlash />}
+        icon={<CustomFaEyeCheckIcon/>}
         onChange={(evt) => {
           drawing_area.show_background_image = evt.target.checked
           drawing_area.drawBgImage()

@@ -4,12 +4,13 @@
 
 import { Box, Textarea, TabPanel, Checkbox, Button } from '@chakra-ui/react'
 import React, { FunctionComponent, useState, useRef, MutableRefObject } from 'react'
-import ReactQuill from 'react-quill'
+import ReactQuill from 'react-quill' 
+// 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
+// to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
 import { OSTooltip } from './deps/OpenSankey/types/Utils'
 import { OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
 import { Class_NodeElementPlus } from './Types/NodePlus'
 
-// import ReactQuill from 'react-quill'
 // import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
 // // Local imports
@@ -35,7 +36,6 @@ export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
 })=> {
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [,setCount]=useState(0)
-
   const {new_data}=applicationData
   const {drawing_area,t}=new_data
   const selected_nodes=drawing_area.selected_nodes_list

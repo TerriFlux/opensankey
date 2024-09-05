@@ -48,10 +48,11 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
 
     tuto_sub_nav[ki]=<>{Object.entries(SankeyListIcons[ki]).filter(ic=>{
       return filter_name===''?true:t(ki+'.'+ic[0]).includes(filter_name)
-    }).sort(([a,], [b,]) => (t(ki+'.'+a) > t(ki+'.'+b)) ? 1 : ((t(ki+'.'+b) > t(ki+'.'+a)) ? -1 : 0)).map(icon=>{
+    }).sort(([a,], [b,]) => (t(ki+'.'+a) > t(ki+'.'+b)) ? 1 : ((t(ki+'.'+b) > t(ki+'.'+a)) ? -1 : 0)).map((icon,i)=>{
       // icon[0]:Name of the icon
       // icon[1]:Path of the icon
       return <Card
+        key={'card_'+icon[0]+'_'+i}
         variant={allSelectedNodeHasSameicon===ki+'_'+icon[0]?'card_icon_selected':'card_icon_not_selected'}
         onClick={()=>{
           new_data.drawing_area.sankey.icon_catalog[ki+'_'+icon[0]]=icon[1]
@@ -142,8 +143,9 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
 
   // List of all imported svg icon
   // WARNING : Those icon disappear whe nwe reload the application (but the icon are still present in the catalog), so
-  const card_imported=Object.keys(import_svg.current).sort(([a,], [b,]) => (a > b) ? 1 : ((b > a) ? -1 : 0)).map((ki)=>{
+  const card_imported=Object.keys(import_svg.current).sort(([a,], [b,]) => (a > b) ? 1 : ((b > a) ? -1 : 0)).map((ki,i)=>{
     return <Card
+      key={'card_icon_'+i}
       variant={allSelectedNodeHasSameicon==='icon_imported_'+ki?'card_icon_selected':'card_icon_not_selected'}
       onClick={()=>{
         new_data.drawing_area.sankey.icon_catalog['icon_imported_'+ki]=import_svg.current[ki].path
@@ -183,15 +185,15 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
         <Tabs variant='tabs_variant_lib_cion'>
           <TabList>
             {
-              Object.keys(tuto_sub_nav).map(m=>{
-                return <Tab> {t(m+'.'+m)}</Tab>
+              Object.keys(tuto_sub_nav).map((m,i)=>{
+                return <Tab key={'tab_icon_catalog_'+i}> {t(m+'.'+m)}</Tab>
               })
             }
           </TabList>
           <TabPanels>
-            {Object.keys(tuto_sub_nav).map(modale_sub_icon=>{
+            {Object.keys(tuto_sub_nav).map((modale_sub_icon,i)=>{
 
-              return <TabPanel>
+              return <TabPanel key={'panel_icon_catalog_'+i}>
                 {modale_sub_icon!=='import'?<Box
                   as='span'
                   layerStyle='menuconfigpanel_row_2cols'

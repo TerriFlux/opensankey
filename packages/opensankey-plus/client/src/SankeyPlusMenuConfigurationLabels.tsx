@@ -4,7 +4,8 @@ import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import ReactQuill from 'react-quill'
-//import 'react-quill/dist/quill.snow.css'
+// 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
+// to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
 
 // Imported libs
 import {
