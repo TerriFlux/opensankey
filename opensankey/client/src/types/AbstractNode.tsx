@@ -1,3 +1,12 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Date : 03/09/2024
+// All rights reserved for TerriFlux SARL
+//
+// This file is used to avoid cycling dependancies inside each Class definition files.
+// ==================================================================================================
+
+
 import {
   Class_AbstractLinkElement
 } from './AbstractLink'
@@ -23,47 +32,42 @@ export abstract class Class_AbstractNodeElement
   Type_GenericSankey
 >{
   // Mandatory getters
-  public abstract get name(): string;
-  // public abstract get position_x(): number;
-  // public abstract get position_y(): number;
-  // public abstract get position_u(): number;
-  // public abstract get position_v(): number;
-  public abstract get position_type(): string;
-  public abstract get input_links_list(): Type_AbstractLinkElement[];
-  public abstract get output_links_list(): Type_AbstractLinkElement[];
-  // public abstract get is_visible(): boolean;
+  public abstract get name(): string
+  public abstract get position_type(): string
+  public abstract get input_links_list(): Type_AbstractLinkElement[]
+  public abstract get output_links_list(): Type_AbstractLinkElement[]
   // Mandatory methods
-  public abstract addTag(_: Class_AbstractTag): void;
-  public abstract removeTag(_: Class_AbstractTag): void;
-  public abstract getShapeWidthToUse(): number;
-  public abstract getShapeHeightToUse(): number;
-  public abstract addInputLink(_: Type_AbstractLinkElement): void;
-  public abstract addOutputLink(_: Type_AbstractLinkElement): void;
-  public abstract deleteInputLink(_: Type_AbstractLinkElement): void;
-  public abstract deleteOutputLink(_: Type_AbstractLinkElement): void;
-  public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void;
-  public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void;
-  public abstract updateInputValue(): void;
-  public abstract updateOutputValue(): void;
-  public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void;
-  public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void;
-  public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void;
-  public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void;
+  public abstract addTag(_: Class_AbstractTag): void
+  public abstract removeTag(_: Class_AbstractTag): void
+  public abstract getShapeWidthToUse(): number
+  public abstract getShapeHeightToUse(): number
+  public abstract addInputLink(_: Type_AbstractLinkElement): void
+  public abstract addOutputLink(_: Type_AbstractLinkElement): void
+  public abstract deleteInputLink(_: Type_AbstractLinkElement): void
+  public abstract deleteOutputLink(_: Type_AbstractLinkElement): void
+  public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
+  public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
+  public abstract updateInputValue(): void
+  public abstract updateOutputValue(): void
+  public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void
+  public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
+  public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
+  public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
 }
 
 export abstract class Class_AbstractNodeDimension {
   // Mandatory methods
-  public abstract getLevel(): number;
-  public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void;
+  public abstract getLevel(): number
+  public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void
   // Mandatory getters
-  public abstract get id(): string;
-  public abstract get parent_level_tag(): Class_AbstractLevelTag;
-  public abstract get children_level_tags(): Class_AbstractLevelTag[];
+  public abstract get id(): string
+  public abstract get parent_level_tag(): Class_AbstractLevelTag
+  public abstract get children_level_tags(): Class_AbstractLevelTag[]
   public abstract get parent(): Type_AbstractNodeElement
-  public abstract get children(): Type_AbstractNodeElement[];
+  public abstract get children(): Type_AbstractNodeElement[]
 }
 
 export abstract class Class_AbstractNodeStyle {
   // Mandatory getters
-  public abstract get id(): string;
+  public abstract get id(): string
 }
