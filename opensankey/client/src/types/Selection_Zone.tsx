@@ -30,7 +30,7 @@ import { default_element_position } from './Utils'
  * @class Class_ZoneSelection
  * @extends {Class_Element}
  */
-export class Class_ZoneSelection
+export abstract class Class_ZoneSelection
 <
   Type_GenericDrawingArea extends Class_AbstractDrawingArea,
   Type_GenericSankey extends Class_AbstractSankey

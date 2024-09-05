@@ -18,6 +18,7 @@ import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
+import { Class_ZoneSelection } from './Selection_Zone'
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
@@ -46,11 +47,12 @@ function isDrawingAreaActive() {
  */
 export abstract class Class_ApplicationData
 <
-  Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>,
   Type_GenericSankey extends Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
   Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
->
+  Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
+  Type_GenericSelectionZone extends Class_ZoneSelection<Type_GenericDrawingArea,Type_GenericSankey>
+  >
   extends Class_AbstractApplicationData {
 
   // PUBLIC ATTRIBUTES =================================================================
@@ -151,7 +153,7 @@ export abstract class Class_ApplicationData
 
   // ABSTRACT METHODS ===================================================================
 
-  protected abstract createNewDrawingArea(): Type_GenericDrawingArea
+  public abstract createNewDrawingArea(): Type_GenericDrawingArea
 
   // PUBLIC METHODS =====================================================================
 
@@ -205,7 +207,7 @@ export abstract class Class_ApplicationData
    * @return {*}
    * @memberof Class_ApplicationData
    */
-  private keyboardEventListener(app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+  private keyboardEventListener(app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>) {
     return (evt: KeyboardEvent) => {
       // Event to move all selected nodes with keyboard arrows --------------------------
       if (
