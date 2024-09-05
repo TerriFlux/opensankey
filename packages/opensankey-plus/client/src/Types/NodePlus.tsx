@@ -17,7 +17,6 @@ import {
   Class_NodeStyle
 } from '../deps/OpenSankey/types/Node'
 import {
-  default_main_sankey_id,
   Type_ElementPosition
 } from '../deps/OpenSankey/types/Utils'
 

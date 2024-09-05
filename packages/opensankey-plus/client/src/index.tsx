@@ -18,15 +18,13 @@ import {
 // import { OSPDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 // import { DefaultOSPStyleLink } from './SankeyPlusUtils'
 import { SaveDiagramOptionsType } from './deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
-import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
 import { initializeAdditionalMenus, initializeMenuConfiguration, initializeReinitialization, moduleDialogs } from './deps/OpenSankey/OSModule'
 import { applicationDataType, processFunctionsType, SankeyData } from './deps/OpenSankey/types/LegacyType'
 import SankeyApp from './deps/OpenSankey/SankeyApp'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './deps/OpenSankey/dialogs/SankeyPersistence'
 import { DefaultSankeyData } from './deps/OpenSankey/types/Legacy'
-import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
-import { Class_ApplicationDataOS, Type_GenericApplicationDataOS } from './deps/OpenSankey/types/TypesOS'
+import { Type_GenericApplicationDataOS } from './deps/OpenSankey/types/TypesOS'
 
 declare const window: Window &
 typeof globalThis & {

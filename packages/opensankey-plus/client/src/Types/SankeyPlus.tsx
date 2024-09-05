@@ -18,9 +18,7 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { ViewType } from '../../types/Types'
-import { Class_LinkElement, Class_LinkStyle } from '../deps/OpenSankey/types/Link'
 import { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
-import { Class_LinkElementOS, Class_NodeElementOS } from '../deps/OpenSankey/types/TypesOS'
 import { default_main_sankey_id, default_style_id, default_style_name } from '../deps/OpenSankey/types/Utils'
 
 // CLASS SANKEY PLUS *********************************************************************
@@ -260,24 +258,24 @@ export class Class_SankeyPlus extends Class_Sankey
   }
 
   // PROTECTED METHODS ==================================================================
-    /**
+  /**
    * Specific node creation method for this Sankey
    * @param {string} id
    * @param {string} name
    * @return {Class_Node}
    * @memberof Class_Sankey
    */
-    protected createNewNode(id: string, name: string): Class_NodeElementPlus {
-      // Create node
-      const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
-      return node
-    }
+  protected createNewNode(id: string, name: string): Class_NodeElementPlus {
+    // Create node
+    const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
+    return node
+  }
   
-    protected createNewLink(id: string, source: Class_NodeElementPlus, target: Class_NodeElementPlus): Class_LinkElementPlus {
-      // Create link
-      const link = new Class_LinkElementPlus(id, source, target, this.drawing_area, this._menu_config)
-      return link
-    }
+  protected createNewLink(id: string, source: Class_NodeElementPlus, target: Class_NodeElementPlus): Class_LinkElementPlus {
+    // Create link
+    const link = new Class_LinkElementPlus(id, source, target, this.drawing_area, this._menu_config)
+    return link
+  }
     
   protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
     const style= new Class_LinkStylePlus(id,name,is_deletable)

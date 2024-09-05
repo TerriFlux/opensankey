@@ -44,6 +44,7 @@ import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
 import { OSPNodeFO } from './SankeyPlusForeignObject'
 import { dict_hook_ref_setter_show_dialog_componentsType } from './deps/OpenSankey/types/MenuConfig'
+import { MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 
 declare const window: Window &
   typeof globalThis & {
@@ -190,17 +191,11 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
     is_activated={true}
   />
   //Links
-  // TODO : re implement MenuConfLinkApparenceGradient with class
-  // additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
-  //   applicationContext={applicationContext as OSPApplicationContextType}
-  //   ComponentUpdater={ComponentUpdater as OSPComponentUpdaterType}
-  //   multi_selected_links={applicationState.multi_selected_links}
-  //   data={applicationData.data as OSPData}
-  //   link_function={link_function}
-  //   is_activated={true}
-  //   menu_for_style={false}
-  //   selected_style_link={applicationState.ref_selected_style_link}
-  // />)
+  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
+    applicationData={plus_dict_app_data}
+    is_activated={true}
+    menu_for_style={false}
+  />)
 
   //Preferences
   // TODO : re implement OSPMenuPreferenceLabels with class

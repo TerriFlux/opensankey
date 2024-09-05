@@ -11,8 +11,7 @@
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import {
   initial_window_width,
-  initial_window_height,
-  Class_ApplicationData
+  initial_window_height
 } from '../deps/OpenSankey/types/ApplicationData'
 
 // Local imports
@@ -57,6 +56,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
      * @memberof Class_DrawingArea
      */
   public d3_selection_free_label: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -106,6 +106,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     super.reset()
     // Add specific groups for free_labels, link and others
     this.d3_selection_free_label = this.d3_selection?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
+    this.d3_selection_def_gradient = this.d3_selection?.append('g').attr('id', 'def_gradient') ?? null
     this.drawElements()
   }
 
