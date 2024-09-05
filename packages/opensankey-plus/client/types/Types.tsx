@@ -17,9 +17,21 @@ import ReactQuill from 'react-quill'
 // import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
 // import { DrawArrowsType } from '../src/deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
 // import { Class_ApplicationData } from '../src/deps/OpenSankey/types/ApplicationData'
-import { Class_ApplicationDataPlus } from '../src/Types/ApplicationDataPlus'
-import { applicationDataType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationDataType, initializeReinitializationType, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyNode, SankeyNodeStyle } from '../src/deps/OpenSankey/types/LegacyType'
+import {
+  applicationDataType,
+  initializeAdditionalMenusType,
+  initializeApplicationDataType,
+  initializeReinitializationType,
+  SankeyData,
+  SankeyLink,
+  SankeyLinkAttrLocal,
+  SankeyLinkStyle,
+  SankeyNode,
+  SankeyNodeStyle
+} from '../src/deps/OpenSankey/types/LegacyType'
 import { setDiagramFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
+import { Type_GenericApplicationDataOSP } from '../src/Types/TypesOSP'
+import { dict_hook_ref_setter_show_dialog_componentsType } from '../src/deps/OpenSankey/types/MenuConfig'
 // import { applicationDataType } from '../src/deps/OpenSankey/types/Legacy'
 
 
@@ -143,7 +155,7 @@ export interface OSPApplicationDataVarType  {
 
 
   data: OSPData,
-  set_data: (_: SankeyData)=>void,
+  set_data: (_: OSPData)=>void,
   get_default_data: OSPGetDefaultData,
   // convert_data: ConvertDataFuncType,
   // display_nodes: {[_: string]: SankeyNode},
@@ -151,7 +163,7 @@ export interface OSPApplicationDataVarType  {
   // min_link_thickness: number,
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: setDiagramFuncType,
-  new_data: Class_ApplicationDataPlus
+  new_data: Type_GenericApplicationDataOSP
 }
 export type OSPApplicationDataType = OSPApplicationDataVarType
 

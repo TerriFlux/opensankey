@@ -40,10 +40,10 @@ import {
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
-import { Class_ApplicationDataPlus } from './Types/ApplicationDataPlus'
 import { OSPNodeFO } from './SankeyPlusForeignObject'
 import { dict_hook_ref_setter_show_dialog_componentsType } from './deps/OpenSankey/types/MenuConfig'
 import { MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
+import { Class_ApplicationDataOSP } from './Types/TypesOSP'
 import { OSPTransformationElements } from './SankeyPlusConvert'
 
 declare const window: Window &
@@ -98,7 +98,7 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
   //   }
   // }
 
-  const class_dataplus=new Class_ApplicationDataPlus(false)
+  const class_dataplus=new Class_ApplicationDataOSP(false)
 
   // Read data from cache if it exist
   if (_initial_data !== undefined) {

@@ -7,25 +7,24 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-// External imports
-
 // OpenSankey imports
 import {
   Class_LinkAttribute,
-  Class_LinkElement,
   Class_LinkStyle
 } from '../deps/OpenSankey/types/Link'
 import {
   getBooleanFromJSON,
   Type_ElementPosition,
-  Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
+import {
+  Class_AbstractLinkElementPlus,
+  type Class_AbstractDrawingAreaPlus,
+  type Class_AbstractNodeElementPlus,
+  type Class_AbstractSankeyPlus
+} from './Abstract'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
-import { Class_SankeyPlus } from './SankeyPlus'
-import { Class_NodeElementPlus } from './NodePlus'
 
 export const default_shape_shape_is_gradient = false
 
@@ -37,25 +36,40 @@ export const default_shape_shape_is_gradient = false
  * @class Class_LinkElementPlus
  * @extends {Class_LinkElement}
  */
-export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPlus, Class_SankeyPlus, Class_NodeElementPlus> {
+export abstract class Class_LinkElementPlus
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>>,
+    Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>>,
+    Type_GenericNodeElement extends Class_AbstractNodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>>
+  >
+  extends Class_AbstractLinkElementPlus
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey,
+    Type_GenericNodeElement
+  >
+{
+  // ABSTRACT ATTRIBUTES ===============================================================
 
-  // PUBLIC ATTRIBUTES ==================================================================
-
-  // PROTECTED ATTRIBUTE ================================================================
-  // Override
   /**
-* Display attributes for link
-* @protected
-* @type {{
-*     drawing_area: Type_GenericDrawingArea,
-  *     position: Type_ElementPosition,
-  *     local: Class_LinkAttribute,
-  *     style: Class_LinkStyle
-  *   }}
-  * @memberof Class_LinkElement
-  */
-  protected _display: {
-    drawing_area: Class_DrawingAreaPlus,
+   * Display attributes
+   * @protected
+   * @abstract
+   * @type {{
+   *       drawing_area: Type_GenericDrawingArea,
+   *       displaying_order: number,
+   *       position_starting: Type_ElementPosition,
+   *       position_ending: Type_ElementPosition,
+   *       style: Class_LinkStylePlus,
+   *       attributes: Class_LinkAttributePlus,
+   *       position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+   *       position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+   *       position_offset_label?: number // optional var used when label is dragged (if label follow link path)
+   *     }}
+   * @memberof Class_LinkElementPlus
+   */
+  protected abstract _display: {
+    drawing_area: Type_GenericDrawingArea,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -65,6 +79,11 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
     position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
     position_offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
+
+  // PUBLIC ATTRIBUTES ==================================================================
+
+  // PROTECTED ATTRIBUTE ================================================================
+
   // PRIVATE ATTRIBUTES =================================================================
 
   // CONSTRUCTOR ========================================================================
@@ -72,56 +91,29 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
   /**
    * Creates an instance of Class_LinkElementPlus.
    * @param {string} id
-   * @param {Class_NodeElementPlus} source
-   * @param {Class_NodeElementPlus} target
-   * @param {Class_DrawingAreaPlus} drawing_area
+   * @param {Type_GenericNodeElement} source
+   * @param {Type_GenericNodeElement} target
+   * @param {Type_GenericDrawingArea} drawing_area
    * @param {Class_MenuConfigPlus} menu_config
    * @memberof Class_LinkElementPlus
    */
   constructor(
     id: string,
-    source: Class_NodeElementPlus,
-    target: Class_NodeElementPlus,
-    drawing_area: Class_DrawingAreaPlus,
+    source: Type_GenericNodeElement,
+    target: Type_GenericNodeElement,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfigPlus,
   ) {
     // Heritance
     super(id, source, target, drawing_area, menu_config)
-    // Overrides
-    // Display
-    this._display = {
-      drawing_area: drawing_area,
-      displaying_order: drawing_area.addElement(),
-      position_starting: {
-        type: 'absolute',
-        x: 0,
-        y: 0,
-        u: 0,
-        v: 0
-      },
-      position_ending: {
-        type: 'absolute',
-        x: 0,
-        y: 0,
-        u: 0,
-        v: 0
-      },
-      style: drawing_area.sankey.default_link_style,
-      attributes: new Class_LinkAttributePlus()
-    }
-    // Link with style
-    this._display.style.addReference(this)
-
-
-    this._sankeys = {}
+    // Override menu config
     this._menu_config = menu_config
 
-    this.source.addOutputLink(this)
-    this.target.addInputLink(this)// Target
-    // Instanciate display on svg
-    this.computeControlPoints()
-    this.draw()
-    // New attributes
+    // this.source.addOutputLink(this)
+    // this.target.addInputLink(this)// Target
+    // // Instanciate display on svg
+    // this.computeControlPoints()
+    // this.draw()
   }
 
   public getPathColorToUse() {
@@ -179,7 +171,7 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
         if ((!l_recy && n_source.position_x < n_target.position_x) || (l_recy && n_source.position_x >= n_target.position_x)) {
           // In case when when link isn't recycling & the source is at the left of target
           // or the link is recycling but the source is at the right of the target
-          // the gradient go from color of source to color of target 
+          // the gradient go from color of source to color of target
 
           // Position lienear gradient (it start & stop position )
           gradient
@@ -212,7 +204,7 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
         if (n_source.position_y < n_target.position_y) {
           // In case when when link isn't recycling & the source is on top of target
           // or the link is recycling but the source is at the bottom of the target
-          // the gradient go from color of source to color of target 
+          // the gradient go from color of source to color of target
 
           // Position lienear gradient (it start & stop position )
           gradient?.attr('x1', 0)
@@ -269,6 +261,7 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
     return super.getPathColorToUse()
   }
   //  GETTER & SETTER =============================================
+
   public get shape_is_gradient() {
     if (this._display.attributes.shape_is_gradient !== undefined) {
       return this._display.attributes.shape_is_gradient
@@ -284,8 +277,6 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
   }
 }
 
-
-
 // CLASS LINK ATTRIBUTES ****************************************************************
 
 /**
@@ -297,12 +288,8 @@ export class Class_LinkElementPlus extends Class_LinkElement<Class_DrawingAreaPl
 export class Class_LinkAttributePlus extends Class_LinkAttribute {
 
   // PROTECTED ATTRIBUTES ===============================================================
+
   protected _shape_is_gradient?: boolean | undefined
-
-
-  // CONSTRUCTOR ========================================================================
-
-  constructor() { super() }
 
   // PUBLIC METHODES ====================================================================
 
@@ -324,18 +311,13 @@ export class Class_LinkAttributePlus extends Class_LinkAttribute {
 
   // PROTECTED METHODS ==================================================================
 
-  protected update() { }
-
   // GETTERS ============================================================================
 
   public get shape_is_gradient(): boolean | undefined { return this._shape_is_gradient }
 
-
   // SETTERS ============================================================================
 
   public set shape_is_gradient(value: boolean | undefined) { this._shape_is_gradient = value; this.update() }
-
-
 }
 
 // CLASS LINK STYLE *********************************************************************
@@ -352,7 +334,6 @@ export class Class_LinkStylePlus extends Class_LinkStyle {
   // PRIVATE ATTRIBUTES =================================================================
   private _shape_is_gradient: boolean
 
-
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
@@ -361,10 +342,9 @@ export class Class_LinkStylePlus extends Class_LinkStyle {
   ) {
     // Instantiate super class
     super(id, name, is_deletable)
+    // Update new attributes
     this._shape_is_gradient = default_shape_shape_is_gradient
-
   }
-
 
   // PROTECTED METHODS ==================================================================
 

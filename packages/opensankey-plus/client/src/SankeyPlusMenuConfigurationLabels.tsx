@@ -42,7 +42,7 @@ import {
   context_zdtFType,
   ZDTMenuAsAccordeonItemType
 } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
-import { Class_ContainerElement } from './Types/FreeLabel'
+import { Type_GenericContainerElement } from './Types/TypesOSP'
 
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -103,13 +103,13 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
   // }
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
-  const handleUplabel = (i: Class_ContainerElement) => {
+  const handleUplabel = (i: Type_GenericContainerElement) => {
     new_data.drawing_area.sankey.moveUpFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après
-  const handleDownlabel = (i: Class_ContainerElement) => {
+  const handleDownlabel = (i: Type_GenericContainerElement) => {
     new_data.drawing_area.sankey.moveDownFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }

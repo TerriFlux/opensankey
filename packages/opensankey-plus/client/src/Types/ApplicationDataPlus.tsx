@@ -8,11 +8,7 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import {
-  Class_ApplicationData,
-  initial_window_height,
-  initial_window_width,
-} from '../deps/OpenSankey/types/ApplicationData'
+import { Class_AbstractApplicationDataPlus } from './Abstract'
 
 // Local imports
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
@@ -29,18 +25,22 @@ import { Class_SankeyPlus } from './SankeyPlus'
  * @class Class_ApplicationDataPlus
  * @extends {Class_ApplicationData}
  */
-export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_DrawingAreaPlus, Class_SankeyPlus, Class_NodeElementPlus, Class_LinkElementPlus> {
+export abstract class Class_ApplicationDataPlus
+<
+  Type_GenericDrawingArea extends Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericSankey extends Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericNodeElement extends Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+>
+extends Class_AbstractApplicationDataPlus
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey,
+  Type_GenericNodeElement,
+  Type_GenericLinkElement
+> {
 
   // PUBLIC ATTRIBUTES =================================================================
-
-  /**
-   * Drawing area
-   *
-   * @protected
-   * @type {Class_DrawingArea}
-   * @memberof Class_ApplicationData
-   */
-  protected _drawing_area: Class_DrawingAreaPlus
 
   /**
    * Configuration Menu
@@ -72,10 +72,6 @@ export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_Drawi
     // OVERRIDE Drawing_Area & MENU CONFIG TO TAKE INTO ACCOUNT ALL NEW VAR. & FUNCTIONS OF OSP
     // TODO : since we change reference of the app_data, verify we cut all link of previous DA & config with app_data
     this._menu_configuration = new Class_MenuConfigPlus()
-    this._drawing_area = new Class_DrawingAreaPlus(
-      this.drawing_area.getHeight(),
-      this.drawing_area.getWidth(),
-      this)
 
     //let logo_sankey_plus = ''
     try {
@@ -93,28 +89,7 @@ export class Class_ApplicationDataPlus extends Class_ApplicationData<Class_Drawi
     this.logo = this._logo_sankey_plus
   }
 
-  // PUBLIC METHODS ====================================================================
-
-  // PROTECTED METHODS ====================================================================
-
-  public createNewDrawingArea(): Class_DrawingAreaPlus {
-    const drawing_area = new Class_DrawingAreaPlus(
-      initial_window_height,
-      initial_window_width,
-      this
-    )
-    return drawing_area
-  }
-
   // GETTERS / SETTERS ==================================================================
-
-  // Overrides --------------------------------------------------------------------------
-
-  // DrawingArea
-  public override get drawing_area() { return this._drawing_area }
-  public override set drawing_area(_: Class_DrawingAreaPlus) { this._drawing_area = _ }
-
-  // New -------------------------------------------------------------------------------
 
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
   public set logo_sankey_plus(value: string) { this._logo_sankey_plus = value }

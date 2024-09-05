@@ -10,6 +10,7 @@ import ReactQuill from 'react-quill'
 import { OSTooltip } from './deps/OpenSankey/types/Utils'
 import { OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
 import { Class_NodeElementPlus } from './Types/NodePlus'
+import { Type_GenericNodeElementOSP } from './Types/TypesOSP'
 
 // import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
@@ -77,7 +78,7 @@ export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
    * @param {Type_NodeElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Class_NodeElementPlus,) => {
+  const check_indeterminate = (curr: Type_GenericNodeElementOSP,) => {
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)

@@ -1,0 +1,191 @@
+// ==================================================================================================
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Date : 03/09/2024
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
+// Import OpenSankey
+import { initial_window_height, initial_window_width } from '../deps/OpenSankey/types/ApplicationData'
+import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from '../deps/OpenSankey/types/Utils'
+
+// Local imports
+import { Class_MenuConfigPlus } from './MenuConfigPlus'
+import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
+import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
+import { Class_SankeyPlus } from './SankeyPlus'
+import { Class_NodeElementPlus } from './NodePlus'
+import { Class_LinkAttributePlus, Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
+import { Class_ContainerElement } from './FreeLabel'
+import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
+
+// STANDARD TYPES FOR OPENSANKEY AND MORE *********************************************************
+
+export type Type_GenericApplicationDataOSP = Class_ApplicationDataPlus<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>
+export type Type_GenericDrawingAreaOSP = Class_DrawingAreaPlus<Type_GenericSankeyOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>
+export type Type_GenericSankeyOSP = Class_SankeyPlus<Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>
+export type Type_GenericNodeElementOSP = Class_NodeElementPlus<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericLinkElementOSP>
+export type Type_GenericLinkElementOSP = Class_LinkElementPlus<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericNodeElementOSP>
+export type Type_GenericContainerElement = Class_ContainerElement<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP>
+
+// STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
+
+// APPLICATION DATA ===============================================================================
+
+export class Class_ApplicationDataOSP
+  extends Class_ApplicationDataPlus<
+    Class_DrawingAreaOSP,
+    Class_SankeyOSP,
+    Class_NodeElementOSP,
+    Class_LinkElementOSP
+  > {
+  public createNewDrawingArea(): Class_DrawingAreaOSP {
+    const drawing_area = new Class_DrawingAreaOSP(
+      initial_window_height,
+      initial_window_width,
+      this
+    )
+    return drawing_area
+  }
+}
+
+// DRAWING AREA ===================================================================================
+export class Class_DrawingAreaOSP
+  extends Class_DrawingAreaPlus<
+    Class_SankeyOSP,
+    Class_NodeElementOSP,
+    Class_LinkElementOSP
+  > {
+  protected createNewSankey() {
+    const sankey = new Class_SankeyOSP(this, this.application_data.menu_configuration)
+    return sankey
+  }
+
+  protected createNewSelectionZone(): Class_ZoneSelectionPlus<Class_DrawingAreaOSP, Class_SankeyOSP> {
+    return new Class_ZoneSelectionPlus<Class_DrawingAreaOSP, Class_SankeyOSP>(this, this.application_data.menu_configuration)
+  }
+}
+
+// SANKEY =========================================================================================
+export class Class_SankeyOSP
+  extends Class_SankeyPlus<
+    Class_DrawingAreaOSP,
+    Class_NodeElementOSP,
+    Class_LinkElementOSP
+  > {
+
+  protected _link_styles: { [_: string]: Class_LinkStylePlus } = {}
+
+  constructor(
+    drawing_area: Class_DrawingAreaOSP,
+    menu_config: Class_MenuConfigPlus,
+    id: string = default_main_sankey_id
+  ) {
+    super(drawing_area, menu_config, id)
+    this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
+  }
+
+  protected createNewNode(id: string, name: string): Class_NodeElementOSP {
+    const node = new Class_NodeElementOSP(id, name, this.drawing_area, this._menu_config)
+    return node
+  }
+
+  protected createNewLink(id: string, source: Class_NodeElementOSP, target: Class_NodeElementOSP): Class_LinkElementOSP {
+    const link = new Class_LinkElementOSP(id, source, target, this.drawing_area, this._menu_config)
+    return link
+  }
+
+  protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
+    const style = new Class_LinkStylePlus(id, name, is_deletable)
+    return style
+  }
+
+  public get default_link_style() {
+    return this._link_styles[default_style_id]
+  }
+}
+
+// NODE ===========================================================================================
+export class Class_NodeElementOSP
+  extends Class_NodeElementPlus<
+    Class_DrawingAreaOSP, Class_SankeyOSP, Class_LinkElementOSP
+  > {
+
+  public copyInputLink(link: Class_LinkElementOSP): Class_LinkElementOSP {
+    const new_link = new Class_LinkElementOSP(
+      link.id,
+      this.main_sankey.nodes_dict[link.source.id] as Class_NodeElementOSP,
+      this,
+      this.drawing_area,
+      this.menu_config as Class_MenuConfigPlus
+    )
+    return new_link
+  }
+
+  public copyOutputLink(link: Class_LinkElementOSP): Class_LinkElementOSP {
+    const new_link = new Class_LinkElementOSP(
+      link.id,
+      this,
+      this.main_sankey.nodes_dict[link.target.id] as Class_NodeElementOSP,
+      this.drawing_area,
+      this.menu_config as Class_MenuConfigPlus
+    )
+    return new_link
+  }
+}
+
+// LINK ===========================================================================================
+export class Class_LinkElementOSP
+  extends Class_LinkElementPlus<
+    Class_DrawingAreaOSP, Class_SankeyOSP, Class_NodeElementOSP
+  > {
+
+    protected _display: {
+        drawing_area: Class_DrawingAreaOSP,
+        displaying_order: number,
+        position_starting: Type_ElementPosition,
+        position_ending: Type_ElementPosition,
+        style: Class_LinkStylePlus,
+        attributes: Class_LinkAttributePlus,
+        position_x_label?: number
+        position_y_label?: number
+        position_offset_label?: number
+    }
+
+  constructor(
+    id: string,
+    source: Class_NodeElementOSP,
+    target: Class_NodeElementOSP,
+    drawing_area: Class_DrawingAreaOSP,
+    menu_config: Class_MenuConfigPlus
+  ) {
+    super(id, source, target, drawing_area, menu_config)
+    // Display
+    this._display = {
+      drawing_area: drawing_area,
+      displaying_order: drawing_area.addElement(),
+      position_starting: {
+        type: 'absolute',
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      position_ending: {
+        type: 'absolute',
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      style: drawing_area.sankey.default_link_style,
+      attributes: new Class_LinkAttributePlus()
+    }
+    // Link with style
+    this._display.style.addReference(this)
+  }
+}
+
+
+
+
+

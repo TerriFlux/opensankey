@@ -8,20 +8,42 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { Class_Element } from '../deps/OpenSankey/types/Element'
-import { getBooleanFromJSON, getNumberFromJSON, getStringFromJSON, Type_ElementPosition, Type_JSON } from '../deps/OpenSankey/types/Utils'
-import { default_element_position } from '../deps/OpenSankey/types/Utils'
+import {
+  Class_Element
+} from '../deps/OpenSankey/types/Element'
+import {
+  Class_Handler
+} from '../deps/OpenSankey/types/Handler'
+import {
+  Type_ElementPosition,
+  Type_JSON,
+  default_element_position,
+  getBooleanFromJSON,
+  getNumberFromJSON,
+  getStringFromJSON
+} from '../deps/OpenSankey/types/Utils'
 import { default_selected_stroke_width } from '../deps/OpenSankey/types/Node'
-import { Class_Handler } from '../deps/OpenSankey/types/Handler'
 
 // Local imports
+import {
+  Class_AbstractDrawingAreaPlus,
+  Class_AbstractSankeyPlus
+} from './Abstract'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
-import { Class_SankeyPlus } from './SankeyPlus'
 
 // CLASS FREE LABEL ELEMENT *************************************************************
 
-export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus, Class_SankeyPlus> {
+export class Class_ContainerElement
+<
+  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<any, any, any>,
+  Type_GenericSankey extends Class_AbstractSankeyPlus<any, any, any>
+>
+extends Class_Element
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey
+>
+{
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -33,24 +55,15 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
    * Display attributes
    * @protected
    * @type {{
-   *     drawing_area: Class_DrawingAreaPlus,
+   *     drawing_area: Type_GenericDrawingArea,
    *     position: Type_ElementPosition,
    *   }}
    * @memberof Class_ContainerElement
    */
   protected _display: {
-    drawing_area: Class_DrawingAreaPlus,
+    drawing_area: Type_GenericDrawingArea,
     position: Type_ElementPosition,
   }
-
-  /**
-   * List of Sankey in which element appear
-   *
-   * @private
-   * @type {Class_Sankey[]}
-   * @memberof Class_ProtoElement
-   */
-  declare protected _sankeys: { [_: string]: Class_SankeyPlus }
 
   /**
    * Config menu ref to html element & function to update it
@@ -75,10 +88,10 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
   private _label_height: number
 
   private _drag_handler: {
-    top: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
-    bottom: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
-    left: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
-    right: Class_Handler<Class_DrawingAreaPlus, Class_SankeyPlus>,
+    top: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
+    bottom: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
+    left: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
+    right: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
   }
 
   // CONSTRUCTOR ========================================================================
@@ -87,12 +100,12 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
    * Creates an instance of Class_ContainerElement.
    * @param {string} id
    * @param {Class_MenuConfigPlus} menu_config
-   * @param {Class_DrawingAreaPlus} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @memberof Class_ContainerElement
    */
   constructor(id: string,
     menu_config: Class_MenuConfigPlus,
-    drawing_area: Class_DrawingAreaPlus,
+    drawing_area: Type_GenericDrawingArea,
   ) {
     super(id, menu_config, 'g_labels')
     this._display = {
@@ -237,7 +250,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
   /**
    * Setting value of container from JSON
    *
-   * @return {*} 
+   * @return {*}
    * @memberof Class_ContainerElement
    */
   public toJSON() {
@@ -487,7 +500,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
-        (drawing_area as Class_DrawingAreaPlus).addFreeLabelToSelection(this)
+        drawing_area.addFreeLabelToSelection(this)
         // Open related menu
         this.menu_config.openConfigMenuElementsFreeLabels()
         // Update components related to free label edition
@@ -496,7 +509,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
       // CTRL
       else if (event.ctrlKey) {
         // Add free label to selection
-        (drawing_area as Class_DrawingAreaPlus).addFreeLabelToSelection(this)
+        drawing_area.addFreeLabelToSelection(this)
         // Update components related to free label edition
         this.menu_config.ref_to_menu_config_free_label_updater.current()
       }
@@ -506,7 +519,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
         // Purge selection list
         drawing_area.purgeSelection();
         // Add free label to selection
-        (drawing_area as Class_DrawingAreaPlus).addFreeLabelToSelection(this)
+        drawing_area.addFreeLabelToSelection(this)
       }
     }
   }
@@ -619,7 +632,7 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
     super.eventMouseDrag(event)
 
     // Get related drawing area
-    const drawing_area = this.drawing_area as Class_DrawingAreaPlus
+    const drawing_area = this.drawing_area
     const zdt_selected = drawing_area.selected_free_labels_list
 
     if (zdt_selected.length == 0) {
@@ -667,7 +680,6 @@ export class Class_ContainerElement extends Class_Element<Class_DrawingAreaPlus,
   // Overrides --------------------------------------------------------------------------
 
   public override get menu_config() { return this._menu_config }
-  // public override get drawing_area() { return this._display.drawing_area }
 
   // New --------------------------------------------------------------------------------
 

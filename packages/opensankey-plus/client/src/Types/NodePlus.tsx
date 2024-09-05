@@ -10,25 +10,13 @@
 // External imports
 import * as d3 from 'd3'
 
-// OpenSankey imports
-import {
-  Class_NodeAttribute,
-  Class_NodeElement,
-  Class_NodeStyle
-} from '../deps/OpenSankey/types/Node'
-import {
-  getBooleanFromJSON,
-  getStringFromJSON,
-  getStringOrUndefinedFromJSON,
-  Type_ElementPosition,
-  Type_JSON
-} from '../deps/OpenSankey/types/Utils'
-
-
 // Local imports
+import {
+  Class_AbstractNodeElementPlus,
+  type Class_AbstractDrawingAreaPlus,
+  type Class_AbstractSankeyPlus
+} from './Abstract'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
-import { Class_SankeyPlus } from './SankeyPlus'
 import { Class_LinkElementPlus } from './LinkPlus'
 
 // CLASS NODE ELEMENT PLUS **************************************************************
@@ -37,38 +25,24 @@ import { Class_LinkElementPlus } from './LinkPlus'
  * Override OpenSankey's class to take in account specifities of OpenSankey+ app
  * @export
  * @class Class_NodeElementPlus
- * @extends {Class_NodeElement}
+ * @extends {Class_AbstractNodeElementPlus}
  */
-export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPlus, Class_SankeyPlus, Class_LinkElementPlus> {
-
+export abstract class Class_NodeElementPlus
+<
+  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>, Type_GenericLinkElement>,
+  Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
+>
+extends Class_AbstractNodeElementPlus
+<
+  Type_GenericDrawingArea,
+  Type_GenericSankey,
+  Type_GenericLinkElement
+>
+{
   // PUBLIC ATTRIBUTES ==================================================================
 
-  // /**
-  //  * D3 selection that contains related svg element
-  //  * @type {(d3.Selection<SVGGElement, Class_Element, SVGGElement, unknown> | null)}
-  //  * @memberof Class_Element
-  //  */
-  // declare public d3_selection: d3.Selection<SVGGElement, Class_NodeElement, SVGGElement, unknown> | null
-
   // PROTECTED ATTRIBUTE ================================================================
-
-  // Definition of abstract attribut from Class_Element
-  protected _display: {
-    drawing_area: Class_DrawingAreaPlus,
-    position: Type_ElementPosition,
-    style: Class_NodeStyle,
-    attributes: Class_NodeAttribute
-    position_x_label?: number// Relative x position of label when dragged (optionnal)
-    position_y_label?: number// Relative y position of label when dragged (optionnal)
-  }
-
-  /**
-   * List of Sankey in which element appear
-   * @private
-   * @type {Class_SankeyPlus[]}
-   * @memberof Class_ProtoElement
-   */
-  protected _sankeys: { [_: string]: Class_SankeyPlus }
 
   /**
    * Config menu ref to html element & function to update it
@@ -101,26 +75,19 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
    * Creates an instance of Class_NodeElementPlus.
    * @param {string} id
    * @param {string} name
-   * @param {Class_DrawingAreaPlus} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @param {Class_MenuConfigPlus} menu_config
    * @memberof Class_NodeElementPlus
    */
   constructor(
     id: string,
     name: string,
-    drawing_area: Class_DrawingAreaPlus,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfigPlus
   ) {
     // Heritance
     super(id, name, drawing_area, menu_config)
     // Overrides
-    this._display = {
-      drawing_area: this.display.drawing_area,
-      position: this.display.position,
-      style: this.display.drawing_area.sankey.default_node_style,
-      attributes: new Class_NodeAttribute()
-    }
-    this._sankeys = {}
     this._menu_config = menu_config
     // New attributes
     this._iconName = ''
@@ -136,6 +103,11 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     this._hyperlink = ''
   }
 
+  // ABSTRACT METHODS ===================================================================
+
+  public abstract copyInputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
+  public abstract copyOutputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
+
   // PUBLIC METHOD ======================================================================
 
   // Overrides --------------------------------------------------------------------------
@@ -144,28 +116,6 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     super.draw()
     this.drawIllustration()
     this.drawFO()
-  }
-
-  public copyInputLink(link: Class_LinkElementPlus): Class_LinkElementPlus {
-    const new_link = new Class_LinkElementPlus(
-      link.id,
-      this.main_sankey.nodes_dict[link.source.id] as Class_NodeElementPlus,
-      this,
-      this.drawing_area,
-      this.menu_config as Class_MenuConfigPlus
-    )
-    return new_link
-  }
-
-  public copyOutputLink(link: Class_LinkElementPlus): Class_LinkElementPlus {
-    const new_link = new Class_LinkElementPlus(
-      link.id,
-      this,
-      this.main_sankey.nodes_dict[link.target.id] as Class_NodeElementPlus,
-      this.drawing_area,
-      this.menu_config as Class_MenuConfigPlus
-    )
-    return new_link
   }
 
   /**
@@ -237,7 +187,7 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
     this._hyperlink = node_to_copy._hyperlink
   }
 
-  public override isEqual(_: Class_NodeElementPlus): boolean {
+  public override isEqual(_: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): boolean {
     const super_equal = super.isEqual(_)
     if (super_equal == false) {
       return false
@@ -282,7 +232,7 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   // New --------------------------------------------------------------------------------
 
   public drawIllustration() {
-    this.d3_selection_plus?.selectAll('.illustration').remove()
+    this.d3_selection?.selectAll('.illustration').remove()
     if (this._is_image) {
       this.drawIllustrationImage()
     }
@@ -292,9 +242,9 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   }
 
   public drawFO() {
-    this.d3_selection_plus?.select('.node_fo').remove()
+    this.d3_selection?.select('.node_fo').remove()
 
-    this.d3_selection_plus?.append('foreignObject')
+    this.d3_selection?.append('foreignObject')
       .attr('id', this.id + '_fo')
       .attr('class', 'node_fo')
       .attr('width', this.getShapeWidthToUse())
@@ -319,16 +269,16 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
   // PRIVATE METHODS ====================================================================
 
   private drawIllustrationImage() {
-    this.d3_selection_plus?.append('image')
-      .attr('id', n => 'image_node_' + n.id)
+    this.d3_selection?.append('image')
+      .attr('id', 'image_node_' + this.id)
       .attr('class', 'illustration')
-      .attr('href', n => n.image_src)
+      .attr('href', this.image_src)
       .attr('height', this.getShapeHeightToUse())
       .attr('width', this.getShapeWidthToUse())
   }
 
   private drawIllustrationIcon() {
-    this.d3_selection_plus?.append('svg')
+    this.d3_selection?.append('svg')
       .attr('id', 'icon_node_' + this.id)
       .attr('class', 'icon_node')
       .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
@@ -345,10 +295,6 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
 
   // Overrides --------------------------------------------------------------------------
 
-  // // DrawingArea
-  // public override get drawing_area() { return this._display.drawing_area }
-
-
   // Get application config menu
   protected override get menu_config(): Class_MenuConfigPlus { return this._menu_config }
 
@@ -356,8 +302,6 @@ export class Class_NodeElementPlus extends Class_NodeElement<Class_DrawingAreaPl
 
   public get iconName(): string { return this._iconName }
   public set iconName(value: string) { this._iconName = value }
-
-  public get d3_selection_plus() { return this.d3_selection as d3.Selection<SVGGElement, this, SVGGElement, unknown> | null }
 
   public get iconColor(): string { return this._iconColor }
   public set iconColor(value: string) { this._iconColor = value }

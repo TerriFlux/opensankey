@@ -8,18 +8,15 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import {
-  Class_Sankey
-} from '../deps/OpenSankey/types/Sankey'
+import { default_main_sankey_id, default_style_id } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
-import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
-import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Class_NodeElementPlus } from './NodePlus'
+import type { ViewType } from '../../types/Types'
+import type { Class_MenuConfigPlus } from './MenuConfigPlus'
+import type { Class_NodeElementPlus } from './NodePlus'
+import type { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
+import { type Class_AbstractDrawingAreaPlus, Class_AbstractSankeyPlus } from './Abstract'
 import { Class_ContainerElement } from './FreeLabel'
-import { ViewType } from '../../types/Types'
-import { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
-import { default_main_sankey_id, default_style_id, default_style_name, getJSONFromJSON, Type_JSON } from '../deps/OpenSankey/types/Utils'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -29,21 +26,23 @@ import { default_main_sankey_id, default_style_id, default_style_name, getJSONFr
  * @export
  * @class Class_Sankey
  */
-export class Class_SankeyPlus extends Class_Sankey
+export abstract class Class_SankeyPlus
+<
+  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericNodeElement extends Class_NodeElementPlus<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>
+>
+extends Class_AbstractSankeyPlus
   <
-    Class_DrawingAreaPlus,
-    Class_NodeElementPlus,
-    Class_LinkElementPlus
-  > {
+  Type_GenericDrawingArea,
+  Type_GenericNodeElement,
+  Type_GenericLinkElement
+  >
+{
 
-  // PUBLIC ATTRIBUTES ==================================================================
+  // ABSTRACT ATTRIBUTES ================================================================
 
-  // /**
-  //  * Drawing area where sankey belongs
-  //  * @type {Class_DrawingArea}
-  //  * @memberof Class_Sankey
-  //  */
-  // declare public drawing_area: Class_DrawingAreaPlus
+  protected abstract _link_styles: { [_: string]: Class_LinkStylePlus }
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -55,24 +54,13 @@ export class Class_SankeyPlus extends Class_Sankey
    */
   protected _menu_config: Class_MenuConfigPlus
 
-  protected _link_styles: { [_: string]: Class_LinkStylePlus }
-
-  // /**
-  //  * Nodes
-  //  *
-  //  * @protected
-  //  * @type {{ [_: string]: Class_NodeElement }}
-  //  * @memberof Class_Sankey
-  //  */
-  // declare protected _nodes: { [_: string]: Class_NodeElementPlus }
-
   /**
    * Contains dict of Free Labels elements
    * @protected
-   * @type {{ [_: string]: Class_ContainerElement }}
+   * @type {{ [_: string]: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> }}
    * @memberof Class_SankeyPlus
    */
-  protected _labels: { [_: string]: Class_ContainerElement } = {}
+  protected _labels: { [_: string]: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> } = {}
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -88,11 +76,11 @@ export class Class_SankeyPlus extends Class_Sankey
 
   /**
    * Creates an instance of Class_Sankey.
-   * @param {Class_DrawingAreaPlus} drawing_area
+   * @param {Type_GenericDrawingArea} drawing_area
    * @memberof Class_Sankey
    */
   constructor(
-    drawing_area: Class_DrawingAreaPlus,
+    drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfigPlus,
     id: string = default_main_sankey_id
   ) {
@@ -100,39 +88,12 @@ export class Class_SankeyPlus extends Class_Sankey
     super(drawing_area, menu_config, id)
     // Overrides
     this._menu_config = menu_config
-    // this._nodes = {}
     // New attributes
-    this._link_styles = {}
-    this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
     this._labels = {}
     this._icon_catalog = {}
   }
 
   // PUBLIC METHODS =====================================================================
-
-  // Overrides --------------------------------------------------------------------------
-
-  public override addNewDefaultNode(): Class_NodeElementPlus {
-    const n = String(Object.values(this._nodes).length)
-    const id = 'node' + n
-    const name = 'Node ' + n
-    return this.addNewNode(id, name)
-  }
-
-  public override addNewNode(id: string, name: string): Class_NodeElementPlus {
-    if (!this._nodes[id]) {
-      // Create node
-      const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
-      // Set node to default position
-      node.initDefaultPosXY()
-      // Update registry of nodes
-      this._addNode(node)
-      return node
-    }
-    else {
-      return this.addNewNode(id + '_0', name + '_0')
-    }
-  }
   /**
    * Extract sankey as a JSON struct
    *
@@ -195,7 +156,7 @@ export class Class_SankeyPlus extends Class_Sankey
           this.free_labels_dict[cont.id].copyFrom(cont)
         })
 
-      // Delete container present in current but not new 
+      // Delete container present in current but not new
       list_curr_container.filter(curr_cont => !list_new_container.map(new_cont => new_cont.id).includes(curr_cont.id))
         .forEach(cont => {
           this.deleteFreeLabel(cont)
@@ -220,43 +181,37 @@ export class Class_SankeyPlus extends Class_Sankey
 
   /**
    * Add a given zdt to Sankey
-   * @param {Class_ContainerElement} node
+   * @param {Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>} node
    * @memberof Class_Sankey
    */
-  private _addLabel(zdt: Class_ContainerElement) { this._labels[zdt.id] = zdt }
+  private _addLabel(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
+    this._labels[zdt.id] = zdt
+  }
 
-  public moveUpFreeLabelOrder = (zdt: Class_ContainerElement) => {
+  public moveUpFreeLabelOrder(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
     const list_zdt = Object.entries(this._labels)
     // Get idx of element to move up
     const posElemt = list_zdt.indexOf([zdt.id, zdt])
-
     // Remove zdt from original dict.
     list_zdt.splice(posElemt, 1)
-
     // Add zdt before previous zdt if dict
     list_zdt.splice(posElemt - 1, 0, [zdt.id, zdt])
-
     // Replace original dict with new one (the same in different order)
     this._labels = Object.fromEntries(list_zdt)
-
     // Redraw all free labels
     this.free_labels_list.map(zdt => zdt.draw())
   }
 
-  public moveDownFreeLabelOrder = (zdt: Class_ContainerElement) => {
+  public moveDownFreeLabelOrder(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
     const list_zdt = Object.entries(this._labels)
     // Get idx of element to move up
     const posElemt = list_zdt.indexOf([zdt.id, zdt])
-
     // Remove zdt from original dict.
     list_zdt.splice(posElemt, 1)
-
     // Add zdt after next zdt if dict
     list_zdt.splice(posElemt + 1, 0, [zdt.id, zdt])
-
     // Replace original dict with new one (the same in different order)
     this._labels = Object.fromEntries(list_zdt)
-
     // Redraw all free labels
     this.free_labels_list.map(zdt => zdt.draw())
   }
@@ -268,13 +223,13 @@ export class Class_SankeyPlus extends Class_Sankey
    * @return {Class_Node}
    * @memberof Class_Sankey
    */
-  public addNewFreeLabel(id: string): Class_ContainerElement {
+  public addNewFreeLabel(id: string): Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> {
     if (!this._labels[id]) {
       // Create node
-      const zdt = new Class_ContainerElement(
+      const zdt = new Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>(
         id,
         this._menu_config as Class_MenuConfigPlus,
-        this.drawing_area as Class_DrawingAreaPlus)
+        this.drawing_area as Type_GenericDrawingArea)
       // Set node to default position
       zdt.initDefaultPosXY()
       // Update registry of nodes
@@ -299,11 +254,11 @@ export class Class_SankeyPlus extends Class_Sankey
 
   /**
    * Permanently delete selected nodes
-   * @memberof Class_DrawingAreaPlus
+   * @memberof Type_GenericDrawingArea
    */
   public deleteSelectedFreeLabels() {
     // Get copy of selected nodes
-    const selected_labels = this.drawing_area.selected_free_labels_list
+    const selected_labels = this.drawing_area.selected_free_labels_list as Class_ContainerElement<Type_GenericDrawingArea, this>[]
     // Delete each one of them
     selected_labels.forEach(selected_label => { this.deleteFreeLabel(selected_label) })
     // Then let garbage collector do the rest...
@@ -311,10 +266,10 @@ export class Class_SankeyPlus extends Class_Sankey
 
   /**
  * Delete a given zdt from Sankey -> zdt may still exist somewhere
- * @param {Class_ContainerElement} zdt
+ * @param {Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>} zdt
  * @memberof Class_SankeyPlus
  */
-  public deleteFreeLabel(zdt: Class_ContainerElement) {
+  public deleteFreeLabel(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
     if (this._labels[zdt.id] !== undefined) {
       // Delete node in sankey
       const _ = this._labels[zdt.id]
@@ -338,59 +293,16 @@ export class Class_SankeyPlus extends Class_Sankey
     return ''
   }
 
-  // PROTECTED METHODS ==================================================================
-  /**
-   * Specific node creation method for this Sankey
-   * @param {string} id
-   * @param {string} name
-   * @return {Class_Node}
-   * @memberof Class_Sankey
-   */
-  protected createNewNode(id: string, name: string): Class_NodeElementPlus {
-    // Create node
-    const node = new Class_NodeElementPlus(id, name, this.drawing_area, this._menu_config)
-    return node
-  }
-
-  protected createNewLink(id: string, source: Class_NodeElementPlus, target: Class_NodeElementPlus): Class_LinkElementPlus {
-    // Create link
-    const link = new Class_LinkElementPlus(id, source, target, this.drawing_area, this._menu_config)
-    return link
-  }
-
-  protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStylePlus {
-    const style = new Class_LinkStylePlus(id, name, is_deletable)
-    return style
-  }
-  // Overrides --------------------------------------------------------------------------
-
-  /**
-   * Add a given node to Sankey
-   * @param {Class_Node} node
-   * @memberof Class_Sankey
-   */
-  protected override _addNode(node: Class_NodeElementPlus) { this._nodes[node.id] = node }
-
   // GETTERS / SETTERS ==================================================================
-
-  // // Overrides --------------------------------------------------------------------------
-
-  // public override get nodes_dict(): {[_: string]: Class_NodeElementPlus}; // {
-  // //   return this._nodes
-  // // }
-
-  // public override get nodes_list() {
-  //   return Object.values(this._nodes)
-  // }
-
-  // New --------------------------------------------------------------------------------
 
   public get free_labels_dict() { return this._labels }
 
   public get free_labels_list() { return Object.values(this._labels) }
   public get free_labels_list_sorted() { return this.free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 
-  public get visible_free_labels_list() { return this.free_labels_list.filter(zdt => zdt.is_visible) }
+  public get visible_free_labels_list() {
+    return this.free_labels_list.filter(zdt => zdt.is_visible)
+  }
 
   public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
   public set icon_catalog(value: { [x: string]: string }) { this._icon_catalog = value }

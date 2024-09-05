@@ -8,20 +8,19 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import {
   initial_window_width,
-  initial_window_height
+  initial_window_height,
 } from '../deps/OpenSankey/types/ApplicationData'
 
 // Local imports
-import { Class_SankeyPlus } from './SankeyPlus'
-import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
-import { Class_NodeElementPlus } from './NodePlus'
-import { Class_ContainerElement } from './FreeLabel'
-import { Class_LinkElementPlus } from './LinkPlus'
-import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
+import { type Class_AbstractApplicationDataPlus, Class_AbstractDrawingAreaPlus } from './Abstract'
+import type { Class_SankeyPlus } from './SankeyPlus'
+import type { Class_NodeElementPlus } from './NodePlus'
+import type { Class_ContainerElement } from './FreeLabel'
+import type { Class_LinkElementPlus } from './LinkPlus'
 import { getBooleanFromJSON, getStringFromJSON, Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -32,15 +31,23 @@ import { getBooleanFromJSON, getStringFromJSON, Type_JSON } from '../deps/OpenSa
  * @class Class_DrawingAreaPlus
  * @extends {Class_DrawingArea}
  */
-export class Class_DrawingAreaPlus extends Class_DrawingArea
-  <Class_SankeyPlus,
-    Class_NodeElementPlus,
-    Class_LinkElementPlus
-  > {
+export abstract class Class_DrawingAreaPlus
+<
+  Type_GenericSankey extends Class_SankeyPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericNodeElement extends Class_NodeElementPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElementPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>
+>
+extends Class_AbstractDrawingAreaPlus
+<
+  Type_GenericSankey,
+  Type_GenericNodeElement,
+  Type_GenericLinkElement
+>
+{
 
   // TODO Faire le menage ?
-  // override _sankey:Class_SankeyPlus
-  // private _sankey_plus:Class_SankeyPlus=this.sankey
+  // override _sankey:Type_GenericSankey
+  // private _sankey_plus:Type_GenericSankey=this.sankey
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -49,7 +56,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
    * @type {Class_ApplicationData}
    * @memberof Class_DrawingArea
    */
-  public application_data: Class_ApplicationDataPlus
+  public application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
 
   /**
      * d3 selection of svg group that contains drawing area free labels
@@ -63,7 +70,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _contextualised_free_label: Class_ContainerElement | undefined = undefined
+  private _contextualised_free_label: Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined = undefined
 
   // Attribute for background image
   private _show_background_image: boolean = false
@@ -76,13 +83,18 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
    * Creates an instance of Class_DrawingAreaPlus.
    * @param {number} height
    * @param {number} width
-   * @param {Class_ApplicationDataPlus} application_data
+   * @param {
+   *  Class_AbstractApplicationDataPlus<
+        Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+        Type_GenericSankey,
+        Type_GenericNodeElement,
+        Type_GenericLinkElement>} application_data
    * @memberof Class_DrawingAreaPlus
    */
   constructor(
     height: number,
     width: number,
-    application_data: Class_ApplicationDataPlus
+    application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
   ) {
     // Heritance
     super(height, width, application_data)
@@ -90,14 +102,8 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
     this.application_data = application_data
   }
 
-  // PROTECTED METHODS ====================================================================
-  protected createNewSankey(): Class_SankeyPlus {
-    return new Class_SankeyPlus(this, this.application_data.menu_configuration)
-  }
+  protected abstract createNewSelectionZone(): Class_ZoneSelectionPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
-  protected createNewSelectionZone(): Class_ZoneSelectionPlus {
-    return new Class_ZoneSelectionPlus(this, this.application_data.menu_configuration)
-  }
   // PUBLIC METHODS ====================================================================
 
   /**
@@ -125,7 +131,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
 
   /**
  * Functon that add an image in in the background of the svg,
- * the image is imported in the config menu 
+ * the image is imported in the config menu
  *
  * @memberof Class_DrawingAreaPlus
  */
@@ -177,19 +183,20 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
       this.drawGrid()
     }
   }
+
   /**
    * add a free labels from a selection set
    *
-   * @param {Class_ContainerElement} zdt
+   * @param {Class_ContainerElement<this, Type_GenericSankey>} zdt
    * @memberof Class_DrawingAreaPlus
    */
-  public addFreeLabelToSelection(zdt: Class_ContainerElement) {
-    this._selection[zdt.id] = zdt
+  public addFreeLabelToSelection(zdt: Class_ContainerElement<any, any>) {
+    // this._selection[zdt.id] = zdt
     zdt.setSelected()
   }
 
   /**
-   * Extract Drawing area attributes from JSON 
+   * Extract Drawing area attributes from JSON
    *
    * @param {Type_JSON} json_object
    * @param {boolean} [redraw]
@@ -208,7 +215,7 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
    *
    * @param {boolean} [only_visible_elements]
    * @param {boolean} [with_values]
-   * @return {*} 
+   * @return {*}
    * @memberof Class_DrawingAreaPlus
    */
   public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
@@ -235,10 +242,10 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
 
   /**
    * remove a zdt from a selection set
-   * @param {Class_ContainerElement} node
+   * @param {Class_ContainerElement<this, Type_GenericSankey>} node
    * @memberof Class_DrawingAreaPlus
    */
-  public removeFreeLabelFromSelection(zdt: Class_ContainerElement) {
+  public removeFreeLabelFromSelection(zdt: Class_ContainerElement<this, Type_GenericSankey>) {
     if (this._selection[zdt.id] !== undefined) {
       delete this._selection[zdt.id]
       zdt.setUnSelected()
@@ -258,25 +265,12 @@ export class Class_DrawingAreaPlus extends Class_DrawingArea
 
   // GETTERS / SETTERS ==================================================================
 
-  // Overrides --------------------------------------------------------------------------
-
-  public override get sankey(): Class_SankeyPlus { return this._sankey }
-  public override set sankey(_: Class_SankeyPlus) { this.sankey = _ }
-
-  // New --------------------------------------------------------------------------------
-
-  // TODO MEnage
-  // public get application_data_plus(): Class_ApplicationDataPlus{
-  //   return this.application_data as Class_ApplicationDataPlus
-  // }
-
-  // public get selected_nodes_list_plus(): Class_NodeElementPlus[] { return this.selected_nodes_list as unknown as Class_NodeElementPlus[] }
-
-  public get selected_free_labels_list() { return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) }
+  public get selected_free_labels_list(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]{
+    return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) as Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] }
   public get selected_free_labels_list_sorted() { return this.selected_free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 
-  public get contextualised_free_label(): Class_ContainerElement | undefined { return this._contextualised_free_label }
-  public set contextualised_free_label(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
+  public get contextualised_free_label(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined { return this._contextualised_free_label }
+  public set contextualised_free_label(value: Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined) { this._contextualised_free_label = value }
 
   public get show_background_image(): boolean { return this._show_background_image }
   public set show_background_image(value: boolean) { this._show_background_image = value }

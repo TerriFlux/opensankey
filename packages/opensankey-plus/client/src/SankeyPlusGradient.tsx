@@ -2,12 +2,15 @@
 // import * as d3 from 'd3'
 
 import React,{ FunctionComponent, useState } from 'react'
-import { MenuConfLinkApparenceGradientFType } from '../types/SankeyPlusGradientTypes'
-import { Class_LinkElementPlus, Class_LinkStylePlus } from './Types/LinkPlus'
-import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
 import { Checkbox } from '@chakra-ui/react'
+
+import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
 import { isAttributeOverloaded } from './deps/OpenSankey/types/Link'
-import { Class_NodeElementPlus } from './Types/NodePlus'
+
+import type { MenuConfLinkApparenceGradientFType } from "../types/SankeyPlusGradientTypes"
+import type { Class_LinkStylePlus } from "./Types/LinkPlus"
+import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from "./Types/TypesOSP"
+
 
 // import { Checkbox } from '@chakra-ui/react'
 
@@ -54,7 +57,7 @@ export const MenuConfLinkApparenceGradient: FunctionComponent<MenuConfLinkAppare
   // Get data
   const { new_data } = applicationData
   const { ref_selected_style_link } = new_data.menu_configuration
-  
+
   const { t } = new_data
   const [forceUpdate, setForceUpdate] = useState(false)
   // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink
@@ -77,14 +80,14 @@ export const MenuConfLinkApparenceGradient: FunctionComponent<MenuConfLinkAppare
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStylePlus[] | Class_LinkElementPlus[]
+  let elements: Class_LinkStylePlus[] | Type_GenericLinkElementOSP[]
   if (menu_for_style) {
     elements = [new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
   else {
     elements = selected_links
   }
-  const check_indeterminate = (curr: Class_LinkElementPlus) => {
+  const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
     return (selected_links[0].shape_is_gradient== curr.shape_is_gradient)
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
@@ -97,11 +100,11 @@ export const MenuConfLinkApparenceGradient: FunctionComponent<MenuConfLinkAppare
       isChecked={elements[0].shape_is_gradient}
       iconColor={is_indeterminate ? '#78C2AD' : 'white'}
       onChange={(evt) => {
-        const list_node_to_redraw_arrow:Class_NodeElementPlus[]=[]
+        const list_node_to_redraw_arrow:Type_GenericNodeElementOSP[]=[]
         elements.forEach(element => {
-          element.shape_is_gradient = evt.target.checked 
+          element.shape_is_gradient = evt.target.checked
           if(!menu_for_style){
-            list_node_to_redraw_arrow.push((element as Class_LinkElementPlus).target)
+            list_node_to_redraw_arrow.push((element as Type_GenericLinkElementOSP).target)
           }
         });
         //Remove duplicate node in array then redraw link arrow of nodes
@@ -117,7 +120,7 @@ export const MenuConfLinkApparenceGradient: FunctionComponent<MenuConfLinkAppare
         <></>}
     </Checkbox>
   </OSTooltip>):<></>
-  
+
 }
 
 // export const OSPLinkStroke : OSPLinkStrokeFType =(l:SankeyLink,data:SankeyData,GetLinkValue:GetLinkValueFuncType)=>{

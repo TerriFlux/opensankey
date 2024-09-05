@@ -246,7 +246,7 @@ root.render(
           options
         )
       }
-    } 
+    }
 
   />
 )
