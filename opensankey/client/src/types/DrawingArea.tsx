@@ -65,10 +65,9 @@ const default_scale = 50
  */
 export abstract class Class_DrawingArea
 <
-  Type_GenericSankey extends Class_Sankey<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>, Type_GenericSankey, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>, Type_GenericSankey, Type_GenericNodeElement>,
-  Type_GenericSelectionZone extends Class_ZoneSelection<Type_GenericDrawingAreaOS,Type_GenericSankey>
+  Type_GenericSankey extends Class_Sankey<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+  Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
+  Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>,
 >
   extends Class_AbstractDrawingArea
 {
@@ -246,7 +245,7 @@ export abstract class Class_DrawingArea
    * @type {boolean}
    * @memberof Class_DrawingArea
    */
-  private _ghost_link: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>, Type_GenericSankey, Type_GenericNodeElement> | null = null
+  private _ghost_link: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null = null
 
   /**
    *Elements that are selected in this area
@@ -1426,7 +1425,7 @@ export abstract class Class_DrawingArea
     }
   }
 
-  public updateLayoutFrom(other: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>) {
+  public updateLayoutFrom(other: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     this.color = other.color
     this.grid_size = other.grid_size
     this.grid_visible = other.grid_visible
@@ -1637,7 +1636,7 @@ export abstract class Class_DrawingArea
         // Make target a 'ghost' node
         target.setInvisible()
         // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>, Type_GenericSankey, Type_GenericNodeElement>(
+        this._ghost_link = new Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
           'ghost_link',
           source,
           target,
@@ -1894,7 +1893,7 @@ export abstract class Class_DrawingArea
   public set legend(value: Class_Legend<this, Type_GenericSankey>) { this._legend = value }
 
   public get ghost_link() { return this._ghost_link }
-  public set ghost_link(value: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement,Type_GenericSelectionZone>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
+  public set ghost_link(value: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
 
   // Selections
   public get selected_nodes_list(): Type_GenericNodeElement[] {
