@@ -233,7 +233,7 @@ extends Class_AbstractDrawingAreaPlus
    * @param {Class_DrawingAreaPlus} other
    * @memberof Class_DrawingAreaPlus
    */
-  public updateLayoutFrom(other: Class_DrawingAreaPlus): void {
+  public updateLayoutFrom(other: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>): void {
     super.updateLayoutFrom(other)
 
     this._show_background_image = other._show_background_image
