@@ -1,6 +1,6 @@
 // ==================================================================================================
 // Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
-// Date : 29/05/2024
+// Date : 03/09/2024
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
@@ -20,7 +20,6 @@ export type Type_GenericDrawingAreaOS = Class_DrawingArea<Type_GenericSankeyOS, 
 export type Type_GenericSankeyOS = Class_Sankey<Type_GenericDrawingAreaOS, Type_GenericNodeElementOS, Type_GenericLinkElementOS>
 export type Type_GenericNodeElementOS = Class_NodeElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericLinkElementOS>
 export type Type_GenericLinkElementOS = Class_LinkElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS>
-
 
 // STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
 
@@ -81,7 +80,7 @@ export class Class_SankeyOS
     menu_config: Class_MenuConfig,
     id: string = default_main_sankey_id) {
     super(drawing_area, menu_config, id)
-    this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id, default_style_name, false)
+    this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
 
   }
 
@@ -94,7 +93,7 @@ export class Class_SankeyOS
     const link = new Class_LinkElementOS(id, source, target, this.drawing_area, this._menu_config)
     return link
   }
-  protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
+  protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
     const style = new Class_LinkStyle(id, name, is_deletable)
     return style
   }

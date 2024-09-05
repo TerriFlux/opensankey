@@ -253,7 +253,7 @@ export abstract class  Class_LinkElement
 >
 {
 
-  // PROTECTED ATTRIBUTES ===============================================================
+  // ABSTRACT ATTRIBUTES ===============================================================
 
   /**
    * Display attributes for link
@@ -354,7 +354,7 @@ export abstract class  Class_LinkElement
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_links')
-    
+
     // Add control points
     this._control_points = {
       starting_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
@@ -4277,8 +4277,7 @@ export class Class_GhostLinkElement
 >
 {
 
-  
-  
+
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
     displaying_order: number,

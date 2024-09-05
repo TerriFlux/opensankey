@@ -102,7 +102,7 @@ export abstract class Class_Sankey
   private _links: { [_: string]: Type_GenericLinkElement } = {}
 
   // Existing styles
-  protected abstract _link_styles: { [_: string]: Class_LinkStyle } 
+  protected abstract _link_styles: { [_: string]: Class_LinkStyle }
   private _node_styles: { [_: string]: Class_NodeStyle } = {}
 
   // Tags
@@ -171,7 +171,7 @@ export abstract class Class_Sankey
 
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
-  protected abstract creacteNewLinkStyle(id:string,name:string,is_deletable?:boolean):Class_LinkStyle
+  protected abstract createNewLinkStyle(id:string,name:string,is_deletable?:boolean):Class_LinkStyle
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
