@@ -6,6 +6,8 @@
 // This file is used to avoid cycling dependancies inside each Class definition files.
 // ==================================================================================================
 
+import * as d3 from 'd3'
+
 import { Class_ApplicationData } from "../deps/OpenSankey/types/ApplicationData";
 import { Class_DrawingArea } from "../deps/OpenSankey/types/DrawingArea";
 import { Class_Element } from "../deps/OpenSankey/types/Element";
@@ -51,6 +53,7 @@ extends Class_DrawingArea
     Type_GenericLinkElement
 >
 {
+    public abstract d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
     public abstract addFreeLabelToSelection(_: Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>): void
     public abstract get selected_free_labels_list(): Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
 }

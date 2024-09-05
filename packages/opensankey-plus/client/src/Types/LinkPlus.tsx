@@ -15,6 +15,7 @@ import {
 import {
   getBooleanFromJSON,
   Type_ElementPosition,
+  Type_JSON,
 } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
