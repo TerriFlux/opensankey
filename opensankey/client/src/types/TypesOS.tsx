@@ -23,6 +23,8 @@ export type Type_GenericLinkElementOS = Class_LinkElement<Type_GenericDrawingAre
 
 // STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
 
+// APPLICATION DATA ===============================================================================
+
 export class Class_ApplicationDataOS
   extends Class_ApplicationData<
     Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
@@ -37,55 +39,53 @@ export class Class_ApplicationDataOS
   }
 }
 
-export class Class_LinkElementOS
-  extends Class_LinkElement<
-    Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS
+// DRAWING AREA ===================================================================================
+export class Class_DrawingAreaOS
+  extends Class_DrawingArea<
+    Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
   > {
-    
-    protected _display: {
-      drawing_area: Class_DrawingAreaOS,
-      displaying_order: number,
-      position_starting: Type_ElementPosition,
-      position_ending: Type_ElementPosition,
-      style: Class_LinkStyle,
-      attributes: Class_LinkAttribute
-      position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-      position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-      position_offset_label?: number // optional var used when label is dragged (if label follow link path)
-    }
-
-    constructor(id: string,
-      source: Class_NodeElementOS,
-      target: Class_NodeElementOS,
-      drawing_area: Class_DrawingAreaOS,
-      menu_config: Class_MenuConfig,){
-      super(id,source,target,drawing_area,menu_config)
-      // Display
-    this._display = {
-      drawing_area: drawing_area,
-      displaying_order: drawing_area.addElement(),
-      position_starting: {
-        type: 'absolute',
-        x: 0,
-        y: 0,
-        u:0,
-        v:0
-      },
-      position_ending: {
-        type: 'absolute',
-        x: 0,
-        y: 0,
-        u:0,
-        v:0
-      },
-      style: drawing_area.sankey.default_link_style as Class_LinkStyle,
-      attributes: new Class_LinkAttribute()
-    }
-    // Link with style
-    this._display.style.addReference(this)
-    }
+  protected createNewSankey() {
+    const sankey = new Class_SankeyOS(this, this.application_data.menu_configuration)
+    return sankey
+  }
 }
 
+// SANKEY =========================================================================================
+export class Class_SankeyOS
+  extends Class_Sankey<
+    Class_DrawingAreaOS, Class_NodeElementOS, Class_LinkElementOS
+  > {
+
+  protected _link_styles: { [_: string]: Class_LinkStyle } = {}
+
+  constructor(drawing_area: Class_DrawingAreaOS,
+    menu_config: Class_MenuConfig,
+    id: string = default_main_sankey_id) {
+    super(drawing_area, menu_config, id)
+    this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id, default_style_name, false)
+
+  }
+
+  protected createNewNode(id: string, name: string): Class_NodeElementOS {
+    const node = new Class_NodeElementOS(id, name, this.drawing_area, this._menu_config)
+    return node
+  }
+
+  protected createNewLink(id: string, source: Class_NodeElementOS, target: Class_NodeElementOS): Class_LinkElementOS {
+    const link = new Class_LinkElementOS(id, source, target, this.drawing_area, this._menu_config)
+    return link
+  }
+  protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
+    const style = new Class_LinkStyle(id, name, is_deletable)
+    return style
+  }
+
+  public get default_link_style() {
+    return this._link_styles[default_style_id]
+  }
+}
+
+// NODE ===========================================================================================
 export class Class_NodeElementOS
   extends Class_NodeElement<
     Class_DrawingAreaOS, Class_SankeyOS, Class_LinkElementOS
@@ -113,54 +113,59 @@ export class Class_NodeElementOS
   }
 }
 
-export class Class_SankeyOS
-  extends Class_Sankey<
-    Class_DrawingAreaOS, Class_NodeElementOS, Class_LinkElementOS
+// LINK ===========================================================================================
+export class Class_LinkElementOS
+  extends Class_LinkElement<
+    Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS
   > {
-    protected _link_styles: { [_: string]: Class_LinkStyle }={}
-    constructor(drawing_area: Class_DrawingAreaOS,
-      menu_config: Class_MenuConfig,
-      id: string = default_main_sankey_id){
-      super(drawing_area,menu_config,id)
-      this._link_styles[default_style_id] = this.creacteNewLinkStyle(default_style_id,default_style_name,false)
 
+  protected _display: {
+    drawing_area: Class_DrawingAreaOS,
+    displaying_order: number,
+    position_starting: Type_ElementPosition,
+    position_ending: Type_ElementPosition,
+    style: Class_LinkStyle,
+    attributes: Class_LinkAttribute
+    position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_offset_label?: number // optional var used when label is dragged (if label follow link path)
+  }
+
+  constructor(
+    id: string,
+    source: Class_NodeElementOS,
+    target: Class_NodeElementOS,
+    drawing_area: Class_DrawingAreaOS,
+    menu_config: Class_MenuConfig
+  ) {
+    super(id, source, target, drawing_area, menu_config)
+    // Display
+    this._display = {
+      drawing_area: drawing_area,
+      displaying_order: drawing_area.addElement(),
+      position_starting: {
+        type: 'absolute',
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      position_ending: {
+        type: 'absolute',
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      style: drawing_area.sankey.default_link_style as Class_LinkStyle,
+      attributes: new Class_LinkAttribute()
     }
-  /**
-   * Specific node creation method for this Sankey
-   * @param {string} id
-   * @param {string} name
-   * @return {Class_Node}
-   * @memberof Class_Sankey
-   */
-  protected createNewNode(id: string, name: string): Class_NodeElementOS {
-    // Create node
-    const node = new Class_NodeElementOS(id, name, this.drawing_area, this._menu_config)
-    return node
-  }
-
-  protected createNewLink(id: string, source: Class_NodeElementOS, target: Class_NodeElementOS): Class_LinkElementOS {
-    // Create link
-    const link = new Class_LinkElementOS(id, source, target, this.drawing_area, this._menu_config)
-    return link
-  }
-  protected creacteNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
-    const style= new Class_LinkStyle(id,name,is_deletable)
-    return style
-  }
-
-  public get default_link_style()  {
-    return this._link_styles[default_style_id]
-  }
-
-}
-
-export class Class_DrawingAreaOS
-  extends Class_DrawingArea<
-    Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
-  > {
-  protected createNewSankey() {
-    const sankey = new Class_SankeyOS(this, this.application_data.menu_configuration)
-    return sankey
+    // Link with style
+    this._display.style.addReference(this)
   }
 }
+
+
+
+
 

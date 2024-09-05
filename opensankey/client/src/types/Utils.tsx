@@ -48,8 +48,6 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
  */
 export type Type_JSON = { [_: string]: boolean | number | string | string[] | Type_JSON }
 
-
-
 // CONSTANTS ****************************************************************************
 
 export const default_grey_color = 'grey'
