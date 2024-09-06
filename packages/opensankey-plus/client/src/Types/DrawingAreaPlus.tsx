@@ -155,7 +155,7 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   public checkAndUpdateAreaSize() {
-    super.checkAndUpdateAreaSize()
+    const [max_x_node,max_y_node]=super.checkAndUpdateAreaSize()
 
     let max_free_label_pos_x = 0
     let max_free_label_pos_y = 0
@@ -166,21 +166,24 @@ export abstract class Class_DrawingAreaPlus
       max_free_label_pos_y = Math.max(max_free_label_pos_y, free_label_bottomest_pos)
     })
 
+    const max_x=Math.max(max_free_label_pos_x,max_x_node)
+    const max_y=Math.max(max_free_label_pos_y,max_y_node)
     // If righest free_label is too close to right drawing area border then enlarege DA
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
-    if ((max_free_label_pos_x > this._width - this.grid_size) || ((max_free_label_pos_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
-      this.setWidth(max_free_label_pos_x + this._grid_size)
+    if ((max_x > this._width - this.grid_size) || ((max_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
+      this.setWidth(max_x + this._grid_size)
       this.drawGrid()
     }
 
     // If bottomiest free_label is too close to the bottom of drawing area border then enlarege DA
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
-    if (max_free_label_pos_y > this._height - this.grid_size || ((max_free_label_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
-      this.setHeight(max_free_label_pos_y + this._grid_size)
+    if (max_y > this._height - this.grid_size || ((max_y + this._grid_size <= this._height) && (max_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
+      this.setHeight(max_y + this._grid_size)
       this.drawGrid()
     }
+    return [max_x,max_y]
   }
 
   /**
