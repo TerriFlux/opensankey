@@ -21,7 +21,6 @@ import type {
 import {
   getBooleanFromJSON,
   Type_JSON,
-  default_main_sankey_id,
   const_default_position_x,
   const_default_position_y,
   Type_ElementPosition
@@ -63,6 +62,7 @@ export abstract class Class_ProtoElement
    */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey
   }
 
   /**
@@ -72,15 +72,6 @@ export abstract class Class_ProtoElement
    * @memberof Class_Element
    */
   protected _svg_group: string
-
-  /**
-   * List of Sankey in which element appear
-   *
-   * @private
-   * @type {Type_GenericSankey[]}
-   * @memberof Class_ProtoElement
-   */
-  protected _sankeys: {[_: string]: Type_GenericSankey}
 
   /**
    * Config menu ref to html element & function to update it
@@ -157,8 +148,6 @@ export abstract class Class_ProtoElement
     this._id = id
     this._svg_group = svg_group
     this._menu_config = menu_config
-    // Other attributes with default initializing
-    this._sankeys = {}
   }
 
   /**
@@ -469,7 +458,7 @@ export abstract class Class_ProtoElement
   // Visible
   public setVisible() { this._is_visible = true; this.draw() }
   public setInvisible() { this._is_visible = false; this.draw() }
-  public get is_visible() { return this._is_visible }
+  public get is_visible() { return (this.sankey.is_visible && this._is_visible) }
 
   // Mouse is over element
   public isMouseOver() { return this._is_mouse_over }
@@ -480,12 +469,7 @@ export abstract class Class_ProtoElement
   public get id() { return this._id }
 
   // Sankey
-  public get main_sankey() {
-    if (!this._sankeys[default_main_sankey_id]) {
-      this._sankeys[default_main_sankey_id] = this.drawing_area.sankey as Type_GenericSankey
-    }
-    return this._sankeys[default_main_sankey_id]
-  }
+  public get sankey() { return this._display.sankey }
 
   // Get application config menu
   protected get menu_config(): Class_MenuConfig { return this._menu_config }
@@ -519,6 +503,7 @@ export abstract class Class_Element
    */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
   }
 

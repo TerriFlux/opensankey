@@ -51,8 +51,8 @@ export class Class_DrawingAreaOS
     super(_height, _width, application_data)
   }
 
-  protected createNewSankey() {
-    const sankey = new Class_SankeyOS(this, this.application_data.menu_configuration)
+  protected createNewSankey(id: string = default_main_sankey_id) {
+    const sankey = new Class_SankeyOS(this, this.application_data.menu_configuration, id)
     return sankey
   }
 
@@ -112,7 +112,7 @@ export class Class_NodeElementOS
   public copyInputLink(link: Class_LinkElement<Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS>): Class_LinkElementOS {
     const new_link = new Class_LinkElementOS(
       link.id,
-      this.main_sankey.nodes_dict[link.source.id] as Class_NodeElementOS,
+      this.sankey.nodes_dict[link.source.id] as Class_NodeElementOS,
       this,
       this.drawing_area,
       this.menu_config
@@ -124,7 +124,7 @@ export class Class_NodeElementOS
     const new_link = new Class_LinkElementOS(
       link.id,
       this,
-      this.main_sankey.nodes_dict[link.target.id] as Class_NodeElementOS,
+      this.sankey.nodes_dict[link.target.id] as Class_NodeElementOS,
       this.drawing_area,
       this.menu_config
     )
@@ -140,6 +140,7 @@ export class Class_LinkElementOS
 
   protected _display: {
     drawing_area: Class_DrawingAreaOS,
+    sankey: Class_SankeyOS,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -161,6 +162,7 @@ export class Class_LinkElementOS
     // Display
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
         type: 'absolute',

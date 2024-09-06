@@ -33,29 +33,29 @@ import { default_element_position } from './Utils'
  * @extends {Class_Element}
  */
 export class Class_Handler
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey
->
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey
+  >
   extends Class_Element
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
->
-{
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected _display: {
-      drawing_area: Type_GenericDrawingArea,
-      position: Type_ElementPosition,
-    }
+    drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
+    position: Type_ElementPosition,
+  }
 
   // PRIVATE ATTRIBUTES =================================================================
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
-  private _custom_class: string|undefined
+  private _custom_class: string | undefined
   private _ref_element: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>
   private _ref_element_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined
 
@@ -66,12 +66,12 @@ export class Class_Handler
   * @param {string} id
   * @param {Type_GenericDrawingArea} drawing_area
   * @param {Class_MenuConfig} menu_config
-  * @param {(Class_LinkElement | Class_NodeElement)} ref
+  * @param {Class_ProtoElement} ref
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragStart_function
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} drag_function
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragEnd_function
   * @param {{class?:string, size?: number, color?: string, filled?: boolean }} [options]
-  * @param {(Class_LinkElement | Class_NodeElement)} [ref_optional]
+  * @param {Class_ProtoElement} [ref_optional]
   * @memberof Class_Handler
   */
   constructor(
@@ -82,7 +82,7 @@ export class Class_Handler
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
-    options?: {class?:string, size?: number, color?: string, filled?: boolean },
+    options?: { class?: string, size?: number, color?: string, filled?: boolean },
     ref_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
   ) {
     // Init parent class attributes
@@ -92,6 +92,7 @@ export class Class_Handler
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
     }
     // Drag handling functions -> defined by parent element
@@ -110,7 +111,7 @@ export class Class_Handler
         this._filled = options.filled
       }
       if (options.class !== undefined) {
-        this._custom_class= options.class
+        this._custom_class = options.class
       }
     }
   }
@@ -124,7 +125,7 @@ export class Class_Handler
 
   public drawElements() {
     this.d3_selection?.attr('class', 'gg_handler')
-    if(this._custom_class!==undefined){
+    if (this._custom_class !== undefined) {
       this.d3_selection?.attr('class', this._custom_class)
     }
     this.d3_selection?.append('rect')
@@ -156,10 +157,10 @@ export class Class_Handler
      */
   public get is_visible(): boolean {
     return (
-      this._ref_element.is_visible  &&
+      super.is_visible &&
+      this._ref_element.is_visible &&
       this._ref_element.is_selected &&
-      this._is_visible &&
-      (this._ref_element_optional?.is_visible ?? true) )
+      (this._ref_element_optional?.is_visible ?? true))
   }
 
   public get ref_element(): Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {

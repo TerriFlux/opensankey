@@ -64,6 +64,7 @@ export abstract class Class_AbstractDrawingArea {
 
 export abstract class Class_AbstractSankey {
   // Mandatory getters
+  public abstract get is_visible(): boolean
   public abstract get color_map(): string
   public abstract get nodes_color_map(): string
   public abstract get links_color_map(): string

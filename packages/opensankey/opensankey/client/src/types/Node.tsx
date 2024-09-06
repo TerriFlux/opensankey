@@ -165,6 +165,7 @@ export abstract class Class_NodeElement
   // Definition of abstract attribut from Class_Element
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
     style: Class_NodeStyle,
     attributes: Class_NodeAttribute
@@ -230,6 +231,7 @@ export abstract class Class_NodeElement
     this._name = name
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
       style: drawing_area.sankey.default_node_style as Class_NodeStyle,
       attributes: new Class_NodeAttribute()
@@ -304,20 +306,20 @@ export abstract class Class_NodeElement
     node_to_copy.input_links_list
       .filter(link => {
         return (
-          (link.id in this.main_sankey.links_dict) &&
+          (link.id in this.sankey.links_dict) &&
           !(link.id in this.input_links_dict)
         )
       })
       .forEach(link => {
         this.addInputLink(
-          this.main_sankey.links_dict[link.id] as Type_GenericLinkElement)
+          this.sankey.links_dict[link.id] as Type_GenericLinkElement)
       })
     // Create missing input link from existing source node
     node_to_copy.input_links_list
       .filter(link => {
         return (
-          !(link.id in this.main_sankey.links_dict) &&
-          (link.source.id in this.main_sankey.nodes_dict)
+          !(link.id in this.sankey.links_dict) &&
+          (link.source.id in this.sankey.nodes_dict)
         )
       })
       .forEach(link => {
@@ -336,20 +338,20 @@ export abstract class Class_NodeElement
     node_to_copy.output_links_list
       .filter(link => {
         return (
-          (link.id in this.main_sankey.links_dict) &&
+          (link.id in this.sankey.links_dict) &&
           !(link.id in this.output_links_dict)
         )
       })
       .forEach(link => {
         this.addOutputLink(
-          this.main_sankey.links_dict[link.id] as Type_GenericLinkElement)
+          this.sankey.links_dict[link.id] as Type_GenericLinkElement)
       })
     // Create missing input link from existing source node
     node_to_copy.output_links_list
       .filter(link => {
         return (
-          !(link.id in this.main_sankey.links_dict) &&
-          (link.target.id in this.main_sankey.nodes_dict)
+          !(link.id in this.sankey.links_dict) &&
+          (link.target.id in this.sankey.nodes_dict)
         )
       })
       .forEach(link => {
@@ -375,7 +377,7 @@ export abstract class Class_NodeElement
       })
     // Copy tags ------------------------------------------------------------------------
     let all_existing_tags: { [_: string]: Class_Tag } = {}
-    this.main_sankey.node_taggs_list
+    this.sankey.node_taggs_list
       .forEach(tagg => {
         all_existing_tags = {
           ...all_existing_tags,
@@ -404,7 +406,7 @@ export abstract class Class_NodeElement
     // Copy dimensions ------------------------------------------------------------------
     // Create a dict of all existing dimensions in this related sankey
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
-    this.main_sankey.level_taggs_list
+    this.sankey.level_taggs_list
       .forEach(tagg => {
         (tagg as Class_LevelTagGroup).tags_list
           .forEach(tag => {
@@ -497,7 +499,7 @@ export abstract class Class_NodeElement
   // Styles / attributes related methods ------------------------------------------------
 
   public useDefaultStyle() {
-    this.style = this.main_sankey.default_node_style as Class_NodeStyle
+    this.style = this.sankey.default_node_style as Class_NodeStyle
   }
 
   public resetAttributes() {
@@ -1082,7 +1084,7 @@ export abstract class Class_NodeElement
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
     const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-    this._display.style = this.main_sankey.node_styles_dict[style_id] as Class_NodeStyle
+    this._display.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -1099,14 +1101,14 @@ export abstract class Class_NodeElement
         const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
         const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
         return (
-          (tagg_id in this.main_sankey.node_taggs_dict) &&
+          (tagg_id in this.sankey.node_taggs_dict) &&
           ((tag_ids as string[]).length > 0)
         )
       })
       .forEach(([_tagg_id, _tag_ids]) => {
         const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
         const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
-        const tagg = this.main_sankey.node_taggs_dict[tagg_id] as Class_TagGroup
+        const tagg = this.sankey.node_taggs_dict[tagg_id] as Class_TagGroup
         tagg.tags_list
           .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
@@ -1128,14 +1130,14 @@ export abstract class Class_NodeElement
     input_link_ids
       .forEach(_ => {
         const link_id = matching_links_id[_] ?? _
-        this.addInputLink(this.main_sankey.links_dict[link_id] as Type_GenericLinkElement)
+        this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
       })
     // Output links
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
     output_link_ids
       .forEach(_ => {
         const link_id = matching_links_id[_] ?? _
-        this.addOutputLink(this.main_sankey.links_dict[link_id] as Type_GenericLinkElement)
+        this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
       })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
@@ -1143,7 +1145,7 @@ export abstract class Class_NodeElement
       this._links_order = ordered_link_ids
         .map(_ => {
           const link_id = matching_links_id[_] ?? _
-          return this.main_sankey.links_dict[link_id]
+          return this.sankey.links_dict[link_id]
         }) as Type_GenericLinkElement[]
     }
   }
@@ -1170,14 +1172,14 @@ export abstract class Class_NodeElement
           const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, _)
           if (dimension_as_json) {
             // Get level tag group from id
-            const tagg = this.main_sankey.level_taggs_dict[tagg_id] as Class_LevelTagGroup
+            const tagg = this.sankey.level_taggs_dict[tagg_id] as Class_LevelTagGroup
             // Continue only in level tag group exists
             if (tagg) {
               // Continue only if we can find related parent
               let parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
               if (parent_id) {
                 parent_id = matching_nodes_id[parent_id] ?? parent_id
-                const parent = this.main_sankey.nodes_dict[parent_id]
+                const parent = this.sankey.nodes_dict[parent_id]
                 if (parent) {
                   // Read infos from dimension json struct
                   // Get child & parent tags
@@ -1409,7 +1411,7 @@ export abstract class Class_NodeElement
       // Create default source node
       // Position center of source node to pointer pos
       // Create default target node
-      const target = this.main_sankey.addNewDefaultNode() as this
+      const target = this.sankey.addNewDefaultNode() as this
       target.setPosXY(this.position_x, this.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
@@ -2374,9 +2376,9 @@ export abstract class Class_NodeElement
 
   public get is_visible() {
     return (
+      super.is_visible &&
       this.are_related_tags_selected &&
-      this.is_related_level_selected &&
-      this._is_visible
+      this.is_related_level_selected
     )
   }
 
@@ -3518,7 +3520,7 @@ export abstract class Class_NodeElement
       tooltip_html += '      <th>' + 'Provenances' + '</th>' // TODO traduction manquante
       tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction manquante
       tooltip_html += '      <th>' + 'Ratios' + '</th>' // TODO traduction manquante
-      this.main_sankey.flux_taggs_list
+      this.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
       tooltip_html += '    </tr>'
@@ -3538,7 +3540,7 @@ export abstract class Class_NodeElement
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
-          this.main_sankey.flux_taggs_list
+          this.sankey.flux_taggs_list
             .forEach(tagg => {
               const _: string[] = []
               link.flux_tags_list
@@ -3566,7 +3568,7 @@ export abstract class Class_NodeElement
       tooltip_html += '      <th>' + 'Destinations' + '</th>' // TODO traduction manquante
       tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction manquante
       tooltip_html += '      <th>' + 'Ratios' + '</th>' // TODO traduction manquante
-      this.main_sankey.flux_taggs_list
+      this.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
       tooltip_html += '    </tr>'
@@ -3585,7 +3587,7 @@ export abstract class Class_NodeElement
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
-          this.main_sankey.flux_taggs_list
+          this.sankey.flux_taggs_list
             .forEach(tagg => {
               const _: string[] = []
               link.flux_tags_list
