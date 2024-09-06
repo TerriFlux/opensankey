@@ -298,7 +298,7 @@ export abstract class Class_NodeElementPlus
       .append('g')
       .append('path')
       .style('fill', this.iconColor)
-      .attr('d', this.main_sankey.getIconFromCatalog(this.iconName))
+      .attr('d', this.sankey.getIconFromCatalog(this.iconName))
   }
 
   // GETTERS / SETTERS ==================================================================

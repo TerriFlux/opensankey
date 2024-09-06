@@ -61,6 +61,14 @@ export abstract class Class_SankeyPlus
    */
   protected _labels: { [_: string]: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> } = {}
 
+  /**
+   * Allows to toggle Sankey visibility
+   * @protected
+   * @type {boolean}
+   * @memberof Class_SankeyPlus
+   */
+  protected _is_visible: boolean = true
+
   // PRIVATE ATTRIBUTES =================================================================
 
   private _icon_catalog: { [x: string]: string } = {}
@@ -292,22 +300,86 @@ export abstract class Class_SankeyPlus
     return ''
   }
 
+  public copyFrom(
+    other: Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>
+  ) {
+    // First clean self
+    this.delete()
+    // Then, copy each elements from others
+    // - nodes & link
+    other.nodes_list.forEach(other_node => {
+      const new_node = this.createNewNode(other_node.id, other_node.name)
+      new_node.copyFrom(other_node)
+    })
+    other.links_list.forEach(other_link => {
+      // Node copy should create all missing links between nodes
+      if (this.links_dict[other_link.id]) {
+        this.links_dict[other_link.id].copyFrom(other_link)
+      }
+    })
+    // - node styles
+    other.node_styles_list.forEach(other_snode => {
+      // Node copy should create all missing styles for nodes
+      if (this.node_styles_dict[other_snode.id]) {
+        this.node_styles_dict[other_snode.id].copyFrom(other_snode)
+      }
+    })
+    // - link styles
+    other.link_styles_list.forEach(other_slink => {
+      // Link copy should create all missing styles for nodes
+      if (this.link_styles_dict[other_slink.id]) {
+        this.link_styles_dict[other_slink.id].copyFrom(other_slink)
+      }
+    })
+    // - tags groups -> will copy related tags also
+    other.node_taggs_list.forEach(other_tagg => {
+      // Node copy should create all missing tag groups
+      if (this.node_taggs_dict[other_tagg.id]) {
+        this.node_taggs_dict[other_tagg.id].copyFrom(other_tagg)
+      }
+    })
+    other.flux_taggs_list.forEach(other_tagg => {
+      // Node copy should create all missing tag groups
+      if (this.flux_taggs_dict[other_tagg.id]) {
+        this.flux_taggs_dict[other_tagg.id].copyFrom(other_tagg)
+      }
+    })
+    other.data_taggs_list.forEach(other_tagg => {
+      // Node copy should create all missing tag groups
+      if (this.data_taggs_dict[other_tagg.id]) {
+        this.data_taggs_dict[other_tagg.id].copyFrom(other_tagg)
+      }
+    })
+    other.level_taggs_list.forEach(other_tagg => {
+      // Node copy should create all missing tag groups
+      if (this.level_taggs_dict[other_tagg.id]) {
+        this.level_taggs_dict[other_tagg.id].copyFrom(other_tagg)
+      }
+    })
+  }
+
   // GETTERS / SETTERS ==================================================================
 
-  public get free_labels_dict() { return this._labels }
+  // Sankey visibility - for views
+  public setVisible() { this._is_visible = true }
+  public setInvisible() { this._is_visible = false }
+  public toggleVisibility() { this._is_visible = !this._is_visible }
+  public get is_visible() { return this._is_visible }
 
+  // Free labels
+  public get free_labels_dict() { return this._labels }
   public get free_labels_list() { return Object.values(this._labels) }
   public get free_labels_list_sorted() { return this.free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
-
   public get visible_free_labels_list() {
     return this.free_labels_list.filter(zdt => zdt.is_visible)
   }
 
+  // Icons
   public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
   public set icon_catalog(value: { [x: string]: string }) { this._icon_catalog = value }
 
+  // Links styles
   public get default_link_style() { return this._link_styles[default_style_id] }
-
   public get link_styles_dict() {
     return this._link_styles
   }

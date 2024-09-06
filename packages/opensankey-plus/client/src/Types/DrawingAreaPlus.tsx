@@ -14,13 +14,22 @@ import {
 } from '../deps/OpenSankey/types/ApplicationData'
 
 // Local imports
-import { type Class_AbstractApplicationDataPlus, Class_AbstractDrawingAreaPlus } from './Abstract'
+import {
+  type Class_AbstractApplicationDataPlus,
+  Class_AbstractDrawingAreaPlus
+} from './Abstract'
 import type { Class_SankeyPlus } from './SankeyPlus'
 import type { Class_NodeElementPlus } from './NodePlus'
 import type { Class_ContainerElement } from './FreeLabel'
 import type { Class_LinkElementPlus } from './LinkPlus'
-import { getBooleanFromJSON, getStringFromJSON, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
+import {
+  default_main_sankey_id,
+  getBooleanFromJSON,
+  getStringFromJSON,
+  makeId,
+  Type_JSON
+} from '../deps/OpenSankey/types/Utils'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -75,6 +84,9 @@ export abstract class Class_DrawingAreaPlus
   private _show_background_image: boolean = false
   private _background_image: string = ''
 
+  // Objects containeds in drawing area -------------------------------------------------
+
+  protected _views: { [id: string]: Type_GenericSankey } = {}
 
   // CONSTRUCTOR ========================================================================
 
@@ -155,7 +167,7 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   public checkAndUpdateAreaSize() {
-    const [max_x_node,max_y_node]=super.checkAndUpdateAreaSize()
+    const [max_x_node, max_y_node] = super.checkAndUpdateAreaSize()
 
     let max_free_label_pos_x = 0
     let max_free_label_pos_y = 0
@@ -166,8 +178,8 @@ export abstract class Class_DrawingAreaPlus
       max_free_label_pos_y = Math.max(max_free_label_pos_y, free_label_bottomest_pos)
     })
 
-    const max_x=Math.max(max_free_label_pos_x,max_x_node)
-    const max_y=Math.max(max_free_label_pos_y,max_y_node)
+    const max_x = Math.max(max_free_label_pos_x, max_x_node)
+    const max_y = Math.max(max_free_label_pos_y, max_y_node)
     // If righest free_label is too close to right drawing area border then enlarege DA
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
@@ -183,7 +195,7 @@ export abstract class Class_DrawingAreaPlus
       this.setHeight(max_y + this._grid_size)
       this.drawGrid()
     }
-    return [max_x,max_y]
+    return [max_x, max_y]
   }
 
   /**
@@ -256,13 +268,37 @@ export abstract class Class_DrawingAreaPlus
 
   /**
    * override purgeSelection to include event for OSP DA
-   *
    * @memberof Class_DrawingAreaPlus
    */
   public purgeSelection() {
     super.purgeSelection()
     this.application_data.menu_configuration.ref_to_menu_config_free_label_updater.current()
+  }
 
+  /**
+   * Create a new view (sankey) from given sankey
+   *
+   * @param {string} id
+   * @memberof Class_DrawingAreaPlus
+   */
+  public createNewView(
+    id: string,
+    base_sankey: Type_GenericSankey | undefined = undefined
+  ) {
+    // If no base sankey is given, we take the currently active sankey
+    if (base_sankey === undefined)
+      base_sankey = this.sankey
+    // If no view existed previously, we add the active sankey as master sankey
+    if (this.views.length === 0)
+      this._views[default_main_sankey_id] = this.sankey
+    // Create the new sankey
+    const new_sankey = this.createNewSankey(makeId('view '))
+    new_sankey.copyFrom(this.sankey)
+    // Shown sankey = new sankey
+    this._sankey.setInvisible()
+    this._sankey.draw()
+    this._sankey = new_sankey
+    this._sankey.draw()
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -280,4 +316,8 @@ export abstract class Class_DrawingAreaPlus
 
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
+
+  public get views(): Type_GenericSankey[] {
+    return Object.values(this._views)
+  }
 }

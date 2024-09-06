@@ -61,6 +61,7 @@ export class Class_ContainerElement
    */
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
   }
 
@@ -109,6 +110,7 @@ export class Class_ContainerElement
     super(id, menu_config, 'g_labels')
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey,
       position: structuredClone(default_element_position as Type_ElementPosition),
     }
     // Free labels attributs

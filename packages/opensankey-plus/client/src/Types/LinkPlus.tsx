@@ -71,6 +71,7 @@ export abstract class Class_LinkElementPlus
    */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -109,7 +110,7 @@ export abstract class Class_LinkElementPlus
     super(id, source, target, drawing_area, menu_config)
     // Override menu config
     this._menu_config = menu_config
-
+    // TODO trouver comment faire proprement
     // this.source.addOutputLink(this)
     // this.target.addInputLink(this)// Target
     // // Instanciate display on svg

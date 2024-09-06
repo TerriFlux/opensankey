@@ -116,7 +116,7 @@ export class Class_NodeElementOSP
   public copyInputLink(link: Class_LinkElementOSP): Class_LinkElementOSP {
     const new_link = new Class_LinkElementOSP(
       link.id,
-      this.main_sankey.nodes_dict[link.source.id] as Class_NodeElementOSP,
+      this.sankey.nodes_dict[link.source.id] as Class_NodeElementOSP,
       this,
       this.drawing_area,
       this.menu_config as Class_MenuConfigPlus
@@ -128,7 +128,7 @@ export class Class_NodeElementOSP
     const new_link = new Class_LinkElementOSP(
       link.id,
       this,
-      this.main_sankey.nodes_dict[link.target.id] as Class_NodeElementOSP,
+      this.sankey.nodes_dict[link.target.id] as Class_NodeElementOSP,
       this.drawing_area,
       this.menu_config as Class_MenuConfigPlus
     )
@@ -145,6 +145,7 @@ export class Class_LinkElementOSP
 
   protected _display: {
     drawing_area: Class_DrawingAreaOSP,
+    sankey: Class_SankeyOSP,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -166,6 +167,7 @@ export class Class_LinkElementOSP
     // Display
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
         type: 'absolute',
