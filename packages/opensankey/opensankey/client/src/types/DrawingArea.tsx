@@ -772,6 +772,8 @@ export abstract class Class_DrawingArea
       this.setHeight(max_node_pos_y + this._grid_size)
       this.drawGrid()
     }
+
+    return [max_node_pos_x,max_node_pos_y]
   }
 
   /**
