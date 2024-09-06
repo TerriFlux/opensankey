@@ -56,7 +56,7 @@ export class Class_DrawingAreaOS
     return sankey
   }
 
-  protected createNewSelectionZone():Class_ZoneSelection<Type_GenericDrawingAreaOS,Class_SankeyOS>{
+  protected createNewSelectionZone(){
     return new Class_ZoneSelectionOS(this, this.application_data.menu_configuration)
   }
 
@@ -76,12 +76,13 @@ export class Class_SankeyOS
 
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
 
-  constructor(drawing_area: Class_DrawingAreaOS,
+  constructor(
+    drawing_area: Class_DrawingAreaOS,
     menu_config: Class_MenuConfig,
-    id: string = default_main_sankey_id) {
+    id: string = default_main_sankey_id
+  ) {
     super(drawing_area, menu_config, id)
     this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
-
   }
 
   protected createNewNode(id: string, name: string): Class_NodeElementOS {
@@ -181,7 +182,7 @@ export class Class_LinkElementOS
     // Link with style
     this._display.style.addReference(this)
 
-    
+
     this.source.addOutputLink(this)
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
