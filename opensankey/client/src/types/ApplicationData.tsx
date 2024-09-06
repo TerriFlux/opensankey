@@ -18,7 +18,6 @@ import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
-import { Class_ZoneSelection } from './Selection_Zone'
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
