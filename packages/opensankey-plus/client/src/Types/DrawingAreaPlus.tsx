@@ -190,7 +190,7 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   public addFreeLabelToSelection(zdt: Class_ContainerElement<any, any>) {
-    // this._selection[zdt.id] = zdt
+    this._selection[zdt.id] = zdt
     zdt.setSelected()
   }
 
