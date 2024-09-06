@@ -69,7 +69,7 @@ if [ "$skip_gdeps" = false ] ; then
   printf ">>> Installation dans "${global}"\n"
   npm install -g pnpm
 fi
-printf "OK --------------------------------------------------------------------\n"
+printf "OK ------------------------------------------------------------------\n"
 
 # Clean deps first
 printf "\nClean deps ----------------------------------------------------------\n"
@@ -80,7 +80,7 @@ for dir in nodes_modules dist build; do
     rm -r "$SCRIPT_DIR/deps/OpenSankey/opensankey/client/$dir"
   fi
 done
-printf "OK --------------------------------------------------------------------\n"
+printf "OK ------------------------------------------------------------------\n"
 
 # Front-end build
 printf "\nBuild ---------------------------------------------------------------\n"
@@ -93,11 +93,10 @@ if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
-  printf ">>> Build standalone\n"
-  # Build&& CI= pnpm run build || exit_if_error $?
+  printf ">>> Build standalone\n" && CI= pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
   printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
 fi
 cd ..
-printf "OK --------------------------------------------------------------------\n"
+printf "OK ------------------------------------------------------------------\n"
