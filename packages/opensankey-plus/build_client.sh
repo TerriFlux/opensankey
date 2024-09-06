@@ -69,6 +69,7 @@ if [ "$skip_gdeps" = false ] ; then
   printf ">>> Installation dans "${global}"\n"
   npm install -g pnpm
 fi
+printf "OK --------------------------------------------------------------------\n"
 
 # Clean deps first
 printf "\nClean deps ----------------------------------------------------------\n"
@@ -79,6 +80,7 @@ for dir in nodes_modules dist build; do
     rm -r "$SCRIPT_DIR/deps/OpenSankey/opensankey/client/$dir"
   fi
 done
+printf "OK --------------------------------------------------------------------\n"
 
 # Front-end build
 printf "\nBuild ---------------------------------------------------------------\n"

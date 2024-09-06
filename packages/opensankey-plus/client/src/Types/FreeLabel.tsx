@@ -34,16 +34,15 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 // CLASS FREE LABEL ELEMENT *************************************************************
 
 export class Class_ContainerElement
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<any, any, any>,
-  Type_GenericSankey extends Class_AbstractSankeyPlus<any, any, any>
->
-extends Class_Element
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
->
-{
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<any, any, any>,
+    Type_GenericSankey extends Class_AbstractSankeyPlus<any, any, any>
+  >
+  extends Class_Element
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -88,10 +87,10 @@ extends Class_Element
   private _label_height: number
 
   private _drag_handler: {
-    top: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
-    bottom: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
-    left: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
-    right: Class_Handler<Type_GenericDrawingArea,Type_GenericSankey>,
+    top: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    bottom: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    left: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    right: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
   }
 
   // CONSTRUCTOR ========================================================================
@@ -276,18 +275,18 @@ extends Class_Element
  * @param {Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>} _
  * @memberof Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>
  */
-  public copyFrom(_: Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>){
+  public copyFrom(_: Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>) {
     // Since container attributes are primary type (number,string,boolean) there is no need to do deep clone
-    this._title=_._title
-    this._content=_._content
-    this._opacity=_._opacity
-    this._color=_._color
-    this._color_border=_._color_border
-    this._transparent_border=_._transparent_border
-    this._is_image=_._is_image
-    this._image_src=_._image_src
-    this._label_width=_._label_width
-    this._label_height=_._label_height
+    this._title = _._title
+    this._content = _._content
+    this._opacity = _._opacity
+    this._color = _._color
+    this._color_border = _._color_border
+    this._transparent_border = _._transparent_border
+    this._is_image = _._is_image
+    this._image_src = _._image_src
+    this._label_width = _._label_width
+    this._label_height = _._label_height
   }
   // PRIVATE METHODS ====================================================================
 
@@ -517,7 +516,7 @@ extends Class_Element
       else {
         // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
         // Purge selection list
-        drawing_area.purgeSelection();
+        drawing_area.purgeSelection()
         // Add free label to selection
         drawing_area.addFreeLabelToSelection(this)
       }

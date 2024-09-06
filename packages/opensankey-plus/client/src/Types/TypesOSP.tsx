@@ -18,7 +18,7 @@ import { Class_LinkAttributePlus, Class_LinkElementPlus, Class_LinkStylePlus } f
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 
-// STANDARD TYPES FOR OPENSANKEY AND MORE *********************************************************
+// STANDARD TYPES FOR OPENSANKEY+ AND MORE **********************************************
 
 export type Type_GenericApplicationDataOSP = Class_ApplicationDataPlus<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>
 export type Type_GenericDrawingAreaOSP = Class_DrawingAreaPlus<Type_GenericSankeyOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>
@@ -27,9 +27,9 @@ export type Type_GenericNodeElementOSP = Class_NodeElementPlus<Type_GenericDrawi
 export type Type_GenericLinkElementOSP = Class_LinkElementPlus<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericNodeElementOSP>
 export type Type_GenericContainerElement = Class_ContainerElement<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP>
 
-// STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
+// STANDARD CLASSES FOR OPENSANKEY+ AND MORE ********************************************
 
-// APPLICATION DATA ===============================================================================
+// APPLICATION DATA =====================================================================
 
 export class Class_ApplicationDataOSP
   extends Class_ApplicationDataPlus<
@@ -48,7 +48,8 @@ export class Class_ApplicationDataOSP
   }
 }
 
-// DRAWING AREA ===================================================================================
+// DRAWING AREA =========================================================================
+
 export class Class_DrawingAreaOSP
   extends Class_DrawingAreaPlus<
     Class_SankeyOSP,
@@ -65,7 +66,8 @@ export class Class_DrawingAreaOSP
   }
 }
 
-// SANKEY =========================================================================================
+// SANKEY ===============================================================================
+
 export class Class_SankeyOSP
   extends Class_SankeyPlus<
     Class_DrawingAreaOSP,
@@ -104,7 +106,8 @@ export class Class_SankeyOSP
   }
 }
 
-// NODE ===========================================================================================
+// NODE =================================================================================
+
 export class Class_NodeElementOSP
   extends Class_NodeElementPlus<
     Class_DrawingAreaOSP, Class_SankeyOSP, Class_LinkElementOSP
@@ -133,23 +136,24 @@ export class Class_NodeElementOSP
   }
 }
 
-// LINK ===========================================================================================
+// LINK =================================================================================
+
 export class Class_LinkElementOSP
   extends Class_LinkElementPlus<
     Class_DrawingAreaOSP, Class_SankeyOSP, Class_NodeElementOSP
   > {
 
-    protected _display: {
-        drawing_area: Class_DrawingAreaOSP,
-        displaying_order: number,
-        position_starting: Type_ElementPosition,
-        position_ending: Type_ElementPosition,
-        style: Class_LinkStylePlus,
-        attributes: Class_LinkAttributePlus,
-        position_x_label?: number
-        position_y_label?: number
-        position_offset_label?: number
-    }
+  protected _display: {
+    drawing_area: Class_DrawingAreaOSP,
+    displaying_order: number,
+    position_starting: Type_ElementPosition,
+    position_ending: Type_ElementPosition,
+    style: Class_LinkStylePlus,
+    attributes: Class_LinkAttributePlus,
+    position_x_label?: number
+    position_y_label?: number
+    position_offset_label?: number
+  }
 
   constructor(
     id: string,
@@ -184,8 +188,3 @@ export class Class_LinkElementOSP
     this._display.style.addReference(this)
   }
 }
-
-
-
-
-

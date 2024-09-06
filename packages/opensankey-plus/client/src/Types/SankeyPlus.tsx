@@ -27,18 +27,17 @@ import { Class_ContainerElement } from './FreeLabel'
  * @class Class_Sankey
  */
 export abstract class Class_SankeyPlus
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericNodeElement extends Class_NodeElementPlus<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>
->
-extends Class_AbstractSankeyPlus
   <
-  Type_GenericDrawingArea,
-  Type_GenericNodeElement,
-  Type_GenericLinkElement
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericNodeElement extends Class_NodeElementPlus<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>
   >
-{
+  extends Class_AbstractSankeyPlus
+  <
+    Type_GenericDrawingArea,
+    Type_GenericNodeElement,
+    Type_GenericLinkElement
+  > {
 
   // ABSTRACT ATTRIBUTES ================================================================
 

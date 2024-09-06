@@ -32,18 +32,17 @@ import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
  * @extends {Class_DrawingArea}
  */
 export abstract class Class_DrawingAreaPlus
-<
-  Type_GenericSankey extends Class_SankeyPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericNodeElement extends Class_NodeElementPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElementPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>
->
-extends Class_AbstractDrawingAreaPlus
-<
-  Type_GenericSankey,
-  Type_GenericNodeElement,
-  Type_GenericLinkElement
->
-{
+  <
+    Type_GenericSankey extends Class_SankeyPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericNodeElement extends Class_NodeElementPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElementPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>
+  >
+  extends Class_AbstractDrawingAreaPlus
+  <
+    Type_GenericSankey,
+    Type_GenericNodeElement,
+    Type_GenericLinkElement
+  > {
 
   // TODO Faire le menage ?
   // override _sankey:Type_GenericSankey
@@ -265,8 +264,9 @@ extends Class_AbstractDrawingAreaPlus
 
   // GETTERS / SETTERS ==================================================================
 
-  public get selected_free_labels_list(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]{
-    return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) as Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] }
+  public get selected_free_labels_list(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] {
+    return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) as Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
+  }
   public get selected_free_labels_list_sorted() { return this.selected_free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 
   public get contextualised_free_label(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined { return this._contextualised_free_label }

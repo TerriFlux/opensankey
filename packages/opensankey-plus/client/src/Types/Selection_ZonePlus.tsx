@@ -1,7 +1,7 @@
-import { Class_ZoneSelection } from "../deps/OpenSankey/types/Selection_Zone"
-import { Class_AbstractDrawingAreaPlus, Class_AbstractSankeyPlus } from "./Abstract"
-import { Class_ContainerElement } from "./FreeLabel"
-import { Class_MenuConfigPlus } from "./MenuConfigPlus"
+import { Class_ZoneSelection } from '../deps/OpenSankey/types/Selection_Zone'
+import { Class_AbstractDrawingAreaPlus, Class_AbstractSankeyPlus } from './Abstract'
+import { Class_ContainerElement } from './FreeLabel'
+import { Class_MenuConfigPlus } from './MenuConfigPlus'
 
 /**
  * Class that helps to create a selection zone for elements on the drawing area
@@ -10,16 +10,15 @@ import { Class_MenuConfigPlus } from "./MenuConfigPlus"
  * @extends {Class_Element}
  */
 export class Class_ZoneSelectionPlus
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, any, any>,
-  Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, any, any>
->
-extends Class_ZoneSelection
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
->
-{
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, any, any>,
+    Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, any, any>
+  >
+  extends Class_ZoneSelection
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -39,7 +38,6 @@ extends Class_ZoneSelection
   ) {
     // Init parent class attributes
     super(drawing_area, menu_config)
-
   }
 
   // PUBLIC METHODS =====================================================================
@@ -50,8 +48,9 @@ extends Class_ZoneSelection
    * @memberof Class_ZoneSelection
    */
   public selectElementsInside() {
+    // Get OpenSankey standard elements
     super.selectElementsInside()
-
+    // Adds OpenSankey+ elements
     this.drawing_area.sankey.free_labels_list
       .filter(container => {
         // Check if node is horizontally in selection zone
@@ -73,7 +72,4 @@ extends Class_ZoneSelection
         this.drawing_area.addFreeLabelToSelection(container as Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>)
       })
   }
-
-  // GETTERS / SETTERS ==================================================================
-
 }

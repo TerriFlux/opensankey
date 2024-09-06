@@ -7,17 +7,20 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-// External imports
-import * as d3 from 'd3'
-
 // Local imports
 import {
   Class_AbstractNodeElementPlus,
   type Class_AbstractDrawingAreaPlus,
   type Class_AbstractSankeyPlus
 } from './Abstract'
-import { Class_MenuConfigPlus } from './MenuConfigPlus'
-import { Class_LinkElementPlus } from './LinkPlus'
+import type { Class_MenuConfigPlus } from './MenuConfigPlus'
+import type { Class_LinkElementPlus } from './LinkPlus'
+import {
+  type Type_JSON,
+  getBooleanFromJSON,
+  getStringFromJSON,
+  getStringOrUndefinedFromJSON
+} from '../deps/OpenSankey/types/Utils'
 
 // CLASS NODE ELEMENT PLUS **************************************************************
 
@@ -28,19 +31,17 @@ import { Class_LinkElementPlus } from './LinkPlus'
  * @extends {Class_AbstractNodeElementPlus}
  */
 export abstract class Class_NodeElementPlus
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>, Type_GenericLinkElement>,
-  Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
->
-extends Class_AbstractNodeElementPlus
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey,
-  Type_GenericLinkElement
->
-{
-  // PUBLIC ATTRIBUTES ==================================================================
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>, Type_GenericLinkElement>,
+    Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
+  >
+  extends Class_AbstractNodeElementPlus
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey,
+    Type_GenericLinkElement
+  > {
 
   // PROTECTED ATTRIBUTE ================================================================
 
@@ -126,7 +127,11 @@ extends Class_AbstractNodeElementPlus
    * @param {{ [_: string]: { [_: string]: string } }} [matching_tags_id]
    * @memberof Class_NodeElementPlus
    */
-  public override fromJSON(json_node_object: Type_JSON, matching_taggs_id?: { [_: string]: string }, matching_tags_id?: { [_: string]: { [_: string]: string } }): void {
+  public override fromJSON(
+    json_node_object: Type_JSON,
+    matching_taggs_id?: { [_: string]: string },
+    matching_tags_id?: { [_: string]: { [_: string]: string } }
+  ): void {
     super.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
     this._iconName = getStringFromJSON(json_node_object, 'iconName', this._iconName)
     this._iconColor = getStringFromJSON(json_node_object, 'iconColor', this._iconColor)
@@ -164,14 +169,16 @@ extends Class_AbstractNodeElementPlus
 
     return json_entry
   }
-  
+
   /**
    * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
    *
    * @param {Class_NodeElementPlus} node_to_copy
    * @memberof Class_NodeElementPlus
    */
-  public copyFrom(node_to_copy: Class_NodeElementPlus): void {
+  public copyFrom(
+    node_to_copy: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  ): void {
     super.copyFrom(node_to_copy)
 
     this._iconName = node_to_copy._iconName
@@ -187,7 +194,9 @@ extends Class_AbstractNodeElementPlus
     this._hyperlink = node_to_copy._hyperlink
   }
 
-  public override isEqual(_: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): boolean {
+  public override isEqual(
+    _: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  ): boolean {
     const super_equal = super.isEqual(_)
     if (super_equal == false) {
       return false
@@ -255,6 +264,7 @@ extends Class_AbstractNodeElementPlus
   }
 
   // PROTECTED METHODS ====================================================================
+
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {

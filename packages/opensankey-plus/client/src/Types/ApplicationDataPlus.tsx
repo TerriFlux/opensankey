@@ -26,19 +26,19 @@ import { Class_SankeyPlus } from './SankeyPlus'
  * @extends {Class_ApplicationData}
  */
 export abstract class Class_ApplicationDataPlus
-<
-  Type_GenericDrawingArea extends Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericSankey extends Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericNodeElement extends Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
->
-extends Class_AbstractApplicationDataPlus
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey,
-  Type_GenericNodeElement,
-  Type_GenericLinkElement
-> {
+  <
+    Type_GenericDrawingArea extends Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericSankey extends Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericNodeElement extends Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  >
+  extends Class_AbstractApplicationDataPlus
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey,
+    Type_GenericNodeElement,
+    Type_GenericLinkElement
+  > {
 
   // PUBLIC ATTRIBUTES =================================================================
 
