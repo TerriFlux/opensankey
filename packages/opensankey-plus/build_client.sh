@@ -64,14 +64,24 @@ done
 
 # Install global dependencies
 if [ "$skip_gdeps" = false ] ; then
-  printf "Global dependencies ------------------------------------------------\n"
+  printf "Global dependencies -------------------------------------------------\n"
   global=`npm root -g`
   printf ">>> Installation dans "${global}"\n"
   npm install -g pnpm
 fi
 
+# Clean deps first
+printf "\nClean deps ----------------------------------------------------------\n"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+for dir in nodes_modules dist build; do
+  if [ -d "$SCRIPT_DIR/deps/OpenSankey/opensankey/client/$dir" ] ; then
+    echo "removing $SCRIPT_DIR/deps/OpenSankey/opensankey/client/$dir"
+    rm -r "$SCRIPT_DIR/deps/OpenSankey/opensankey/client/$dir"
+  fi
+done
+
 # Front-end build
-printf "\nBuild --------------------------------------------------------------\n"
+printf "\nBuild ---------------------------------------------------------------\n"
 cd client
 if [ "$install" = true ] ; then
   printf ">>> Install deps\n\n" && pnpm install || exit_if_error $?
@@ -81,10 +91,11 @@ if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
-  printf ">>> Build standalone\n" && CI= pnpm run build || exit_if_error $?
+  printf ">>> Build standalone\n"
+  # Build&& CI= pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
   printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
 fi
 cd ..
-printf "OK -----------------------------------------------------------------\n"
+printf "OK --------------------------------------------------------------------\n"
