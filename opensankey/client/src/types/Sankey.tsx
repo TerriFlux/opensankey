@@ -1295,6 +1295,8 @@ export abstract class Class_Sankey
 
   public get id(): string { return this._id }
 
+  public get is_visible(): boolean { return true } // Visibility always true for base sankey
+
   public get color_map(): string { return this._color_map }
   public set color_map(value: string) { this._color_map = value }
 
