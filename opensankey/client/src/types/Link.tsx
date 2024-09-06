@@ -1973,7 +1973,7 @@ export abstract class  Class_LinkElement
   }
 
   public get display(){
-     return this._display
+    return this._display
   }
 
   /**
@@ -4317,8 +4317,8 @@ export class Class_GhostLinkElement
       style: drawing_area.sankey.default_link_style as Class_LinkStyle,
       attributes: new Class_LinkAttribute()
     }
-  // Link with style
-  this._display.style.addReference(this)
+    // Link with style
+    this._display.style.addReference(this)
   }
 
   // GETTER / SETTER ====================================================================

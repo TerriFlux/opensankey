@@ -815,6 +815,7 @@ export abstract class Class_DrawingArea
     let element_min_x: Type_GenericNodeElement | undefined = undefined
     let element_min_y: Type_GenericNodeElement| undefined = undefined
 
+    // Get min x and min y elements
     this.sankey.visible_nodes_list
       .forEach(n => {
         // Search for node with position x inf. to 0 and to element with minimum x position value
@@ -827,25 +828,29 @@ export abstract class Class_DrawingArea
         }
       })
 
-    // TODO true element appears as never -> fix this
-    // if (element_min_x) {
-    //   const true_element = element_min_x
-    //   // If element is on the left of the DA move all elements to 'x' pixel to the right
-    //   // (x being the absolute value of element position x )
-    //   this.sankey.visible_nodes_list.filter(el => el !== element_min_x).forEach(node => {
-    //     node.position_x += Math.abs(element_min_x.position_x)
-    //   })
-    //   true_element.position_x = 0
-    // }
-    // if (element_min_y !== undefined) {
-    //   const true_element = element_min_y
-    //   // If element is on top of the DA move all elements to 'y' pixel to the bottom
-    //   // (y being the absolute value of element position y )
-    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-    //     node.position_y += Math.abs(true_element.position_y)
-    //   })
-    //   true_element.position_y = 0
-    // }
+    // Shift from min x element
+    if (element_min_x !== undefined) {
+      const true_element: Type_GenericNodeElement = element_min_x
+      // If element is on the left of the DA move all elements to 'x' pixel to the right
+      // (x being the absolute value of element position x )
+      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+        node.position_x += Math.abs(true_element.position_x)
+      })
+      true_element.position_x = 0
+    }
+
+    // Shift from min y element
+    if (element_min_y !== undefined) {
+      const true_element: Type_GenericNodeElement = element_min_y
+      // If element is on top of the DA move all elements to 'y' pixel to the bottom
+      // (y being the absolute value of element position y )
+      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+        node.position_y += Math.abs(true_element.position_y)
+      })
+      true_element.position_y = 0
+    }
+
+    // Redraw
     this.checkAndUpdateAreaSize()
   }
 

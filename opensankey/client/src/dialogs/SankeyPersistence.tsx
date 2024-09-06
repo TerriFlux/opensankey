@@ -431,10 +431,12 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 /* EXAMPLES PROCESSING *****************************************************************/
 
 // TODO s'en occuper
+/* eslint-disable */
 export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
   postProcessLoadExcel
 ) => {
+/* eslint-enable */
 //   const {data}=applicationData
 //   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
 //   convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
