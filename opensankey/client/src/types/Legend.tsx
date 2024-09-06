@@ -106,6 +106,7 @@ export class Class_Legend
    */
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
   }
 
@@ -122,6 +123,7 @@ export class Class_Legend
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position)
     }
   }
@@ -557,7 +559,8 @@ export class Class_Legend
 
   public get is_visible(): boolean {
     return (
-      !this._masked
+      super.is_visible &&
+      (!this._masked)
     )
   }
 

@@ -268,6 +268,7 @@ export abstract class  Class_LinkElement
   */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -413,6 +414,7 @@ export abstract class  Class_LinkElement
     // Source
     this._source = source
     this._target = target// Target
+    // TODO fix that
     // this._source.addOutputLink(this)
     // this._target.addInputLink(this)// Target
     // // Instanciate display on svg
@@ -592,7 +594,7 @@ export abstract class  Class_LinkElement
   }
 
   public useDefaultStyle() {
-    this.style = this.main_sankey.default_link_style as Class_LinkStyle
+    this.style = this.sankey.default_link_style as Class_LinkStyle
     this.drawElements()
   }
 
@@ -714,22 +716,22 @@ export abstract class  Class_LinkElement
     let source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
     if (source_node_id) {
       source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
-      if (this.main_sankey.nodes_dict[source_node_id]) {
-        this.source = this.main_sankey.nodes_dict[source_node_id] as Type_GenericNodeElement
+      if (this.sankey.nodes_dict[source_node_id]) {
+        this.source = this.sankey.nodes_dict[source_node_id] as Type_GenericNodeElement
         this.shape_is_recycling = false
       }
     }
     let target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
     if (target_node_id) {
       target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
-      if (this.main_sankey.nodes_dict[target_node_id]) {
-        this.target = this.main_sankey.nodes_dict[target_node_id] as Type_GenericNodeElement
+      if (this.sankey.nodes_dict[target_node_id]) {
+        this.target = this.sankey.nodes_dict[target_node_id] as Type_GenericNodeElement
         this.shape_is_recycling = false
       }
     }
     // Get style & local attributes
     const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-    this._display.style = this.main_sankey.link_styles_dict[style_id] as Class_LinkStyle
+    this._display.style = this.sankey.link_styles_dict[style_id] as Class_LinkStyle
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -763,7 +765,7 @@ export abstract class  Class_LinkElement
     }
     else {
       // Do we apply colors of data tags ?
-      this.main_sankey.selected_data_tags_list
+      this.sankey.selected_data_tags_list
         .filter(tag => tag.group.show_legend)
         .forEach(tag => shape_color = tag.color)
     }
@@ -1965,10 +1967,10 @@ export abstract class  Class_LinkElement
 
   public get is_visible() {
     return (
+      super.is_visible &&
       this.are_source_and_target_displayed &&
       this.are_related_tags_selected &&
-      this.is_value_above_threshold &&
-      this._is_visible
+      this.is_value_above_threshold
     )
   }
 
@@ -2136,7 +2138,7 @@ export abstract class  Class_LinkElement
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(this.main_sankey.selected_data_tags_list as Class_DataTag[])
+      return this._values.getValueForDataTags(this.sankey.selected_data_tags_list as Class_DataTag[])
   }
 
   /**
@@ -2167,12 +2169,12 @@ export abstract class  Class_LinkElement
 
       if (this.source.position_type == 'parametric') {
         // if the positioning mode of source is parametric we need to reposition all nodes below
-        const same_source_u = this.main_sankey.visible_nodes_list.filter(n=>n.position_u == this.source.position_u && n.position_v > this.source.position_v)
+        const same_source_u = this.sankey.visible_nodes_list.filter(n=>n.position_u == this.source.position_u && n.position_v > this.source.position_v)
         same_source_u.forEach(n=>n.draw())
       }
       if (this.target.position_type == 'parametric') {
         // if the positioning mode of target is parametric we need to reposition all nodes below
-        const same_target_u = this.main_sankey.visible_nodes_list.filter(n=>n.position_u == this.target.position_u && n.position_v > this.target.position_v)
+        const same_target_u = this.sankey.visible_nodes_list.filter(n=>n.position_u == this.target.position_u && n.position_v > this.target.position_v)
         same_target_u.forEach(n=>n.draw())
       }
     }
@@ -4277,9 +4279,9 @@ export class Class_GhostLinkElement
 >
 {
 
-
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
@@ -4290,15 +4292,18 @@ export class Class_GhostLinkElement
     position_offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
 
-  constructor(id: string,
+  constructor(
+    id: string,
     source: Type_GenericNodeElement,
     target: Type_GenericNodeElement,
     drawing_area: Type_GenericDrawingArea,
-    menu_config: Class_MenuConfig,){
+    menu_config: Class_MenuConfig
+  ){
     super(id,source,target,drawing_area,menu_config)
     // Display
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey as Type_GenericSankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
         type: 'absolute',
@@ -4322,5 +4327,5 @@ export class Class_GhostLinkElement
   }
 
   // GETTER / SETTER ====================================================================
-  public get is_visible() { return this._is_visible }
+  public get is_visible() { return (this._is_visible && this.sankey.is_visible) }
 }

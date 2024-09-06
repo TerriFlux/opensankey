@@ -45,6 +45,7 @@ export abstract class Class_ZoneSelection
 
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
   }
 
@@ -73,6 +74,7 @@ export abstract class Class_ZoneSelection
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
+      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
     }
   }

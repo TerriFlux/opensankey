@@ -137,8 +137,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   // PUBLIC METHODS =====================================================================
   public synchroWith(dim: Class_NodeDimension) {
     // Get list of all nodes
-    const nodes_dict = this.parent.main_sankey.nodes_dict
-    const level_taggs_dict = this.parent.main_sankey.level_taggs_dict
+    const nodes_dict = this.parent.sankey.nodes_dict
+    const level_taggs_dict = this.parent.sankey.level_taggs_dict
     // Sync references with parent nodes
     if (dim.parent.id in nodes_dict) {
       this.parent = nodes_dict[dim.parent.id]

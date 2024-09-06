@@ -321,7 +321,7 @@ export abstract class Class_DrawingArea
 
   // ABSTRACT METHODS ==================================================================
 
-  protected abstract createNewSankey(): Type_GenericSankey
+  protected abstract createNewSankey(id?: string): Type_GenericSankey
   protected abstract createNewSelectionZone(): Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PUBLIC METHODS ====================================================================
