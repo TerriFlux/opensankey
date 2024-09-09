@@ -362,7 +362,7 @@ export abstract class Class_DrawingAreaPlus
     }
     // Create the new sankey
     const new_sankey = this.createNewSankey(makeId('view '))
-    new_sankey.copyFrom(this.sankey)
+    new_sankey.copyFrom(base_sankey)
     // Add new sankey to views
     this._views[new_sankey.id] = new_sankey
     this._views_order.push(new_sankey.id)
@@ -372,9 +372,12 @@ export abstract class Class_DrawingAreaPlus
 
   public setCurrentView(id: string) {
     if (this.has_views && !this.is_view_master) {
+      // Hide previous diplayed sankey
       this._sankey.setInvisible()
       this._sankey.draw()
+      // SHow new sankey
       this._sankey = this._views[id]
+      this._sankey.setVisible()
       this._sankey.draw()
     }
   }

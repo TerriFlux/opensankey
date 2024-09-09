@@ -668,7 +668,8 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
     {(master_data ? master_data : { view: [] as string[] }).view.length > 0 && master_data!.current_view !== 'none' && !window.SankeyToolsStatic ? <>
       {button_delete_actual_view}
-      {master_data && !master_data.is_catalog ? button_heredited_attr_from_master : <></>}
+      {
+        master_data && !master_data.is_catalog ? button_heredited_attr_from_master : <></>}
     </>
       : <></>
 
@@ -815,303 +816,304 @@ export const RecomputeViews: RecomputeViewsFType = (
   set_master_data({ ...JSON.parse(JSON.stringify(new_master_data)) })
 }
 
-export const OSPKeyHandler: OSPKeyHandlerFType = (
-  applicationContext,
-  e: KeyboardEvent,
-  applicationData,
-  applicationState,
-  dict_hook_ref_setter_show_dialog_components,
-  reDrawOSPLabels,
-  ComponentUpdater
-) => {
-  const { t, has_open_sankey_plus } = applicationContext
-  const { data, set_data, master_data, set_master_data, view, set_view, set_view_not_saved } = applicationData
-  const { multi_selected_label } = applicationState
-  const { updateMenus } = ComponentUpdater
-  const is_master = applicationData.view === 'none'
-  if (e.key === 'a' && e.ctrlKey) {
-    e.preventDefault()
-    multi_selected_label.current = Object.values(data.labels)
-    reDrawOSPLabels(multi_selected_label.current)
-    ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f => f())
-  }
-  // Clone current data,if its a view clone the view
-  if (has_open_sankey_plus && e.key === 'x' && (e.ctrlKey || e.metaKey)) {
-    e.preventDefault()
+// TODO Plus necessaire à supprimer si nouvelle implementation OK
+// export const OSPKeyHandler: OSPKeyHandlerFType = (
+//   applicationContext,
+//   e: KeyboardEvent,
+//   applicationData,
+//   applicationState,
+//   dict_hook_ref_setter_show_dialog_components,
+//   reDrawOSPLabels,
+//   ComponentUpdater
+// ) => {
+//   const { t, has_open_sankey_plus } = applicationContext
+//   const { data, set_data, master_data, set_master_data, view, set_view, set_view_not_saved } = applicationData
+//   const { multi_selected_label } = applicationState
+//   const { updateMenus } = ComponentUpdater
+//   const is_master = applicationData.view === 'none'
+//   if (e.key === 'a' && e.ctrlKey) {
+//     e.preventDefault()
+//     multi_selected_label.current = Object.values(data.labels)
+//     reDrawOSPLabels(multi_selected_label.current)
+//     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f => f())
+//   }
+//   // Clone current data,if its a view clone the view
+//   if (has_open_sankey_plus && e.key === 'x' && (e.ctrlKey || e.metaKey)) {
+//     e.preventDefault()
 
-    if (is_master) {
-      // If we do a control+X while we are on is_master data, we create view empty
-      // data is is_master data and master_data might not be  se
-      const new_ind = 'view_' + String(new Date().getTime())
-      // const copy_data = {diff:[]}
-      const copy_data = JSON.parse(JSON.stringify(data))
-      const new_master_data = data
-      new_master_data.view.push({
-        id: new_ind,
-        view_data: copy_data,
-        nom: 'data_' + new_ind,
-        details: '',
-        heredited_attr_from_master: []
-      })
-      RecomputeViews(new_master_data, master_data, set_master_data)
-      // is_master data is now set
-      // at this stage data is a view and is equal with is_master data
+//     if (is_master) {
+//       // If we do a control+X while we are on is_master data, we create view empty
+//       // data is is_master data and master_data might not be  se
+//       const new_ind = 'view_' + String(new Date().getTime())
+//       // const copy_data = {diff:[]}
+//       const copy_data = JSON.parse(JSON.stringify(data))
+//       const new_master_data = data
+//       new_master_data.view.push({
+//         id: new_ind,
+//         view_data: copy_data,
+//         nom: 'data_' + new_ind,
+//         details: '',
+//         heredited_attr_from_master: []
+//       })
+//       RecomputeViews(new_master_data, master_data, set_master_data)
+//       // is_master data is now set
+//       // at this stage data is a view and is equal with is_master data
 
-      set_view(new_ind)
-      new_master_data.current_view = new_ind
-      set_master_data({ ...new_master_data })
-      set_data({ ...copy_data })
-    } else {
-      const new_ind = 'view_' + String(new Date().getTime())
-      const current_view_object = master_data!.view.filter(v => v.id === view)[0]
+//       set_view(new_ind)
+//       new_master_data.current_view = new_ind
+//       set_master_data({ ...new_master_data })
+//       set_data({ ...copy_data })
+//     } else {
+//       const new_ind = 'view_' + String(new Date().getTime())
+//       const current_view_object = master_data!.view.filter(v => v.id === view)[0]
 
-      const copy_data = JSON.parse(JSON.stringify(current_view_object.view_data))
-      master_data!.view.push({
-        id: new_ind,
-        view_data: copy_data,
-        nom: t('view.prefix_copy') + ' ' + current_view_object.nom,
-        details: '',
-        heredited_attr_from_master: []
+//       const copy_data = JSON.parse(JSON.stringify(current_view_object.view_data))
+//       master_data!.view.push({
+//         id: new_ind,
+//         view_data: copy_data,
+//         nom: t('view.prefix_copy') + ' ' + current_view_object.nom,
+//         details: '',
+//         heredited_attr_from_master: []
 
-      })
-
-
-      // is_master data is now set
-      master_data!.current_view = new_ind
-      set_view(new_ind)
-      set_master_data({ ...master_data! })
-      // get view data & set_data to avoid synchronisation problem
-      const n_data = GetDataFromView(master_data, new_ind)
-      if (n_data) {
-        set_data(JSON.parse(JSON.stringify(n_data)))
-      }
-    }
-  }
-
-  if (e.key === 's' && e.ctrlKey && !e.shiftKey) {
-    e.preventDefault()
-
-    applicationData.function_on_wait.current = () => {
-      ComponentUpdater.updateComponenSaveInCache.current(false)
-
-      if (view !== 'none') {
-        // If we do a control+S while we are on a view, we save the difference between the data we are handling
-        // and the is_master data. These difference are the saved the view we are currently on
-        // Get difference between master_data and the current data then save it in view
-        let difference = getDiff(master_data, data)
-        difference = (difference !== undefined) ? difference : []
-        difference = difference.filter((d) => !(d.path!.includes('view')))
-        difference = FilterView(difference)
-
-        // Check wich format of the view is better optimized for memory storage
-        const raw_is_smaller_than_diff = JSON.stringify(data).length < JSON.stringify(difference).length
-        master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff ? JSON.parse(JSON.stringify(data)) : { diff: difference }
-
-        // Save is_master data with the view we are currently working on updated
-        set_master_data({ ...master_data! })
-        // Save master_data data in localStorage
-        localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
-
-      } else {
-        // Save current data (wich is master_data)
-        localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-        localStorage.setItem('last_save', 'true')
-      }
-      ComponentUpdater.updateComponenSaveInCache.current(true)
-
-    }
+//       })
 
 
-    //dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
+//       // is_master data is now set
+//       master_data!.current_view = new_ind
+//       set_view(new_ind)
+//       set_master_data({ ...master_data! })
+//       // get view data & set_data to avoid synchronisation problem
+//       const n_data = GetDataFromView(master_data, new_ind)
+//       if (n_data) {
+//         set_data(JSON.parse(JSON.stringify(n_data)))
+//       }
+//     }
+//   }
+
+//   if (e.key === 's' && e.ctrlKey && !e.shiftKey) {
+//     e.preventDefault()
+
+//     applicationData.function_on_wait.current = () => {
+//       ComponentUpdater.updateComponenSaveInCache.current(false)
+
+//       if (view !== 'none') {
+//         // If we do a control+S while we are on a view, we save the difference between the data we are handling
+//         // and the is_master data. These difference are the saved the view we are currently on
+//         // Get difference between master_data and the current data then save it in view
+//         let difference = getDiff(master_data, data)
+//         difference = (difference !== undefined) ? difference : []
+//         difference = difference.filter((d) => !(d.path!.includes('view')))
+//         difference = FilterView(difference)
+
+//         // Check wich format of the view is better optimized for memory storage
+//         const raw_is_smaller_than_diff = JSON.stringify(data).length < JSON.stringify(difference).length
+//         master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff ? JSON.parse(JSON.stringify(data)) : { diff: difference }
+
+//         // Save is_master data with the view we are currently working on updated
+//         set_master_data({ ...master_data! })
+//         // Save master_data data in localStorage
+//         localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
+
+//       } else {
+//         // Save current data (wich is master_data)
+//         localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+//         localStorage.setItem('last_save', 'true')
+//       }
+//       ComponentUpdater.updateComponenSaveInCache.current(true)
+
+//     }
+
+
+//     //dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
 
 
 
 
-  }
-  // Changing view to is_master
-  if (!is_master && e.key === 'F7') {
+//   }
+//   // Changing view to is_master
+//   if (!is_master && e.key === 'F7') {
 
-    // Check if there is unsaved change before we switch view
-    // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
-    let saved = true
-    if (view !== 'none' && has_open_sankey_plus) {
-      const diff = CheckCurrentViewSaved(master_data, data, view)
-      if (diff.length > 0 && !window.SankeyToolsStatic) {
-        saved = false
-        set_view_not_saved(view)
-        set_view('none')
-      }
-    }
+//     // Check if there is unsaved change before we switch view
+//     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+//     let saved = true
+//     if (view !== 'none' && has_open_sankey_plus) {
+//       const diff = CheckCurrentViewSaved(master_data, data, view)
+//       if (diff.length > 0 && !window.SankeyToolsStatic) {
+//         saved = false
+//         set_view_not_saved(view)
+//         set_view('none')
+//       }
+//     }
 
-    if (saved) {
-      set_view('none')
-      set_data(JSON.parse(JSON.stringify(master_data)))
-    }
-  }
-  // Changing view to next or previous
-  if (['F8', 'F9'].includes(e.key)) {
-    if (e.key === 'F8') {
-      // going backward
-      //Cherche la position de la vue sélectionné dans le tableau de vue
-      let ind = -1
-      master_data!.view.map((v, i) => {
-        ind = (v.id === view) ? i : ind
-      })
-      if (ind === -1) {
-        ind = 1
-      } else if (ind === 0) {
-        ind = Object.keys(master_data!.view).length
-      }
-      const data_view = GetDataFromView(master_data, master_data!.view[ind - 1].id) as OSPData
+//     if (saved) {
+//       set_view('none')
+//       set_data(JSON.parse(JSON.stringify(master_data)))
+//     }
+//   }
+//   // Changing view to next or previous
+//   if (['F8', 'F9'].includes(e.key)) {
+//     if (e.key === 'F8') {
+//       // going backward
+//       //Cherche la position de la vue sélectionné dans le tableau de vue
+//       let ind = -1
+//       master_data!.view.map((v, i) => {
+//         ind = (v.id === view) ? i : ind
+//       })
+//       if (ind === -1) {
+//         ind = 1
+//       } else if (ind === 0) {
+//         ind = Object.keys(master_data!.view).length
+//       }
+//       const data_view = GetDataFromView(master_data, master_data!.view[ind - 1].id) as OSPData
 
-      // Check if there is unsaved change before we switch view
-      // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
-      let saved = true
-      if (view !== 'none' && has_open_sankey_plus) {
-        const diff = CheckCurrentViewSaved(master_data, data, view)
-        if (diff.length > 0 && !window.SankeyToolsStatic) {
-          saved = false
-          set_view_not_saved(view)
-          set_view(master_data!.view[ind - 1].id)
-        }
-      }
-      if (saved) {
-        set_data({ ...data_view as OSPData })
-        set_view(master_data!.view[ind - 1].id)
-      }
+//       // Check if there is unsaved change before we switch view
+//       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+//       let saved = true
+//       if (view !== 'none' && has_open_sankey_plus) {
+//         const diff = CheckCurrentViewSaved(master_data, data, view)
+//         if (diff.length > 0 && !window.SankeyToolsStatic) {
+//           saved = false
+//           set_view_not_saved(view)
+//           set_view(master_data!.view[ind - 1].id)
+//         }
+//       }
+//       if (saved) {
+//         set_data({ ...data_view as OSPData })
+//         set_view(master_data!.view[ind - 1].id)
+//       }
 
-    } else if (e.key === 'F9') {
-      let new_master_data: OSPData | undefined
-      if (is_master) {
-        new_master_data = data
-        RecomputeViews(new_master_data, master_data, set_master_data)
-      } else {
-        new_master_data = master_data
-      }
-      //Cherche la position de la vue sélectionné dans le tableau de vue
-      let ind = -1
-      new_master_data!.view.map((v, i) => {
-        ind = (v.id === view) ? i : ind
-      })
-      //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-      if (ind === Object.keys(new_master_data!.view).length - 1) {
-        ind = -1
-      } else if (ind === -1) {
-        ind = -1
-      }
-      // Check if there is unsaved change before we switch view
-      // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
-      if (view === 'none') {
-        new_master_data!.current_view = master_data!.view[ind + 1].id
-        set_master_data(new_master_data)
-      }
-      let saved = true
-      if (view !== 'none' && has_open_sankey_plus) {
-        const diff = CheckCurrentViewSaved(new_master_data, data, view)
-        if (diff.length > 0 && !window.SankeyToolsStatic) {
-          saved = false
-          set_view_not_saved(view)
-          set_view(master_data!.view[ind + 1].id)
-        }
-      }
-      const data_view = GetDataFromView(new_master_data, new_master_data!.view[ind + 1].id) as OSPData
-      if (saved) {
-        set_data(JSON.parse(JSON.stringify(data_view)))
-        set_view(new_master_data!.view[ind + 1].id)
-      }
-      //}
-    }
-  }
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName === 'INPUT') ? d3.select(document.activeElement).attr('value') === 'menuConfigButton' : true) && (!document.activeElement?.className.includes('ql-editor'))) {
-    // Deplace les zdt sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
-    // (exemples : le input de la largeur minimal d'un noeud)
-    e.preventDefault()
-    if (e.key === 'ArrowUp') {
-      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
-        if (d !== undefined) {
-          return d.idLabel
-        }
-      }).includes(f.idLabel)).map(d => {
+//     } else if (e.key === 'F9') {
+//       let new_master_data: OSPData | undefined
+//       if (is_master) {
+//         new_master_data = data
+//         RecomputeViews(new_master_data, master_data, set_master_data)
+//       } else {
+//         new_master_data = master_data
+//       }
+//       //Cherche la position de la vue sélectionné dans le tableau de vue
+//       let ind = -1
+//       new_master_data!.view.map((v, i) => {
+//         ind = (v.id === view) ? i : ind
+//       })
+//       //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
+//       if (ind === Object.keys(new_master_data!.view).length - 1) {
+//         ind = -1
+//       } else if (ind === -1) {
+//         ind = -1
+//       }
+//       // Check if there is unsaved change before we switch view
+//       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+//       if (view === 'none') {
+//         new_master_data!.current_view = master_data!.view[ind + 1].id
+//         set_master_data(new_master_data)
+//       }
+//       let saved = true
+//       if (view !== 'none' && has_open_sankey_plus) {
+//         const diff = CheckCurrentViewSaved(new_master_data, data, view)
+//         if (diff.length > 0 && !window.SankeyToolsStatic) {
+//           saved = false
+//           set_view_not_saved(view)
+//           set_view(master_data!.view[ind + 1].id)
+//         }
+//       }
+//       const data_view = GetDataFromView(new_master_data, new_master_data!.view[ind + 1].id) as OSPData
+//       if (saved) {
+//         set_data(JSON.parse(JSON.stringify(data_view)))
+//         set_view(new_master_data!.view[ind + 1].id)
+//       }
+//       //}
+//     }
+//   }
+//   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName === 'INPUT') ? d3.select(document.activeElement).attr('value') === 'menuConfigButton' : true) && (!document.activeElement?.className.includes('ql-editor'))) {
+//     // Deplace les zdt sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
+//     // (exemples : le input de la largeur minimal d'un noeud)
+//     e.preventDefault()
+//     if (e.key === 'ArrowUp') {
+//       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
+//         if (d !== undefined) {
+//           return d.idLabel
+//         }
+//       }).includes(f.idLabel)).map(d => {
 
-        d.y = d.y - data.grid_square_size
+//         d.y = d.y - data.grid_square_size
 
-        let y_max = 0
-        Object.values(data.labels).map(d => {
-          y_max = (d.y > y_max) ? d.y : y_max
-        })
-        //Diminue hauteur svg si le noeud est près du bord
-        if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
-          data.height -= 90
-        }
-      })
-    } else if (e.key === 'ArrowDown') {
-      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
-        if (d !== undefined) {
-          return d.idLabel
-        }
-      }).includes(f.idLabel)).map(d => {
-
-
-        d.y = d.y + data.grid_square_size
-
-        //Augumente hauteur svg si le noeud est près du bord
-        if (d.y > data.height - 100) {
-          data.height += 100
-        }
-      })
-    } else if (e.key === 'ArrowLeft') {
-      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
-        if (d !== undefined) {
-          return d.idLabel
-        }
-      }).includes(f.idLabel)).map(d => {
+//         let y_max = 0
+//         Object.values(data.labels).map(d => {
+//           y_max = (d.y > y_max) ? d.y : y_max
+//         })
+//         //Diminue hauteur svg si le noeud est près du bord
+//         if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
+//           data.height -= 90
+//         }
+//       })
+//     } else if (e.key === 'ArrowDown') {
+//       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
+//         if (d !== undefined) {
+//           return d.idLabel
+//         }
+//       }).includes(f.idLabel)).map(d => {
 
 
-        d.x = d.x - data.grid_square_size
+//         d.y = d.y + data.grid_square_size
 
-        //Diminue largeur svg si le noeud est près du bord
-        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
-          data.width -= 50
-        }
-      })
-    } else if (e.key === 'ArrowRight') {
-      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
-        if (d !== undefined) {
-          return d.idLabel
-        }
-      }).includes(f.idLabel)).map(d => {
+//         //Augumente hauteur svg si le noeud est près du bord
+//         if (d.y > data.height - 100) {
+//           data.height += 100
+//         }
+//       })
+//     } else if (e.key === 'ArrowLeft') {
+//       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
+//         if (d !== undefined) {
+//           return d.idLabel
+//         }
+//       }).includes(f.idLabel)).map(d => {
 
 
-        d.x = d.x + data.grid_square_size
+//         d.x = d.x - data.grid_square_size
 
-        //Augumente largeur svg si le noeud est près du bord
-        if (d.x > data.width - 100) {
-          data.width += 100
-        }
-      })
-    }
-    reDrawOSPLabels(multi_selected_label.current)
-  }
+//         //Diminue largeur svg si le noeud est près du bord
+//         if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
+//           data.width -= 50
+//         }
+//       })
+//     } else if (e.key === 'ArrowRight') {
+//       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
+//         if (d !== undefined) {
+//           return d.idLabel
+//         }
+//       }).includes(f.idLabel)).map(d => {
 
-  // Add deselection of all selected zdt
-  if (e.key === 'Escape') {
 
-    multi_selected_label.current.forEach(l => {
-      d3.select('#' + l.idLabel + ' rect').attr('stroke-width', 1)
-    })
-    multi_selected_label.current = []
+//         d.x = d.x + data.grid_square_size
 
-  }
+//         //Augumente largeur svg si le noeud est près du bord
+//         if (d.x > data.width - 100) {
+//           data.width += 100
+//         }
+//       })
+//     }
+//     reDrawOSPLabels(multi_selected_label.current)
+//   }
 
-  if (e.key === 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
-    if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') === 'menuConfigButton') {
-      deleteGLabel(updateMenus, multi_selected_label.current)
-      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
-      multi_selected_label.current = []
-      ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f => f())
-    }
-  }
-}
+//   // Add deselection of all selected zdt
+//   if (e.key === 'Escape') {
+
+//     multi_selected_label.current.forEach(l => {
+//       d3.select('#' + l.idLabel + ' rect').attr('stroke-width', 1)
+//     })
+//     multi_selected_label.current = []
+
+//   }
+
+//   if (e.key === 'Delete' && (!document.activeElement?.className.includes('ql-editor'))) {
+//     if (document.activeElement?.tagName !== 'INPUT' || d3.select(document.activeElement).attr('value') === 'menuConfigButton') {
+//       deleteGLabel(updateMenus, multi_selected_label.current)
+//       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
+//       multi_selected_label.current = []
+//       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f => f())
+//     }
+//   }
+// }
 
 export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   applicationData,
