@@ -26,7 +26,7 @@ export const initial_window_height = window.innerHeight - 50 //TODO : replace 50
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
-function isDrawingAreaActive() {
+export function isDrawingAreaActive() {
   const inputs = ['input', 'textarea']
   if (
     document.activeElement &&
@@ -193,7 +193,7 @@ export abstract class Class_ApplicationData
     }
   }
 
-  // PRIVATE METHODS =====================================================================
+  // PRIVATE METHODS ====================================================================
 
   /**
    * Function to create custom application behavior when we press a key,
@@ -205,131 +205,138 @@ export abstract class Class_ApplicationData
    * @return {*}
    * @memberof Class_ApplicationData
    */
-  private keyboardEventListener(app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
-    return (evt: KeyboardEvent) => {
-      // Event to move all selected nodes with keyboard arrows --------------------------
-      if (
-        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
-        isDrawingAreaActive() // Avoid using this hotkey in text-inputs
-      ) {
-        // Deplace les noeuds sélectionné avec les flèches du clavier
-        if (evt.key == 'ArrowUp') {
-          app_ref.drawing_area.selected_nodes_list.forEach(node => {
-            node.position_y -= app_ref.drawing_area.grid_size
-          })
-        } else if (evt.key == 'ArrowDown') {
-          app_ref.drawing_area.selected_nodes_list.forEach(node => {
-            node.position_y += app_ref.drawing_area.grid_size
-          })
-        } else if (evt.key == 'ArrowLeft') {
-          app_ref.drawing_area.selected_nodes_list.forEach(node => {
-            node.position_x -= app_ref.drawing_area.grid_size
-          })
-        } else if (evt.key == 'ArrowRight') {
-          app_ref.drawing_area.selected_nodes_list.forEach(node => {
-            node.position_x += app_ref.drawing_area.grid_size
-          })
-        }
-        // Move all elements so none of them are outside the DA
-        this.drawing_area.recenterElements()
-      }
-      // Open config menu ---------------------------------------------------------------
-      else if (evt.key == 'Tab') {
-        app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
-      }
-      // Event to restore application display as neutral --------------------------------
-      else if (evt.key == 'Escape') {
-        // Set app in selection mode
-        app_ref.drawing_area.setSelectionMode()
+  private keyboardEventListener(
+    app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
+  ) {
+    return (evt: KeyboardEvent) => {this.keyboardEventProcessing(evt, app_ref)}
+  }
 
-        // Deselect all element
-        app_ref.drawing_area.purgeSelection()
+  // PROTECTED METHODS ==================================================================
 
-        // Close all menus
-        app_ref.menu_configuration.closeAllMenus()
-        app_ref.drawing_area.closeAllContextMenus()
-      }
-      // Event to delete all selected elements ------------------------------------------
-      else if (
-        (evt.key === 'Delete') &&
-        isDrawingAreaActive()  // Avoid using this hotkey in text-inputs
-      ) {
-        // Delete selected elements
-        app_ref.drawing_area.deleteSelection()
-      }
-      // Event to blur the input we are currently focused on ----------------------------
-      // (It's in adequation with event on input that update drawing area when we blur input)
-      // TODO surement à supprimer lorsque les inputs se feront avec menuConfigurationTextInput && menuConfigurationNumberInput
-      else if (
-        (evt.key == 'Enter') &&
-        (document.activeElement?.tagName == 'INPUT') &&
-        (['form-control', 'chakra-numberinput__field', 'chakra-input', 'name_label_input'].some(r => document.activeElement?.className.includes(r)))
-      ) {
-        (document.activeElement as HTMLInputElement).blur()
-      }
-      // Event to select all visible elements -------------------------------------------
-      else if (evt.key == 'a' && evt.ctrlKey) {
-        // Prevent default event on ctrl + a
-        evt.preventDefault()
+  protected keyboardEventProcessing(
+    evt: KeyboardEvent,
+    app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>)
+  {
+    // Events booleans ----------------------------------------------------------------
 
-        // Select all node & links
-        app_ref.drawing_area.addAllVisibleNodesToSelection()
-        app_ref.drawing_area.addAllVisibleLinksToSelection()
+    const evtOnDrawingArea = isDrawingAreaActive()
+    const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
+    const evtAlt = (!(evt.ctrlKey || evt.metaKey)) && (!evt.shiftKey) && (evt.altKey)
+    const evtShift = (!(evt.ctrlKey || evt.metaKey)) && (evt.shiftKey) && (!evt.altKey)
+    const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
+    const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
+    const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
+    const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
+    const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
+    const evtCtrlA = evtCtrl && evtKeyA
+    const evtCtrlS = evtCtrl && evtKeyS
+    const evtCtrlShiftS = evtCtrlShift && evtKeyS
+    const evtCtrlAltS = evtCtrlAlt && evtKeyS
+    const evtCtrlF = evtCtrl && evtKeyF
+
+    // Event to move all selected nodes with keyboard arrows --------------------------
+    if (
+      ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
+      evtOnDrawingArea // Avoid using this hotkey in text-inputs
+    ) {
+      // Deplace les noeuds sélectionné avec les flèches du clavier
+      if (evt.key == 'ArrowUp') {
+        app_ref.drawing_area.selected_nodes_list.forEach(node => {
+          node.position_y -= app_ref.drawing_area.grid_size
+        })
+      } else if (evt.key == 'ArrowDown') {
+        app_ref.drawing_area.selected_nodes_list.forEach(node => {
+          node.position_y += app_ref.drawing_area.grid_size
+        })
+      } else if (evt.key == 'ArrowLeft') {
+        app_ref.drawing_area.selected_nodes_list.forEach(node => {
+          node.position_x -= app_ref.drawing_area.grid_size
+        })
+      } else if (evt.key == 'ArrowRight') {
+        app_ref.drawing_area.selected_nodes_list.forEach(node => {
+          node.position_x += app_ref.drawing_area.grid_size
+        })
       }
-      // Event to save current diagram in cache -----------------------------------------
-      else if (
-        ((evt.key === 's') || (evt.key === 'S')) &&
-        (evt.ctrlKey) &&
-        (!evt.shiftKey) &&
-        (!evt.altKey)
-      ) {
-        // Prevent default event on ctrl + s
-        evt.preventDefault()
-        // Save in cache
-        localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
-        localStorage.setItem('last_save', 'true')
-        // Update logo save in cache
-        app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+      // Move all elements so none of them are outside the DA
+      this.drawing_area.recenterElements()
+    }
+    // Open config menu ---------------------------------------------------------------
+    else if (evt.key == 'Tab') {
+      app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+    }
+    // Event to restore application display as neutral --------------------------------
+    else if (evt.key == 'Escape') {
+      // Set app in selection mode
+      app_ref.drawing_area.setSelectionMode()
+
+      // Deselect all element
+      app_ref.drawing_area.purgeSelection()
+
+      // Close all menus
+      app_ref.menu_configuration.closeAllMenus()
+      app_ref.drawing_area.closeAllContextMenus()
+    }
+    // Event to delete all selected elements ------------------------------------------
+    else if (
+      (evt.key === 'Delete') &&
+      isDrawingAreaActive()  // Avoid using this hotkey in text-inputs
+    ) {
+      // Delete selected elements
+      app_ref.drawing_area.deleteSelection()
+    }
+    // Event to blur the input we are currently focused on ----------------------------
+    // (It's in adequation with event on input that update drawing area when we blur input)
+    // TODO surement à supprimer lorsque les inputs se feront avec menuConfigurationTextInput && menuConfigurationNumberInput
+    else if (
+      (evt.key == 'Enter') &&
+      (document.activeElement?.tagName == 'INPUT') &&
+      (['form-control', 'chakra-numberinput__field', 'chakra-input', 'name_label_input'].some(r => document.activeElement?.className.includes(r)))
+    ) {
+      (document.activeElement as HTMLInputElement).blur()
+    }
+    // Event to select all visible elements -------------------------------------------
+    else if (evtCtrlA) {
+      // Prevent default event on ctrl + a
+      evt.preventDefault()
+
+      // Select all node & links
+      app_ref.drawing_area.addAllVisibleNodesToSelection()
+      app_ref.drawing_area.addAllVisibleLinksToSelection()
+    }
+    // Event to save current diagram in cache -----------------------------------------
+    else if (evtCtrlS) {
+      // Prevent default event on ctrl + s
+      evt.preventDefault()
+      // Save in cache
+      localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
+      localStorage.setItem('last_save', 'true')
+      // Update logo save in cache
+      app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    }
+    // event to download current sankey in JSON --------------------------------------
+    else if (evtCtrlShiftS) {
+      // Prevent default event on ctrl + shift + s
+      evt.preventDefault()
+      // Trigger saving via JSON saving button
+      ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
+    }
+    // event to download current sankey in Excel -------------------------------------
+    else if (evtCtrlAltS) {
+      // Prevent default event on ctrl + shift + s
+      evt.preventDefault()
+      // Trigger saving via Excel saving button
+      ClickSaveExcel('/opensankey/', app_ref.toJSON())
+    }
+    // Fullscreen --------------------------------------------------------------------
+    else if (evtCtrlF) {
+      // Prevent default event
+      evt.preventDefault()
+      // Toggle fullscreen
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
       }
-      // event to download current sankey in JSON --------------------------------------
-      else if (
-        ((evt.key === 's') || (evt.key === 'S')) &&
-        (evt.ctrlKey) &&
-        (evt.shiftKey) &&
-        (!evt.altKey)
-      ) {
-        // Prevent default event on ctrl + shift + s
-        evt.preventDefault()
-        // Trigger saving via JSON saving button
-        ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
-      }
-      // event to download current sankey in Excel -------------------------------------
-      else if (
-        ((evt.key === 's') || (evt.key === 'S')) &&
-        (evt.ctrlKey) &&
-        (!evt.shiftKey) &&
-        (evt.altKey)
-      ) {
-        // Prevent default event on ctrl + shift + s
-        evt.preventDefault()
-        // Trigger saving via Excel saving button
-        ClickSaveExcel('/opensankey/', app_ref.toJSON())
-      }
-      // Fullscreen --------------------------------------------------------------------
-      else if (
-        (evt.key === 'f') &&
-        (evt.ctrlKey) &&
-        isDrawingAreaActive()  // Avoid using this hotkey in text-inputs
-      ) {
-        // Prevent default event
-        evt.preventDefault()
-        // Toggle fullscreen
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen()
-        }
-        else if (document.exitFullscreen) {
-          document.exitFullscreen()
-        }
+      else if (document.exitFullscreen) {
+        document.exitFullscreen()
       }
     }
   }

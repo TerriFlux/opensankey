@@ -63,6 +63,10 @@ export class Class_MenuConfig {
 
   // PROTECTED  ATTRIBUTES ==============================================================
 
+  /* ========================================
+    Configuration menu
+    ========================================*/
+
   /**
    *   List of accordions to show
    * @protected
@@ -70,6 +74,13 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   protected _accordions_to_show: string[] = []
+
+  /* ========================================
+    Timeout dict
+  =========================================== */
+
+  protected _waiting_processes: {[id: string]: NodeJS.Timeout} = {}
+  protected _waiting_time_for_processes: number = 500 // ms
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -203,13 +214,6 @@ export class Class_MenuConfig {
 
   // Var to hide welcome menu when we relaucnh application
   private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAggainWelcome') === '1'))
-
-  /* ========================================
-    Timeout dict
-  =========================================== */
-
-  private _waiting_processes: {[id: string]: NodeJS.Timeout} = {}
-  private _waiting_time_for_processes: number = 500 // ms
 
   // CONSTRUCTOR ========================================================================
 
@@ -796,7 +800,7 @@ export class Class_MenuConfig {
     d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current ? menu_config_width : 0)) + 'px')
   }
 
-  // PRIVATE METHODS ====================================================================
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Create a timed out process - Used to avoid multiple reloading of components
@@ -806,12 +810,12 @@ export class Class_MenuConfig {
    * so the current object must be passed directly as an argument.
    * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
    *
-   * @private
+   * @protected
    * @param {string} process_id
    * @param {(_: Class_MenuConfig) => void} process_func
    * @memberof Class_MenuConfig
    */
-  private _add_waiting_process(
+  protected _add_waiting_process(
     process_id: string,
     process_func: (_: Class_MenuConfig) => void
   ) {
@@ -825,11 +829,11 @@ export class Class_MenuConfig {
 
   /**
    * Cancel a timed out process - It wont happen
-   * @private
+   * @protected
    * @param {string} process_id
    * @memberof Class_MenuConfig
    */
-  private _cancel_waiting_process(process_id: string) {
+  protected _cancel_waiting_process(process_id: string) {
     if (this._waiting_processes[process_id] !== undefined)
       clearTimeout(this._waiting_processes[process_id])
   }
