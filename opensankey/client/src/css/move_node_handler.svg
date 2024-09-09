@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   width="90"
+   height="90"
+   viewBox="0 0 206 185"
+
+   id="svg258"
+   sodipodi:docname="Diagramme sans nom.drawio (1).svg"
+   inkscape:version="1.0.2-2 (e86c870879, 2021-01-15)">
+  
+  <g
+     id="g256"
+     transform="translate(-18.546861,-15.049638)">
+    <g
+       data-cell-id="0"
+       id="g254">
+      <g
+         data-cell-id="1"
+         id="g252">
+        <g
+           data-cell-id="YF-SXcgdx01_akOxk3-O-7"
+           id="g228">
+          <g
+             id="g226">
+            <path
+               d="M 188.08,118 H 138.1 q -10,0 -10,-10 V 98 q 0,-10 -10,-10 H 68.08"
+               fill="none"
+               stroke="#78c2ad"
+               stroke-width="23"
+               stroke-miterlimit="10"
+               pointer-events="stroke"
+               id="path224" />
+          </g>
+        </g>
+        <g
+           data-cell-id="YF-SXcgdx01_akOxk3-O-8"
+           id="g234">
+          <g
+             id="g232">
+            <path
+               d="M 188.08,148 H 128.1 q -10,0 -10,10 v 5 q 0,5 -10,5 H 68.08"
+               fill="none"
+               stroke="#000000"
+               stroke-width="30"
+               stroke-miterlimit="10"
+               pointer-events="stroke"
+               id="path230" />
+          </g>
+        </g>
+        <g
+           data-cell-id="YF-SXcgdx01_akOxk3-O-15"
+           id="g244">
+          <g
+             id="g242">
+            <path
+               d="m 201.08,139 h 3.5 l -6.5,8 -6.5,-8 h 3.5 v -1 -11 h -3.5 l 6.5,-8 6.5,8 h -3.5 v 11 z"
+               fill="#000000"
+               stroke="#000000"
+               stroke-width="2"
+               stroke-miterlimit="1.42"
+               pointer-events="all"
+               id="path236" />
+            <path
+               d="m 201.08,139 h 3.5 l -6.5,8 -6.5,-8 h 3.5"
+               fill="none"
+               stroke="#000000"
+               stroke-width="2"
+               stroke-miterlimit="4"
+               pointer-events="all"
+               id="path238" />
+            <path
+               d="m 195.08,127 h -3.5 l 6.5,-8 6.5,8 h -3.5"
+               fill="none"
+               stroke="#000000"
+               stroke-width="2"
+               stroke-miterlimit="4"
+               pointer-events="all"
+               id="path240" />
+          </g>
+        </g>
+        <g
+           data-cell-id="zbDOob6OFQTTqO6CQ0mM-5"
+           id="g250">
+          <g
+             id="g248">
+            <path
+               d="m 7,18 v 0 0 L 77,43 7,68 v 0 0 L 27,43 Z"
+               fill="#ffffff"
+               stroke="#000000"
+               stroke-miterlimit="10"
+               transform="rotate(-130,42,43)"
+               pointer-events="all"
+               id="path246" />
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

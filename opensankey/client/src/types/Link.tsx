@@ -902,14 +902,28 @@ export abstract class  Class_LinkElement
     super.eventMouseOver(event)
     // ALT
     if (event.altKey) {
-      // // Purge selection list
-      // this.drawing_area.purgeSelection()
       // Show tooltip
       this.drawTooltip()
+      this.d3_selection?.classed('tooltip_shown',true)
+
     } else if (this.thickness < 15) {
       this._artifical_enlargement = true
       // Artificially enlarge link thickness if too thin
       this.d3_selection?.select('.link_path').attr('stroke-width', 15)
+    }
+  }
+
+/**
+ * Define event when mouse moves in the element
+ *
+ * @protected
+ * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+ * @memberof Class_LinkElement
+ */
+protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
+    super.eventMouseMove(event)
+    if(event.altKey){
+      this.moveTooltip(event)
     }
   }
 
@@ -926,6 +940,7 @@ export abstract class  Class_LinkElement
 
     // Clear tooltip
     d3.selectAll('.sankey-tooltip').remove()
+    this.d3_selection?.classed('tooltip_shown',false)
 
     // reset link thickness
     if (this._artifical_enlargement) {
@@ -1281,6 +1296,19 @@ export abstract class  Class_LinkElement
       .html(this.tooltip_html)
   }
 
+  /**
+   * Event when we move the mouse over the link and the tooltip is shown,
+   * we simply move the tooltip to current cursor location
+   *
+   * @private
+   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+   * @memberof Class_LinkElement
+   */
+  private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
+    d3.selectAll('.sankey-tooltip')
+    .style('top', event.pageY + 'px')
+    .style('left', event.pageX + 'px')
+  }
 
   private drawControlPoint() {
     // Draw control handler
@@ -4317,8 +4345,13 @@ export class Class_GhostLinkElement
       style: drawing_area.sankey.default_link_style as Class_LinkStyle,
       attributes: new Class_LinkAttribute()
     }
-    // Link with style
-    this._display.style.addReference(this)
+  // Link with style
+  this._display.style.addReference(this)
+
+  this.source.addOutputLink(this)
+  this.target.addInputLink(this)// Target
+  // Instanciate display on svg
+  this.computeControlPoints()
   }
 
   // GETTER / SETTER ====================================================================

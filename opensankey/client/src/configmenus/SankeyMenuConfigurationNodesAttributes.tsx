@@ -90,6 +90,7 @@ import {
   TooltipValueSurcharge,
 } from '../types/Utils'
 import { default_style_id } from '../types/Utils'
+import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
 
@@ -188,7 +189,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   const value_label_horiz = (elements[0]?.value_label_horiz ?? default_value_label_horiz)
   const value_label_horiz_shift = (elements[0]?.value_label_horiz_shift ?? default_value_label_horiz_shift)
   const value_label_font_size = (elements[0]?.value_label_font_size ?? default_label_font_size)
-
   /**
    * Get style name to display for style selector
    * @return {*}
@@ -212,14 +212,14 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Components updaters ----------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [,setCount]=useState(0)
-  const [,setCountStyle]=useState(0)
+  const [, setCount] = useState(0)
+  const [, setCountStyle] = useState(0)
 
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current = ()=>setCount(a=>a+1)
-  }else{
-    new_data.menu_configuration.ref_to_menu_config_nodes_styles_updater.current = ()=>setCountStyle(a=>a+1)
+    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current = () => setCount(a => a + 1)
+  } else {
+    new_data.menu_configuration.ref_to_menu_config_nodes_styles_updater.current = () => setCountStyle(a => a + 1)
   }
 
   /**
@@ -229,14 +229,32 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     if (menu_for_style) {
-    // Update menus for node's apparence in case we use this for style
+      // Update menus for node's apparence in case we use this for style
       new_data.menu_configuration.updateComponentRelatedToNodesStyles()
       // Redraw all visible nodes if we modifie node style
-      new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
+      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
     }
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToNodesApparence()
   }
+
+  // Node to ConfigMenuNumberInput state variable
+  const number_of_input = 9
+  const ref_set_number_inputs: MutableRefObject<(_: number | null | undefined) => void>[] = []
+  for (let i = 0; i < number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_: number | null | undefined) => null))
+
+  // Be sure that values are updated in inputs when refreshing this component
+  ref_set_number_inputs[0].current(shape_min_height)
+  ref_set_number_inputs[1].current(shape_min_width)
+  ref_set_number_inputs[2].current(value_label_font_size)
+  ref_set_number_inputs[3].current(name_label_font_size)
+  ref_set_number_inputs[4].current(name_label_box_width)
+  ref_set_number_inputs[5].current(name_label_horiz_shift)
+  ref_set_number_inputs[6].current(name_label_vert_shift)
+  ref_set_number_inputs[7].current(value_label_horiz_shift)
+  ref_set_number_inputs[8].current(value_label_vert_shift)
+
 
   // JSX menu components ---------------------------------------------------------------
 
@@ -252,7 +270,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         isChecked={shape_visible}
         isIndeterminate={
           is_indeterminated
@@ -269,7 +287,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         </OSTooltip>
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_nodes, 'shape_visible') ?
+            isAttributeOverloaded(selected_nodes, 'shape_visible') ?
             TooltipValueSurcharge('node_var', t) :
             <></>
         }
@@ -289,11 +307,11 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         {t('Noeud.apparence.Couleur')}
         {
           (!menu_for_style) &&
-          isAttributeOverloaded(selected_nodes, 'shape_color') ? (
-              <>{TooltipValueSurcharge('node_var_', t)}</>
-            ) : (
-              <></>
-            )
+            isAttributeOverloaded(selected_nodes, 'shape_color') ? (
+            <>{TooltipValueSurcharge('node_var_', t)}</>
+          ) : (
+            <></>
+          )
         }
       </Box>
       <Box layerStyle='option_with_activation'>
@@ -332,7 +350,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.Forme')}
           {((!menu_for_style) &&
-          isAttributeOverloaded(selected_nodes, 'shape_type') ?
+            isAttributeOverloaded(selected_nodes, 'shape_type') ?
             <>{TooltipValueSurcharge('node_var_', t)}</> :
             <></>)}
         </Box>
@@ -419,7 +437,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Noeud.apparence.arrow_angle')}
                 {((!menu_for_style) &&
-                isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor') ?
+                  isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor') ?
                   <>{TooltipValueSurcharge('node_var_', t)}</> :
                   <></>
                 )}
@@ -524,18 +542,20 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.TML')}
         </Box>
-        <ConfigNodeAttributeNumberInput
-          valueOfAttr={shape_min_width}
-          function_onChange={(_, val) => elements.forEach(element => element.shape_min_width = val)}
-          menu_for_style={menu_for_style}
-          function_onBlur={() => {
+        <ConfigMenuNumberInput
+          ref_to_set_value={ref_set_number_inputs[1]}
+          default_value={shape_min_width}
+          function_on_blur={(value) => {
+            elements.forEach(element =>
+              element.shape_min_width = (value ?? undefined))
             refreshThisAndUpdateRelatedComponents()
           }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
           stepper={true}
-          minimum_value={1}
-          unitText='pixels'
+          unit_text='pixels'
         />
-
       </Box>
     </OSTooltip>
 
@@ -545,16 +565,19 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.TMH')}
         </Box>
-        <ConfigNodeAttributeNumberInput
-          valueOfAttr={shape_min_height}
-          function_onChange={(_, val) => elements.forEach(element => element.shape_min_height = val)}
-          menu_for_style={menu_for_style}
-          function_onBlur={() => {
+        <ConfigMenuNumberInput
+          ref_to_set_value={ref_set_number_inputs[0]}
+          default_value={shape_min_height}
+          function_on_blur={(value) => {
+            elements.forEach(element =>
+              element.shape_min_height = (value ?? undefined))
             refreshThisAndUpdateRelatedComponents()
           }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
           stepper={true}
-          minimum_value={1}
-          unitText='pixels'
+          unit_text='pixels'
         />
       </Box>
     </OSTooltip>
@@ -567,7 +590,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminated}
         isChecked={name_label_visible}
         onChange={(evt) => {
@@ -579,7 +602,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
           {t('Noeud.labels.vdb')}
         </OSTooltip>
         {((!menu_for_style) &&
-        isAttributeOverloaded(selected_nodes, 'name_label_visible') ?
+          isAttributeOverloaded(selected_nodes, 'name_label_visible') ?
           TooltipValueSurcharge('node_var', t) :
           <></>
         )}
@@ -610,7 +633,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
               {t('Noeud.labels.lb')}
             </OSTooltip>
             {((!menu_for_style) &&
-            isAttributeOverloaded(selected_nodes, 'name_label_color') ? TooltipValueSurcharge('node_var', t) : <></>)}
+              isAttributeOverloaded(selected_nodes, 'name_label_color') ? TooltipValueSurcharge('node_var', t) : <></>)}
           </Checkbox>
 
           <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
@@ -697,15 +720,19 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                   })
               }
             </Select>
-            <ConfigNodeAttributeNumberInput
-              valueOfAttr={name_label_font_size}
-              function_onChange={(_, val) => elements.forEach(element => element.name_label_font_size = val)}
-              menu_for_style={menu_for_style}
-              function_onBlur={() => {
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[3]}
+              default_value={name_label_font_size}
+              function_on_blur={(value) => {
+                elements.forEach(element =>
+                  element.name_label_font_size = (value ?? undefined))
                 refreshThisAndUpdateRelatedComponents()
               }}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              step={1}
               stepper={true}
-              unitText='pixels'
+              unit_text='pixels'
             />
           </Box>
 
@@ -725,7 +752,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             </OSTooltip>
             {
               (!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'name_label_background') ?
+                isAttributeOverloaded(selected_nodes, 'name_label_background') ?
                 TooltipValueSurcharge('node_var', t) :
                 <></>
             }
@@ -742,21 +769,25 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                 {t('Menu.larg')}
                 {
                   (!menu_for_style) &&
-                  isAttributeOverloaded(selected_nodes, 'name_label_box_width') ?
+                    isAttributeOverloaded(selected_nodes, 'name_label_box_width') ?
                     <>{TooltipValueSurcharge('node_var_', t)}</> :
                     <></>
                 }
               </Box>
 
-              <ConfigNodeAttributeNumberInput
-                valueOfAttr={name_label_box_width}
-                function_onChange={(_, val) => elements.forEach(element => element.name_label_box_width = val)}
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs[4]}
+                default_value={name_label_box_width}
+                function_on_blur={(value) => {
+                  elements.forEach(element =>
+                    element.name_label_box_width = (value ?? undefined))
+                  refreshThisAndUpdateRelatedComponents()
+                }}
                 menu_for_style={menu_for_style}
-                function_onBlur={() => refreshThisAndUpdateRelatedComponents()}
-                stepper={true}
                 minimum_value={0}
-                maximum_value={500}
-                unitText='pixels'
+                step={1}
+                stepper={true}
+                unit_text='pixels'
               />
             </Box>
           </OSTooltip>
@@ -905,14 +936,19 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                   TooltipValueSurcharge('node_var', t) :
                   <></>}
               </Box>
-
-              <ConfigNodeAttributeNumberInput
-                valueOfAttr={name_label_horiz_shift}
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs[5]}
+                default_value={name_label_horiz_shift}
+                function_on_blur={(value) => {
+                  elements.forEach(element =>
+                    element.name_label_horiz_shift = (value ?? undefined))
+                  refreshThisAndUpdateRelatedComponents()
+                }}
                 menu_for_style={menu_for_style}
-                function_onChange={(_, val) => elements.forEach(element => element.name_label_horiz_shift = val)}
-                function_onBlur={()=>refreshThisAndUpdateRelatedComponents()}
+                minimum_value={0}
+                step={1}
                 stepper={true}
-                unitText='pixels'
+                unit_text='pixels'
               />
             </Box>
           </OSTooltip>
@@ -928,13 +964,19 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                   <></>}
               </Box>
 
-              <ConfigNodeAttributeNumberInput
-                valueOfAttr={name_label_vert_shift}
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs[6]}
+                default_value={name_label_vert_shift}
+                function_on_blur={(value) => {
+                  elements.forEach(element =>
+                    element.name_label_vert_shift = (value ?? undefined))
+                  refreshThisAndUpdateRelatedComponents()
+                }}
                 menu_for_style={menu_for_style}
-                function_onChange={(_, val) => elements.forEach(element => element.name_label_vert_shift = val)}
-                function_onBlur={()=>refreshThisAndUpdateRelatedComponents()}
+                minimum_value={0}
+                step={1}
                 stepper={true}
-                unitText='pixels'
+                unit_text='pixels'
               />
             </Box>
           </OSTooltip>
@@ -950,7 +992,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
     <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminated}
         isChecked={value_label_visible}
         onChange={(evt) => {
@@ -980,14 +1022,19 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
             <Box layerStyle='menuconfigpanel_option_name' >
               Police
             </Box>
-            <ConfigNodeAttributeNumberInput
-              valueOfAttr={value_label_font_size}
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[2]}
+              default_value={value_label_font_size}
+              function_on_blur={(value) => {
+                elements.forEach(element =>
+                  element.value_label_font_size = (value ?? undefined))
+                refreshThisAndUpdateRelatedComponents()
+              }}
               menu_for_style={menu_for_style}
-              function_onChange={(_, val) => elements.forEach(element => element.value_label_font_size = val)}
-              function_onBlur={() => refreshThisAndUpdateRelatedComponents()}
+              minimum_value={0}
+              step={1}
               stepper={true}
-              minimum_value={11}
-              unitText='pixels'
+              unit_text='pixels'
             />
           </Box>
 
@@ -1136,15 +1183,18 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                   <></>}
               </Box>
 
-              <ConfigNodeAttributeNumberInput
-                menu_for_style={menu_for_style}
-                valueOfAttr={value_label_horiz_shift}
-                function_onChange={(_, val) => elements.forEach(element => element.value_label_horiz_shift = val)}
-                function_onBlur={() => {
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs[7]}
+                default_value={value_label_horiz_shift}
+                function_on_blur={(value) => {
+                  elements.forEach(element =>
+                    element.value_label_horiz_shift = (value ?? undefined))
                   refreshThisAndUpdateRelatedComponents()
                 }}
+                menu_for_style={menu_for_style}
+                step={1}
                 stepper={true}
-                unitText='pixels'
+                unit_text='pixels'
               />
             </Box>
           </OSTooltip>
@@ -1160,15 +1210,18 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
                   <></>}
               </Box>
 
-              <ConfigNodeAttributeNumberInput
-                menu_for_style={menu_for_style}
-                valueOfAttr={value_label_vert_shift}
-                function_onChange={(_, val) => elements.forEach(element => element.value_label_vert_shift = val)}
-                function_onBlur={() => {
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs[8]}
+                default_value={value_label_vert_shift}
+                function_on_blur={(value) => {
+                  elements.forEach(element =>
+                    element.value_label_vert_shift = (value ?? undefined))
                   refreshThisAndUpdateRelatedComponents()
                 }}
+                menu_for_style={menu_for_style}
+                step={1}
                 stepper={true}
-                unitText='pixels'
+                unit_text='pixels'
               />
             </Box>
           </OSTooltip>
@@ -1274,85 +1327,4 @@ export const SankeyWrapperConfigInModalOrMenu: FunctionComponent<SankeyWrapperCo
       </Box>
     </TabPanel>
 
-}
-
-type ConfigLayoutNumberInputType = {
-  valueOfAttr: number | undefined,
-  menu_for_style: boolean
-  minimum_value?: number
-  maximum_value?: number
-  stepper?: boolean
-  unitText?: string
-  function_onChange: (s: string, val: number) => void
-  function_onBlur: () => void
-}
-/**
- * Component developped for number input of the nodes attributs config menu
- *
- * @param {boolean} menu_for_style Modify either the style of node or the multi_selected_nodes
- * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
- * @param {number} maximum_value (optional, if not specified it mean the value can be undefined )
- * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
- * @param {string} unitText (default:'') text of the addon
- * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
- *
- * @return {JSX.Elmement}
- */
-const ConfigNodeAttributeNumberInput: FunctionComponent<ConfigLayoutNumberInputType> = ({
-  valueOfAttr,
-  menu_for_style,
-  minimum_value,
-  maximum_value,
-  stepper = false,
-  unitText,
-  function_onChange,
-  function_onBlur
-}) => {
-  const [_value,setValue]=useState(valueOfAttr)
-  const ref_input = useRef<HTMLInputElement>(null)
-  const isModifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
-  const variantOfInput = unitText ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-
-  // Add stepper addon if specified
-  const stepperBtn = stepper ? <NumberInputStepper>
-    <NumberIncrementStepper />
-    <NumberDecrementStepper />
-  </NumberInputStepper> : <></>
-
-  // Add unit addon if specified
-  const inputUnit = unitText ? <InputRightAddon>{unitText}</InputRightAddon> : <></>
-
-  return <InputGroup variant='menuconfigpanel_option_input' >
-    <NumberInput
-      allowMouseWheel
-      variant={variantOfInput}
-      min={minimum_value}
-      max={maximum_value}
-      step={1}
-      value={_value}
-      onChange={(_, value) => {
-        function_onChange(_, value)
-        if (!menu_for_style) {
-          // reset timeout if exist
-          if (isModifying.current) {
-            clearTimeout(isModifying.current)
-          }
-          // launch timeout that automatically blur the input
-          isModifying.current = setTimeout(() => {
-            function_onBlur()
-            ref_input.current?.blur()
-          }, 2000)
-        }
-        setValue(value)
-      }}
-      onBlur={() => {
-        if (!menu_for_style) clearTimeout(isModifying.current)
-        function_onBlur()
-      }}
-    >
-      <NumberInputField ref={ref_input} />
-      {stepperBtn}
-    </NumberInput>
-    {inputUnit}
-  </InputGroup>
 }

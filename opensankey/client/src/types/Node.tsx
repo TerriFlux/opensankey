@@ -1455,7 +1455,30 @@ export abstract class Class_NodeElement
     if (event.altKey) {
       // Show tooltip
       this.drawTooltip()
+      this.d3_selection?.classed('tooltip_shown',true)
     }
+  }
+
+/**
+ * Define event when mouse moves in the element
+ *
+ * @protected
+ * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+ * @memberof Class_NodeElement
+ */
+protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
+    super.eventMouseMove(event)
+    if(event.altKey){
+      this.moveTooltip(event)
+    }
+  }
+
+  protected eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
+    super.eventMouseOut(event)
+
+    // Clear tooltip
+    d3.selectAll('.sankey-tooltip').remove()
+    this.d3_selection?.classed('tooltip_shown',false)
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1821,11 +1844,11 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private drawLinks() {
-    Object.values(this._input_links).filter(link => !link.is_visible).forEach(link => {
+    Object.values(this._input_links).forEach(link => {
       link.draw()
       this._handle_input_links[link.id].draw()
     })
-    Object.values(this._output_links).filter(link => !link.is_visible).forEach(link => {
+    Object.values(this._output_links).forEach(link => {
       link.draw()
       this._handle_output_links[link.id].draw()
     })
@@ -2090,6 +2113,8 @@ export abstract class Class_NodeElement
           this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
+        
+        this._handle_output_links[link.id].d3_selection?.attr('class','node_io '+link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor 
 
         link.target.drawLinksArrow() //redraw arrow of node target of output links visible
 
@@ -2117,6 +2142,7 @@ export abstract class Class_NodeElement
           this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
+        this._handle_input_links[link.id].d3_selection?.attr('class','node_io '+link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor 
       }
     })
     this.drawLinksArrow()
@@ -2139,6 +2165,20 @@ export abstract class Class_NodeElement
       .style('top', this.position_y + 'px')
       .style('left', this.position_x + 'px')
       .html(this.tooltip_html)
+  }
+
+/**
+   * Event when we move the mouse over the node and the tooltip is shown,
+   * we simply move the tooltip to current cursor location
+ *
+ * @private
+ * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
+ * @memberof Class_NodeElement
+ */
+private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
+    d3.selectAll('.sankey-tooltip')
+    .style('top', event.pageY + 'px')
+    .style('left', event.pageX + 'px')
   }
 
   /**
@@ -2265,8 +2305,8 @@ export abstract class Class_NodeElement
       this.dragHandlerMoveLink,
       this.dragEndHandlerMoveLink,
       {
-        filled: false,
-        color: '#78C2AD',
+        filled: true,
+        color: '#F7AD7C',
         class: 'node_io'
       },
       link
