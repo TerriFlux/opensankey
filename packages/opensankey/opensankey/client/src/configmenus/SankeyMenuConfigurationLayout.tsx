@@ -359,7 +359,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenu
             ref_to_set_value={ref_set_number_inputs[4]}
             default_value={new_data.drawing_area.legend.legend_bg_opacity}
             function_on_blur={(value) => {
-              if (value) {
+              if (value!==undefined && value!==null) {
                 new_data.drawing_area.legend.legend_bg_opacity = value
                 refreshThisAndUpdateRelatedComponents()
               }

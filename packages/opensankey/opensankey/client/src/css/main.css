@@ -15,54 +15,93 @@
 
 
 /* BASIC CONFIGURATION */
-body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#000;
+body {
+	background-color: #f2f2f2;
+	/*font-family:'Open Sans',sans-serif;*/
+	font-size: 14px;
+	letter-spacing: 0px;
+	color: #000;
 
 }
 
 /* Cursor when in selection mode */
-.selection_mode{
+.selection_mode {
+
 	/* Hovering node & link in selection mode */
-	.node,.link{
-	cursor : url(cursor_n.svg) 0 0, auto;
+	.gg_nodes {
+		cursor: grab;
 	}
+
+	.gg_nodes:active {
+		cursor: grabbing;
+	}
+
+	/* Cursor when hovering with alt key pressed*/
+	.tooltip_shown {
+		cursor: url(comment-info.svg) 24 24, auto;
+	}
+
 	/* Hovering background in selection mode */
-	#g_background{
-	cursor : url(cursor_n.svg) 0 0, auto;
-	}
+	/* #g_background{
+	cursor : url(pen-nib.svg) 0 0, auto;
+	} */
+
 	/* Hovering link control points  in selection mode */
-	.cp_start,.cp_end,.bz_start,.bz_end,.recy_middle{
-	  cursor : url(cursor_n.svg) 0 0, auto;
+	#g_handlers,#grp_legend{
+		cursor: grab;
 	}
+
+	#g_handlers:active,#grp_legend:active{
+		cursor: grabbing;
+	}
+
 	/* Hovering link io handle in selection mode */
-	.node_io{
-		cursor : url(cursor_n.svg) 0 0, auto;
+	.node_io.right {
+		cursor: url(move_node_handler_right.drawio.svg) 0 0, auto;
+	}
+	.node_io.left {
+		cursor: url(move_node_handler_left.drawio.svg) 90 0, auto;
+	}
+
+	.node_io.top {
+		cursor: url(move_node_handler_top.drawio.svg) 0 90, auto;
+	}
+	.node_io.bottom {
+		cursor: url(move_node_handler_bottom.drawio.svg) 0 0, auto;
 	}
 
 	/* Hovering legend in selection mode */
-	.g_scale{
-		cursor :'move';
+	.g_scale {
+		cursor: 'move';
 
 	}
 }
 
 /* Cursor when in edition mode */
-.edition_mode{
-	.node,.link{
-	cursor : url(cursor_ln.svg) 0 0, auto;
+.edition_mode {
+
+	#g_background,
+	.gg_nodes {
+		cursor: url(pen-nib.svg) 0 24, auto;
 	}
 
-	#g_background{
-	cursor : url(cursor_ln.svg) 0 0, auto;
+	#g_handlers,
+	.link {
+		cursor: url(pen-nib-slash.svg) 0 24, auto;
+	}
+
+	/* Cursor when hovering with alt key pressed*/
+	.tooltip_shown {
+		cursor: url(comment-info.svg) 24 24, auto;
 	}
 	
-	.cp_start,.cp_end,.bz_start,.bz_end,.recy_middle{
-	  cursor : url(cursor_ln.svg) 0 0, auto;
-	}
 
-	.node_io{
-		cursor : url(cursor_ln.svg) 0 0, auto;
+	.node_io {
+		cursor: url(move_node_handler.svg) 0 0, auto;
 	}
 }
+
+
 
 
 
@@ -71,44 +110,51 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
  TOOLTIP
 ------------------------------------------------ */
 .sankey-tooltip {
-	background-color : white;
-	border : 1px solid #66a593;
-	border-radius : 4px;
+	background-color: white;
+	border: 1px solid #66a593;
+	border-radius: 4px;
 	min-width: 250px;
 	max-width: 600px;
-	font-size : 12px;
-	z-index : 1800;
-	position : absolute;
-	pointer-events : none;
+	font-size: 12px;
+	z-index: 1800;
+	position: absolute;
+	pointer-events: none;
 
 }
+
 .sankey-tooltip .title {
 	font-weight: bold;
 	text-align: center;
 	background: #66a593;
 	color: white;
 }
+
 .sankey-tooltip .subtitle {
 	font-size: 1.2em;
 }
+
 .sankey-tooltip .tab-title {
 	font-weight: bold;
-	font-size : 1.1em;
+	font-size: 1.1em;
 }
+
 .sankey-tooltip table {
-	color : black;
+	color: black;
 }
+
 .sankey-tooltip table thead th {
-	color : #66a593;
+	color: #66a593;
 	font-weight: bold;
 }
 
 .sankey-tooltip table th {
-	padding : 0px
+	padding: 0px
 }
+
 .sankey-tooltip table td {
-	padding : 4px
+	padding: 4px
 }
+
 .sankey-tooltip ul {
 	margin-bottom: 0;
 	padding-left: 10px;
@@ -120,6 +166,7 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
 	--rmsc-radius: 6px !important;
 	--rmsc-h: 2rem !important;
 }
+
 .rmsc .dropdown-container {
 	height: 2rem !important;
 }
