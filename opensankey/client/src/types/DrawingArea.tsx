@@ -99,7 +99,13 @@ export abstract class Class_DrawingArea
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
    * @memberof Class_DrawingArea
    */
-  public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+    /**
+   * d3 selection of svg group that contains drawing area background
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
+    public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area grid
@@ -368,8 +374,9 @@ export abstract class Class_DrawingArea
       .attr('transform', 'translate(0,' + this.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
 
     // Add specific groups for nodes, link and others
-    this.d3_selection_bg = this.d3_selection.append('g').attr('id', 'g_background')
-    this.d3_selection_grid = this.d3_selection_bg.append('g').attr('id', 'g_grid')
+    this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
+    this.d3_selection_bg=this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
+    this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
@@ -1865,9 +1872,9 @@ export abstract class Class_DrawingArea
 
   // Mode
   public isInSelectionMode() { return this._mode === 'selection' }
-  public setSelectionMode() { this._mode = 'selection'; this.changeCursor(false) }
+  protected setSelectionMode() { this._mode = 'selection'; this.changeCursor(false) }
   public isInEditionMode() { return this._mode === 'edition' }
-  public setEditionMode() { this._mode = 'edition'; this.changeCursor(true) }
+  protected setEditionMode() { this._mode = 'edition'; this.changeCursor(true) }
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()

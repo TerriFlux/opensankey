@@ -240,9 +240,11 @@ export abstract class Class_ApplicationData
       }
       // Event to restore application display as neutral --------------------------------
       else if (evt.key == 'Escape') {
+        if(app_ref.drawing_area.isInEditionMode()){
         // Set app in selection mode
-        app_ref.drawing_area.setSelectionMode()
-
+        app_ref.drawing_area.switchMode()
+        }
+        
         // Deselect all element
         app_ref.drawing_area.purgeSelection()
 

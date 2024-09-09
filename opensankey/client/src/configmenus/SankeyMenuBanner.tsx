@@ -31,8 +31,8 @@ import {
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faShareNodes,
   faArrowPointer,
+  faPenNib,
   faCodeBranch,
   faDiagramProject,
   faArrowsLeftRight,
@@ -154,7 +154,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
 
   // JSX Component ----------------------------------------------------------------------
   if (Object.keys(level_taggs).includes('Primaire')) {
@@ -175,7 +175,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<addSimpleLevelDropDownFTy
                 new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
                 // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
                 // (it isn't done for link not directly displayed after fromJSON)
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
                 new_data.drawing_area.checkAndUpdateAreaSize()
               }}
             >
@@ -232,7 +232,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_nodetag_filter_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_nodetag_filter_updater.current = () => setCount(a => a + 1)
 
   let taggs_in_banner: Class_TagGroup[] | Class_LevelTagGroup[]
   if (level) {
@@ -298,7 +298,7 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
           alignSelf='center'
           variant='activate_antagonist_checkbox'
           isChecked={level_tagg.activated}
-          icon={<CustomFaEyeCheckIcon/>}
+          icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
             const first_antagonist_level_tagg = level_taggs[level_tagg.siblings[0]]
@@ -457,7 +457,7 @@ export const AddAllDropDownFlux: FunctionComponent<AddAllDropDownFluxFType> = (
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_fluxtag_filter_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_fluxtag_filter_updater.current = () => setCount(a => a + 1)
 
   // JSX Components --------------------------------------------------------------------
   // Create drop down
@@ -590,7 +590,7 @@ export const DataTagSelector: FunctionComponent<DataTagSelectorType> = ({
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_datatag_filter_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_datatag_filter_updater.current = () => setCount(a => a + 1)
 
   // JSX Components --------------------------------------------------------------------
   const allDD = data_taggs_with_banner
@@ -707,7 +707,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.drawing_area.show_structure)
   const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.drawing_area.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_toolbar_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
   let btn_mouse_mode_edition = <></>
 
 
@@ -717,7 +717,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0,...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
+  const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
 
   const redrawNodeLinkLegend = () => {
     sankey.draw()
@@ -780,7 +780,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
               defaultValue={new_data.drawing_area.filter_link_value}
               onChange={evt => {
                 applicationData.new_data.drawing_area.filter_link_value = +evt
-                setCount(a=>a+1)
+                setCount(a => a + 1)
                 // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
                 // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 new_data.drawing_area.sankey.draw()
@@ -803,10 +803,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
                   tmp = max_link_value
                 }
                 applicationData.new_data.drawing_area.filter_link_value = tmp
-                setCount(a=>a+1)
+                setCount(a => a + 1)
 
               }}
-              onBlur={()=>{
+              onBlur={() => {
                 // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
                 // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 new_data.drawing_area.sankey.draw()
@@ -829,7 +829,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
               value={new_data.drawing_area.filter_label}
               onChange={(evt) => {
                 applicationData.new_data.drawing_area.filter_label = +evt
-                setCount(a=>a+1)
+                setCount(a => a + 1)
                 new_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawLabel())
               }}
             >
@@ -850,7 +850,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
                   tmp = max_link_value
                 }
                 applicationData.new_data.drawing_area.filter_label = tmp
-                setCount(a=>a+1)
+                setCount(a => a + 1)
                 new_data.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
               }}
             >
@@ -899,7 +899,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
               } else {
                 sIsDataTypeReconcilied(false)
               }
-              setCount(a=>a+1)
+              setCount(a => a + 1)
               redrawNodeLinkLegend()
             }}>
             <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
@@ -919,7 +919,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
             value={new_data.drawing_area.show_structure}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
               new_data.drawing_area.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
-              setCount(a=>a+1)
+              setCount(a => a + 1)
               redrawNodeLinkLegend()
             }}>
             <option key='none' value='reconciled' >{t('Banner.t_v_s')}</option>
@@ -1063,7 +1063,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
           }} >
           <FontAwesomeIcon icon={(
             applicationData.new_data?.drawing_area.isInEditionMode() ?
-              faShareNodes :
+              faPenNib :
               faArrowPointer
           )}
           />
@@ -1086,7 +1086,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
     {popover_link_visual_filter}
   </OSTooltip>
-  {/* Popover to display the link-filter */}
+    {/* Popover to display the link-filter */}
   </>
 
 
@@ -1097,7 +1097,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
     <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
       <Button variant={'success'} onClick={() => {
         new_data.drawing_area.show_structure = new_data.drawing_area.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-        setCount(a=>a+1)
+        setCount(a => a + 1)
         redrawNodeLinkLegend()
 
       }} >
@@ -1171,11 +1171,11 @@ const stretchButtons: stretchButtonsFType = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { applicationData.new_data.drawing_area.areaFitVertically() }} >
-      <FontAwesomeIcon icon={faArrowsUpDown} />
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='toolbar_button_6' onClick={() => { applicationData.new_data.drawing_area.areaFitVertically() }} >
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip></>
 }
 
 
