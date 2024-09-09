@@ -121,6 +121,16 @@ export abstract class Class_DrawingAreaPlus
   // PUBLIC METHODS =====================================================================
 
   /**
+ * Override switchMode to setEvent listener when changing drawing area mode (in selection mode drag event are enabled)
+ *
+ * @memberof Class_DrawingAreaPlus
+ */
+  public override switchMode() {
+    super.switchMode()
+    this.sankey.free_labels_list.forEach(lab => lab.setEventsListeners())
+  }
+
+  /**
    * Override Reset drawing area from OS
    * @memberof Class_DrawingArea
    */
