@@ -1,3 +1,4 @@
+import './deps/Opensankey/css/main.css'
 import './css/main.css'
 import './css/colors/red.css'
 import './css/style_elements_sankey.css'

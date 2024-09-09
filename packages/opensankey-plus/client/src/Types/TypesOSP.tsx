@@ -186,5 +186,10 @@ export class Class_LinkElementOSP
     }
     // Link with style
     this._display.style.addReference(this)
+    this.source.addOutputLink(this)
+    this.target.addInputLink(this)// Target
+    // Instanciate display on svg
+    this.computeControlPoints()
+    this.draw()
   }
 }

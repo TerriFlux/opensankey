@@ -363,8 +363,8 @@ export class Class_ContainerElement
    */
   private dragTopHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-      this._label_width -= event.dy
-      this.setPosXY(this.position_x, this.position_y + event.dy)
+      this._label_height -= event.dy
+      this.position_y=this.position_y +event.dy
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -382,7 +382,6 @@ export class Class_ContainerElement
   private dragBottomHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_height += event.dy
-      this.setPosXY(this.position_x, this.position_y + event.dy)
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -418,7 +417,6 @@ export class Class_ContainerElement
   private dragRightHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_width += event.dx
-      this.setPosXY(this.position_x + event.dx, this.position_y)
       this.drawShape()
 
       // Reposition drag handler with updated with & pos of the free label
