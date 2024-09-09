@@ -269,7 +269,8 @@ export abstract class Class_ApplicationData
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
       // Set app in selection mode
-      app_ref.drawing_area.setSelectionMode()
+      if(app_ref.drawing_area.isInEditionMode())
+        app_ref.drawing_area.switchMode()
 
       // Deselect all element
       app_ref.drawing_area.purgeSelection()
