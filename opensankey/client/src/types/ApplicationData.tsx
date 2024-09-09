@@ -219,12 +219,14 @@ export abstract class Class_ApplicationData
   {
     // Events booleans ----------------------------------------------------------------
 
-    const evtOnDrawingArea = isDrawingAreaActive()
+    const evtOnDrawingArea = isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
-    const evtAlt = (!(evt.ctrlKey || evt.metaKey)) && (!evt.shiftKey) && (evt.altKey)
-    const evtShift = (!(evt.ctrlKey || evt.metaKey)) && (evt.shiftKey) && (!evt.altKey)
     const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
     const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
+    const evtKeyTab = (evt.key === 'Tab') && evtOnDrawingArea
+    const evtKeyDel = (evt.key === 'Del') && evtOnDrawingArea
+    const evtKeyEsc = (evt.key === 'Escape') && evtOnDrawingArea
+    const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
     const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
@@ -261,11 +263,11 @@ export abstract class Class_ApplicationData
       this.drawing_area.recenterElements()
     }
     // Open config menu ---------------------------------------------------------------
-    else if (evt.key == 'Tab') {
+    else if (evtKeyTab) {
       app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
     }
     // Event to restore application display as neutral --------------------------------
-    else if (evt.key == 'Escape') {
+    else if (evtKeyEsc) {
       // Set app in selection mode
       app_ref.drawing_area.setSelectionMode()
 
@@ -277,10 +279,7 @@ export abstract class Class_ApplicationData
       app_ref.drawing_area.closeAllContextMenus()
     }
     // Event to delete all selected elements ------------------------------------------
-    else if (
-      (evt.key === 'Delete') &&
-      isDrawingAreaActive()  // Avoid using this hotkey in text-inputs
-    ) {
+    else if (evtKeyDel) {
       // Delete selected elements
       app_ref.drawing_area.deleteSelection()
     }
@@ -288,7 +287,7 @@ export abstract class Class_ApplicationData
     // (It's in adequation with event on input that update drawing area when we blur input)
     // TODO surement à supprimer lorsque les inputs se feront avec menuConfigurationTextInput && menuConfigurationNumberInput
     else if (
-      (evt.key == 'Enter') &&
+      (evtKeyEnter) &&
       (document.activeElement?.tagName == 'INPUT') &&
       (['form-control', 'chakra-numberinput__field', 'chakra-input', 'name_label_input'].some(r => document.activeElement?.className.includes(r)))
     ) {
