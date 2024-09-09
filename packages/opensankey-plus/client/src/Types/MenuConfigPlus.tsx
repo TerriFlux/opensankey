@@ -31,10 +31,13 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   // PRIVATE ATTRIBUTES =================================================================
 
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
-  private _ref_to_menu_config_free_label_updater: MutableRefObject<(() => void)>
+
+  private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
+
   // Button that open the sub menu links of elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -45,7 +48,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     super()
 
     // Init value for menu_config plus variable
-    this._ref_to_menu_config_free_label_updater = useRef(() => null)
+    this._ref_to_menu_config_container_updater = useRef(() => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node=useRef(() => null)
     this._dict_setter_show_dialog_plus = {
@@ -58,7 +61,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   // PUBLIC METHODS ====================================================================
 
-  public openConfigMenuElementsFreeLabels() {
+  public openConfigMenuElementsContainers() {
     this.openConfigMenuElements()
     this._zdt_accordion_ref.current?.click()
     // Leave enough time for menus to open
@@ -74,6 +77,46 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   }
 
 
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToContainers() {
+    this._add_waiting_process(
+      'updateComponentRelatedToContainersUpdaters',
+      (_this: Class_MenuConfigPlus) => {
+        _this._ref_to_menu_config_container_updater.current()
+      }
+    )
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  /**
+   * Create a timed out process - Used to avoid multiple reloading of components
+   *
+   * The process_func is meant to be use by setTimeout(),
+   * and inside setTimeOut 'this' keyword has another meaning,
+   * so the current object must be passed directly as an argument.
+   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
+   *
+   * @protected
+   * @param {string} process_id
+   * @param {(_: Class_MenuConfig) => void} process_func
+   * @memberof Class_MenuConfig
+   */
+  protected _add_waiting_process(
+    process_id: string,
+    process_func: (_: Class_MenuConfigPlus) => void
+  ) {
+    this._cancel_waiting_process(process_id)
+    this._waiting_processes[process_id] = setTimeout(
+      (_this) => { process_func(_this) },
+      this._waiting_time_for_processes,
+      this
+    )
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   public get zdt_accordion_ref(): RefObject<HTMLButtonElement> { return this._zdt_accordion_ref }
@@ -81,8 +124,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
   // public set dict_setter_show_dialog_plus(value: OSPShowMenuComponentsVarType) {this._dict_setter_show_dialog_plus = value;}
 
-  public get ref_to_menu_config_free_label_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_free_label_updater }
-  public set ref_to_menu_config_free_label_updater(value: MutableRefObject<(() => void)>) { this._ref_to_menu_config_free_label_updater = value }
+  public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
+  public set ref_to_menu_config_containers_updater(value: MutableRefObject<(() => void)>) { this._ref_to_menu_config_container_updater = value }
 
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> {return this._r_setter_editor_content_fo_node}
   public set r_setter_editor_content_fo_node(value: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>) {this._r_setter_editor_content_fo_node = value}

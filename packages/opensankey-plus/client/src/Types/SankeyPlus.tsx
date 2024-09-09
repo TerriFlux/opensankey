@@ -59,7 +59,7 @@ export abstract class Class_SankeyPlus
    * @type {{ [_: string]: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> }}
    * @memberof Class_SankeyPlus
    */
-  protected _labels: { [_: string]: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> } = {}
+  protected _containers: { [_: string]: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> } = {}
 
   /**
    * Allows to toggle Sankey visibility
@@ -96,7 +96,7 @@ export abstract class Class_SankeyPlus
     // Overrides
     this._menu_config = menu_config
     // New attributes
-    this._labels = {}
+    this._containers = {}
     this._icon_catalog = {}
   }
 
@@ -138,7 +138,7 @@ export abstract class Class_SankeyPlus
 
     // Class container
     json_entry['labels'] = json_object_labels
-    this.free_labels_list.forEach(obj => {
+    this.containers_list.forEach(obj => {
       json_object_labels[obj.id] = obj.toJSON()
     })
 
@@ -153,26 +153,26 @@ export abstract class Class_SankeyPlus
     super.updateLayoutFromJSON(new_layout, mode)
 
     // Update Containers
-    const list_curr_container = this.free_labels_list
-    const list_new_container = new_layout.sankey.free_labels_list
+    const list_curr_container = this.containers_list
+    const list_new_container = new_layout.sankey.containers_list
     if (mode.includes('freeLabels')) {
       // Add new container present in new but not current
       list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
         .forEach(cont => {
           this.addNewFreeLabel(cont.id)
-          this.free_labels_dict[cont.id].copyFrom(cont)
+          this.containers_dict[cont.id].copyFrom(cont)
         })
 
       // Delete container present in current but not new
       list_curr_container.filter(curr_cont => !list_new_container.map(new_cont => new_cont.id).includes(curr_cont.id))
         .forEach(cont => {
-          this.deleteFreeLabel(cont)
+          this.deleteContainer(cont)
         })
 
       // Update container in current that are also in new
       list_new_container.filter(new_cont => list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
         .forEach(cont => {
-          this.free_labels_dict[cont.id].copyFrom(cont)
+          this.containers_dict[cont.id].copyFrom(cont)
         })
     }
 
@@ -192,11 +192,11 @@ export abstract class Class_SankeyPlus
    * @memberof Class_Sankey
    */
   private _addLabel(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
-    this._labels[zdt.id] = zdt
+    this._containers[zdt.id] = zdt
   }
 
   public moveUpFreeLabelOrder(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
-    const list_zdt = Object.entries(this._labels)
+    const list_zdt = Object.entries(this._containers)
     // Get idx of element to move up
     const posElemt = list_zdt.indexOf([zdt.id, zdt])
     // Remove zdt from original dict.
@@ -204,13 +204,13 @@ export abstract class Class_SankeyPlus
     // Add zdt before previous zdt if dict
     list_zdt.splice(posElemt - 1, 0, [zdt.id, zdt])
     // Replace original dict with new one (the same in different order)
-    this._labels = Object.fromEntries(list_zdt)
+    this._containers = Object.fromEntries(list_zdt)
     // Redraw all free labels
-    this.free_labels_list.map(zdt => zdt.draw())
+    this.containers_list.map(zdt => zdt.draw())
   }
 
   public moveDownFreeLabelOrder(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
-    const list_zdt = Object.entries(this._labels)
+    const list_zdt = Object.entries(this._containers)
     // Get idx of element to move up
     const posElemt = list_zdt.indexOf([zdt.id, zdt])
     // Remove zdt from original dict.
@@ -218,9 +218,9 @@ export abstract class Class_SankeyPlus
     // Add zdt after next zdt if dict
     list_zdt.splice(posElemt + 1, 0, [zdt.id, zdt])
     // Replace original dict with new one (the same in different order)
-    this._labels = Object.fromEntries(list_zdt)
+    this._containers = Object.fromEntries(list_zdt)
     // Redraw all free labels
-    this.free_labels_list.map(zdt => zdt.draw())
+    this.containers_list.map(zdt => zdt.draw())
   }
 
   /**
@@ -231,7 +231,7 @@ export abstract class Class_SankeyPlus
    * @memberof Class_Sankey
    */
   public addNewFreeLabel(id: string): Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> {
-    if (!this._labels[id]) {
+    if (!this._containers[id]) {
       // Create node
       const zdt = new Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>(
         id,
@@ -254,7 +254,7 @@ export abstract class Class_SankeyPlus
    * @memberof Class_Sankey
    */
   public addNewDefaultFreeLabel() {
-    const n = String(Object.values(this._labels).length)
+    const n = String(Object.values(this._containers).length)
     const id = 'free_label' + n
     return this.addNewFreeLabel(id)
   }
@@ -265,9 +265,9 @@ export abstract class Class_SankeyPlus
    */
   public deleteSelectedFreeLabels() {
     // Get copy of selected nodes
-    const selected_labels = this.drawing_area.selected_free_labels_list as Class_ContainerElement<Type_GenericDrawingArea, this>[]
+    const selected_labels = this.drawing_area.selected_containers_list as Class_ContainerElement<Type_GenericDrawingArea, this>[]
     // Delete each one of them
-    selected_labels.forEach(selected_label => { this.deleteFreeLabel(selected_label) })
+    selected_labels.forEach(selected_label => { this.deleteContainer(selected_label) })
     // Then let garbage collector do the rest...
   }
 
@@ -276,11 +276,11 @@ export abstract class Class_SankeyPlus
  * @param {Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>} zdt
  * @memberof Class_SankeyPlus
  */
-  public deleteFreeLabel(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
-    if (this._labels[zdt.id] !== undefined) {
+  public deleteContainer(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
+    if (this._containers[zdt.id] !== undefined) {
       // Delete node in sankey
-      const _ = this._labels[zdt.id]
-      delete this._labels[zdt.id]
+      const _ = this._containers[zdt.id]
+      delete this._containers[zdt.id]
       _.delete()
     }
   }
@@ -367,11 +367,11 @@ export abstract class Class_SankeyPlus
   public get is_visible() { return this._is_visible }
 
   // Free labels
-  public get free_labels_dict() { return this._labels }
-  public get free_labels_list() { return Object.values(this._labels) }
-  public get free_labels_list_sorted() { return this.free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
-  public get visible_free_labels_list() {
-    return this.free_labels_list.filter(zdt => zdt.is_visible)
+  public get containers_dict() { return this._containers }
+  public get containers_list() { return Object.values(this._containers) }
+  public get containers_list_sorted() { return this.containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
+  public get visible_containers_list() {
+    return this.containers_list.filter(zdt => zdt.is_visible)
   }
 
   // Icons

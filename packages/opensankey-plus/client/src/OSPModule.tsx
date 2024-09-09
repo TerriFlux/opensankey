@@ -1,10 +1,30 @@
-import React, { useRef } from 'react'
+// ==================================================================================================
+// Authors :
+//  - Vincent CLAVEL
+//  - Julien ALAPETITE
+//  - Vincent LE DOZE
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
 
+// External imports
+import React, { useRef } from 'react'
 import { t } from 'i18next'
-import { Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger, Button, PopoverArrow, PopoverCloseButton, Box, Input } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Input,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
+} from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
+// OpenSankey imports
 import {
   module_dialogsType,
   InitalizeSelectorDetailNodesType
@@ -12,6 +32,7 @@ import {
 import { AddAllDropDownNode, setDiagram } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
 import { MenuDraggable } from './deps/OpenSankey/topmenus/SankeyMenuTop'
 
+// Local imports
 import {
   OSPApplicationDataType,
   OSPApplicationDataVarType,
@@ -22,7 +43,6 @@ import {
   OSPInitializeReinitializationType,
   OSPUpdateMenuConfType
 } from '../types/Types'
-
 // import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, OSPMenuPreferenceLabels } from './SankeyPlusMenuConfigurationLabels'
 import { OSPHyperLink, OSPNodeIcon } from './SankeyPlusNodes'
@@ -171,16 +191,16 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 
   // TODO : re implement OSPBannerView with class
 
-  // const has_views = OSPApplicationData.master_data &&  OSPApplicationData.master_data.view.length > 0
-  // if (!window.SankeyToolsStatic || has_views ) {
-  //   additionalMenus.externale_navbar_item['view']=<OSPBannerView
-  //     applicationData={applicationData as OSPApplicationDataType}
-  //     applicationContext={OSPApplicationContext}
-  //     dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType)}
-  //     convert_data={applicationData.convert_data}
-  //     view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
-  //   />
-  // }
+  const has_views = OSPApplicationData.master_data &&  OSPApplicationData.master_data.view.length > 0
+  if (!window.SankeyToolsStatic || has_views ) {
+    additionalMenus.externale_navbar_item['view']=<OSPBannerView
+      applicationData={applicationData as OSPApplicationDataType}
+      applicationContext={OSPApplicationContext}
+      dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType)}
+      convert_data={applicationData.convert_data}
+      view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
+    />
+  }
 
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <OSPNodeIcon

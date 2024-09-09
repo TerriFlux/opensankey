@@ -51,7 +51,7 @@ export class Class_ZoneSelectionPlus
     // Get OpenSankey standard elements
     super.selectElementsInside()
     // Adds OpenSankey+ elements
-    this.drawing_area.sankey.free_labels_list
+    this.drawing_area.sankey.containers_list
       .filter(container => {
         // Check if node is horizontally in selection zone
         const is_node_horizontally_in_zone = (
@@ -69,7 +69,7 @@ export class Class_ZoneSelectionPlus
         return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
       })
       .forEach(container => {
-        this.drawing_area.addFreeLabelToSelection(container as Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>)
+        this.drawing_area.addContainerToSelection(container as Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>)
       })
   }
 }

@@ -47,8 +47,8 @@ export abstract class Class_AbstractDrawingAreaPlus
     Type_GenericLinkElement
   > {
   public abstract d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
-  public abstract addFreeLabelToSelection(_: Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>): void
-  public abstract get selected_free_labels_list(): Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
+  public abstract addContainerToSelection(_: Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>): void
+  public abstract get selected_containers_list(): Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
 }
 
 export abstract class Class_AbstractSankeyPlus
@@ -64,7 +64,7 @@ export abstract class Class_AbstractSankeyPlus
     Type_GenericLinkElement
   > {
   public abstract getIconFromCatalog(id_icon: string): string
-  public abstract get free_labels_list(): Class_AbstractContainerElement<Type_GenericDrawingArea, Class_AbstractSankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>[]
+  public abstract get containers_list(): Class_AbstractContainerElement<Type_GenericDrawingArea, Class_AbstractSankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>[]
 }
 
 export abstract class Class_AbstractNodeElementPlus

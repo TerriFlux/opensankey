@@ -67,7 +67,7 @@ export abstract class Class_DrawingAreaPlus
   public application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
 
   /**
-     * d3 selection of svg group that contains drawing area free labels
+     * d3 selection of svg group that contains drawing area container
      * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
      * @memberof Class_DrawingArea
      */
@@ -87,6 +87,7 @@ export abstract class Class_DrawingAreaPlus
   // Objects containeds in drawing area -------------------------------------------------
 
   protected _views: { [id: string]: Type_GenericSankey } = {}
+  protected _views_order: string[] = []
 
   // CONSTRUCTOR ========================================================================
 
@@ -113,9 +114,11 @@ export abstract class Class_DrawingAreaPlus
     this.application_data = application_data
   }
 
+  // ABSTRACT METHODS ===================================================================
+
   protected abstract createNewSelectionZone(): Class_ZoneSelectionPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
-  // PUBLIC METHODS ====================================================================
+  // PUBLIC METHODS =====================================================================
 
   /**
    * Override Reset drawing area from OS
@@ -137,7 +140,7 @@ export abstract class Class_DrawingAreaPlus
   public drawElements(): void {
     super.drawElements()
     this.drawBgImage()
-    this.sankey.free_labels_list.forEach(zdt => zdt.draw())
+    this.sankey.containers_list.forEach(container => container.draw())
   }
 
   /**
@@ -162,7 +165,23 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * Override checkAndUpdateAreaSize so it take into account free labels
+   * Delete a given container -> container will not exist anymore
+   * @param {Class_ContainerElement<any, any>} container
+   * @memberof Class_DrawingAreaPlus
+   */
+  public deleteContainer(container: Class_ContainerElement<any, any>) {
+    // Remove from selection if necessary
+    this.removeContainerFromSelection(container)
+    // Remove container from sankey
+    this.sankey.deleteContainer(container)
+    // Self delete container
+    container.delete()
+    // Update related menus
+    this.application_data.menu_configuration.updateComponentRelatedToContainers()
+  }
+
+  /**
+   * Override checkAndUpdateAreaSize so it take into account container
    *
    * @memberof Class_DrawingAreaPlus
    */
@@ -171,7 +190,7 @@ export abstract class Class_DrawingAreaPlus
 
     let max_free_label_pos_x = 0
     let max_free_label_pos_y = 0
-    this.sankey.visible_free_labels_list.filter(free_label => free_label.display.position.type === 'absolute').map(free_label => {
+    this.sankey.visible_containers_list.filter(free_label => free_label.display.position.type === 'absolute').map(free_label => {
       const free_label_rightest_pos = free_label.position_x + free_label.label_width
       const free_label_bottomest_pos = free_label.position_y + free_label.label_height
       max_free_label_pos_x = Math.max(max_free_label_pos_x, free_label_rightest_pos)
@@ -199,14 +218,64 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * add a free labels from a selection set
+   * add a container from a selection set
    *
-   * @param {Class_ContainerElement<this, Type_GenericSankey>} zdt
+   * @param {Class_ContainerElement<any, any>} container
    * @memberof Class_DrawingAreaPlus
    */
-  public addFreeLabelToSelection(zdt: Class_ContainerElement<any, any>) {
-    this._selection[zdt.id] = zdt
-    zdt.setSelected()
+  public addContainerToSelection(container: Class_ContainerElement<any, any>) {
+    this._selection[container.id] = container
+    container.setSelected()
+  }
+
+  /**
+     * Add all nodes to selection set
+     * Update menu accordingly
+     * @memberof Class_DrawingArea
+     */
+  public addAllVisibleContainersToSelection() {
+    this.sankey.visible_containers_list
+      .forEach(container => this.addContainerToSelection(container))
+  }
+
+  /**
+   * remove a container from a selection set
+   * Update menu accordingly
+   * @param {Class_ContainerElement<any, any>} container
+   * @memberof Class_DrawingAreaPlus
+   */
+  public removeContainerFromSelection(container: Class_ContainerElement<any, any>) {
+    if (this._selection[container.id] !== undefined) {
+      // Update selection list
+      delete this._selection[container.id]
+      // Update selection attribute on given container
+      container.setUnSelected()
+      // Update related menus
+      this.application_data.menu_configuration.updateComponentRelatedToContainers()
+    }
+  }
+
+  /**
+   * Permanently delete selected containers
+   * Update menu accordingly
+   * @memberof Class_DrawingAreaPlus
+   */
+  public deleteSelectedContainers() {
+    // Get copy of selected nodes
+    const selected_containers = this.selected_containers_list
+    // Delete each one of them
+    selected_containers.forEach(container => { this.deleteContainer(container) })
+    // Then let garbage collector do the rest...
+  }
+
+  /**
+   * Delete all selected elements
+   *
+   * @memberof Class_DrawingArea
+   */
+  public deleteSelection() {
+    super.deleteSelection()
+    this.deleteSelectedContainers()
   }
 
   /**
@@ -255,14 +324,14 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * remove a zdt from a selection set
+   * remove a container from a selection set
    * @param {Class_ContainerElement<this, Type_GenericSankey>} node
    * @memberof Class_DrawingAreaPlus
    */
-  public removeFreeLabelFromSelection(zdt: Class_ContainerElement<this, Type_GenericSankey>) {
-    if (this._selection[zdt.id] !== undefined) {
-      delete this._selection[zdt.id]
-      zdt.setUnSelected()
+  public removeFreeLabelFromSelection(container: Class_ContainerElement<this, Type_GenericSankey>) {
+    if (this._selection[container.id] !== undefined) {
+      delete this._selection[container.id]
+      container.setUnSelected()
     }
   }
 
@@ -272,44 +341,81 @@ export abstract class Class_DrawingAreaPlus
    */
   public purgeSelection() {
     super.purgeSelection()
-    this.application_data.menu_configuration.ref_to_menu_config_free_label_updater.current()
+    this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
   }
 
   /**
    * Create a new view (sankey) from given sankey
    *
-   * @param {string} id
    * @memberof Class_DrawingAreaPlus
    */
   public createNewView(
-    id: string,
     base_sankey: Type_GenericSankey | undefined = undefined
   ) {
     // If no base sankey is given, we take the currently active sankey
     if (base_sankey === undefined)
       base_sankey = this.sankey
     // If no view existed previously, we add the active sankey as master sankey
-    if (this.views.length === 0)
+    if (this.views.length === 0) {
       this._views[default_main_sankey_id] = this.sankey
+      this._views_order.push(default_main_sankey_id)
+    }
     // Create the new sankey
     const new_sankey = this.createNewSankey(makeId('view '))
     new_sankey.copyFrom(this.sankey)
+    // Add new sankey to views
+    this._views[new_sankey.id] = new_sankey
+    this._views_order.push(new_sankey.id)
     // Shown sankey = new sankey
-    this._sankey.setInvisible()
-    this._sankey.draw()
-    this._sankey = new_sankey
-    this._sankey.draw()
+    this.setCurrentView(new_sankey.id)
+  }
+
+  public setCurrentView(id: string) {
+    if (this.has_views && !this.is_view_master) {
+      this._sankey.setInvisible()
+      this._sankey.draw()
+      this._sankey = this._views[id]
+      this._sankey.draw()
+    }
+  }
+
+  public setCurrentViewToMaster() {
+    if (this.has_views && !this.is_view_master) {
+      this.setCurrentView(default_main_sankey_id)
+    }
+  }
+
+  public setCurrentViewToNext() {
+    if (this.has_views && this.has_view_after) {
+      const idx = this._views_order.indexOf(this._sankey.id)
+      this.setCurrentView(this._views_order[idx + 1])
+    }
+  }
+
+  public setCurrentViewToPrev() {
+    if (this.has_views && !this.has_view_before) {
+      const idx = this._views_order.indexOf(this._sankey.id)
+      this.setCurrentView(this._views_order[idx - 1])
+    }
+  }
+
+  public deleteCurrentView() {
+    if (this.has_views && !this.is_view_master) {
+      delete this._views[this.sankey.id] // Remove for view dict
+      this._sankey.delete() // Delete view
+      this._sankey = this._views[default_main_sankey_id] // Fall back to master view by defaut
+    }
   }
 
   // GETTERS / SETTERS ==================================================================
 
-  public get selected_free_labels_list(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] {
-    return this.sankey.free_labels_list.filter(zdt => zdt.is_selected) as Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
+  public get selected_containers_list(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] {
+    return this.sankey.containers_list.filter(container => container.is_selected) as Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
   }
-  public get selected_free_labels_list_sorted() { return this.selected_free_labels_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
+  public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 
-  public get contextualised_free_label(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined { return this._contextualised_free_label }
-  public set contextualised_free_label(value: Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined) { this._contextualised_free_label = value }
+  public get contextualised_container(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined { return this._contextualised_free_label }
+  public set contextualised_container(value: Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined) { this._contextualised_free_label = value }
 
   public get show_background_image(): boolean { return this._show_background_image }
   public set show_background_image(value: boolean) { this._show_background_image = value }
@@ -319,5 +425,27 @@ export abstract class Class_DrawingAreaPlus
 
   public get views(): Type_GenericSankey[] {
     return Object.values(this._views)
+  }
+
+  public get has_views(): boolean {
+    return (this._views_order.length > 0)
+  }
+
+  public get is_view_master(): boolean {
+    return (this.sankey.id === default_main_sankey_id)
+  }
+
+  public get has_view_before(): boolean {
+    if (this.has_views)
+      return (this._views_order.indexOf(this._sankey.id) > 0)
+    else
+      return false
+  }
+
+  public get has_view_after(): boolean {
+    if (this.has_views)
+      return (this._views_order.indexOf(this._sankey.id) < (this._views_order.length - 1))
+    else
+      return false
   }
 }

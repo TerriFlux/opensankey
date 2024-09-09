@@ -83,22 +83,33 @@ export type CheckCurrentViewSavedFType = (
   view: string
 ) => Diff<OSPData | undefined, OSPData | undefined>[]
 
-// Function that return a toolbar to navigate,create or modify view, it contain :
-// - a button to return to master data
-// - a button to create a view if we are currently on master data
-// - 2 button to navigate in the list of view
-// - a dropdown to directly select the view we want to display (or select master data)
-// Then if we are in a view there is additionnal button
-// - a button to choose variable of the view that get their value from master
-// - a button to clone the actual view
-// a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-// export type OSPBannerViewFType = {
-//   applicationData:OSPApplicationDataType,
-//   applicationContext:OSPApplicationContextType,
-//   dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-//   convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
-//   view_selector:JSX.Element
-// }
+/**
+ * Fucntion that return a toolbar to navigate,create or modify view, it contain :
+ * - a button to return to master data
+ * - a button to create a view if we are currently on master data
+ * - 2 button to navigate in the list of view
+ * - a dropdown to directly select the view we want to display (or select master data)
+ * Then if we are in a view there is additionnal button
+ * - a button to choose variable of the view that get their value from master
+ * - a button to clone the actual view
+ * a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
+ *
+ * @param {*} {
+ *   applicationData,
+ *   applicationContext,
+ *   dict_hook_ref_setter_show_dialog_components,
+ *   convert_data,
+ *   view_selector
+ * }
+ * @return {*}
+ */
+export type OSPBannerViewFType = {
+  applicationData:OSPApplicationDataType,
+  applicationContext:OSPApplicationContextType,
+  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
+  convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
+  view_selector:JSX.Element
+}
 
 export type OSPMenuPreferenceViewFType = (
   t:TFunction,

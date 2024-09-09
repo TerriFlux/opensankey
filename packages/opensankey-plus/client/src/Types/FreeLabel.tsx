@@ -352,7 +352,7 @@ export class Class_ContainerElement
     */
   private dragHandleEnd() {
     return () => {
-      this.menu_config.ref_to_menu_config_free_label_updater.current()
+      this.menu_config.ref_to_menu_config_containers_updater.current()
     }
   }
 
@@ -501,18 +501,18 @@ export class Class_ContainerElement
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
-        drawing_area.addFreeLabelToSelection(this)
+        drawing_area.addContainerToSelection(this)
         // Open related menu
-        this.menu_config.openConfigMenuElementsFreeLabels()
+        this.menu_config.openConfigMenuElementsContainers()
         // Update components related to free label edition
-        this.menu_config.ref_to_menu_config_free_label_updater.current()
+        this.menu_config.ref_to_menu_config_containers_updater.current()
       }
       // CTRL
       else if (event.ctrlKey) {
         // Add free label to selection
-        drawing_area.addFreeLabelToSelection(this)
+        drawing_area.addContainerToSelection(this)
         // Update components related to free label edition
-        this.menu_config.ref_to_menu_config_free_label_updater.current()
+        this.menu_config.ref_to_menu_config_containers_updater.current()
       }
       // OTHERS
       else {
@@ -520,7 +520,7 @@ export class Class_ContainerElement
         // Purge selection list
         drawing_area.purgeSelection()
         // Add free label to selection
-        drawing_area.addFreeLabelToSelection(this)
+        drawing_area.addContainerToSelection(this)
       }
     }
   }
@@ -634,7 +634,7 @@ export class Class_ContainerElement
 
     // Get related drawing area
     const drawing_area = this.drawing_area
-    const zdt_selected = drawing_area.selected_free_labels_list
+    const zdt_selected = drawing_area.selected_containers_list
 
     if (zdt_selected.length == 0) {
       if (drawing_area.isInSelectionMode()) {

@@ -8,6 +8,7 @@
 // ==================================================================================================
 
 // OpenSankey imports
+import { isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
 
 // Local imports
@@ -87,6 +88,110 @@ export abstract class Class_ApplicationDataPlus
       console.log('terriflux.png not found')
     }
     this.logo = this._logo_sankey_plus
+  }
+
+  // PROTECTED METHODS =====================================================================
+
+  /**
+   * Function to create custom application behavior when we press a key,
+   *
+   * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
+   *
+   * @private
+   * @param {Class_ApplicationDataPlus} app_ref
+   * @return {*}
+   * @memberof Class_ApplicationDataPlus
+   */
+  protected keyboardEventProcessing(
+    evt: KeyboardEvent,
+    app_ref: Class_ApplicationDataPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
+  ) {
+    return (evt: KeyboardEvent) => {
+      // Apply first default OS key processing
+      super.keyboardEventProcessing(evt, app_ref)
+
+      // Events booleans ----------------------------------------------------------------
+
+      const evtOnDrawingArea = isDrawingAreaActive() // Avoid using hotkeys in text-inputs
+      const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
+      const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
+      const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
+      const evtKeyTab = (evt.key === 'Tab') && evtOnDrawingArea
+      const evtKeyDel = (evt.key === 'Del') && evtOnDrawingArea
+      const evtKeyEsc = (evt.key === 'Escape') && evtOnDrawingArea
+      const evtKeyF7 = (evt.key === 'F7')
+      const evtKeyF8 = (evt.key === 'F8')
+      const evtKeyF9 = (evt.key === 'F9')
+      const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
+      const evtKeyX = ((evt.key === 'x') || (evt.key === 'X')) && evtOnDrawingArea
+      const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
+      const evtCtrlA = evtCtrl && evtKeyA
+      const evtCtrlX = evtCtrl && evtKeyX
+      const evtCtrlF = evtCtrl && evtKeyF
+
+      // Event to move all selected containers with keyboard arrows --------------------------
+      if (
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
+        isDrawingAreaActive() // Avoid using this hotkey in text-inputs
+      ) {
+
+        // Deplace les containers sélectionné avec les flèches du clavier
+        evt.preventDefault()
+        if (evt.key == 'ArrowUp') {
+          app_ref.drawing_area.selected_containers_list.forEach(container => {
+            container.position_y -= app_ref.drawing_area.grid_size
+          })
+        } else if (evt.key == 'ArrowDown') {
+          app_ref.drawing_area.selected_containers_list.forEach(container => {
+            container.position_y += app_ref.drawing_area.grid_size
+          })
+        } else if (evt.key == 'ArrowLeft') {
+          app_ref.drawing_area.selected_containers_list.forEach(container => {
+            container.position_x -= app_ref.drawing_area.grid_size
+          })
+        } else if (evt.key == 'ArrowRight') {
+          app_ref.drawing_area.selected_containers_list.forEach(container => {
+            container.position_x += app_ref.drawing_area.grid_size
+          })
+        }
+        // Move all elements so none of them are outside the DA
+        this.drawing_area.recenterElements()
+      }
+
+      // Event to add all visible containers to selection -----------------------------------------
+
+      if (evtCtrlA) {
+        // Prevent default event on ctrl + a
+        evt.preventDefault()
+        // Select all node & links
+        app_ref.drawing_area.addAllVisibleContainersToSelection()
+      }
+
+      // Event to clone current sankey into a new view --------------------------------------------
+
+      if (this._has_sankey_plus && evtCtrlX) {
+        // Prevent default event on ctrl + a
+        evt.preventDefault()
+        // Create a new view from current displayed sankey
+        this.drawing_area.createNewView()
+      }
+
+      // Changing view to is_master ---------------------------------------------------------------
+
+      if (evtKeyF7) {
+        this.drawing_area.setCurrentViewToMaster()
+      }
+
+      // Changing view to next or previous --------------------------------------------------------
+
+      if (evtKeyF8) {
+        this.drawing_area.setCurrentViewToPrev()
+      }
+
+      if (evtKeyF9) {
+        this.drawing_area.setCurrentViewToNext()
+      }
+    }
   }
 
   // GETTERS / SETTERS ==================================================================

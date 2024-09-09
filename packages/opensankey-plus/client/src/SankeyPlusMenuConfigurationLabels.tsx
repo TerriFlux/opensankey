@@ -83,19 +83,19 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
 }) => {
   const { new_data } = applicationData
   const { t } = new_data
-  const selected_zdt = new_data.drawing_area.selected_free_labels_list
+  const selected_zdt = new_data.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
   const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'zdt') : 'zdt')
   const [button_icon_or_image, set_button_icon_or_image] = useState<'zdt' | 'image'>(zdt_or_image)
 
-  const INITIAL_OPTIONS_label = new_data.drawing_area.sankey.free_labels_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
+  const INITIAL_OPTIONS_label = new_data.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
   const selected_label = selected_zdt.map((d) => { return { 'label': d.title, 'value': d.id } })
 
   //const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
   const [forceUpdate, setForceUpdate] = useState(false)
   // Link current component updater to menu config class
-  new_data.menu_configuration.ref_to_menu_config_free_label_updater.current = () => setForceUpdate(!forceUpdate)
+  new_data.menu_configuration.ref_to_menu_config_containers_updater.current = () => setForceUpdate(!forceUpdate)
   //applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
 
   // if (selected_zdt.length == 0 && s_editor_content_fo_zdt != '') {
@@ -143,9 +143,9 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
             onChange={(entries: Type_MenuSelectionEntry[]) => {
               // Update selection list
               const entries_values = entries.map(d => d.value)
-              new_data.drawing_area.sankey.free_labels_list.forEach(zdt => {
+              new_data.drawing_area.sankey.containers_list.forEach(zdt => {
                 if (entries_values.includes(zdt.id)) {
-                  new_data.drawing_area.addFreeLabelToSelection(zdt)
+                  new_data.drawing_area.addContainerToSelection(zdt)
                 }
                 else {
                   new_data.drawing_area.removeFreeLabelFromSelection(zdt)
@@ -282,7 +282,7 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
           // Create default node
           const new_node = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
           // Add node to selection
-          new_data.drawing_area.addFreeLabelToSelection(new_node)
+          new_data.drawing_area.addContainerToSelection(new_node)
           // Update menus
           redrawAndRefresh()
         }
@@ -587,8 +587,8 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
   const { t } = new_data
   // const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<OSPLabel>()
   // const { _ref_to_menu_config_free_label_updater } = ComponentUpdater
-  const selected_zdt = new_data.drawing_area.selected_free_labels_list
-  const zdt_to_contextualise = new_data.drawing_area.contextualised_free_label
+  const selected_zdt = new_data.drawing_area.selected_containers_list
+  const zdt_to_contextualise = new_data.drawing_area.contextualised_container
   // contextualised_zdt.current = set_zdt_to_contextualise
   // dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
   const [, setCount] = useState(0)
@@ -600,7 +600,7 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
   const redrawAndRefresh = () => {
     // Refresh menu config free label
-    new_data.menu_configuration.ref_to_menu_config_free_label_updater.current()
+    new_data.menu_configuration.ref_to_menu_config_containers_updater.current()
     // Redraw selected elements
     selected_zdt.forEach(zdt => zdt.draw())
     // Refresh this menu
@@ -609,7 +609,7 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
   const closeContextMenu = () => {
     // Unset contextualized node
-    new_data.drawing_area.contextualised_free_label = undefined
+    new_data.drawing_area.contextualised_container = undefined
     setCount(a => a + 1)
 
   }
