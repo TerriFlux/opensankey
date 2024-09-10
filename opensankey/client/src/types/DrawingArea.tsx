@@ -15,6 +15,7 @@ import {
   default_background_color,
   default_black_color,
   default_grid_color,
+  default_main_sankey_id,
   getBooleanFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
@@ -296,14 +297,15 @@ export abstract class Class_DrawingArea
   constructor(
     _height: number,
     _width: number,
-    application_data: Class_AbstractApplicationData
+    application_data: Class_AbstractApplicationData,
+    id:string=default_main_sankey_id
   ) {
     super()
     this.application_data = application_data
     // Init attributes
     this._height = _height
     this._width = _width
-    this._sankey = this.createNewSankey()
+    this._sankey = this.createNewSankey(id)
     this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone=this.createNewSelectionZone()
   }
@@ -1464,7 +1466,7 @@ export abstract class Class_DrawingArea
    * @private
    * @memberof Class_DrawingArea
    */
-  private unDraw() {
+  public unDraw() {
     if (this.d3_selection_zoom_area) {
       this.d3_selection_zoom_area.remove()
       this.d3_selection_zoom_area = null
@@ -2048,6 +2050,8 @@ export abstract class Class_DrawingArea
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
+
+  public get id(){return this._sankey.id}
 
 
 }

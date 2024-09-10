@@ -151,7 +151,7 @@ export abstract class Class_ApplicationData
 
   // ABSTRACT METHODS ===================================================================
 
-  public abstract createNewDrawingArea(): Type_GenericDrawingArea
+  public abstract createNewDrawingArea(id?:string): Type_GenericDrawingArea
 
   // PUBLIC METHODS =====================================================================
 

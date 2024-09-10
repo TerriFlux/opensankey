@@ -29,11 +29,12 @@ export class Class_ApplicationDataOS
   extends Class_ApplicationData<
     Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
   > {
-  public createNewDrawingArea(): Class_DrawingAreaOS {
+  public createNewDrawingArea(id?:string): Class_DrawingAreaOS {
     const drawing_area = new Class_DrawingAreaOS(
       initial_window_height,
       initial_window_width,
-      this
+      this,
+      id
     )
     return drawing_area
   }
@@ -47,8 +48,10 @@ export class Class_DrawingAreaOS
 
   constructor(_height: number,
     _width: number,
-    application_data: Class_ApplicationDataOS) {
-    super(_height, _width, application_data)
+    application_data: Class_ApplicationDataOS,
+    id?:string
+  ) {
+    super(_height, _width, application_data,id)
   }
 
   protected createNewSankey(id: string = default_main_sankey_id) {
