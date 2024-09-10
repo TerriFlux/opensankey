@@ -440,6 +440,9 @@ export abstract class Class_DrawingAreaPlus
     return Object.values(this._views)
   }
 
+  public get has_master_sankey(): boolean {
+    return true // TODO a implementer : permet de gerer le cas des catalogues de vues
+  }
   public get has_views(): boolean {
     return (this._views_order.length > 0)
   }

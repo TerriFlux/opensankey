@@ -105,9 +105,6 @@ export type CheckCurrentViewSavedFType = (
  */
 export type OSPBannerViewFType = {
   applicationData:OSPApplicationDataType,
-  applicationContext:OSPApplicationContextType,
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-  convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
   view_selector:JSX.Element
 }
 

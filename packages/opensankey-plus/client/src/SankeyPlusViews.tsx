@@ -115,548 +115,566 @@ declare const window: Window &
  */
 export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   applicationData,
-  applicationContext,
-  dict_hook_ref_setter_show_dialog_components,
-  convert_data,
   view_selector
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const {
-    data,
-    set_data,
-    master_data,
-    set_master_data,
-    get_default_data,
-    view,
-    set_view,
-    new_data
-  } = applicationData
+  const { new_data } = applicationData
   const { t } = new_data
+
+  // Ref to trigger other components ----------------------------------------------------
+
   const { ref_setter_show_modal_transparent_view_attr } = new_data.menu_configuration.dict_setter_show_dialog_plus
+  const ref_to_input_loader_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
 
-  const m_d = master_data ? master_data : data
-  const _load_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
-
+  // Local variables --------------------------------------------------------------------
   const has_sankey_plus = new_data.has_sankey_plus
+  const has_master_sankey = new_data.drawing_area.has_master_sankey
   const has_views = new_data.drawing_area.has_views
   const is_view_master = new_data.drawing_area.is_view_master
   const next_button_disabled = !new_data.drawing_area.has_view_after
   const prev_button_disabled = !new_data.drawing_area.has_view_before
 
-  const buttonCreateView = <OSTooltip
-      placement='bottom'
-      label={
-        (!has_sankey_plus) ?
-          (t('Menu.sankeyOSPDisabled')) :
-          t('view.tooltips.buttonCreateView')}
-    >
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={!has_sankey_plus}
-          onClick={() => {
-            const evt = document
-            const evt_ctrl_x = new KeyboardEvent('keydown', { key: 'x', ctrlKey: true })
-            if (evt.onkeydown) {
-              evt.onkeydown(evt_ctrl_x)
-            }
-          }}
-        >
-          <Box
-            layerStyle='menutop_button_style'
-          >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
-                }}
-                icon={faPlus}
-              />
-              {
-                !has_sankey_plus ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} />
-                  : <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('Menu.addView')}
-            </Box>
-          </Box>
-        </Button>
-      </Box>
-    </OSTooltip>
+  // Button to create a view ------------------------------------------------------------
 
-  // TO DELETE WHEN UNITARY SANKEY WILL BE MERGE IN SANKEYPLUS
-  const special_cast_for_unit_sankey = data as SankeyUnitData
-
-  const button_heredited_attr_from_master = !(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length > 0) ?
-    <OSTooltip
-      placement='bottom'
-      label={
-        (!has_sankey_plus) ?
-          (t('Menu.sankeyOSPDisabled')) :
-          t('view.tooltips.buttonCloneMasterAttrView')
-    }>
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={!has_sankey_plus}
-          onClick={
-            () => {
-              ref_setter_show_modal_transparent_view_attr.current(true)
-            }
+  const button_to_create_view = <OSTooltip
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.buttonCreateView')}
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!has_sankey_plus}
+        onClick={() => {
+          const evt = document
+          const evt_ctrl_x = new KeyboardEvent('keydown', { key: 'x', ctrlKey: true })
+          if (evt.onkeydown) {
+            evt.onkeydown(evt_ctrl_x)
           }
+        }}
+      >
+        <Box
+          layerStyle='menutop_button_style'
         >
           <Box
-            layerStyle='menutop_button_style'
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
           >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
-                }}
-                icon={faListCheck}
-              />
-              {
-                !has_sankey_plus ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} />
-                  : <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('view.keep_master_var')}
-            </Box>
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faPlus}
+            />
+            {
+              !has_sankey_plus ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
           </Box>
-        </Button>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.addView')}
+          </Box>
+        </Box>
+      </Button>
+    </Box>
+  </OSTooltip>
+
+  // Button to delete actual view -------------------------------------------------------
+
+  const button_to_delete_actual_view = <OSTooltip
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.button_delete_actual_view')
+    }
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!has_sankey_plus}
+        onClick={
+          // Delete the view
+          () => {
+            new_data.drawing_area.deleteCurrentView()
+            // TODO update menus & view selection
+            // let ind = -1
+            // master_data!.view.map((v, i) => {
+            //   ind = (v.id === view) ? i : ind
+            // })
+            // master_data!.view.splice(ind, 1)
+            // // If master is not a catalog & we delete the current view then we go to master
+            // // If master is a catalog and the catalog of view is empty then we got to master
+            // if ((master_data!.current_view === view && master_data!.is_catalog === false) || (master_data!.view.length === 0 && master_data!.is_catalog === true)) {
+            //   set_view('none')
+            //   set_data(JSON.parse(JSON.stringify(master_data)))
+            // } else if (master_data!.is_catalog && master_data!.view.length > 0) {
+            //   // If master is a catalog and the catalog is not empty then we got to the first view
+            //   set_view(master_data!.view[0].id)
+            //   const tmp = GetDataFromView(master_data, master_data!.view[0].id) as OSPData
+            //   if (!tmp.accordeonToShow.includes('Vis')) {
+            //     tmp.accordeonToShow.push('Vis')
+            //   }
+            //   set_data(JSON.parse(JSON.stringify(tmp)))
+            // }
+            // if (master_data!.view.length === 0) {
+            //   master_data!.is_catalog = false
+            //   set_data(JSON.parse(JSON.stringify(master_data)))
+            // }
+            // set_master_data({ ...master_data! })
+          }
+        }
+      >
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faMinus}
+            />
+            {
+              !has_sankey_plus ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} /> :
+                <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('view.delete')}
+          </Box>
+        </Box>
+      </Button>
+    </Box>
+  </OSTooltip>
+
+  // Button to fallback to master -------------------------------------------------------
+
+  const button_to_return_to_master = <OSTooltip
+    placement='bottom'
+    label={
+      (!has_sankey_plus && !has_views) ?
+        t('Menu.sankeyOSPDisabled') :
+        t('view.tooltips.home')}
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={((!has_sankey_plus && !has_views) || (!has_master_sankey))}
+        onClick={() => {
+          const evt = document
+          const evt_key_f7 = { key: 'F7' }
+          if (evt.onkeydown) {
+            evt.onkeydown(evt_key_f7 as KeyboardEvent)
+          }
+        }}
+      >
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_sankey_plus && !has_views) ? '0.6' : '1'
+              }}
+              icon={faHome}
+            />
+            {
+              (!has_sankey_plus && !has_views) ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.home')}
+          </Box>
+        </Box>
+      </Button>
+    </Box>
+  </OSTooltip>
+
+  // Button to go to next view ----------------------------------------------------------
+
+  const button_to_prev_view = <OSTooltip
+  placement='bottom'
+  label={
+    (!has_sankey_plus && !has_views) ?
+      t('Menu.sankeyOSPDisabled') :
+      t('view.tooltips.PrevViewButton')
+  }
+>
+  <Box>
+    <Button
+      variant='menutop_button'
+      isDisabled={prev_button_disabled || !has_views}
+      onClick={() => {
+        const ev = document
+        const tmp = { key: 'F8' }
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp as KeyboardEvent)
+        }
+      }}
+    >
+      <Box
+        layerStyle='menutop_button_style'
+      >
+        <Box
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
+        >
+          <FontAwesomeIcon
+            style={{
+              'height': '2rem',
+              'width': '3rem',
+              // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
+            }}
+            icon={faCaretSquareLeft}
+          />
+          {
+            (!has_sankey_plus && !has_views) ?
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  'fontSize': '1em',
+                  'position': 'absolute',
+                  'right': '0.1em',
+                  'bottom': '0em',
+                  'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                }} />
+              : <></>
+          }
+        </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('Menu.precView')}
+        </Box>
       </Box>
-    </OSTooltip> :
-    <></>
+    </Button>
+  </Box>
+</OSTooltip>
+
+  // Button to previous view ------------------------------------------------------------
+
+  const button_to_next_view = <OSTooltip
+  placement='bottom'
+  label={
+    (!has_sankey_plus && !has_views) ?
+      (t('Menu.sankeyOSPDisabled')) :
+      t('view.tooltips.NextViewButton')}
+>
+  <Box>
+    <Button
+      variant='menutop_button'
+      isDisabled={next_button_disabled || !has_views}
+      onClick={() => {
+        const ev = document
+        const tmp = { key: 'F9' }
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp as KeyboardEvent)
+        }
+      }}
+    >
+      <Box
+        layerStyle='menutop_button_style'
+      >
+        <Box
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
+        >
+          <FontAwesomeIcon
+            style={{
+              'height': '2rem',
+              'width': '3rem',
+              // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
+            }}
+            icon={faCaretSquareRight}
+          />
+          {
+            (!has_sankey_plus && !has_views) ?
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  'fontSize': '1em',
+                  'position': 'absolute',
+                  'right': '0.1em',
+                  'bottom': '0em',
+                  'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                }} />
+              : <></>
+          }
+        </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('Menu.nextView')}
+        </Box>
+      </Box>
+    </Button>
+  </Box>
+</OSTooltip>
+
+  // Button to display attributes transfert modal ---------------------------------------
+
+  const button_to_show_view_attr_transfert_modal = <OSTooltip
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.buttonCloneMasterAttrView')
+    }>
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!has_sankey_plus}
+        onClick={
+          () => {
+            ref_setter_show_modal_transparent_view_attr.current(true)
+          }
+        }
+      >
+        <Box
+          layerStyle='menutop_button_style'
+        >
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faListCheck}
+            />
+            {
+              !has_sankey_plus ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('view.keep_master_var')}
+          </Box>
+        </Box>
+      </Button>
+    </Box>
+  </OSTooltip>
+
+  // Button to load views as a catalog of view (ie  JSON containing only views) ---------
 
   const create_data_catalog = <OSTooltip
-      placement='bottom'
-      label={(!has_sankey_plus || !is_view_master) ? (t('Menu.sankeyOSPDisabled')) : t('view.tooltips.catalog_data')}
-    >
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={!has_sankey_plus || !is_view_master}
-          onClick={
-            () => {
-              if (_load_json_catalog.current) {
-                _load_json_catalog.current.name = ''
-                _load_json_catalog.current.click()
-              }
-            }}
-        >
-          <Box
-            layerStyle='menutop_button_style'
-          >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
-                }}
-                icon={faCopy}
-              />
-              {
-                !has_sankey_plus ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} />
-                  : <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('view.catalog')}
-            </Box>
-          </Box>
-        </Button>
-      </Box>
-    </OSTooltip>
-
-  const button_delete_actual_view = <OSTooltip
-      placement='bottom'
-      label={
-        (!has_sankey_plus) ?
-          (t('Menu.sankeyOSPDisabled')) :
-          t('view.tooltips.button_delete_actual_view')
-      }
-    >
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={!has_sankey_plus}
-          onClick={
-            // Delete the view
-            () => {
-              new_data.drawing_area.deleteCurrentView()
-              // TODO update menus & view selection
-
-              // let ind = -1
-              // master_data!.view.map((v, i) => {
-              //   ind = (v.id === view) ? i : ind
-              // })
-              // master_data!.view.splice(ind, 1)
-              // // If master is not a catalog & we delete the current view then we go to master
-              // // If master is a catalog and the catalog of view is empty then we got to master
-              // if ((master_data!.current_view === view && master_data!.is_catalog === false) || (master_data!.view.length === 0 && master_data!.is_catalog === true)) {
-              //   set_view('none')
-              //   set_data(JSON.parse(JSON.stringify(master_data)))
-              // } else if (master_data!.is_catalog && master_data!.view.length > 0) {
-              //   // If master is a catalog and the catalog is not empty then we got to the first view
-              //   set_view(master_data!.view[0].id)
-              //   const tmp = GetDataFromView(master_data, master_data!.view[0].id) as OSPData
-              //   if (!tmp.accordeonToShow.includes('Vis')) {
-              //     tmp.accordeonToShow.push('Vis')
-              //   }
-              //   set_data(JSON.parse(JSON.stringify(tmp)))
-              // }
-              // if (master_data!.view.length === 0) {
-              //   master_data!.is_catalog = false
-              //   set_data(JSON.parse(JSON.stringify(master_data)))
-              // }
-              // set_master_data({ ...master_data! })
+    placement='bottom'
+    label={
+      (!has_sankey_plus || !is_view_master) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.catalog_data')
+    }
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!has_sankey_plus || !is_view_master}
+        onClick={
+          () => {
+            if (ref_to_input_loader_json_catalog.current) {
+              ref_to_input_loader_json_catalog.current.name = ''
+              ref_to_input_loader_json_catalog.current.click()
             }
-          }
+          }}
+      >
+        <Box
+          layerStyle='menutop_button_style'
         >
           <Box
-            layerStyle='menutop_button_style'
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
           >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
-                }}
-                icon={faMinus}
-              />
-              {
-                !has_sankey_plus ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} /> :
-                  <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('view.delete')}
-            </Box>
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
+              }}
+              icon={faCopy}
+            />
+            {
+              !has_sankey_plus ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
           </Box>
-        </Button>
-      </Box>
-    </OSTooltip>
+          <Box
+            gridRow="2"
+          >
+            {t('view.catalog')}
+          </Box>
+        </Box>
+      </Button>
+    </Box>
+  </OSTooltip>
 
+  // Input to read JSON as a catalog of view (ie  JSON containing only views) ---------
 
-  const file_reder_for_catalog = <Input
+  const input_loader_json_catalog = <Input
     type="file"
     multiple
     accept='.json'
-    ref={_load_json_catalog}
+    ref={ref_to_input_loader_json_catalog}
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
-      const files = (evt.target as HTMLFormElement).files
-      const cpy_master_data = (master_data) ? master_data : JSON.parse(JSON.stringify(data))
-      cpy_master_data!.is_catalog = true
-      cpy_master_data!.nodeTags = {}
-      cpy_master_data!.fluxTags = {}
-      cpy_master_data!.dataTags = {}
-      cpy_master_data!.nodes = {}
-      cpy_master_data!.links = {}
-      cpy_master_data!.labels = {}
-      cpy_master_data!.linkZIndex = []
+      // TODO implementer dans Class_DrawingArea
 
-      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
-      for (const i in files) {
-        const reader = new FileReader()
-        reader.onload = (() => {
-          return (e: ProgressEvent<FileReader>) => {
-            const result = String((e.target as FileReader).result)
-            const result_data = JSON.parse(result)
-            const imported_data = JSON.parse(JSON.stringify(result_data)) as OSPData
-            convert_data(imported_data, get_default_data)
-            let new_ind = 'view_' + String(new Date().getTime())
-            let first_data = {} as OSPData
-            if (imported_data.view && imported_data.view.length > 0) {
-              // Import all view from the coming file
-              imported_data.view.forEach((v, i2) => {
-                const view_from_imported_data = GetDataFromView(imported_data, v.id) as OSPData
-                convert_data(view_from_imported_data, get_default_data)
+      // const files = (evt.target as HTMLFormElement).files
+      // const cpy_master_data = (master_data) ? master_data : JSON.parse(JSON.stringify(data))
+      // cpy_master_data!.is_catalog = true
+      // cpy_master_data!.nodeTags = {}
+      // cpy_master_data!.fluxTags = {}
+      // cpy_master_data!.dataTags = {}
+      // cpy_master_data!.nodes = {}
+      // cpy_master_data!.links = {}
+      // cpy_master_data!.labels = {}
+      // cpy_master_data!.linkZIndex = []
 
-                if (i2 === 0 && i === '0') {
-                  new_ind = v.id
-                  first_data = view_from_imported_data
-                }
-                cpy_master_data!.view.push({
-                  id: v.id,
-                  view_data: view_from_imported_data,
-                  nom: (files[i].name).replace('.json', '') + ' ' + v.nom,
-                  details: '',
-                  heredited_attr_from_master: []
-                })
-              })
-            } else {
-              // Import only master data  when it doesn't have view
-              imported_data.view = []
-              first_data = imported_data
-              cpy_master_data!.view.push({
-                id: new_ind,
-                view_data: imported_data,
-                nom: (files[i].name).replace('.json', ''),
-                details: '',
-                heredited_attr_from_master: []
-              })
-            }
-            if (i === '0') {
+      // // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
+      // for (const i in files) {
+      //   const reader = new FileReader()
+      //   reader.onload = (() => {
+      //     return (e: ProgressEvent<FileReader>) => {
+      //       const result = String((e.target as FileReader).result)
+      //       const result_data = JSON.parse(result)
+      //       const imported_data = JSON.parse(JSON.stringify(result_data)) as OSPData
+      //       convert_data(imported_data, get_default_data)
+      //       let new_ind = 'view_' + String(new Date().getTime())
+      //       let first_data = {} as OSPData
+      //       if (imported_data.view && imported_data.view.length > 0) {
+      //         // Import all view from the coming file
+      //         imported_data.view.forEach((v, i2) => {
+      //           const view_from_imported_data = GetDataFromView(imported_data, v.id) as OSPData
+      //           convert_data(view_from_imported_data, get_default_data)
 
-              set_view(new_ind)
-              cpy_master_data!.current_view = new_ind
-              set_data(JSON.parse(JSON.stringify(first_data)))
-            }
-            set_master_data(JSON.parse(JSON.stringify(cpy_master_data)))
+      //           if (i2 === 0 && i === '0') {
+      //             new_ind = v.id
+      //             first_data = view_from_imported_data
+      //           }
+      //           cpy_master_data!.view.push({
+      //             id: v.id,
+      //             view_data: view_from_imported_data,
+      //             nom: (files[i].name).replace('.json', '') + ' ' + v.nom,
+      //             details: '',
+      //             heredited_attr_from_master: []
+      //           })
+      //         })
+      //       } else {
+      //         // Import only master data  when it doesn't have view
+      //         imported_data.view = []
+      //         first_data = imported_data
+      //         cpy_master_data!.view.push({
+      //           id: new_ind,
+      //           view_data: imported_data,
+      //           nom: (files[i].name).replace('.json', ''),
+      //           details: '',
+      //           heredited_attr_from_master: []
+      //         })
+      //       }
+      //       if (i === '0') {
 
-          }
-        })()
-        // Permet d'executer la transformation des blob en vues tout en evitant la var length
-        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
-        if (!isNaN(+i)) {
-          reader.readAsText(files[i])
-        }
-      }
+      //         set_view(new_ind)
+      //         cpy_master_data!.current_view = new_ind
+      //         set_data(JSON.parse(JSON.stringify(first_data)))
+      //       }
+      //       set_master_data(JSON.parse(JSON.stringify(cpy_master_data)))
+
+      //     }
+      //   })()
+      //   // Permet d'executer la transformation des blob en vues tout en evitant la var length
+      //   //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
+      //   if (!isNaN(+i)) {
+      //     reader.readAsText(files[i])
+      //   }
+      // }
     }}
   />
 
   return <>
-    {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
-    {window.SankeyToolsStatic ? <></> : create_data_catalog}
+    {/* Load + Save  */}
+    {new_data.is_static ? <></> : input_loader_json_catalog}
+    {new_data.is_static ? <></> : create_data_catalog}
 
     {/* Return to Sankey master button */}
-    {window.SankeyToolsStatic ? <></> : <OSTooltip
-      placement='bottom'
-      label={
-        (!has_sankey_plus && !has_views) ?
-          t('Menu.sankeyOSPDisabled') :
-          t('view.tooltips.home')}
-    >
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={((!has_sankey_plus && !has_views) || (master_data && master_data.is_catalog))}
-          onClick={() => {
-            const evt = document
-            const evt_key_f7 = { key: 'F7' }
-            if (evt.onkeydown) {
-              evt.onkeydown(evt_key_f7 as KeyboardEvent)
-            }
-          }}
-        >
-          <Box
-            layerStyle='menutop_button_style'
-          >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (!has_sankey_plus && !has_views) ? '0.6' : '1'
-                }}
-                icon={faHome}
-              />
-              {
-                (!has_sankey_plus && !has_views) ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} />
-                  : <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('Menu.home')}
-            </Box>
-          </Box>
-        </Button>
-      </Box>
-    </OSTooltip>}
+    {new_data.is_static ? <></> : button_to_return_to_master}
 
-    {window.SankeyToolsStatic ? <></> : buttonCreateView}
-
-    <OSTooltip placement='bottom' label={(!has_sankey_plus && !has_views) ? t('Menu.sankeyOSPDisabled') : t('view.tooltips.PrevViewButton')}>
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={prev_button_disabled || !has_views}
-          onClick={() => {
-            const ev = document
-            const tmp = { key: 'F8' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}
-        >
-          <Box
-            layerStyle='menutop_button_style'
-          >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
-                }}
-                icon={faCaretSquareLeft}
-              />
-              {
-                (!has_sankey_plus && !has_views) ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} />
-                  : <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('Menu.precView')}
-            </Box>
-          </Box>
-        </Button>
-      </Box>
-    </OSTooltip>
-
-    <OSTooltip
-      placement='bottom'
-      label={
-        (!has_sankey_plus && !has_views) ?
-          (t('Menu.sankeyOSPDisabled')) :
-          t('view.tooltips.NextViewButton')}
-    >
-      <Box>
-        <Button
-          variant='menutop_button'
-          isDisabled={next_button_disabled || !has_views}
-          onClick={() => {
-            const ev = document
-            const tmp = { key: 'F9' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}
-        >
-          <Box
-            layerStyle='menutop_button_style'
-          >
-            <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
-            >
-              <FontAwesomeIcon
-                style={{
-                  'height': '2rem',
-                  'width': '3rem',
-                  // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
-                }}
-                icon={faCaretSquareRight}
-              />
-              {
-                (!has_sankey_plus && !has_views) ?
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    style={{
-                      'fontSize': '1em',
-                      'position': 'absolute',
-                      'right': '0.1em',
-                      'bottom': '0em',
-                      'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                    }} />
-                  : <></>
-              }
-            </Box>
-            <Box
-              gridRow="2"
-            >
-              {t('Menu.nextView')}
-            </Box>
-          </Box>
-        </Button>
-      </Box>
-    </OSTooltip>
-
+    {/* Create, switch between or delete views */}
+    {new_data.is_static ? <></> : button_to_create_view}
+    {button_to_prev_view}
+    {button_to_next_view}
     <Box
       height='3rem'
       gridColumnEnd='span 4'
@@ -665,14 +683,16 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     >
       {view_selector}
     </Box>
-
-    {(master_data ? master_data : { view: [] as string[] }).view.length > 0 && master_data!.current_view !== 'none' && !window.SankeyToolsStatic ? <>
-      {button_delete_actual_view}
-      {
-        master_data && !master_data.is_catalog ? button_heredited_attr_from_master : <></>}
-    </>
-      : <></>
-
+    {
+      (
+        (!is_view_master) &&
+        (!new_data.is_static)
+      ) ?
+        <>
+          {button_to_delete_actual_view}
+          {button_to_show_view_attr_transfert_modal}
+        </> :
+        <></>
     }
   </>
 }
