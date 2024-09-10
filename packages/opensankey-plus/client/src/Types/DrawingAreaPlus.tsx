@@ -18,7 +18,7 @@ import {
   type Class_AbstractApplicationDataPlus,
   Class_AbstractDrawingAreaPlus
 } from './Abstract'
-import type { Class_SankeyPlus } from './SankeyPlus'
+import { Class_SankeyPlus } from './SankeyPlus'
 import type { Class_NodeElementPlus } from './NodePlus'
 import type { Class_ContainerElement } from './FreeLabel'
 import type { Class_LinkElementPlus } from './LinkPlus'
@@ -26,6 +26,7 @@ import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 import {
   default_main_sankey_id,
   getBooleanFromJSON,
+  getJSONOrUndefinedFromJSON,
   getStringFromJSON,
   makeId,
   Type_JSON
@@ -86,8 +87,6 @@ export abstract class Class_DrawingAreaPlus
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  protected _views: { [id: string]: Type_GenericSankey } = {}
-  protected _views_order: string[] = []
 
   // CONSTRUCTOR ========================================================================
 
@@ -106,10 +105,11 @@ export abstract class Class_DrawingAreaPlus
   constructor(
     height: number,
     width: number,
-    application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
+    application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    id:string=default_main_sankey_id
   ) {
     // Heritance
-    super(height, width, application_data)
+    super(height, width, application_data,id)
     // Overrides
     this.application_data = application_data
   }
@@ -127,7 +127,7 @@ export abstract class Class_DrawingAreaPlus
  */
   public override switchMode() {
     super.switchMode()
-    this.sankey.free_labels_list.forEach(lab => lab.setEventsListeners())
+    this.sankey.containers_list.forEach(lab => lab.setEventsListeners())
   }
 
   /**
@@ -301,6 +301,25 @@ export abstract class Class_DrawingAreaPlus
     // New attributes
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
+
+    // const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+
+    // if (views) {
+    //   Object.entries(views).forEach(ent_view => {
+    //     const tmp = this.createNewSankey(ent_view[0])
+    //     tmp.fromJSON(ent_view[1] as Type_JSON)
+    //     // Add new sankey to views
+    //     this._views[ent_view[0]] = tmp
+    //     this._views_order.push(ent_view[0])
+    //   })
+
+    //   // Set view to the one active when saved
+    //   const active_view = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+    //   if (active_view != default_main_sankey_id && active_view in this._views) {
+    //     const idx = this._views_order.indexOf(active_view)
+    //     this.setCurrentView(this._views_order[idx])
+    //   }
+    // }
   }
 
   /**
@@ -312,11 +331,30 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
-    const json_entry = super.toJSON(only_visible_elements, with_values)
+    let current_view = default_main_sankey_id
+
+    // // Save current view id if it's not master
+    // if (this.has_views && !this.is_view_master) {
+    //   current_view = this.sankey.id
+    //   this.setCurrentViewToMaster()
+    // }
+    // Herited toJSON
+    const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
+
+    // if (this.views.length > 0) {
+    //   json_entry['views'] = {}
+    //   const json_entry_views = json_entry['views']
+    //   // Go throught all view (except first since it's master data & already parsed in JSON)
+    //   this._views_order.filter((id, i) => i !== 0).forEach(id => {
+    //     json_entry_views[id] = this._views[id].toJSON()
+    //   })
+    // }
+
+    // Add var to remember active view when saved
+    // json_entry['current_view'] = current_view
 
     json_entry['show_background_image'] = this._show_background_image
     json_entry['background_image'] = this._background_image
-
     return json_entry
   }
 
@@ -354,71 +392,6 @@ export abstract class Class_DrawingAreaPlus
     this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
   }
 
-  /**
-   * Create a new view (sankey) from given sankey
-   *
-   * @memberof Class_DrawingAreaPlus
-   */
-  public createNewView(
-    base_sankey: Type_GenericSankey | undefined = undefined
-  ) {
-    // If no base sankey is given, we take the currently active sankey
-    if (base_sankey === undefined)
-      base_sankey = this.sankey
-    // If no view existed previously, we add the active sankey as master sankey
-    if (this.views.length === 0) {
-      this._views[default_main_sankey_id] = this.sankey
-      this._views_order.push(default_main_sankey_id)
-    }
-    // Create the new sankey
-    const new_sankey = this.createNewSankey(makeId('view '))
-    new_sankey.copyFrom(base_sankey)
-    // Add new sankey to views
-    this._views[new_sankey.id] = new_sankey
-    this._views_order.push(new_sankey.id)
-    // Shown sankey = new sankey
-    this.setCurrentView(new_sankey.id)
-  }
-
-  public setCurrentView(id: string) {
-    if (this.has_views && !this.is_view_master) {
-      // Hide previous diplayed sankey
-      this._sankey.setInvisible()
-      this._sankey.draw()
-      // SHow new sankey
-      this._sankey = this._views[id]
-      this._sankey.setVisible()
-      this._sankey.draw()
-    }
-  }
-
-  public setCurrentViewToMaster() {
-    if (this.has_views && !this.is_view_master) {
-      this.setCurrentView(default_main_sankey_id)
-    }
-  }
-
-  public setCurrentViewToNext() {
-    if (this.has_views && this.has_view_after) {
-      const idx = this._views_order.indexOf(this._sankey.id)
-      this.setCurrentView(this._views_order[idx + 1])
-    }
-  }
-
-  public setCurrentViewToPrev() {
-    if (this.has_views && !this.has_view_before) {
-      const idx = this._views_order.indexOf(this._sankey.id)
-      this.setCurrentView(this._views_order[idx - 1])
-    }
-  }
-
-  public deleteCurrentView() {
-    if (this.has_views && !this.is_view_master) {
-      delete this._views[this.sankey.id] // Remove for view dict
-      this._sankey.delete() // Delete view
-      this._sankey = this._views[default_main_sankey_id] // Fall back to master view by defaut
-    }
-  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -436,29 +409,4 @@ export abstract class Class_DrawingAreaPlus
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
 
-  public get views(): Type_GenericSankey[] {
-    return Object.values(this._views)
-  }
-
-  public get has_views(): boolean {
-    return (this._views_order.length > 0)
-  }
-
-  public get is_view_master(): boolean {
-    return (this.sankey.id === default_main_sankey_id)
-  }
-
-  public get has_view_before(): boolean {
-    if (this.has_views)
-      return (this._views_order.indexOf(this._sankey.id) > 0)
-    else
-      return false
-  }
-
-  public get has_view_after(): boolean {
-    if (this.has_views)
-      return (this._views_order.indexOf(this._sankey.id) < (this._views_order.length - 1))
-    else
-      return false
-  }
 }

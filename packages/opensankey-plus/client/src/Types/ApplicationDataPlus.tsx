@@ -9,6 +9,7 @@
 
 // OpenSankey imports
 import { isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
+import { default_main_sankey_id, makeId } from '../deps/OpenSankey/types/Utils'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
 
 // Local imports
@@ -59,6 +60,9 @@ export abstract class Class_ApplicationDataPlus
   // PRIVATE ATTRIBUTES =================================================================
 
   private _logo_sankey_plus: string = ''
+
+  protected _views: { [id: string]: Type_GenericDrawingArea } = {}
+  protected _views_order: string[] = []
 
   // CONSTRUCTOR ========================================================================
 
@@ -166,23 +170,95 @@ export abstract class Class_ApplicationDataPlus
       // Prevent default event on ctrl + a
       evt.preventDefault()
       // Create a new view from current displayed sankey
-      this.drawing_area.createNewView()
+      this.createNewView()
     }
 
     // Changing view to is_master ---------------------------------------------------------------
 
     if (evtKeyF7) {
-      this.drawing_area.setCurrentViewToMaster()
+      evt.preventDefault()
+      this.setCurrentViewToMaster()
     }
 
     // Changing view to next or previous --------------------------------------------------------
 
     if (evtKeyF8) {
-      this.drawing_area.setCurrentViewToPrev()
+      evt.preventDefault()
+      this.setCurrentViewToPrev()
     }
 
     if (evtKeyF9) {
-      this.drawing_area.setCurrentViewToNext()
+      evt.preventDefault()
+      this.setCurrentViewToNext()
+    }
+  }
+
+  
+  /**
+   * Create a new view (sankey) from given sankey
+   *
+   * @memberof Class_DrawingAreaPlus
+   */
+  public createNewView(
+    base_DA: Type_GenericDrawingArea | undefined = undefined
+  ) {
+    // If no base sankey is given, we take the currently active sankey
+    if (base_DA === undefined)
+      base_DA = this._drawing_area
+    // If no view existed previously, we add the active sankey as master sankey
+    if (this.views.length === 0) {
+      this._views[default_main_sankey_id] = this._drawing_area
+      this._views_order.push(default_main_sankey_id)
+    }
+    // Create the new sankey
+    const new_DA = this.createNewDrawingArea(makeId('view'))
+    // Add new sankey to views
+    this._views[new_DA.id] = new_DA
+    this._views_order.push(new_DA.id)
+    // Shown sankey = new sankey
+    this.setCurrentView(new_DA.id)
+
+    new_DA.sankey.copyFrom(base_DA.sankey)
+  }
+
+  public setCurrentView(id: string) {
+    if (id in this._views) {
+      // Hide previous diplayed sankey
+      this._drawing_area.sankey.setInvisible()
+      // this._drawing_area.reset()
+      this._drawing_area.unDraw()
+      // SHow new sankey
+      this._drawing_area = this._views[id]
+      this._drawing_area.sankey.setVisible()
+      this._drawing_area.reset()
+    }
+  }
+
+  public setCurrentViewToMaster() {
+    if (this.has_views && !this.is_view_master) {
+      this.setCurrentView(default_main_sankey_id)
+    }
+  }
+
+  public setCurrentViewToNext() {
+    if (this.has_views && this.has_view_after) {
+      const idx = this._views_order.indexOf(this._drawing_area.sankey.id)
+      this.setCurrentView(this._views_order[idx + 1])
+    }
+  }
+
+  public setCurrentViewToPrev() {
+    if (this.has_views && !this.has_view_before) {
+      const idx = this._views_order.indexOf(this._drawing_area.sankey.id)
+      this.setCurrentView(this._views_order[idx - 1])
+    }
+  }
+
+  public deleteCurrentView() {
+    if (this.has_views && !this.is_view_master) {
+      delete this._views[this._drawing_area.sankey.id] // Remove for view dict
+      this._drawing_area.sankey.delete() // Delete view
+      this._drawing_area = this._views[default_main_sankey_id] // Fall back to master view by defaut
     }
   }
 
@@ -200,5 +276,32 @@ export abstract class Class_ApplicationDataPlus
   }
   public set menu_configuration(_: Class_MenuConfigPlus) { this._menu_configuration = _ }
 
+
+  
+  public get views(): Type_GenericDrawingArea[] {
+    return Object.values(this._views)
+  }
+
+  public get has_views(): boolean {
+    return (this._views_order.length > 0)
+  }
+
+  public get is_view_master(): boolean {
+    return (this._drawing_area.sankey.id === default_main_sankey_id)
+  }
+
+  public get has_view_before(): boolean {
+    if (this.has_views)
+      return (this._views_order.indexOf(this._drawing_area.sankey.id) > 0)
+    else
+      return false
+  }
+
+  public get has_view_after(): boolean {
+    if (this.has_views)
+      return (this._views_order.indexOf(this._drawing_area.sankey.id) < (this._views_order.length - 1))
+    else
+      return false
+  }
 
 }
