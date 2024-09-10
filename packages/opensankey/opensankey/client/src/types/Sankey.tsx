@@ -177,10 +177,11 @@ export abstract class Class_Sankey
   // All --------------------------------------------------------------------------------
 
   public draw() {
+      // Draw nodes
+      this.nodes_list.forEach(node => node.draw())
     // Draw links
     this.links_list.forEach(link => link.draw())
-    // Draw nodes
-    this.nodes_list.forEach(node => node.draw())
+ 
   }
 
   // Nodes related ----------------------------------------------------------------------
@@ -887,21 +888,20 @@ export abstract class Class_Sankey
     new_layout: Type_GenericDrawingArea,
     mode: string[],
   ) {
+    const all=mode.includes('*')
 
-    const list_curr_nodes = this.nodes_list
-    const list_curr_nodes_id = list_curr_nodes.map(n => n.id)
     const list_new_nodes = new_layout.sankey.nodes_list as Type_GenericNodeElement[]
     const list_new_nodes_id = list_new_nodes.map(n => n.id)
 
-    const list_curr_links = this.links_list
     const list_new_links = new_layout.sankey.links_list as Type_GenericLinkElement[]
     const list_new_links_id = list_new_links.map(n => n.id)
 
     // Transfer DA attribut from new layout to current (+ nodes/links style)
-    if (mode.includes('attrDrawingArea')) {
+    if (mode.includes('attrDrawingArea') || all) {
 
       // Transfer node style from new_layout style node  to corresponding style in current
       const list_curr_nodes_style = this.node_styles_list
+      const list_curr_nodes_style_id = list_curr_nodes_style.map(ns=>ns.id)
       const list_new_nodes_style = new_layout.sankey.node_styles_list as Class_NodeStyle[]
       const list_new_nodes_style_id = list_new_nodes_style.map(ns => ns.id)
 
@@ -914,7 +914,7 @@ export abstract class Class_Sankey
         })
       // Create style present in new layout but not current
       list_new_nodes_style
-        .filter(n => !list_new_nodes_style_id.includes(n.id))
+        .filter(n => !list_curr_nodes_style_id.includes(n.id))
         .forEach(n => {
           this._addNewNodeStyle(n.id, n.name)
           this._node_styles[n.id].copyFrom(n)
@@ -922,6 +922,7 @@ export abstract class Class_Sankey
 
       // Transfer link style from new_layout style link  to corresponding style in current
       const list_curr_links_style = this.link_styles_list
+      const list_curr_links_style_id = list_curr_links_style.map(ls=>ls.id)
       const list_new_links_style = new_layout.sankey.link_styles_list as Class_LinkStyle[]
       const list_new_links_style_id = list_new_links_style.map(ns => ns.id)
 
@@ -933,7 +934,7 @@ export abstract class Class_Sankey
         })
       // Create style present in new layout but not current
       list_new_links_style
-        .filter(n => !list_new_links_style_id.includes(n.id))
+        .filter(n => !list_curr_links_style_id.includes(n.id))
         .forEach(n => {
           this._addNewLinkStyle(n.id, n.name)
           this._link_styles[n.id].copyFrom(n)
@@ -944,7 +945,7 @@ export abstract class Class_Sankey
     }
 
     // Update level_tag_dict
-    if (mode.includes('tagLevel')) {
+    if (mode.includes('tagLevel') || all) {
       // Finds the corresponding tag group by name and apply the "dynamic" attributes
       // activate, show_legend and selected.
       const curr_level_taggs_list = this.level_taggs_list
@@ -963,13 +964,13 @@ export abstract class Class_Sankey
       new_level_taggs_list_id
         .filter(id_nt => !curr_level_taggs_list_id.includes(id_nt))
         .forEach(id_nt => {
-          this.addNodeTagGroup(id_nt, new_layout.sankey.level_taggs_dict[id_nt].name)
+          this.addLevelTagGroup(id_nt, new_layout.sankey.level_taggs_dict[id_nt].name)
           this.level_taggs_dict[id_nt].copyFrom(new_layout.sankey.level_taggs_dict[id_nt] as Class_LevelTagGroup)
         })
     }
 
     // Update node_tag_dict
-    if (mode.includes('tagNode')) {
+    if (mode.includes('tagNode') || all) {
       // Finds the corresponding tag group by name and apply the "dynamic" attributes
       // activate, show_legend and selected.
       const curr_node_taggs_list = this.node_taggs_list
@@ -1000,7 +1001,7 @@ export abstract class Class_Sankey
     }
 
     // Update flux_tag_dict
-    if (mode.includes('tagFlux')) {
+    if (mode.includes('tagFlux') || all) {
       // Finds the corresponding tag group by name and apply the "dynamic" attributes
       // activate, show_legend and selected.
 
@@ -1033,7 +1034,7 @@ export abstract class Class_Sankey
     }
 
     // Update data_tag_dict
-    if (mode.includes('tagData')) {
+    if (mode.includes('tagData') || all) {
       // Finds the corresponding tag group by name and apply the "dynamic" attributes
       // activate, show_legend and selected.
 
@@ -1065,17 +1066,17 @@ export abstract class Class_Sankey
     }
 
     // Search node in new that are not in current then add them
-    if (mode.includes('addNode')) {
+    if (mode.includes('addNode') || all) {
       list_new_nodes
-        .filter(n => !list_curr_nodes_id.includes(n.id))
+        .filter(n => !this.nodes_list.map(n=>n.id).includes(n.id))
         .forEach(n => {
           this.addNewNode(n.id, n.name)
         })
     }
 
     // Search node in current that are not in new then delete them
-    if (mode.includes('removeNode')) {
-      list_curr_nodes
+    if (mode.includes('removeNode') || all) {
+      this.nodes_list
         .filter(n => !list_new_nodes_id.includes(n.id))
         .forEach(n => {
           this.drawing_area.deleteNode(n)
@@ -1083,7 +1084,7 @@ export abstract class Class_Sankey
     }
 
     // Update nodes ref to node_taggs
-    if (mode.includes('tagNode')) {
+    if (mode.includes('tagNode') || all) {
       // Remove all tags for all current nodes
       this.nodes_list.forEach(node => {
         node.tags_list.forEach(nt => {
@@ -1107,23 +1108,23 @@ export abstract class Class_Sankey
     }
 
     // Search link in new that are not in current then add them
-    if (mode.includes('addFlux')) {
+    if (mode.includes('addFlux') || all) {
       list_new_links
-        .filter(link => !list_curr_nodes_id.includes(link.id))
+        .filter(link => !this.links_list.map(l=>l.id).includes(link.id))
         .forEach(link => {
           const similar_src_curr = this.nodes_dict[link.source.id]
           const similar_trgt_curr = this.nodes_dict[link.target.id]
           if (similar_src_curr && similar_trgt_curr)
             this.addNewLink(
-              link.source as Type_GenericNodeElement,
-              link.target as Type_GenericNodeElement)
+              similar_src_curr as Type_GenericNodeElement,
+              similar_trgt_curr as Type_GenericNodeElement)
         })
     }
 
     // Search link in current that are not in new then delete them
-    if (mode.includes('removeFlux')) {
+    if (mode.includes('removeFlux') || all) {
 
-      list_curr_links
+      this.links_list
         .filter(link => !list_new_links_id.includes(link.id))
         .forEach(link => {
           this.drawing_area.deleteLink(link)
@@ -1131,7 +1132,7 @@ export abstract class Class_Sankey
     }
 
     // Update flux ref to node_taggs
-    if (mode.includes('tagFlux')) {
+    if (mode.includes('tagFlux') || all) {
       // Remove all tags for all current fluxs
       this.links_list.forEach(link => {
         const all_values = Object.values(link.getAllValues())
@@ -1160,8 +1161,8 @@ export abstract class Class_Sankey
     }
 
     // Update node position from new layout
-    if (mode.includes('posNode')) {
-      list_curr_nodes
+    if (mode.includes('posNode') || all) {
+      this.nodes_list
         .filter(node => list_new_nodes_id.includes(node.id))
         .forEach(node => {
           const similar_node_in_new = list_new_nodes.filter(new_n => new_n.id == node.id)[0]
@@ -1171,7 +1172,7 @@ export abstract class Class_Sankey
 
     // Apply links values from new layout to current links
     // /!\ new layout must but an ancient version of the current sankey because each link value has an unique id
-    if (mode.includes('Values')) {
+    if (mode.includes('Values') || all) {
       const links_list = new_layout.sankey.links_list as Type_GenericLinkElement[]
       links_list
         .filter(link => this.links_dict[link.id] !== undefined)
@@ -1189,9 +1190,9 @@ export abstract class Class_Sankey
     }
 
     // With attrNode we transfer node attr
-    if (mode.includes('attrNode')) {
+    if (mode.includes('attrNode') || all) {
       // Transfer node attr from new_layout node to correspondinf node in current
-      list_curr_nodes
+      this.nodes_list
         .filter(n => list_new_nodes_id.includes(n.id))
         .forEach(n => {
           const similar_new_layout_node = list_new_nodes.filter(new_n => new_n.id == n.id)[0]
@@ -1200,8 +1201,8 @@ export abstract class Class_Sankey
     }
 
     // With attrFlux we transfer link attr
-    if (mode.includes('attrFlux')) {
-      list_curr_links
+    if (mode.includes('attrFlux') || all) {
+      this.links_list
         .filter(link => list_new_links_id.includes(link.id))
         .forEach(link => {
           const similar_new_layout_link = list_new_links.filter(new_l => new_l.id == link.id)[0]
