@@ -58,13 +58,13 @@ export type RecomputeViewsFType = (
 //   ComponentUpdater:OSPComponentUpdaterType
 // ) => void
 
-// export type SelecteurViewFType = {
-//   applicationData:OSPApplicationDataType,
-//   applicationState:OSPElementsSelectedType,
-//   t:TFunction,
-//   set_view_not_saved:(s:string)=>void,
-//   connected:boolean,
-// }
+export type SelecteurViewFType = {
+  applicationData:OSPApplicationDataType,
+  applicationState:OSPElementsSelectedType,
+  t:TFunction,
+  set_view_not_saved:(s:string)=>void,
+  connected:boolean,
+}
 
 export type viewsAccordionFType = (
   applicationData:OSPApplicationDataType,

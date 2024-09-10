@@ -154,24 +154,21 @@ root.render(
         reinitialization
       )=>{
         if (window.SankeyToolsStatic) {
-          // const plus_dict_app_data=applicationData as OSPApplicationDataType
-          // const OSPApplicationContext=applicationContext as OSPApplicationContextType
-          // const selector_of_view=<SelecteurView
-          //   applicationData={plus_dict_app_data}
-          //   applicationState={applicationState as OSPElementsSelectedType}
-          //   t={applicationContext.t}
-          //   set_view_not_saved={plus_dict_app_data.set_view_not_saved}
-          //   connected={OSPApplicationContext.has_open_sankey_plus}
-          // />;
-          // (uiElementsRef as OSPUiElementsRefType).ViewSelector.current=selector_of_view
-          // additionalMenus.externale_navbar_item['view']=<OSPBannerView
-          //   applicationData={applicationData as OSPApplicationDataType}
-          //   applicationContext={OSPApplicationContext}
-          //   dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType)}
-          //   convert_data={applicationData.convert_data}
-          //   view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
-          // />
-          // return
+          const plus_dict_app_data=applicationData as OSPApplicationDataType
+          const OSPApplicationContext=applicationContext as OSPApplicationContextType
+          const selector_of_view=<SelecteurView
+            applicationData={plus_dict_app_data}
+            applicationState={applicationState as OSPElementsSelectedType}
+            t={applicationContext.t}
+            set_view_not_saved={plus_dict_app_data.set_view_not_saved}
+            connected={OSPApplicationContext.has_open_sankey_plus}
+          />;
+          (uiElementsRef as OSPUiElementsRefType).ViewSelector.current=selector_of_view
+          additionalMenus.externale_navbar_item['view']=<OSPBannerView
+            applicationData={applicationData}
+            view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
+          />
+          return
         }
         initializeAdditionalMenus(
           additionalMenus,

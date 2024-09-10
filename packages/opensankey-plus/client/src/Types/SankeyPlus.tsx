@@ -43,6 +43,10 @@ export abstract class Class_SankeyPlus
 
   protected abstract _link_styles: { [_: string]: Class_LinkStylePlus }
 
+  // PUBLIC ATTRIBUTES ==================================================================
+
+  public name: string
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
@@ -96,6 +100,7 @@ export abstract class Class_SankeyPlus
     // Overrides
     this._menu_config = menu_config
     // New attributes
+    this.name = this.id  // Default name = id
     this._containers = {}
     this._icon_catalog = {}
   }

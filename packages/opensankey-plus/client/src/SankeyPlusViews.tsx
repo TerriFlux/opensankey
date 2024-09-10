@@ -1135,15 +1135,38 @@ export const RecomputeViews: RecomputeViewsFType = (
 //   }
 // }
 
+/**
+ *
+ *
+ * @param {*} {
+ *   applicationData,
+ *   applicationState,
+ *   set_view_not_saved,
+ * }
+ * @return {*}
+ */
 export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   applicationData,
   applicationState,
-  t,
   set_view_not_saved,
-  connected
 }) => {
-  const { data, set_data, master_data, set_master_data, view, set_view } = applicationData
+
+  // Data -------------------------------------------------------------------------------
+
+  const { data, set_data, master_data, set_master_data, view, set_view, new_data } = applicationData
+  const { t } = new_data
+
+  // Components updaters ---------------------------------------------------------------
+
+  const [, setCount] = useState(0)
+  new_data.menu_configuration.ref_to_selector_views.current = () => setCount(a => a + 1)
+
   const { multi_selected_nodes, multi_selected_links, multi_selected_label } = applicationState
+
+  const cur_view = new_data.drawing_area.sankey
+  const has_sankey_plus = new_data.has_sankey_plus
+  const has_views = new_data.drawing_area.has_views
+  const is_view_master = new_data.drawing_area.is_view_master
 
   let vname = ''
   if ((master_data && master_data.current_view && master_data.current_view !== 'none' && master_data.view.length > 0)) {
@@ -1163,9 +1186,14 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   const selecteur = <Select
     variant='menuconfigpanel_option_select'
     onDoubleClick={() => {
-      if (connected && master_data && master_data.current_view && master_data.current_view !== 'none') {
+      if (
+        has_sankey_plus &&
+        has_views &&
+        !is_view_master
+      ) {
         sSelectOrEdit('edit')
-        sValueEditorNameView(master_data!.view.filter(v => v.id === master_data.current_view)[0].nom)
+        sValueEditorNameView(new_data.dr
+          master_data!.view.filter(v => v.id === master_data.current_view)[0].nom)
       }
     }}
     onChange={
@@ -1240,7 +1268,7 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
     }}
   />
 
-  return connected && s_select_or_edit === 'edit' ? editeur_name : selecteur
+  return has_sankey_plus && s_select_or_edit === 'edit' ? editeur_name : selecteur
 }
 
 export const viewsAccordion: viewsAccordionFType = (

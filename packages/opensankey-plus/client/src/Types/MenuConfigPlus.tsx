@@ -32,7 +32,17 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
 
+  /* ========================================
+    Updater of component for containers related menus
+    ========================================*/
+
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
+
+  /* ========================================
+    Updater of components for views related menus
+    ========================================*/
+
+  private _ref_to_selector_views: MutableRefObject<() => void>
 
   // Button that open the sub menu links of elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
@@ -45,10 +55,11 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
    * @memberof Class_MenuConfigPlus
    */
   constructor() {
+    // Init parent class
     super()
-
     // Init value for menu_config plus variable
     this._ref_to_menu_config_container_updater = useRef(() => null)
+    this._ref_to_selector_views = useRef(() => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node=useRef(() => null)
     this._dict_setter_show_dialog_plus = {
@@ -123,6 +134,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
   // public set dict_setter_show_dialog_plus(value: OSPShowMenuComponentsVarType) {this._dict_setter_show_dialog_plus = value;}
+
+  public get ref_to_selector_views(): MutableRefObject<() => void> { return this._ref_to_selector_views }
 
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
   public set ref_to_menu_config_containers_updater(value: MutableRefObject<(() => void)>) { this._ref_to_menu_config_container_updater = value }
