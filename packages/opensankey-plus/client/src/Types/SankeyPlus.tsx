@@ -17,6 +17,8 @@ import type { Class_NodeElementPlus } from './NodePlus'
 import type { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
 import { type Class_AbstractDrawingAreaPlus, Class_AbstractSankeyPlus } from './Abstract'
 import { Class_ContainerElement } from './FreeLabel'
+import { Class_SankeyOS, Type_GenericSankeyOS } from '../deps/OpenSankey/types/TypesOS'
+import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -156,11 +158,12 @@ export abstract class Class_SankeyPlus
 
   public updateLayoutFromJSON(new_layout: Type_GenericDrawingArea, mode: string[]): void {
     super.updateLayoutFromJSON(new_layout, mode)
+    let all=mode.includes('*')
 
     // Update Containers
     const list_curr_container = this.containers_list
     const list_new_container = new_layout.sankey.containers_list
-    if (mode.includes('freeLabels')) {
+    if (mode.includes('freeLabels') || all) {
       // Add new container present in new but not current
       list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
         .forEach(cont => {
@@ -182,7 +185,7 @@ export abstract class Class_SankeyPlus
     }
 
     // Update icon catalog
-    if (mode.includes('icon_catalog')) {
+    if (mode.includes('icon_catalog') || all) {
       Object.entries(new_layout.sankey.icon_catalog).filter(icon => icon[0] && icon[1]).forEach(icon => {
         this.icon_catalog[icon[0]] = icon[1]
       })
@@ -310,57 +313,7 @@ export abstract class Class_SankeyPlus
   ) {
     // First clean self
     this.delete()
-    // Then, copy each elements from others
-    // - nodes & link
-    other.nodes_list.forEach(other_node => {
-      const new_node = this.createNewNode(other_node.id, other_node.name)
-      new_node.copyFrom(other_node)
-    })
-    other.links_list.forEach(other_link => {
-      // Node copy should create all missing links between nodes
-      if (this.links_dict[other_link.id]) {
-        this.links_dict[other_link.id].copyFrom(other_link)
-      }
-    })
-    // - node styles
-    other.node_styles_list.forEach(other_snode => {
-      // Node copy should create all missing styles for nodes
-      if (this.node_styles_dict[other_snode.id]) {
-        this.node_styles_dict[other_snode.id].copyFrom(other_snode)
-      }
-    })
-    // - link styles
-    other.link_styles_list.forEach(other_slink => {
-      // Link copy should create all missing styles for nodes
-      if (this.link_styles_dict[other_slink.id]) {
-        this.link_styles_dict[other_slink.id].copyFrom(other_slink)
-      }
-    })
-    // - tags groups -> will copy related tags also
-    other.node_taggs_list.forEach(other_tagg => {
-      // Node copy should create all missing tag groups
-      if (this.node_taggs_dict[other_tagg.id]) {
-        this.node_taggs_dict[other_tagg.id].copyFrom(other_tagg)
-      }
-    })
-    other.flux_taggs_list.forEach(other_tagg => {
-      // Node copy should create all missing tag groups
-      if (this.flux_taggs_dict[other_tagg.id]) {
-        this.flux_taggs_dict[other_tagg.id].copyFrom(other_tagg)
-      }
-    })
-    other.data_taggs_list.forEach(other_tagg => {
-      // Node copy should create all missing tag groups
-      if (this.data_taggs_dict[other_tagg.id]) {
-        this.data_taggs_dict[other_tagg.id].copyFrom(other_tagg)
-      }
-    })
-    other.level_taggs_list.forEach(other_tagg => {
-      // Node copy should create all missing tag groups
-      if (this.level_taggs_dict[other_tagg.id]) {
-        this.level_taggs_dict[other_tagg.id].copyFrom(other_tagg)
-      }
-    })
+    this.updateLayoutFromJSON(other.drawing_area ,['*'])
   }
 
   // GETTERS / SETTERS ==================================================================

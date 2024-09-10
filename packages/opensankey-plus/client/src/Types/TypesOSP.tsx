@@ -38,11 +38,12 @@ export class Class_ApplicationDataOSP
     Class_NodeElementOSP,
     Class_LinkElementOSP
   > {
-  public createNewDrawingArea(): Class_DrawingAreaOSP {
+  public createNewDrawingArea(id?:string): Class_DrawingAreaOSP {
     const drawing_area = new Class_DrawingAreaOSP(
       initial_window_height,
       initial_window_width,
-      this
+      this,
+      id
     )
     return drawing_area
   }
@@ -56,8 +57,8 @@ export class Class_DrawingAreaOSP
     Class_NodeElementOSP,
     Class_LinkElementOSP
   > {
-  protected createNewSankey() {
-    const sankey = new Class_SankeyOSP(this, this.application_data.menu_configuration)
+  protected createNewSankey(id?:string) {
+    const sankey = new Class_SankeyOSP(this, this.application_data.menu_configuration,id)
     return sankey
   }
 
