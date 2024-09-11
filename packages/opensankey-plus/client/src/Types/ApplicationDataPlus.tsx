@@ -9,7 +9,7 @@
 
 // OpenSankey imports
 import { isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
-import { default_main_sankey_id, makeId } from '../deps/OpenSankey/types/Utils'
+import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
 
 // Local imports
@@ -193,7 +193,73 @@ export abstract class Class_ApplicationDataPlus
     }
   }
 
-  
+  // PUBLIC METHODS =====================================================================
+
+  /**
+   * Extract application data attribute from JSON then extract info for  views
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
+  public override fromJSON(json_object: Type_JSON): void {
+    super.fromJSON(json_object)
+    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    if (views) {
+      // Save master in view
+      this._views[default_main_sankey_id] = this._drawing_area
+      this._views_order.push(default_main_sankey_id)
+
+      // Create other views
+      Object.entries(views).forEach(ent_view => {
+        const tmp = this.createNewDrawingArea(ent_view[0])
+        tmp.fromJSON(ent_view[1] as Type_JSON)
+        // Add new sankey to views
+        this._views[ent_view[0]] = tmp
+        this._views_order.push(ent_view[0])
+      })
+
+      // Set view to the one active when saved
+      const active_view = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+      if (active_view != default_main_sankey_id && active_view in this._views) {
+        const idx = this._views_order.indexOf(active_view)
+        this.setCurrentView(this._views_order[idx])
+      }
+    }
+  }
+
+  /**
+   * Convert application_data to JSON format,
+   * if we are in a view switch to master then save master then the view
+   *
+   * @param {boolean} [with_view=true]
+   * @return {*} 
+   * @memberof Class_ApplicationDataPlus
+   */
+  toJSON(with_view: boolean = true) {
+    let current_view = default_main_sankey_id
+
+    // Save current view id if it's not master
+    if (this.has_views && !this.is_view_master) {
+      current_view = this._drawing_area.id
+      this.setCurrentViewToMaster()
+    }
+    // Herited toJSON
+    const json_entry: Type_JSON = super.toJSON()
+
+    if (this.views.length > 0 && with_view) {
+      json_entry['views'] = {}
+      const json_entry_views = json_entry['views']
+      // Go throught all view (except first since it's master data & already parsed in JSON)
+      this._views_order.filter((id, i) => i !== 0).forEach(id => {
+        json_entry_views[id] = this._views[id].toJSON()
+      })
+    }
+
+    // Add var to remember active view when saved
+    json_entry['current_view'] = current_view
+
+    return json_entry
+  }
+
   /**
    * Create a new view (sankey) from given sankey
    *
@@ -211,14 +277,17 @@ export abstract class Class_ApplicationDataPlus
       this._views_order.push(default_main_sankey_id)
     }
     // Create the new sankey
-    const new_DA = this.createNewDrawingArea(makeId('view'))
+    const new_id = makeId('view')
+    const new_DA = this.createNewDrawingArea(new_id)
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
     this._views_order.push(new_DA.id)
     // Shown sankey = new sankey
     this.setCurrentView(new_DA.id)
-
-    new_DA.sankey.copyFrom(base_DA.sankey)
+    // Copy base_DA to new view
+    const copy = base_DA.toJSON()
+    copy.id = new_id
+    new_DA.fromJSON(copy)
   }
 
   public setCurrentView(id: string) {
@@ -277,7 +346,7 @@ export abstract class Class_ApplicationDataPlus
   public set menu_configuration(_: Class_MenuConfigPlus) { this._menu_configuration = _ }
 
 
-  
+
   public get views(): Type_GenericDrawingArea[] {
     return Object.values(this._views)
   }

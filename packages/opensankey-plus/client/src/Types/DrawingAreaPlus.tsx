@@ -302,24 +302,7 @@ export abstract class Class_DrawingAreaPlus
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
 
-    // const views = getJSONOrUndefinedFromJSON(json_object, 'views')
-
-    // if (views) {
-    //   Object.entries(views).forEach(ent_view => {
-    //     const tmp = this.createNewSankey(ent_view[0])
-    //     tmp.fromJSON(ent_view[1] as Type_JSON)
-    //     // Add new sankey to views
-    //     this._views[ent_view[0]] = tmp
-    //     this._views_order.push(ent_view[0])
-    //   })
-
-    //   // Set view to the one active when saved
-    //   const active_view = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
-    //   if (active_view != default_main_sankey_id && active_view in this._views) {
-    //     const idx = this._views_order.indexOf(active_view)
-    //     this.setCurrentView(this._views_order[idx])
-    //   }
-    // }
+   
   }
 
   /**
@@ -331,27 +314,8 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
-    let current_view = default_main_sankey_id
-
-    // // Save current view id if it's not master
-    // if (this.has_views && !this.is_view_master) {
-    //   current_view = this.sankey.id
-    //   this.setCurrentViewToMaster()
-    // }
     // Herited toJSON
     const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
-
-    // if (this.views.length > 0) {
-    //   json_entry['views'] = {}
-    //   const json_entry_views = json_entry['views']
-    //   // Go throught all view (except first since it's master data & already parsed in JSON)
-    //   this._views_order.filter((id, i) => i !== 0).forEach(id => {
-    //     json_entry_views[id] = this._views[id].toJSON()
-    //   })
-    // }
-
-    // Add var to remember active view when saved
-    // json_entry['current_view'] = current_view
 
     json_entry['show_background_image'] = this._show_background_image
     json_entry['background_image'] = this._background_image
