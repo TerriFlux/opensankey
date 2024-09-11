@@ -64,13 +64,12 @@ const default_scale = 50
  * @class Class_DrawingArea
  */
 export abstract class Class_DrawingArea
-<
-  Type_GenericSankey extends Class_Sankey<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>,
->
-  extends Class_AbstractDrawingArea
-{
+  <
+    Type_GenericSankey extends Class_Sankey<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>,
+  >
+  extends Class_AbstractDrawingArea {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -101,12 +100,12 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-    /**
-   * d3 selection of svg group that contains drawing area background
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-    public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  /**
+ * d3 selection of svg group that contains drawing area background
+ * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+ * @memberof Class_DrawingArea
+ */
+  public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area grid
@@ -260,7 +259,7 @@ export abstract class Class_DrawingArea
    * @type {{ [id: string]: Class_ProtoElement }}
    * @memberof Class_DrawingArea
    */
-  protected _selection: { [id: string]: Class_ProtoElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,Type_GenericSankey> } = {}
+  protected _selection: { [id: string]: Class_ProtoElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
@@ -281,7 +280,7 @@ export abstract class Class_DrawingArea
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
-    .on('zoom', (event) => {this.eventZoom(event)})
+    .on('zoom', (event) => { this.eventZoom(event) })
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
@@ -298,7 +297,7 @@ export abstract class Class_DrawingArea
     _height: number,
     _width: number,
     application_data: Class_AbstractApplicationData,
-    id:string=default_main_sankey_id
+    id: string = default_main_sankey_id
   ) {
     super()
     this.application_data = application_data
@@ -307,7 +306,7 @@ export abstract class Class_DrawingArea
     this._width = _width
     this._sankey = this.createNewSankey(id)
     this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
-    this._selection_zone=this.createNewSelectionZone()
+    this._selection_zone = this.createNewSelectionZone()
   }
 
   public delete() {
@@ -377,7 +376,7 @@ export abstract class Class_DrawingArea
 
     // Add specific groups for nodes, link and others
     this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
-    this.d3_selection_bg=this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
+    this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
@@ -782,7 +781,7 @@ export abstract class Class_DrawingArea
       this.drawGrid()
     }
 
-    return [max_node_pos_x,max_node_pos_y]
+    return [max_node_pos_x, max_node_pos_y]
   }
 
   /**
@@ -824,7 +823,7 @@ export abstract class Class_DrawingArea
    */
   public recenterElements() {
     let element_min_x: Type_GenericNodeElement | undefined = undefined
-    let element_min_y: Type_GenericNodeElement| undefined = undefined
+    let element_min_y: Type_GenericNodeElement | undefined = undefined
 
     // Get min x and min y elements
     this.sankey.visible_nodes_list
@@ -874,7 +873,7 @@ export abstract class Class_DrawingArea
    * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
    * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
    */
-  public computeHorizontalIndex (
+  public computeHorizontalIndex(
     node: Type_GenericNodeElement,
     starting_index: number,
     visited_nodes_ids: string[],
@@ -897,7 +896,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+      (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -967,7 +966,7 @@ export abstract class Class_DrawingArea
    * @param {object} links
    * @param {object} nodes
    */
-  public compute_recycling_horizontal_index (
+  public compute_recycling_horizontal_index(
     link: Type_GenericLinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
@@ -1020,7 +1019,7 @@ export abstract class Class_DrawingArea
   }
 
   public computeAutoSankey(
-    launched_from_process:boolean
+    launched_from_process: boolean
   ) {
     // Calcul de la valeur max des flux
     let linksMaxValue = 0
@@ -1037,7 +1036,7 @@ export abstract class Class_DrawingArea
 
     // // Get scale from max value
     if (launched_from_process) {
-      this._scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue): linksMaxValue
+      this._scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue) : linksMaxValue
     }
     // this.sankey.node_styles_dict['default'].position_type = 'parametric'
     // if ('NodeSectorStyle' in this.sankey.node_styles_dict) {
@@ -1063,9 +1062,8 @@ export abstract class Class_DrawingArea
     this.sankey.visible_nodes_list
       .forEach(node => {
         //     const node = data.nodes[node_id]
-        if (!node.hasInputLinks() && node.hasOutputLinks() )
-        {
-        // get current node horizontal index (eg longest branch length)
+        if (!node.hasInputLinks() && node.hasOutputLinks()) {
+          // get current node horizontal index (eg longest branch length)
           const starting_index = 0
           this.computeHorizontalIndex(
             node,
@@ -1076,9 +1074,8 @@ export abstract class Class_DrawingArea
           )
         }
         else {
-        // Lone node case
-          if (!node.hasInputLinks() && !node.hasOutputLinks())
-          {
+          // Lone node case
+          if (!node.hasInputLinks() && !node.hasOutputLinks()) {
             horizontal_indexes_per_nodes_ids[node.id] = 0
           }
         }
@@ -1098,9 +1095,9 @@ export abstract class Class_DrawingArea
     // TODO : maybe possible to speed up here overall computing with getting
     //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
     let max_horizontal_index = 0
-    const nodes_per_horizontal_indexes: {[index: number]: Type_GenericNodeElement[]} = {}
+    const nodes_per_horizontal_indexes: { [index: number]: Type_GenericNodeElement[] } = {}
     this.sankey.visible_nodes_list.forEach(node => {
-    // Previously computed index for given node
+      // Previously computed index for given node
       const node_index = horizontal_indexes_per_nodes_ids[node.id]
       // Update reversed dict index-> nodes
       if (!nodes_per_horizontal_indexes[node_index]) {
@@ -1114,7 +1111,7 @@ export abstract class Class_DrawingArea
       // Set recycling links
       Object.values(this.sankey.nodes_dict[node.id].output_links_list)
         .forEach(link => {
-        // Get id for source and target
+          // Get id for source and target
           const target_node_id = this.sankey.links_dict[link.id].target.id
           // Compute only if indexes for source >= index for target
           // which can not be the case if these nodes have been reprocessed
@@ -1129,34 +1126,34 @@ export abstract class Class_DrawingArea
     })
     // for the node which have no input links they should stick to the next output node and
     // have an horizontal index equal to output node horizontal index minus one
-    for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
-    // Pass if no nodes for this horizontal_index
-    // TODO : if it is the case -> something was wrong before
+    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
+      // Pass if no nodes for this horizontal_index
+      // TODO : if it is the case -> something was wrong before
       if (!nodes_per_horizontal_indexes[horizontal_index]) {
         continue
       }
-      const to_splice : Type_GenericNodeElement[] = []
+      const to_splice: Type_GenericNodeElement[] = []
       nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
         if (!node.hasInputLinks()) {
-          let min_next_horizontal_index = max_horizontal_index+1
+          let min_next_horizontal_index = max_horizontal_index + 1
           node.output_links_list.forEach(
             (link) => {
-              if ( this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
+              if (this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
                 this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id].is_visible
               ) {
                 const target_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
-                if (target_node === undefined ) {
+                if (target_node === undefined) {
                   return
                 }
                 if (horizontal_indexes_per_nodes_ids[target_node.id] < horizontal_indexes_per_nodes_ids[node.id]) {
                   return
                 }
-                if (horizontal_indexes_per_nodes_ids[target_node.id]<min_next_horizontal_index) {
+                if (horizontal_indexes_per_nodes_ids[target_node.id] < min_next_horizontal_index) {
                   min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.id]
                 }
               }
             })
-          if (horizontal_indexes_per_nodes_ids[node.id]<min_next_horizontal_index-1) {
+          if (horizontal_indexes_per_nodes_ids[node.id] < min_next_horizontal_index - 1) {
             to_splice.push(node as Type_GenericNodeElement)
             // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
             // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
@@ -1168,18 +1165,18 @@ export abstract class Class_DrawingArea
           }
         }
       })
-      to_splice.forEach(node=>nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node),1))
+      to_splice.forEach(node => nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node), 1))
     }
 
     // Loop on all index "columns"
     let h_left_margin = this._horizontal_spacing
     let h_right_margin = this._horizontal_spacing
     const height_cumul_per_indexes: number[] = []
-    const height_per_nodes_ids: {[node_id: string]: number} = {}
+    const height_per_nodes_ids: { [node_id: string]: number } = {}
     const node_id_per_hxv_indexes: string[][] = []
     let max_height_cumul = 0
-    for (let h_index=0; h_index<=max_horizontal_index; h_index++) {
-    // Pass if no nodes for this index
+    for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
+      // Pass if no nodes for this index
       if (!nodes_per_horizontal_indexes[h_index]) {
         continue
       }
@@ -1187,16 +1184,16 @@ export abstract class Class_DrawingArea
       // Loop on nodes from computed horizontal index
       let height_cumul_for_index = 0
       let max_vertical_index = 0
-      const sortcoef_per_nodes_ids: {[node_id: string]: number} = {}
-      const vertical_indexes_per_node_id: {[node_id: string]: number} = {}
+      const sortcoef_per_nodes_ids: { [node_id: string]: number } = {}
+      const vertical_indexes_per_node_id: { [node_id: string]: number } = {}
       const nodes_ids_per_vertical_index: string[] = []
       nodes_per_horizontal_indexes[h_index]
         .forEach(node => {
-        // Node height
+          // Node height
           const node_height = node.getShapeHeightToUse()
           // Coef to verticaly sort nodes - highest coef is upper
           // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
-          const node_sortcoef = node_height * (0.8 + 0.2/(node.output_links_list.length + node.input_links_list.length))
+          const node_sortcoef = node_height * (0.8 + 0.2 / (node.output_links_list.length + node.input_links_list.length))
 
           // Verticaly sort nodes accordingly to their height
           height_per_nodes_ids[node.id] = node_height
@@ -1204,14 +1201,14 @@ export abstract class Class_DrawingArea
           vertical_indexes_per_node_id[node.id] = max_vertical_index
           nodes_ids_per_vertical_index.push(node.id)
           if (max_vertical_index > 0) {
-          // Bubble sort algo
-            for (let v_index=max_vertical_index; v_index>0; v_index--) {
-            // Prev node infos
-              const prev_v_index = v_index-1
+            // Bubble sort algo
+            for (let v_index = max_vertical_index; v_index > 0; v_index--) {
+              // Prev node infos
+              const prev_v_index = v_index - 1
               const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
               const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
               if (prev_node_sortcoef < node_sortcoef) {
-              // Update referencing for bubble node
+                // Update referencing for bubble node
                 vertical_indexes_per_node_id[node.id] = prev_v_index
                 nodes_ids_per_vertical_index[prev_v_index] = node.id
                 // Update referencing for prev node
@@ -1249,15 +1246,14 @@ export abstract class Class_DrawingArea
 
           // If we launched the function from process example
           // then we assume we need to place node label according to some parameters
-          if(launched_from_process){
+          if (launched_from_process) {
             // Place labels accordingly
             // If node is lone, source, sink or in the middle
-            if (!node.hasInputLinks() && !node.hasOutputLinks())
-            {
+            if (!node.hasInputLinks() && !node.hasOutputLinks()) {
               // Node is lone node
               node.name_label_horiz = 'middle'
               node.name_label_vert = 'middle'
-              node.name_label_background =  true
+              node.name_label_background = true
             }
             else if (node.input_links_list.length === 0) {
               // Node is a source : no input link
@@ -1281,7 +1277,7 @@ export abstract class Class_DrawingArea
 
       // Get horizontal index that need the most of vertical space
       // with vertical spacing between nodes in account
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1)*(this.vertical_spacing)
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * (this.vertical_spacing)
       if (height_cumul_for_index > max_height_cumul) {
         max_height_cumul = height_cumul_for_index
       }
@@ -1297,22 +1293,22 @@ export abstract class Class_DrawingArea
     // compute total height of nodes that belong to the same column,
     // then compute the spaces between them and their positions.
     const v_margin = this.vertical_spacing
-    for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
-    // Pass if no nodes for this horizontal_index
-    // TODO : if it is the case -> something was wrong before
+    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
+      // Pass if no nodes for this horizontal_index
+      // TODO : if it is the case -> something was wrong before
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
 
       // Loop on horizontal_index node
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = h_left_margin + horizontal_index*this.horizontal_spacing
-      const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index])/2
+      const h_position_for_index = h_left_margin + horizontal_index * this.horizontal_spacing
+      const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
       let upper_node_height_and_margin = v_margin_for_index
       if (center_biggest_nodes === true) {
-      // From the bottom to the top : plot node every two index
-        let last_index = (node_id_per_hxv_indexes[horizontal_index].length-1)
-        for (let index=last_index; index>=0; index-=2) {
+        // From the bottom to the top : plot node every two index
+        let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
+        for (let index = last_index; index >= 0; index -= 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
           // Node position
           this.sankey.nodes_dict[node_id].position_x = h_position_for_index
@@ -1328,7 +1324,7 @@ export abstract class Class_DrawingArea
           last_index = 1
         else
           last_index = 0
-        for (let index=last_index; index<node_id_per_hxv_indexes[horizontal_index].length; index+=2) {
+        for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
           // Node position
           this.sankey.nodes_dict[node_id].position_x = h_position_for_index
@@ -1341,7 +1337,7 @@ export abstract class Class_DrawingArea
       else {
         node_id_per_hxv_indexes[horizontal_index]
           .forEach(node_id => {
-          // Node position
+            // Node position
             this.sankey.nodes_dict[node_id].position_x = h_position_for_index
             this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
             // Update upper margin for next node
@@ -1352,10 +1348,10 @@ export abstract class Class_DrawingArea
     }
 
     this.setWidth(h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
-    this.setHeight(v_margin*2 + max_height_cumul)
+    this.setHeight(v_margin * 2 + max_height_cumul)
 
-    this.sankey.nodes_list.forEach(n=>n.reorganizeIOLinks())
-  //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict)
+    this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+    //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict)
   }
 
   /**
@@ -1446,7 +1442,7 @@ export abstract class Class_DrawingArea
     mode: string[]
   ) {
     // Transfert all attributes = Copy everything from other drawing area
-    const all=mode.includes('*')
+    const all = mode.includes('*')
     // Transfer DA attributs
     if (mode.includes('attrDrawingArea') || all) {
       this.color = other_drawing_area.color
@@ -1848,7 +1844,7 @@ export abstract class Class_DrawingArea
         // Avoid CTRL + Scroll default behavior in Browser
         event.preventDefault()
         // Get Scrolling factor ; either 1.1 or 0.9
-        const scale = 1 + (event.deltaY/Math.abs(event.deltaY))/10
+        const scale = 1 + (event.deltaY / Math.abs(event.deltaY)) / 10
         // Apply scaling
         this.zoomListener.scaleBy(
           this.d3_selection_zoom_area,
@@ -1861,7 +1857,7 @@ export abstract class Class_DrawingArea
         this.zoomListener.translateBy(this.d3_selection_zoom_area, event.deltaY, 0)
       }
       // Vertical displacement
-      else  {
+      else {
         this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, event.deltaY)
       }
     }
@@ -2060,8 +2056,4 @@ export abstract class Class_DrawingArea
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
-
-  public get id(){return this._sankey.id}
-
-
 }

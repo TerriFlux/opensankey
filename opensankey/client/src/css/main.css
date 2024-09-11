@@ -73,14 +73,13 @@ body {
 	/* Hovering legend in selection mode */
 	.g_scale {
 		cursor: 'move';
-
 	}
 }
 
 /* Cursor when in edition mode */
 .edition_mode {
 
-	#g_background,
+	#bg_drawing_area,
 	.gg_nodes {
 		cursor: url(pen-nib.svg) 0 24, auto;
 	}
@@ -94,7 +93,7 @@ body {
 	.tooltip_shown {
 		cursor: url(comment-info.svg) 24 24, auto;
 	}
-	
+
 
 	.node_io {
 		cursor: url(move_node_handler.svg) 0 0, auto;
