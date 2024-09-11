@@ -130,11 +130,11 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   // Local variables --------------------------------------------------------------------
   const has_sankey_plus = new_data.has_sankey_plus
-  const has_master_sankey = new_data.drawing_area.has_master_sankey
-  const has_views = new_data.drawing_area.has_views
-  const is_view_master = new_data.drawing_area.is_view_master
-  const next_button_disabled = !new_data.drawing_area.has_view_after
-  const prev_button_disabled = !new_data.drawing_area.has_view_before
+  const has_master_sankey = new_data.has_master_sankey
+  const has_views = new_data.has_views
+  const is_view_master = new_data.is_view_master
+  const next_button_disabled = !new_data.has_view_after
+  const prev_button_disabled = !new_data.has_view_before
 
   // Button to create a view ------------------------------------------------------------
 
@@ -213,7 +213,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
         onClick={
           // Delete the view
           () => {
-            new_data.drawing_area.deleteCurrentView()
+            new_data.deleteCurrentView()
             // TODO update menus & view selection
             // let ind = -1
             // master_data!.view.map((v, i) => {
@@ -1163,10 +1163,10 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 
   const { multi_selected_nodes, multi_selected_links, multi_selected_label } = applicationState
 
-  const cur_view = new_data.drawing_area.sankey
+  const cur_view = new_data.drawing_area
   const has_sankey_plus = new_data.has_sankey_plus
-  const has_views = new_data.drawing_area.has_views
-  const is_view_master = new_data.drawing_area.is_view_master
+  const has_views = new_data.has_views
+  const is_view_master = new_data.is_view_master
 
   let vname = ''
   if ((master_data && master_data.current_view && master_data.current_view !== 'none' && master_data.view.length > 0)) {

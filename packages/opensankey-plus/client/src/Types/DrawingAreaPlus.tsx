@@ -364,11 +364,19 @@ export abstract class Class_DrawingAreaPlus
    * @param {Class_DrawingAreaPlus} other
    * @memberof Class_DrawingAreaPlus
    */
-  public updateLayoutFrom(other: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>): void {
-    super.updateLayoutFrom(other)
-
-    this._show_background_image = other._show_background_image
-    this._background_image = other._background_image
+  public updateFrom(
+    other_drawing_area: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    mode: string[]
+  ): void {
+    // Transfert all attributes = Copy everything from other drawing area
+    const all=mode.includes('*')
+    // Transfer DA attributs
+    if (mode.includes('attrDrawingArea') || all) {
+      this._show_background_image = other_drawing_area._show_background_image
+      this._background_image = other_drawing_area._background_image
+    }
+    // Transfert other inherited DA attributes + Sankey attributes
+    super.updateFrom(other_drawing_area, mode)
   }
 
   /**

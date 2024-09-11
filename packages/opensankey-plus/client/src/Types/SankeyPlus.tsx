@@ -156,13 +156,19 @@ export abstract class Class_SankeyPlus
     return json_entry
   }
 
-  public updateLayoutFromJSON(new_layout: Type_GenericDrawingArea, mode: string[]): void {
-    super.updateLayoutFromJSON(new_layout, mode)
+  public updateFrom(
+    other_sankey: Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
+    mode: string[]
+  ): void {
+    // Call inherited method
+    super.updateFrom(other_sankey, mode)
+
+    // Add specifities from OSP
     let all=mode.includes('*')
 
     // Update Containers
     const list_curr_container = this.containers_list
-    const list_new_container = new_layout.sankey.containers_list
+    const list_new_container = other_sankey.containers_list
     if (mode.includes('freeLabels') || all) {
       // Add new container present in new but not current
       list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
@@ -186,7 +192,7 @@ export abstract class Class_SankeyPlus
 
     // Update icon catalog
     if (mode.includes('icon_catalog') || all) {
-      Object.entries(new_layout.sankey.icon_catalog).filter(icon => icon[0] && icon[1]).forEach(icon => {
+      Object.entries(other_sankey.icon_catalog).filter(icon => icon[0] && icon[1]).forEach(icon => {
         this.icon_catalog[icon[0]] = icon[1]
       })
     }
@@ -313,7 +319,7 @@ export abstract class Class_SankeyPlus
   ) {
     // First clean self
     this.delete()
-    this.updateLayoutFromJSON(other.drawing_area ,['*'])
+    this.updateFrom(other ,['*'])
   }
 
   // GETTERS / SETTERS ==================================================================
