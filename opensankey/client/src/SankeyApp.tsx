@@ -153,8 +153,8 @@ export const SankeyApp: FunctionComponent<SankeyAppTypes> = ({
     additional_preferences: [],
 
     // Configuration Menu
-    additional_configuration_menus: [],
-
+    additional_configuration_menus_edition_elements: [],
+    additional_configuration_menus_primary_accordion_elements:[],
     // menu_style_add_node_appearence_attr : [],
     // menu_style_add_node_label : [],
     // menu_style_add_node_label_value : [],

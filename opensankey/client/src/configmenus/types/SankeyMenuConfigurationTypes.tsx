@@ -13,7 +13,7 @@ export type OpenSankeyConfigurationsMenusFType = {
   menu_configuration_nodes_attributes: JSX.Element,
   menu_config_link_data: JSX.Element,
   menu_config_link_attr: JSX.Element,
-  additional_menus:AdditionalMenusType
+  additional_menus:AdditionalMenusType,
 
 }
 

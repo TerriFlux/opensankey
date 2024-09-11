@@ -45,7 +45,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
   *     menu_configuration_nodes_attributes,
   *     menu_config_link_data,
   *     menu_config_link_attr,
-  *     additional_accordion_edition_elements,
+  *     additional_primary_accordion_elements,
   *   }
   * @return {*}
   */
@@ -59,7 +59,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
     menu_configuration_nodes_attributes,
     menu_config_link_data,
     menu_config_link_attr,
-    // additional_accordion_edition_elements,
     additional_menus,
 
   }
@@ -178,7 +177,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
               />
             </AccordionPanel>
           </AccordionItem>
-          {additional_menus.additional_configuration_menus}
+          {additional_menus.additional_configuration_menus_edition_elements}
         </Accordion>
       </AccordionPanel>
     </AccordionItem>,
@@ -291,7 +290,11 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
           </Accordion>
         </AccordionPanel>
       </AccordionItem> :
-      <></>
+      <></>,
+      //Add extra accordionItem (for example views with OpenSankey+ submodule)
+      <>{additional_menus.additional_configuration_menus_primary_accordion_elements.map((c: ReactElementLike, i: number) => {
+        return <React.Fragment key={i}>{c}</React.Fragment>
+      })}</>
   ]
 
   return (
