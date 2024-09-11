@@ -302,7 +302,7 @@ export abstract class Class_DrawingAreaPlus
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
 
-   
+
   }
 
   /**
@@ -366,6 +366,10 @@ export abstract class Class_DrawingAreaPlus
 
 
   // GETTERS / SETTERS ==================================================================
+
+  public get id() { return this._sankey.id }
+  public get name() { return this._sankey.name }
+  public set name(name: string) { this._sankey.name = name }
 
   public get selected_containers_list(): Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] {
     return this.sankey.containers_list.filter(container => container.is_selected) as Class_ContainerElement<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]

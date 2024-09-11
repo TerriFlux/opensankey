@@ -59,11 +59,7 @@ export type RecomputeViewsFType = (
 // ) => void
 
 export type SelecteurViewFType = {
-  applicationData:OSPApplicationDataType,
-  applicationState:OSPElementsSelectedType,
-  t:TFunction,
-  set_view_not_saved:(s:string)=>void,
-  connected:boolean,
+  applicationData:OSPApplicationDataType
 }
 
 export type viewsAccordionFType = (

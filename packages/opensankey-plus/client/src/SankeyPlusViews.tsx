@@ -42,11 +42,12 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
-import { SankeyLinkValueDict, TagsGroup } from './deps/OpenSankey/types/Types'
+// import { SankeyLinkValueDict, TagsGroup } from './deps/OpenSankey/types/Types'
 import {
+  default_main_sankey_id,
   OSTooltip,
-  preferenceCheck,
-  updateLayoutOSTyped
+  // preferenceCheck,
+  // updateLayoutOSTyped
 } from './deps/OpenSankey/types/Utils'
 
 // Local libs
@@ -55,8 +56,8 @@ import {
   FilterViewFType,
   GetDataFromViewFType,
   getSetDiagramFType,
-  OSPKeyHandlerFType,
-  MenuEnregistrerViewFType,
+  // OSPKeyHandlerFType,
+  // MenuEnregistrerViewFType,
   modal_transparent_view_attrFType,
   modal_view_not_savedFType,
   OpenOSPCheckpointButtonFType,
@@ -64,7 +65,7 @@ import {
   OSPBannerViewFType,
   OSPMenuPreferenceViewFType,
   SelecteurViewFType,
-  setValueFType,
+  // setValueFType,
   viewsAccordionFType
 } from '../types/SankeyPlusViewsTypes'
 
@@ -76,7 +77,8 @@ import {
   OSPApplicationDataType,
   SankeyUnitData
 } from '../types/Types'
-import { deleteGLabel } from './SankeyPlusLabels'
+// import { deleteGLabel } from './SankeyPlusLabels'
+import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 // TODO Est-ce toujours utile ?
 declare const window: Window &
@@ -697,144 +699,296 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   </>
 }
 
-export const getSetDiagramFunc: getSetDiagramFType = (
-  set_master_data: (d: OSPData | undefined) => void,
-  set_view: (s: string) => void,
-  DefaultSankeyData: () => OSPData
-) => {
-  return (
-    the_diagram: string,
-    set_data: (d: OSPData) => void,
-    convert_data: (d: OSPData, DefaultSankeyData: () => OSPData) => void
-  ) => {
-    const sous_filieres = window.sankey.sous_filieres
 
-    const new_data = JSON.parse(
-      JSON.stringify(
-        window.sankey[sous_filieres[the_diagram]]
-      )
-    ) as OSPData
-    convert_data(new_data, DefaultSankeyData)
-    window.sankey.diagram = the_diagram
-    d3.select(' .opensankey #svg').on('.zoom', null)
-    if (window.SankeyToolsStatic && new_data.view.length > 0) {
-      set_master_data(new_data)
-      set_view(new_data.view[0].id)
-      set_data(GetDataFromView(new_data, new_data.view[0].id) as OSPData)
-    } else {
-      set_master_data(undefined)
-      set_data(new_data)
-      set_view('none')
+/**
+ *
+ *
+ * @param {*} {
+ *   applicationData,
+ *   applicationState,
+ *   set_view_not_saved,
+ * }
+ * @return {*}
+ */
+export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
+  applicationData
+}) => {
+
+  // Data -------------------------------------------------------------------------------
+
+  const { new_data } = applicationData
+  const { t } = new_data
+
+  // Components updaters ---------------------------------------------------------------
+
+  const [, setCount] = useState(0)
+  const [s_select_or_edit, sSelectOrEdit] = useState('select')
+
+  const refreshThis = () => {
+    sSelectOrEdit('select')
+    setCount(a => a + 1)
+  }
+
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    refreshThis()
+  }
+
+  new_data.menu_configuration.ref_to_selector_views_updater.current = refreshThis
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+
+  // Local variables ------------------------------------------------------------------
+
+  const cur_view = new_data.drawing_area
+  const has_sankey_plus = new_data.has_sankey_plus
+  const has_views = new_data.has_views
+  const is_view_master = new_data.is_view_master
+
+  // JSX elements ---------------------------------------------------------------------
+
+  const selecteur = <Select
+    variant='menuconfigpanel_option_select'
+    onDoubleClick={() => {
+      if (
+        has_sankey_plus &&
+        has_views &&
+        !is_view_master
+      ) {
+        sSelectOrEdit('edit') // Swith to edition mode
+      }
+    }}
+    onChange={
+      (evt: React.ChangeEvent<HTMLSelectElement>) => {
+        new_data.setCurrentView(evt.target.value)
+        // TODO supprimer quand OK
+        // multi_selected_nodes.current = []
+        // multi_selected_links.current = []
+        // multi_selected_label.current = []
+        // // Depending on the value selected we :
+        // //  - If we select a view :Get a modified version of master data according to the modifications saved in the view selected
+        // //      and save original master data in a variable that the view can't modify
+        // //  - If we select master('none'): Get the data we are workinkg on to be the master data
+
+        // // Verify if we saved the view before changing the view
+        // // If not, we display a modal that will warn the user with the possibility to save before exit
+        // let saved = true
+        // if (view !== 'none') {
+        //   const difference = CheckCurrentViewSaved(master_data, data, view)
+        //   if (difference.length !== 0 && !window.SankeyToolsStatic) {
+        //     saved = false
+        //     set_view_not_saved(view)
+        //     set_view(evt.target.value)
+        //   }
+        // }
+
+        // if (saved) {
+        //   if (evt.target.value === '') {
+        //     return
+        //   } else if (evt.target.value !== 'none') {
+        //     let new_master_data: OSPData
+        //     if (view === 'none') {
+        //       new_master_data = JSON.parse(JSON.stringify(data))
+        //       RecomputeViews(new_master_data, master_data, set_master_data)
+        //     } else {
+        //       new_master_data = JSON.parse(JSON.stringify(master_data)) as OSPData
+        //     }
+        //     const data_view = GetDataFromView(new_master_data, evt.target.value) as OSPData
+        //     set_data(JSON.parse(JSON.stringify(data_view)))
+        //     new_master_data.current_view = evt.target.value
+        //     set_master_data(JSON.parse(JSON.stringify(new_master_data)))
+        //     set_view(evt.target.value)
+        //   } else if (evt.target.value === 'none') {
+        //     set_view(evt.target.value)
+        //     set_data(JSON.parse(JSON.stringify(master_data)))
+        //   }
+        // }
+        // sValueEditorNameView(master_data!.view.filter(v => v.id === master_data!.current_view)[0].nom)
+      }
     }
-  }
-}
-
-
-export const setValue: setValueFType = (
-  dataTags: TagsGroup[],
-  v_target: SankeyLinkValueDict,
-  v_source: SankeyLinkValueDict,
-  depth: number
-) => {
-  const dataTag = Object.values(dataTags)[depth]
-  const listKey = Object.keys(dataTag.tags)
-  for (const i in listKey) {
-    if (depth === dataTags.length - 1) {
-      v_target[listKey[i]] = v_source[listKey[i]]
-    } else {
-      if (v_target[listKey[i]] === undefined) {
-        v_target[listKey[i]] = {}
-      }
-      setValue(
-        dataTags,
-        v_target[listKey[i]] as SankeyLinkValueDict,
-        v_source[listKey[i]] as SankeyLinkValueDict,
-        depth + 1)
+    value={cur_view.id}
+  >
+    <option
+      hidden
+      value={default_main_sankey_id}
+    >
+      {t('view.actual')}
+    </option>
+    {
+      new_data.views
+        .filter(view => view.id !== default_main_sankey_id)
+        .map(view => {
+          return <option
+            key={view.id}
+            value={view.id}
+          >
+            {view.name}
+          </option>
+        })
     }
-  }
+  </Select>
+
+  const text_input = <ConfigMenuTextInput
+    ref_to_set_value={ref_set_text_value_input}
+    function_get_value={() => { return cur_view.name }}
+    function_on_blur={(_) => {
+      // Update text for links
+      if ((_ !== undefined) && (_ !== null )) {
+        cur_view.name = _
+      }
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }}
+  />
+
+  return (has_sankey_plus && s_select_or_edit === 'edit') ? text_input : selecteur
 }
 
-export const GetDataFromView: GetDataFromViewFType = (
-  master_data: OSPData | undefined,
-  id_view_to_see: string
-) => {
-  // Copy master data
-  if (!master_data) {
-    alert('sankey master undefined')
-    return undefined
-  }
-  const copy_master_data = JSON.parse(JSON.stringify(master_data))
-  copy_master_data.view = []
-  let data_init = JSON.parse(JSON.stringify(copy_master_data)) as OSPData
-  // Get the difference from the view
-  if (master_data.view.filter(v => v.id === id_view_to_see).length === 0) {
-    alert('view not found')
-    return data_init
-  }
-  const view_object = master_data.view.filter(v => v.id === id_view_to_see)[0]
+// TODO Voir si toujours utile
+// export const getSetDiagramFunc: getSetDiagramFType = (
+//   set_master_data: (d: OSPData | undefined) => void,
+//   set_view: (s: string) => void,
+//   DefaultSankeyData: () => OSPData
+// ) => {
+//   return (
+//     the_diagram: string,
+//     set_data: (d: OSPData) => void,
+//     convert_data: (d: OSPData, DefaultSankeyData: () => OSPData) => void
+//   ) => {
+//     const sous_filieres = window.sankey.sous_filieres
 
-  if ((view_object.view_data as DiffType).diff) {
-    const diff_view = (view_object.view_data as DiffType).diff
-    if (!diff_view) {
-      return data_init
-    }
-    diff_view.forEach((d) => applyChange(data_init, {}, d))
-  } else {
-    data_init = view_object.view_data as OSPData
-  }
-  updateLayoutOSTyped(data_init, master_data, view_object.heredited_attr_from_master)
-  // updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
-  return data_init
-}
+//     const new_data = JSON.parse(
+//       JSON.stringify(
+//         window.sankey[sous_filieres[the_diagram]]
+//       )
+//     ) as OSPData
+//     convert_data(new_data, DefaultSankeyData)
+//     window.sankey.diagram = the_diagram
+//     d3.select(' .opensankey #svg').on('.zoom', null)
+//     if (window.SankeyToolsStatic && new_data.view.length > 0) {
+//       set_master_data(new_data)
+//       set_view(new_data.view[0].id)
+//       set_data(GetDataFromView(new_data, new_data.view[0].id) as OSPData)
+//     } else {
+//       set_master_data(undefined)
+//       set_data(new_data)
+//       set_view('none')
+//     }
+//   }
+// }
 
-export const FilterView: FilterViewFType = (pre_diff) => {
-  return JSON
-    .parse(JSON.stringify(pre_diff))
-    .filter((d: { path: string[] }) => {
-      return !d.path.includes('view')
-    })
-    .map((d: { path: string[], kind: string, item: { kind: string } }) => {
-      if (d.kind === 'D') {
-        delete ((d as unknown) as differenceType).lhs
-      }
-      if (d.kind === 'A' && d.item.kind === 'D') {
-        delete ((d as unknown) as differenceType).item.lhs
-      }
-      if (d.kind === 'E') {
-        delete ((d as unknown) as differenceType).lhs
-      }
-      return d as Diff<undefined, OSPData>
-    })
-}
+// TODO Voir si toujours utile
+// export const setValue: setValueFType = (
+//   dataTags: TagsGroup[],
+//   v_target: SankeyLinkValueDict,
+//   v_source: SankeyLinkValueDict,
+//   depth: number
+// ) => {
+//   const dataTag = Object.values(dataTags)[depth]
+//   const listKey = Object.keys(dataTag.tags)
+//   for (const i in listKey) {
+//     if (depth === dataTags.length - 1) {
+//       v_target[listKey[i]] = v_source[listKey[i]]
+//     } else {
+//       if (v_target[listKey[i]] === undefined) {
+//         v_target[listKey[i]] = {}
+//       }
+//       setValue(
+//         dataTags,
+//         v_target[listKey[i]] as SankeyLinkValueDict,
+//         v_source[listKey[i]] as SankeyLinkValueDict,
+//         depth + 1)
+//     }
+//   }
+// }
 
-export const RecomputeViews: RecomputeViewsFType = (
-  new_master_data: OSPData | undefined,
-  prev_master_data: OSPData | undefined,
-  set_master_data: (d: OSPData | undefined,) => void
-) => {
-  if (prev_master_data) {
-    new_master_data!.view.forEach(current_v => {
-      if (prev_master_data.view.filter(v => v.id === current_v.id).length === 0) {
-        return
-      }
-      const data_view = GetDataFromView(prev_master_data, current_v.id) as OSPData
+// TODO Voir si toujours utile
+// export const GetDataFromView: GetDataFromViewFType = (
+//   master_data: OSPData | undefined,
+//   id_view_to_see: string
+// ) => {
+//   // Copy master data
+//   if (!master_data) {
+//     alert('sankey master undefined')
+//     return undefined
+//   }
+//   const copy_master_data = JSON.parse(JSON.stringify(master_data))
+//   copy_master_data.view = []
+//   let data_init = JSON.parse(JSON.stringify(copy_master_data)) as OSPData
+//   // Get the difference from the view
+//   if (master_data.view.filter(v => v.id === id_view_to_see).length === 0) {
+//     alert('view not found')
+//     return data_init
+//   }
+//   const view_object = master_data.view.filter(v => v.id === id_view_to_see)[0]
 
-      if ((current_v.view_data as OSPData).version) {
-        current_v.view_data = data_view
-      }
-      else {
-        let difference = getDiff(new_master_data, data_view)
-        difference = (difference !== undefined) ? difference : []
-        difference = FilterView(difference)
-        if (difference.length > 0) {
-          (current_v.view_data as DiffType).diff = difference
-        }
-      }
-    })
-  }
-  // master data is now set
-  set_master_data({ ...JSON.parse(JSON.stringify(new_master_data)) })
-}
+//   if ((view_object.view_data as DiffType).diff) {
+//     const diff_view = (view_object.view_data as DiffType).diff
+//     if (!diff_view) {
+//       return data_init
+//     }
+//     diff_view.forEach((d) => applyChange(data_init, {}, d))
+//   } else {
+//     data_init = view_object.view_data as OSPData
+//   }
+//   updateLayoutOSTyped(data_init, master_data, view_object.heredited_attr_from_master)
+//   // updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
+//   return data_init
+// }
+
+
+// TODO Voir si toujours utile
+// export const FilterView: FilterViewFType = (pre_diff) => {
+//   return JSON
+//     .parse(JSON.stringify(pre_diff))
+//     .filter((d: { path: string[] }) => {
+//       return !d.path.includes('view')
+//     })
+//     .map((d: { path: string[], kind: string, item: { kind: string } }) => {
+//       if (d.kind === 'D') {
+//         delete ((d as unknown) as differenceType).lhs
+//       }
+//       if (d.kind === 'A' && d.item.kind === 'D') {
+//         delete ((d as unknown) as differenceType).item.lhs
+//       }
+//       if (d.kind === 'E') {
+//         delete ((d as unknown) as differenceType).lhs
+//       }
+//       return d as Diff<undefined, OSPData>
+//     })
+// }
+
+
+// TODO Voir si toujours utile
+// export const RecomputeViews: RecomputeViewsFType = (
+//   new_master_data: OSPData | undefined,
+//   prev_master_data: OSPData | undefined,
+//   set_master_data: (d: OSPData | undefined,) => void
+// ) => {
+//   if (prev_master_data) {
+//     new_master_data!.view.forEach(current_v => {
+//       if (prev_master_data.view.filter(v => v.id === current_v.id).length === 0) {
+//         return
+//       }
+//       const data_view = GetDataFromView(prev_master_data, current_v.id) as OSPData
+
+//       if ((current_v.view_data as OSPData).version) {
+//         current_v.view_data = data_view
+//       }
+//       else {
+//         let difference = getDiff(new_master_data, data_view)
+//         difference = (difference !== undefined) ? difference : []
+//         difference = FilterView(difference)
+//         if (difference.length > 0) {
+//           (current_v.view_data as DiffType).diff = difference
+//         }
+//       }
+//     })
+//   }
+//   // master data is now set
+//   set_master_data({ ...JSON.parse(JSON.stringify(new_master_data)) })
+// }
 
 // TODO Plus necessaire à supprimer si nouvelle implementation OK
 // export const OSPKeyHandler: OSPKeyHandlerFType = (
@@ -1135,1033 +1289,899 @@ export const RecomputeViews: RecomputeViewsFType = (
 //   }
 // }
 
-/**
- *
- *
- * @param {*} {
- *   applicationData,
- *   applicationState,
- *   set_view_not_saved,
- * }
- * @return {*}
- */
-export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
-  applicationData,
-  applicationState,
-  set_view_not_saved,
-}) => {
-
-  // Data -------------------------------------------------------------------------------
-
-  const { data, set_data, master_data, set_master_data, view, set_view, new_data } = applicationData
-  const { t } = new_data
-
-  // Components updaters ---------------------------------------------------------------
-
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_selector_views.current = () => setCount(a => a + 1)
-
-  const { multi_selected_nodes, multi_selected_links, multi_selected_label } = applicationState
-
-  const cur_view = new_data.drawing_area
-  const has_sankey_plus = new_data.has_sankey_plus
-  const has_views = new_data.has_views
-  const is_view_master = new_data.is_view_master
-
-  let vname = ''
-  if ((master_data && master_data.current_view && master_data.current_view !== 'none' && master_data.view.length > 0)) {
-    if (master_data.view.filter(v => v.id === master_data.current_view).length > 0) {
-      vname = master_data.view.filter(v => v.id === master_data.current_view)[0].nom
-    } else {
-      vname = ''
-    }
-  }
-  const [s_value_editor_name_view, sValueEditorNameView] = useState(vname)
-  if (s_value_editor_name_view == '' && vname != '') {
-    sValueEditorNameView(vname)
-  }
-  const [s_select_or_edit, sSelectOrEdit] = useState('select')
-  applicationState.r_setter_value_editor_name_view.current = sValueEditorNameView
-
-  const selecteur = <Select
-    variant='menuconfigpanel_option_select'
-    onDoubleClick={() => {
-      if (
-        has_sankey_plus &&
-        has_views &&
-        !is_view_master
-      ) {
-        sSelectOrEdit('edit')
-        sValueEditorNameView(new_data.dr
-          master_data!.view.filter(v => v.id === master_data.current_view)[0].nom)
-      }
-    }}
-    onChange={
-      (evt: React.ChangeEvent<HTMLSelectElement>) => {
-        multi_selected_nodes.current = []
-        multi_selected_links.current = []
-        multi_selected_label.current = []
-        // Depending on the value selected we :
-        //  - If we select a view :Get a modified version of master data according to the modifications saved in the view selected
-        //      and save original master data in a variable that the view can't modify
-        //  - If we select master('none'): Get the data we are workinkg on to be the master data
-
-        // Verify if we saved the view before changing the view
-        // If not, we display a modal that will warn the user with the possibility to save before exit
-        let saved = true
-        if (view !== 'none') {
-          const difference = CheckCurrentViewSaved(master_data, data, view)
-          if (difference.length !== 0 && !window.SankeyToolsStatic) {
-            saved = false
-            set_view_not_saved(view)
-            set_view(evt.target.value)
-          }
-        }
-
-        if (saved) {
-          if (evt.target.value === '') {
-            return
-          } else if (evt.target.value !== 'none') {
-            let new_master_data: OSPData
-            if (view === 'none') {
-              new_master_data = JSON.parse(JSON.stringify(data))
-              RecomputeViews(new_master_data, master_data, set_master_data)
-            } else {
-              new_master_data = JSON.parse(JSON.stringify(master_data)) as OSPData
-            }
-            const data_view = GetDataFromView(new_master_data, evt.target.value) as OSPData
-            set_data(JSON.parse(JSON.stringify(data_view)))
-            new_master_data.current_view = evt.target.value
-            set_master_data(JSON.parse(JSON.stringify(new_master_data)))
-            set_view(evt.target.value)
-          } else if (evt.target.value === 'none') {
-            set_view(evt.target.value)
-            set_data(JSON.parse(JSON.stringify(master_data)))
-          }
-        }
-        sValueEditorNameView(master_data!.view.filter(v => v.id === master_data!.current_view)[0].nom)
-      }
-    }
-    value={view}
-  >
-    <option
-      hidden
-      value={'none'}
-    >
-      {t('view.actual')}
-    </option>
-    {master_data ? master_data.view.map(d => {
-      return <option key={d.id} value={d.id}>{d.nom}</option>
-    }) : <></>}
-  </Select>
-
-  const editeur_name = <Input
-    variant='menuconfigpanel_option_input'
-    value={s_value_editor_name_view}
-    onChange={(evt) => {
-      sValueEditorNameView(evt.target.value)
-    }}
-    onBlur={() => {
-      master_data!.view.filter(v => v.id === view)[0].nom = s_value_editor_name_view
-      set_master_data({ ...master_data! })
-      sSelectOrEdit('select')
-    }}
-  />
-
-  return has_sankey_plus && s_select_or_edit === 'edit' ? editeur_name : selecteur
-}
-
-export const viewsAccordion: viewsAccordionFType = (
-  applicationData,
-  t: TFunction,
-  is_activated: boolean,
-  convert_data: (d: OSPData, DefaultSankeyData: () => OSPData) => void,
-  DefaultSankeyData: () => OSPData,
-  view_selector
-) => {
-  const { data, set_data, master_data, set_master_data, view, set_view } = applicationData
-  const _load_json = useRef<HTMLInputElement>(null)
-
-  // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
-
-  return <>
-    <AccordionItem
-      // id='Visualisation'
-      style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'initial' : 'none' }}
-    // eventKey="Visualisation"
-    // onClick={
-    //   evt => {
-    //     if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && uiElementsRef.ref_nav_item_active.current === 'Visualisation') {
-    //       uiElementsRef.ref_setter_nav_item_active.current!('')
-    //     } else {
-    //       uiElementsRef.ref_setter_nav_item_active.current!('Visualisation')
-    //     }
-    //   }
-    // }
-    >
-      <AccordionButton onClick={() => {
-        const scroll_x = window.scrollX
-        const scroll_y = window.scrollY
-        setTimeout(() => {
-          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-        }, 50)
-      }}
-      >
-        <Box as='span' layerStyle='menuconfig_entry'>
-          {t('view.storytelling')}
-        </Box>
-        <Tag colorScheme='teel' >Beta</Tag>
-        <AccordionIcon />
-      </AccordionButton>
-      <AccordionPanel>
-        <Box layerStyle='menuconfigpanel_grid'>
-
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('view.select')}
-            </Box>
-            <InputGroup
-              variant='menuconfigpanel_option_input'>
-              {view_selector}
-            </InputGroup>
-          </Box>
-          <Table size='sm'>
-            <Thead>
-              <Tr>
-                <Th>{t('view.name')}</Th>
-                <Th>Position</Th>
-                <Th>{t('view.delete')}</Th>
-                {/* <Th>{t('view.copy')}</Th>
-                <Th>{t('view.import')}</Th>
-                <Th>{t('view.export')}</Th> */}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {master_data ? Object.values(master_data.view).map(d => {
-                return (
-                  <Tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
-                    <Td>
-                      <Input
-                        variant='menuconfigpanel_option_input'
-                        value={d.nom}
-                        isDisabled={!is_activated}
-                        onChange={evt => {
-                          // Change the name of the view
-                          master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
-                          set_master_data({ ...master_data })
-                        }}
-                      />
-                    </Td>
-                    <Td>
-                      {/* Change the position of the view in the liste of view from master data */}
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
-                        onClick={
-                          () => {
-                            let ind = -1
-                            master_data.view.map((v, i) => {
-                              ind = (v.id === d.id) ? i : ind
-                            })
-                            const toShift = master_data.view[ind]
-                            master_data.view.splice(ind, 1)
-                            master_data.view.splice(ind - 1, 0, toShift)
-                            set_master_data(JSON.parse(JSON.stringify(master_data)))
-                            set_data(JSON.parse(JSON.stringify(data)))
-                          }
-                        }
-                      ><FaArrowUp />
-                      </Button>
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
-                        onClick={
-                          () => {
-                            let ind = -1
-                            master_data.view.map((v, i) => {
-                              ind = (v.id === d.id) ? i : ind
-                            })
-                            const toShift = master_data.view[ind]
-                            master_data.view.splice(ind, 1)
-                            master_data.view.splice(ind + 1, 0, toShift)
-                            set_master_data(JSON.parse(JSON.stringify(master_data)))
-                            set_data(JSON.parse(JSON.stringify(data)))
-                          }
-                        }
-                      ><FaArrowDown />
-                      </Button>
-                    </Td>
-                    <Td><Button
-                      variant='menuconfigpanel_del_button_in_table'
-                      isDisabled={!is_activated}
-                      onClick={
-                        // Delete the view
-                        () => {
-                          let ind = -1
-                          master_data.view.map((v, i) => {
-                            ind = (v.id === d.id) ? i : ind
-                          })
-                          master_data.view.splice(ind, 1)
-                          // If master is not a catalog & we delete the current view then we go to master
-                          // If master is a catalog and the catalog of view is empty then we got to master
-                          if ((master_data.current_view === view && master_data.is_catalog === false) || (master_data.view.length === 0 && master_data.is_catalog === true)) {
-                            set_view('none')
-                            set_data(JSON.parse(JSON.stringify(master_data)))
-                          } else if (master_data.is_catalog && master_data.view.length > 0) {
-                            // If master is a catalog and the catalog is not empty then we got to the first view
-                            set_view(master_data.view[0].id)
-                            const tmp = GetDataFromView(master_data, master_data.view[0].id) as OSPData
-                            if (!tmp.accordeonToShow.includes('Vis')) {
-                              tmp.accordeonToShow.push('Vis')
-                            }
-                            set_data(JSON.parse(JSON.stringify(tmp)))
-                          }
-                          if (master_data.view.length === 0) {
-                            master_data.is_catalog = false
-                            set_data(JSON.parse(JSON.stringify(master_data)))
-
-                          }
-                          set_master_data(JSON.parse(JSON.stringify(master_data)))
-                        }
-                      }
-                    ><FaMinus /></Button></Td>
-                  </Tr>
-                )
-              }) : <></>}
-            </Tbody>
-          </Table>
-        </Box>
-
-
-      </AccordionPanel>
-    </AccordionItem>
-
-    <Input
-      type="file"
-      ref={_load_json}
-      style={{ display: 'none' }}
-      onChange={(evt: ChangeEvent) => {
-        const files = (evt.target as HTMLFormElement).files
-        const reader = new FileReader()
-
-        reader.onload = (() => {
-          return (e: ProgressEvent<FileReader>) => {
-            const result = String((e.target as FileReader).result)
-            const result_data = JSON.parse(result)
-            let ind = -1
-            master_data!.view.map((v, i) => {
-              ind = (v.id === _load_json.current?.id) ? i : ind
-            })
-            const cur_view = master_data!.view[ind]
-            const imported_data = JSON.parse(JSON.stringify(result_data))
-            imported_data.view = []
-            convert_data(imported_data, DefaultSankeyData)
-            let difference = getDiff(master_data, imported_data)
-            difference = JSON.parse(
-              JSON.stringify(
-                (difference !== undefined) ?
-                  difference : []
-              )
-            )
-            difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
-            cur_view.view_data = { diff: difference }
-
-            cur_view.nom = (files[0].name).replace('.json', '')
-
-            set_master_data(JSON.parse(JSON.stringify(master_data)))
-            set_data(JSON.parse(JSON.stringify(imported_data)))
-            set_view(cur_view.id)
-          }
-        })()
-        reader.readAsText(files[0])
-      }}
-    />
-  </>
-}
-
-// Function to check if the current data of the view is unsaved
-// We compare the differences saved in the master_data with the current changement of the view
-export const CheckCurrentViewSaved: CheckCurrentViewSavedFType = (
-  master_data: OSPData | undefined,
-  data: OSPData | undefined,
-  view: string
-) => {
-  const view_data = GetDataFromView(master_data, view)
-  //const data=JSON.parse(JSON.stringify(data))
-  //const updated_diff=JSON.parse(JSON.stringify(original_diff))
-
-  //updateLayout(data_updated_layout,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
-  //updateLayout(updated_diff,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
-
-  let difference = getDiff(view_data, data)
-  difference = (difference !== undefined) ? difference : []
-  difference = difference.filter((d) => {
-    // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
-    return (
-      (d.path![0] !== 'current_view') &&
-      (d.path![0] !== 'view') &&
-      (d.path![0] !== 'width') &&
-      (d.path![0] !== 'height') &&
-      (d.path![0] !== 'linkZIndex') &&
-      !(d.path!.length === 4 && d.path![3] === 'vert_shift'))
-  })
-  console.log(difference)
-  return difference
-}
-
-
-export const OSPMenuPreferenceView: OSPMenuPreferenceViewFType = (
-  t: TFunction,
-  data: OSPData,
-  set_data: (_: OSPData) => void
-) => {
-  return <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isChecked={data.accordeonToShow.includes('Vis')}
-    onChange={() => {
-      preferenceCheck('Vis', data)
-      set_data(JSON.parse(JSON.stringify(data)))
-    }}>
-    {t('view.storytelling')}
-  </Checkbox>
-}
-
-
-// Modal used when we want to switch to master or a view without saving some changements we made on the current view
-// It give the option save or not the changements made
-export const modal_view_not_saved: modal_view_not_savedFType = (
-  view_not_saved: string,
-  set_view_not_saved: (s: string) => void,
-  t: TFunction,
-  applicationData
-) => {
-  const { data, set_data, view, master_data, set_master_data } = applicationData
-  return (
-    <Modal
-      isOpen={view_not_saved !== ''}
-      onClose={() => null}
-    >
-      <ModalContent
-        maxWidth='inherit'
-      >
-        <ModalHeader>
-          {t('view.ns')}
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          {t('view.warn_ns')}
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant='danger'
-            onClick={() => {
-              // Don't save the view before changing to the selected one
-              if (view !== 'none') {
-                const data_view = GetDataFromView(master_data, view) as OSPData
-                set_data(JSON.parse(JSON.stringify(data_view)))
-              } else if (view === 'none') {
-                set_data(JSON.parse(JSON.stringify(master_data)))
-              }
-              set_view_not_saved('')
-            }}
-          >
-            {t('view.dont_save')}
-          </Button>
-          <Button
-            variant='success'
-            onClick={() => {
-              // Save the view before changing to the selected one
-
-              let difference = getDiff(master_data, data)
-              difference = (difference !== undefined) ? difference : []
-              difference = difference.filter((d) => !(d.path!.includes('view')))
-              master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = { diff: difference }
-              update_heredited_attr_from_master(master_data!.view.filter(v => v.id === view_not_saved)[0], data, master_data!)
-              if (view !== 'none') {
-                const data_view = GetDataFromView(master_data, view) as OSPData
-
-                set_master_data(JSON.parse(JSON.stringify(master_data)))
-                set_data(JSON.parse(JSON.stringify(data_view)))
-
-              } else if (view === 'none') {
-                set_data(JSON.parse(JSON.stringify(master_data)))
-              }
-              set_view_not_saved('')
-            }}
-          >
-            {t('view.save')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>)
-}
-
-
-export const modal_transparent_view_attr: modal_transparent_view_attrFType = (
-  dict_hook_ref_setter_show_dialog_components,
-  applicationData,
-  t: TFunction
-) => {
-  const current_view = applicationData.master_data?.view.filter(v => v.id === applicationData.master_data!.current_view)[0] ?? {} as ViewType
-  const { data, set_data, master_data, set_master_data } = applicationData as OSPApplicationDataType
-  const { ref_setter_show_modal_transparent_view_attr } = dict_hook_ref_setter_show_dialog_components
-  const [show_modal, set_show_modal] = useState(false)
-  ref_setter_show_modal_transparent_view_attr.current = set_show_modal
-  if (master_data && master_data.current_view !== undefined && master_data?.current_view !== 'none' && applicationData.data !== undefined) {
-
-    return <Modal isOpen={show_modal} onClose={() => {
-      RecomputeViews(data, data, set_data as (d: OSPData | undefined) => void)
-      set_show_modal(false)
-    }}>
-      <ModalContent
-        maxWidth='inherit'
-      >
-        <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Menu.Transformation.Topology')}
-            </Box>
-            <Box layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('addNode')) {
-                    current_view.heredited_attr_from_master.push('addNode')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-
-                }
-                }
-              >{t('Menu.Transformation.addNode')}</Button>
-
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('removeNode')) {
-                    current_view.heredited_attr_from_master.push('removeNode')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-
-                }
-                }
-              >{t('Menu.Transformation.removeNode')}</Button>
-
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('addFlux')) {
-                    current_view.heredited_attr_from_master.push('addFlux')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-
-                }
-                }>{t('Menu.Transformation.addFlux')}</Button>
-
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('removeFlux')) {
-                    current_view.heredited_attr_from_master.push('removeFlux')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-
-                }
-                }>{t('Menu.Transformation.removeFlux')}</Button>
-            </Box>
-          </Box>
-
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Menu.Transformation.Geometry')}
-            </Box>
-            <Box layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('posNode')) {
-                    current_view.heredited_attr_from_master.push('posNode')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {t('Menu.Transformation.PosNoeud')}
-              </Button>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('posFlux')) {
-                    current_view.heredited_attr_from_master.push('posFlux')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {t('Menu.Transformation.posFlux')}</Button>
-            </Box>
-          </Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
-
-            <Box as='span' layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('Values')) {
-                    current_view.heredited_attr_from_master.push('Values')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-
-                }
-                }
-              >{current_view.heredited_attr_from_master.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
-              </Button>
-            </Box>
-
-          </Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-            <Box as='span' layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('attrNode')) {
-                    current_view.heredited_attr_from_master.push('attrNode')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {t('Menu.Transformation.attrNode')}
-              </Button>
-
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('attrFlux')) {
-                    current_view.heredited_attr_from_master.push('attrFlux')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {t('Menu.Transformation.attrFlux')}
-              </Button>
-            </Box>
-          </Box>
-
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-            <Box layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('tagNode')) {
-                    current_view.heredited_attr_from_master.push('tagNode')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {t('Menu.Transformation.tagNode')}
-              </Button>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('tagFlux')) {
-                    current_view.heredited_attr_from_master.push('tagFlux')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {t('Menu.Transformation.tagFlux')}
-              </Button>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('tagData')) {
-                    current_view.heredited_attr_from_master.push('tagData')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }
-                }
-              >{t('Menu.Transformation.tagData')}</Button>
-            </Box>
-          </Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
-
-            <Box as='span' layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('tagLevel')) {
-                    current_view.heredited_attr_from_master.push('tagLevel')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {current_view.heredited_attr_from_master.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
-              </Button>
-            </Box>
-          </Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
-
-            <Box as='span' layerStyle='options_4cols'>
-              <Button
-                variant={current_view.heredited_attr_from_master.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                onClick={() => {
-                  if (!current_view.heredited_attr_from_master.includes('attrGeneral')) {
-                    current_view.heredited_attr_from_master.push('attrGeneral')
-                  } else {
-                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'), 1)
-                  }
-                  set_data({ ...data })
-                  set_master_data({ ...master_data! })
-                }}>
-                {current_view.heredited_attr_from_master.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
-              </Button>
-            </Box>
-          </Box>
-        </ModalBody>
-
-        <ModalFooter><Button onClick={() => {
-          updateLayoutOSTyped(data, master_data!, current_view.heredited_attr_from_master)
-          // updateLayout(data,master_data,current_view.heredited_attr_from_master)
-          set_data({ ...data })
-        }}>{t('view.updateViewWithMasterVar')}</Button></ModalFooter>
-      </ModalContent>
-    </Modal>
-  } return <></>
-}
-
-export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
-  t,
-  elementsSelected
-}) => {
-  const [save_only_view, set_save_only_view] = useState(false)
-  elementsSelected.saveViewGetter.current = save_only_view
-  return <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isChecked={save_only_view}
-    onChange={() => set_save_only_view(!save_only_view)}>
-    <OSTooltip label={t('view.tooltips.buttonExportView')}>
-      {t('view.export')}
-    </OSTooltip>
-  </Checkbox>
-}
-
-export const OpenOSPCheckpointButton: OpenOSPCheckpointButtonFType = (
-  master_data: OSPData | undefined,
-  data: OSPData,
-  view: string,
-  view_not_saved: string,
-  has_open_sankey_plus: boolean,
-  t: TFunction
-) => {
-
-  // Boolean used to change the logo of the button to save the current view :
-  //  - if there is no differences between the the saved view and the current view, then the logo has a check
-  //  - else if it contain difference, the logo contain an exclamation point
-  const is_different = false
-  if (view !== 'none' && view_not_saved === '' && master_data && has_open_sankey_plus) {
-    // find another way with a variable. Checking the all view consumes too much time
-    // const diff=CheckCurrentViewSaved(master_data,data,view)
-    // if(diff.length>0){
-    //   is_different=true
-    // }
-  }
-
-  return <OSTooltip
-    label={(!has_open_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : t('view.tooltips.saveView')}>
-    <Button
-      isDisabled={!has_open_sankey_plus}
-      variant='light'
-      onClick={() => {
-        const ev = document
-        const t = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
-        if (ev.onkeydown) {
-          ev.onkeydown(t)
-        }
-      }}
-    >
-      <FontAwesomeIcon
-        icon={faFloppyDisk}
-        style={{ opacity: (!has_open_sankey_plus) ? '0.6' : '1', width: '2rem', height: '2rem' }} />
-      {!has_open_sankey_plus ? <>
-        <FontAwesomeIcon
-          icon={faLock}
-          style={{
-            fontSize: '1em',
-            color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-          }} />
-      </>
-        : <>{is_different ?
-          <FontAwesomeIcon
-            icon={faExclamation}
-            style={{
-              fontSize: '1em',
-              color: 'rgba(var(--bs-danger-rgb), var(--bs-bg-opacity))'
-            }} />
-          : <></>}</>
-      }
-    </Button>
-  </OSTooltip>
-}
-
-/**
- * Modify heredited_attr_from_master in function of the modification done in the view.
- * If an attribute in the view is modified which was heredited from master the set attributes
- * containing the attribute is removed from the list of heredited attributes
- */
-const update_heredited_attr_from_master = (
-  view: ViewType,
-  view_data: OSPData,
-  master_data: OSPData
-): void => {
-  const heredited_attr_from_master = view.heredited_attr_from_master
-  if (heredited_attr_from_master.indexOf('attrGeneral') !== -1) {
-    let differences = getDiff(view_data, master_data)
-    if (differences) {
-      const legend_pos = differences.filter(difference => difference.path![0] == 'legend_position')
-      if (legend_pos.length > 0) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
-      }
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'E') &&
-          (difference.path!.length === 1) &&
-          (difference.path![0] !== 'current_view'))
-      if (differences.length > 0) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
-      }
-    }
-    const display_style_diff = getDiff(view_data.display_style, master_data.display_style)
-    if (display_style_diff) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
-    }
-
-    const node_style_differences = getDiff(view_data.style_node, master_data.style_node)
-    if (node_style_differences) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
-    }
-
-    const link_style_differences = getDiff(view_data.style_link, master_data.style_link)
-    if (link_style_differences) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('addNode') !== -1) {
-    let differences = getDiff(view_data.nodes, master_data.nodes)
-    if (differences) {
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'N') &&
-          (difference.path!.length === 1))
-      if (differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('addNode'), 1)
-      }
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('removeNode') !== -1) {
-    let differences = getDiff(view_data.nodes, master_data.nodes)
-    if (differences) {
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'D') &&
-          (difference.path!.length === 1))
-      if (differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('removeNode'), 1)
-      }
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('addFlux') !== -1) {
-    let differences = getDiff(view_data.links, master_data.links)
-    if (differences) {
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'N') &&
-          (difference.path!.length === 1))
-      if (differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('addFlux'), 1)
-      }
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('removeFlux') !== -1) {
-    let differences = getDiff(view_data.links, master_data.links)
-    if (differences) {
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'D') &&
-          (difference.path!.length === 1))
-      if (differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('removeFlux'), 1)
-      }
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('posNode') !== -1) {
-    let differences = getDiff(view_data.nodes, master_data.nodes)
-    if (differences) {
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'E') &&
-          (['x', 'y', 'x_label', 'y_label'].includes(difference.path![1])))
-      if (differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('posNode'), 1)
-      }
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('posLink') !== -1) {
-    const geometry_attributes = [
-      'orientation',
-      'left_horiz_shift',
-      'right_horiz_shift',
-      'vert_shift',
-      'curvature',
-      'curved',
-      'recycling',
-      'arrow_size',
-      // Geometry link labels
-      'x_label',
-      'y_label',
-      'label_position',
-      'orthogonal_label_position',
-      'label_on_path'
-    ]
-    let differences = getDiff(view_data.links, master_data.links)
-    if (differences) {
-      differences = differences.filter(
-        (difference) =>
-          (difference.kind === 'D' || difference.kind === 'N') &&
-          (difference.path!.length === 3) &&
-          (difference.path![1] === 'local') &&
-          (geometry_attributes.includes(difference.path![2])) ||
-          (difference.kind === 'E' && geometry_attributes.includes(difference.path![1]))
-      )
-      if (differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('posLink'), 1)
-      }
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('attrNode') !== -1) {
-    Object.entries(view_data.nodes).forEach(([key, node]) => {
-      const layoutNode = master_data.nodes[key]
-      if (!layoutNode) {
-        return
-      }
-      if (!node.local) {
-        node.local = {}
-      }
-      if (!layoutNode.local) {
-        layoutNode.local = {}
-      }
-      const differences = getDiff(node.local, layoutNode.local)
-      if (differences && differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrNode'), 1)
-      }
-    })
-  }
-
-  if (heredited_attr_from_master.indexOf('attrFlux') !== -1) {
-    Object.entries(view_data.links).forEach(([key, link]) => {
-      const layoutLink = master_data.links[key]
-      if (!layoutLink) {
-        return
-      }
-      if (!link.local) {
-        link.local = {}
-      }
-      if (!layoutLink.local) {
-        layoutLink.local = {}
-      }
-      const differences = getDiff(link.local, layoutLink.local)
-      if (differences && differences.length > 1) {
-        heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrFlux'), 1)
-      }
-
-    })
-  }
-
-  if (heredited_attr_from_master.indexOf('Values') !== -1) {
-    const dataTagsNames = Object.values(view_data.dataTags).map(tagGroup => tagGroup.group_name)
-    const layoutTagsNames = Object.values(master_data.dataTags).map(tagGroup => tagGroup.group_name)
-
-    if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
-      Object.entries(view_data.links).forEach(([key, link]) => {
-        const layoutLink = master_data.links[key]
-        if (!layoutLink) {
-          return
-        }
-        const differences = getDiff(link.value, layoutLink.value)
-        if (differences) {
-          heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('Values'), 1)
-        }
-      })
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('tagLevel') !== -1) {
-    const differences = getDiff(view_data.levelTags, master_data.levelTags)
-    if (differences) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagLevel'), 1)
-      //alert('Niveau de détail modifié. Cet attribut n\'est plus hérité du maître.')
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('tagNode') !== -1) {
-    const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
-    if (differences) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagNode'), 1)
-      //alert('Etiquettes de noeuds modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('tagFlux') !== -1) {
-    const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
-    if (differences) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagFlux'), 1)
-      //alert('Etiquettes de flux modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
-    }
-  }
-
-  if (heredited_attr_from_master.indexOf('tagData') !== -1) {
-    const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
-    if (differences) {
-      heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagData'), 1)
-      //alert('Etiquettes de données modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
-    }
-  }
-}
+// TODO A implementer avec classes
+
+// export const viewsAccordion: viewsAccordionFType = (
+//   applicationData,
+//   t: TFunction,
+//   is_activated: boolean,
+//   convert_data: (d: OSPData, DefaultSankeyData: () => OSPData) => void,
+//   DefaultSankeyData: () => OSPData,
+//   view_selector
+// ) => {
+//   const { data, set_data, master_data, set_master_data, view, set_view } = applicationData
+//   const _load_json = useRef<HTMLInputElement>(null)
+
+//   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
+
+//   return <>
+//     <AccordionItem
+//       // id='Visualisation'
+//       style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'initial' : 'none' }}
+//     // eventKey="Visualisation"
+//     // onClick={
+//     //   evt => {
+//     //     if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && uiElementsRef.ref_nav_item_active.current === 'Visualisation') {
+//     //       uiElementsRef.ref_setter_nav_item_active.current!('')
+//     //     } else {
+//     //       uiElementsRef.ref_setter_nav_item_active.current!('Visualisation')
+//     //     }
+//     //   }
+//     // }
+//     >
+//       <AccordionButton onClick={() => {
+//         const scroll_x = window.scrollX
+//         const scroll_y = window.scrollY
+//         setTimeout(() => {
+//           document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+//         }, 50)
+//       }}
+//       >
+//         <Box as='span' layerStyle='menuconfig_entry'>
+//           {t('view.storytelling')}
+//         </Box>
+//         <Tag colorScheme='teel' >Beta</Tag>
+//         <AccordionIcon />
+//       </AccordionButton>
+//       <AccordionPanel>
+//         <Box layerStyle='menuconfigpanel_grid'>
+
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+//             <Box layerStyle='menuconfigpanel_option_name' >
+//               {t('view.select')}
+//             </Box>
+//             <InputGroup
+//               variant='menuconfigpanel_option_input'>
+//               {view_selector}
+//             </InputGroup>
+//           </Box>
+//           <Table size='sm'>
+//             <Thead>
+//               <Tr>
+//                 <Th>{t('view.name')}</Th>
+//                 <Th>Position</Th>
+//                 <Th>{t('view.delete')}</Th>
+//                 {/* <Th>{t('view.copy')}</Th>
+//                 <Th>{t('view.import')}</Th>
+//                 <Th>{t('view.export')}</Th> */}
+//               </Tr>
+//             </Thead>
+//             <Tbody>
+//               {master_data ? Object.values(master_data.view).map(d => {
+//                 return (
+//                   <Tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
+//                     <Td>
+//                       <Input
+//                         variant='menuconfigpanel_option_input'
+//                         value={d.nom}
+//                         isDisabled={!is_activated}
+//                         onChange={evt => {
+//                           // Change the name of the view
+//                           master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
+//                           set_master_data({ ...master_data })
+//                         }}
+//                       />
+//                     </Td>
+//                     <Td>
+//                       {/* Change the position of the view in the liste of view from master data */}
+//                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
+//                         onClick={
+//                           () => {
+//                             let ind = -1
+//                             master_data.view.map((v, i) => {
+//                               ind = (v.id === d.id) ? i : ind
+//                             })
+//                             const toShift = master_data.view[ind]
+//                             master_data.view.splice(ind, 1)
+//                             master_data.view.splice(ind - 1, 0, toShift)
+//                             set_master_data(JSON.parse(JSON.stringify(master_data)))
+//                             set_data(JSON.parse(JSON.stringify(data)))
+//                           }
+//                         }
+//                       ><FaArrowUp />
+//                       </Button>
+//                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
+//                         onClick={
+//                           () => {
+//                             let ind = -1
+//                             master_data.view.map((v, i) => {
+//                               ind = (v.id === d.id) ? i : ind
+//                             })
+//                             const toShift = master_data.view[ind]
+//                             master_data.view.splice(ind, 1)
+//                             master_data.view.splice(ind + 1, 0, toShift)
+//                             set_master_data(JSON.parse(JSON.stringify(master_data)))
+//                             set_data(JSON.parse(JSON.stringify(data)))
+//                           }
+//                         }
+//                       ><FaArrowDown />
+//                       </Button>
+//                     </Td>
+//                     <Td><Button
+//                       variant='menuconfigpanel_del_button_in_table'
+//                       isDisabled={!is_activated}
+//                       onClick={
+//                         // Delete the view
+//                         () => {
+//                           let ind = -1
+//                           master_data.view.map((v, i) => {
+//                             ind = (v.id === d.id) ? i : ind
+//                           })
+//                           master_data.view.splice(ind, 1)
+//                           // If master is not a catalog & we delete the current view then we go to master
+//                           // If master is a catalog and the catalog of view is empty then we got to master
+//                           if ((master_data.current_view === view && master_data.is_catalog === false) || (master_data.view.length === 0 && master_data.is_catalog === true)) {
+//                             set_view('none')
+//                             set_data(JSON.parse(JSON.stringify(master_data)))
+//                           } else if (master_data.is_catalog && master_data.view.length > 0) {
+//                             // If master is a catalog and the catalog is not empty then we got to the first view
+//                             set_view(master_data.view[0].id)
+//                             const tmp = GetDataFromView(master_data, master_data.view[0].id) as OSPData
+//                             if (!tmp.accordeonToShow.includes('Vis')) {
+//                               tmp.accordeonToShow.push('Vis')
+//                             }
+//                             set_data(JSON.parse(JSON.stringify(tmp)))
+//                           }
+//                           if (master_data.view.length === 0) {
+//                             master_data.is_catalog = false
+//                             set_data(JSON.parse(JSON.stringify(master_data)))
+
+//                           }
+//                           set_master_data(JSON.parse(JSON.stringify(master_data)))
+//                         }
+//                       }
+//                     ><FaMinus /></Button></Td>
+//                   </Tr>
+//                 )
+//               }) : <></>}
+//             </Tbody>
+//           </Table>
+//         </Box>
+
+
+//       </AccordionPanel>
+//     </AccordionItem>
+
+//     <Input
+//       type="file"
+//       ref={_load_json}
+//       style={{ display: 'none' }}
+//       onChange={(evt: ChangeEvent) => {
+//         const files = (evt.target as HTMLFormElement).files
+//         const reader = new FileReader()
+
+//         reader.onload = (() => {
+//           return (e: ProgressEvent<FileReader>) => {
+//             const result = String((e.target as FileReader).result)
+//             const result_data = JSON.parse(result)
+//             let ind = -1
+//             master_data!.view.map((v, i) => {
+//               ind = (v.id === _load_json.current?.id) ? i : ind
+//             })
+//             const cur_view = master_data!.view[ind]
+//             const imported_data = JSON.parse(JSON.stringify(result_data))
+//             imported_data.view = []
+//             convert_data(imported_data, DefaultSankeyData)
+//             let difference = getDiff(master_data, imported_data)
+//             difference = JSON.parse(
+//               JSON.stringify(
+//                 (difference !== undefined) ?
+//                   difference : []
+//               )
+//             )
+//             difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
+//             cur_view.view_data = { diff: difference }
+
+//             cur_view.nom = (files[0].name).replace('.json', '')
+
+//             set_master_data(JSON.parse(JSON.stringify(master_data)))
+//             set_data(JSON.parse(JSON.stringify(imported_data)))
+//             set_view(cur_view.id)
+//           }
+//         })()
+//         reader.readAsText(files[0])
+//       }}
+//     />
+//   </>
+// }
+
+// // Function to check if the current data of the view is unsaved
+// // We compare the differences saved in the master_data with the current changement of the view
+// export const CheckCurrentViewSaved: CheckCurrentViewSavedFType = (
+//   master_data: OSPData | undefined,
+//   data: OSPData | undefined,
+//   view: string
+// ) => {
+//   const view_data = GetDataFromView(master_data, view)
+//   //const data=JSON.parse(JSON.stringify(data))
+//   //const updated_diff=JSON.parse(JSON.stringify(original_diff))
+
+//   //updateLayout(data_updated_layout,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
+//   //updateLayout(updated_diff,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
+
+//   let difference = getDiff(view_data, data)
+//   difference = (difference !== undefined) ? difference : []
+//   difference = difference.filter((d) => {
+//     // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
+//     return (
+//       (d.path![0] !== 'current_view') &&
+//       (d.path![0] !== 'view') &&
+//       (d.path![0] !== 'width') &&
+//       (d.path![0] !== 'height') &&
+//       (d.path![0] !== 'linkZIndex') &&
+//       !(d.path!.length === 4 && d.path![3] === 'vert_shift'))
+//   })
+//   console.log(difference)
+//   return difference
+// }
+
+
+// export const OSPMenuPreferenceView: OSPMenuPreferenceViewFType = (
+//   t: TFunction,
+//   data: OSPData,
+//   set_data: (_: OSPData) => void
+// ) => {
+//   return <Checkbox
+//     variant='menuconfigpanel_option_checkbox'
+//     isChecked={data.accordeonToShow.includes('Vis')}
+//     onChange={() => {
+//       preferenceCheck('Vis', data)
+//       set_data(JSON.parse(JSON.stringify(data)))
+//     }}>
+//     {t('view.storytelling')}
+//   </Checkbox>
+// }
+
+
+// // Modal used when we want to switch to master or a view without saving some changements we made on the current view
+// // It give the option save or not the changements made
+// export const modal_view_not_saved: modal_view_not_savedFType = (
+//   view_not_saved: string,
+//   set_view_not_saved: (s: string) => void,
+//   t: TFunction,
+//   applicationData
+// ) => {
+//   const { data, set_data, view, master_data, set_master_data } = applicationData
+//   return (
+//     <Modal
+//       isOpen={view_not_saved !== ''}
+//       onClose={() => null}
+//     >
+//       <ModalContent
+//         maxWidth='inherit'
+//       >
+//         <ModalHeader>
+//           {t('view.ns')}
+//         </ModalHeader>
+//         <ModalCloseButton />
+//         <ModalBody>
+//           {t('view.warn_ns')}
+//         </ModalBody>
+//         <ModalFooter>
+//           <Button
+//             variant='danger'
+//             onClick={() => {
+//               // Don't save the view before changing to the selected one
+//               if (view !== 'none') {
+//                 const data_view = GetDataFromView(master_data, view) as OSPData
+//                 set_data(JSON.parse(JSON.stringify(data_view)))
+//               } else if (view === 'none') {
+//                 set_data(JSON.parse(JSON.stringify(master_data)))
+//               }
+//               set_view_not_saved('')
+//             }}
+//           >
+//             {t('view.dont_save')}
+//           </Button>
+//           <Button
+//             variant='success'
+//             onClick={() => {
+//               // Save the view before changing to the selected one
+
+//               let difference = getDiff(master_data, data)
+//               difference = (difference !== undefined) ? difference : []
+//               difference = difference.filter((d) => !(d.path!.includes('view')))
+//               master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = { diff: difference }
+//               update_heredited_attr_from_master(master_data!.view.filter(v => v.id === view_not_saved)[0], data, master_data!)
+//               if (view !== 'none') {
+//                 const data_view = GetDataFromView(master_data, view) as OSPData
+
+//                 set_master_data(JSON.parse(JSON.stringify(master_data)))
+//                 set_data(JSON.parse(JSON.stringify(data_view)))
+
+//               } else if (view === 'none') {
+//                 set_data(JSON.parse(JSON.stringify(master_data)))
+//               }
+//               set_view_not_saved('')
+//             }}
+//           >
+//             {t('view.save')}
+//           </Button>
+//         </ModalFooter>
+//       </ModalContent>
+//     </Modal>)
+// }
+
+
+// export const modal_transparent_view_attr: modal_transparent_view_attrFType = (
+//   dict_hook_ref_setter_show_dialog_components,
+//   applicationData,
+//   t: TFunction
+// ) => {
+//   const current_view = applicationData.master_data?.view.filter(v => v.id === applicationData.master_data!.current_view)[0] ?? {} as ViewType
+//   const { data, set_data, master_data, set_master_data } = applicationData as OSPApplicationDataType
+//   const { ref_setter_show_modal_transparent_view_attr } = dict_hook_ref_setter_show_dialog_components
+//   const [show_modal, set_show_modal] = useState(false)
+//   ref_setter_show_modal_transparent_view_attr.current = set_show_modal
+//   if (master_data && master_data.current_view !== undefined && master_data?.current_view !== 'none' && applicationData.data !== undefined) {
+
+//     return <Modal isOpen={show_modal} onClose={() => {
+//       RecomputeViews(data, data, set_data as (d: OSPData | undefined) => void)
+//       set_show_modal(false)
+//     }}>
+//       <ModalContent
+//         maxWidth='inherit'
+//       >
+//         <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
+//         <ModalCloseButton />
+//         <ModalBody>
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>
+//               {t('Menu.Transformation.Topology')}
+//             </Box>
+//             <Box layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('addNode')) {
+//                     current_view.heredited_attr_from_master.push('addNode')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+
+//                 }
+//                 }
+//               >{t('Menu.Transformation.addNode')}</Button>
+
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('removeNode')) {
+//                     current_view.heredited_attr_from_master.push('removeNode')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+
+//                 }
+//                 }
+//               >{t('Menu.Transformation.removeNode')}</Button>
+
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('addFlux')) {
+//                     current_view.heredited_attr_from_master.push('addFlux')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+
+//                 }
+//                 }>{t('Menu.Transformation.addFlux')}</Button>
+
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('removeFlux')) {
+//                     current_view.heredited_attr_from_master.push('removeFlux')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+
+//                 }
+//                 }>{t('Menu.Transformation.removeFlux')}</Button>
+//             </Box>
+//           </Box>
+
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>
+//               {t('Menu.Transformation.Geometry')}
+//             </Box>
+//             <Box layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('posNode')) {
+//                     current_view.heredited_attr_from_master.push('posNode')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {t('Menu.Transformation.PosNoeud')}
+//               </Button>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('posFlux')) {
+//                     current_view.heredited_attr_from_master.push('posFlux')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {t('Menu.Transformation.posFlux')}</Button>
+//             </Box>
+//           </Box>
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+
+//             <Box as='span' layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('Values')) {
+//                     current_view.heredited_attr_from_master.push('Values')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+
+//                 }
+//                 }
+//               >{current_view.heredited_attr_from_master.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+//               </Button>
+//             </Box>
+
+//           </Box>
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
+//             <Box as='span' layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('attrNode')) {
+//                     current_view.heredited_attr_from_master.push('attrNode')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {t('Menu.Transformation.attrNode')}
+//               </Button>
+
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('attrFlux')) {
+//                     current_view.heredited_attr_from_master.push('attrFlux')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {t('Menu.Transformation.attrFlux')}
+//               </Button>
+//             </Box>
+//           </Box>
+
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
+//             <Box layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('tagNode')) {
+//                     current_view.heredited_attr_from_master.push('tagNode')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {t('Menu.Transformation.tagNode')}
+//               </Button>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('tagFlux')) {
+//                     current_view.heredited_attr_from_master.push('tagFlux')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {t('Menu.Transformation.tagFlux')}
+//               </Button>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('tagData')) {
+//                     current_view.heredited_attr_from_master.push('tagData')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }
+//                 }
+//               >{t('Menu.Transformation.tagData')}</Button>
+//             </Box>
+//           </Box>
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
+
+//             <Box as='span' layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('tagLevel')) {
+//                     current_view.heredited_attr_from_master.push('tagLevel')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {current_view.heredited_attr_from_master.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+//               </Button>
+//             </Box>
+//           </Box>
+//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+
+//             <Box as='span' layerStyle='options_4cols'>
+//               <Button
+//                 variant={current_view.heredited_attr_from_master.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+//                 onClick={() => {
+//                   if (!current_view.heredited_attr_from_master.includes('attrGeneral')) {
+//                     current_view.heredited_attr_from_master.push('attrGeneral')
+//                   } else {
+//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'), 1)
+//                   }
+//                   set_data({ ...data })
+//                   set_master_data({ ...master_data! })
+//                 }}>
+//                 {current_view.heredited_attr_from_master.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+//               </Button>
+//             </Box>
+//           </Box>
+//         </ModalBody>
+
+//         <ModalFooter><Button onClick={() => {
+//           updateLayoutOSTyped(data, master_data!, current_view.heredited_attr_from_master)
+//           // updateLayout(data,master_data,current_view.heredited_attr_from_master)
+//           set_data({ ...data })
+//         }}>{t('view.updateViewWithMasterVar')}</Button></ModalFooter>
+//       </ModalContent>
+//     </Modal>
+//   } return <></>
+// }
+
+// export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
+//   t,
+//   elementsSelected
+// }) => {
+//   const [save_only_view, set_save_only_view] = useState(false)
+//   elementsSelected.saveViewGetter.current = save_only_view
+//   return <Checkbox
+//     variant='menuconfigpanel_option_checkbox'
+//     isChecked={save_only_view}
+//     onChange={() => set_save_only_view(!save_only_view)}>
+//     <OSTooltip label={t('view.tooltips.buttonExportView')}>
+//       {t('view.export')}
+//     </OSTooltip>
+//   </Checkbox>
+// }
+
+// export const OpenOSPCheckpointButton: OpenOSPCheckpointButtonFType = (
+//   master_data: OSPData | undefined,
+//   data: OSPData,
+//   view: string,
+//   view_not_saved: string,
+//   has_open_sankey_plus: boolean,
+//   t: TFunction
+// ) => {
+
+//   // Boolean used to change the logo of the button to save the current view :
+//   //  - if there is no differences between the the saved view and the current view, then the logo has a check
+//   //  - else if it contain difference, the logo contain an exclamation point
+//   const is_different = false
+//   if (view !== 'none' && view_not_saved === '' && master_data && has_open_sankey_plus) {
+//     // find another way with a variable. Checking the all view consumes too much time
+//     // const diff=CheckCurrentViewSaved(master_data,data,view)
+//     // if(diff.length>0){
+//     //   is_different=true
+//     // }
+//   }
+
+//   return <OSTooltip
+//     label={(!has_open_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : t('view.tooltips.saveView')}>
+//     <Button
+//       isDisabled={!has_open_sankey_plus}
+//       variant='light'
+//       onClick={() => {
+//         const ev = document
+//         const t = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
+//         if (ev.onkeydown) {
+//           ev.onkeydown(t)
+//         }
+//       }}
+//     >
+//       <FontAwesomeIcon
+//         icon={faFloppyDisk}
+//         style={{ opacity: (!has_open_sankey_plus) ? '0.6' : '1', width: '2rem', height: '2rem' }} />
+//       {!has_open_sankey_plus ? <>
+//         <FontAwesomeIcon
+//           icon={faLock}
+//           style={{
+//             fontSize: '1em',
+//             color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+//           }} />
+//       </>
+//         : <>{is_different ?
+//           <FontAwesomeIcon
+//             icon={faExclamation}
+//             style={{
+//               fontSize: '1em',
+//               color: 'rgba(var(--bs-danger-rgb), var(--bs-bg-opacity))'
+//             }} />
+//           : <></>}</>
+//       }
+//     </Button>
+//   </OSTooltip>
+// }
+
+// /**
+//  * Modify heredited_attr_from_master in function of the modification done in the view.
+//  * If an attribute in the view is modified which was heredited from master the set attributes
+//  * containing the attribute is removed from the list of heredited attributes
+//  */
+// const update_heredited_attr_from_master = (
+//   view: ViewType,
+//   view_data: OSPData,
+//   master_data: OSPData
+// ): void => {
+//   const heredited_attr_from_master = view.heredited_attr_from_master
+//   if (heredited_attr_from_master.indexOf('attrGeneral') !== -1) {
+//     let differences = getDiff(view_data, master_data)
+//     if (differences) {
+//       const legend_pos = differences.filter(difference => difference.path![0] == 'legend_position')
+//       if (legend_pos.length > 0) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
+//       }
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'E') &&
+//           (difference.path!.length === 1) &&
+//           (difference.path![0] !== 'current_view'))
+//       if (differences.length > 0) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
+//       }
+//     }
+//     const display_style_diff = getDiff(view_data.display_style, master_data.display_style)
+//     if (display_style_diff) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
+//     }
+
+//     const node_style_differences = getDiff(view_data.style_node, master_data.style_node)
+//     if (node_style_differences) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
+//     }
+
+//     const link_style_differences = getDiff(view_data.style_link, master_data.style_link)
+//     if (link_style_differences) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrGeneral'), 1)
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('addNode') !== -1) {
+//     let differences = getDiff(view_data.nodes, master_data.nodes)
+//     if (differences) {
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'N') &&
+//           (difference.path!.length === 1))
+//       if (differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('addNode'), 1)
+//       }
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('removeNode') !== -1) {
+//     let differences = getDiff(view_data.nodes, master_data.nodes)
+//     if (differences) {
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'D') &&
+//           (difference.path!.length === 1))
+//       if (differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('removeNode'), 1)
+//       }
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('addFlux') !== -1) {
+//     let differences = getDiff(view_data.links, master_data.links)
+//     if (differences) {
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'N') &&
+//           (difference.path!.length === 1))
+//       if (differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('addFlux'), 1)
+//       }
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('removeFlux') !== -1) {
+//     let differences = getDiff(view_data.links, master_data.links)
+//     if (differences) {
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'D') &&
+//           (difference.path!.length === 1))
+//       if (differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('removeFlux'), 1)
+//       }
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('posNode') !== -1) {
+//     let differences = getDiff(view_data.nodes, master_data.nodes)
+//     if (differences) {
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'E') &&
+//           (['x', 'y', 'x_label', 'y_label'].includes(difference.path![1])))
+//       if (differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('posNode'), 1)
+//       }
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('posLink') !== -1) {
+//     const geometry_attributes = [
+//       'orientation',
+//       'left_horiz_shift',
+//       'right_horiz_shift',
+//       'vert_shift',
+//       'curvature',
+//       'curved',
+//       'recycling',
+//       'arrow_size',
+//       // Geometry link labels
+//       'x_label',
+//       'y_label',
+//       'label_position',
+//       'orthogonal_label_position',
+//       'label_on_path'
+//     ]
+//     let differences = getDiff(view_data.links, master_data.links)
+//     if (differences) {
+//       differences = differences.filter(
+//         (difference) =>
+//           (difference.kind === 'D' || difference.kind === 'N') &&
+//           (difference.path!.length === 3) &&
+//           (difference.path![1] === 'local') &&
+//           (geometry_attributes.includes(difference.path![2])) ||
+//           (difference.kind === 'E' && geometry_attributes.includes(difference.path![1]))
+//       )
+//       if (differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('posLink'), 1)
+//       }
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('attrNode') !== -1) {
+//     Object.entries(view_data.nodes).forEach(([key, node]) => {
+//       const layoutNode = master_data.nodes[key]
+//       if (!layoutNode) {
+//         return
+//       }
+//       if (!node.local) {
+//         node.local = {}
+//       }
+//       if (!layoutNode.local) {
+//         layoutNode.local = {}
+//       }
+//       const differences = getDiff(node.local, layoutNode.local)
+//       if (differences && differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrNode'), 1)
+//       }
+//     })
+//   }
+
+//   if (heredited_attr_from_master.indexOf('attrFlux') !== -1) {
+//     Object.entries(view_data.links).forEach(([key, link]) => {
+//       const layoutLink = master_data.links[key]
+//       if (!layoutLink) {
+//         return
+//       }
+//       if (!link.local) {
+//         link.local = {}
+//       }
+//       if (!layoutLink.local) {
+//         layoutLink.local = {}
+//       }
+//       const differences = getDiff(link.local, layoutLink.local)
+//       if (differences && differences.length > 1) {
+//         heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('attrFlux'), 1)
+//       }
+
+//     })
+//   }
+
+//   if (heredited_attr_from_master.indexOf('Values') !== -1) {
+//     const dataTagsNames = Object.values(view_data.dataTags).map(tagGroup => tagGroup.group_name)
+//     const layoutTagsNames = Object.values(master_data.dataTags).map(tagGroup => tagGroup.group_name)
+
+//     if (JSON.stringify(dataTagsNames) === (JSON.stringify(layoutTagsNames))) {
+//       Object.entries(view_data.links).forEach(([key, link]) => {
+//         const layoutLink = master_data.links[key]
+//         if (!layoutLink) {
+//           return
+//         }
+//         const differences = getDiff(link.value, layoutLink.value)
+//         if (differences) {
+//           heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('Values'), 1)
+//         }
+//       })
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('tagLevel') !== -1) {
+//     const differences = getDiff(view_data.levelTags, master_data.levelTags)
+//     if (differences) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagLevel'), 1)
+//       //alert('Niveau de détail modifié. Cet attribut n\'est plus hérité du maître.')
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('tagNode') !== -1) {
+//     const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+//     if (differences) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagNode'), 1)
+//       //alert('Etiquettes de noeuds modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('tagFlux') !== -1) {
+//     const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+//     if (differences) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagFlux'), 1)
+//       //alert('Etiquettes de flux modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
+//     }
+//   }
+
+//   if (heredited_attr_from_master.indexOf('tagData') !== -1) {
+//     const differences = getDiff(view_data.nodeTags, master_data.nodeTags)
+//     if (differences) {
+//       heredited_attr_from_master.splice(heredited_attr_from_master.indexOf('tagData'), 1)
+//       //alert('Etiquettes de données modifiées. Ce groupe d\'attribut n\'est plus hérité du maître.')
+//     }
+//   }
+// }

@@ -122,7 +122,6 @@ export abstract class Class_ApplicationDataPlus
     const evtKeyF9 = (evt.key === 'F9')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyX = ((evt.key === 'x') || (evt.key === 'X')) && evtOnDrawingArea
-    const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlX = evtCtrl && evtKeyX
 
@@ -231,7 +230,7 @@ export abstract class Class_ApplicationDataPlus
    * if we are in a view switch to master then save master then the view
    *
    * @param {boolean} [with_view=true]
-   * @return {*} 
+   * @return {*}
    * @memberof Class_ApplicationDataPlus
    */
   toJSON(with_view: boolean = true) {
@@ -317,7 +316,7 @@ export abstract class Class_ApplicationDataPlus
   }
 
   public setCurrentViewToPrev() {
-    if (this.has_views && !this.has_view_before) {
+    if (this.has_views && this.has_view_before) {
       const idx = this._views_order.indexOf(this._drawing_area.sankey.id)
       this.setCurrentView(this._views_order[idx - 1])
     }
@@ -345,8 +344,6 @@ export abstract class Class_ApplicationDataPlus
   }
   public set menu_configuration(_: Class_MenuConfigPlus) { this._menu_configuration = _ }
 
-
-
   public get views(): Type_GenericDrawingArea[] {
     return Object.values(this._views)
   }
@@ -371,6 +368,13 @@ export abstract class Class_ApplicationDataPlus
       return (this._views_order.indexOf(this._drawing_area.sankey.id) < (this._views_order.length - 1))
     else
       return false
+  }
+
+  public get has_master_sankey(): boolean {
+    if (this.has_views)
+      return default_main_sankey_id in this.views
+    else
+      return true
   }
 
 }

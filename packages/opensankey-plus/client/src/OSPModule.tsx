@@ -52,10 +52,8 @@ import {
 
 // import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import {
-  GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView,
-  SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved,
-  viewsAccordion,
-  OSPMenuPreferenceView
+  OSPBannerView,
+  SelecteurView,
 } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
@@ -178,18 +176,25 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 
   // Local variables --------------------------------------------------------------------
   const is_static = applicationDataOSP.new_data.is_static
-  const has_views = applicationDataOSP.new_data.drawing_area.has_views
+  const has_views = applicationDataOSP.new_data.has_views
 
-  // TODO : re implement SelecteurView with class
-  (uiElementsRef as OSPUiElementsRefType).ViewSelector.current=<SelecteurView
+  // JSX Elements for views navbar ------------------------------------------------------
+  const view_selector = <SelecteurView
     applicationData={applicationDataOSP}
-    applicationState={applicationState as OSPElementsSelectedType}
-    t={applicationContext.t}
-    set_view_not_saved={applicationDataOSP.set_view_not_saved}
-    connected={OSPApplicationContext.has_open_sankey_plus}
   />
-  // Top Menus
-  additionalMenus.external_file_export_item.push(<OSPItemExport />)
+
+  if (!is_static || has_views ) {
+    additionalMenus.externale_navbar_item['view'] = <OSPBannerView
+      applicationData={applicationDataOSP}
+      view_selector={view_selector}
+    />
+  }
+
+  // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
+
+  // TODO : manque implementation des exort svg
+  // // Top Menus
+  // additionalMenus.external_file_export_item.push(<OSPItemExport />)
 
   // Page settings
   // TODO : re implement ImportImageAsSvgBg with class
@@ -199,13 +204,6 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   />
 
   // TODO : re implement OSPBannerView with class
-
-  if (!is_static || has_views ) {
-    additionalMenus.externale_navbar_item['view'] = <OSPBannerView
-      applicationData={applicationDataOSP}
-      view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
-    />
-  }
 
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <OSPNodeIcon

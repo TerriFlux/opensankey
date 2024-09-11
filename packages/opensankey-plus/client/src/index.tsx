@@ -1,4 +1,4 @@
-import './deps/Opensankey/css/main.css'
+import './deps/OpenSankey/css/main.css'
 import './css/main.css'
 import './css/colors/red.css'
 import './css/style_elements_sankey.css'
@@ -26,6 +26,7 @@ import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuD
 import { ClickSaveDiagram } from './deps/OpenSankey/dialogs/SankeyPersistence'
 import { DefaultSankeyData } from './deps/OpenSankey/types/Legacy'
 import { Type_GenericApplicationDataOS } from './deps/OpenSankey/types/TypesOS'
+import { OSPBannerView, SelecteurView } from './SankeyPlusViews'
 
 declare const window: Window &
 typeof globalThis & {
@@ -145,7 +146,6 @@ root.render(
       }
     }
 
-
     initializeAdditionalMenus={
       (
         additionalMenus,
@@ -154,19 +154,15 @@ root.render(
         reinitialization
       )=>{
         if (window.SankeyToolsStatic) {
-          const plus_dict_app_data=applicationData as OSPApplicationDataType
-          const OSPApplicationContext=applicationContext as OSPApplicationContextType
-          const selector_of_view=<SelecteurView
-            applicationData={plus_dict_app_data}
-            applicationState={applicationState as OSPElementsSelectedType}
-            t={applicationContext.t}
-            set_view_not_saved={plus_dict_app_data.set_view_not_saved}
-            connected={OSPApplicationContext.has_open_sankey_plus}
-          />;
-          (uiElementsRef as OSPUiElementsRefType).ViewSelector.current=selector_of_view
+          // Cast
+          const plus_dict_app_data=applicationData as unknown as OSPApplicationDataType
           additionalMenus.externale_navbar_item['view']=<OSPBannerView
-            applicationData={applicationData}
-            view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
+            applicationData={plus_dict_app_data}
+            view_selector={
+              <SelecteurView
+                applicationData={plus_dict_app_data}
+              />
+            }
           />
           return
         }
