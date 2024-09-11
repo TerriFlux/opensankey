@@ -42,8 +42,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     Updater of components for views related menus
     ========================================*/
 
-  private _ref_to_selector_views: MutableRefObject<JSX.Element | null>
   private _ref_to_selector_views_updater: MutableRefObject<() => void>
+  private _ref_to_navbar_views_updater: MutableRefObject<() => void>
 
   // Button that open the sub menu links of elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
@@ -60,7 +60,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     super()
     // Init value for menu_config plus variable
     this._ref_to_menu_config_container_updater = useRef(() => null)
-    this._ref_to_selector_views = useRef<JSX.Element>(null)
+    this._ref_to_navbar_views_updater = useRef(() => null)
     this._ref_to_selector_views_updater = useRef(() => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node=useRef(() => null)
@@ -96,9 +96,40 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
    */
   public updateComponentRelatedToContainers() {
     this._add_waiting_process(
-      'updateComponentRelatedToContainersUpdaters',
+      'updateComponentRelatedToContainers',
       (_this: Class_MenuConfigPlus) => {
         _this._ref_to_menu_config_container_updater.current()
+      }
+    )
+  }
+
+  public updateAllComponentsRelatedToViews() {
+    this.updateComponentRelatedToNavbarView()
+    this.updateComponentRelatedToViewSelector()
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToViewSelector() {
+    this._add_waiting_process(
+      'updateComponentRelatedToViewSelector',
+      (_this: Class_MenuConfigPlus) => {
+        _this._ref_to_selector_views_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNavbarView() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNavbarView',
+      (_this: Class_MenuConfigPlus) => {
+        _this._ref_to_navbar_views_updater.current()
       }
     )
   }
@@ -137,7 +168,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
   // public set dict_setter_show_dialog_plus(value: OSPShowMenuComponentsVarType) {this._dict_setter_show_dialog_plus = value;}
 
-  public get ref_to_selector_views(): RefObject<JSX.Element> { return this._ref_to_selector_views }
+  public get ref_to_navbar_views_updater(): MutableRefObject<() => void>  { return this._ref_to_navbar_views_updater }
   public get ref_to_selector_views_updater(): MutableRefObject<() => void> { return this._ref_to_selector_views_updater }
 
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }

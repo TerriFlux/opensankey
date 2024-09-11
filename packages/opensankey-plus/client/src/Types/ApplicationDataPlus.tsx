@@ -299,6 +299,8 @@ export abstract class Class_ApplicationDataPlus
       this._drawing_area = this._views[id]
       this._drawing_area.sankey.setVisible()
       this._drawing_area.reset()
+      // Update Menu
+      this._menu_configuration.updateAllComponentsRelatedToViews()
     }
   }
 
@@ -372,7 +374,7 @@ export abstract class Class_ApplicationDataPlus
 
   public get has_master_sankey(): boolean {
     if (this.has_views)
-      return default_main_sankey_id in this.views
+      return default_main_sankey_id in this._views
     else
       return true
   }

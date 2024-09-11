@@ -125,6 +125,14 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const { new_data } = applicationData
   const { t } = new_data
 
+  // Component updater ------------------------------------------------------------------
+
+  const [, setCount] = useState(0)
+  const refreshThis = () => {
+    setCount(a => a + 1)
+  }
+  new_data.menu_configuration.ref_to_navbar_views_updater.current = refreshThis
+
   // Ref to trigger other components ----------------------------------------------------
 
   const { ref_setter_show_modal_transparent_view_attr } = new_data.menu_configuration.dict_setter_show_dialog_plus
@@ -135,8 +143,8 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const has_master_sankey = new_data.has_master_sankey
   const has_views = new_data.has_views
   const is_view_master = new_data.is_view_master
-  const next_button_disabled = !new_data.has_view_after
-  const prev_button_disabled = !new_data.has_view_before
+  const has_view_before = new_data.has_view_before
+  const has_view_after = new_data.has_view_after
 
   // Button to create a view ------------------------------------------------------------
 
@@ -211,7 +219,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!has_sankey_plus}
+        isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={
           // Delete the view
           () => {
@@ -260,7 +268,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
               icon={faMinus}
             />
             {
-              !has_sankey_plus ?
+              (!has_sankey_plus) ?
                 <FontAwesomeIcon
                   icon={faLock}
                   style={{
@@ -288,19 +296,19 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const button_to_return_to_master = <OSTooltip
     placement='bottom'
     label={
-      (!has_sankey_plus && !has_views) ?
+      (!has_sankey_plus) ?
         t('Menu.sankeyOSPDisabled') :
         t('view.tooltips.home')}
   >
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={((!has_sankey_plus && !has_views) || (!has_master_sankey))}
+        isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={() => {
           const evt = document
-          const evt_key_f7 = { key: 'F7' }
+          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7'})
           if (evt.onkeydown) {
-            evt.onkeydown(evt_key_f7 as KeyboardEvent)
+            evt.onkeydown(evt_key_f7)
           }
         }}
       >
@@ -320,7 +328,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
               icon={faHome}
             />
             {
-              (!has_sankey_plus && !has_views) ?
+              (!has_sankey_plus) ?
                 <FontAwesomeIcon
                   icon={faLock}
                   style={{
@@ -348,7 +356,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const button_to_prev_view = <OSTooltip
   placement='bottom'
   label={
-    (!has_sankey_plus && !has_views) ?
+    (!has_sankey_plus) ?
       t('Menu.sankeyOSPDisabled') :
       t('view.tooltips.PrevViewButton')
   }
@@ -356,10 +364,10 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   <Box>
     <Button
       variant='menutop_button'
-      isDisabled={prev_button_disabled || !has_views}
+      isDisabled={!(has_sankey_plus && has_views && has_view_before)}
       onClick={() => {
         const ev = document
-        const tmp = { key: 'F8' }
+        const tmp = new KeyboardEvent('keydown', { key: 'F8'})
         if (ev.onkeydown) {
           ev.onkeydown(tmp as KeyboardEvent)
         }
@@ -381,7 +389,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
             icon={faCaretSquareLeft}
           />
           {
-            (!has_sankey_plus && !has_views) ?
+            (!has_sankey_plus) ?
               <FontAwesomeIcon
                 icon={faLock}
                 style={{
@@ -409,17 +417,17 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const button_to_next_view = <OSTooltip
   placement='bottom'
   label={
-    (!has_sankey_plus && !has_views) ?
+    (!has_sankey_plus) ?
       (t('Menu.sankeyOSPDisabled')) :
       t('view.tooltips.NextViewButton')}
 >
   <Box>
     <Button
       variant='menutop_button'
-      isDisabled={next_button_disabled || !has_views}
+      isDisabled={!(has_sankey_plus && has_views && has_view_after)}
       onClick={() => {
         const ev = document
-        const tmp = { key: 'F9' }
+        const tmp = new KeyboardEvent('keydown', { key: 'F9'})
         if (ev.onkeydown) {
           ev.onkeydown(tmp as KeyboardEvent)
         }
@@ -441,7 +449,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
             icon={faCaretSquareRight}
           />
           {
-            (!has_sankey_plus && !has_views) ?
+            (!has_sankey_plus) ?
               <FontAwesomeIcon
                 icon={faLock}
                 style={{
@@ -476,7 +484,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!has_sankey_plus}
+        isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={
           () => {
             ref_setter_show_modal_transparent_view_attr.current(true)
@@ -499,7 +507,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
               icon={faListCheck}
             />
             {
-              !has_sankey_plus ?
+              (!has_sankey_plus) ?
                 <FontAwesomeIcon
                   icon={faLock}
                   style={{
@@ -527,7 +535,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const create_data_catalog = <OSTooltip
     placement='bottom'
     label={
-      (!has_sankey_plus || !is_view_master) ?
+      (!has_sankey_plus) ?
         (t('Menu.sankeyOSPDisabled')) :
         t('view.tooltips.catalog_data')
     }
@@ -535,7 +543,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!has_sankey_plus || !is_view_master}
+        isDisabled={!(has_sankey_plus && has_views)}
         onClick={
           () => {
             if (ref_to_input_loader_json_catalog.current) {
@@ -560,7 +568,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
               icon={faCopy}
             />
             {
-              !has_sankey_plus ?
+              (!has_sankey_plus) ?
                 <FontAwesomeIcon
                   icon={faLock}
                   style={{
@@ -686,15 +694,12 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
       {view_selector}
     </Box>
     {
-      (
-        (!is_view_master) &&
-        (!new_data.is_static)
-      ) ?
+      new_data.is_static ?
+        <></>:
         <>
           {button_to_delete_actual_view}
           {button_to_show_view_attr_transfert_modal}
-        </> :
-        <></>
+        </>
     }
   </>
 }
