@@ -1441,21 +1441,31 @@ export abstract class Class_DrawingArea
     }
   }
 
-  public updateLayoutFrom(other: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
-    this.color = other.color
-    this.grid_size = other.grid_size
-    this.grid_visible = other.grid_visible
+  public updateFrom(
+    other_drawing_area: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    mode: string[]
+  ) {
+    // Transfert all attributes = Copy everything from other drawing area
+    const all=mode.includes('*')
+    // Transfer DA attributs
+    if (mode.includes('attrDrawingArea') || all) {
+      this.color = other_drawing_area.color
+      this.grid_size = other_drawing_area.grid_size
+      this.grid_visible = other_drawing_area.grid_visible
 
-    // Transfer legend attribute from new layout
-    this.legend.masked = other.legend.masked
-    this.legend.display_legend_scale = other.legend.display_legend_scale
-    this.legend.legend_police = other.legend.legend_police
-    this.legend.legend_bg_border = other.legend.legend_bg_border
-    this.legend.legend_bg_color = other.legend.legend_bg_color
-    this.legend.legend_bg_opacity = other.legend.legend_bg_opacity
-    this.legend.legend_show_dataTags = other.legend.legend_show_dataTags
-    this.legend.node_label_separator = other.legend.node_label_separator
-    this.legend.width = other.legend.width
+      // Transfer legend attribute from new layout
+      this.legend.masked = other_drawing_area.legend.masked
+      this.legend.display_legend_scale = other_drawing_area.legend.display_legend_scale
+      this.legend.legend_police = other_drawing_area.legend.legend_police
+      this.legend.legend_bg_border = other_drawing_area.legend.legend_bg_border
+      this.legend.legend_bg_color = other_drawing_area.legend.legend_bg_color
+      this.legend.legend_bg_opacity = other_drawing_area.legend.legend_bg_opacity
+      this.legend.legend_show_dataTags = other_drawing_area.legend.legend_show_dataTags
+      this.legend.node_label_separator = other_drawing_area.legend.node_label_separator
+      this.legend.width = other_drawing_area.legend.width
+    }
+    // Transfert Sankey Attributes
+    this.sankey.updateFrom(other_drawing_area.sankey, mode)
   }
 
 

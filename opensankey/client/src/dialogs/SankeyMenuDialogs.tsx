@@ -29,7 +29,8 @@ export   const os_all_element_to_transform = [
 export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   applicationData,
   diagramSelector,
-  apply_transformation_additional_elements}) => {
+  apply_transformation_additional_elements
+}) => {
   const {dataVarToUpdate,new_data}=applicationData
   const { t } = new_data
   // const [prev_sankey_data,set_prev_sankey_data] = useState(data)
@@ -697,7 +698,7 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
                     const new_layout = JSON.parse(result)
                     const tmp_DA = new_data.createNewDrawingArea()
                     tmp_DA.fromJSON(new_layout, false)
-                    new_data.drawing_area.sankey.updateLayoutFromJSON(tmp_DA,dataVarToUpdate.current)
+                    new_data.drawing_area.updateFrom(tmp_DA, dataVarToUpdate.current)
                     new_data.drawing_area.drawElements()
                     new_data.menu_configuration.updateAllMenuComponents()
 
