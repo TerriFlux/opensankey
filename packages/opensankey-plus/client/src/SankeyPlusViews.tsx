@@ -130,6 +130,14 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const { ref_setter_show_modal_transparent_view_attr } = new_data.menu_configuration.dict_setter_show_dialog_plus
   const ref_to_input_loader_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
 
+  // Local updatera --------------------------------------------------------------------
+  const [,setCount]=useState(0)
+  const refreshThisComponentAndRelated=()=>{
+    setCount(a=>a+1)
+    new_data.menu_configuration.ref_to_selector_views_updater.current()
+  }
+  new_data.menu_configuration.ref_to_banner_views_updater.current =()=> setCount(a=>a+1)
+
   // Local variables --------------------------------------------------------------------
   const has_sankey_plus = new_data.has_sankey_plus
   const has_master_sankey = new_data.has_master_sankey
@@ -137,7 +145,6 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const is_view_master = new_data.is_view_master
   const next_button_disabled = !new_data.has_view_after
   const prev_button_disabled = !new_data.has_view_before
-
   // Button to create a view ------------------------------------------------------------
 
   const button_to_create_view = <OSTooltip
@@ -295,10 +302,10 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={((!has_sankey_plus && !has_views) || (!has_master_sankey))}
+        isDisabled={((!has_sankey_plus && !has_views) || (new_data.is_view_master))}
         onClick={() => {
           const evt = document
-          const evt_key_f7 = { key: 'F7' }
+          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7'})
           if (evt.onkeydown) {
             evt.onkeydown(evt_key_f7 as KeyboardEvent)
           }
@@ -359,9 +366,9 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
       isDisabled={prev_button_disabled || !has_views}
       onClick={() => {
         const ev = document
-        const tmp = { key: 'F8' }
+        const evt_key_f8 = new KeyboardEvent('keydown', { key: 'F8'})
         if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
+          ev.onkeydown(evt_key_f8)
         }
       }}
     >
@@ -419,9 +426,9 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
       isDisabled={next_button_disabled || !has_views}
       onClick={() => {
         const ev = document
-        const tmp = { key: 'F9' }
+          const evt_key_f9 = new KeyboardEvent('keydown', { key: 'F9'})
         if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
+          ev.onkeydown(evt_key_f9)
         }
       }}
     >
@@ -732,6 +739,8 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Update BannerView component
+    new_data.menu_configuration.ref_to_banner_views_updater.current()
     // And update this menu also
     refreshThis()
   }
@@ -762,6 +771,7 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         new_data.setCurrentView(evt.target.value)
+        refreshThisAndUpdateRelatedComponents()
         // TODO supprimer quand OK
         // multi_selected_nodes.current = []
         // multi_selected_links.current = []

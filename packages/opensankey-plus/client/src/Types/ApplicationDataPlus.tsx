@@ -299,6 +299,11 @@ export abstract class Class_ApplicationDataPlus
       this._drawing_area = this._views[id]
       this._drawing_area.sankey.setVisible()
       this._drawing_area.reset()
+      // Purge selections to avoid modifying unvisible view
+      this._drawing_area.purgeSelection()
+      // Update components related to views
+      this._menu_configuration.ref_to_selector_views_updater.current()
+      this._menu_configuration.ref_to_banner_views_updater.current()
     }
   }
 
@@ -322,11 +327,32 @@ export abstract class Class_ApplicationDataPlus
     }
   }
 
+
+  /**
+   * Delete current view
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
   public deleteCurrentView() {
-    if (this.has_views && !this.is_view_master) {
-      delete this._views[this._drawing_area.sankey.id] // Remove for view dict
-      this._drawing_area.sankey.delete() // Delete view
-      this._drawing_area = this._views[default_main_sankey_id] // Fall back to master view by defaut
+    this.deleteView(this._drawing_area.sankey.id) // Remove for view dict
+  }
+
+  /**
+   * Delete view from applicationData & go to master
+   *
+   * @param {string} id
+   * @memberof Class_ApplicationDataPlus
+   */
+  public deleteView(id: string) {
+    // Check if we are not trying to delete master
+    if (this.has_views && id != default_main_sankey_id && id in this._views) {
+      // Got to master
+      if (!this.is_view_master) {
+        this._drawing_area.delete() // Delete view
+        this.setCurrentViewToMaster()
+      }
+      delete this._views[id] // Remove for view dict
+      this._views_order.splice(this._views_order.indexOf(id),1) // Remove id from view_order
     }
   }
 
@@ -372,9 +398,9 @@ export abstract class Class_ApplicationDataPlus
 
   public get has_master_sankey(): boolean {
     if (this.has_views)
-      return default_main_sankey_id in this.views
+      return default_main_sankey_id in this._views
     else
-      return true
+      return false
   }
 
 }
