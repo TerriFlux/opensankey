@@ -40,7 +40,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract addLinkToSelection(_: Type_AbstractLinkElement): void
   public abstract purgeSelection(): void
   public abstract closeAllMenus(): void
-  public abstract updateLayoutFrom(_: Class_AbstractDrawingArea): void
+  public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
   // Mandatory getters
   public abstract get sankey(): Class_AbstractSankey
   public abstract get scale(): number

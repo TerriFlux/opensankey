@@ -43,6 +43,32 @@ import {
   Type_MacroTagGroup
 } from './Utils'
 
+
+// LOCAL FUNCTIONS **********************************************************************
+
+function get_sync_lists(
+  to_sync: {[id: string]: any},
+  as_ref: {[id: string]: any}
+) {
+  // Transfer node style from new_layout style node  to corresponding style in current
+  const to_sync_ids = Object.keys(to_sync)
+  const as_ref_ids = Object.keys(as_ref)
+
+  // Styles can be to remove, to add or to update
+  const to_remove = to_sync_ids
+    .filter(id => !(as_ref_ids.includes(id)))
+  const to_add = as_ref_ids
+    .filter(id => !to_sync_ids.includes(id))
+  const to_update = to_sync_ids
+  .filter(id => as_ref_ids.includes(id))
+
+  return [
+    to_remove,
+    to_add,
+    to_update
+  ]
+}
+
 // CLASS SANKEY *************************************************************************
 /**
  * Contains all necessary elements to draw a Sankey
@@ -181,7 +207,7 @@ export abstract class Class_Sankey
       this.nodes_list.forEach(node => node.draw())
     // Draw links
     this.links_list.forEach(link => link.draw())
- 
+
   }
 
   // Nodes related ----------------------------------------------------------------------
@@ -884,330 +910,340 @@ export abstract class Class_Sankey
       })
   }
 
-  public updateLayoutFromJSON(
-    new_layout: Type_GenericDrawingArea,
+  /**
+   * Copy some of all the other sankey attributes to this sankey
+   * Modes list can contains all these options :
+   * - 'attrDrawingArea' - Copy Attributes related to display on drawing area (ie styles)
+   * - 'tagLevel' - Copy level tags
+   * - 'tagNode' - Copy node tags
+   * - 'tagFlux' - Copy flux tags
+   * - 'tagData' - Copy data tags
+   * @param {Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} other_sankey
+   * @param {string[]} mode
+   * @memberof Class_Sankey
+   */
+  public updateFrom(
+    other_sankey: Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
     mode: string[],
   ) {
+    // Local variables to avoid recomputations ------------------------------------------
+
     const all=mode.includes('*')
 
-    const list_new_nodes = new_layout.sankey.nodes_list as Type_GenericNodeElement[]
-    const list_new_nodes_id = list_new_nodes.map(n => n.id)
+    // Transfer DA attribut from other sankey to current (+ nodes/links style)------------
 
-    const list_new_links = new_layout.sankey.links_list as Type_GenericLinkElement[]
-    const list_new_links_id = list_new_links.map(n => n.id)
-
-    // Transfer DA attribut from new layout to current (+ nodes/links style)
     if (mode.includes('attrDrawingArea') || all) {
 
-      // Transfer node style from new_layout style node  to corresponding style in current
-      const list_curr_nodes_style = this.node_styles_list
-      const list_curr_nodes_style_id = list_curr_nodes_style.map(ns=>ns.id)
-      const list_new_nodes_style = new_layout.sankey.node_styles_list as Class_NodeStyle[]
-      const list_new_nodes_style_id = list_new_nodes_style.map(ns => ns.id)
+      // Nodes styles can be to remove, to add or to update
+      const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(this._node_styles, other_sankey._node_styles)
 
-      list_curr_nodes_style
-        .filter(n => list_new_nodes_id.includes(n.id))
-        .forEach(n => {
-          const similar_new_layout_node = list_new_nodes_style
-            .filter(new_n => new_n.id == n.id)[0]
-          n.copyFrom(similar_new_layout_node)
+      // Update styles
+      ns_to_remove
+        .forEach(id => {
+          this._node_styles[id].delete()
         })
-      // Create style present in new layout but not current
-      list_new_nodes_style
-        .filter(n => !list_curr_nodes_style_id.includes(n.id))
-        .forEach(n => {
-          this._addNewNodeStyle(n.id, n.name)
-          this._node_styles[n.id].copyFrom(n)
+      ns_to_add
+        .forEach(id => {
+          const ns = other_sankey._node_styles[id]
+          this._addNewNodeStyle(ns.id, ns.name)
+          this._node_styles[ns.id].copyFrom(ns)
+        })
+      ns_to_update
+        .forEach(id => {
+          this._node_styles[id].copyFrom(other_sankey._node_styles[id])
         })
 
-      // Transfer link style from new_layout style link  to corresponding style in current
-      const list_curr_links_style = this.link_styles_list
-      const list_curr_links_style_id = list_curr_links_style.map(ls=>ls.id)
-      const list_new_links_style = new_layout.sankey.link_styles_list as Class_LinkStyle[]
-      const list_new_links_style_id = list_new_links_style.map(ns => ns.id)
+      // Link styles can be to remove, to add or to update
+      const [ls_to_remove, ls_to_add, ls_to_update] = get_sync_lists(this._link_styles, other_sankey._link_styles)
 
-      list_curr_links_style
-        .filter(n => list_new_links_id.includes(n.id))
-        .forEach(n => {
-          const similar_new_layout_link = list_new_links_style.filter(new_n => new_n.id == n.id)[0]
-          n.copyFrom(similar_new_layout_link)
+      // Update styles
+      ls_to_remove
+        .forEach(id => {
+          this._link_styles[id].delete()
         })
-      // Create style present in new layout but not current
-      list_new_links_style
-        .filter(n => !list_curr_links_style_id.includes(n.id))
-        .forEach(n => {
-          this._addNewLinkStyle(n.id, n.name)
-          this._link_styles[n.id].copyFrom(n)
+      ls_to_add
+        .forEach(id => {
+          const ls = other_sankey._link_styles[id]
+          this._addNewLinkStyle(ls.id, ls.name)
+          this._link_styles[ls.id].copyFrom(ls)
         })
-
-      // Transfer DA attribute from new layout
-      this.drawing_area.updateLayoutFrom(new_layout)
+      ls_to_update
+        .forEach(id => {
+          this._link_styles[id].copyFrom(other_sankey._link_styles[id])
+        })
     }
 
-    // Update level_tag_dict
+    // Update level_tag_dict ------------------------------------------------------------
+
     if (mode.includes('tagLevel') || all) {
-      // Finds the corresponding tag group by name and apply the "dynamic" attributes
-      // activate, show_legend and selected.
-      const curr_level_taggs_list = this.level_taggs_list
-      const curr_level_taggs_list_id = curr_level_taggs_list.map(nt => nt.id)
-      const new_level_taggs_list = new_layout.sankey.level_taggs_list
-      const new_level_taggs_list_id = new_level_taggs_list.map(nt => nt.id)
+      // Finds the corresponding tag group by ids
+      const [to_remove, to_add, to_update] = get_sync_lists(this._level_taggs, other_sankey._level_taggs)
 
-      // Delete level_taggs group not present in new layout
-      curr_level_taggs_list_id
-        .filter(id_nt => !new_level_taggs_list_id.includes(id_nt))
-        .forEach(id_nt => {
-          this.removeTagGroupWithId('level_taggs', id_nt)
+      // Update taggs
+      to_remove
+        .forEach(id => {
+          this.removeTagGroupWithId('level_taggs', id)
         })
-
-      // Add level_taggs group not present in current layout
-      new_level_taggs_list_id
-        .filter(id_nt => !curr_level_taggs_list_id.includes(id_nt))
-        .forEach(id_nt => {
-          this.addLevelTagGroup(id_nt, new_layout.sankey.level_taggs_dict[id_nt].name)
-          this.level_taggs_dict[id_nt].copyFrom(new_layout.sankey.level_taggs_dict[id_nt] as Class_LevelTagGroup)
+      to_add
+        .forEach(id => {
+          const ltagg = other_sankey._level_taggs[id]
+          this.addLevelTagGroup(ltagg.id, ltagg.name)
+          this._level_taggs[id].copyFrom(ltagg)
+        })
+      to_update
+        .forEach(id => {
+          this._level_taggs[id].copyFrom(other_sankey._level_taggs[id])
         })
     }
 
-    // Update node_tag_dict
+    // Update node_tag_dict ------------------------------------------------------------
     if (mode.includes('tagNode') || all) {
-      // Finds the corresponding tag group by name and apply the "dynamic" attributes
-      // activate, show_legend and selected.
-      const curr_node_taggs_list = this.node_taggs_list
-      const curr_node_taggs_list_id = curr_node_taggs_list.map(nt => nt.id)
-      const new_node_taggs_list = new_layout.sankey.node_taggs_list
-      const new_node_taggs_list_id = new_node_taggs_list.map(nt => nt.id)
+      // Finds the corresponding tag group by ids
+      const [to_remove, to_add, to_update] = get_sync_lists(this._node_taggs, other_sankey._node_taggs)
 
-      // Delete node_taggs group not present in new layout
-      curr_node_taggs_list_id
-        .filter(id_nt => !new_node_taggs_list_id.includes(id_nt))
-        .forEach(id_nt => {
-          this.removeTagGroupWithId('node_taggs', id_nt)
+      // Update taggs
+      to_remove
+        .forEach(id => {
+          this.removeTagGroupWithId('node_taggs', id)
         })
-
-      // Add node_taggs group not present in current layout
-      new_node_taggs_list_id
-        .filter(id_nt => !curr_node_taggs_list_id.includes(id_nt))
-        .forEach(id_nt => {
-          this.addNodeTagGroup(id_nt, new_layout.sankey.node_taggs_dict[id_nt].name)
-          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt] as Class_TagGroup)
+      to_add
+        .forEach(id => {
+          const ntagg = other_sankey._node_taggs[id]
+          this.addNodeTagGroup(ntagg.id, ntagg.name)
+          this._node_taggs[id].copyFrom(ntagg)
         })
-
-      new_node_taggs_list_id
-        .filter(id_nt => curr_node_taggs_list_id.includes(id_nt))
-        .forEach(id_nt => {
-          this.node_taggs_dict[id_nt].copyFrom(new_layout.sankey.node_taggs_dict[id_nt] as Class_TagGroup)
+      to_update
+        .forEach(id => {
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[id])
         })
     }
 
-    // Update flux_tag_dict
+    // Update flux_tag_dict ------------------------------------------------------------
     if (mode.includes('tagFlux') || all) {
-      // Finds the corresponding tag group by name and apply the "dynamic" attributes
-      // activate, show_legend and selected.
+      // Finds the corresponding tag group by ids
+      const [to_remove, to_add, to_update] = get_sync_lists(this._flux_taggs, other_sankey._flux_taggs)
 
-      const curr_flux_taggs_list = this.flux_taggs_list
-      const curr_flux_taggs_list_id = curr_flux_taggs_list.map(nt => nt.id)
-      const new_flux_taggs_list = new_layout.sankey.flux_taggs_list
-      const new_flux_taggs_list_id = new_flux_taggs_list.map(nt => nt.id)
-
-      // Delete flux_taggs group not present in new layout
-      curr_flux_taggs_list_id
-        .filter(id_ft => !new_flux_taggs_list_id.includes(id_ft))
-        .forEach(id_ft => {
-          this.removeTagGroupWithId('flux_taggs', id_ft)
+      // Update taggs
+      to_remove
+        .forEach(id => {
+          this.removeTagGroupWithId('flux_taggs', id)
         })
-
-      // Add flux_taggs group not present in current layout
-      new_flux_taggs_list_id
-        .filter(id_ft => !curr_flux_taggs_list_id.includes(id_ft))
-        .forEach(id_ft => {
-          this.addFluxTagGroup(id_ft, new_layout.sankey.flux_taggs_dict[id_ft].name)
-          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft] as Class_TagGroup)
+      to_add
+        .forEach(id => {
+          const ftagg = other_sankey._flux_taggs[id]
+          this.addFluxTagGroup(ftagg.id, ftagg.name)
+          this._flux_taggs[id].copyFrom(ftagg)
         })
-
-      // Updtae flux_taggs group present in current layout and this
-      new_flux_taggs_list_id
-        .filter(id_ft => curr_flux_taggs_list_id.includes(id_ft))
-        .forEach(id_ft => {
-          this.flux_taggs_dict[id_ft].copyFrom(new_layout.sankey.flux_taggs_dict[id_ft] as Class_TagGroup)
+      to_update
+        .forEach(id => {
+          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[id])
         })
     }
 
-    // Update data_tag_dict
+    // Update data_tag_dict ------------------------------------------------------------
     if (mode.includes('tagData') || all) {
-      // Finds the corresponding tag group by name and apply the "dynamic" attributes
-      // activate, show_legend and selected.
 
-      const curr_data_taggs_list = this.data_taggs_list
-      const curr_data_taggs_list_id = curr_data_taggs_list.map(nt => nt.id)
-      const new_data_taggs_list = new_layout.sankey.data_taggs_list
-      const new_data_taggs_list_id = new_data_taggs_list.map(nt => nt.id)
+      // Finds the corresponding tag group by ids
+      const [to_remove, to_add, to_update] = get_sync_lists(this._data_taggs, other_sankey._data_taggs)
 
-      // Delete data_taggs group not present in new layout
-      curr_data_taggs_list_id
-        .filter(id_ft => !new_data_taggs_list_id.includes(id_ft))
-        .forEach(id_ft => {
-          this.removeTagGroupWithId('data_taggs', id_ft)
+      // Update taggs
+      to_remove
+        .forEach(id => {
+          this.removeTagGroupWithId('data_taggs', id)
         })
-
-      // Add data_taggs group not present in current layout
-      new_data_taggs_list_id
-        .filter(id_ft => !curr_data_taggs_list_id.includes(id_ft))
-        .forEach(id_ft => {
-          this.addDataTagGroup(id_ft, new_layout.sankey.data_taggs_dict[id_ft].name)
-          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft] as Class_DataTagGroup)
+      to_add
+        .forEach(id => {
+          const dtagg = other_sankey._data_taggs[id]
+          this.addDataTagGroup(dtagg.id, dtagg.name)
+          this._data_taggs[id].copyFrom(dtagg)
         })
-      // update data_taggs group present in current layout and this
-      new_data_taggs_list_id
-        .filter(id_ft => curr_data_taggs_list_id.includes(id_ft))
-        .forEach(id_ft => {
-          this.data_taggs_dict[id_ft].copyFrom(new_layout.sankey.data_taggs_dict[id_ft] as Class_DataTagGroup)
+      to_update
+        .forEach(id => {
+          this._data_taggs[id].copyFrom(other_sankey._data_taggs[id])
         })
     }
 
-    // Search node in new that are not in current then add them
-    if (mode.includes('addNode') || all) {
-      list_new_nodes
-        .filter(n => !this.nodes_list.map(n=>n.id).includes(n.id))
-        .forEach(n => {
-          this.addNewNode(n.id, n.name)
-        })
-    }
+    // Nodes  ---------------------------------------------------------------------------
+    const add_nodes = mode.includes('addNode')
+    const remove_nodes = mode.includes('removeNodes')
+    const sync_nodes_tags = mode.includes('tagNode')
+    const sync_nodes_positions = mode.includes('posNode')
+    const sync_nodes_attr = mode.includes('attrNode')
 
-    // Search node in current that are not in new then delete them
-    if (mode.includes('removeNode') || all) {
-      this.nodes_list
-        .filter(n => !list_new_nodes_id.includes(n.id))
-        .forEach(n => {
-          this.drawing_area.deleteNode(n)
-        })
-    }
+    if (
+      add_nodes ||
+      remove_nodes ||
+      sync_nodes_tags ||
+      sync_nodes_positions ||
+      sync_nodes_attr ||
+      all
+    ) {
+      const [to_remove, to_add, to_update] = get_sync_lists(this._nodes, other_sankey._nodes)
 
-    // Update nodes ref to node_taggs
-    if (mode.includes('tagNode') || all) {
-      // Remove all tags for all current nodes
-      this.nodes_list.forEach(node => {
-        node.tags_list.forEach(nt => {
-          node.removeTag(nt)
-        })
-      })
-      // Apply same node-tag relationship from new_layout to current sankey's nodes
-      const nodes_list = new_layout.sankey.nodes_list as Type_GenericNodeElement[]
-      nodes_list
-        .filter(node => this.nodes_dict[node.id] !== undefined)
-        .forEach(node => {
-          node.tags_list
-            .filter(tag => {
-              return tag.group.id in this.node_taggs_dict
-            })
-            .filter(tag => tag.id in this.node_taggs_dict[tag.group.id].tags_dict)
-            .forEach(tag => {
-              this.nodes_dict[node.id].addTag(tag)
-            })
-        })
-    }
-
-    // Search link in new that are not in current then add them
-    if (mode.includes('addFlux') || all) {
-      list_new_links
-        .filter(link => !this.links_list.map(l=>l.id).includes(link.id))
-        .forEach(link => {
-          const similar_src_curr = this.nodes_dict[link.source.id]
-          const similar_trgt_curr = this.nodes_dict[link.target.id]
-          if (similar_src_curr && similar_trgt_curr)
-            this.addNewLink(
-              similar_src_curr as Type_GenericNodeElement,
-              similar_trgt_curr as Type_GenericNodeElement)
-        })
-    }
-
-    // Search link in current that are not in new then delete them
-    if (mode.includes('removeFlux') || all) {
-
-      this.links_list
-        .filter(link => !list_new_links_id.includes(link.id))
-        .forEach(link => {
-          this.drawing_area.deleteLink(link)
-        })
-    }
-
-    // Update flux ref to node_taggs
-    if (mode.includes('tagFlux') || all) {
-      // Remove all tags for all current fluxs
-      this.links_list.forEach(link => {
-        const all_values = Object.values(link.getAllValues())
-        all_values.forEach(value => {
-          value[0].flux_tags_list.forEach(tag => {
-            value[0].removeTag(tag)
+      // Add nodes that are in other sankey but not in this sankey
+      if (add_nodes || all) {
+        to_add
+          .forEach(id => {
+            const n = other_sankey._nodes[id]
+            this.addNewNode(n.id, n.name)
+            this._nodes[id].copyFrom(n)
           })
-        })
-      })
-      // Apply same flux-tag relationship from new_layout to current sankey's fluxs
-      const links_list = new_layout.sankey.links_list as Type_GenericLinkElement[]
-      links_list
-        .filter(link => this.links_dict[link.id] !== undefined)
-        .forEach(link => {
-          const new_values = link.getAllValues()
-          const values = this.links_dict[link.id].getAllValues()
-          Object.entries(new_values)
-            .filter(([id,]) => id in values)
-            .forEach(([id, [val,]]) => {
-              val.flux_tags_list
-                .filter(tag => tag.group.id in this.flux_taggs_dict)
-                .filter(tag => tag.id in this.flux_taggs_dict[tag.group.id].tags_dict)
-                .forEach(tag => values[id][0].addTag(tag))
-            })
-        })
+      }
+
+      // Delete nodes that are in other sankey but not in this sankey
+      if (remove_nodes || all) {
+        to_remove
+          .forEach(id => {
+            this.drawing_area.deleteNode(this._nodes[id])
+          })
+      }
+
+      // Update nodes ref to node_taggs
+      if (sync_nodes_tags || all) {
+        to_update
+          .forEach(id => {
+            const node = this._nodes[id]
+            // Remove all tags for all current nodes
+            node.tags_list
+              .forEach(nt => {
+                node.removeTag(nt)
+              })
+            // Add  same node-tag relationship from new_layout to current sankey's nodes
+            const other_node = other_sankey._nodes[id]
+            other_node.tags_list
+              .filter(tag => tag.group.id in this._node_taggs)
+              .filter(tag => tag.id in this._node_taggs[tag.group.id].tags_dict)
+              .forEach(tag => {
+                node.addTag(tag)
+              })
+          })
+      }
+
+      // Update node position from other sankey
+      if (sync_nodes_positions || all) {
+        to_update
+          .forEach(id => {
+            const n = other_sankey._nodes[id]
+            this._nodes[id].setPosXY(n.position_x, n.position_y)
+          })
+      }
+
+      // With attrNode we transfer node attr
+      if (sync_nodes_attr || all) {
+        // Transfer node attr from new_layout node to correspondinf node in current
+        to_update
+          .forEach(id => {
+            const n = this._nodes[id]
+            const pn = structuredClone(n.display.position) // Save position
+            const on = other_sankey._nodes[id]
+            n.copyFrom(on) // Copy attributes
+            n.display.position = pn // Reapply position
+          })
+      }
     }
 
-    // Update node position from new layout
-    if (mode.includes('posNode') || all) {
-      this.nodes_list
-        .filter(node => list_new_nodes_id.includes(node.id))
-        .forEach(node => {
-          const similar_node_in_new = list_new_nodes.filter(new_n => new_n.id == node.id)[0]
-          node.setPosXY(similar_node_in_new.position_x, similar_node_in_new.position_y)
-        })
-    }
+    // Links -------------------------------------------------------------------------
 
-    // Apply links values from new layout to current links
-    // /!\ new layout must but an ancient version of the current sankey because each link value has an unique id
-    if (mode.includes('Values') || all) {
-      const links_list = new_layout.sankey.links_list as Type_GenericLinkElement[]
-      links_list
-        .filter(link => this.links_dict[link.id] !== undefined)
-        .forEach(link => {
-          const new_values = link.getAllValues()
-          const values = this.links_dict[link.id].getAllValues()
-          Object.entries(new_values)
-            .filter(([id,]) => {
-              return id in values
-            })
-            .forEach(([id, [val,]]) => {
-              values[id][0].copyFrom(val)
-            })
-        })
-    }
+    const add_flux = mode.includes('addFlux')
+    const remove_flux = mode.includes('removeFlux')
+    const sync_flux_tags = mode.includes('tagFlux')
+    const sync_flux_values = mode.includes('Values')
+    const sync_flux_attr = mode.includes('attrFlux')
 
-    // With attrNode we transfer node attr
-    if (mode.includes('attrNode') || all) {
-      // Transfer node attr from new_layout node to correspondinf node in current
-      this.nodes_list
-        .filter(n => list_new_nodes_id.includes(n.id))
-        .forEach(n => {
-          const similar_new_layout_node = list_new_nodes.filter(new_n => new_n.id == n.id)[0]
-          n.copyFrom(similar_new_layout_node)
-        })
-    }
+    if (
+      add_flux ||
+      remove_flux ||
+      sync_flux_tags ||
+      sync_flux_values ||
+      sync_flux_attr ||
+      all
+    ){
+      const [to_remove, to_add, to_update] = get_sync_lists(this._links, other_sankey._links)
 
-    // With attrFlux we transfer link attr
-    if (mode.includes('attrFlux') || all) {
-      this.links_list
-        .filter(link => list_new_links_id.includes(link.id))
-        .forEach(link => {
-          const similar_new_layout_link = list_new_links.filter(new_l => new_l.id == link.id)[0]
-          link.copyFrom(similar_new_layout_link)
+      // Add link in new that are not in current then add them
+      if (add_flux || all) {
+        to_add
+          .forEach(id => {
+            const link = other_sankey._links[id]
+            const similar_src_curr = this._nodes[link.source.id]
+            const similar_trgt_curr = this._nodes[link.target.id]
+            if (similar_src_curr && similar_trgt_curr)
+              // Copy with exactly the same atributs, source, targets, id, ...
+              this._addNewLink(
+                id,
+                similar_src_curr as Type_GenericNodeElement,
+                similar_trgt_curr as Type_GenericNodeElement
+              )
+              this._links[id].copyFrom(link)
+          })
+      }
+
+      // Remove link in current that are not in new then delete them
+      if (remove_flux || all) {
+        to_remove
+          .forEach(id => {
+            this.drawing_area.deleteLink(this._links[id])
+          })
+      }
+
+      // Update flux ref to node_taggs
+      if (sync_flux_tags || all) {
+        to_update
+          .forEach(id => {
+            // Remove all tags for all current fluxs
+            const link = this._links[id]
+            const values = link.getAllValues()
+            Object.values(values)
+              .forEach(([value, ]) => {
+                value.flux_tags_list
+                  .forEach(tag => {
+                    value.removeTag(tag)
+                  })
+              })
+            // Apply same flux-tag relationship from new_layout to current sankey's fluxs
+            const other_link = other_sankey._links[id]
+            const other_values = other_link.getAllValues()
+            Object.entries(other_values)
+              .filter(([id,]) => id in values)
+              .forEach(([id, [val,]]) => {
+                val.flux_tags_list
+                  .filter(tag => tag.group.id in this._flux_taggs)
+                  .filter(tag => tag.id in this._flux_taggs[tag.group.id].tags_dict)
+                  .forEach(tag => values[id][0].addTag(tag))
+              })
         })
+      }
+
+      // Apply links values from other sankey to current links
+      // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
+      if (sync_flux_values || all) {
+        to_update
+          .forEach(id => {
+            const values = this._links[id].getAllValues()
+            const other_values = other_sankey._links[id].getAllValues()
+            Object.entries(other_values)
+              .filter(([id,]) => id in values)
+              .forEach(([id, [val,]]) => {
+                values[id][0].copyFrom(val)
+              })
+          })
+      }
+
+      // With attrFlux we transfer link attr
+      if (sync_flux_attr || all) {
+        to_update
+          .forEach(id => {
+            const link = this._links[id]
+            // Save positions
+            const sp = structuredClone(link.source.display.position)
+            const tp = structuredClone(link.target.display.position)
+            // Copy all attributes
+            link.copyFrom(other_sankey._links[id])
+            // Keep positions
+            link.source.display.position = sp
+            link.target.display.position = tp
+          })
+      }
     }
   }
 
