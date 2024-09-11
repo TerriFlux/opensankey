@@ -14,7 +14,7 @@ import {
   OSPInitializeApplicationData,
   OSPInitializeReinitialization,
 
-  OSPInitializeAdditionalMenus, OSPModuleDialogs
+  OSPInitializeAdditionalMenus, OSPModuleDialogs,
 } from './OSPModule'
 // import { OSPDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 // import { DefaultOSPStyleLink } from './SankeyPlusUtils'
@@ -130,7 +130,6 @@ root.render(
           config_link_attr,
           menu_configuration_nodes_attributes,
         )
-        // OSPUpdateMenuConf(menu_conf,applicationData)
         return menu_conf
 
       }
@@ -155,15 +154,15 @@ root.render(
       )=>{
         if (window.SankeyToolsStatic) {
           // Cast
-          const plus_dict_app_data=applicationData as unknown as OSPApplicationDataType
-          additionalMenus.externale_navbar_item['view']=<OSPBannerView
-            applicationData={plus_dict_app_data}
-            view_selector={
-              <SelecteurView
-                applicationData={plus_dict_app_data}
-              />
-            }
-          />
+          // const plus_dict_app_data=applicationData as unknown as OSPApplicationDataType
+          // additionalMenus.externale_navbar_item['view']=<OSPBannerView
+          //   applicationData={plus_dict_app_data}
+          //   // // view_selector={
+          //   // //   <SelecteurView
+          //   // //     applicationData={plus_dict_app_data}
+          //   // //   />
+          //   // }
+          // />
           return
         }
         initializeAdditionalMenus(

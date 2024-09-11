@@ -10,6 +10,7 @@ import {
 import {
   setDiagramFuncType
 } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
+import { Type_GenericApplicationDataOSP } from '../src/Types/TypesOSP'
 
 
 export type getSetDiagramFType = (
@@ -59,17 +60,17 @@ export type RecomputeViewsFType = (
 // ) => void
 
 export type SelecteurViewFType = {
-  applicationData:OSPApplicationDataType
+  new_data:Type_GenericApplicationDataOSP
 }
 
-export type viewsAccordionFType = (
+export type viewsAccordionFType = {
   applicationData:OSPApplicationDataType,
-  t:TFunction,
-  is_activated:boolean,
-  convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
-  DefaultSankeyData: ()=>OSPData,
-  view_selector:JSX.Element,
-) => JSX.Element
+  // t:TFunction,
+  // is_activated:boolean,
+  // convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
+  // DefaultSankeyData: ()=>OSPData,
+  // view_selector:JSX.Element,
+}
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
@@ -100,15 +101,12 @@ export type CheckCurrentViewSavedFType = (
  * @return {*}
  */
 export type OSPBannerViewFType = {
-  applicationData:OSPApplicationDataType,
-  view_selector:JSX.Element
+  applicationData:OSPApplicationDataType
 }
 
-export type OSPMenuPreferenceViewFType = (
-  t:TFunction,
-  data:OSPData,
-  set_data:(_:OSPData)=>void
-) => JSX.Element
+export type OSPMenuPreferenceViewFType = {
+  applicationData:OSPApplicationDataType
+}
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made

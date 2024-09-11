@@ -53,7 +53,9 @@ import {
 // import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import {
   OSPBannerView,
+  OSPMenuPreferenceView,
   SelecteurView,
+  ViewsAccordion,
 } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
@@ -179,14 +181,13 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   const has_views = applicationDataOSP.new_data.has_views
 
   // JSX Elements for views navbar ------------------------------------------------------
-  const view_selector = <SelecteurView
-    applicationData={applicationDataOSP}
-  />
+  // AddMenu accordion views
+  additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<ViewsAccordion applicationData={applicationDataOSP} />)
+
 
   if (!is_static || has_views ) {
     additionalMenus.externale_navbar_item['view'] = <OSPBannerView
       applicationData={applicationDataOSP}
-      view_selector={view_selector}
     />
   }
 
@@ -236,15 +237,11 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   )
 
   // TODO : re implement OSPMenuPreferenceView with class
-  // additionalMenus.additional_preferences.push(
-  //   OSPMenuPreferenceView(
-  //     applicationContext.t,
-  //     (applicationData as OSPApplicationDataType).data,
-  //     (applicationData as OSPApplicationDataType).set_data
-  //   )
-  // )
+  additionalMenus.additional_preferences.push(
+    <OSPMenuPreferenceView applicationData={applicationDataOSP} />
+  )
   //- Builds Configuration Menus FreeLabel
-  additionalMenus.additional_configuration_menus.push(
+  additionalMenus.additional_configuration_menus_edition_elements.push(
     <ZDTMenuAsAccordeonItem
       applicationData={applicationDataOSP}
       content_menu_zdt={
@@ -311,34 +308,6 @@ export const OSPModuleDialogs: module_dialogsType = (
     />
   ]
 }
-
-
-
-
-
-export const OSPUpdateMenuConf: OSPUpdateMenuConfType = (menu_conf,
-  _applicationData
-) => {
-
-  // TODO : re implement viewsAccordion with class
-
-  // const OSPApplicationData=applicationData as OSPApplicationDataType
-  // // const  OSPUiElementsRef=uiElementsRef as OSPUiElementsRefType
-
-  // // const OSPApplicationContext=applicationContext as OSPApplicationContextType
-  // const menu_conf_view=viewsAccordion(
-  //   OSPApplicationData,
-  //   OSPApplicationContext.t,
-  //   OSPApplicationContext.has_open_sankey_plus,
-  //   OSPApplicationData.convert_data,
-  //   OSPApplicationData.get_default_data,
-  //   OSPUiElementsRef.ViewSelector?.current??<></>
-  // )
-  // menu_conf.push(menu_conf_view)
-  return menu_conf
-
-}
-
 
 export const OSPInitalizeSelectorDetailNodes: InitalizeSelectorDetailNodesType = (
   applicationData,

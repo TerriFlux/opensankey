@@ -302,8 +302,7 @@ export abstract class Class_ApplicationDataPlus
       // Purge selections to avoid modifying unvisible view
       this._drawing_area.purgeSelection()
       // Update components related to views
-      this._menu_configuration.ref_to_selector_views_updater.current()
-      this._menu_configuration.ref_to_banner_views_updater.current()
+        this._menu_configuration.updateComponentRelatedToViews()
     }
   }
 
@@ -352,7 +351,39 @@ export abstract class Class_ApplicationDataPlus
         this.setCurrentViewToMaster()
       }
       delete this._views[id] // Remove for view dict
-      this._views_order.splice(this._views_order.indexOf(id),1) // Remove id from view_order
+      this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
+    }
+  }
+
+  /**
+   * Move up view id in _views_order
+   *
+   * @param {string} id id of the view to move
+   * @memberof Class_ApplicationDataPlus
+   */
+  public moveViewUpInOrder(id: string) {
+    if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
+      const idx = this._views_order.indexOf(id)
+      if (idx > 1) {//Can't move up a view before master so index of view must be > 1 (view to move up must be after the second element in _views_order)
+        this._views_order.splice(idx, 1)
+        this._views_order.splice(idx - 1, 0, id)
+      }
+    }
+  }
+
+  /**
+   * Move down view id in _views_order
+   *
+   * @param {string} id id of the view to move
+   * @memberof Class_ApplicationDataPlus
+   */
+  public moveViewDownInOrder(id: string) {
+    if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
+      const idx = this._views_order.indexOf(id)
+      if (idx < this._views_order.length - 1) {//Can't move down a view if it's the last in _views_order
+        this._views_order.splice(idx, 1)
+        this._views_order.splice(idx + 1, 0, id)
+      }
     }
   }
 
