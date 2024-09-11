@@ -571,6 +571,14 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 onChange={(evt) => {
                   set_trade_close(evt.target.checked)
                   setTrade(evt.target.checked)
+                  if (parametric) {
+                    Object.values(applicationData.data.nodes)
+                      .filter(node=> node.style === 'NodeExportStyle' || node.style === 'NodeImportStyle')
+                      .forEach(node=>{if (node.local) delete node.local})
+                    Object.values(applicationData.data.links)
+                      .filter(link=> link.style === 'LinkExportStyle' || link.style === 'LinkImportStyle')
+                      .forEach(link=>{if (link.local) delete link.local})
+                  }
                 }}
               >
                 <OSTooltip label={t('MEP.tooltips.importExportClose')}>
@@ -583,7 +591,15 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                 isChecked={!trade_close}
                 onChange={(evt) => {
                   set_trade_close(!evt.target.checked)
-                  setTrade(!evt.target.checked)   
+                  setTrade(!evt.target.checked)
+                  if (parametric) {
+                    Object.values(applicationData.data.nodes)
+                    .filter(node=> node.style === 'NodeExportStyle' || node.style === 'NodeImportStyle')
+                      .forEach(node=>{if (node.local) delete node.local})
+                    Object.values(applicationData.data.links)
+                      .filter(link=> link.style === 'LinkExportStyle' || link.style === 'LinkImportStyle')
+                      .forEach(link=>{if (link.local) delete link.local})
+                  }
                 }}
               >
                 <OSTooltip label={t('MEP.tooltips.importExportAboveBelow')}>
