@@ -137,12 +137,6 @@ export abstract class Class_Sankey
   private _data_taggs: { [_: string]: Class_DataTagGroup } = {}
   private _level_taggs: { [_: string]: Class_LevelTagGroup } = {}
 
-  // Variable determining if we apply tag color to elements
-  // TODO inutile desormais -> a supprimer
-  private _color_map: string
-  private _nodes_color_map: string
-  private _links_color_map: string
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -160,9 +154,6 @@ export abstract class Class_Sankey
     this._menu_config = menu_config
     this._id = id
     this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
-    this._color_map = 'no_colormap'
-    this._nodes_color_map = 'no_colormap'
-    this._links_color_map = 'no_colormap'
   }
 
   public delete() {
@@ -1333,15 +1324,6 @@ export abstract class Class_Sankey
   public get id(): string { return this._id }
 
   public get is_visible(): boolean { return true } // Visibility always true for base sankey
-
-  public get color_map(): string { return this._color_map }
-  public set color_map(value: string) { this._color_map = value }
-
-  public get nodes_color_map(): string { return this._nodes_color_map }
-  public set nodes_color_map(value: string) { this._nodes_color_map = value }
-
-  public get links_color_map(): string { return this._links_color_map }
-  public set links_color_map(value: string) { this._links_color_map = value }
 
   // Nodes related ----------------------------------------------------------------------
 
