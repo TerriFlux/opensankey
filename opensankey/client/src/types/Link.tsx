@@ -771,6 +771,7 @@ export abstract class  Class_LinkElement
     }
     return shape_color
   }
+
   /**
    * Copy attributes from element & create/copy ref to current sankey (ref to link_taggs & style & values)
    *
@@ -783,6 +784,7 @@ export abstract class  Class_LinkElement
     this._display.position_x_label = element._display.position_x_label
     this._display.position_y_label = element._display.position_y_label
     this._tooltip_text = element._tooltip_text
+
     // Copy local attributes
     this._display.attributes.copyFrom(element._display.attributes)
 
@@ -3903,7 +3905,8 @@ export class Class_LinkValueTree {
       .forEach(child => {
         const _ = child.getAllValues()
         out = {
-          ..._
+          ... out,
+          ... _
         }
       })
     Object.values(out)

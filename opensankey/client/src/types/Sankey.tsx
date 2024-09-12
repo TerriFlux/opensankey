@@ -189,16 +189,16 @@ export abstract class Class_Sankey
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
   protected abstract createNewLinkStyle(id:string,name:string,is_deletable?:boolean):Class_LinkStyle
+
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
 
   public draw() {
-      // Draw nodes
-      this.nodes_list.forEach(node => node.draw())
     // Draw links
     this.links_list.forEach(link => link.draw())
-
+    // Draw nodes
+    this.nodes_list.forEach(node => node.draw())
   }
 
   // Nodes related ----------------------------------------------------------------------
@@ -1032,6 +1032,7 @@ export abstract class Class_Sankey
     }
 
     // Update data_tag_dict ------------------------------------------------------------
+
     if (mode.includes('tagData') || all) {
 
       // Finds the corresponding tag group by ids
@@ -1055,6 +1056,7 @@ export abstract class Class_Sankey
     }
 
     // Nodes  ---------------------------------------------------------------------------
+
     const add_nodes = mode.includes('addNode')
     const remove_nodes = mode.includes('removeNodes')
     const sync_nodes_tags = mode.includes('tagNode')
@@ -1074,10 +1076,14 @@ export abstract class Class_Sankey
       // Add nodes that are in other sankey but not in this sankey
       if (add_nodes || all) {
         to_add
-          .forEach(id => {
+          .map(id => {
             const n = other_sankey._nodes[id]
             this.addNewNode(n.id, n.name)
-            this._nodes[id].copyFrom(n)
+            this._nodes[id].copyAttrFrom(n)
+            return id
+          })
+          .forEach(id => {
+            this._nodes[id].copyDimensionsFrom(other_sankey._nodes[id])
           })
       }
 
@@ -1089,24 +1095,28 @@ export abstract class Class_Sankey
           })
       }
 
+      // With attrNode we transfer node attr
+      if (sync_nodes_attr || all) {
+        // Transfer node attr from new_layout node to correspondinf node in current
+        to_update
+          .map(id => {
+            const n = this._nodes[id]
+            const pn = structuredClone(n.display.position) // Save position
+            const on = other_sankey._nodes[id]
+            n.copyAttrFrom(on) // Copy attributes
+            n.display.position = pn // Reapply position
+            return id
+          })
+        .forEach(id => {
+          this._nodes[id].copyDimensionsFrom(other_sankey._nodes[id])
+        })
+      }
+
       // Update nodes ref to node_taggs
       if (sync_nodes_tags || all) {
         to_update
           .forEach(id => {
-            const node = this._nodes[id]
-            // Remove all tags for all current nodes
-            node.tags_list
-              .forEach(nt => {
-                node.removeTag(nt)
-              })
-            // Add  same node-tag relationship from new_layout to current sankey's nodes
-            const other_node = other_sankey._nodes[id]
-            other_node.tags_list
-              .filter(tag => tag.group.id in this._node_taggs)
-              .filter(tag => tag.id in this._node_taggs[tag.group.id].tags_dict)
-              .forEach(tag => {
-                node.addTag(tag)
-              })
+            this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
           })
       }
 
@@ -1116,19 +1126,6 @@ export abstract class Class_Sankey
           .forEach(id => {
             const n = other_sankey._nodes[id]
             this._nodes[id].setPosXY(n.position_x, n.position_y)
-          })
-      }
-
-      // With attrNode we transfer node attr
-      if (sync_nodes_attr || all) {
-        // Transfer node attr from new_layout node to correspondinf node in current
-        to_update
-          .forEach(id => {
-            const n = this._nodes[id]
-            const pn = structuredClone(n.display.position) // Save position
-            const on = other_sankey._nodes[id]
-            n.copyFrom(on) // Copy attributes
-            n.display.position = pn // Reapply position
           })
       }
     }
@@ -1177,49 +1174,6 @@ export abstract class Class_Sankey
           })
       }
 
-      // Update flux ref to node_taggs
-      if (sync_flux_tags || all) {
-        to_update
-          .forEach(id => {
-            // Remove all tags for all current fluxs
-            const link = this._links[id]
-            const values = link.getAllValues()
-            Object.values(values)
-              .forEach(([value, ]) => {
-                value.flux_tags_list
-                  .forEach(tag => {
-                    value.removeTag(tag)
-                  })
-              })
-            // Apply same flux-tag relationship from new_layout to current sankey's fluxs
-            const other_link = other_sankey._links[id]
-            const other_values = other_link.getAllValues()
-            Object.entries(other_values)
-              .filter(([id,]) => id in values)
-              .forEach(([id, [val,]]) => {
-                val.flux_tags_list
-                  .filter(tag => tag.group.id in this._flux_taggs)
-                  .filter(tag => tag.id in this._flux_taggs[tag.group.id].tags_dict)
-                  .forEach(tag => values[id][0].addTag(tag))
-              })
-        })
-      }
-
-      // Apply links values from other sankey to current links
-      // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
-      if (sync_flux_values || all) {
-        to_update
-          .forEach(id => {
-            const values = this._links[id].getAllValues()
-            const other_values = other_sankey._links[id].getAllValues()
-            Object.entries(other_values)
-              .filter(([id,]) => id in values)
-              .forEach(([id, [val,]]) => {
-                values[id][0].copyFrom(val)
-              })
-          })
-      }
-
       // With attrFlux we transfer link attr
       if (sync_flux_attr || all) {
         to_update
@@ -1234,6 +1188,116 @@ export abstract class Class_Sankey
             link.source.display.position = sp
             link.target.display.position = tp
           })
+      }
+
+      // Update links ordering
+      to_update.concat(to_add)
+        .forEach(id => {
+          // Source node
+          const source = this._nodes[this._links[id].source.id]
+          const other_source = other_sankey._nodes[other_sankey._links[id].source.id]
+          source.copyLinkOrderingFrom(other_source)
+          // Target node
+          const target = this._nodes[this._links[id].target.id]
+          const other_target = other_sankey._nodes[other_sankey._links[id].target.id]
+          target.copyLinkOrderingFrom(other_target)
+        })
+
+      // Values  ------------------------------------------------------------------------
+      // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
+      if (sync_flux_tags || sync_flux_values || all){
+        // To speed up matching process between values ids (that are random)
+        // We compute corresp value ids for sync_flux_tags & sync_flux_values
+        const values_corresp_ids: {[id_flux: string]: {[id_value: string]: string}} = {}
+        to_update.concat(to_add)
+          .forEach(id_flux => {
+            // avoid recomputation
+            const values = this._links[id_flux].getAllValues()
+            const other_values = other_sankey._links[id_flux].getAllValues()
+            // Init corresps list
+            values_corresp_ids[id_flux] = {}
+            if (Object.keys(values).length > 0) {
+              // Case 1 : No datatags - only one value per flux
+              if (Object.values(values)[1] === undefined) {
+                values_corresp_ids[id_flux][Object.keys(values)[0]] = Object.keys(other_values)[0]
+              }
+              // Case 2 : Datatags are present
+              else {
+                Object.entries(values)
+                  .forEach(([id_value, [, dtags]]) => {
+                    if (dtags !== undefined) { // Should never be the case
+                      // Find values match based on datatags ids
+                      const dtags_id = dtags.map(dtag => dtag.id)
+                      Object.entries(other_values)
+                        .filter(([, [, other_dtags]]) => {
+                          if (other_dtags !== undefined)
+                            return (
+                              JSON.stringify(dtags_id) ===
+                              JSON.stringify(other_dtags.map(other_dtag => other_dtag.id))
+                            )
+                          else
+                            return false // Should never be the case
+                        })
+                        .forEach(([id_other_value, ]) => {
+                          values_corresp_ids[id_flux][id_value] = id_other_value
+                        })
+                    }
+                  })
+              }
+            }
+          })
+
+        // Update refs between values and flux_tags
+        if (sync_flux_tags || all) {
+          to_update.concat(to_add)
+            .forEach(id_flux => {
+              // Avid recomputation
+              const link = this._links[id_flux]
+              const values = link.getAllValues()
+              const other_link = other_sankey._links[id_flux]
+              const other_values = other_link.getAllValues()
+              // Loop on all current values for given flux id_flux
+              Object.entries(values)
+                .forEach(([id_value, [value, ]]) => {
+                  // Remove all tags for all current fluxs
+                  value.flux_tags_list
+                    .forEach(tag => {
+                      value.removeTag(tag)
+                    })
+                  // Get corresponding value to copy
+                  const id_other_value = values_corresp_ids[id_flux][id_value]
+                  if (id_other_value !== undefined){
+                    const other_value = other_values[id_other_value][0]
+                    // Apply same flux-tag relationship from new_layout to current sankey's fluxs
+                    other_value.flux_tags_list
+                      .filter(tag => tag.group.id in this._flux_taggs)
+                      .filter(tag => tag.id in this._flux_taggs[tag.group.id].tags_dict)
+                      .forEach(tag => value.addTag(tag))
+                  }
+                })
+          })
+        }
+
+        // Apply links values from other sankey to current links
+        if (sync_flux_values || all) {
+          to_update.concat(to_add)
+            .forEach(id_flux => {
+              // Avid recomputation
+              const link = this._links[id_flux]
+              const values = link.getAllValues()
+              const other_link = other_sankey._links[id_flux]
+              const other_values = other_link.getAllValues()
+              // Loop on all current values for given flux id_flux
+              Object.entries(values)
+                .forEach(([id_value, [value, ]]) => {
+                  // Get corresponding value to copy
+                  const id_other_value = values_corresp_ids[id_flux][id_value]
+                  if (id_other_value !== undefined){
+                    value.copyFrom(other_values[id_other_value][0])
+                  }
+                })
+            })
+        }
       }
     }
   }
