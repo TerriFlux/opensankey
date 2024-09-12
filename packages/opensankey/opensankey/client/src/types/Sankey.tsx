@@ -42,6 +42,7 @@ import {
   default_style_name,
   Type_MacroTagGroup
 } from './Utils'
+import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 
 
 // LOCAL FUNCTIONS **********************************************************************
@@ -564,8 +565,8 @@ export abstract class Class_Sankey
    * @memberof Class_Sankey
    */
   public toJSON(
-    only_visible_elements: boolean = false,
-    with_values: boolean = true
+    only_visible_elements: boolean = default_save_only_visible_elements,
+    with_values: boolean = default_save_with_values
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
