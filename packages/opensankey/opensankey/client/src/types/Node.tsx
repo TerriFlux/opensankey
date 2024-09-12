@@ -273,8 +273,7 @@ export abstract class Class_NodeElement
 
   // ABSTRACT METHODS ===================================================================
 
-  public abstract copyInputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
-  public abstract copyOutputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
+  // Nothing
 
   // PUBLIC METHODS =====================================================================
 
@@ -284,7 +283,7 @@ export abstract class Class_NodeElement
    * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node_to_copy
    * @memberof Class_NodeElement
    */
-  public copyFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyAttrFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Copy attributes ------------------------------------------------------------------
     // Name
     this._name = node_to_copy.name
@@ -301,70 +300,9 @@ export abstract class Class_NodeElement
       this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id] as Class_NodeStyle
       this._display.style.addReference(this)
     }
-    // Copy input links ------------------------------------------------------------------
-    // Add missing input links
-    node_to_copy.input_links_list
-      .filter(link => {
-        return (
-          (link.id in this.sankey.links_dict) &&
-          !(link.id in this.input_links_dict)
-        )
-      })
-      .forEach(link => {
-        this.addInputLink(
-          this.sankey.links_dict[link.id] as Type_GenericLinkElement)
-      })
-    // Create missing input link from existing source node
-    node_to_copy.input_links_list
-      .filter(link => {
-        return (
-          !(link.id in this.sankey.links_dict) &&
-          (link.source.id in this.sankey.nodes_dict)
-        )
-      })
-      .forEach(link => {
-        this.addInputLink(this.copyInputLink(link))
-      })
-    // Remove input link that are not input links on node to copy from
-    this.input_links_list
-      .filter(link => {
-        return (
-          !(link.id in node_to_copy.input_links_dict)
-        )
-      })
-      .forEach(link => this.deleteInputLink(link))
-    // Copy output links ------------------------------------------------------------------
-    // Add missing output links
-    node_to_copy.output_links_list
-      .filter(link => {
-        return (
-          (link.id in this.sankey.links_dict) &&
-          !(link.id in this.output_links_dict)
-        )
-      })
-      .forEach(link => {
-        this.addOutputLink(
-          this.sankey.links_dict[link.id] as Type_GenericLinkElement)
-      })
-    // Create missing input link from existing source node
-    node_to_copy.output_links_list
-      .filter(link => {
-        return (
-          !(link.id in this.sankey.links_dict) &&
-          (link.target.id in this.sankey.nodes_dict)
-        )
-      })
-      .forEach(link => {
-        this.addOutputLink(this.copyOutputLink(link))
-      })
-    // Remove input link that are not input links on node to copy from
-    this.output_links_list
-      .filter(link => {
-        return (
-          !(link.id in node_to_copy.output_links_dict)
-        )
-      })
-      .forEach(link => this.deleteInputLink(link))
+  }
+
+  public copyLinkOrderingFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Copy links orders ----------------------------------------------------------------
     this._links_order = []  // Empty current link order list
     // Fill with link that exist in current sankey and avoid duplicates in link ordre list
@@ -375,34 +313,23 @@ export abstract class Class_NodeElement
         if (!this._links_order.includes(link))
           this._links_order.push(link)
       })
+  }
+
+  public copyTagsReferencingFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Copy tags ------------------------------------------------------------------------
-    let all_existing_tags: { [_: string]: Class_Tag } = {}
-    this.sankey.node_taggs_list
-      .forEach(tagg => {
-        all_existing_tags = {
-          ...all_existing_tags,
-          ...(tagg as Class_TagGroup).tags_dict
-        }
-      })
+    // Clear all tags
+    this.tags_list
+      .forEach(tag => this.removeTag(tag))
     // Add missing tags
     node_to_copy.tags_list
-      .filter(tag => {
-        return (
-          (tag.id in all_existing_tags) &&
-          !(tag.id in this.tags_dict)
-        )
-      })
+      .filter(tag => tag.group.id in this.sankey.node_taggs_dict)
+      .filter(tag => tag.id in this.sankey.node_taggs_dict[tag.group.id])
       .forEach(tag => {
-        this.addTag(tag)
+        this.addTag(this.sankey.node_taggs_dict[tag.group.id].tags_dict[tag.id] as Class_Tag)
       })
-    // Remove tags that are not present on node to copy from
-    this.tags_list
-      .filter(tag => {
-        return (
-          !(tag.id in node_to_copy.tags_dict)
-        )
-      })
-      .forEach(tag => this.removeTag(tag))
+  }
+
+  public copyDimensionsFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Copy dimensions ------------------------------------------------------------------
     // Create a dict of all existing dimensions in this related sankey
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
