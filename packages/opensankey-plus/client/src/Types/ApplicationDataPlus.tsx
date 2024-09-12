@@ -8,7 +8,8 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
+import { SaveDiagramOptionsType } from '../deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
+import { default_save_JSON_options, isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
 
@@ -18,6 +19,10 @@ import { Class_LinkElementPlus } from './LinkPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_SankeyPlus } from './SankeyPlus'
+
+export interface SaveDiagramPlusOptionsType extends SaveDiagramOptionsType {
+  only_current_view?: boolean
+}
 
 // CLASS APPLICATION DATA PLUS **********************************************************
 
@@ -43,6 +48,9 @@ export abstract class Class_ApplicationDataPlus
   > {
 
   // PUBLIC ATTRIBUTES =================================================================
+
+  // Save JSON options
+  public override options_save_json: SaveDiagramPlusOptionsType = default_save_JSON_options
 
   /**
    * Configuration Menu
@@ -75,7 +83,6 @@ export abstract class Class_ApplicationDataPlus
     super(published_mode)
 
     // OVERRIDE Drawing_Area & MENU CONFIG TO TAKE INTO ACCOUNT ALL NEW VAR. & FUNCTIONS OF OSP
-    // TODO : since we change reference of the app_data, verify we cut all link of previous DA & config with app_data
     this._menu_configuration = new Class_MenuConfigPlus()
 
     //let logo_sankey_plus = ''
@@ -210,7 +217,7 @@ export abstract class Class_ApplicationDataPlus
       // Create other views
       Object.entries(views).forEach(ent_view => {
         const tmp = this.createNewDrawingArea(ent_view[0])
-        tmp.fromJSON(ent_view[1] as Type_JSON)
+        tmp.fromJSON(ent_view[1] as Type_JSON, false)
         // Add new sankey to views
         this._views[ent_view[0]] = tmp
         this._views_order.push(ent_view[0])
@@ -226,6 +233,29 @@ export abstract class Class_ApplicationDataPlus
   }
 
   /**
+   * Function to return a dict of view instanced as class from a JSON file, this doesn't affect current Class_ApplicationData and sub-structur
+   *
+   * @param {Type_JSON} json_object
+   * @return {*}  {{ [id: string]: Type_GenericDrawingArea }}
+   * @memberof Class_ApplicationDataPlus
+   */
+  public extractViewsFromJSON(json_object: Type_JSON): { [id: string]: Type_GenericDrawingArea } {
+    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    const dict_of_view: { [id: string]: Type_GenericDrawingArea } = {}
+
+    if (views) {
+      // Create other views
+      Object.entries(views).filter(ent => ent[0] !== default_main_sankey_id).forEach(ent_view => {
+        const tmp = this.createNewDrawingArea(ent_view[0])
+        tmp.fromJSON(ent_view[1] as Type_JSON, false)
+        // Add new DA to views
+        dict_of_view[ent_view[0]] = tmp
+      })
+    }
+    return dict_of_view
+  }
+
+  /**
    * Convert application_data to JSON format,
    * if we are in a view switch to master then save master then the view
    *
@@ -233,26 +263,35 @@ export abstract class Class_ApplicationDataPlus
    * @return {*}
    * @memberof Class_ApplicationDataPlus
    */
-  toJSON(with_view: boolean = true) {
+  public toJSON() {
     let current_view = default_main_sankey_id
+    let json_entry: Type_JSON = {}
 
-    // Save current view id if it's not master
-    if (this.has_views && !this.is_view_master) {
-      current_view = this._drawing_area.id
-      this.setCurrentViewToMaster()
+    if (this.has_views && this.options_save_json.only_current_view && !this.is_view_master) {
+      // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
+      json_entry = super.toJSON()
+      json_entry.id = default_main_sankey_id
+    } else {
+      // Else save master then views in a variable in JSON
+
+      // Save current view id if it's not master & move to master
+      if (this.has_views && !this.is_view_master) {
+        current_view = this._drawing_area.id
+        this.setCurrentViewToMaster()
+      }
+      // Herited toJSON to save master data
+      json_entry = super.toJSON()
+
+      if (this.has_views) {
+        // If application_data has views then we save them in the JSON
+        json_entry['views'] = {}
+        const json_entry_views = json_entry['views']
+        // Go throught all view (except first since it's master data & already parsed in JSON)
+        this._views_order.filter((id, i) => i !== 0).forEach(id => {
+          json_entry_views[id] = this._views[id].toJSON()
+        })
+      }
     }
-    // Herited toJSON
-    const json_entry: Type_JSON = super.toJSON()
-
-    if (this.views.length > 0 && with_view) {
-      json_entry['views'] = {}
-      const json_entry_views = json_entry['views']
-      // Go throught all view (except first since it's master data & already parsed in JSON)
-      this._views_order.filter((id, i) => i !== 0).forEach(id => {
-        json_entry_views[id] = this._views[id].toJSON()
-      })
-    }
-
     // Add var to remember active view when saved
     json_entry['current_view'] = current_view
 
@@ -282,7 +321,7 @@ export abstract class Class_ApplicationDataPlus
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
     this._views_order.push(new_DA.id)
-    // Shown sankey = new sankey
+    // Shown sankey = new sanke
     this.setCurrentView(new_DA.id)
   }
 
@@ -303,6 +342,8 @@ export abstract class Class_ApplicationDataPlus
       this._menu_configuration.updateComponentRelatedToViews()
       // Set view mode_edition to previous value
       this._drawing_area.setToModeEdition(was_mode_edition)
+      // Update menu save diagram JSON
+      this.menu_configuration.updateComponentSaveDiagramJSON()
     }
   }
 

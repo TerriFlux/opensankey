@@ -1,20 +1,11 @@
 // Standard libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
-import * as d3 from 'd3'
 
-import { TFunction } from 'i18next'
-import LZString from 'lz-string'
-import {
-  Diff,
-  diff as getDiff,
-  applyChange
-} from 'deep-diff'
-
-import { FaArrowDown, FaArrowUp, FaMinus, FaCheck } from 'react-icons/fa'
 
 // Imported libs
+import { FaArrowDown, FaArrowUp, FaCheck, FaMinus } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faListCheck, faXmark, faExclamation, faFloppyDisk, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faListCheck, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus, faXmark } from '@fortawesome/free-solid-svg-icons'
 import {
   AccordionItem,
   AccordionButton,
@@ -32,13 +23,13 @@ import {
   Thead,
   Tr,
   Button,
-  Modal,
-  ModalFooter,
-  ModalHeader,
-  ModalBody,
-  ModalContent,
   Tag,
-  ModalCloseButton
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalFooter,
+  ModalBody
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
@@ -46,37 +37,25 @@ import {
 import {
   default_main_sankey_id,
   OSTooltip,
+  Type_JSON,
   // preferenceCheck,
   // updateLayoutOSTyped
 } from './deps/OpenSankey/types/Utils'
 
 // Local libs
 import {
-  CheckCurrentViewSavedFType,
-  FilterViewFType,
-  GetDataFromViewFType,
-  getSetDiagramFType,
-  // OSPKeyHandlerFType,
-  // MenuEnregistrerViewFType,
-  modal_transparent_view_attrFType,
-  modal_view_not_savedFType,
-  OpenOSPCheckpointButtonFType,
-  RecomputeViewsFType,
   OSPBannerViewFType,
   OSPMenuPreferenceViewFType,
   SelecteurViewFType,
   // setValueFType,
-  viewsAccordionFType
+  viewsAccordionFType,
+  MenuEnregistrerViewFType,
+  modal_transparent_view_attrFType
 } from '../types/SankeyPlusViewsTypes'
 
 import {
   OSPData,
-  differenceType,
-  DiffType,
-  ViewType,
-  OSPApplicationDataType,
-  SankeyUnitData
-} from '../types/Types'
+  OSPApplicationDataType} from '../types/Types'
 // import { deleteGLabel } from './SankeyPlusLabels'
 import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
@@ -307,7 +286,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
         isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={() => {
           const evt = document
-          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7'})
+          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
           if (evt.onkeydown) {
             evt.onkeydown(evt_key_f7)
           }
@@ -355,123 +334,123 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   // Button to go to next view ----------------------------------------------------------
 
   const button_to_prev_view = <OSTooltip
-  placement='bottom'
-  label={
-    (!has_sankey_plus) ?
-      t('Menu.sankeyOSPDisabled') :
-      t('view.tooltips.PrevViewButton')
-  }
->
-  <Box>
-    <Button
-      variant='menutop_button'
-      isDisabled={!(has_sankey_plus && has_views && has_view_before)}
-      onClick={() => {
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'F8'})
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <Box
-        layerStyle='menutop_button_style'
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        t('Menu.sankeyOSPDisabled') :
+        t('view.tooltips.PrevViewButton')
+    }
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!(has_sankey_plus && has_views && has_view_before)}
+        onClick={() => {
+          const ev = document
+          const tmp = new KeyboardEvent('keydown', { key: 'F8' })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}
       >
         <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
+          layerStyle='menutop_button_style'
         >
-          <FontAwesomeIcon
-            style={{
-              'height': '2rem',
-              'width': '3rem',
-              // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
-            }}
-            icon={faCaretSquareLeft}
-          />
-          {
-            (!has_sankey_plus) ?
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  'fontSize': '1em',
-                  'position': 'absolute',
-                  'right': '0.1em',
-                  'bottom': '0em',
-                  'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                }} />
-              : <></>
-          }
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
+              }}
+              icon={faCaretSquareLeft}
+            />
+            {
+              (!has_sankey_plus) ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.precView')}
+          </Box>
         </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.precView')}
-        </Box>
-      </Box>
-    </Button>
-  </Box>
-</OSTooltip>
+      </Button>
+    </Box>
+  </OSTooltip>
 
   // Button to previous view ------------------------------------------------------------
 
   const button_to_next_view = <OSTooltip
-  placement='bottom'
-  label={
-    (!has_sankey_plus) ?
-      (t('Menu.sankeyOSPDisabled')) :
-      t('view.tooltips.NextViewButton')}
->
-  <Box>
-    <Button
-      variant='menutop_button'
-      isDisabled={!(has_sankey_plus && has_views && has_view_after)}
-      onClick={() => {
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'F9'})
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <Box
-        layerStyle='menutop_button_style'
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.NextViewButton')}
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!(has_sankey_plus && has_views && has_view_after)}
+        onClick={() => {
+          const ev = document
+          const tmp = new KeyboardEvent('keydown', { key: 'F9' })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}
       >
         <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
+          layerStyle='menutop_button_style'
         >
-          <FontAwesomeIcon
-            style={{
-              'height': '2rem',
-              'width': '3rem',
-              // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
-            }}
-            icon={faCaretSquareRight}
-          />
-          {
-            (!has_sankey_plus) ?
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  'fontSize': '1em',
-                  'position': 'absolute',
-                  'right': '0.1em',
-                  'bottom': '0em',
-                  'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                }} />
-              : <></>
-          }
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
+              }}
+              icon={faCaretSquareRight}
+            />
+            {
+              (!has_sankey_plus) ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.nextView')}
+          </Box>
         </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.nextView')}
-        </Box>
-      </Box>
-    </Button>
-  </Box>
-</OSTooltip>
+      </Button>
+    </Box>
+  </OSTooltip>
 
   // Button to display attributes transfert modal ---------------------------------------
 
@@ -544,7 +523,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views)}
+        isDisabled={!(has_sankey_plus)}
         onClick={
           () => {
             if (ref_to_input_loader_json_catalog.current) {
@@ -601,76 +580,30 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     ref={ref_to_input_loader_json_catalog}
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
-      // TODO implementer dans Class_DrawingArea
+      const files = (evt.target as HTMLFormElement).files
 
-      // const files = (evt.target as HTMLFormElement).files
-      // const cpy_master_data = (master_data) ? master_data : JSON.parse(JSON.stringify(data))
-      // cpy_master_data!.is_catalog = true
-      // cpy_master_data!.nodeTags = {}
-      // cpy_master_data!.fluxTags = {}
-      // cpy_master_data!.dataTags = {}
-      // cpy_master_data!.nodes = {}
-      // cpy_master_data!.links = {}
-      // cpy_master_data!.labels = {}
-      // cpy_master_data!.linkZIndex = []
+      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
+      for (const i in files) {
+        const reader = new FileReader()
+        reader.onload = (() => {
+          return (e: ProgressEvent<FileReader>) => {
+            const file_content = String((e.target as FileReader).result)
+            const JSON_data = JSON.parse(file_content)
 
-      // // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
-      // for (const i in files) {
-      //   const reader = new FileReader()
-      //   reader.onload = (() => {
-      //     return (e: ProgressEvent<FileReader>) => {
-      //       const result = String((e.target as FileReader).result)
-      //       const result_data = JSON.parse(result)
-      //       const imported_data = JSON.parse(JSON.stringify(result_data)) as OSPData
-      //       convert_data(imported_data, get_default_data)
-      //       let new_ind = 'view_' + String(new Date().getTime())
-      //       let first_data = {} as OSPData
-      //       if (imported_data.view && imported_data.view.length > 0) {
-      //         // Import all view from the coming file
-      //         imported_data.view.forEach((v, i2) => {
-      //           const view_from_imported_data = GetDataFromView(imported_data, v.id) as OSPData
-      //           convert_data(view_from_imported_data, get_default_data)
+            // Extract view of files
+            const dict_new_views = new_data.extractViewsFromJSON(JSON_data as Type_JSON)
 
-      //           if (i2 === 0 && i === '0') {
-      //             new_ind = v.id
-      //             first_data = view_from_imported_data
-      //           }
-      //           cpy_master_data!.view.push({
-      //             id: v.id,
-      //             view_data: view_from_imported_data,
-      //             nom: (files[i].name).replace('.json', '') + ' ' + v.nom,
-      //             details: '',
-      //             heredited_attr_from_master: []
-      //           })
-      //         })
-      //       } else {
-      //         // Import only master data  when it doesn't have view
-      //         imported_data.view = []
-      //         first_data = imported_data
-      //         cpy_master_data!.view.push({
-      //           id: new_ind,
-      //           view_data: imported_data,
-      //           nom: (files[i].name).replace('.json', ''),
-      //           details: '',
-      //           heredited_attr_from_master: []
-      //         })
-      //       }
-      //       if (i === '0') {
-
-      //         set_view(new_ind)
-      //         cpy_master_data!.current_view = new_ind
-      //         set_data(JSON.parse(JSON.stringify(first_data)))
-      //       }
-      //       set_master_data(JSON.parse(JSON.stringify(cpy_master_data)))
-
-      //     }
-      //   })()
-      //   // Permet d'executer la transformation des blob en vues tout en evitant la var length
-      //   //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
-      //   if (!isNaN(+i)) {
-      //     reader.readAsText(files[i])
-      //   }
-      // }
+            Object.values(dict_new_views).forEach(new_view => {
+              new_data.createNewView(new_view)
+            })
+          }
+        })()
+        // Permet d'executer la transformation des blob en vues tout en evitant la var length
+        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
+        if (!isNaN(+i)) {
+          reader.readAsText(files[i])
+        }
+      }
     }}
   />
 
@@ -697,7 +630,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     </Box>
     {
       new_data.is_static ?
-        <></>:
+        <></> :
         <>
           {button_to_delete_actual_view}
           {button_to_show_view_attr_transfert_modal}
@@ -1892,30 +1825,39 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                 new_data.drawing_area.updateFrom(master_view, update_modes)
                 new_data.drawing_area.reset()
               }
-            }}>
-              {t('view.updateViewWithMasterVar')}
-            </Button></ModalFooter>
+            }}
+          >
+            {t('view.updateViewWithMasterVar')}
+          </Button>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   }
   return <></>
 }
 
-// export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
-//   t,
-//   elementsSelected
-// }) => {
-//   const [save_only_view, set_save_only_view] = useState(false)
-//   elementsSelected.saveViewGetter.current = save_only_view
-//   return <Checkbox
-//     variant='menuconfigpanel_option_checkbox'
-//     isChecked={save_only_view}
-//     onChange={() => set_save_only_view(!save_only_view)}>
-//     <OSTooltip label={t('view.tooltips.buttonExportView')}>
-//       {t('view.export')}
-//     </OSTooltip>
-//   </Checkbox>
-// }
+export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
+  applicationData
+}) => {
+  const [, setCount] = useState(0)
+  const { new_data } = applicationData
+  const { t } = new_data
+  applicationData.new_data.menu_configuration.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
+
+  return (new_data.has_views && !new_data.is_view_master) ? <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={
+      applicationData.new_data.options_save_json.only_current_view
+    }
+    onChange={(evt) => {
+      applicationData.new_data.options_save_json.only_current_view = evt.target.checked
+      new_data.menu_configuration.updateComponentSaveDiagramJSON()
+    }}>
+    <OSTooltip label={t('view.tooltips.buttonExportView')}>
+      {t('view.export')}
+    </OSTooltip>
+  </Checkbox> : <></>
+}
 
 // export const OpenOSPCheckpointButton: OpenOSPCheckpointButtonFType = (
 //   master_data: OSPData | undefined,
