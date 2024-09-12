@@ -106,8 +106,7 @@ export abstract class Class_NodeElementPlus
 
   // ABSTRACT METHODS ===================================================================
 
-  public abstract copyInputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
-  public abstract copyOutputLink(_: Type_GenericLinkElement): Type_GenericLinkElement
+  // Nothing ...
 
   // PUBLIC METHOD ======================================================================
 
@@ -176,10 +175,10 @@ export abstract class Class_NodeElementPlus
    * @param {Class_NodeElementPlus} node_to_copy
    * @memberof Class_NodeElementPlus
    */
-  public copyFrom(
+  public copyAttrFrom(
     node_to_copy: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
   ): void {
-    super.copyFrom(node_to_copy)
+    super.copyAttrFrom(node_to_copy)
 
     this._iconName = node_to_copy._iconName
     this._iconColor = node_to_copy._iconColor

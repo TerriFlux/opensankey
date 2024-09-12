@@ -112,30 +112,7 @@ export class Class_SankeyOSP
 export class Class_NodeElementOSP
   extends Class_NodeElementPlus<
     Class_DrawingAreaOSP, Class_SankeyOSP, Class_LinkElementOSP
-  > {
-
-  public copyInputLink(link: Class_LinkElementOSP): Class_LinkElementOSP {
-    const new_link = new Class_LinkElementOSP(
-      link.id,
-      this.sankey.nodes_dict[link.source.id] as Class_NodeElementOSP,
-      this,
-      this.drawing_area,
-      this.menu_config as Class_MenuConfigPlus
-    )
-    return new_link
-  }
-
-  public copyOutputLink(link: Class_LinkElementOSP): Class_LinkElementOSP {
-    const new_link = new Class_LinkElementOSP(
-      link.id,
-      this,
-      this.sankey.nodes_dict[link.target.id] as Class_NodeElementOSP,
-      this.drawing_area,
-      this.menu_config as Class_MenuConfigPlus
-    )
-    return new_link
-  }
-}
+  > {}
 
 // LINK =================================================================================
 

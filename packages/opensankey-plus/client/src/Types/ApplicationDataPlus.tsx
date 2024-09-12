@@ -276,17 +276,18 @@ export abstract class Class_ApplicationDataPlus
       this._views_order.push(default_main_sankey_id)
     }
     // Create the new sankey
-    const new_id = makeId('view')
-    const new_DA = this.createNewDrawingArea(new_id)
+    const new_DA = this.createNewDrawingArea(makeId('view'))
+    // Copy current sankey
+    new_DA.updateFrom(base_DA, ['*'])
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
     this._views_order.push(new_DA.id)
     // Shown sankey = new sankey
     this.setCurrentView(new_DA.id)
-    // Copy base_DA to new view
-    const copy = base_DA.toJSON()
-    copy.id = new_id
-    new_DA.fromJSON(copy)
+    // // Copy base_DA to new view
+    // const copy = base_DA.toJSON()
+    // copy.id = new_id
+    // new_DA.fromJSON(copy)
   }
 
   public setCurrentView(id: string) {
@@ -299,7 +300,8 @@ export abstract class Class_ApplicationDataPlus
       this._drawing_area = this._views[id]
       this._drawing_area.sankey.setVisible()
       this._drawing_area.reset()
-      // Update Menu
+      // Update Menus
+      this._menu_configuration.updateAllMenuComponents()
       this._menu_configuration.updateAllComponentsRelatedToViews()
     }
   }
