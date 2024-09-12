@@ -489,7 +489,6 @@ export abstract class Class_NodeElement
     this.drawNameLabel()
     this.drawValueLabel()
     this.drawLinks()
-
   }
 
   public drawAsSelected() {
@@ -2115,8 +2114,8 @@ protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseE
           this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
-        
-        this._handle_output_links[link.id].d3_selection?.attr('class','node_io '+link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor 
+
+        this._handle_output_links[link.id].d3_selection?.attr('class','node_io '+link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
 
         link.target.drawLinksArrow() //redraw arrow of node target of output links visible
 
@@ -2144,7 +2143,7 @@ protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseE
           this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
-        this._handle_input_links[link.id].d3_selection?.attr('class','node_io '+link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor 
+        this._handle_input_links[link.id].d3_selection?.attr('class','node_io '+link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
       }
     })
     this.drawLinksArrow()

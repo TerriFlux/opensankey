@@ -269,11 +269,9 @@ export const AddAllDropDownNode: FunctionComponent<addAllDropDownNodeFType> = (
         isChecked={tagg.show_legend}
         onChange={evt => {
           // Reset values
-          new_data.drawing_area.sankey.nodes_color_map = 'no_colormap'
           Object.values(node_taggs).forEach(tagg => tagg.show_legend = false)
           // Update this tagg group value
           if (evt.target.checked) {
-            new_data.drawing_area.sankey.nodes_color_map = tagg.id
             tagg.show_legend = true
           }
           // Refresh this & related component
@@ -537,15 +535,13 @@ export const AddAllDropDownFlux: FunctionComponent<AddAllDropDownFluxFType> = (
                 height='1rem'
               >
                 <Switch
-                  isChecked={new_data.drawing_area.sankey.links_color_map === flux_tagg.id}
+                  isChecked={flux_tagg.show_legend}
                   onChange={evt => {
                     // Reset default colormap for all fluxtaggs
                     Object.values(flux_taggs_dict)
                       .forEach(flux_tagg => { flux_tagg.show_legend = false })
-                    new_data.drawing_area.sankey.links_color_map = 'no_colormap'
                     // Update values for this fluxtagg
                     if (evt.target.checked) {
-                      new_data.drawing_area.sankey.links_color_map = flux_tagg.id
                       flux_tagg.show_legend = true
                     }
                     // Update related components (includes this)
