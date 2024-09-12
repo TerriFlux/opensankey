@@ -76,6 +76,16 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   }
 
   // PUBLIC METHODS ====================================================================
+  /**
+   * Override updateAllMenuComponents to take into account menu for OSP
+   *
+   * @memberof Class_MenuConfigPlus
+   */
+  updateAllMenuComponents(): void {
+    super.updateAllMenuComponents()
+    this.updateComponentRelatedToContainers()
+    this.updateComponentRelatedToViews()
+  }
 
   public openConfigMenuElementsContainers() {
     this.openConfigMenuElements()
@@ -122,9 +132,6 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   }
 
-
-  // PROTECTED METHODS ==================================================================
-
   /**
    * Create a timed out process - Used to avoid multiple reloading of components
    *
@@ -133,12 +140,12 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
    * so the current object must be passed directly as an argument.
    * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
    *
-   * @protected
+   * @public
    * @param {string} process_id
    * @param {(_: Class_MenuConfig) => void} process_func
    * @memberof Class_MenuConfig
    */
-  protected _add_waiting_process(
+  public _add_waiting_process(
     process_id: string,
     process_func: (_: Class_MenuConfigPlus) => void
   ) {
@@ -149,6 +156,11 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
       this
     )
   }
+
+
+  // PROTECTED METHODS ==================================================================
+
+  
 
   // GETTERS / SETTERS ==================================================================
 

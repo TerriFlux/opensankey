@@ -210,7 +210,7 @@ export abstract class Class_ApplicationDataPlus
       // Create other views
       Object.entries(views).forEach(ent_view => {
         const tmp = this.createNewDrawingArea(ent_view[0])
-        tmp.fromJSON(ent_view[1] as Type_JSON)
+        tmp.fromJSON(ent_view[1] as Type_JSON,false)
         // Add new sankey to views
         this._views[ent_view[0]] = tmp
         this._views_order.push(ent_view[0])
@@ -223,6 +223,29 @@ export abstract class Class_ApplicationDataPlus
         this.setCurrentView(this._views_order[idx])
       }
     }
+  }
+
+/**
+ * Function to return a dict of view instanced as class from a JSON file, this doesn't affect current Class_ApplicationData and sub-structur
+ * 
+ * @param {Type_JSON} json_object
+ * @return {*}  {{ [id: string]: Type_GenericDrawingArea }}
+ * @memberof Class_ApplicationDataPlus
+ */
+public extractViewsFromJSON(json_object: Type_JSON):{ [id: string]: Type_GenericDrawingArea }{
+    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    const dict_of_view:{ [id: string]: Type_GenericDrawingArea }={}
+
+    if (views) {
+      // Create other views
+      Object.entries(views).filter(ent=>ent[0]!==default_main_sankey_id).forEach(ent_view => {
+        const tmp = this.createNewDrawingArea(ent_view[0])
+        tmp.fromJSON(ent_view[1] as Type_JSON,false)
+        // Add new DA to views
+        dict_of_view[ent_view[0]] = tmp
+      })
+    }
+    return dict_of_view
   }
 
   /**
@@ -281,8 +304,16 @@ export abstract class Class_ApplicationDataPlus
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
     this._views_order.push(new_DA.id)
-    // Shown sankey = new sankey
-    this.setCurrentView(new_DA.id)
+    // In case we add a new view with an existing key it automatically change in the dict but we need to delete all duplicate in _views_order
+    this._views_order=Array.from(new Set([...this._views_order])) 
+
+    // Shown sankey = new sanke
+    this._menu_configuration._add_waiting_process(
+      'setCurrentView',
+      (_this: Class_MenuConfigPlus) => {
+        this.setCurrentView(new_DA.id)
+      }
+    )
     // Copy base_DA to new view
     const copy = base_DA.toJSON()
     copy.id = new_id

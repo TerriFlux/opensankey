@@ -46,6 +46,7 @@ import {
 import {
   default_main_sankey_id,
   OSTooltip,
+  Type_JSON,
   // preferenceCheck,
   // updateLayoutOSTyped
 } from './deps/OpenSankey/types/Utils'
@@ -79,6 +80,8 @@ import {
 } from '../types/Types'
 // import { deleteGLabel } from './SankeyPlusLabels'
 import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+import { Class_AbstractDrawingAreaPlus } from './Types/Abstract'
+import { Class_ApplicationDataOSP } from './Types/TypesOSP'
 
 // TODO Est-ce toujours utile ?
 declare const window: Window &
@@ -546,7 +549,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views)}
+        isDisabled={!(has_sankey_plus)}
         onClick={
           () => {
             if (ref_to_input_loader_json_catalog.current) {
@@ -603,76 +606,30 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     ref={ref_to_input_loader_json_catalog}
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
-      // TODO implementer dans Class_DrawingArea
+      const files = (evt.target as HTMLFormElement).files
 
-      // const files = (evt.target as HTMLFormElement).files
-      // const cpy_master_data = (master_data) ? master_data : JSON.parse(JSON.stringify(data))
-      // cpy_master_data!.is_catalog = true
-      // cpy_master_data!.nodeTags = {}
-      // cpy_master_data!.fluxTags = {}
-      // cpy_master_data!.dataTags = {}
-      // cpy_master_data!.nodes = {}
-      // cpy_master_data!.links = {}
-      // cpy_master_data!.labels = {}
-      // cpy_master_data!.linkZIndex = []
+      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
+      for (const i in files) {
+        const reader = new FileReader()
+        reader.onload = (() => {
+          return (e: ProgressEvent<FileReader>) => {
+            const file_content = String((e.target as FileReader).result)
+            const JSON_data = JSON.parse(file_content)
 
-      // // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
-      // for (const i in files) {
-      //   const reader = new FileReader()
-      //   reader.onload = (() => {
-      //     return (e: ProgressEvent<FileReader>) => {
-      //       const result = String((e.target as FileReader).result)
-      //       const result_data = JSON.parse(result)
-      //       const imported_data = JSON.parse(JSON.stringify(result_data)) as OSPData
-      //       convert_data(imported_data, get_default_data)
-      //       let new_ind = 'view_' + String(new Date().getTime())
-      //       let first_data = {} as OSPData
-      //       if (imported_data.view && imported_data.view.length > 0) {
-      //         // Import all view from the coming file
-      //         imported_data.view.forEach((v, i2) => {
-      //           const view_from_imported_data = GetDataFromView(imported_data, v.id) as OSPData
-      //           convert_data(view_from_imported_data, get_default_data)
+            // Extract view of files
+            const dict_new_views=new_data.extractViewsFromJSON(JSON_data as Type_JSON)
 
-      //           if (i2 === 0 && i === '0') {
-      //             new_ind = v.id
-      //             first_data = view_from_imported_data
-      //           }
-      //           cpy_master_data!.view.push({
-      //             id: v.id,
-      //             view_data: view_from_imported_data,
-      //             nom: (files[i].name).replace('.json', '') + ' ' + v.nom,
-      //             details: '',
-      //             heredited_attr_from_master: []
-      //           })
-      //         })
-      //       } else {
-      //         // Import only master data  when it doesn't have view
-      //         imported_data.view = []
-      //         first_data = imported_data
-      //         cpy_master_data!.view.push({
-      //           id: new_ind,
-      //           view_data: imported_data,
-      //           nom: (files[i].name).replace('.json', ''),
-      //           details: '',
-      //           heredited_attr_from_master: []
-      //         })
-      //       }
-      //       if (i === '0') {
-
-      //         set_view(new_ind)
-      //         cpy_master_data!.current_view = new_ind
-      //         set_data(JSON.parse(JSON.stringify(first_data)))
-      //       }
-      //       set_master_data(JSON.parse(JSON.stringify(cpy_master_data)))
-
-      //     }
-      //   })()
-      //   // Permet d'executer la transformation des blob en vues tout en evitant la var length
-      //   //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
-      //   if (!isNaN(+i)) {
-      //     reader.readAsText(files[i])
-      //   }
-      // }
+            Object.values(dict_new_views).forEach(new_view=>{
+              new_data.createNewView(new_view)
+            })
+          }
+        })()
+        // Permet d'executer la transformation des blob en vues tout en evitant la var length
+        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
+        if (!isNaN(+i)) {
+          reader.readAsText(files[i])
+        }
+      }
     }}
   />
 
