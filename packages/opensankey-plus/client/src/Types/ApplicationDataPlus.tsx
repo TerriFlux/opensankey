@@ -293,7 +293,7 @@ export abstract class Class_ApplicationDataPlus
     if (id in this._views) {
       // Hide previous diplayed sankey
       this._drawing_area.sankey.setInvisible()
-      // this._drawing_area.reset()
+      const was_mode_edition = this._drawing_area.isInEditionMode()
       this._drawing_area.unDraw()
       // SHow new sankey
       this._drawing_area = this._views[id]
@@ -302,7 +302,9 @@ export abstract class Class_ApplicationDataPlus
       // Purge selections to avoid modifying unvisible view
       this._drawing_area.purgeSelection()
       // Update components related to views
-        this._menu_configuration.updateComponentRelatedToViews()
+      this._menu_configuration.updateComponentRelatedToViews()
+      // Set view mode_edition to previous value  
+      this._drawing_area.setToModeEdition(was_mode_edition)
     }
   }
 
