@@ -37,7 +37,7 @@ import {
   getJSONFromJSON,
   getStringFromJSON,
   getStringOrUndefinedFromJSON,
-  default_main_sankey_id ,
+  default_main_sankey_id,
   default_style_id,
   default_style_name,
   Type_MacroTagGroup
@@ -47,8 +47,8 @@ import {
 // LOCAL FUNCTIONS **********************************************************************
 
 function get_sync_lists(
-  to_sync: {[id: string]: any},
-  as_ref: {[id: string]: any}
+  to_sync: { [id: string]: any },
+  as_ref: { [id: string]: any }
 ) {
   // Transfer node style from new_layout style node  to corresponding style in current
   const to_sync_ids = Object.keys(to_sync)
@@ -60,7 +60,7 @@ function get_sync_lists(
   const to_add = as_ref_ids
     .filter(id => !to_sync_ids.includes(id))
   const to_update = to_sync_ids
-  .filter(id => as_ref_ids.includes(id))
+    .filter(id => as_ref_ids.includes(id))
 
   return [
     to_remove,
@@ -82,8 +82,7 @@ export abstract class Class_Sankey
     Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
     Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>,
   >
-  extends Class_AbstractSankey
-{
+  extends Class_AbstractSankey {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -188,8 +187,7 @@ export abstract class Class_Sankey
 
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
-  protected abstract createNewLinkStyle(id:string,name:string,is_deletable?:boolean):Class_LinkStyle
-
+  protected abstract createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
@@ -747,8 +745,8 @@ export abstract class Class_Sankey
         // Set node value to node from JSON
         node.fromJSON(
           node_json as Type_JSON,
-          {...matching_taggs_id['nodeTags'],...matching_taggs_id['levelTags']},
-          {...matching_tags_id['nodeTags'],...matching_tags_id['levelTags']})
+          { ...matching_taggs_id['nodeTags'], ...matching_taggs_id['levelTags'] },
+          { ...matching_tags_id['nodeTags'], ...matching_tags_id['levelTags'] })
       })
     // Redo a go throught, but this time create nodes dimension
     Object.entries(json_node_object)
@@ -919,7 +917,7 @@ export abstract class Class_Sankey
   ) {
     // Local variables to avoid recomputations ------------------------------------------
 
-    const all=mode.includes('*')
+    const all = mode.includes('*')
 
     // Transfer DA attribut from other sankey to current (+ nodes/links style)------------
 
@@ -1145,7 +1143,7 @@ export abstract class Class_Sankey
       sync_flux_values ||
       sync_flux_attr ||
       all
-    ){
+    ) {
       const [to_remove, to_add, to_update] = get_sync_lists(this._links, other_sankey._links)
 
       // Add link in new that are not in current then add them
@@ -1162,7 +1160,7 @@ export abstract class Class_Sankey
                 similar_src_curr as Type_GenericNodeElement,
                 similar_trgt_curr as Type_GenericNodeElement
               )
-              this._links[id].copyFrom(link)
+            this._links[id].copyFrom(link)
           })
       }
 
@@ -1553,7 +1551,7 @@ export abstract class Class_Sankey
    * @readonly
    * @memberof Class_Sankey
    */
-  public abstract get default_link_style():Class_LinkStyle
+  public abstract get default_link_style(): Class_LinkStyle
 
   /**
    * Return all the style as a list
