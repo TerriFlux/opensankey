@@ -468,7 +468,7 @@
 //   additional_preferences: JSX.Element[],
 
 //   // Configuration Menu
-//   additional_configuration_menus: JSX.Element[]
+//   additional_configuration_menus_edition_elements: JSX.Element[]
 
 //   // menu_style_add_node_appearence_attr: JSX.Element[]
 //   // menu_style_add_node_label: JSX.Element[]
