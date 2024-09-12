@@ -79,7 +79,7 @@ export class Class_MenuConfig {
     Timeout dict
   =========================================== */
 
-  protected _waiting_processes: {[id: string]: NodeJS.Timeout} = {}
+  protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 500 // ms
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -177,6 +177,10 @@ export class Class_MenuConfig {
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
 
+  // Update component ToolbarBuilder
+  private _ref_to_save_diagram_updater: MutableRefObject<() => void>
+
+
   /* ========================================
     Updater of filtering components
   =========================================== */
@@ -235,7 +239,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
     this._ref_menu_opened = useRef(false)
-    this._ref_lauchToast = useRef<() => void>(() => null),
+    this._ref_lauchToast = useRef<() => void>(() => null)
     this._function_on_wait = useRef(() => null)
 
     // Layout
@@ -278,6 +282,10 @@ export class Class_MenuConfig {
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
+
+    // Init save diagram JSON components updater ------------------------------------------------
+
+    this._ref_to_save_diagram_updater = useRef(() => null)
 
     // Init dict of setter show dialog -------------------------------------------------
 
@@ -793,6 +801,14 @@ export class Class_MenuConfig {
   }
 
   /**
+   * Update modal Save diagram JSON
+   *
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentSaveDiagramJSON() {
+    this._ref_to_save_diagram_updater.current()
+  }
+  /**
    * Function to position horizontally the toolbar, it's position depend if the configuration menu is opened
    * @memberof Class_MenuConfig
    */
@@ -1021,6 +1037,11 @@ export class Class_MenuConfig {
   }
   public get never_see_again(): MutableRefObject<boolean> {
     return this._never_see_again
+  }
+
+  // Get ref updater of save diagram JSON
+  public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
+    return this._ref_to_save_diagram_updater
   }
 }
 
