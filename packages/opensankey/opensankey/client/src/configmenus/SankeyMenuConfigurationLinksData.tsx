@@ -74,18 +74,19 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
   // Function used to force this component to reload
   const [, setCount] = useState(0)
 
+  const refreshThis = () => {
+    setCount(a => a + 1)
+    updateInputsValues()
+  }
+
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setCount(a => a + 1)
+    refreshThis()
   }
-
-  new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = () => {
-    updateInputsValues()
-    setCount(a=>a+1)
-  }
+  new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis
 
   // JSX -------------------------------------------------------------------------------
 
