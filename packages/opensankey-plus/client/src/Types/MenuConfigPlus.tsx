@@ -99,7 +99,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
    */
   public updateComponentRelatedToContainers() {
     this._add_waiting_process(
-      'updateComponentRelatedToContainersUpdaters',
+      'updateComponentRelatedToContainers',
       (_this: Class_MenuConfigPlus) => {
         _this._ref_to_menu_config_container_updater.current()
       }
@@ -112,9 +112,16 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
    * @memberof Class_MenuConfigPlus
    */
   public updateComponentRelatedToViews() {
-    this._ref_to_banner_views_updater.current()
-    this._ref_to_accordion_views_updater.current()
+    this._add_waiting_process(
+      'updateComponentRelatedToView',
+      (_this: Class_MenuConfigPlus) => {
+        _this._ref_to_banner_views_updater.current()
+        _this._ref_to_accordion_views_updater.current()
+      }
+    )
+
   }
+
 
   // PROTECTED METHODS ==================================================================
 
@@ -149,6 +156,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
   // public set dict_setter_show_dialog_plus(value: OSPShowMenuComponentsVarType) {this._dict_setter_show_dialog_plus = value;}
+
+  // public get ref_to_navbar_views_updater(): MutableRefObject<() => void>  { return this._ref_to_navbar_views_updater }
+  // public get ref_to_selector_views_updater(): MutableRefObject<() => void> { return this._ref_to_selector_views_updater }
 
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
   public set ref_to_menu_config_containers_updater(value: MutableRefObject<(() => void)>) { this._ref_to_menu_config_container_updater = value }
