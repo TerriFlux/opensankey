@@ -219,24 +219,10 @@ root.render(
     }
     ClickSaveDiagram={
       (
-        ApplicationClass: Type_GenericApplicationDataOS,
-        // applicationState:applicationStateType,
-        options:SaveDiagramOptionsType
+        ApplicationClass: Type_GenericApplicationDataOS
       ) => {
-        // const {master_data} = applicationData as OSPApplicationDataType
-        // const OSPElementsSelected = applicationState as OSPElementsSelectedType
-        // let data_to_save = data as OSPData
-        // if (master_data && (master_data.view.length > 0)) {
-        //   //if views are present there are two cases. If save only view data is saved otherwise master data is saved.
-        //   if ( OSPElementsSelected.saveViewGetter.current ) {
-        //     data_to_save.current_view='none'
-        //   } else {
-        //     data_to_save = master_data
-        //   }
-        // }
         ClickSaveDiagram(
-          ApplicationClass,
-          options
+          ApplicationClass
         )
       }
     }

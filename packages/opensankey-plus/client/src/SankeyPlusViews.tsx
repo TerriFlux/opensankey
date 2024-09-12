@@ -1,20 +1,13 @@
 // Standard libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
-import * as d3 from 'd3'
 
 import { TFunction } from 'i18next'
-import LZString from 'lz-string'
-import {
-  Diff,
-  diff as getDiff,
-  applyChange
-} from 'deep-diff'
 
-import { FaArrowDown, FaArrowUp, FaMinus, FaCheck } from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus } from 'react-icons/fa'
 
 // Imported libs
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faListCheck, faXmark, faExclamation, faFloppyDisk, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faListCheck, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus } from '@fortawesome/free-solid-svg-icons'
 import {
   AccordionItem,
   AccordionButton,
@@ -32,14 +25,7 @@ import {
   Thead,
   Tr,
   Button,
-  Modal,
-  ModalFooter,
-  ModalHeader,
-  ModalBody,
-  ModalContent,
-  Tag,
-  ModalCloseButton
-} from '@chakra-ui/react'
+  Tag} from '@chakra-ui/react'
 
 // OpenSankey Libs
 // import { SankeyLinkValueDict, TagsGroup } from './deps/OpenSankey/types/Types'
@@ -53,35 +39,19 @@ import {
 
 // Local libs
 import {
-  CheckCurrentViewSavedFType,
-  FilterViewFType,
-  GetDataFromViewFType,
-  getSetDiagramFType,
-  // OSPKeyHandlerFType,
-  // MenuEnregistrerViewFType,
-  modal_transparent_view_attrFType,
-  modal_view_not_savedFType,
-  OpenOSPCheckpointButtonFType,
-  RecomputeViewsFType,
   OSPBannerViewFType,
   OSPMenuPreferenceViewFType,
   SelecteurViewFType,
   // setValueFType,
-  viewsAccordionFType
+  viewsAccordionFType,
+  MenuEnregistrerViewFType
 } from '../types/SankeyPlusViewsTypes'
 
 import {
   OSPData,
-  differenceType,
-  DiffType,
-  ViewType,
-  OSPApplicationDataType,
-  SankeyUnitData
-} from '../types/Types'
+  OSPApplicationDataType} from '../types/Types'
 // import { deleteGLabel } from './SankeyPlusLabels'
 import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
-import { Class_AbstractDrawingAreaPlus } from './Types/Abstract'
-import { Class_ApplicationDataOSP } from './Types/TypesOSP'
 
 // TODO Est-ce toujours utile ?
 declare const window: Window &
@@ -312,7 +282,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
         isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={() => {
           const evt = document
-          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7'})
+          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
           if (evt.onkeydown) {
             evt.onkeydown(evt_key_f7)
           }
@@ -360,123 +330,123 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   // Button to go to next view ----------------------------------------------------------
 
   const button_to_prev_view = <OSTooltip
-  placement='bottom'
-  label={
-    (!has_sankey_plus) ?
-      t('Menu.sankeyOSPDisabled') :
-      t('view.tooltips.PrevViewButton')
-  }
->
-  <Box>
-    <Button
-      variant='menutop_button'
-      isDisabled={!(has_sankey_plus && has_views && has_view_before)}
-      onClick={() => {
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'F8'})
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <Box
-        layerStyle='menutop_button_style'
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        t('Menu.sankeyOSPDisabled') :
+        t('view.tooltips.PrevViewButton')
+    }
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!(has_sankey_plus && has_views && has_view_before)}
+        onClick={() => {
+          const ev = document
+          const tmp = new KeyboardEvent('keydown', { key: 'F8' })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}
       >
         <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
+          layerStyle='menutop_button_style'
         >
-          <FontAwesomeIcon
-            style={{
-              'height': '2rem',
-              'width': '3rem',
-              // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
-            }}
-            icon={faCaretSquareLeft}
-          />
-          {
-            (!has_sankey_plus) ?
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  'fontSize': '1em',
-                  'position': 'absolute',
-                  'right': '0.1em',
-                  'bottom': '0em',
-                  'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                }} />
-              : <></>
-          }
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
+              }}
+              icon={faCaretSquareLeft}
+            />
+            {
+              (!has_sankey_plus) ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.precView')}
+          </Box>
         </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.precView')}
-        </Box>
-      </Box>
-    </Button>
-  </Box>
-</OSTooltip>
+      </Button>
+    </Box>
+  </OSTooltip>
 
   // Button to previous view ------------------------------------------------------------
 
   const button_to_next_view = <OSTooltip
-  placement='bottom'
-  label={
-    (!has_sankey_plus) ?
-      (t('Menu.sankeyOSPDisabled')) :
-      t('view.tooltips.NextViewButton')}
->
-  <Box>
-    <Button
-      variant='menutop_button'
-      isDisabled={!(has_sankey_plus && has_views && has_view_after)}
-      onClick={() => {
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'F9'})
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <Box
-        layerStyle='menutop_button_style'
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.NextViewButton')}
+  >
+    <Box>
+      <Button
+        variant='menutop_button'
+        isDisabled={!(has_sankey_plus && has_views && has_view_after)}
+        onClick={() => {
+          const ev = document
+          const tmp = new KeyboardEvent('keydown', { key: 'F9' })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}
       >
         <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
+          layerStyle='menutop_button_style'
         >
-          <FontAwesomeIcon
-            style={{
-              'height': '2rem',
-              'width': '3rem',
-              // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
-            }}
-            icon={faCaretSquareRight}
-          />
-          {
-            (!has_sankey_plus) ?
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  'fontSize': '1em',
-                  'position': 'absolute',
-                  'right': '0.1em',
-                  'bottom': '0em',
-                  'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                }} />
-              : <></>
-          }
+          <Box
+            gridRow="1"
+            padding="0.1rem 0 0.1rem 0"
+          >
+            <FontAwesomeIcon
+              style={{
+                'height': '2rem',
+                'width': '3rem',
+                // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
+              }}
+              icon={faCaretSquareRight}
+            />
+            {
+              (!has_sankey_plus) ?
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{
+                    'fontSize': '1em',
+                    'position': 'absolute',
+                    'right': '0.1em',
+                    'bottom': '0em',
+                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
+                  }} />
+                : <></>
+            }
+          </Box>
+          <Box
+            gridRow="2"
+          >
+            {t('Menu.nextView')}
+          </Box>
         </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.nextView')}
-        </Box>
-      </Box>
-    </Button>
-  </Box>
-</OSTooltip>
+      </Button>
+    </Box>
+  </OSTooltip>
 
   // Button to display attributes transfert modal ---------------------------------------
 
@@ -617,9 +587,9 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
             const JSON_data = JSON.parse(file_content)
 
             // Extract view of files
-            const dict_new_views=new_data.extractViewsFromJSON(JSON_data as Type_JSON)
+            const dict_new_views = new_data.extractViewsFromJSON(JSON_data as Type_JSON)
 
-            Object.values(dict_new_views).forEach(new_view=>{
+            Object.values(dict_new_views).forEach(new_view => {
               new_data.createNewView(new_view)
             })
           }
@@ -656,7 +626,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
     </Box>
     {
       new_data.is_static ?
-        <></>:
+        <></> :
         <>
           {button_to_delete_actual_view}
           {button_to_show_view_attr_transfert_modal}
@@ -1792,21 +1762,28 @@ export const OSPMenuPreferenceView: FunctionComponent<OSPMenuPreferenceViewFType
 //   } return <></>
 // }
 
-// export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
-//   t,
-//   elementsSelected
-// }) => {
-//   const [save_only_view, set_save_only_view] = useState(false)
-//   elementsSelected.saveViewGetter.current = save_only_view
-//   return <Checkbox
-//     variant='menuconfigpanel_option_checkbox'
-//     isChecked={save_only_view}
-//     onChange={() => set_save_only_view(!save_only_view)}>
-//     <OSTooltip label={t('view.tooltips.buttonExportView')}>
-//       {t('view.export')}
-//     </OSTooltip>
-//   </Checkbox>
-// }
+export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
+  applicationData
+}) => {
+  const [, setCount] = useState(0)
+  const { new_data } = applicationData
+  const { t } = new_data
+  applicationData.new_data.menu_configuration.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
+
+  return (new_data.has_views && !new_data.is_view_master) ? <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={
+      applicationData.new_data.options_save_json.only_current_view
+    }
+    onChange={(evt) => {
+      applicationData.new_data.options_save_json.only_current_view = evt.target.checked
+      new_data.menu_configuration.updateComponentSaveDiagramJSON()
+    }}>
+    <OSTooltip label={t('view.tooltips.buttonExportView')}>
+      {t('view.export')}
+    </OSTooltip>
+  </Checkbox> : <></>
+}
 
 // export const OpenOSPCheckpointButton: OpenOSPCheckpointButtonFType = (
 //   master_data: OSPData | undefined,

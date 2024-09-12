@@ -120,10 +120,9 @@ export type modal_transparent_view_attrFType = (
   t:TFunction
 )=> JSX.Element
 
-// export type MenuEnregistrerViewFType = {
-//   t:TFunction,
-//   elementsSelected: OSPElementsSelectedType
-// }
+export type MenuEnregistrerViewFType = {
+applicationData:OSPApplicationDataType
+}
 
 export type OpenOSPCheckpointButtonFType = (
   master_data:OSPData| undefined,

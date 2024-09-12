@@ -52,6 +52,7 @@ import {
 
 // import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import {
+  MenuEnregistrerView,
   OSPBannerView,
   OSPMenuPreferenceView,
   SelecteurView,
@@ -118,7 +119,7 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
   //   }
   // }
 
-  const class_dataplus=new Class_ApplicationDataOSP(false)
+  const class_dataplus = new Class_ApplicationDataOSP(false)
 
   // Read data from cache if it exist
   if (_initial_data !== undefined) {
@@ -129,21 +130,9 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
     data: data_plus,
     set_data: set_data_plus,
     get_default_data: plus_get_defaut_data,
-    new_data:class_dataplus ,
+    new_data: class_dataplus,
     dataVarToUpdate: useRef(['']),
-    // convert_data : (data:SankeyData,DefaultSankeyData:()=>SankeyData) => {
-    //   plus_convert_data(data as OSPData,DefaultSankeyData as ()=> OSPData)
-    //   convert_data(data,DefaultSankeyData)
-    // },
-    // master_data,
-    // set_master_data,
-    // view,
-    // set_view,
-    // view_not_saved:view_not_saved,
-    // set_view_not_saved:set_view_not_saved,
-    // setDiagram:useOpenSankeySetDiagram?getSetDiagramFunc(set_master_data,set_view,plus_get_defaut_data ) : setDiagram,
-    setDiagram: setDiagram,
-    // is_catalog:false
+   setDiagram: setDiagram,
   } as OSPApplicationDataVarType
 }
 
@@ -185,7 +174,7 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<ViewsAccordion applicationData={applicationDataOSP} />)
 
 
-  if (!is_static || has_views ) {
+  if (!is_static || has_views) {
     additionalMenus.externale_navbar_item['view'] = <OSPBannerView
       applicationData={applicationDataOSP}
     />
@@ -252,23 +241,19 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
     />
   )
 
-  const plusData = applicationData as unknown as OSPApplicationDataType
-  // TODO : re implement MenuEnregistrerView with class
-  // if (plusData.master_data && plusData.master_data.current_view && plusData.master_data.current_view!=='none') {
-  //   additionalMenus.additional_file_save_json_option.push(
-  //     <MenuEnregistrerView
-  //       t={t}
-  //       elementsSelected={applicationState as OSPElementsSelectedType}
-  //     />
-  //   )
-  // }
+  // Addition chackbox for dialog save JSON dagram
+  additionalMenus.additional_file_save_json_option.push(
+    <MenuEnregistrerView
+      applicationData={applicationDataOSP}
+    />
+  )
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
 
   // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
-  additionalMenus.apply_transformation_additional_elements.push( <OSPTransformationElements
-    applicationData={plusData}
+  additionalMenus.apply_transformation_additional_elements.push(<OSPTransformationElements
+    applicationData={applicationDataOSP}
   />)
 }
 
