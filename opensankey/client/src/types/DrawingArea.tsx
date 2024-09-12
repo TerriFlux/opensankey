@@ -1496,7 +1496,7 @@ export abstract class Class_DrawingArea
       .attr('height', this.getHeight())
       .style('stroke-width', 5)
       .style('stroke', default_black_color)
-    this.changeCursor(true)
+    this.drawCursor()
   }
 
   /**
@@ -1885,9 +1885,9 @@ export abstract class Class_DrawingArea
 
   // Mode
   public isInSelectionMode() { return this._mode === 'selection' }
-  protected setSelectionMode() { this._mode = 'selection'; this.changeCursor(false) }
-  public isInEditionMode() { return this._mode === 'edition' }
-  protected setEditionMode() { this._mode = 'edition'; this.changeCursor(true) }
+  protected setSelectionMode() { this._mode = 'selection'; this.drawCursor() }
+  public isInEditionMode() { return this._mode === 'edition'}
+  protected setEditionMode() { this._mode = 'edition'; this.drawCursor();console.trace('tata')  }
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
@@ -1896,9 +1896,23 @@ export abstract class Class_DrawingArea
     this.application_data.menu_configuration.ref_to_toolbar_updater.current()
   }
 
-  public changeCursor(is_edition: boolean) {
-    this.d3_selection?.classed('edition_mode', is_edition)
-    this.d3_selection?.classed('selection_mode', !is_edition)
+  public setToModeEdition(_:boolean){
+    if(_){
+      this.setEditionMode()
+    }else{
+      this.setSelectionMode()
+    }
+  }
+  
+  /**
+   * Technically don't draw a cursor but add a class & then css use it to modify cursor
+   *
+   * @memberof Class_DrawingArea
+   */
+  public drawCursor() {
+    const mode_edition = this.isInEditionMode()
+    this.d3_selection?.classed('edition_mode', mode_edition)
+    this.d3_selection?.classed('selection_mode', !mode_edition)
   }
 
   /**
