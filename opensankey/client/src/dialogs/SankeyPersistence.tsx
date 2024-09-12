@@ -339,6 +339,13 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
     (cpy as unknown as {view:[]}).view=[]
   }
+  delete cpy.initial_nodes
+  delete cpy.initial_links
+  delete cpy.additional_nodes
+  delete cpy.additional_links
+  delete cpy.removed_nodes
+  delete cpy.removed_links
+
   const str_data = JSON.stringify(cpy)
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   const dataAsSuite = (cpy as DataSuiteType)
@@ -519,16 +526,19 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data:
   let url = root + url_prefix + 'sankey/save_excel'
 
   const cpy = JSON.parse(JSON.stringify(data)) as SankeyData
-  if ( data.initial_nodes && Object.values(data.initial_nodes).length > 0) {
+  // Object.values(cpy.links).forEach(d=>{
+  //   (d as SankeyLink).value={}
+  // })
+  if ( data.additional_nodes && Object.values(data.additional_nodes).length > 0) {
     cpy.nodes = JSON.parse(JSON.stringify(data.initial_nodes))
     cpy.links = JSON.parse(JSON.stringify(data.initial_links))  
-    delete cpy.initial_nodes
-    delete cpy.initial_links
-    delete cpy.additional_nodes
-    delete cpy.additional_links
-    delete cpy.removed_nodes
-    delete cpy.removed_links
   }
+  delete cpy.initial_nodes
+  delete cpy.initial_links
+  delete cpy.additional_nodes
+  delete cpy.additional_links
+  delete cpy.removed_nodes
+  delete cpy.removed_links
 
   const fetchData = {
     method: 'POST',
