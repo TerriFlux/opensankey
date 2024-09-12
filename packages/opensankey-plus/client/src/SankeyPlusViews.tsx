@@ -116,8 +116,7 @@ declare const window: Window &
  * @return {*}
  */
 export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
-  applicationData,
-  view_selector
+  applicationData
 }) => {
 
   // Data -------------------------------------------------------------------------------
@@ -127,16 +126,20 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   // Component updater ------------------------------------------------------------------
 
+  // Local updatera --------------------------------------------------------------------
   const [, setCount] = useState(0)
   const refreshThis = () => {
     setCount(a => a + 1)
   }
-  new_data.menu_configuration.ref_to_navbar_views_updater.current = refreshThis
+  new_data.menu_configuration.ref_to_banner_views_updater.current = refreshThis
 
   // Ref to trigger other components ----------------------------------------------------
 
   const { ref_setter_show_modal_transparent_view_attr } = new_data.menu_configuration.dict_setter_show_dialog_plus
   const ref_to_input_loader_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
+
+
+  new_data.menu_configuration.ref_to_banner_views_updater.current = () => setCount(a => a + 1)
 
   // Local variables --------------------------------------------------------------------
   const has_sankey_plus = new_data.has_sankey_plus
@@ -691,7 +694,8 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
       alignSelf='center'
       alignContent='center'
     >
-      {view_selector}
+      <SelecteurView new_data={new_data} />
+
     </Box>
     {
       new_data.is_static ?
@@ -716,12 +720,11 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
  * @return {*}
  */
 export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
-  applicationData
+  new_data
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
 
   // Components updaters ---------------------------------------------------------------
@@ -737,11 +740,10 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // And update this menu also
-    refreshThis()
+    // Update views components
+    new_data.menu_configuration.updateComponentRelatedToViews()
   }
 
-  new_data.menu_configuration.ref_to_selector_views_updater.current = refreshThis
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Local variables ------------------------------------------------------------------
@@ -767,6 +769,7 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         new_data.setCurrentView(evt.target.value)
+        refreshThisAndUpdateRelatedComponents()
         // TODO supprimer quand OK
         // multi_selected_nodes.current = []
         // multi_selected_links.current = []
@@ -839,7 +842,7 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
     function_get_value={() => { return cur_view.name }}
     function_on_blur={(_) => {
       // Update text for links
-      if ((_ !== undefined) && (_ !== null )) {
+      if ((_ !== undefined) && (_ !== null)) {
         cur_view.name = _
       }
       // Update this menu
@@ -1296,209 +1299,154 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 
 // TODO A implementer avec classes
 
-// export const viewsAccordion: viewsAccordionFType = (
-//   applicationData,
-//   t: TFunction,
-//   is_activated: boolean,
-//   convert_data: (d: OSPData, DefaultSankeyData: () => OSPData) => void,
-//   DefaultSankeyData: () => OSPData,
-//   view_selector
-// ) => {
-//   const { data, set_data, master_data, set_master_data, view, set_view } = applicationData
-//   const _load_json = useRef<HTMLInputElement>(null)
+export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
+  applicationData,
+}
+) => {
+  const { new_data } = applicationData
+  const _load_json = useRef<HTMLInputElement>(null)
+  const { t } = new_data
+  const [, setCount] = useState(0)
+  const refreshThis = () => setCount(a => a + 1)
+  new_data.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
+  const is_activated = new_data.has_sankey_plus
+  const curr_view = new_data.drawing_area
+  const is_master = new_data.is_view_master
+  const list_view = new_data.views //include master
+  // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
-//   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
+  return <>
+    <AccordionItem
+      style={{ 'display': (new_data.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
+    >
+      <AccordionButton onClick={() => {
+        const scroll_x = window.scrollX
+        const scroll_y = window.scrollY
+        setTimeout(() => {
+          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+        }, 50)
+      }}
+      >
+        <Box as='span' layerStyle='menuconfig_entry'>
+          {t('view.storytelling')}
+        </Box>
+        <Tag colorScheme='teel' >Beta</Tag>
+        <AccordionIcon />
+      </AccordionButton>
+      <AccordionPanel>
+        <Box layerStyle='menuconfigpanel_grid'>
 
-//   return <>
-//     <AccordionItem
-//       // id='Visualisation'
-//       style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'initial' : 'none' }}
-//     // eventKey="Visualisation"
-//     // onClick={
-//     //   evt => {
-//     //     if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && uiElementsRef.ref_nav_item_active.current === 'Visualisation') {
-//     //       uiElementsRef.ref_setter_nav_item_active.current!('')
-//     //     } else {
-//     //       uiElementsRef.ref_setter_nav_item_active.current!('Visualisation')
-//     //     }
-//     //   }
-//     // }
-//     >
-//       <AccordionButton onClick={() => {
-//         const scroll_x = window.scrollX
-//         const scroll_y = window.scrollY
-//         setTimeout(() => {
-//           document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-//         }, 50)
-//       }}
-//       >
-//         <Box as='span' layerStyle='menuconfig_entry'>
-//           {t('view.storytelling')}
-//         </Box>
-//         <Tag colorScheme='teel' >Beta</Tag>
-//         <AccordionIcon />
-//       </AccordionButton>
-//       <AccordionPanel>
-//         <Box layerStyle='menuconfigpanel_grid'>
-
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-//             <Box layerStyle='menuconfigpanel_option_name' >
-//               {t('view.select')}
-//             </Box>
-//             <InputGroup
-//               variant='menuconfigpanel_option_input'>
-//               {view_selector}
-//             </InputGroup>
-//           </Box>
-//           <Table size='sm'>
-//             <Thead>
-//               <Tr>
-//                 <Th>{t('view.name')}</Th>
-//                 <Th>Position</Th>
-//                 <Th>{t('view.delete')}</Th>
-//                 {/* <Th>{t('view.copy')}</Th>
-//                 <Th>{t('view.import')}</Th>
-//                 <Th>{t('view.export')}</Th> */}
-//               </Tr>
-//             </Thead>
-//             <Tbody>
-//               {master_data ? Object.values(master_data.view).map(d => {
-//                 return (
-//                   <Tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
-//                     <Td>
-//                       <Input
-//                         variant='menuconfigpanel_option_input'
-//                         value={d.nom}
-//                         isDisabled={!is_activated}
-//                         onChange={evt => {
-//                           // Change the name of the view
-//                           master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
-//                           set_master_data({ ...master_data })
-//                         }}
-//                       />
-//                     </Td>
-//                     <Td>
-//                       {/* Change the position of the view in the liste of view from master data */}
-//                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
-//                         onClick={
-//                           () => {
-//                             let ind = -1
-//                             master_data.view.map((v, i) => {
-//                               ind = (v.id === d.id) ? i : ind
-//                             })
-//                             const toShift = master_data.view[ind]
-//                             master_data.view.splice(ind, 1)
-//                             master_data.view.splice(ind - 1, 0, toShift)
-//                             set_master_data(JSON.parse(JSON.stringify(master_data)))
-//                             set_data(JSON.parse(JSON.stringify(data)))
-//                           }
-//                         }
-//                       ><FaArrowUp />
-//                       </Button>
-//                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated}
-//                         onClick={
-//                           () => {
-//                             let ind = -1
-//                             master_data.view.map((v, i) => {
-//                               ind = (v.id === d.id) ? i : ind
-//                             })
-//                             const toShift = master_data.view[ind]
-//                             master_data.view.splice(ind, 1)
-//                             master_data.view.splice(ind + 1, 0, toShift)
-//                             set_master_data(JSON.parse(JSON.stringify(master_data)))
-//                             set_data(JSON.parse(JSON.stringify(data)))
-//                           }
-//                         }
-//                       ><FaArrowDown />
-//                       </Button>
-//                     </Td>
-//                     <Td><Button
-//                       variant='menuconfigpanel_del_button_in_table'
-//                       isDisabled={!is_activated}
-//                       onClick={
-//                         // Delete the view
-//                         () => {
-//                           let ind = -1
-//                           master_data.view.map((v, i) => {
-//                             ind = (v.id === d.id) ? i : ind
-//                           })
-//                           master_data.view.splice(ind, 1)
-//                           // If master is not a catalog & we delete the current view then we go to master
-//                           // If master is a catalog and the catalog of view is empty then we got to master
-//                           if ((master_data.current_view === view && master_data.is_catalog === false) || (master_data.view.length === 0 && master_data.is_catalog === true)) {
-//                             set_view('none')
-//                             set_data(JSON.parse(JSON.stringify(master_data)))
-//                           } else if (master_data.is_catalog && master_data.view.length > 0) {
-//                             // If master is a catalog and the catalog is not empty then we got to the first view
-//                             set_view(master_data.view[0].id)
-//                             const tmp = GetDataFromView(master_data, master_data.view[0].id) as OSPData
-//                             if (!tmp.accordeonToShow.includes('Vis')) {
-//                               tmp.accordeonToShow.push('Vis')
-//                             }
-//                             set_data(JSON.parse(JSON.stringify(tmp)))
-//                           }
-//                           if (master_data.view.length === 0) {
-//                             master_data.is_catalog = false
-//                             set_data(JSON.parse(JSON.stringify(master_data)))
-
-//                           }
-//                           set_master_data(JSON.parse(JSON.stringify(master_data)))
-//                         }
-//                       }
-//                     ><FaMinus /></Button></Td>
-//                   </Tr>
-//                 )
-//               }) : <></>}
-//             </Tbody>
-//           </Table>
-//         </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
+              {t('view.select')}
+            </Box>
+            <InputGroup
+              variant='menuconfigpanel_option_input'>
+              <SelecteurView new_data={new_data} />
+            </InputGroup>
+          </Box>
+          <Table size='sm'>
+            <Thead>
+              <Tr>
+                <Th>{t('view.name')}</Th>
+                <Th>Position</Th>
+                <Th>{t('view.delete')}</Th>
+                {/* <Th>{t('view.copy')}</Th>
+                <Th>{t('view.import')}</Th>
+                <Th>{t('view.export')}</Th> */}
+              </Tr>
+            </Thead>
+            <Tbody>
+              {list_view.map(d => {
+                return (
+                  <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
+                    <Td>
+                      <Input
+                        variant='menuconfigpanel_option_input'
+                        value={d.name}
+                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onChange={evt => {
+                          d.name = evt.target.value
+                          new_data.menu_configuration.updateComponentRelatedToViews()
+                        }}
+                      />
+                    </Td>
+                    <Td>
+                      {/* Change the position of the view in the liste of view from master data */}
+                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onClick={() => { new_data.moveViewUpInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
+                      ><FaArrowUp />
+                      </Button>
+                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onClick={() => { new_data.moveViewDownInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
+                      ><FaArrowDown />
+                      </Button>
+                    </Td>
+                    <Td><Button
+                      variant='menuconfigpanel_del_button_in_table'
+                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      onClick={
+                        // Delete the view
+                        () => {
+                          new_data.deleteView(d.id)
+                          new_data.menu_configuration.updateComponentRelatedToViews()
+                        }
+                      }
+                    ><FaMinus /></Button></Td>
+                  </Tr>
+                )
+              })}
+            </Tbody>
+          </Table>
+        </Box>
 
 
-//       </AccordionPanel>
-//     </AccordionItem>
+      </AccordionPanel>
+    </AccordionItem>
+    {/* 
+    <Input
+      type="file"
+      ref={_load_json}
+      style={{ display: 'none' }}
+      onChange={(evt: ChangeEvent) => {
+        const files = (evt.target as HTMLFormElement).files
+        const reader = new FileReader()
 
-//     <Input
-//       type="file"
-//       ref={_load_json}
-//       style={{ display: 'none' }}
-//       onChange={(evt: ChangeEvent) => {
-//         const files = (evt.target as HTMLFormElement).files
-//         const reader = new FileReader()
+        // Load a view from a JSON
+        // reader.onload = (() => {
+        //   return (e: ProgressEvent<FileReader>) => {
+        //     const result = String((e.target as FileReader).result)
+        //     const result_data = JSON.parse(result)
+        //     let ind = -1
+        //     master_data!.view.map((v, i) => {
+        //       ind = (v.id === _load_json.current?.id) ? i : ind
+        //     })
+        //     const cur_view = master_data!.view[ind]
+        //     const imported_data = JSON.parse(JSON.stringify(result_data))
+        //     imported_data.view = []
+        //     convert_data(imported_data, DefaultSankeyData)
+        //     let difference = getDiff(master_data, imported_data)
+        //     difference = JSON.parse(
+        //       JSON.stringify(
+        //         (difference !== undefined) ?
+        //           difference : []
+        //       )
+        //     )
+        //     difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
+        //     cur_view.view_data = { diff: difference }
 
-//         reader.onload = (() => {
-//           return (e: ProgressEvent<FileReader>) => {
-//             const result = String((e.target as FileReader).result)
-//             const result_data = JSON.parse(result)
-//             let ind = -1
-//             master_data!.view.map((v, i) => {
-//               ind = (v.id === _load_json.current?.id) ? i : ind
-//             })
-//             const cur_view = master_data!.view[ind]
-//             const imported_data = JSON.parse(JSON.stringify(result_data))
-//             imported_data.view = []
-//             convert_data(imported_data, DefaultSankeyData)
-//             let difference = getDiff(master_data, imported_data)
-//             difference = JSON.parse(
-//               JSON.stringify(
-//                 (difference !== undefined) ?
-//                   difference : []
-//               )
-//             )
-//             difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
-//             cur_view.view_data = { diff: difference }
+        //     cur_view.nom = (files[0].name).replace('.json', '')
 
-//             cur_view.nom = (files[0].name).replace('.json', '')
-
-//             set_master_data(JSON.parse(JSON.stringify(master_data)))
-//             set_data(JSON.parse(JSON.stringify(imported_data)))
-//             set_view(cur_view.id)
-//           }
-//         })()
-//         reader.readAsText(files[0])
-//       }}
-//     />
-//   </>
-// }
+        //     set_master_data(JSON.parse(JSON.stringify(master_data)))
+        //     set_data(JSON.parse(JSON.stringify(imported_data)))
+        //     set_view(cur_view.id)
+        //   }
+        // })()
+        reader.readAsText(files[0])
+      }}
+    /> */}
+  </>
+}
 
 // // Function to check if the current data of the view is unsaved
 // // We compare the differences saved in the master_data with the current changement of the view
@@ -1531,21 +1479,22 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 // }
 
 
-// export const OSPMenuPreferenceView: OSPMenuPreferenceViewFType = (
-//   t: TFunction,
-//   data: OSPData,
-//   set_data: (_: OSPData) => void
-// ) => {
-//   return <Checkbox
-//     variant='menuconfigpanel_option_checkbox'
-//     isChecked={data.accordeonToShow.includes('Vis')}
-//     onChange={() => {
-//       preferenceCheck('Vis', data)
-//       set_data(JSON.parse(JSON.stringify(data)))
-//     }}>
-//     {t('view.storytelling')}
-//   </Checkbox>
-// }
+export const OSPMenuPreferenceView: FunctionComponent<OSPMenuPreferenceViewFType> = ({
+  applicationData
+}
+) => {
+  const [, setCount] = useState(0)
+  const { new_data } = applicationData
+  const { t } = new_data
+  return <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('Vis')} onChange={() => {
+      new_data.menu_configuration.toggleGivenAccordion('Vis')
+      setCount(a => a + 1)
+    }}>
+    {t('view.storytelling')}
+  </Checkbox>
+}
 
 
 // // Modal used when we want to switch to master or a view without saving some changements we made on the current view

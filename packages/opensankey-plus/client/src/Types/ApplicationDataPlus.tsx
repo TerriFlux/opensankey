@@ -294,15 +294,19 @@ export abstract class Class_ApplicationDataPlus
     if (id in this._views) {
       // Hide previous diplayed sankey
       this._drawing_area.sankey.setInvisible()
-      // this._drawing_area.reset()
+      const was_mode_edition = this._drawing_area.isInEditionMode()
       this._drawing_area.unDraw()
       // SHow new sankey
       this._drawing_area = this._views[id]
       this._drawing_area.sankey.setVisible()
       this._drawing_area.reset()
-      // Update Menus
+      // Purge selections to avoid modifying unvisible view
+      this._drawing_area.purgeSelection()
+      // Update components related to viewss
       this._menu_configuration.updateAllMenuComponents()
-      this._menu_configuration.updateAllComponentsRelatedToViews()
+      this._menu_configuration.updateComponentRelatedToViews()
+      // Set view mode_edition to previous value
+      this._drawing_area.setToModeEdition(was_mode_edition)
     }
   }
 
@@ -326,11 +330,64 @@ export abstract class Class_ApplicationDataPlus
     }
   }
 
+
+  /**
+   * Delete current view
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
   public deleteCurrentView() {
-    if (this.has_views && !this.is_view_master) {
-      delete this._views[this._drawing_area.sankey.id] // Remove for view dict
-      this._drawing_area.sankey.delete() // Delete view
-      this._drawing_area = this._views[default_main_sankey_id] // Fall back to master view by defaut
+    this.deleteView(this._drawing_area.sankey.id) // Remove for view dict
+  }
+
+  /**
+   * Delete view from applicationData & go to master
+   *
+   * @param {string} id
+   * @memberof Class_ApplicationDataPlus
+   */
+  public deleteView(id: string) {
+    // Check if we are not trying to delete master
+    if (this.has_views && id != default_main_sankey_id && id in this._views) {
+      // Got to master
+      if (!this.is_view_master) {
+        this._drawing_area.delete() // Delete view
+        this.setCurrentViewToMaster()
+      }
+      delete this._views[id] // Remove for view dict
+      this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
+    }
+  }
+
+  /**
+   * Move up view id in _views_order
+   *
+   * @param {string} id id of the view to move
+   * @memberof Class_ApplicationDataPlus
+   */
+  public moveViewUpInOrder(id: string) {
+    if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
+      const idx = this._views_order.indexOf(id)
+      if (idx > 1) {//Can't move up a view before master so index of view must be > 1 (view to move up must be after the second element in _views_order)
+        this._views_order.splice(idx, 1)
+        this._views_order.splice(idx - 1, 0, id)
+      }
+    }
+  }
+
+  /**
+   * Move down view id in _views_order
+   *
+   * @param {string} id id of the view to move
+   * @memberof Class_ApplicationDataPlus
+   */
+  public moveViewDownInOrder(id: string) {
+    if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
+      const idx = this._views_order.indexOf(id)
+      if (idx < this._views_order.length - 1) {//Can't move down a view if it's the last in _views_order
+        this._views_order.splice(idx, 1)
+        this._views_order.splice(idx + 1, 0, id)
+      }
     }
   }
 
@@ -378,7 +435,7 @@ export abstract class Class_ApplicationDataPlus
     if (this.has_views)
       return default_main_sankey_id in this._views
     else
-      return true
+      return false
   }
 
 }
