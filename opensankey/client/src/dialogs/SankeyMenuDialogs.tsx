@@ -541,10 +541,13 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
     ClickSaveDiagram
   }: ApplySaveJSONTypes
 ) => {
-  const [mode_save,set_mode_save]=useState(true)
-  const [mode_visible_element,set_mode_visible_element]=useState(false)
   const [show_save_json_modal,set_show_save_json_modal]=useState(false)
+  const [,setCount]=useState(0)
   applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_json_saver.current=set_show_save_json_modal
+
+  // Set ref of update of ApplySaveJSONDialog components
+  applicationData.new_data.menu_configuration.ref_to_save_diagram_updater.current=()=>setCount(a=>a+1)
+  
   return <Modal
     isOpen={show_save_json_modal}
     onClose={() => set_show_save_json_modal(false)}
@@ -561,17 +564,17 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
 
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
-            isChecked={mode_save}
-            onChange={() => set_mode_save(!mode_save)}>
+            isChecked={applicationData.new_data.options_save_json.mode_save}
+            onChange={(evt) =>{applicationData.new_data.options_save_json.mode_save=evt.target.checked;setCount(a=>a+1)}}>
             {t('Menu.SaveValue')}
           </Checkbox>
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
-            isChecked={mode_visible_element}
-            onChange={() => set_mode_visible_element(!mode_visible_element)}>
+            isChecked={applicationData.new_data.options_save_json.mode_visible_element}
+            onChange={(evt) =>{applicationData.new_data.options_save_json.mode_visible_element=evt.target.checked;setCount(a=>a+1)}}>
             {t('Menu.VisibleElement')}
           </Checkbox>
-          {additional_file_save_json_option.map(el=>el)}
+          {additional_file_save_json_option.map(el=><React.Fragment key={'add_save_'}>{el}</React.Fragment>)}
         </Box>
       </ModalBody>
       <ModalFooter>
@@ -584,11 +587,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
               onClick={
                 () => {
                   ClickSaveDiagram(
-                    applicationData.new_data,
-                    {
-                      mode_save,
-                      mode_visible_element
-                    }
+                    applicationData.new_data
                   )
                 }
               }>{t('Menu.SaveJSON')}

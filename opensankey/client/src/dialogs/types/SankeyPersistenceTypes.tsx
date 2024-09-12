@@ -29,13 +29,12 @@ export type RetrieveExcelResultsFuncType = (
 ) => void
 
 export type SaveDiagramOptionsType = {
-  mode_save: boolean,
-  mode_visible_element: boolean
+  mode_save?: boolean,
+  mode_visible_element?: boolean
 }
 
 export type ClickSaveDiagramFuncType = (
-  ApplicationClass: Type_GenericApplicationDataOS,
-  options: SaveDiagramOptionsType
+  ApplicationClass: Type_GenericApplicationDataOS
 ) => void
 
 export type DownloadExamplesFuncType = (file_name: string, the_url_prefix: string, filetype: string) => void
