@@ -284,10 +284,6 @@ export abstract class Class_ApplicationDataPlus
     this._views_order.push(new_DA.id)
     // Shown sankey = new sankey
     this.setCurrentView(new_DA.id)
-    // // Copy base_DA to new view
-    // const copy = base_DA.toJSON()
-    // copy.id = new_id
-    // new_DA.fromJSON(copy)
   }
 
   public setCurrentView(id: string) {
@@ -407,6 +403,16 @@ export abstract class Class_ApplicationDataPlus
 
   public get views(): Type_GenericDrawingArea[] {
     return Object.values(this._views)
+  }
+
+  public get master_view(): Type_GenericDrawingArea | undefined {
+    if (this.has_views)
+      if (this.has_master_sankey)
+        return this._views[default_main_sankey_id]
+      else
+        return undefined
+    else
+      return this._drawing_area
   }
 
   public get has_views(): boolean {

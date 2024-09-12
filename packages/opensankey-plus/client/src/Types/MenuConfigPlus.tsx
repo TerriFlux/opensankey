@@ -42,9 +42,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     Updater of components for views related menus
     ========================================*/
 
-  private _ref_to_selector_views: MutableRefObject<JSX.Element | null>
   private _ref_to_banner_views_updater: MutableRefObject<() => void>
   private _ref_to_accordion_views_updater: MutableRefObject<() => void>
+  private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_:boolean) => void>
 
 
   // Button that open the sub menu links of elements
@@ -62,9 +62,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     super()
     // Init value for menu_config plus variable
     this._ref_to_menu_config_container_updater = useRef(() => null)
-    this._ref_to_selector_views = useRef<JSX.Element>(null)
     this._ref_to_banner_views_updater = useRef(() => null)
     this._ref_to_accordion_views_updater = useRef(() => null)
+    this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node = useRef(() => null)
     this._dict_setter_show_dialog_plus = {
@@ -161,13 +161,10 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   // public get ref_to_selector_views_updater(): MutableRefObject<() => void> { return this._ref_to_selector_views_updater }
 
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
-  public set ref_to_menu_config_containers_updater(value: MutableRefObject<(() => void)>) { this._ref_to_menu_config_container_updater = value }
 
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
-  public set r_setter_editor_content_fo_node(value: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>) { this._r_setter_editor_content_fo_node = value }
 
   public get ref_to_banner_views_updater(): MutableRefObject<() => void> { return this._ref_to_banner_views_updater }
-  public set ref_to_banner_views_updater(value: MutableRefObject<() => void>) { this._ref_to_banner_views_updater = value }
-
   public get ref_to_accordion_views_updater(): MutableRefObject<() => void> { return this._ref_to_accordion_views_updater }
+  public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
 }

@@ -52,9 +52,9 @@ import {
 
 // import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import {
+  ModalTransparentViewAttr,
   OSPBannerView,
   OSPMenuPreferenceView,
-  SelecteurView,
   ViewsAccordion,
 } from './SankeyPlusViews'
 
@@ -292,11 +292,9 @@ export const OSPModuleDialogs: module_dialogsType = (
     <ContextZDT
       applicationData={OSP_dict_app_data}
     />,
-    // modal_transparent_view_attr(
-    //   OSP_dict_hook_ref,
-    //   OSP_dict_app_data,
-    //   applicationContext.t
-    // ),
+    <ModalTransparentViewAttr
+      applicationData={OSP_dict_app_data}
+    />,
     // modal_view_not_saved(
     //   OSP_dict_app_data.view_not_saved,
     //   OSP_dict_app_data.set_view_not_saved,
@@ -311,7 +309,6 @@ export const OSPModuleDialogs: module_dialogsType = (
 
 export const OSPInitalizeSelectorDetailNodes: InitalizeSelectorDetailNodesType = (
   applicationData,
-
 ) => {
 
   const mutiple_level_tag_filter = <AddAllDropDownNode
