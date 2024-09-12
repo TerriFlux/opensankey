@@ -18,11 +18,14 @@ import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
+import { SaveDiagramOptionsType } from '../dialogs/types/SankeyPersistenceTypes'
 
 // SPECIFIC CONSTANTS ******************************************************************/
-
+export const default_save_only_visible_elements=false
+export const default_save_with_values=true
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
+export const default_save_JSON_options={mode_save:default_save_with_values}
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -58,6 +61,9 @@ export abstract class Class_ApplicationData
   // App
   public version: string = '0.9'
   public fit_screen: boolean
+
+  // Save JSON options 
+  public options_save_json:SaveDiagramOptionsType=default_save_JSON_options
 
   /**
    *Drawing area
@@ -189,7 +195,10 @@ export abstract class Class_ApplicationData
     // Dump with drawing area & its content in json struct
     return {
       ...json_object,
-      ...this.drawing_area.toJSON()
+      ...this.drawing_area.toJSON(
+        this.options_save_json?.mode_save??default_save_only_visible_elements,
+        this.options_save_json?.mode_visible_element??default_save_with_values
+      )
     }
   }
 
@@ -318,7 +327,8 @@ export abstract class Class_ApplicationData
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via JSON saving button
-      ClickSaveDiagram(app_ref, { mode_save: true, mode_visible_element: false })
+      app_ref.options_save_json=default_save_JSON_options
+      ClickSaveDiagram(app_ref)
     }
     // event to download current sankey in Excel -------------------------------------
     else if (evtCtrlAltS) {

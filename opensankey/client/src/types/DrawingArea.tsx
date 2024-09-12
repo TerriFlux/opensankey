@@ -1887,7 +1887,7 @@ export abstract class Class_DrawingArea
   public isInSelectionMode() { return this._mode === 'selection' }
   protected setSelectionMode() { this._mode = 'selection'; this.drawCursor() }
   public isInEditionMode() { return this._mode === 'edition'}
-  protected setEditionMode() { this._mode = 'edition'; this.drawCursor();console.trace('tata')  }
+  protected setEditionMode() { this._mode = 'edition'; this.drawCursor()}
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()

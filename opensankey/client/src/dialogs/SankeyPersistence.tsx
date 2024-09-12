@@ -400,13 +400,10 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
  * @param {*} options
  */
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
-  ApplicationClass,
-  options
+  ApplicationClass
 ): void => {
   // Convert all datas as JSON
-  const json_data = ApplicationClass.drawing_area.toJSON(
-    options.mode_visible_element,
-    options.mode_save
+  const json_data = ApplicationClass.toJSON(
   )
   // Prepare JSON for saving
   const json_data_str = JSON.stringify(json_data,null,2)
