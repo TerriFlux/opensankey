@@ -110,9 +110,9 @@ export type OSPMenuPreferenceViewFType = {
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
-export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
+export type modal_view_not_savedFType = {
   applicationData:OSPApplicationDataType
-)=> JSX.Element
+}
 
 export type modal_transparent_view_attrFType = (
   dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,

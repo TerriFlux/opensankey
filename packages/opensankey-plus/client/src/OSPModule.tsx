@@ -40,22 +40,18 @@ import {
   OSPGetDefaultData,
   OSPInitializeAdditionalMenusType,
   OSPInitializeApplicationDataVarType,
-  OSPInitializeReinitializationType,
-  OSPUpdateMenuConfType
-} from '../types/Types'
-// import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
+  OSPInitializeReinitializationType} from '../types/Types'
 import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, OSPMenuPreferenceLabels } from './SankeyPlusMenuConfigurationLabels'
 import { OSPHyperLink, OSPNodeIcon } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
 } from './SankeyPlusUtils'
 
-// import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import {
   MenuEnregistrerView,
+  Modal_view_not_saved,
   OSPBannerView,
   OSPMenuPreferenceView,
-  SelecteurView,
   ViewsAccordion,
 } from './SankeyPlusViews'
 
@@ -282,12 +278,7 @@ export const OSPModuleDialogs: module_dialogsType = (
     //   OSP_dict_app_data,
     //   applicationContext.t
     // ),
-    // modal_view_not_saved(
-    //   OSP_dict_app_data.view_not_saved,
-    //   OSP_dict_app_data.set_view_not_saved,
-    //   applicationContext.t,
-    //   applicationData as OSPApplicationDataType
-    // ),
+    <Modal_view_not_saved applicationData={OSP_dict_app_data}/>,
     <ModalSelectionIcon
       applicationData={OSP_dict_app_data}
     />

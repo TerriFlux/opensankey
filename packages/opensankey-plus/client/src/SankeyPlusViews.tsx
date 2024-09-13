@@ -1,8 +1,6 @@
 // Standard libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 
-import { TFunction } from 'i18next'
-
 import { FaArrowDown, FaArrowUp, FaMinus } from 'react-icons/fa'
 
 // Imported libs
@@ -25,7 +23,15 @@ import {
   Thead,
   Tr,
   Button,
-  Tag} from '@chakra-ui/react'
+  Tag,
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalCloseButton,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay
+} from '@chakra-ui/react'
 
 // OpenSankey Libs
 // import { SankeyLinkValueDict, TagsGroup } from './deps/OpenSankey/types/Types'
@@ -44,12 +50,14 @@ import {
   SelecteurViewFType,
   // setValueFType,
   viewsAccordionFType,
-  MenuEnregistrerViewFType
+  MenuEnregistrerViewFType,
+  modal_view_not_savedFType
 } from '../types/SankeyPlusViewsTypes'
 
 import {
   OSPData,
-  OSPApplicationDataType} from '../types/Types'
+  OSPApplicationDataType
+} from '../types/Types'
 // import { deleteGLabel } from './SankeyPlusLabels'
 import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
@@ -587,11 +595,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
             const JSON_data = JSON.parse(file_content)
 
             // Extract view of files
-            const dict_new_views = new_data.extractViewsFromJSON(JSON_data as Type_JSON)
-
-            Object.values(dict_new_views).forEach(new_view => {
-              new_data.createNewView(new_view)
-            })
+            new_data.extractViewsFromJSON(JSON_data as Type_JSON)
           }
         })()
         // Permet d'executer la transformation des blob en vues tout en evitant la var length
@@ -1424,74 +1428,60 @@ export const OSPMenuPreferenceView: FunctionComponent<OSPMenuPreferenceViewFType
 }
 
 
-// // Modal used when we want to switch to master or a view without saving some changements we made on the current view
-// // It give the option save or not the changements made
-// export const modal_view_not_saved: modal_view_not_savedFType = (
-//   view_not_saved: string,
-//   set_view_not_saved: (s: string) => void,
-//   t: TFunction,
-//   applicationData
-// ) => {
-//   const { data, set_data, view, master_data, set_master_data } = applicationData
-//   return (
-//     <Modal
-//       isOpen={view_not_saved !== ''}
-//       onClose={() => null}
-//     >
-//       <ModalContent
-//         maxWidth='inherit'
-//       >
-//         <ModalHeader>
-//           {t('view.ns')}
-//         </ModalHeader>
-//         <ModalCloseButton />
-//         <ModalBody>
-//           {t('view.warn_ns')}
-//         </ModalBody>
-//         <ModalFooter>
-//           <Button
-//             variant='danger'
-//             onClick={() => {
-//               // Don't save the view before changing to the selected one
-//               if (view !== 'none') {
-//                 const data_view = GetDataFromView(master_data, view) as OSPData
-//                 set_data(JSON.parse(JSON.stringify(data_view)))
-//               } else if (view === 'none') {
-//                 set_data(JSON.parse(JSON.stringify(master_data)))
-//               }
-//               set_view_not_saved('')
-//             }}
-//           >
-//             {t('view.dont_save')}
-//           </Button>
-//           <Button
-//             variant='success'
-//             onClick={() => {
-//               // Save the view before changing to the selected one
 
-//               let difference = getDiff(master_data, data)
-//               difference = (difference !== undefined) ? difference : []
-//               difference = difference.filter((d) => !(d.path!.includes('view')))
-//               master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = { diff: difference }
-//               update_heredited_attr_from_master(master_data!.view.filter(v => v.id === view_not_saved)[0], data, master_data!)
-//               if (view !== 'none') {
-//                 const data_view = GetDataFromView(master_data, view) as OSPData
+/**
+ * Modal to ask user if he want to save unsaved view change before switching view
+ *
+ * @param {*} {applicationData}
+ * @return {*} 
+ */
+export const Modal_view_not_saved: FunctionComponent<modal_view_not_savedFType> = ({ applicationData }) => {
 
-//                 set_master_data(JSON.parse(JSON.stringify(master_data)))
-//                 set_data(JSON.parse(JSON.stringify(data_view)))
+  const { new_data } = applicationData
+  const { t } = new_data
+  const [show_modal, setShowModal] = useState(false)
+  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current = setShowModal
 
-//               } else if (view === 'none') {
-//                 set_data(JSON.parse(JSON.stringify(master_data)))
-//               }
-//               set_view_not_saved('')
-//             }}
-//           >
-//             {t('view.save')}
-//           </Button>
-//         </ModalFooter>
-//       </ModalContent>
-//     </Modal>)
-// }
+  return (
+    <Modal
+      isCentered
+      isOpen={show_modal}
+      onClose={() => null}
+    >
+      <ModalOverlay />
+      <ModalContent
+        maxWidth='inherit'
+      >
+        <ModalHeader>
+          {t('view.ns')}
+        </ModalHeader>
+        <ModalBody>
+          {t('view.warn_ns')}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant='menuconfigpanel_del_button'
+            onClick={() => {
+              new_data.resetViewWithOriginal()
+              setShowModal(false)
+            }}
+          >
+            {t('view.dont_save')}
+          </Button>
+          <Button
+            variant='menuconfigpanel_add_button'
+            onClick={() => {
+              new_data.saveBeforeChangingView()
+              setShowModal(false)
+
+            }}
+          >
+            {t('view.save')}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>)
+}
 
 
 // export const modal_transparent_view_attr: modal_transparent_view_attrFType = (

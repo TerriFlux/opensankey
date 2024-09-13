@@ -131,6 +131,7 @@ export type OSPShowMenuComponentsVarType={
   ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_zdt: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modal_transparent_view_attr: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_menu_view_not_saved: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
 
