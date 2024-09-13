@@ -132,21 +132,16 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
     get_default_data: plus_get_defaut_data,
     new_data: class_dataplus,
     dataVarToUpdate: useRef(['']),
-   setDiagram: setDiagram,
+    setDiagram: setDiagram,
   } as OSPApplicationDataVarType
 }
 
 // export const OSPcloseAllMenu = closeAllMenu
 
 export const OSPInitializeReinitialization: OSPInitializeReinitializationType = (
-  _applicationData
 ) => () => {
-  // const recast_selected_dict=applicationState as OSPElementsSelectedType
-  // recast_selected_dict.multi_selected_label.current = []
   localStorage.removeItem('icon_imported')
   sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
-  // (applicationData as OSPApplicationDataType).set_master_data(undefined);
-  // (applicationData as OSPApplicationDataType).set_view('none')
 }
 
 

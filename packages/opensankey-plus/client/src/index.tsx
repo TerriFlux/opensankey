@@ -140,7 +140,7 @@ root.render(
       )=>{
         return () => {
           initializeReinitialization(applicationData)()
-          OSPInitializeReinitialization(applicationData)()
+          OSPInitializeReinitialization()()
         }
       }
     }

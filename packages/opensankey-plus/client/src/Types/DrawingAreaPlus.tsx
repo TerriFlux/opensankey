@@ -26,9 +26,7 @@ import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 import {
   default_main_sankey_id,
   getBooleanFromJSON,
-  getJSONOrUndefinedFromJSON,
   getStringFromJSON,
-  makeId,
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 
@@ -179,7 +177,7 @@ export abstract class Class_DrawingAreaPlus
    * @param {Class_ContainerElement<any, any>} container
    * @memberof Class_DrawingAreaPlus
    */
-  public deleteContainer(container: Class_ContainerElement<any, any>) {
+  public deleteContainer(container: Class_ContainerElement<any, any>) { // eslint-disable-line
     // Remove from selection if necessary
     this.removeContainerFromSelection(container)
     // Remove container from sankey
@@ -233,7 +231,7 @@ export abstract class Class_DrawingAreaPlus
    * @param {Class_ContainerElement<any, any>} container
    * @memberof Class_DrawingAreaPlus
    */
-  public addContainerToSelection(container: Class_ContainerElement<any, any>) {
+  public addContainerToSelection(container: Class_ContainerElement<any, any>) { // eslint-disable-line
     this._selection[container.id] = container
     container.setSelected()
   }
@@ -254,7 +252,7 @@ export abstract class Class_DrawingAreaPlus
    * @param {Class_ContainerElement<any, any>} container
    * @memberof Class_DrawingAreaPlus
    */
-  public removeContainerFromSelection(container: Class_ContainerElement<any, any>) {
+  public removeContainerFromSelection(container: Class_ContainerElement<any, any>) { // eslint-disable-line
     if (this._selection[container.id] !== undefined) {
       // Update selection list
       delete this._selection[container.id]

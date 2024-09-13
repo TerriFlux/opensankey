@@ -35,8 +35,8 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 
 export class Class_ContainerElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<any, any, any>,
-    Type_GenericSankey extends Class_AbstractSankeyPlus<any, any, any>
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<any, any, any>, // eslint-disable-line
+    Type_GenericSankey extends Class_AbstractSankeyPlus<any, any, any> // eslint-disable-line
   >
   extends Class_Element
   <

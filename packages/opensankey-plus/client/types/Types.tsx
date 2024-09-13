@@ -130,7 +130,6 @@ export type OSPShowMenuComponentsVarType={
   ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_zdt: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_modal_transparent_view_attr: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
 
@@ -218,7 +217,7 @@ export type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...arg
 
 // Extract parameter from OS function type
 type paramInitAppDataType = Parameters<initializeApplicationDataType>
-type paramInitializeReinitializationType=Parameters<initializeReinitializationType>
+type paramInitializeReinitializationType=Parameters<() => void>
 type paramInitializeAdditionalMenusType=Parameters<initializeAdditionalMenusType>
 
 // Special parameter for additionnalMenu

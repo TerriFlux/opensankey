@@ -54,8 +54,8 @@ import {
 } from '../types/SankeyPlusViewsTypes'
 
 import {
-  OSPData,
-  OSPApplicationDataType} from '../types/Types'
+  OSPData
+} from '../types/Types'
 // import { deleteGLabel } from './SankeyPlusLabels'
 import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
@@ -115,7 +115,6 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   // Ref to trigger other components ----------------------------------------------------
 
-  const { ref_setter_show_modal_transparent_view_attr } = new_data.menu_configuration.dict_setter_show_dialog_plus
   const ref_to_input_loader_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
 
   // Local variables --------------------------------------------------------------------
@@ -1534,10 +1533,6 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
 
   new_data.menu_configuration.ref_to_modal_view_attributes_switcher.current = switchThis
 
-  // const current_view = applicationData.master_data?.view.filter(v => v.id === applicationData.master_data!.current_view)[0] ?? {} as ViewType
-  // const { data, set_data, master_data, set_master_data } = applicationData as OSPApplicationDataType
-  // const { ref_setter_show_modal_transparent_view_attr } = dict_hook_ref_setter_show_dialog_components
-
   const has_sankey_plus = new_data.has_sankey_plus
   const has_master_sankey = new_data.has_master_sankey
   const is_view_master = new_data.is_view_master
@@ -1549,7 +1544,7 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
       onClose={
         () => {
           switchThis(false)
-      }}
+        }}
     >
       <ModalContent
         maxWidth='inherit'
