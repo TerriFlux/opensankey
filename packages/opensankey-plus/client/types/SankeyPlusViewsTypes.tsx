@@ -3,11 +3,7 @@ import {
   OSPShowMenuComponentsType,
 } from './Types'
 
-import {
-  setDiagramFuncType
-} from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
 import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
-
 
 export type ViewToastFType = {
   dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType

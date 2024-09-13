@@ -64,10 +64,11 @@ import { MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { Class_ApplicationDataOSP } from './types/TypesOSP'
 import { OSPTransformationElements } from './SankeyPlusConvert'
 
-declare const window: Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-  }
+// TODO toujours utile ?
+// declare const window: Window &
+//   typeof globalThis & {
+//     SankeyToolsStatic: boolean
+//   }
 
 
 export const OSPDefaultData = () => {

@@ -1,4 +1,4 @@
-import { OSPApplicationDataType, OSPData, OSPLink, OSPNode } from './Types'
+import { OSPApplicationDataType } from './Types'
 
 
 export type MenuConfLinkApparenceGradientFType={

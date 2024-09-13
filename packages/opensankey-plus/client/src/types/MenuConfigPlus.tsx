@@ -73,7 +73,6 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
       ref_setter_show_menu_node_icon: useRef(() => null),
       ref_setter_show_modal_import_icons: useRef(() => null),
       ref_setter_show_menu_zdt: useRef(() => null),
-      ref_setter_show_modal_transparent_view_attr: useRef<() => void>(() => null),
       ref_setter_show_menu_view_not_saved:useRef(()=>null)
     }
   }

@@ -5,20 +5,16 @@ import './css/style_elements_sankey.css'
 import './css/react-quill.css'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import LZString from 'lz-string'
 import './traduction'
 
 
-import { OSPApplicationDataType, OSPData } from '../types/Types'
+import { OSPData } from '../types/Types'
 import {
   OSPInitializeApplicationData,
   OSPInitializeReinitialization,
 
   OSPInitializeAdditionalMenus, OSPModuleDialogs,
 } from './OSPModule'
-// import { OSPDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
-// import { DefaultOSPStyleLink } from './SankeyPlusUtils'
-import { SaveDiagramOptionsType } from './deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
 import { initializeAdditionalMenus, initializeMenuConfiguration, initializeReinitialization, moduleDialogs } from './deps/OpenSankey/OSModule'
 import { applicationDataType, processFunctionsType, SankeyData } from './deps/OpenSankey/types/LegacyType'
 import SankeyApp from './deps/OpenSankey/SankeyApp'
@@ -26,7 +22,6 @@ import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuD
 import { ClickSaveDiagram } from './deps/OpenSankey/dialogs/SankeyPersistence'
 import { DefaultSankeyData } from './deps/OpenSankey/types/Legacy'
 import { Type_GenericApplicationDataOS } from './deps/OpenSankey/types/TypesOS'
-import { OSPBannerView, SelecteurView } from './SankeyPlusViews'
 
 declare const window: Window &
 typeof globalThis & {
@@ -68,7 +63,7 @@ const get_default_data=()=>{
 // Create a default sankey
 const data = get_default_data() as SankeyData
 // Search if a data is stored in localStorage of the navigator
-const json_data = LZString.decompress(localStorage.getItem('data') as string)
+// const json_data = LZString.decompress(localStorage.getItem('data') as string)
 
 // window.SankeyToolsStatic = true
 // if (!window.sankey) {
@@ -189,8 +184,8 @@ root.render(
     // (OS only use data from imported file
     // but OSP can use its view as imported data
     // )
-    initializeDiagrammSelector={(applicationData)=>{
-      const plus_app_data=applicationData as unknown as OSPApplicationDataType
+    initializeDiagrammSelector={(_applicationData)=>{
+      // const plus_app_data=applicationData as unknown as OSPApplicationDataType
       // return OSPDiagramSelector(
       //   plus_app_data
       // )

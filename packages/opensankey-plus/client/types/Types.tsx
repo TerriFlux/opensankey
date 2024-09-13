@@ -1,6 +1,8 @@
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 import { Diff } from 'deep-diff'
 import ReactQuill from 'react-quill'
+
+// TODO clean commented code
 // import {
 //   SankeyData,
 //   SankeyLink,
@@ -11,17 +13,16 @@ import ReactQuill from 'react-quill'
 //   dict_hook_ref_setter_show_dialog_componentsType,
 //   initializeAdditionalMenusType,
 //   initializeApplicationDataType,
-//   initializeReinitializationType,
 
 // } from '../src/deps/OpenSankey/types/Types'
 // import { OSPLinkSabotColorFType } from './SankeyPlusUtilsTypes'
 // import { DrawArrowsType } from '../src/deps/OpenSankey/draw/types/SankeyDrawFunctionTypes'
 // import { Class_ApplicationData } from '../src/deps/OpenSankey/types/ApplicationData'
+
 import {
   applicationDataType,
   initializeAdditionalMenusType,
   initializeApplicationDataType,
-  initializeReinitializationType,
   SankeyData,
   SankeyLink,
   SankeyLinkAttrLocal,
@@ -32,6 +33,7 @@ import {
 import { setDiagramFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
 import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 import { dict_hook_ref_setter_show_dialog_componentsType } from '../src/deps/OpenSankey/types/MenuConfig'
+
 // import { applicationDataType } from '../src/deps/OpenSankey/types/Legacy'
 
 

@@ -1,7 +1,6 @@
 // Standard libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 
-
 // Imported libs
 import { FaArrowDown, FaArrowUp, FaCheck, FaMinus } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -34,21 +33,20 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
-// import { SankeyLinkValueDict, TagsGroup } from './deps/OpenSankey/types/Types'
 import {
   default_main_sankey_id,
   OSTooltip,
   Type_JSON,
-  // preferenceCheck,
-  // updateLayoutOSTyped
 } from './deps/OpenSankey/types/Utils'
+import {
+  ConfigMenuTextInput
+} from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 // Local libs
 import {
   OSPBannerViewFType,
   OSPMenuPreferenceViewFType,
   SelecteurViewFType,
-  // setValueFType,
   viewsAccordionFType,
   MenuEnregistrerViewFType,
   modal_view_not_savedFType,
@@ -56,11 +54,8 @@ import {
 } from '../types/SankeyPlusViewsTypes'
 
 import {
-  OSPData,
-  OSPApplicationDataType
+  OSPData
 } from '../types/Types'
-// import { deleteGLabel } from './SankeyPlusLabels'
-import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 // TODO Est-ce toujours utile ?
 declare const window: Window &
@@ -667,7 +662,6 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         new_data.setCurrentView(evt.target.value)
         refreshThisAndUpdateRelatedComponents()
-
       }
     }
     value={cur_view.id}
@@ -706,172 +700,6 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   />
 
   return (has_sankey_plus && s_select_or_edit === 'edit') ? text_input : selecteur
-}
-
-/**
- * Sub accordion for view config in menu configuration
- * @param {*} {
- *   applicationData,
- * }
- * @return {*}
- */
-export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
-  applicationData,
-}
-) => {
-
-  // Data -------------------------------------------------------------------------------
-
-  const { new_data } = applicationData
-  const { t } = new_data
-
-  // Components updaters ----------------------------------------------------------------
-
-  const [, setCount] = useState(0)
-  const refreshThis = () => setCount(a => a + 1)
-  new_data.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
-
-  // Local variables --------------------------------------------------------------------
-
-  const is_activated = new_data.has_sankey_plus
-  const curr_view = new_data.drawing_area
-  const list_view = new_data.views //include master
-
-  // JSX elements -----------------------------------------------------------------------
-
-  // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
-
-  return <>
-    <AccordionItem
-      style={{ 'display': (new_data.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
-    >
-      <AccordionButton onClick={() => {
-        const scroll_x = window.scrollX
-        const scroll_y = window.scrollY
-        setTimeout(() => {
-          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-        }, 50)
-      }}
-      >
-        <Box as='span' layerStyle='menuconfig_entry'>
-          {t('view.storytelling')}
-        </Box>
-        <Tag colorScheme='teel' >Beta</Tag>
-        <AccordionIcon />
-      </AccordionButton>
-      <AccordionPanel>
-        <Box layerStyle='menuconfigpanel_grid'>
-
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('view.select')}
-            </Box>
-            <InputGroup
-              variant='menuconfigpanel_option_input'>
-              <SelecteurView new_data={new_data} />
-            </InputGroup>
-          </Box>
-          <Table size='sm'>
-            <Thead>
-              <Tr>
-                <Th>{t('view.name')}</Th>
-                <Th>Position</Th>
-                <Th>{t('view.delete')}</Th>
-                {/* <Th>{t('view.copy')}</Th>
-                <Th>{t('view.import')}</Th>
-                <Th>{t('view.export')}</Th> */}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {list_view.map(d => {
-                return (
-                  <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
-                    <Td>
-                      <Input
-                        variant='menuconfigpanel_option_input'
-                        value={d.name}
-                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onChange={evt => {
-                          d.name = evt.target.value
-                          new_data.menu_configuration.updateComponentRelatedToViews()
-                        }}
-                      />
-                    </Td>
-                    <Td>
-                      {/* Change the position of the view in the liste of view from master data */}
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data.moveViewUpInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
-                      ><FaArrowUp />
-                      </Button>
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data.moveViewDownInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
-                      ><FaArrowDown />
-                      </Button>
-                    </Td>
-                    <Td><Button
-                      variant='menuconfigpanel_del_button_in_table'
-                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                      onClick={
-                        // Delete the view
-                        () => {
-                          new_data.deleteView(d.id)
-                          new_data.menu_configuration.updateComponentRelatedToViews()
-                        }
-                      }
-                    ><FaMinus /></Button></Td>
-                  </Tr>
-                )
-              })}
-            </Tbody>
-          </Table>
-        </Box>
-
-
-      </AccordionPanel>
-    </AccordionItem>
-    {/*
-    <Input
-      type="file"
-      ref={_load_json}
-      style={{ display: 'none' }}
-      onChange={(evt: ChangeEvent) => {
-        const files = (evt.target as HTMLFormElement).files
-        const reader = new FileReader()
-
-        // Load a view from a JSON
-        // reader.onload = (() => {
-        //   return (e: ProgressEvent<FileReader>) => {
-        //     const result = String((e.target as FileReader).result)
-        //     const result_data = JSON.parse(result)
-        //     let ind = -1
-        //     master_data!.view.map((v, i) => {
-        //       ind = (v.id === _load_json.current?.id) ? i : ind
-        //     })
-        //     const cur_view = master_data!.view[ind]
-        //     const imported_data = JSON.parse(JSON.stringify(result_data))
-        //     imported_data.view = []
-        //     convert_data(imported_data, DefaultSankeyData)
-        //     let difference = getDiff(master_data, imported_data)
-        //     difference = JSON.parse(
-        //       JSON.stringify(
-        //         (difference !== undefined) ?
-        //           difference : []
-        //       )
-        //     )
-        //     difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
-        //     cur_view.view_data = { diff: difference }
-
-        //     cur_view.nom = (files[0].name).replace('.json', '')
-
-        //     set_master_data(JSON.parse(JSON.stringify(master_data)))
-        //     set_data(JSON.parse(JSON.stringify(imported_data)))
-        //     set_view(cur_view.id)
-        //   }
-        // })()
-        reader.readAsText(files[0])
-      }}
-    /> */}
-  </>
 }
 
 /**
