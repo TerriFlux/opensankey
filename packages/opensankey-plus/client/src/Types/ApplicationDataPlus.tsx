@@ -49,7 +49,7 @@ export abstract class Class_ApplicationDataPlus
 
   // PUBLIC ATTRIBUTES =================================================================
 
-  // Save JSON options 
+  // Save JSON options
   public override options_save_json: SaveDiagramPlusOptionsType = default_save_JSON_options
 
   /**
@@ -333,24 +333,16 @@ export abstract class Class_ApplicationDataPlus
       this._views_order.push(default_main_sankey_id)
     }
     // Create the new sankey
-    const new_id = makeId('view')
-    const new_DA = this.createNewDrawingArea(new_id)
+    const new_DA = this.createNewDrawingArea(makeId('view'))
+    // Copy current sankey
+    new_DA.updateFrom(base_DA, ['*'])
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
     this._views_order.push(new_DA.id)
     // In case we add a new view with an existing key it automatically change in the dict but we need to delete all duplicate in _views_order
 
     // Shown sankey = new sanke
-    this._menu_configuration._add_waiting_process(
-      'setCurrentView',
-      (_this: Class_MenuConfigPlus) => {
-        this.setCurrentView(new_DA.id)
-      }
-    )
-    // Copy base_DA to new view
-    const copy = base_DA.toJSON()
-    copy.id = new_id
-    new_DA.fromJSON(copy)
+    this.setCurrentView(new_DA.id)
   }
 
   public setCurrentView(id: string) {
@@ -377,16 +369,18 @@ export abstract class Class_ApplicationDataPlus
         // Set original view in temporary var so it can be used when we change view and don't want to save current modification
         if (id !== default_main_sankey_id && this._original_current_view == undefined) {
           this.options_save_json = default_save_JSON_options
+          // Create a clone of current view's DA
+          const new_DA = this.createNewDrawingArea(this._drawing_area.id)
+          // Copy current sankey
+          new_DA.updateFrom(this._drawing_area, ['*'])
 
-          const copy = this._drawing_area.toJSON()
-          const new_DA = this.createNewDrawingArea(copy.id as string) //create a new DA with same id as the original & stock it in _original_current_view
-          new_DA.fromJSON(copy, false) // copy original view
           this._original_current_view = new_DA
         }
 
-        // Update components related to views
+        // Update components related to viewss
+        this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
-        // Set view mode_edition to previous value  
+        // Set view mode_edition to previous value
         this._drawing_area.setToModeEdition(was_mode_edition)
         // Update menu save diagram JSON
         this.menu_configuration.updateComponentSaveDiagramJSON()
@@ -526,6 +520,16 @@ export abstract class Class_ApplicationDataPlus
 
   public get views(): Type_GenericDrawingArea[] {
     return Object.values(this._views)
+  }
+
+  public get master_view(): Type_GenericDrawingArea | undefined {
+    if (this.has_views)
+      if (this.has_master_sankey)
+        return this._views[default_main_sankey_id]
+      else
+        return undefined
+    else
+      return this._drawing_area
   }
 
   public get has_views(): boolean {

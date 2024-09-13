@@ -219,7 +219,7 @@ export type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...arg
 
 // Extract parameter from OS function type
 type paramInitAppDataType = Parameters<initializeApplicationDataType>
-type paramInitializeReinitializationType=Parameters<initializeReinitializationType>
+type paramInitializeReinitializationType=Parameters<() => void>
 type paramInitializeAdditionalMenusType=Parameters<initializeAdditionalMenusType>
 
 // Special parameter for additionnalMenu

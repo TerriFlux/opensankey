@@ -11,8 +11,8 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
  */
 export class Class_ZoneSelectionPlus
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, any, any>,
-    Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, any, any>
+    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<Type_GenericSankey, any, any>, // eslint-disable-line
+    Type_GenericSankey extends Class_AbstractSankeyPlus<Type_GenericDrawingArea, any, any> // eslint-disable-line
   >
   extends Class_ZoneSelection
   <

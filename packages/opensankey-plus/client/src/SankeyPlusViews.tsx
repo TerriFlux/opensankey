@@ -1,11 +1,11 @@
 // Standard libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 
-import { FaArrowDown, FaArrowUp, FaMinus } from 'react-icons/fa'
 
 // Imported libs
+import { FaArrowDown, FaArrowUp, FaCheck, FaMinus } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faListCheck, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faListCheck, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus, faXmark } from '@fortawesome/free-solid-svg-icons'
 import {
   AccordionItem,
   AccordionButton,
@@ -51,7 +51,8 @@ import {
   // setValueFType,
   viewsAccordionFType,
   MenuEnregistrerViewFType,
-  modal_view_not_savedFType
+  modal_view_not_savedFType,
+  modal_transparent_view_attrFType
 } from '../types/SankeyPlusViewsTypes'
 
 import {
@@ -107,7 +108,8 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   // Component updater ------------------------------------------------------------------
 
-  // Local updatera --------------------------------------------------------------------
+  // Local updater ----------------------------------------------------------------------
+
   const [, setCount] = useState(0)
   const refreshThis = () => {
     setCount(a => a + 1)
@@ -116,15 +118,11 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   // Ref to trigger other components ----------------------------------------------------
 
-  const { ref_setter_show_modal_transparent_view_attr } = new_data.menu_configuration.dict_setter_show_dialog_plus
   const ref_to_input_loader_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
 
-
-  new_data.menu_configuration.ref_to_banner_views_updater.current = () => setCount(a => a + 1)
-
   // Local variables --------------------------------------------------------------------
+
   const has_sankey_plus = new_data.has_sankey_plus
-  const has_master_sankey = new_data.has_master_sankey
   const has_views = new_data.has_views
   const is_view_master = new_data.is_view_master
   const has_view_before = new_data.has_view_before
@@ -471,7 +469,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
         isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={
           () => {
-            ref_setter_show_modal_transparent_view_attr.current(true)
+            new_data.menu_configuration.ref_to_modal_view_attributes_switcher.current(true)
           }
         }
       >
@@ -641,8 +639,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
 
 /**
- *
- *
+ * View selector for navbar or menuconfig
  * @param {*} {
  *   applicationData,
  *   applicationState,
@@ -658,15 +655,9 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 
   const { t } = new_data
 
-  // Components updaters ---------------------------------------------------------------
+  // Components updaters ----------------------------------------------------------------
 
-  const [, setCount] = useState(0)
   const [s_select_or_edit, sSelectOrEdit] = useState('select')
-
-  const refreshThis = () => {
-    sSelectOrEdit('select')
-    setCount(a => a + 1)
-  }
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
@@ -677,14 +668,14 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
-  // Local variables ------------------------------------------------------------------
+  // Local variables --------------------------------------------------------------------
 
   const cur_view = new_data.drawing_area
   const has_sankey_plus = new_data.has_sankey_plus
   const has_views = new_data.has_views
   const is_view_master = new_data.is_view_master
 
-  // JSX elements ---------------------------------------------------------------------
+  // JSX elements -----------------------------------------------------------------------
 
   const selecteur = <Select
     variant='menuconfigpanel_option_select'
@@ -782,6 +773,172 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
   />
 
   return (has_sankey_plus && s_select_or_edit === 'edit') ? text_input : selecteur
+}
+
+/**
+ * Sub accordion for view config in menu configuration
+ * @param {*} {
+ *   applicationData,
+ * }
+ * @return {*}
+ */
+export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
+  applicationData,
+}
+) => {
+
+  // Data -------------------------------------------------------------------------------
+
+  const { new_data } = applicationData
+  const { t } = new_data
+
+  // Components updaters ----------------------------------------------------------------
+
+  const [, setCount] = useState(0)
+  const refreshThis = () => setCount(a => a + 1)
+  new_data.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
+
+  // Local variables --------------------------------------------------------------------
+
+  const is_activated = new_data.has_sankey_plus
+  const curr_view = new_data.drawing_area
+  const list_view = new_data.views //include master
+
+  // JSX elements -----------------------------------------------------------------------
+
+  // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
+
+  return <>
+    <AccordionItem
+      style={{ 'display': (new_data.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
+    >
+      <AccordionButton onClick={() => {
+        const scroll_x = window.scrollX
+        const scroll_y = window.scrollY
+        setTimeout(() => {
+          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+        }, 50)
+      }}
+      >
+        <Box as='span' layerStyle='menuconfig_entry'>
+          {t('view.storytelling')}
+        </Box>
+        <Tag colorScheme='teel' >Beta</Tag>
+        <AccordionIcon />
+      </AccordionButton>
+      <AccordionPanel>
+        <Box layerStyle='menuconfigpanel_grid'>
+
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
+              {t('view.select')}
+            </Box>
+            <InputGroup
+              variant='menuconfigpanel_option_input'>
+              <SelecteurView new_data={new_data} />
+            </InputGroup>
+          </Box>
+          <Table size='sm'>
+            <Thead>
+              <Tr>
+                <Th>{t('view.name')}</Th>
+                <Th>Position</Th>
+                <Th>{t('view.delete')}</Th>
+                {/* <Th>{t('view.copy')}</Th>
+                <Th>{t('view.import')}</Th>
+                <Th>{t('view.export')}</Th> */}
+              </Tr>
+            </Thead>
+            <Tbody>
+              {list_view.map(d => {
+                return (
+                  <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
+                    <Td>
+                      <Input
+                        variant='menuconfigpanel_option_input'
+                        value={d.name}
+                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onChange={evt => {
+                          d.name = evt.target.value
+                          new_data.menu_configuration.updateComponentRelatedToViews()
+                        }}
+                      />
+                    </Td>
+                    <Td>
+                      {/* Change the position of the view in the liste of view from master data */}
+                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onClick={() => { new_data.moveViewUpInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
+                      ><FaArrowUp />
+                      </Button>
+                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onClick={() => { new_data.moveViewDownInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
+                      ><FaArrowDown />
+                      </Button>
+                    </Td>
+                    <Td><Button
+                      variant='menuconfigpanel_del_button_in_table'
+                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      onClick={
+                        // Delete the view
+                        () => {
+                          new_data.deleteView(d.id)
+                          new_data.menu_configuration.updateComponentRelatedToViews()
+                        }
+                      }
+                    ><FaMinus /></Button></Td>
+                  </Tr>
+                )
+              })}
+            </Tbody>
+          </Table>
+        </Box>
+
+
+      </AccordionPanel>
+    </AccordionItem>
+    {/*
+    <Input
+      type="file"
+      ref={_load_json}
+      style={{ display: 'none' }}
+      onChange={(evt: ChangeEvent) => {
+        const files = (evt.target as HTMLFormElement).files
+        const reader = new FileReader()
+
+        // Load a view from a JSON
+        // reader.onload = (() => {
+        //   return (e: ProgressEvent<FileReader>) => {
+        //     const result = String((e.target as FileReader).result)
+        //     const result_data = JSON.parse(result)
+        //     let ind = -1
+        //     master_data!.view.map((v, i) => {
+        //       ind = (v.id === _load_json.current?.id) ? i : ind
+        //     })
+        //     const cur_view = master_data!.view[ind]
+        //     const imported_data = JSON.parse(JSON.stringify(result_data))
+        //     imported_data.view = []
+        //     convert_data(imported_data, DefaultSankeyData)
+        //     let difference = getDiff(master_data, imported_data)
+        //     difference = JSON.parse(
+        //       JSON.stringify(
+        //         (difference !== undefined) ?
+        //           difference : []
+        //       )
+        //     )
+        //     difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
+        //     cur_view.view_data = { diff: difference }
+
+        //     cur_view.nom = (files[0].name).replace('.json', '')
+
+        //     set_master_data(JSON.parse(JSON.stringify(master_data)))
+        //     set_data(JSON.parse(JSON.stringify(imported_data)))
+        //     set_view(cur_view.id)
+        //   }
+        // })()
+        reader.readAsText(files[0])
+      }}
+    /> */}
+  </>
 }
 
 // TODO Voir si toujours utile
@@ -1230,154 +1387,6 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 
 // TODO A implementer avec classes
 
-export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
-  applicationData,
-}
-) => {
-  const { new_data } = applicationData
-  const _load_json = useRef<HTMLInputElement>(null)
-  const { t } = new_data
-  const [, setCount] = useState(0)
-  const refreshThis = () => setCount(a => a + 1)
-  new_data.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
-  const is_activated = new_data.has_sankey_plus
-  const curr_view = new_data.drawing_area
-  const is_master = new_data.is_view_master
-  const list_view = new_data.views //include master
-  // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
-
-  return <>
-    <AccordionItem
-      style={{ 'display': (new_data.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
-    >
-      <AccordionButton onClick={() => {
-        const scroll_x = window.scrollX
-        const scroll_y = window.scrollY
-        setTimeout(() => {
-          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-        }, 50)
-      }}
-      >
-        <Box as='span' layerStyle='menuconfig_entry'>
-          {t('view.storytelling')}
-        </Box>
-        <Tag colorScheme='teel' >Beta</Tag>
-        <AccordionIcon />
-      </AccordionButton>
-      <AccordionPanel>
-        <Box layerStyle='menuconfigpanel_grid'>
-
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('view.select')}
-            </Box>
-            <InputGroup
-              variant='menuconfigpanel_option_input'>
-              <SelecteurView new_data={new_data} />
-            </InputGroup>
-          </Box>
-          <Table size='sm'>
-            <Thead>
-              <Tr>
-                <Th>{t('view.name')}</Th>
-                <Th>Position</Th>
-                <Th>{t('view.delete')}</Th>
-                {/* <Th>{t('view.copy')}</Th>
-                <Th>{t('view.import')}</Th>
-                <Th>{t('view.export')}</Th> */}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {list_view.map(d => {
-                return (
-                  <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
-                    <Td>
-                      <Input
-                        variant='menuconfigpanel_option_input'
-                        value={d.name}
-                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onChange={evt => {
-                          d.name = evt.target.value
-                          new_data.menu_configuration.updateComponentRelatedToViews()
-                        }}
-                      />
-                    </Td>
-                    <Td>
-                      {/* Change the position of the view in the liste of view from master data */}
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data.moveViewUpInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
-                      ><FaArrowUp />
-                      </Button>
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data.moveViewDownInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
-                      ><FaArrowDown />
-                      </Button>
-                    </Td>
-                    <Td><Button
-                      variant='menuconfigpanel_del_button_in_table'
-                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                      onClick={
-                        // Delete the view
-                        () => {
-                          new_data.deleteView(d.id)
-                          new_data.menu_configuration.updateComponentRelatedToViews()
-                        }
-                      }
-                    ><FaMinus /></Button></Td>
-                  </Tr>
-                )
-              })}
-            </Tbody>
-          </Table>
-        </Box>
-
-
-      </AccordionPanel>
-    </AccordionItem>
-    {/* 
-    <Input
-      type="file"
-      ref={_load_json}
-      style={{ display: 'none' }}
-      onChange={(evt: ChangeEvent) => {
-        const files = (evt.target as HTMLFormElement).files
-        const reader = new FileReader()
-
-        // Load a view from a JSON
-        // reader.onload = (() => {
-        //   return (e: ProgressEvent<FileReader>) => {
-        //     const result = String((e.target as FileReader).result)
-        //     const result_data = JSON.parse(result)
-        //     let ind = -1
-        //     master_data!.view.map((v, i) => {
-        //       ind = (v.id === _load_json.current?.id) ? i : ind
-        //     })
-        //     const cur_view = master_data!.view[ind]
-        //     const imported_data = JSON.parse(JSON.stringify(result_data))
-        //     imported_data.view = []
-        //     convert_data(imported_data, DefaultSankeyData)
-        //     let difference = getDiff(master_data, imported_data)
-        //     difference = JSON.parse(
-        //       JSON.stringify(
-        //         (difference !== undefined) ?
-        //           difference : []
-        //       )
-        //     )
-        //     difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
-        //     cur_view.view_data = { diff: difference }
-
-        //     cur_view.nom = (files[0].name).replace('.json', '')
-
-        //     set_master_data(JSON.parse(JSON.stringify(master_data)))
-        //     set_data(JSON.parse(JSON.stringify(imported_data)))
-        //     set_view(cur_view.id)
-        //   }
-        // })()
-        reader.readAsText(files[0])
-      }}
-    /> */}
-  </>
-}
 
 // // Function to check if the current data of the view is unsaved
 // // We compare the differences saved in the master_data with the current changement of the view
@@ -1431,7 +1440,7 @@ export const OSPMenuPreferenceView: FunctionComponent<OSPMenuPreferenceViewFType
 
 /**
  * Modal to ask user if he want to save unsaved view change before switching view
- *
+ * 
  * @param {*} {applicationData}
  * @return {*} 
  */
@@ -1484,273 +1493,328 @@ export const Modal_view_not_saved: FunctionComponent<modal_view_not_savedFType> 
 }
 
 
-// export const modal_transparent_view_attr: modal_transparent_view_attrFType = (
-//   dict_hook_ref_setter_show_dialog_components,
-//   applicationData,
-//   t: TFunction
-// ) => {
-//   const current_view = applicationData.master_data?.view.filter(v => v.id === applicationData.master_data!.current_view)[0] ?? {} as ViewType
-//   const { data, set_data, master_data, set_master_data } = applicationData as OSPApplicationDataType
-//   const { ref_setter_show_modal_transparent_view_attr } = dict_hook_ref_setter_show_dialog_components
-//   const [show_modal, set_show_modal] = useState(false)
-//   ref_setter_show_modal_transparent_view_attr.current = set_show_modal
-//   if (master_data && master_data.current_view !== undefined && master_data?.current_view !== 'none' && applicationData.data !== undefined) {
+export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_attrFType> = (
+  {
+    applicationData
+  }
+): JSX.Element => {
 
-//     return <Modal isOpen={show_modal} onClose={() => {
-//       RecomputeViews(data, data, set_data as (d: OSPData | undefined) => void)
-//       set_show_modal(false)
-//     }}>
-//       <ModalContent
-//         maxWidth='inherit'
-//       >
-//         <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
-//         <ModalCloseButton />
-//         <ModalBody>
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>
-//               {t('Menu.Transformation.Topology')}
-//             </Box>
-//             <Box layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('addNode')) {
-//                     current_view.heredited_attr_from_master.push('addNode')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
+  const { new_data } = applicationData
+  const { t } = new_data
 
-//                 }
-//                 }
-//               >{t('Menu.Transformation.addNode')}</Button>
+  const [state, setState] = useState({
+    show_modal: false,
+    update_modes: [] as string[]
+  })
+  const show_modal = state.show_modal
+  const update_modes = state.update_modes
 
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('removeNode')) {
-//                     current_view.heredited_attr_from_master.push('removeNode')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
+  const switchThis = (_: boolean) => {
+    setState({
+      show_modal: _,
+      update_modes: []
+    })
+  }
 
-//                 }
-//                 }
-//               >{t('Menu.Transformation.removeNode')}</Button>
+  new_data.menu_configuration.ref_to_modal_view_attributes_switcher.current = switchThis
 
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('addFlux')) {
-//                     current_view.heredited_attr_from_master.push('addFlux')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
+  const has_sankey_plus = new_data.has_sankey_plus
+  const has_master_sankey = new_data.has_master_sankey
+  const is_view_master = new_data.is_view_master
 
-//                 }
-//                 }>{t('Menu.Transformation.addFlux')}</Button>
+  if (has_sankey_plus && has_master_sankey && !is_view_master) {
 
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('removeFlux')) {
-//                     current_view.heredited_attr_from_master.push('removeFlux')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
+    return <Modal
+      isOpen={show_modal}
+      onClose={
+        () => {
+          switchThis(false)
+        }}
+    >
+      <ModalContent
+        maxWidth='inherit'
+      >
+        <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.Transformation.Topology')}
+            </Box>
+            <Box layerStyle='options_4cols'>
+              <Button
+                variant={
+                  update_modes.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('addNode')) {
+                    update_modes.push('addNode')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('addNode'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.addNode')}
+              </Button>
 
-//                 }
-//                 }>{t('Menu.Transformation.removeFlux')}</Button>
-//             </Box>
-//           </Box>
+              <Button
+                variant={update_modes.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('removeNode')) {
+                    update_modes.push('removeNode')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('removeNode'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.removeNode')}
+              </Button>
 
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>
-//               {t('Menu.Transformation.Geometry')}
-//             </Box>
-//             <Box layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('posNode')) {
-//                     current_view.heredited_attr_from_master.push('posNode')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {t('Menu.Transformation.PosNoeud')}
-//               </Button>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('posFlux')) {
-//                     current_view.heredited_attr_from_master.push('posFlux')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {t('Menu.Transformation.posFlux')}</Button>
-//             </Box>
-//           </Box>
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+              <Button
+                variant={update_modes.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('addFlux')) {
+                    update_modes.push('addFlux')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('addFlux'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.addFlux')}
+              </Button>
+              <Button
+                variant={update_modes.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('removeFlux')) {
+                    update_modes.push('removeFlux')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('removeFlux'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.removeFlux')}
+              </Button>
+            </Box>
+          </Box>
 
-//             <Box as='span' layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('Values')) {
-//                     current_view.heredited_attr_from_master.push('Values')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.Transformation.Geometry')}
+            </Box>
+            <Box layerStyle='options_4cols'>
+              <Button
+                variant={update_modes.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('posNode')) {
+                    update_modes.push('posNode')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('posNode'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}>
+                {t('Menu.Transformation.PosNoeud')}
+              </Button>
+              <Button
+                variant={update_modes.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('posFlux')) {
+                    update_modes.push('posFlux')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('posFlux'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.posFlux')}
+              </Button>
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
 
-//                 }
-//                 }
-//               >{current_view.heredited_attr_from_master.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
-//               </Button>
-//             </Box>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={update_modes.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('Values')) {
+                    update_modes.push('Values')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('Values'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {update_modes.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+              </Button>
+            </Box>
 
-//           </Box>
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-//             <Box as='span' layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('attrNode')) {
-//                     current_view.heredited_attr_from_master.push('attrNode')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {t('Menu.Transformation.attrNode')}
-//               </Button>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={update_modes.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('attrNode')) {
+                    update_modes.push('attrNode')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('attrNode'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.attrNode')}
+              </Button>
 
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('attrFlux')) {
-//                     current_view.heredited_attr_from_master.push('attrFlux')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {t('Menu.Transformation.attrFlux')}
-//               </Button>
-//             </Box>
-//           </Box>
+              <Button
+                variant={update_modes.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('attrFlux')) {
+                    update_modes.push('attrFlux')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('attrFlux'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.attrFlux')}
+              </Button>
+            </Box>
+          </Box>
 
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-//             <Box layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('tagNode')) {
-//                     current_view.heredited_attr_from_master.push('tagNode')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {t('Menu.Transformation.tagNode')}
-//               </Button>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('tagFlux')) {
-//                     current_view.heredited_attr_from_master.push('tagFlux')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {t('Menu.Transformation.tagFlux')}
-//               </Button>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('tagData')) {
-//                     current_view.heredited_attr_from_master.push('tagData')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }
-//                 }
-//               >{t('Menu.Transformation.tagData')}</Button>
-//             </Box>
-//           </Box>
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
+            <Box layerStyle='options_4cols'>
+              <Button
+                variant={update_modes.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('tagNode')) {
+                    update_modes.push('tagNode')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('tagNode'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.tagNode')}
+              </Button>
+              <Button
+                variant={update_modes.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('tagFlux')) {
+                    update_modes.push('tagFlux')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('tagFlux'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.tagFlux')}
+              </Button>
+              <Button
+                variant={update_modes.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('tagData')) {
+                    update_modes.push('tagData')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('tagData'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {t('Menu.Transformation.tagData')}
+              </Button>
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
 
-//             <Box as='span' layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('tagLevel')) {
-//                     current_view.heredited_attr_from_master.push('tagLevel')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {current_view.heredited_attr_from_master.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
-//               </Button>
-//             </Box>
-//           </Box>
-//           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-//             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={update_modes.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('tagLevel')) {
+                    update_modes.push('tagLevel')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('tagLevel'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {update_modes.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+              </Button>
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
 
-//             <Box as='span' layerStyle='options_4cols'>
-//               <Button
-//                 variant={current_view.heredited_attr_from_master.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-//                 onClick={() => {
-//                   if (!current_view.heredited_attr_from_master.includes('attrGeneral')) {
-//                     current_view.heredited_attr_from_master.push('attrGeneral')
-//                   } else {
-//                     current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'), 1)
-//                   }
-//                   set_data({ ...data })
-//                   set_master_data({ ...master_data! })
-//                 }}>
-//                 {current_view.heredited_attr_from_master.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
-//               </Button>
-//             </Box>
-//           </Box>
-//         </ModalBody>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={update_modes.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (!update_modes.includes('attrGeneral')) {
+                    update_modes.push('attrGeneral')
+                  } else {
+                    update_modes.splice(update_modes.indexOf('attrGeneral'), 1)
+                  }
+                  setState({
+                    show_modal: show_modal,
+                    update_modes: update_modes})
+                }}
+              >
+                {update_modes.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+              </Button>
+            </Box>
+          </Box>
+        </ModalBody>
 
-//         <ModalFooter><Button onClick={() => {
-//           updateLayoutOSTyped(data, master_data!, current_view.heredited_attr_from_master)
-//           // updateLayout(data,master_data,current_view.heredited_attr_from_master)
-//           set_data({ ...data })
-//         }}>{t('view.updateViewWithMasterVar')}</Button></ModalFooter>
-//       </ModalContent>
-//     </Modal>
-//   } return <></>
-// }
+        <ModalFooter>
+          <Button
+            onClick={() => {
+              const master_view = new_data.master_view
+              if (master_view) {
+                new_data.drawing_area.updateFrom(master_view, update_modes)
+                new_data.drawing_area.reset()
+              }
+            }}
+          >
+            {t('view.updateViewWithMasterVar')}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  }
+  return <></>
+}
 
 export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
   applicationData

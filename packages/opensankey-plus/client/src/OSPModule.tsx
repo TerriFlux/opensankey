@@ -48,6 +48,7 @@ import {
 } from './SankeyPlusUtils'
 
 import {
+  ModalTransparentViewAttr,
   MenuEnregistrerView,
   Modal_view_not_saved,
   OSPBannerView,
@@ -128,21 +129,16 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
     get_default_data: plus_get_defaut_data,
     new_data: class_dataplus,
     dataVarToUpdate: useRef(['']),
-   setDiagram: setDiagram,
+    setDiagram: setDiagram,
   } as OSPApplicationDataVarType
 }
 
 // export const OSPcloseAllMenu = closeAllMenu
 
 export const OSPInitializeReinitialization: OSPInitializeReinitializationType = (
-  _applicationData
 ) => () => {
-  // const recast_selected_dict=applicationState as OSPElementsSelectedType
-  // recast_selected_dict.multi_selected_label.current = []
   localStorage.removeItem('icon_imported')
   sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
-  // (applicationData as OSPApplicationDataType).set_master_data(undefined);
-  // (applicationData as OSPApplicationDataType).set_view('none')
 }
 
 
@@ -273,11 +269,9 @@ export const OSPModuleDialogs: module_dialogsType = (
     <ContextZDT
       applicationData={OSP_dict_app_data}
     />,
-    // modal_transparent_view_attr(
-    //   OSP_dict_hook_ref,
-    //   OSP_dict_app_data,
-    //   applicationContext.t
-    // ),
+    <ModalTransparentViewAttr
+      applicationData={OSP_dict_app_data}
+    />,
     <Modal_view_not_saved applicationData={OSP_dict_app_data}/>,
     <ModalSelectionIcon
       applicationData={OSP_dict_app_data}
@@ -287,7 +281,6 @@ export const OSPModuleDialogs: module_dialogsType = (
 
 export const OSPInitalizeSelectorDetailNodes: InitalizeSelectorDetailNodesType = (
   applicationData,
-
 ) => {
 
   const mutiple_level_tag_filter = <AddAllDropDownNode

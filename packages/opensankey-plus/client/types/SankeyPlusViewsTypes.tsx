@@ -114,11 +114,9 @@ export type modal_view_not_savedFType = {
   applicationData:OSPApplicationDataType
 }
 
-export type modal_transparent_view_attrFType = (
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
-  applicationData:OSPApplicationDataType,
-  t:TFunction
-)=> JSX.Element
+export type modal_transparent_view_attrFType = {
+  applicationData: OSPApplicationDataType,
+}
 
 export type MenuEnregistrerViewFType = {
 applicationData:OSPApplicationDataType

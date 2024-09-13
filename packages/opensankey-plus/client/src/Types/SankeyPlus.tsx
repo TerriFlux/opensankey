@@ -17,8 +17,6 @@ import type { Class_NodeElementPlus } from './NodePlus'
 import type { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
 import { type Class_AbstractDrawingAreaPlus, Class_AbstractSankeyPlus } from './Abstract'
 import { Class_ContainerElement } from './FreeLabel'
-import { Class_SankeyOS, Type_GenericSankeyOS } from '../deps/OpenSankey/types/TypesOS'
-import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -26,7 +24,7 @@ import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
  * Contains all necessary elements to draw a Sankey
  *
  * @export
- * @class Class_Sankey
+ * @class Class_SankeyPlus
  */
 export abstract class Class_SankeyPlus
   <
@@ -55,7 +53,7 @@ export abstract class Class_SankeyPlus
    * Config menu ref to html element & function to update it
    * @protected
    * @type {Class_MenuConfig}
-   * @memberof Class_Sankey
+   * @memberof Class_SankeyPlus
    */
   protected _menu_config: Class_MenuConfigPlus
 
@@ -88,9 +86,9 @@ export abstract class Class_SankeyPlus
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_Sankey.
+   * Creates an instance of Class_SankeyPlus.
    * @param {Type_GenericDrawingArea} drawing_area
-   * @memberof Class_Sankey
+   * @memberof Class_SankeyPlus
    */
   constructor(
     drawing_area: Type_GenericDrawingArea,
@@ -164,7 +162,7 @@ export abstract class Class_SankeyPlus
     super.updateFrom(other_sankey, mode)
 
     // Add specifities from OSP
-    let all=mode.includes('*')
+    const all=mode.includes('*')
 
     // Update Containers
     const list_curr_container = this.containers_list
@@ -203,7 +201,7 @@ export abstract class Class_SankeyPlus
   /**
    * Add a given zdt to Sankey
    * @param {Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>} node
-   * @memberof Class_Sankey
+   * @memberof Class_SankeyPlus
    */
   private _addLabel(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
     this._containers[zdt.id] = zdt
@@ -242,7 +240,7 @@ export abstract class Class_SankeyPlus
    * @param {string} id
    * @param {string} name
    * @return {Class_Node}
-   * @memberof Class_Sankey
+   * @memberof Class_SankeyPlus
    */
   public addNewFreeLabel(id: string): Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>> {
     if (!this._containers[id]) {
@@ -265,7 +263,7 @@ export abstract class Class_SankeyPlus
   /**
    * Create and add a node for this Sankey with default name
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof Class_SankeyPlus
    */
   public addNewDefaultFreeLabel() {
     const n = String(Object.values(this._containers).length)
