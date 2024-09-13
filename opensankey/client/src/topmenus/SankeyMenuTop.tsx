@@ -1476,8 +1476,8 @@ export const OpenSankeySaveButton: FunctionComponent<OpenSankeySaveButtonFType> 
   const { t } = new_data
 
   const [forceUpdate, setForceUpdate] = useState(true)
-  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => setForceUpdate(b)
-
+  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current=b;setForceUpdate(b)}
+  new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current=forceUpdate
   let indicator_saved_data = <></>
   if (has_save_in_cache) {
     const color_icon = forceUpdate ? 'tertiaire.3' : 'tertiaire.1'

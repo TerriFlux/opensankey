@@ -25,7 +25,7 @@ export const default_save_only_visible_elements=false
 export const default_save_with_values=true
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-export const default_save_JSON_options={mode_save:default_save_with_values}
+export const default_save_JSON_options:SaveDiagramOptionsType={mode_save:default_save_with_values}
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -196,8 +196,8 @@ export abstract class Class_ApplicationData
     return {
       ...json_object,
       ...this.drawing_area.toJSON(
-        this.options_save_json?.mode_save??default_save_only_visible_elements,
-        this.options_save_json?.mode_visible_element??default_save_with_values
+        this.options_save_json?.mode_visible_element??default_save_only_visible_elements,
+        this.options_save_json?.mode_save??default_save_with_values
       )
     }
   }
