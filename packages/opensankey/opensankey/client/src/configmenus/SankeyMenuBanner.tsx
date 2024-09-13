@@ -1082,7 +1082,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = (
   const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
     {popover_link_visual_filter}
   </OSTooltip>
-    {/* Popover to display the link-filter */}
+  {/* Popover to display the link-filter */}
   </>
 
 
@@ -1167,11 +1167,11 @@ const stretchButtons: stretchButtonsFType = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-      <Button variant='toolbar_button_6' onClick={() => { applicationData.new_data.drawing_area.areaFitVertically() }} >
-        <FontAwesomeIcon icon={faArrowsUpDown} />
-      </Button>
-    </OSTooltip></>
+  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+    <Button variant='toolbar_button_6' onClick={() => { applicationData.new_data.drawing_area.areaFitVertically() }} >
+      <FontAwesomeIcon icon={faArrowsUpDown} />
+    </Button>
+  </OSTooltip></>
 }
 
 

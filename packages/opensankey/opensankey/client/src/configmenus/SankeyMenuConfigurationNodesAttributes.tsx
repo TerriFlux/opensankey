@@ -22,17 +22,10 @@ import {
   Button,
   Checkbox,
   Input,
-  InputGroup,
-  InputRightAddon,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   Select,
   Slider,
   SliderFilledTrack,
@@ -308,10 +301,10 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
         {
           (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'shape_color') ? (
-            <>{TooltipValueSurcharge('node_var_', t)}</>
-          ) : (
-            <></>
-          )
+              <>{TooltipValueSurcharge('node_var_', t)}</>
+            ) : (
+              <></>
+            )
         }
       </Box>
       <Box layerStyle='option_with_activation'>
