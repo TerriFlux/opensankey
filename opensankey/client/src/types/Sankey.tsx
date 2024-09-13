@@ -48,8 +48,8 @@ import { default_save_only_visible_elements, default_save_with_values } from './
 // LOCAL FUNCTIONS **********************************************************************
 
 function get_sync_lists(
-  to_sync: { [id: string]: any },
-  as_ref: { [id: string]: any }
+  to_sync: { [id: string]: unknown },
+  as_ref: { [id: string]: unknown }
 ) {
   // Transfer node style from new_layout style node  to corresponding style in current
   const to_sync_ids = Object.keys(to_sync)
@@ -1106,9 +1106,9 @@ export abstract class Class_Sankey
             n.display.position = pn // Reapply position
             return id
           })
-        .forEach(id => {
-          this._nodes[id].copyDimensionsFrom(other_sankey._nodes[id])
-        })
+          .forEach(id => {
+            this._nodes[id].copyDimensionsFrom(other_sankey._nodes[id])
+          })
       }
 
       // Update nodes ref to node_taggs
@@ -1274,7 +1274,7 @@ export abstract class Class_Sankey
                       .forEach(tag => value.addTag(tag))
                   }
                 })
-          })
+            })
         }
 
         // Apply links values from other sankey to current links
