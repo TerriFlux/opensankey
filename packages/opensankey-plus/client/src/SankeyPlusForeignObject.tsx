@@ -1,7 +1,4 @@
 // // External imports
-// import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-// import * as d3 from 'd3'
-
 import { Box, Textarea, TabPanel, Checkbox, Button } from '@chakra-ui/react'
 import React, { FunctionComponent, useState, useRef, MutableRefObject } from 'react'
 import ReactQuill from 'react-quill'
@@ -11,24 +8,7 @@ import { OSTooltip } from './deps/OpenSankey/types/Utils'
 import { OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
 import { Type_GenericNodeElementOSP } from './types/TypesOSP'
 
-// import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
-// // Local imports
-// import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
-// import { OSPData, OSPNode } from '../types/Types'
-// import { OSPDrawNodesFOFType, OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
-// import { NodeDisplayed } from './import/OpenSankey'
-
-// // OpenSankey types
-// import { NodeTooltipsContentFType } from './deps/OpenSankey/draw/types/SankeyTooltipTypes'
-// import { GetLinkValueFuncType } from './deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
-// import { OSTooltip } from './deps/OpenSankey/configmenus/SankeyUtils'
-
-
-// declare const window: Window &
-// typeof globalThis & {
-//   SankeyToolsStatic: boolean
-// }
 
 export const OSPNodeFO: FunctionComponent<OSPNodeFOFType> = ({
   applicationData,
@@ -247,78 +227,3 @@ export const OSPNodeFO: FunctionComponent<OSPNodeFOFType> = ({
     </Box>
   </TabPanel>
 }
-
-
-// export const OSPDrawNodesFO : OSPDrawNodesFOFType = (
-//   data : OSPData,
-//   display_nodes : { [node_id: string]: OSPNode },
-//   applicationState,
-//   NodeTooltipsContent: NodeTooltipsContentFType,
-//   GetLinkValue:GetLinkValueFuncType,
-//   trad
-// ) => {
-//   const {ref_getter_mode_selection} =applicationState
-//   const node_mouse_over=(data:OSPData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-//     d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's')? 'pointer' : 'unset')
-//     if (NodeDisplayed(data,(d as OSPNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
-//       const sankeyTooltip=d3.select('.sankey-tooltip')
-
-//       sankeyTooltip
-//         .style('opacity', 1)
-//         .html(NodeTooltipsContent(data,display_nodes, d as OSPNode,GetLinkValue,trad))
-//     }
-//   }
-
-//   const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-//     if ((NodeDisplayed(data,(d as OSPNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
-//       const sankeyTooltip=d3.select('.sankey-tooltip')
-
-//       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
-//       let pos_tooltip_y= event.clientY
-//       const size_browser=window.innerHeight
-//       pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
-
-//       const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))
-//       let pos_tooltip_x= event.clientX
-//       const size_browser_w=window.innerWidth
-//       pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
-
-//       sankeyTooltip
-//         .style('top',pos_tooltip_y + 'px')
-//         .style('left',pos_tooltip_x + 'px')
-//     }
-//   }
-
-//   const add_nodes_fo = (
-//   ) => {
-//     //----------------ICON-----------------
-
-//     // Add icon to node (if there is one associated to it)
-//     // then apply selected parameter
-//     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
-
-//     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>)
-
-//     ggg_nodes.filter((d)=>{
-//       return d.has_FO
-//     }) .append('foreignObject')
-//       .attr('width',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
-//       .attr('height',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
-//       .attr('id',(d)=> d.idNode + '_fo')
-//       .on('mouseover', function (event, d) {
-//         node_mouse_over(data,this,event,d)
-//       })
-//       .on('mousemove', function (event,d) {
-//         node_mouse_move(event,d)
-//       })
-//       .on('mouseout', function () {
-//         sankeyTooltip.style('opacity', 0)
-//       })
-//       .append('xhtml:div')
-//       .attr('class','ql-editor')
-//       .html((d)=>d.FO_content)
-//   }
-//   add_nodes_fo()
-
-// }
-

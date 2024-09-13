@@ -40,20 +40,17 @@ import {
   OSPGetDefaultData,
   OSPInitializeAdditionalMenusType,
   OSPInitializeApplicationDataVarType,
-  OSPInitializeReinitializationType,
-  OSPUpdateMenuConfType
-} from '../types/Types'
-// import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
+  OSPInitializeReinitializationType} from '../types/Types'
 import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, OSPMenuPreferenceLabels } from './SankeyPlusMenuConfigurationLabels'
 import { OSPHyperLink, OSPNodeIcon } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
 } from './SankeyPlusUtils'
 
-// import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import {
   ModalTransparentViewAttr,
   MenuEnregistrerView,
+  Modal_view_not_saved,
   OSPBannerView,
   OSPMenuPreferenceView,
   ViewsAccordion,
@@ -94,30 +91,12 @@ export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType =
   _initial_data
 ) => {
   const data_plus = data as OSPData
-  // const [master_data, set_master_data] = useState<OSPData>() // useState OK
-  // const [view, pre_set_view] = useState(data_plus.current_view) // useState OK
-  // const set_view=(s:string)=>{
-  //   data_plus.current_view=s
-  //   if(master_data){
-  //     master_data.current_view=s
-  //   }
-  //   pre_set_view(s)
-  // }
-  // const [view_not_saved,set_view_not_saved]=useState('')
 
   const set_data_plus = set_data as (_: OSPData) => void
   const plus_get_defaut_data = get_default_data as OSPGetDefaultData
   // const useOpenSankeySetDiagram = (master_data && master_data.view.length > 0) || window.SankeyToolsStatic
 
   // If initial data has views & has a current view then update current data to the view (and initial data become master data)
-  // if (data_plus.view && data_plus.view.length > 0 && !master_data) {
-  //   set_master_data({...JSON.parse(JSON.stringify(data))})
-  //   if(data_plus.current_view && data_plus.current_view!=='none'){
-  //     const view_to_display= GetDataFromView(data_plus,data_plus.current_view)
-  //     set_view(data_plus.current_view)
-  //     set_data(view_to_display as OSPData)
-  //   }
-  // }
 
   const class_dataplus = new Class_ApplicationDataOSP(false)
 
@@ -275,12 +254,9 @@ export const OSPModuleDialogs: module_dialogsType = (
     <ModalTransparentViewAttr
       applicationData={OSP_dict_app_data}
     />,
-    // modal_view_not_saved(
-    //   OSP_dict_app_data.view_not_saved,
-    //   OSP_dict_app_data.set_view_not_saved,
-    //   applicationContext.t,
-    //   applicationData as OSPApplicationDataType
-    // ),
+    <Modal_view_not_saved
+      applicationData={OSP_dict_app_data}
+    />,
     <ModalSelectionIcon
       applicationData={OSP_dict_app_data}
     />

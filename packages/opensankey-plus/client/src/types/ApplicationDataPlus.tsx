@@ -72,6 +72,9 @@ export abstract class Class_ApplicationDataPlus
   protected _views: { [id: string]: Type_GenericDrawingArea } = {}
   protected _views_order: string[] = []
 
+  protected _original_current_view: Type_GenericDrawingArea | undefined
+  private _waiting_to_set_view: string | undefined
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -233,7 +236,7 @@ export abstract class Class_ApplicationDataPlus
   }
 
   /**
-   * Function to return a dict of view instanced as class from a JSON file, this doesn't affect current Class_ApplicationData and sub-structur
+   * Function to add views from a JSON file to current application data
    *
    * @param {Type_JSON} json_object
    * @return {*}  {{ [id: string]: Type_GenericDrawingArea }}
@@ -249,8 +252,11 @@ export abstract class Class_ApplicationDataPlus
         const tmp = this.createNewDrawingArea(ent_view[0])
         tmp.fromJSON(ent_view[1] as Type_JSON, false)
         // Add new DA to views
-        dict_of_view[ent_view[0]] = tmp
+        this._views[ent_view[0]] = tmp
+        this._views_order.push(ent_view[0])
       })
+
+      this._views_order = Array.from(new Set([...this._views_order]))
     }
     return dict_of_view
   }
@@ -274,10 +280,21 @@ export abstract class Class_ApplicationDataPlus
     } else {
       // Else save master then views in a variable in JSON
 
-      // Save current view id if it's not master & move to master
       if (this.has_views && !this.is_view_master) {
+        // Update _original_current_view
+        // Since we update the view in master data the view become the 'original_view'
+        if (this._original_current_view != undefined) {
+          const copy = this._drawing_area.toJSON()
+          const new_DA = this.createNewDrawingArea(copy.id as string)
+          new_DA.fromJSON(copy, false)
+          this._original_current_view = new_DA
+        }
+
+        // Save current view id so it we can reset active view as the current one before toJSON
+        // It is done so we save first the master then the views in a JSON
         current_view = this._drawing_area.id
-        this.setCurrentViewToMaster()
+        // Set current DA to master so master is save in first
+        this._drawing_area = this._views[default_main_sankey_id]
       }
       // Herited toJSON to save master data
       json_entry = super.toJSON()
@@ -291,10 +308,11 @@ export abstract class Class_ApplicationDataPlus
           json_entry_views[id] = this._views[id].toJSON()
         })
       }
+      // Set current DA to active view before toJSON
+      this._drawing_area = this._views[current_view]
     }
     // Add var to remember active view when saved
     json_entry['current_view'] = current_view
-
     return json_entry
   }
 
@@ -321,29 +339,52 @@ export abstract class Class_ApplicationDataPlus
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
     this._views_order.push(new_DA.id)
+    // In case we add a new view with an existing key it automatically change in the dict but we need to delete all duplicate in _views_order
+
     // Shown sankey = new sanke
     this.setCurrentView(new_DA.id)
   }
 
   public setCurrentView(id: string) {
     if (id in this._views) {
-      // Hide previous diplayed sankey
-      this._drawing_area.sankey.setInvisible()
-      const was_mode_edition = this._drawing_area.isInEditionMode()
-      this._drawing_area.unDraw()
-      // SHow new sankey
-      this._drawing_area = this._views[id]
-      this._drawing_area.sankey.setVisible()
-      this._drawing_area.reset()
-      // Purge selections to avoid modifying unvisible view
-      this._drawing_area.purgeSelection()
-      // Update components related to viewss
-      this._menu_configuration.updateAllMenuComponents()
-      this._menu_configuration.updateComponentRelatedToViews()
-      // Set view mode_edition to previous value
-      this._drawing_area.setToModeEdition(was_mode_edition)
-      // Update menu save diagram JSON
-      this.menu_configuration.updateComponentSaveDiagramJSON()
+
+      if (!this.is_view_master && this._original_current_view !== undefined && !this.menu_configuration.ref_to_save_in_cache_indicator_value.current) {
+        // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
+        this._waiting_to_set_view = id
+        this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
+      } else {
+
+        // Hide previous diplayed sankey
+        this._drawing_area.sankey.setInvisible()
+        const was_mode_edition = this._drawing_area.isInEditionMode()
+        // Purge selections to avoid modifying unvisible view
+        this._drawing_area.purgeSelection()
+        this._drawing_area.unDraw()
+
+        // SHow new sankey
+        this._drawing_area = this._views[id]
+        this._drawing_area.sankey.setVisible()
+        this._drawing_area.reset()
+
+        // Set original view in temporary var so it can be used when we change view and don't want to save current modification
+        if (id !== default_main_sankey_id && this._original_current_view == undefined) {
+          this.options_save_json = default_save_JSON_options
+          // Create a clone of current view's DA
+          const new_DA = this.createNewDrawingArea(this._drawing_area.id)
+          // Copy current sankey
+          new_DA.updateFrom(this._drawing_area, ['*'])
+
+          this._original_current_view = new_DA
+        }
+
+        // Update components related to viewss
+        this._menu_configuration.updateAllMenuComponents()
+        this._menu_configuration.updateComponentRelatedToViews()
+        // Set view mode_edition to previous value
+        this._drawing_area.setToModeEdition(was_mode_edition)
+        // Update menu save diagram JSON
+        this.menu_configuration.updateComponentSaveDiagramJSON()
+      }
     }
   }
 
@@ -388,6 +429,7 @@ export abstract class Class_ApplicationDataPlus
     if (this.has_views && id != default_main_sankey_id && id in this._views) {
       // Got to master
       if (!this.is_view_master) {
+        this._original_current_view = undefined // delete copy
         this._drawing_area.delete() // Delete view
         this.setCurrentViewToMaster()
       }
@@ -426,6 +468,40 @@ export abstract class Class_ApplicationDataPlus
         this._views_order.splice(idx + 1, 0, id)
       }
     }
+  }
+
+
+  /**
+   * Reset current view with the one in the temporary variable
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
+  public resetViewWithOriginal() {
+    if (!this.is_view_master && this._original_current_view !== undefined && this._original_current_view.id in this._views) {
+      this._views[this._original_current_view.id].delete()
+      this._views[this._original_current_view.id] = this._original_current_view
+
+      delete this._original_current_view
+      this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+      this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
+      delete this._waiting_to_set_view
+    }
+  }
+
+
+  /**
+   * Function to save the current view before changing active view to another one
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
+  public saveBeforeChangingView() {
+    const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
+    if (ev.onkeydown) {
+      ev.onkeydown(tmp)
+    }
+    this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
+    delete this._waiting_to_set_view
+
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -472,9 +548,9 @@ export abstract class Class_ApplicationDataPlus
   }
 
   public get has_view_after(): boolean {
-    if (this.has_views)
+    if (this.has_views) {
       return (this._views_order.indexOf(this._drawing_area.sankey.id) < (this._views_order.length - 1))
-    else
+    } else
       return false
   }
 
