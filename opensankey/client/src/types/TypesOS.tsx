@@ -41,6 +41,7 @@ export class Class_ApplicationDataOS
 }
 
 // DRAWING AREA ===================================================================================
+
 export class Class_DrawingAreaOS
   extends Class_DrawingArea<
     Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
@@ -72,6 +73,7 @@ export class Class_ZoneSelectionOS extends Class_ZoneSelection<Class_DrawingArea
 }
 
 // SANKEY =========================================================================================
+
 export class Class_SankeyOS
   extends Class_Sankey<
     Class_DrawingAreaOS, Class_NodeElementOS, Class_LinkElementOS
@@ -97,6 +99,7 @@ export class Class_SankeyOS
     const link = new Class_LinkElementOS(id, source, target, this.drawing_area, this._menu_config)
     return link
   }
+
   protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
     const style = new Class_LinkStyle(id, name, is_deletable)
     return style
@@ -108,34 +111,14 @@ export class Class_SankeyOS
 }
 
 // NODE ===========================================================================================
+
 export class Class_NodeElementOS
   extends Class_NodeElement<
     Class_DrawingAreaOS, Class_SankeyOS, Class_LinkElementOS
-  > {
-  public copyInputLink(link: Class_LinkElement<Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS>): Class_LinkElementOS {
-    const new_link = new Class_LinkElementOS(
-      link.id,
-      this.sankey.nodes_dict[link.source.id] as Class_NodeElementOS,
-      this,
-      this.drawing_area,
-      this.menu_config
-    )
-    return new_link
-  }
-
-  public copyOutputLink(link: Class_LinkElement<Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS>): Class_LinkElementOS {
-    const new_link = new Class_LinkElementOS(
-      link.id,
-      this,
-      this.sankey.nodes_dict[link.target.id] as Class_NodeElementOS,
-      this.drawing_area,
-      this.menu_config
-    )
-    return new_link
-  }
-}
+  > {}
 
 // LINK ===========================================================================================
+
 export class Class_LinkElementOS
   extends Class_LinkElement<
     Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS
@@ -186,8 +169,6 @@ export class Class_LinkElementOS
     }
     // Link with style
     this._display.style.addReference(this)
-
-
     this.source.addOutputLink(this)
     this.target.addInputLink(this)// Target
     // Instanciate display on svg

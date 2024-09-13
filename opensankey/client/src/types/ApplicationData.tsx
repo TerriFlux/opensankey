@@ -21,11 +21,11 @@ import { Class_Sankey } from './Sankey'
 import { SaveDiagramOptionsType } from '../dialogs/types/SankeyPersistenceTypes'
 
 // SPECIFIC CONSTANTS ******************************************************************/
-export const default_save_only_visible_elements=false
-export const default_save_with_values=true
+export const default_save_only_visible_elements = false
+export const default_save_with_values = true
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-export const default_save_JSON_options:SaveDiagramOptionsType={mode_save:default_save_with_values}
+export const default_save_JSON_options:SaveDiagramOptionsType = { mode_save: default_save_with_values }
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -48,11 +48,11 @@ export function isDrawingAreaActive() {
  * @class Class_ApplicationData
  */
 export abstract class Class_ApplicationData
-<
-  Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericSankey extends Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-  Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
+  <
+    Type_GenericDrawingArea extends Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericSankey extends Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
   >
   extends Class_AbstractApplicationData {
 
@@ -62,8 +62,8 @@ export abstract class Class_ApplicationData
   public version: string = '0.9'
   public fit_screen: boolean
 
-  // Save JSON options 
-  public options_save_json:SaveDiagramOptionsType=default_save_JSON_options
+  // Save JSON options
+  public options_save_json: SaveDiagramOptionsType = default_save_JSON_options
 
   /**
    *Drawing area
@@ -157,7 +157,7 @@ export abstract class Class_ApplicationData
 
   // ABSTRACT METHODS ===================================================================
 
-  public abstract createNewDrawingArea(id?:string): Type_GenericDrawingArea
+  public abstract createNewDrawingArea(id?: string): Type_GenericDrawingArea
 
   // PUBLIC METHODS =====================================================================
 
@@ -196,8 +196,8 @@ export abstract class Class_ApplicationData
     return {
       ...json_object,
       ...this.drawing_area.toJSON(
-        this.options_save_json?.mode_visible_element??default_save_only_visible_elements,
-        this.options_save_json?.mode_save??default_save_with_values
+        this.options_save_json?.mode_visible_element ?? default_save_only_visible_elements,
+        this.options_save_json?.mode_save ?? default_save_with_values
       )
     }
   }
@@ -217,15 +217,14 @@ export abstract class Class_ApplicationData
   private keyboardEventListener(
     app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
   ) {
-    return (evt: KeyboardEvent) => {this.keyboardEventProcessing(evt, app_ref)}
+    return (evt: KeyboardEvent) => { this.keyboardEventProcessing(evt, app_ref) }
   }
 
   // PROTECTED METHODS ==================================================================
 
   protected keyboardEventProcessing(
     evt: KeyboardEvent,
-    app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>)
-  {
+    app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     // Events booleans ----------------------------------------------------------------
 
     const evtOnDrawingArea = isDrawingAreaActive() // Avoid using hotkeys in text-inputs
@@ -278,7 +277,7 @@ export abstract class Class_ApplicationData
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
       // Set app in selection mode
-      if(app_ref.drawing_area.isInEditionMode())
+      if (app_ref.drawing_area.isInEditionMode())
         app_ref.drawing_area.switchMode()
 
       // Deselect all element
@@ -327,7 +326,7 @@ export abstract class Class_ApplicationData
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via JSON saving button
-      app_ref.options_save_json=default_save_JSON_options
+      app_ref.options_save_json = default_save_JSON_options
       ClickSaveDiagram(app_ref)
     }
     // event to download current sankey in Excel -------------------------------------
