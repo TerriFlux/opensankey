@@ -176,6 +176,8 @@ export class Class_MenuConfig {
 
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
+  // Update component OpenSankeySaveButton
+  private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
 
   // Update component ToolbarBuilder
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
@@ -268,6 +270,7 @@ export class Class_MenuConfig {
 
     // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
+    this._ref_to_save_in_cache_indicator_value = useRef(true)
     this._ref_to_toolbar_updater = useRef(() => null)
 
     // Init context menu components updater ---------------------------------------------
@@ -989,6 +992,10 @@ export class Class_MenuConfig {
 
   public get ref_to_save_in_cache_indicator(): MutableRefObject<(b: boolean) => void> {
     return this._ref_to_save_in_cache_indicator
+  }
+
+  public get ref_to_save_in_cache_indicator_value(): MutableRefObject<boolean> {
+    return this._ref_to_save_in_cache_indicator_value
   }
 
   public get ref_to_toolbar_updater(): MutableRefObject<() => void> {

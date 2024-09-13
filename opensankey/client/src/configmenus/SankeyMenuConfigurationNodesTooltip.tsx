@@ -102,8 +102,6 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
       // Reset state value
       setEditorContentTooltip('')
     }
-    // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
   // Link with new_data components updater
@@ -157,6 +155,8 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuC
         onClick={() => {
           selected_nodes.map(node => node.tooltip_text = tmp_editor_content_tooltip)
           setEditorContentTooltip(tmp_editor_content_tooltip)
+          // Toogle saving indicator
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
         }}
       >
         {t('Menu.submit')}
