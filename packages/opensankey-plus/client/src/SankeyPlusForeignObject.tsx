@@ -9,7 +9,7 @@ import ReactQuill from 'react-quill'
 // to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
 import { OSTooltip } from './deps/OpenSankey/types/Utils'
 import { OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
-import { Type_GenericNodeElementOSP } from './Types/TypesOSP'
+import { Type_GenericNodeElementOSP } from './types/TypesOSP'
 
 // import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 

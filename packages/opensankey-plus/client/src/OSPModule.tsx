@@ -64,7 +64,7 @@ import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 import { OSPNodeFO } from './SankeyPlusForeignObject'
 import { dict_hook_ref_setter_show_dialog_componentsType } from './deps/OpenSankey/types/MenuConfig'
 import { MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
-import { Class_ApplicationDataOSP } from './Types/TypesOSP'
+import { Class_ApplicationDataOSP } from './types/TypesOSP'
 import { OSPTransformationElements } from './SankeyPlusConvert'
 
 declare const window: Window &

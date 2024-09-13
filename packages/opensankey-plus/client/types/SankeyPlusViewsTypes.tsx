@@ -10,7 +10,7 @@ import {
 import {
   setDiagramFuncType
 } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
-import { Type_GenericApplicationDataOSP } from '../src/Types/TypesOSP'
+import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 
 
 export type getSetDiagramFType = (

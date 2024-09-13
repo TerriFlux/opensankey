@@ -8,8 +8,8 @@ import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
 import { isAttributeOverloaded } from './deps/OpenSankey/types/Link'
 
 import type { MenuConfLinkApparenceGradientFType } from '../types/SankeyPlusGradientTypes'
-import type { Class_LinkStylePlus } from './Types/LinkPlus'
-import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './Types/TypesOSP'
+import type { Class_LinkStylePlus } from './types/LinkPlus'
+import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './types/TypesOSP'
 
 
 // import { Checkbox } from '@chakra-ui/react'

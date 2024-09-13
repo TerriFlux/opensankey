@@ -42,7 +42,7 @@ import {
   context_zdtFType,
   ZDTMenuAsAccordeonItemType
 } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
-import { Type_GenericContainerElement } from './Types/TypesOSP'
+import { Type_GenericContainerElement } from './types/TypesOSP'
 
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />

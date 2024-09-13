@@ -30,7 +30,7 @@ import {
   SankeyNodeStyle
 } from '../src/deps/OpenSankey/types/LegacyType'
 import { setDiagramFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyMenuBannerTypes'
-import { Type_GenericApplicationDataOSP } from '../src/Types/TypesOSP'
+import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 import { dict_hook_ref_setter_show_dialog_componentsType } from '../src/deps/OpenSankey/types/MenuConfig'
 // import { applicationDataType } from '../src/deps/OpenSankey/types/Legacy'
 
