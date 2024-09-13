@@ -1387,14 +1387,14 @@ export abstract class Class_NodeElement
     }
   }
 
-/**
+  /**
  * Define event when mouse moves in the element
  *
  * @protected
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
  * @memberof Class_NodeElement
  */
-protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
+  protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
     if(event.altKey){
       this.moveTooltip(event)
@@ -2095,7 +2095,7 @@ protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseE
       .html(this.tooltip_html)
   }
 
-/**
+  /**
    * Event when we move the mouse over the node and the tooltip is shown,
    * we simply move the tooltip to current cursor location
  *
@@ -2103,10 +2103,10 @@ protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseE
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
  * @memberof Class_NodeElement
  */
-private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
+  private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
     d3.selectAll('.sankey-tooltip')
-    .style('top', event.pageY + 'px')
-    .style('left', event.pageX + 'px')
+      .style('top', event.pageY + 'px')
+      .style('left', event.pageX + 'px')
   }
 
   /**

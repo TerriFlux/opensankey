@@ -917,14 +917,14 @@ export abstract class  Class_LinkElement
     }
   }
 
-/**
+  /**
  * Define event when mouse moves in the element
  *
  * @protected
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
  * @memberof Class_LinkElement
  */
-protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
+  protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
     if(event.altKey){
       this.moveTooltip(event)
@@ -1310,8 +1310,8 @@ protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseE
    */
   private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
     d3.selectAll('.sankey-tooltip')
-    .style('top', event.pageY + 'px')
-    .style('left', event.pageX + 'px')
+      .style('top', event.pageY + 'px')
+      .style('left', event.pageX + 'px')
   }
 
   private drawControlPoint() {
@@ -4353,13 +4353,13 @@ export class Class_GhostLinkElement
       style: drawing_area.sankey.default_link_style as Class_LinkStyle,
       attributes: new Class_LinkAttribute()
     }
-  // Link with style
-  this._display.style.addReference(this)
+    // Link with style
+    this._display.style.addReference(this)
 
-  this.source.addOutputLink(this)
-  this.target.addInputLink(this)// Target
-  // Instanciate display on svg
-  this.computeControlPoints()
+    this.source.addOutputLink(this)
+    this.target.addInputLink(this)// Target
+    // Instanciate display on svg
+    this.computeControlPoints()
   }
 
   // GETTER / SETTER ====================================================================

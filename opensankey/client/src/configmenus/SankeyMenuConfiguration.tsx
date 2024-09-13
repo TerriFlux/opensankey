@@ -291,10 +291,10 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
         </AccordionPanel>
       </AccordionItem> :
       <></>,
-      //Add extra accordionItem (for example views with OpenSankey+ submodule)
-      <>{additional_menus.additional_configuration_menus_primary_accordion_elements.map((c: ReactElementLike, i: number) => {
-        return <React.Fragment key={i}>{c}</React.Fragment>
-      })}</>
+    //Add extra accordionItem (for example views with OpenSankey+ submodule)
+    <>{additional_menus.additional_configuration_menus_primary_accordion_elements.map((c: ReactElementLike, i: number) => {
+      return <React.Fragment key={i}>{c}</React.Fragment>
+    })}</>
   ]
 
   return (
