@@ -69,16 +69,6 @@ const get_default_data=()=>{
 const data = get_default_data() as SankeyData
 // Search if a data is stored in localStorage of the navigator
 const json_data = LZString.decompress(localStorage.getItem('data') as string)
-// const json_data = localStorage.getItem('data')
-
-// If there is, store the data in the sankey_data
-// if (json_data !== null && json_data != '' && json_data!='null') {
-//   const new_data = JSON.parse(json_data)
-//   Object.assign(data, new_data)
-//   convert_data(data,get_default_data)
-//   // plus_convert_data(data as OSPData, get_default_data as () => OSPData)
-//   complete_sankey_data(data,get_default_data,DefaultNode,DefaultLink)
-// }
 
 // window.SankeyToolsStatic = true
 // if (!window.sankey) {
@@ -153,16 +143,7 @@ root.render(
         reinitialization
       )=>{
         if (window.SankeyToolsStatic) {
-          // Cast
-          // const plus_dict_app_data=applicationData as unknown as OSPApplicationDataType
-          // additionalMenus.externale_navbar_item['view']=<OSPBannerView
-          //   applicationData={plus_dict_app_data}
-          //   // // view_selector={
-          //   // //   <SelecteurView
-          //   // //     applicationData={plus_dict_app_data}
-          //   // //   />
-          //   // }
-          // />
+
           return
         }
         initializeAdditionalMenus(

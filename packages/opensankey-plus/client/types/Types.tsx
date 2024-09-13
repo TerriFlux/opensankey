@@ -139,29 +139,9 @@ export type OSPConvertDataFuncType = (data: OSPData, DefaultSankeyData: OSPGetDe
 
 // OSP type that overwrite or add variable to for applicationDataType
 export interface OSPApplicationDataVarType  {
-  // Recast some OS var to OSP type
-  // data: OSPData,
-  // get_default_data: OSPGetDefaultData
-  // new_data:Class_ApplicationDataPlus
-  // // Exclusive OSP var
-  // master_data: OSPData | undefined,
-  // set_master_data: (_: OSPData | undefined) => void,
-  // view: string,
-  // set_view: (_: string) => void,
-  // view_not_saved:string,
-  // set_view_not_saved:(s:string)=>void,
-  // is_catalog:boolean
-
-
-
-
   data: OSPData,
   set_data: (_: OSPData)=>void,
   get_default_data: OSPGetDefaultData,
-  // convert_data: ConvertDataFuncType,
-  // display_nodes: {[_: string]: SankeyNode},
-  // display_links: {[_: string]: SankeyLink},
-  // min_link_thickness: number,
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: setDiagramFuncType,
   new_data: Type_GenericApplicationDataOSP
@@ -174,7 +154,6 @@ export type OSPElementsSelectedVarType={
   multi_selected_label: { current: OSPLabel[] }
   r_editor_ZDT : MutableRefObject<ReactQuill|undefined>
   r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
-  //r_setter_editor_content_fo_zdt: MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
   r_setter_value_editor_name_view: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   saveViewGetter:MutableRefObject<boolean>
 }

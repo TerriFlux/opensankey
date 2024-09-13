@@ -1,17 +1,6 @@
 import { OSPApplicationDataType, OSPData, OSPLabel, OSPLink, OSPLinkAttrLocal, OSPLinkStyle, OSPNode } from './Types'
-// import { GetLinkValueFuncType } from '../src/deps/OpenSankey/configmenus/types/SankeyUtilsTypes'
-// import { ComponentUpdaterType } from '../src/deps/OpenSankey/types/Types'
 
 export type DefaultOSPStyleLinkFType = () => OSPLinkStyle
-
-// export  type DragLegendOSPFType = (data:OSPData,
-//   multi_selected_label:{current:OSPLabel[]},
-//   ComponentUpdater:ComponentUpdaterType,
-//   resizeCanvas:()=>void,
-//   node_function:OSPNodeFuntionType,
-//   link_function:OSPLinkFuntionType,
-//   applicationData:OSPApplicationDataType
-// ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
 export type ImportImageAsSvgBgFType = {
   applicationData:OSPApplicationDataType,
@@ -39,11 +28,6 @@ export type OSPAssignLinkValueToCorrectVarFType = (
   k:keyof OSPLinkAttrLocal,
   v:boolean|string|number,menu_for_style:boolean
 )=>void
-
-// export type OSPLinkSabotColorFType = (
-//   l: OSPLink,data:OSPData,
-//   GetLinkValue:GetLinkValueFuncType
-// ) => string
 
 export type ValueOf<T>=T[keyof T]
 
