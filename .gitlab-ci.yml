@@ -22,11 +22,11 @@ build:
   tags:
     - dev, prod, test
   script:
+    # Env
     - echo $CI_PROJECT_DIR
-    - echo $TESTS_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     # Build open-sankey
-    - bash build_client.sh -I -L -B -D
+    # - bash build_client.sh -I -L -B -D
     - bash build_server.sh
     - bash build_doc.sh
   except:
@@ -37,10 +37,12 @@ test:
   tags:
     - dev, prod, test
   script:
+    # Env
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
     - echo $TESTS_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
+    # Test
     - bash test.sh
   dependencies:
     - build
