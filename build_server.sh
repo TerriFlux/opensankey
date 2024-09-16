@@ -14,8 +14,8 @@ pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
 
 # Install deps
-cd ./submodules/sankeyexcelparser
-bash build.sh
+cd ./submodules/SankeyExcelParser
+bash build.sh || exit_if_error $?
 cd ../..
 
 # Flake8
