@@ -1,0 +1,3 @@
+[submodule "submodules/OpenSankey+"]
+	path = submodules/OpenSankey+
+	url = git@gitlab.com:su-model/sankeyanimation.git
