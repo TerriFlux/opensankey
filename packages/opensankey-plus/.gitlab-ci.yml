@@ -13,6 +13,7 @@ cache:
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
+  GIT_SUBMODULE_STRATEGY: recursive
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 build:
@@ -23,7 +24,8 @@ build:
     # Prepare env
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Build OpenSankey+ node module
+    # Build OpenSankey+
     - bash build_client.sh -I -L -B -D
+    - bash build_server.sh
   except:
     - schedules

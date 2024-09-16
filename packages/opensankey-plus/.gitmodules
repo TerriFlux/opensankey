@@ -1,4 +1,4 @@
 [submodule "deps/OpenSankey"]
-	path = deps/OpenSankey
+	path = submodules/OpenSankey
 	url = git@gitlab.com:su-model/opensankey.git
 	branch = proto_classe
