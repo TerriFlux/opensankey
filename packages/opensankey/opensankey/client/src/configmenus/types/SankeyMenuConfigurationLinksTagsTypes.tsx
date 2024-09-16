@@ -1,8 +1,7 @@
-import { applicationDataType } from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type MenuConfigurationLinksTagsFType = {
- applicationData:applicationDataType,
- 
- menu_for_modal:boolean,
+export type FCType_MenuConfigurationLinksTags = {
+  new_data: Type_GenericApplicationDataOS,
+  menu_for_modal: boolean,
 }
 

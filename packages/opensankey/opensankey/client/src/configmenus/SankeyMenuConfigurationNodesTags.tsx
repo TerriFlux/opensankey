@@ -11,7 +11,7 @@ import {
 import type { Class_Tag } from '../types/Tag'
 import type { Type_GenericNodeElementOS } from '../types/TypesOS'
 import type {
-  SankeyMenuConfigurationNodesTagsFType
+  FCType_SankeyMenuConfigurationNodesTags
 } from './types/SankeyMenuConfigurationNodesTagsTypes'
 
 // Component definition =================================================================
@@ -23,14 +23,13 @@ import type {
  *
  * @type {*}
  */
-export const SankeyMenuConfigurationNodesTags: FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
-  applicationData,
+export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMenuConfigurationNodesTags> = ({
+  new_data,
   menu_for_modal
 }) => {
 
   // Data ------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
 
   // Node tags groups ------------------------------------------------------------------

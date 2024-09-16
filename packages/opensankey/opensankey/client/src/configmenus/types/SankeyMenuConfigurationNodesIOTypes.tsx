@@ -1,8 +1,8 @@
 
-import { applicationDataType } from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type SankeyMenuConfigurationNodesIOFType = {
-  applicationData : applicationDataType,
+export type FCType_SankeyMenuConfigurationNodesIO = {
+  new_data : Type_GenericApplicationDataOS,
   menu_for_modal: boolean
 }
 

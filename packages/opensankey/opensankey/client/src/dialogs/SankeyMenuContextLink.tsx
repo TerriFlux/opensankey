@@ -16,7 +16,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /*************************************************************************************************/
 
-import { ContextMenuLinkFType } from './types/SankeyMenuContextLinkTypes'
+import { FCType_ContextMenuLink } from './types/SankeyMenuContextLinkTypes'
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 
 /*************************************************************************************************/
@@ -27,16 +27,20 @@ const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
-  applicationData,
+export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
+  new_data,
 }) => {
 
   // Datas ------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
-  const { ref_setter_show_menu_link_appearence, ref_setter_show_menu_link_data, ref_setter_show_menu_link_tooltip, ref_setter_show_menu_link_tags
+  const {
+    ref_setter_show_menu_link_appearence,
+    ref_setter_show_menu_link_data,
+    ref_setter_show_menu_link_tooltip,
+    ref_setter_show_menu_link_tags
   } = new_data.menu_configuration.dict_setter_show_dialog
+
   // Link on which this menu applies ----------------------------------------------------
 
   const contextualised_link = new_data.drawing_area.link_contextualised
@@ -322,7 +326,7 @@ export const ContextMenuLink: FunctionComponent<ContextMenuLinkFType> = ({
       </MenuButton>
       <MenuList>
         <MenuContextLinksData
-          applicationData={applicationData}
+          new_data={new_data}
         />
       </MenuList>
     </Menu> : <></>

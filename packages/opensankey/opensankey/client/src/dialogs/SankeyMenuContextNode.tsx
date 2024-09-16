@@ -17,7 +17,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /*************************************************************************************************/
 
-import { ContextMenuNodeFType } from './types/SankeyMenuContextNodeTypes'
+import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 
 /*************************************************************************************************/
 
@@ -26,9 +26,9 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
+export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   {
-    applicationData,
+    new_data,
     additional_context_element_menu,
     additional_context_element_other
   }
@@ -36,7 +36,6 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = (
 
   // Datas ------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
   const {
     ref_setter_show_menu_node_apparence,

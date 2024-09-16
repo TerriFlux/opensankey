@@ -8,9 +8,11 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { Type_GenericNodeElementOS } from '../types/TypesOS'
 import type {
-  SankeyMenuConfigurationNodesTooltipFType
+  Type_GenericNodeElementOS
+} from '../types/TypesOS'
+import type {
+  FCType_SankeyMenuConfigurationNodesTooltip
 } from './types/SankeyMenuConfigurationNodesTooltipTypes'
 
 // Local functions
@@ -22,23 +24,20 @@ import { OSTooltip } from '../types/Utils'
  * Create tootltip modification menu
  *
  * @param {*} {
- *   applicationData,
- *   applicationContext,
+ *   new_data,
  *   menu_for_modal
  * }
  * @return {*}
  */
-export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
-  applicationData,
+export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<FCType_SankeyMenuConfigurationNodesTooltip> = ({
+  new_data,
   menu_for_modal
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
   // Get necessary infos
-  const { new_data } = applicationData
   const { t } = new_data
-
 
   // Selected nodes ---------------------------------------------------------------------
 

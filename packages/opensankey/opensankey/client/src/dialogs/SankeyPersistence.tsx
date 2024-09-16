@@ -1,4 +1,4 @@
-import React,{ FunctionComponent, useEffect, useState, } from 'react'
+import React, { FunctionComponent, useEffect, useState, } from 'react'
 
 import {
   Box,
@@ -17,61 +17,51 @@ import FileSaver from 'file-saver'
 /*************************************************************************************************/
 
 import type {
-  processFunctionsType,
-  applicationDataType,
   DataSuiteType
 } from '../types/LegacyType'
 import type {
-  ClickSaveDiagramFuncType,
-  ClickSaveExcelFuncType,
-  CounterType,
-  DownloadExamplesFuncType,
-  ProcessExampleFuncType,
-  RetrieveExcelResultsFuncType,
-  UploadExcelImplFuncType,
-  UploadExempleFuncType
+  FType_ClickSaveDiagram,
+  FType_ClickSaveExcel,
+  FCType_Counter,
+  FType_DownloadExamples,
+  FType_ProcessExample,
+  FType_RetrieveExcelResults,
+  FType_UploadExcelImpl,
+  FType_UploadExemple
 } from './types/SankeyPersistenceTypes'
 
 import type { Type_JSON } from '../types/Utils'
 import type { Type_GenericApplicationDataOS } from '../types/TypesOS'
+import { FCType_SankeyLoad } from '../types/FunctionTypes'
 
 
 /* FILE LOADING COMPONENTS *************************************************************/
-
-interface SankeyLoadProdTypes {
-  applicationData: applicationDataType,
-  successAction: () => void,
-  processFunctions:processFunctionsType
-}
-
 /**
  * Loading modal
  * @param {*} {
- *   applicationContext,
- *   applicationData,
+ *   new_data,
  *   successAction,
- *   processFunctions,
- *   dict_hook_ref_setter_show_dialog_components,
+ *   processFunctions
  * }
  * @return {*}
  */
-const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
-  applicationData,
+const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
+  new_data,
   successAction,
   processFunctions,
   // postProcessLoadExcel
 }) => {
-  const { t, url_prefix } = applicationData.new_data
+  const { t, url_prefix } = new_data
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started } = processFunctions
 
-  const [value,setValue] = useState([1,2])
-  const [show_load_dialog,set_show_load_dialog] = useState(false)
-  applicationData.new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current=set_show_load_dialog
-  const [result,set_result] = useState('')
+  const [value, setValue] = useState([1, 2])
+  const [show_load_dialog, set_show_load_dialog] = useState(false)
+  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current = set_show_load_dialog
+  const [result, set_result] = useState('')
   ref_result.current = set_result
-  const [processing,set_processing] = useState(false)
+  const [processing, set_processing] = useState(false)
   ref_setter_processing.current = set_processing
-  const [is_computing,set_is_computing] = useState(false)
+  const [is_computing, set_is_computing] = useState(false)
 
   const reset = () => {
     set_processing(false)
@@ -81,8 +71,8 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
     not_started.current = true
   }
 
-  const handleChange = (evt:MouseEvent) => {
-    if ( value.includes(+(evt.target as HTMLFormElement).value) ) {
+  const handleChange = (evt: MouseEvent) => {
+    if (value.includes(+(evt.target as HTMLFormElement).value)) {
       value.splice(value.indexOf((evt.target as HTMLFormElement).value))
     } else {
       value.push(+(evt.target as HTMLFormElement).value)
@@ -93,11 +83,11 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   const infos = result !== undefined ? result.split('\n') : []
   const success_status = t('Menu.loaded_file')
   const failure_status = t('Menu.failure_file')
-  const spinner=(processing || is_computing)? <Spinner thickness='2px' color='openSankey.200' />:<></>
+  const spinner = (processing || is_computing) ? <Spinner thickness='2px' color='openSankey.200' /> : <></>
 
   if (!not_started.current && !processing) {
     const path = window.location.href
-    const url = path + applicationData.new_data.url_prefix + 'loads_retrieves_result'
+    const url = path + url_prefix + 'loads_retrieves_result'
     const form_data = new FormData()
     const fetchData = {
       method: 'POST',
@@ -107,8 +97,8 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
       response.text()
         .then(text => {
           // try {
-          RetrieveExcelResults(
-            applicationData,
+          retrieveExcelResults(
+            new_data,
             text
           )
           // }
@@ -116,7 +106,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
           //   alert(err)
           // }
         })
-        .then(()=>{
+        .then(() => {
           set_is_computing(false)
         })
     })
@@ -129,7 +119,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   return (
     <Modal
       isOpen={show_load_dialog}
-      onClose={ () => set_show_load_dialog(false) }
+      onClose={() => set_show_load_dialog(false)}
     >
       <ModalOverlay />
       <ModalContent
@@ -139,9 +129,9 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
         maxWidth='inherit'
       >
         <ModalHeader >
-        Chargement du fichier {spinner}
+          Chargement du fichier {spinner}
         </ModalHeader>
-        <ModalCloseButton/>
+        <ModalCloseButton />
         <ModalBody>
           <Box
             layerStyle='menucontext_layout'
@@ -153,7 +143,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                   <Button variant="menuconfigpanel_option_button_tertiary">
                     <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
                     {t('Menu.load_file')}
-                  </Button>):(
+                  </Button>) : (
                   failure.current ? (
                     <Button
                       variant="menuconfigpanel_del_button" onClick={reset}>{failure_status}</Button>) : <>
@@ -162,10 +152,10 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                         <Button
                           variant='menuconfigpanel_option_button_secondary'>
                           {t('Menu.compute_file')}
-                        </Button>):(
+                        </Button>) : (
                         <Button
                           variant="menuconfigpanel_option_button"
-                          onClick={()=>{
+                          onClick={() => {
                             successAction()
                             set_show_load_dialog(false)
                           }}>
@@ -177,14 +167,14 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
             </Box>
 
             <Box layerStyle='options_3cols'>
-              <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} >Infos</Button>
-              <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
-              <Button onClick={evt=>handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} >Infos</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
             </Box>
             {processing ? (
               <Counter
                 url_prefix={url_prefix}
-                finishReconciliation={()=>{
+                finishReconciliation={() => {
                   set_processing(false)
                   ref_processing.current = false
                   set_is_computing(true)
@@ -200,11 +190,11 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
                 {infos.map(
                   (info) => (
                     value.includes(2) && info.includes('ERROR') ?
-                      (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
+                      (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
                       : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                        (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
-                        : value.includes(3) && (info.includes('DEBUG') ) ?
-                          (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
+                        (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
+                        : value.includes(3) && (info.includes('DEBUG')) ?
+                          (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
                   )
                 )
                 }
@@ -231,14 +221,14 @@ export default SankeyLoad
  * }
  * @return {*}
  */
-export const Counter:FunctionComponent<CounterType> = ({
+export const Counter: FunctionComponent<FCType_Counter> = ({
   url_prefix,
   finishReconciliation,
   value,
   result,
   set_result
 }) => {
-  useEffect(() =>{
+  useEffect(() => {
     const interval = setInterval(() => {
       const root = window.location.href
       const url = root + url_prefix + 'load_process'
@@ -247,8 +237,8 @@ export const Counter:FunctionComponent<CounterType> = ({
         body: ''
       }
       fetch(url, fetchData).then(
-        function(response) {
-          if(response.ok) {
+        function (response) {
+          if (response.ok) {
             response.json().then(
               function (data) {
                 set_result(data.output)
@@ -260,7 +250,7 @@ export const Counter:FunctionComponent<CounterType> = ({
     return () => clearInterval(interval)
   })
   const infos = result.split('\n')
-  if ( infos.length > 2) {
+  if (infos.length > 2) {
     if (result.includes('FINISHED')) {
       finishReconciliation(false)
     } else if (result.includes('FAILED')) {
@@ -272,11 +262,11 @@ export const Counter:FunctionComponent<CounterType> = ({
       {infos.map(
         info => (
           value.includes(2) && info.includes('ERROR') ?
-            (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
+            (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
             : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-              (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
-              : value.includes(3) && (info.includes('DEBUG') ) ?
-                (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
+              (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
+              : value.includes(3) && (info.includes('DEBUG')) ?
+                (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
         )
       )
       }
@@ -293,10 +283,10 @@ export const Counter:FunctionComponent<CounterType> = ({
  * @param {Type_JSON} data
  * @param {string} [file_name='sankey']
  */
-export const ClickSaveExcel: ClickSaveExcelFuncType = (
+export const ClickSaveExcel: FType_ClickSaveExcel = (
   url_prefix,
   data_as_JSON,
-  file_name='sankey'
+  file_name = 'sankey'
 ) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
@@ -311,7 +301,7 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, file_name+'.xlsx')
+    FileSaver.saveAs(newBlob, file_name + '.xlsx')
   }
 
   const cleanFile = () => {
@@ -334,7 +324,7 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (
  * @param {Blob} input_file
  * @param {string} the_url_prefix
  */
-export const UploadExcelImpl: UploadExcelImplFuncType = (
+export const UploadExcelImpl: FType_UploadExcelImpl = (
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
   the_url_prefix: string
@@ -359,15 +349,13 @@ export const UploadExcelImpl: UploadExcelImplFuncType = (
  * @param {*} applicationData
  * @param {string} text
  */
-export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
-  applicationData,
+export const retrieveExcelResults: FType_RetrieveExcelResults = (
+  new_data,
   text: string,
 ) => {
   // Failsafe
   if (text === '{}')
     return
-  // Get data
-  const { new_data } = applicationData
   // Extract JSON struct
   const data_as_json = JSON.parse(text) as Type_JSON
   data_as_json['version'] = '0.9' // Avoid converter process
@@ -382,12 +370,11 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     )
   }
 
-  applicationData.new_data.menu_configuration.function_on_wait.current=()=>{
+  new_data.menu_configuration.function_on_wait.current = () => {
     new_data.drawing_area.computeAutoSankey(false)
   }
-  applicationData.new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
+  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
   // TODO adjust sankey zone
-
 }
 
 
@@ -396,17 +383,16 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
 /**
  * Convert and download application data as a JSON file
  *
- * @param {*} ApplicationClass
+ * @param {*} new_data
  * @param {*} options
  */
-export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
-  ApplicationClass
+export const ClickSaveDiagram: FType_ClickSaveDiagram = (
+  new_data
 ): void => {
   // Convert all datas as JSON
-  const json_data = ApplicationClass.toJSON(
-  )
+  const json_data = new_data.toJSON()
   // Prepare JSON for saving
-  const json_data_str = JSON.stringify(json_data,null,2)
+  const json_data_str = JSON.stringify(json_data, null, 2)
   const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
   // Set name for file to download
   const dataAsSuite = (json_data as DataSuiteType)
@@ -429,31 +415,31 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
 // TODO s'en occuper
 /* eslint-disable */
-export const ProcessExample: ProcessExampleFuncType = (
+export const ProcessExample: FType_ProcessExample = (
   applicationData,
   postProcessLoadExcel
 ) => {
-/* eslint-enable */
-//   const {data}=applicationData
-//   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
-//   convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
-//   if ((data as SankeyData & layout_type).layout === undefined) {
-//     // Compute node position of all node according to their level tags
-//     const lvl_tag_keys=Object.keys(data.levelTags)
-//     // If data only have level Tag 'Primaire' then compute node position at each levle
-//     if( (lvl_tag_keys.length == 1) && lvl_tag_keys[0]==='Primaire' ){
-//       const prim=lvl_tag_keys[0]
-//       Object.values(data.levelTags[prim].tags).reverse().forEach(tag_prim=>{
-//       // Deselect all Primaire tags
-//         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
-//         // Select current tag to compute position
-//         tag_prim.selected=true
-//         ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
-//       })
-//     }else if((lvl_tag_keys.length > 1)){
-//     // If data have multiple level Tag
-//     // then compute node position at each level of each level tag group
-//     // except 'Primaire'
+  /* eslint-enable */
+  //   const {data}=applicationData
+  //   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
+  //   convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
+  //   if ((data as SankeyData & layout_type).layout === undefined) {
+  //     // Compute node position of all node according to their level tags
+  //     const lvl_tag_keys=Object.keys(data.levelTags)
+  //     // If data only have level Tag 'Primaire' then compute node position at each levle
+  //     if( (lvl_tag_keys.length == 1) && lvl_tag_keys[0]==='Primaire' ){
+  //       const prim=lvl_tag_keys[0]
+  //       Object.values(data.levelTags[prim].tags).reverse().forEach(tag_prim=>{
+  //       // Deselect all Primaire tags
+  //         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
+  //         // Select current tag to compute position
+  //         tag_prim.selected=true
+  //         ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
+  //       })
+  //     }else if((lvl_tag_keys.length > 1)){
+  //     // If data have multiple level Tag
+  //     // then compute node position at each level of each level tag group
+  //     // except 'Primaire'
 
   //       lvl_tag_keys.filter(kt=>kt!=='Primaire').forEach(kt=>{
   //         Object.values(data.levelTags[kt].tags).reverse().forEach(tag_prim=>{
@@ -497,9 +483,8 @@ export const ProcessExample: ProcessExampleFuncType = (
  * @param {string} filetype
  */
 
-export const DownloadExamples: DownloadExamplesFuncType = (
+export const DownloadExamples: FType_DownloadExamples = (
   file_name: string,
-  the_url_prefix: string,
   filetype: string
 ): void => {
   const root = window.location.href
@@ -522,15 +507,13 @@ export const DownloadExamples: DownloadExamplesFuncType = (
 
 /**
  *
+ *
  * @param {string} file_name
- * @param {string} the_url_prefix
- * @param {SankeyData} data
- * @param {(data: SankeyData) => void} set_data
- * @returns {void) => void}
+ * @param {Type_GenericApplicationDataOS} new_data
  */
-export const UploadExemple: UploadExempleFuncType = (
+export const UploadExemple: FType_UploadExemple = (
   file_name: string,
-  applicationData: Type_GenericApplicationDataOS
+  new_data: Type_GenericApplicationDataOS
   // Reinitialization: () => void,
   // convert_data: ConvertDataFuncType,
   // DefaultSankeyData: DefaultSankeyDataFuncType
@@ -540,7 +523,7 @@ export const UploadExemple: UploadExempleFuncType = (
     root = root.replace('dashboard', '')
   }
 
-  const url = root + applicationData.url_prefix + '/sankey/upload_examples'
+  const url = root + new_data.url_prefix + '/sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
@@ -557,8 +540,7 @@ export const UploadExemple: UploadExempleFuncType = (
 
       if (!file_name.includes('.xlsx')) {
         // Clear datas & apply read datas
-
-        applicationData.fromJSON(JSON_data as Type_JSON)
+        new_data.fromJSON(JSON_data as Type_JSON)
       }
     })
   })

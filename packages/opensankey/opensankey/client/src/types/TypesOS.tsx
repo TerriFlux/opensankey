@@ -21,6 +21,55 @@ export type Type_GenericSankeyOS = Class_Sankey<Type_GenericDrawingAreaOS, Type_
 export type Type_GenericNodeElementOS = Class_NodeElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericLinkElementOS>
 export type Type_GenericLinkElementOS = Class_LinkElement<Type_GenericDrawingAreaOS, Type_GenericSankeyOS, Type_GenericNodeElementOS>
 
+export type Type_AdditionalMenus = {
+  // Top Menu
+  external_edition_item: JSX.Element[],
+  external_file_item: JSX.Element[],
+  external_file_export_item: JSX.Element[],
+  externale_save_item: JSX.Element[],
+  externale_navbar_item: { [_: string]: JSX.Element }
+
+  // Mise en page
+  extra_background_element: JSX.Element
+  apply_transformation_additional_elements: JSX.Element[]
+
+  // Nodes
+  advanced_appearence_content: JSX.Element[],
+  advanced_label_content: JSX.Element[],
+  advanced_label_value_content: JSX.Element[],
+  additional_menu_configuration_nodes: { [_: string]: JSX.Element },
+  additional_context_element_menu: JSX.Element[],
+  additional_context_element_other: JSX.Element[],
+
+  // Links
+  additional_data_element: JSX.Element[],
+  additional_link_appearence_items: JSX.Element[],
+  additional_link_visual_filter_content: JSX.Element[],
+
+  // Preferences
+  additional_preferences: JSX.Element[],
+
+  // Configuration Menu
+  additional_configuration_menus_edition_elements: JSX.Element[]
+  additional_configuration_menus_primary_accordion_elements: JSX.Element[]
+
+  // Other menus
+  additional_edition_item: JSX.Element[],
+  additional_file_save_json_option: JSX.Element[],
+  additional_file_item: JSX.Element[],
+  additional_file_export_item: JSX.Element[],
+
+  sankey_menus: { [_: string]: JSX.Element },
+
+  additional_nav_item: JSX.Element[],
+
+  example_menu: { [k: string]: JSX.Element; }
+  formations_menu: { [k: string]: JSX.Element; },
+
+  cards_template: JSX.Element
+}
+
+
 // STANDARD CLASSES FOR OPENSANKEY AND MORE *******************************************************
 
 // APPLICATION DATA ===============================================================================

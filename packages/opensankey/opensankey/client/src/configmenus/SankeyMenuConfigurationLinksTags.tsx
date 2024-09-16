@@ -11,19 +11,18 @@ import {
 import type { Class_Tag } from '../types/Tag'
 import type { Type_GenericLinkElementOS } from '../types/TypesOS'
 import type {
-  MenuConfigurationLinksTagsFType
+  FCType_MenuConfigurationLinksTags
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
 /*************************************************************************************************/
 
-export const MenuConfigurationLinksTags: FunctionComponent<MenuConfigurationLinksTagsFType> = ({
-  applicationData,
+export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurationLinksTags> = ({
+  new_data,
   menu_for_modal,
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
 
   // Tags -------------------------------------------------------------------------------

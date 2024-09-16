@@ -8,8 +8,8 @@ import {
 
 // Local types imports
 import type {
-  MenuContextLinksDataType,
-  MenuConfigurationLinksDataFType
+  FCType_MenuContextLinkData,
+  FCType_MenuConfigurationLinksData
 } from './types/SankeyMenuConfigurationLinksDataTypes'
 import type {
   Type_GenericLinkElementOS
@@ -24,16 +24,13 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfigur
 
 /*************************************************************************************************/
 
-export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLinksDataFType> = ({
-  applicationData,
+export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurationLinksData> = ({
+  new_data,
   additional_data_element,
 }) => {
 
   // Traduction
-  const { t } = applicationData.new_data
-
-  // Sankey datas
-  const { new_data } = applicationData
+  const { t } = new_data
 
   // Selected links --------------------------------------------------------------------
 
@@ -218,17 +215,12 @@ export const MenuConfigurationLinksData: FunctionComponent<MenuConfigurationLink
 
 /**
  * Component developped for number input of the link data config menu
- * @param {applicationData} TODO
+ * @param {new_data}
  * @return {JSX.Elmement}
  */
-export const MenuContextLinksData: FunctionComponent<MenuContextLinksDataType> = ({
-  applicationData,
+export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData> = ({
+  new_data,
 }) => {
-
-  // Application data ------------------------------------------------------------------
-
-  // Sankey datas
-  const { new_data } = applicationData
 
   // Selected links --------------------------------------------------------------------
 

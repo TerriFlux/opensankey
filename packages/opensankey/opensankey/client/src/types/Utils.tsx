@@ -322,5 +322,8 @@ export const CustomFaEyeCheckIcon=(props:CheckboxProps)=>{
   const { isChecked } = props
   return isChecked?<FaEye/>:<FaEyeSlash/>
 }
+export const GetRandomInt = (max: number) => {
+  return Math.floor(Math.random() * max)
+}
 
 
