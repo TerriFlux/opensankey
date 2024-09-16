@@ -4,8 +4,8 @@ import { Box, Button, Checkbox, Input, Select } from '@chakra-ui/react'
 
 // Internal types / classes
 import {
-  OpenSankeyDefaultModalePreferenceContentFType,
-  modalPreferenceTypes
+  FType_OpenSankeyDefaultModalePreferenceContent,
+  FCType_ModalPreference
 } from './types/SankeyMenuPreferencesTypes'
 
 // Internal components / functions
@@ -15,13 +15,13 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 // COMPONENTS ===========================================================================
 
-export const OpenSankeyDefaultModalePreferenceContent: OpenSankeyDefaultModalePreferenceContentFType = (
-  applicationData,
+export const OpenSankeyDefaultModalePreferenceContent: FType_OpenSankeyDefaultModalePreferenceContent = (
+  new_data,
   trad,
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t } = applicationData.new_data
-  const { new_data, data } = applicationData
+
+  const { t } = new_data
 
   // Component updater ------------------------------------------------------------------
 
@@ -154,9 +154,9 @@ export const OpenSankeyDefaultModalePreferenceContent: OpenSankeyDefaultModalePr
       <Box layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
         <Input
-          variant='menuconfigpanel_option_input' value={data.node_label_separator}
+          variant='menuconfigpanel_option_input' value={new_data.node_label_separator}
           onChange={evt => {
-            data.node_label_separator = evt.target.value  // TODO passer dans new_data
+            new_data.node_label_separator = evt.target.value
           }}
           onBlur={() => new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())}
         />
@@ -167,13 +167,13 @@ export const OpenSankeyDefaultModalePreferenceContent: OpenSankeyDefaultModalePr
 }
 
 
-export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
+export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   {
-    applicationData,
-    ui,
-    t
+    new_data,
+    ui
   }
 ) => {
+  const { t } = new_data
   const content = <>
     {Object.values(ui).map((d, i) => {
       return <React.Fragment key={i}>{d}</React.Fragment>
@@ -181,7 +181,7 @@ export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
   </>
 
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_preference'}
     content={content}
     title={t('Menu.title_pref')}

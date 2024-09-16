@@ -1,115 +1,27 @@
-
-import React, { FunctionComponent, useState } from 'react'
-
-
 import {
   SankeyData,
   SankeyLink,
   SankeyNode,
   SankeyNodeAttrLocal,
-  agregationType,
-  applicationDataType
 } from '../types/LegacyType'
 import {
-  AggregateFuncType,
-  DesaggregateFuncType,
-  computeHorizontalIndexFuncType,
-  hasAggregationLinkToNodeFuncType,
-  synchronizeNodesandLinksIdFuncType,
+  FType_ComputeHorizontalIndex,
+  FType_ComputeRecyclingHorizontalIndex,
+  FType_ReorganizeAllInputOutputLinksId,
+  FType_HasAggregationLinkToNode,
 } from './types/SankeyDrawLayoutTypes'
 import {
-  reorganize_node_inputLinksIdFuncType,
-  reorganize_node_outputLinksIdFuncType
+  FType_ReorganizeNodeInputLinksId,
+  FType_ReorganizeNodeOutputLinksId
 } from './types/SankeyDrawLayoutTypes'
 import {
   ComputeAutoSankeyFuncType,
-  agregationFType,
-  apply_input_outputLinksIdFType,
-  compute_default_input_outputLinksIdFType,
-  desagregationFType,
-  reorganize_all_input_outputLinksIdFType,
-  reorganize_inputLinksIdFType
+  FType_Agregation,
+  FType_Desagregation,
 } from './types/SankeyDrawLayoutTypes'
 
-import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Text } from '@chakra-ui/react'
 import { ReturnValueLink } from '../types/Legacy'
 
-
-export const reorganize_inputLinksId: reorganize_inputLinksIdFType = (
-  data: SankeyData,
-  node: SankeyNode,
-  input: boolean,
-  output: boolean,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => {
-  if (input) {
-    reorganize_node_inputLinksId(data, node, nodes, links)
-  }
-  if (output) {
-    reorganize_node_outputLinksId(data, node, nodes, links)
-  }
-}
-
-/**
- * Synchronise input / ouput links ids of nodes
- * with informations from links
- *
- * @param {SankeyNode} nodes
- * @param {SankeyLink} links
- */
-export const compute_default_input_outputLinksId: compute_default_input_outputLinksIdFType = (
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-) => {
-  // Reset lists of input and ouput links for each nodes
-  Object.values(nodes).forEach(n => {
-    n.inputLinksId = []
-    n.outputLinksId = []
-  })
-  // Rewrite lists of input and ouput links for each nodes
-  // from links information
-  Object.values(links).forEach(link => {
-    nodes[link.idTarget].inputLinksId.push(link.idLink)
-    nodes[link.idSource].outputLinksId.push(link.idLink)
-  })
-}
-
-export const apply_input_outputLinksId: apply_input_outputLinksIdFType = (
-  ref_nodes: { [node_id: string]: SankeyNode },
-  data: SankeyData
-) => {
-  Object.values(ref_nodes).forEach(
-    (ref_node) => {
-      const node = data.nodes[ref_node.idNode]
-      if (!node) {
-        return
-      }
-      const new_inputLinksId: string[] = []
-      ref_node.inputLinksId.forEach(
-        (idLink) => {
-          const ref_link = data.links[idLink]
-          if (ref_link === undefined) {
-            return
-          }
-          new_inputLinksId.push(idLink)
-        }
-      )
-      node.inputLinksId = new_inputLinksId
-      const new_outputLinksId: string[] = []
-      ref_node.outputLinksId.forEach(
-        (idLink) => {
-          const ref_link = data.links[idLink]
-          if (ref_link === undefined) {
-            return
-          }
-          new_outputLinksId.push(idLink)
-        }
-      )
-      node.outputLinksId = new_outputLinksId
-    }
-  )
-}
 
 /**
  * Explore all node's branches to compute all their nodes horizontal index
@@ -123,7 +35,7 @@ export const apply_input_outputLinksId: apply_input_outputLinksIdFType = (
  * @param {object} links
  * @param {object} nodes
  */
-export const computeHorizontalIndex: computeHorizontalIndexFuncType = (
+export const computeHorizontalIndex: FType_ComputeHorizontalIndex = (
   node: SankeyNode,
   starting_index: number,
   visible_nodes_ids: string[],
@@ -221,7 +133,7 @@ export const computeHorizontalIndex: computeHorizontalIndexFuncType = (
  * @param {object} links
  * @param {object} nodes
  */
-export const compute_recycling_horizontal_index = (
+export const computeRecyclingHorizontalIndex: FType_ComputeRecyclingHorizontalIndex = (
   link: SankeyLink,
   visible_nodes_ids: string[],
   recycling_links_ids: string[],
@@ -277,7 +189,6 @@ export const compute_recycling_horizontal_index = (
     }
   }
 }
-
 
 /**
  * Calcul la plus longue branch
@@ -384,7 +295,7 @@ export const ComputeAutoSankey: ComputeAutoSankeyFuncType = (
   // const checked_recycling_links_ids: string[] = []
   // Object.values(possible_recycling_links_ids)
   //   .forEach(link_id =>
-  //     compute_recycling_horizontal_index(
+  //     computeRecyclingHorizontalIndex(
   //       data.links[link_id],
   //       visible_nodes_ids,
   //       checked_recycling_links_ids,
@@ -658,7 +569,7 @@ export const ComputeAutoSankey: ComputeAutoSankeyFuncType = (
   // data.width = h_left_margin + max_horizontal_index * h_space + h_right_margin
   // data.height = v_margin*2 + max_height_cumul
 
-  // reorganize_all_input_outputLinksId(data,data.nodes, data.links)
+  // reorganizeAllInputOutputLinksId(data,data.nodes, data.links)
 }
 
 /**
@@ -669,345 +580,19 @@ export const ComputeAutoSankey: ComputeAutoSankeyFuncType = (
  * @param {object} nodes Dict of node to reorganize
  * @param {object} links Dict of links to reorganize
  */
-export const reorganize_all_input_outputLinksId: reorganize_all_input_outputLinksIdFType = (
+const reorganizeAllInputOutputLinksId: FType_ReorganizeAllInputOutputLinksId = (
   data: SankeyData,
   nodes: { [idNode: string]: SankeyNode },
   links: { [idLink: string]: SankeyLink }
 ) => {
   Object.values(nodes)
     .forEach(node => {
-      reorganize_node_inputLinksId(data, node, nodes, links)
-      reorganize_node_outputLinksId(data, node, nodes, links)
+      ReorganizeNodeInputLinksId(data, node, nodes, links)
+      ReorganizeNodeOutputLinksId(data, node, nodes, links)
     })
 }
 
-/**
- * TODO
- *
- * @param {SankeyData} data Data structure for Sankey
- * @param {string} idNode Id of node that we desagregate
- * @param {string} cur_dimension Dimension on which we desagregage node
- * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
- */
-export const desagregation: desagregationFType = (
-  // applicationData,
-  // idNode: string,
-  // cur_dimension: string,
-  // to_compute_auto_sankey=false
-) => {
-  // const {data}=applicationData
-  // const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
-  // if (dim_desagregate_nodes.length == 0) {
-  //   return
-  // }
-  // const inv_scale = d3.scaleLinear()
-  //   .domain([0, 100])
-  //   .range([0, data.user_scale])
-  // const scale = d3.scaleLinear()
-  //   .range([0, 100])
-  //   .domain([0, data.user_scale])
-  // const nb_desagregated = dim_desagregate_nodes.length
-  // let nodes_heights = 0
-  // dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue))
-  // const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],applicationData,inv_scale,scale,GetLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
-  // let delta_y = 0
-  // dim_desagregate_nodes.forEach(n => {
-  //   if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
-  //     n.x = data.nodes[idNode].x
-  //     n.y = start_point + delta_y
-  //   }
-  //   delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue)
-
-  //   if(n.local==undefined || n.local==null) {
-  //     n.local = {} as SankeyNodeAttrLocal
-  //   }
-  //   setLocalAgregation(n, data, true)
-  //   if (to_compute_auto_sankey) {
-  //     if (n.outputLinksId.length === 0) {
-  //       AssignNodeLocalAttribute(n,'label_horiz', 'right')
-  //       AssignNodeLocalAttribute(n,'label_vert', 'middle')
-  //     } else if (n.inputLinksId.length === 0) {
-  //       AssignNodeLocalAttribute(n,'label_horiz', 'left')
-  //       AssignNodeLocalAttribute(n,'label_vert', 'middle')
-  //     } else {
-  //       AssignNodeLocalAttribute(n,'label_horiz', 'left')
-  //       AssignNodeLocalAttribute(n,'label_vert', 'middle')
-  //       AssignNodeLocalAttribute(n,'label_background', true)
-  //     }
-  //   }
-  // })
-  // const clicked_node=data.nodes[idNode]
-  // if(clicked_node.local==undefined || clicked_node.local==null) {
-  //   clicked_node.local = {} as SankeyNodeAttrLocal
-  // }
-  // setLocalAgregation(clicked_node, data, false)
-  // if (to_compute_auto_sankey && nb_desagregated > 0) {
-  //   agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
-  // }
-}
-
-const hasAggregationLinkToNode: hasAggregationLinkToNodeFuncType = (data: SankeyData,
-  idNodeFather: string,
-  idNodeCurr: string,
-  cur_dimension: string,
-) => {
-  if (data.nodes[idNodeCurr].dimensions) {
-    const father_for_curr_node_with_curr_dim = data.nodes[idNodeCurr].dimensions[cur_dimension]
-    if (father_for_curr_node_with_curr_dim && father_for_curr_node_with_curr_dim.parent_name) {
-      if (idNodeFather === father_for_curr_node_with_curr_dim.parent_name) {
-        return true
-      } else {
-        return hasAggregationLinkToNode(data, idNodeFather, father_for_curr_node_with_curr_dim.parent_name, cur_dimension)
-      }
-    } else {
-      return false
-    }
-  } else {
-    return false
-  }
-}
-
-/**
- * Function that display the parent node of the node in parameter
- * and hide all descendant of the parent node linked by the dimension cur_dimension
- *
- * @param {SankeyData} data Data structure for Sankey
- * @param {string} idNode Id of node that we aggregate
- * @param {string} cur_dimension Dimension on which we aggregate node
- */
-export const agregation: agregationFType = (
-  data: SankeyData,
-  idNode: string,
-  cur_dimension: string,
-) => {
-  if (!(cur_dimension in data.nodes[idNode].dimensions)) {
-    return
-  }
-  const desagregated_node = data.nodes[idNode]
-  const parent_node = data.nodes[desagregated_node.dimensions[cur_dimension].parent_name ?? '']
-  if (!parent_node) {
-    return
-  }
-  const cur_parentId = desagregated_node.dimensions[cur_dimension].parent_name
-  const dim_desagregated_nodes = Object.values(data.nodes).filter(n => {
-    const cur_n_dim = n.dimensions[cur_dimension]
-    if ((cur_n_dim && cur_n_dim.parent_name && !data.nodes[cur_n_dim.parent_name]) || cur_parentId === undefined) {
-      return
-    }
-    return hasAggregationLinkToNode(data, cur_parentId, n.idNode, cur_dimension)
-  })
-  if (dim_desagregated_nodes.length === 0) {
-    return
-  }
-
-  let mean_x = 0
-  let mean_y = 0
-  dim_desagregated_nodes.forEach(n => {
-    if (n.x) {
-      mean_x += n.x
-      mean_y += n.y
-    }
-    if (n.local == undefined || n.local == null) {
-      n.local = {} as SankeyNodeAttrLocal
-    }
-    setLocalAgregation(n, data, false)
-  })
-  mean_x = mean_x / dim_desagregated_nodes.length
-  mean_y = mean_y / dim_desagregated_nodes.length
-
-  if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0)) {
-    parent_node.x = mean_x
-    parent_node.y = mean_y
-  }
-  if (parent_node.local == undefined || parent_node.local == null) {
-    parent_node.local = {} as SankeyNodeAttrLocal
-  }
-  setLocalAgregation(parent_node, data, true)
-}
-
-export type AgregationModalTypes = {
-  applicationData: applicationDataType
-  agregationRef: agregationType
-}
-
-export const AgregationModal: FunctionComponent<AgregationModalTypes> = (
-  { applicationData, agregationRef }
-) => {
-  const { data, set_data } = applicationData
-  const [show_agregation, set_show_agregation] = useState(false)
-  const [dim_name, set_dim_name] = useState('')
-  const [child_names, set_child_names] = useState<string[]>([])
-
-  if (agregationRef.showAgregationRef.current!.length == 0) {
-    agregationRef.showAgregationRef.current!.push([show_agregation, set_show_agregation])
-  }
-  const n = agregationRef.agregationNode.current as SankeyNode
-  if (!n) {
-    return <></>
-  }
-  const dim_names: string[] = []
-  if (agregationRef.isAgregationRef.current) {
-    Object.keys(n.dimensions).forEach(
-      dim => {
-        if (Object.keys(n.dimensions).length > 1 && dim === 'Primaire') {
-          return
-        }
-        if (n.dimensions[dim].parent_name) {
-          dim_names.push(dim)
-        }
-      }
-    )
-    if (dim_name === '') {
-      if (dim_names.length === 0) {
-        return <></>
-      }
-      set_dim_name(dim_names[0])
-    }
-    return (
-      <Modal
-        isOpen={show_agregation}
-        onClose={() => {
-          set_show_agregation(false)
-          set_dim_name('')
-        }} >
-        <ModalOverlay />
-
-        <ModalContent
-          maxWidth='inherit'
-        >
-          <ModalHeader >
-            Dimension difference'agrégation
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Box>
-              <Select
-                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_dim_name(evt.target.value)}
-                value={dim_name}
-              >
-                {dim_names.map(
-                  (cur_dir_name, i) => <option key={i} value={cur_dir_name}>{cur_dir_name}</option>
-                )}
-              </Select>
-              <Text>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name ?? 0] ? data.nodes[n.dimensions[dim_name].parent_name ?? 0].name : ''}</Text>
-            </Box>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="menuconfigpanel_option_button_secondary"
-              onClick={() => {
-                agregation(data, n.idNode, dim_name)
-                set_data({ ...data })
-                set_show_agregation(false)
-                set_dim_name('')
-              }}
-            >Agrégation</Button>
-            <Button variant="menuconfigpanel_del_button" onClick={() => {
-              set_show_agregation(false)
-              set_dim_name('')
-            }}>Annuler</Button>
-          </ModalFooter>
-        </ModalContent>
-
-      </Modal>
-    )
-  } else {
-    Object.values(data.nodes).forEach(n2 => {
-      for (const dim in n2.dimensions) {
-        if (Object.keys(n2.dimensions).length > 1 && dim === 'Primaire') {
-          continue
-        }
-        if (dim in n2.dimensions && n2.dimensions[dim].parent_name == n.idNode) {
-          if (dim_names.indexOf(dim) === -1) {
-            dim_names.push(dim)
-          }
-        }
-      }
-      return false
-    })
-    if (dim_name === '') {
-      const the_child_names: string[] = []
-      Object.values(data.nodes).forEach(n2 => {
-        if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
-          the_child_names.push(n2.name)
-        }
-      }
-      )
-      set_dim_name(dim_names[0])
-      set_child_names(the_child_names)
-    }
-    return (
-      <Modal
-        isOpen={show_agregation}
-        onClose={() => {
-          set_show_agregation(false)
-          agregationRef.agregationNode.current = undefined
-          set_dim_name('')
-        }} >
-        <ModalOverlay />
-        <ModalContent
-          maxWidth='inherit'
-        >
-          <ModalHeader>
-            Dimension desagrégation
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Box>
-              <Select
-                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  set_dim_name(evt.target.value)
-                  const the_child_names: string[] = []
-                  Object.values(data.nodes).forEach(n2 => {
-                    if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
-                      the_child_names.push(n2.name)
-                    }
-                  }
-                  )
-                  set_child_names(the_child_names)
-                }}
-                value={dim_name}
-              >
-                {dim_names.map(
-                  (cur_dim_name, i) => <option key={i} value={cur_dim_name} >{cur_dim_name}</option>
-                )}
-              </Select>
-              {child_names.map(child_name => <Text>{child_name}</Text>)}
-            </Box>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="menuconfigpanel_option_button_secondary"
-              onClick={() => {
-                desagregation(applicationData, n.idNode, dim_name, false)
-                set_data({ ...data })
-                set_show_agregation(false)
-                set_dim_name('')
-              }}
-            >Désagrégation</Button>
-            <Button variant="menuconfigpanel_del_button" onClick={() => {
-              set_show_agregation(false)
-              set_dim_name('')
-            }}>Annuler</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    )
-  }
-}
-
-const setLocalAgregation = (
-  n: SankeyNode,
-  data: SankeyData,
-  local_aggregation: boolean
-) => {
-  if (!n.local) {
-    n.local = {} as SankeyNodeAttrLocal
-  }
-  n.local['local_aggregation'] = local_aggregation
-}
-
-export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType = (
+const ReorganizeNodeInputLinksId: FType_ReorganizeNodeInputLinksId = (
   data: SankeyData,
   node: SankeyNode,
   nodes: { [idNode: string]: SankeyNode },
@@ -1089,7 +674,7 @@ export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType 
  * @param {object} nodes Dict of node to reorganize
  * @param {object} links Dict of links to reorganize
  */
-export const reorganize_node_outputLinksId: reorganize_node_outputLinksIdFuncType = (
+const ReorganizeNodeOutputLinksId: FType_ReorganizeNodeOutputLinksId = (
   data: SankeyData,
   node: SankeyNode,
   nodes: { [idNode: string]: SankeyNode },
@@ -1162,147 +747,158 @@ export const reorganize_node_outputLinksId: reorganize_node_outputLinksIdFuncTyp
   node.outputLinksId = output_links.map(l => l.idLink)
 }
 
-const normalize_name = (name: string) => {
-  const new_name = name.split('\\n').join('').split(' ').join('')
-  return new_name
-}
-
-export const synchronizeNodesandLinksId: synchronizeNodesandLinksIdFuncType = (
-  dataModify: SankeyData,
-  dataRef: SankeyData
+/**
+ * Function that display the parent node of the node in parameter
+ * and hide all descendant of the parent node linked by the dimension cur_dimension
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {string} idNode Id of node that we aggregate
+ * @param {string} cur_dimension Dimension on which we aggregate node
+ */
+export const agregation: FType_Agregation = (
+  data: SankeyData,
+  idNode: string,
+  cur_dimension: string,
 ) => {
-  //- Stores a mapping between idNode of initial data and layout idNodes
-  const idNodesMap: { [s: string]: string } = {}
-  Object.values(dataModify.nodes).forEach(nodeModify => {
-    const nodesRef = Object.values(dataRef.nodes).filter(nodeRef => normalize_name(nodeModify.name) === normalize_name(nodeRef.name))
-    if (nodesRef.length === 0) {
-      idNodesMap[nodeModify.idNode] = nodeModify.idNode
-      return
-    }
-    const nodeRef = nodesRef[0]
-    idNodesMap[nodeModify.idNode] = nodeRef.idNode
-  })
-  Object.values(dataModify.nodes).forEach(nodeModify => {
-    nodeModify.idNode = idNodesMap[nodeModify.idNode]
-    Object.keys(nodeModify.dimensions).forEach(dim => {
-      if (nodeModify.dimensions[dim].parent_name) {
-        nodeModify.dimensions[dim].parent_name = idNodesMap[nodeModify.dimensions[dim].parent_name ?? 0]
-      }
-    })
-  })
-  dataModify.nodes = Object.assign({}, ...Object.values(dataModify.nodes).map(n => ({ [n.idNode]: { ...n } })))
-
-  Object.values(dataModify.links).forEach(lModify => {
-    lModify.idSource = idNodesMap[lModify.idSource]
-    lModify.idTarget = idNodesMap[lModify.idTarget]
-  })
-
-  //- Stores a mapping between idLink of initial data and layout idLinks
-  const idLinksMap: { [s: string]: string } = {}
-  const links_with_no_match: SankeyLink[] = []
-  Object.values(dataModify.links).forEach(lModify => {
-    const lRef = dataRef.links[lModify.idLink]
-    if (!lRef || lRef.idSource !== lModify.idSource || lRef.idTarget !== lModify.idTarget) {
-      links_with_no_match.push(lModify)
-      return
-    }
-    idLinksMap[lModify.idLink] = lRef.idLink
-  })
-  links_with_no_match.forEach(l => {
-    const linksRef = Object.values(dataRef.links).filter(lRef => l.idSource === lRef.idSource && l.idTarget === lRef.idTarget
-    )
-    if (linksRef.length === 0) {
-      idLinksMap[l.idLink] = l.idSource + '---' + l.idTarget
-      return
-    }
-    const layout_link = linksRef[0]
-    idLinksMap[l.idLink] = layout_link.idLink
-  })
-
-  const newLinkZIndex: string[] = []
-  dataModify.linkZIndex.forEach(idLink => newLinkZIndex.push(idLinksMap[idLink]))
-  dataModify.linkZIndex = newLinkZIndex
-
-  Object.values(dataModify.links).forEach(l => l.idLink = idLinksMap[l.idLink])
-  dataModify.links = Object.assign({}, ...Object.values(dataModify.links).map(lModify => ({ [lModify.idLink]: { ...lModify } })))
-
-  Object.values(dataModify.nodes).forEach(n => {
-    const newInputLinksId: string[] = []
-    n.inputLinksId.forEach(linkId => newInputLinksId.push(idLinksMap[linkId]))
-    n.inputLinksId = newInputLinksId
-    const newOutputLinksId: string[] = []
-    n.outputLinksId.forEach(linkId => newOutputLinksId.push(idLinksMap[linkId]))
-    n.outputLinksId = newOutputLinksId
-  })
-  // compute_default_input_outputLinksId(dataModify.nodes, dataModify.links)
-}
-
-
-
-export const Aggregate: AggregateFuncType = (
-  n: SankeyNode, data: SankeyData,
-  agregationRef
-) => {
-  const parent_names: string[] = []
-  const dim_names: string[] = []
-  Object.keys(n.dimensions).forEach(
-    dim => {
-      if (dim === 'Primaire') {
-        if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-          parent_names.push(n.idNode)
-          dim_names.push(dim)
-        }
-      } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
-        parent_names.push(n.dimensions[dim].parent_name as string)
-        dim_names.push(dim)
-      }
-    }
-  )
-  if (parent_names.length === 0) {
+  if (!(cur_dimension in data.nodes[idNode].dimensions)) {
     return
   }
-  if (parent_names.length > 1) {
-    agregationRef.agregationNode.current = n
-    agregationRef.isAgregationRef.current = true
-    agregationRef.showAgregationRef.current![0][1](true)
-  } else {
-    agregation(data, n.idNode, dim_names[0])
+  const desagregated_node = data.nodes[idNode]
+  const parent_node = data.nodes[desagregated_node.dimensions[cur_dimension].parent_name ?? '']
+  if (!parent_node) {
+    return
   }
+  const cur_parentId = desagregated_node.dimensions[cur_dimension].parent_name
+  const dim_desagregated_nodes = Object.values(data.nodes).filter(n => {
+    const cur_n_dim = n.dimensions[cur_dimension]
+    if ((cur_n_dim && cur_n_dim.parent_name && !data.nodes[cur_n_dim.parent_name]) || cur_parentId === undefined) {
+      return
+    }
+    return hasAggregationLinkToNode(data, cur_parentId, n.idNode, cur_dimension)
+  })
+  if (dim_desagregated_nodes.length === 0) {
+    return
+  }
+
+  let mean_x = 0
+  let mean_y = 0
+  dim_desagregated_nodes.forEach(n => {
+    if (n.x) {
+      mean_x += n.x
+      mean_y += n.y
+    }
+    if (n.local == undefined || n.local == null) {
+      n.local = {} as SankeyNodeAttrLocal
+    }
+    setLocalAgregation(n, false)
+  })
+  mean_x = mean_x / dim_desagregated_nodes.length
+  mean_y = mean_y / dim_desagregated_nodes.length
+
+  if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0)) {
+    parent_node.x = mean_x
+    parent_node.y = mean_y
+  }
+  if (parent_node.local == undefined || parent_node.local == null) {
+    parent_node.local = {} as SankeyNodeAttrLocal
+  }
+  setLocalAgregation(parent_node, true)
 }
 
-export const Desaggregate: DesaggregateFuncType = (
-  n: SankeyNode,
-  applicationData,
-  agregationRef
+/**
+ * TODO
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {string} idNode Id of node that we desagregate
+ * @param {string} cur_dimension Dimension on which we desagregage node
+ * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
+ */
+export const desagregation: FType_Desagregation = (
+  // applicationData,
+  // idNode: string,
+  // cur_dimension: string,
+  // to_compute_auto_sankey=false
 ) => {
-  const { data } = applicationData
-  const child_names: string[] = []
-  const dim_names: string[] = []
-  Object.values(data.nodes).forEach(n2 => {
-    for (const dim in n2.dimensions) {
-      if (dim === 'Primaire') {
-        if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-          child_names.push(n2.idNode)
-          dim_names.push(dim)
-        }
-      } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
-        if (dim_names.indexOf(dim) === -1) {
-          child_names.push(n2.idNode)
-          dim_names.push(dim)
-        }
+  // const {data}=applicationData
+  // const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
+  // if (dim_desagregate_nodes.length == 0) {
+  //   return
+  // }
+  // const inv_scale = d3.scaleLinear()
+  //   .domain([0, 100])
+  //   .range([0, data.user_scale])
+  // const scale = d3.scaleLinear()
+  //   .range([0, 100])
+  //   .domain([0, data.user_scale])
+  // const nb_desagregated = dim_desagregate_nodes.length
+  // let nodes_heights = 0
+  // dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue))
+  // const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],applicationData,inv_scale,scale,GetLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
+  // let delta_y = 0
+  // dim_desagregate_nodes.forEach(n => {
+  //   if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
+  //     n.x = data.nodes[idNode].x
+  //     n.y = start_point + delta_y
+  //   }
+  //   delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,applicationData,inv_scale,scale,GetLinkValue)
+
+  //   if(n.local==undefined || n.local==null) {
+  //     n.local = {} as SankeyNodeAttrLocal
+  //   }
+  //   setLocalAgregation(n, true)
+  //   if (to_compute_auto_sankey) {
+  //     if (n.outputLinksId.length === 0) {
+  //       AssignNodeLocalAttribute(n,'label_horiz', 'right')
+  //       AssignNodeLocalAttribute(n,'label_vert', 'middle')
+  //     } else if (n.inputLinksId.length === 0) {
+  //       AssignNodeLocalAttribute(n,'label_horiz', 'left')
+  //       AssignNodeLocalAttribute(n,'label_vert', 'middle')
+  //     } else {
+  //       AssignNodeLocalAttribute(n,'label_horiz', 'left')
+  //       AssignNodeLocalAttribute(n,'label_vert', 'middle')
+  //       AssignNodeLocalAttribute(n,'label_background', true)
+  //     }
+  //   }
+  // })
+  // const clicked_node=data.nodes[idNode]
+  // if(clicked_node.local==undefined || clicked_node.local==null) {
+  //   clicked_node.local = {} as SankeyNodeAttrLocal
+  // }
+  // setLocalAgregation(clicked_node, false)
+  // if (to_compute_auto_sankey && nb_desagregated > 0) {
+  //   agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
+  // }
+}
+
+const hasAggregationLinkToNode: FType_HasAggregationLinkToNode = (
+  data: SankeyData,
+  idNodeFather: string,
+  idNodeCurr: string,
+  cur_dimension: string,
+) => {
+  if (data.nodes[idNodeCurr].dimensions) {
+    const father_for_curr_node_with_curr_dim = data.nodes[idNodeCurr].dimensions[cur_dimension]
+    if (father_for_curr_node_with_curr_dim && father_for_curr_node_with_curr_dim.parent_name) {
+      if (idNodeFather === father_for_curr_node_with_curr_dim.parent_name) {
+        return true
+      } else {
+        return hasAggregationLinkToNode(data, idNodeFather, father_for_curr_node_with_curr_dim.parent_name, cur_dimension)
       }
+    } else {
+      return false
     }
+  } else {
     return false
-  })
-  if (child_names.length === 0) {
-    return
   }
-  if (child_names.length > 1) {
-    agregationRef.agregationNode.current = n
-    agregationRef.isAgregationRef.current = false
-    agregationRef.showAgregationRef.current![0][1](true)
-  } else {
-    desagregation(applicationData, n.idNode, dim_names[0], false)
+}
+
+const setLocalAgregation = (
+  n: SankeyNode,
+  local_aggregation: boolean
+) => {
+  if (!n.local) {
+    n.local = {} as SankeyNodeAttrLocal
   }
+  n.local['local_aggregation'] = local_aggregation
 }
 

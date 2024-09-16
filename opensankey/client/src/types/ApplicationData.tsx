@@ -5,27 +5,28 @@
 // ==================================================================================================
 
 // External imports
+import { MutableRefObject, useRef } from 'react'
 import LZString from 'lz-string'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 // Local imports
+import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
+import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { Class_MenuConfig } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
 import { Type_JSON } from './Utils'
-import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
-import { SaveDiagramOptionsType } from '../dialogs/types/SankeyPersistenceTypes'
 
 // SPECIFIC CONSTANTS ******************************************************************/
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
 export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
-export const default_save_JSON_options:SaveDiagramOptionsType = { mode_save: default_save_with_values }
+export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -63,7 +64,12 @@ export abstract class Class_ApplicationData
   public fit_screen: boolean
 
   // Save JSON options
-  public options_save_json: SaveDiagramOptionsType = default_save_JSON_options
+  public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
+
+  // Attributes to transfer between sankeys
+  public data_var_to_update: MutableRefObject<string[]> = useRef([])
+
+  // PROTECTED ATTRIBUTES ==============================================================
 
   /**
    *Drawing area
@@ -93,6 +99,7 @@ export abstract class Class_ApplicationData
   private _logo_width: number = 100
   private _app_name: string = 'SankeySuite'
   private _url_prefix: string = '/opensankey/' // path for server call
+  private _node_label_separator = '-'
 
   private _has_free_account: boolean = true // token for opensankey (if user is connected with an account)
 
@@ -382,5 +389,8 @@ export abstract class Class_ApplicationData
 
   public get app_name(): string { return this._app_name }
   public set app_name(value: string) { this._app_name = value }
+
+  public get node_label_separator() { return this._node_label_separator }
+  public set node_label_separator(_: string) { this._node_label_separator = _; this._drawing_area.sankey.draw() }
 }
 

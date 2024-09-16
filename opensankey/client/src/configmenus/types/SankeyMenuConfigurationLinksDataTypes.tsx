@@ -1,11 +1,11 @@
-import { applicationDataType } from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type MenuConfigurationLinksDataFType = {
-  applicationData:applicationDataType,
-  additional_data_element:JSX.Element[],
+export type FCType_MenuConfigurationLinksData = {
+  new_data: Type_GenericApplicationDataOS,
+  additional_data_element: JSX.Element[],
 }
 
-export type MenuContextLinksDataType={
-  applicationData: applicationDataType
+export type FCType_MenuContextLinkData = {
+  new_data: Type_GenericApplicationDataOS
 }
 

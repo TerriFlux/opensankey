@@ -21,7 +21,7 @@ import type {
   Type_GenericNodeElementOS,
   Type_GenericLinkElementOS
 } from '../types/TypesOS'
-import type { SankeyMenuConfigurationNodesIOFType } from './types/SankeyMenuConfigurationNodesIOTypes'
+import type { FCType_SankeyMenuConfigurationNodesIO } from './types/SankeyMenuConfigurationNodesIOTypes'
 
 /*************************************************************************************************/
 
@@ -33,20 +33,18 @@ import { OSTooltip } from '../types/Utils'
  * Define IO selection menu for nodes
   *
   * @param {*} {
-  *   applicationContext,
-  *   applicationData,
+  *   new_data,
   *   menu_for_modal
   * }
   * @return {*}
   */
-export const SankeyMenuConfigurationNodesIO: FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
-  applicationData,
+export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenuConfigurationNodesIO> = ({
+  new_data,
   menu_for_modal
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
 
   // Nodes to modify --------------------------------------------------------------------

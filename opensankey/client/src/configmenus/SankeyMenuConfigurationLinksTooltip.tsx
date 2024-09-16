@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurationLinksTooltipTypes'
+import type { FCType_MenuConfigurationLinksTooltip } from './types/SankeyMenuConfigurationLinksTooltipTypes'
 import type { Type_GenericLinkElementOS } from '../types/TypesOS'
 
 // Local functions
@@ -20,22 +20,20 @@ import { OSTooltip } from '../types/Utils'
  * Create tootltip modification menu
  *
  * @param {*} {
- *   applicationData,
- *   applicationContext,
+ *   new_data,
  *   menu_for_modal
  * }
  * @return {*}
  */
-export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
-  applicationData,
+export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigurationLinksTooltip> = ({
+  new_data,
   menu_for_modal
-})=>{
+}) => {
 
   // Data -------------------------------------------------------------------------------
 
   // Get necessary infos
-  const { new_data } = applicationData
-  const { t } = applicationData.new_data
+  const { t } = new_data
 
   // Selected links ---------------------------------------------------------------------
 
@@ -58,7 +56,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
 
   // Check if there is difference between text in editor and link tooltips
   let s_tmp_editor_content_changed = false
-  if ( selected_links.length > 0 ) {
+  if (selected_links.length > 0) {
     if (selected_links[0].tooltip_text !== editor_content_tooltip) {
       s_tmp_editor_content_changed = true
     }
@@ -68,10 +66,10 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
 
   // Update what is displayed in text editor
   const resetTextEditor = () => {
-    if (selected_links.length>0) {
-      if ( typeof selected_links[0].tooltip_text !== 'undefined' ) {
-      // Reset textaera
-        if ( typeof inputRef.current !== 'undefined') {
+    if (selected_links.length > 0) {
+      if (typeof selected_links[0].tooltip_text !== 'undefined') {
+        // Reset textaera
+        if (typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
             inputRef.current.value = selected_links[0].tooltip_text
           }
@@ -80,8 +78,8 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
         setEditorContentTooltip(selected_links[0].tooltip_text)
       }
       else {
-      // Reset textaera
-        if ( typeof inputRef.current !== 'undefined') {
+        // Reset textaera
+        if (typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
             inputRef.current.value = ''
           }
@@ -92,7 +90,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
     }
     else {
       // Reset textaera
-      if ( typeof inputRef.current !== 'undefined') {
+      if (typeof inputRef.current !== 'undefined') {
         if (inputRef.current !== null) {
           inputRef.current.value = ''
         }
@@ -125,7 +123,7 @@ export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfiguration
             setEditorContentTooltip(tmp_editor_content_tooltip)
           }
         }}
-        onBlur={()=>{
+        onBlur={() => {
           setEditorContentTooltip(tmp_editor_content_tooltip)
         }}
       />

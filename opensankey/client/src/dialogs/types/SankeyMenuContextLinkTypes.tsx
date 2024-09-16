@@ -1,6 +1,5 @@
-import {
-  applicationDataType} from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type ContextMenuLinkFType = {
-  applicationData : applicationDataType,
+export type FCType_ContextMenuLink = {
+  new_data: Type_GenericApplicationDataOS,
 }

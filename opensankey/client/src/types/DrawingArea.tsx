@@ -405,20 +405,20 @@ export abstract class Class_DrawingArea
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && !this.static) {
       // Draw horizontal lines
-      const number_of_horizontal_lines = this.getHeight() / this.grid_size
+      const number_of_horizontal_lines = this.height / this.grid_size
       for (let row = 0; row < number_of_horizontal_lines; row++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-horiz')
           .attr('id', 'line_horiz_drawing_area_' + String(row))
           .attr('x1', '0')
-          .attr('x2', this.getWidth())
+          .attr('x2', this.width)
           .attr('y1', row * this.grid_size)
           .attr('y2', row * this.grid_size)
           .style('stroke', this.grid_color)
           .style('stroke-dasharray', 4)
       }
       // Draw vertical lines
-      const number_of_vertical_lines = this.getWidth() / this.grid_size
+      const number_of_vertical_lines = this.width / this.grid_size
       for (let column = 0; column < number_of_vertical_lines; column++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-vert')
@@ -426,7 +426,7 @@ export abstract class Class_DrawingArea
           .attr('x1', column * this.grid_size)
           .attr('x2', column * this.grid_size)
           .attr('y1', 0)
-          .attr('y2', this.getHeight())
+          .attr('y2', this.height)
           .style('stroke-dasharray', 4)
           .style('stroke', this.grid_color)
       }
@@ -769,7 +769,7 @@ export abstract class Class_DrawingArea
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
     if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
-      this.setWidth(max_node_pos_x + this._grid_size)
+      this.width = (max_node_pos_x + this._grid_size)
       this.drawGrid()
     }
 
@@ -777,7 +777,7 @@ export abstract class Class_DrawingArea
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
     if (max_node_pos_y > this._height - this.grid_size || ((max_node_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
-      this.setHeight(max_node_pos_y + this._grid_size)
+      this.height = (max_node_pos_y + this._grid_size)
       this.drawGrid()
     }
 
@@ -795,7 +795,7 @@ export abstract class Class_DrawingArea
     if (this.d3_selection_zoom_area) {
       const navbar_height = this.getNavBarHeight()
       // window.innerWidth-50 correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerWidth - 50) / this.getWidth())
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerWidth - 50) / this.width)
       this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [0, navbar_height])
     }
   }
@@ -811,7 +811,7 @@ export abstract class Class_DrawingArea
     if (this.d3_selection_zoom_area) {
       const navbar_height = this.getNavBarHeight()
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerHeight - 50 - navbar_height) / this.getHeight())
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerHeight - 50 - navbar_height) / this.height)
       this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [0, navbar_height])
     }
   }
@@ -966,7 +966,7 @@ export abstract class Class_DrawingArea
    * @param {object} links
    * @param {object} nodes
    */
-  public compute_recycling_horizontal_index(
+  public computeRecyclingHorizontalIndex(
     link: Type_GenericLinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
@@ -1085,7 +1085,7 @@ export abstract class Class_DrawingArea
     const checked_recycling_links_ids: string[] = []
     Object.values(possible_recycling_links_ids)
       .forEach(link_id =>
-        this.compute_recycling_horizontal_index(
+        this.computeRecyclingHorizontalIndex(
           this.sankey.links_dict[link_id],
           checked_recycling_links_ids,
           horizontal_indexes_per_nodes_ids
@@ -1347,11 +1347,10 @@ export abstract class Class_DrawingArea
       }
     }
 
-    this.setWidth(h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
-    this.setHeight(v_margin * 2 + max_height_cumul)
+    this.width = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
+    this.height = (v_margin * 2 + max_height_cumul)
 
     this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-    //reorganize_all_input_outputLinksId(data,data.nodes, this.sankey.links_dict)
   }
 
   /**
@@ -1492,8 +1491,8 @@ export abstract class Class_DrawingArea
       .attr('class', 'bg')
       .attr('id', 'bg_drawing_area')
       .attr('fill', this.color)
-      .attr('width', this.getWidth())
-      .attr('height', this.getHeight())
+      .attr('width', this.width)
+      .attr('height', this.height)
       .style('stroke-width', 5)
       .style('stroke', default_black_color)
     this.drawCursor()
@@ -1903,7 +1902,7 @@ export abstract class Class_DrawingArea
       this.setSelectionMode()
     }
   }
-  
+
   /**
    * Technically don't draw a cursor but add a class & then css use it to modify cursor
    *
@@ -1973,10 +1972,10 @@ export abstract class Class_DrawingArea
   }
 
   // Size
-  public getWidth() { return this._width }
-  public setWidth(_: number) { this._width = _; this.drawBackground() }
-  public getHeight() { return this._height }
-  public setHeight(_: number) { this._height = _; this.drawBackground() }
+  public get width() { return this._width }
+  public set width(_: number) { this._width = _; this.drawBackground() }
+  public get height() { return this._height }
+  public set height(_: number) { this._height = _; this.drawBackground() }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }

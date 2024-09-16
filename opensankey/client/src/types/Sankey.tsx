@@ -189,6 +189,7 @@ export abstract class Class_Sankey
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
   protected abstract createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle
+
   // PUBLIC METHODS =====================================================================
 
   // All --------------------------------------------------------------------------------
@@ -337,6 +338,7 @@ export abstract class Class_Sankey
   }
 
   // Style related -----------------------------------------------------------------------
+
   /**
    * Create a new default style for node
    * @return {*}
@@ -387,6 +389,18 @@ export abstract class Class_Sankey
   }
 
   // Tags related ------------------------------------------------------------------------
+
+  public triggerPrimaryLevelTagging(): void {
+    // TODO deal with siblings tags
+    if ('Primaire' in this._level_taggs) {
+      if (this.level_taggs_list.length > 1) {
+        this._level_taggs['Primaire'].activated = false
+      }
+      else {
+        this._level_taggs['Primaire'].activated = true
+      }
+    }
+  }
 
   public addLevelTagGroup(
     id: string,

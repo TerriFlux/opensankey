@@ -22,16 +22,15 @@ import {
 } from '../types/Utils'
 import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
-import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
+import { FCType_SankeyModalStyleLink, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { default_style_id } from '../types/Utils'
 
 
 export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> = ({
-  applicationData,
+  new_data,
   node_attribute_tab
 }) => {
-  const { new_data } = applicationData
   const { t } = new_data
 
   // Component's state
@@ -161,7 +160,7 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
   </Box>
 
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_styles_nodes'}
     content={content}
     title={t('Menu.esn')}
@@ -170,11 +169,10 @@ export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> 
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> = ({
-  applicationData,
+export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink> = ({
+  new_data,
   additional_link_appearence_items
 }) => {
-  const { new_data } = applicationData
   const { t } = new_data
   const { ref_selected_style_link } = new_data.menu_configuration
 
@@ -301,7 +299,7 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
 
     {
       <MenuConfigurationLinksAppearence
-        applicationData={applicationData}
+        new_data={new_data}
         additional_link_appearence_items={additional_link_appearence_items}
         menu_for_style={true}
       />
@@ -309,7 +307,7 @@ export const SankeyModalStyleLink: FunctionComponent<SankeyModalStyleLinkFType> 
   </Box>
 
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={applicationData.new_data.menu_configuration.dict_setter_show_dialog}
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_styles_links'}
     content={content}
     title={t('Menu.esf')}

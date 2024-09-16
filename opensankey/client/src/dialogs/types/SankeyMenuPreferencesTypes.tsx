@@ -1,15 +1,12 @@
-import { TFunction, i18n } from 'i18next'
-import {
-  applicationDataType,
-} from '../../types/LegacyType'
+import { i18n } from 'i18next'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type OpenSankeyDefaultModalePreferenceContentFType = (
-  applicationData: applicationDataType,
+export type FType_OpenSankeyDefaultModalePreferenceContent = (
+  new_data: Type_GenericApplicationDataOS,
   trad: i18n,
 ) => { lang: JSX.Element; form: JSX.Element[]; node_label_sep: JSX.Element; }
 
-export type modalPreferenceTypes = {
-  applicationData:applicationDataType,
-  ui: (JSX.Element[] | JSX.Element)[],
-  t: TFunction,
+export type FCType_ModalPreference = {
+  new_data: Type_GenericApplicationDataOS,
+  ui: (JSX.Element[] | JSX.Element)[]
 }

@@ -1,17 +1,13 @@
-import {
-  applicationDataType
-} from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
 export type SankeyModalStyleNodeFType = {
-    
-    applicationData:applicationDataType,
-    node_attribute_tab:JSX.Element,
+  new_data: Type_GenericApplicationDataOS,
+  node_attribute_tab: JSX.Element,
 }
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export type SankeyModalStyleLinkFType = {
-    
-    applicationData:applicationDataType,
-    additional_link_appearence_items:JSX.Element[],
+export type FCType_SankeyModalStyleLink = {
+  new_data: Type_GenericApplicationDataOS,
+  additional_link_appearence_items: JSX.Element[],
 }
 

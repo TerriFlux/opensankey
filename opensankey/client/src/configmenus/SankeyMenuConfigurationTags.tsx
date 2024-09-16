@@ -26,7 +26,9 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
+import type {
+  FType_SankeySettingsEditionElementTags
+} from './types/SankeyMenuConfigurationTagsTypes'
 import type {
   Class_Tag,
   Class_TagGroup,
@@ -39,8 +41,11 @@ import type {
 
 // Local functions / components
 
-import { default_grey_color, OSTooltip } from '../types/Utils'
-import { GetRandomInt } from '../types/Legacy'
+import {
+  default_grey_color,
+  GetRandomInt,
+  OSTooltip
+} from '../types/Utils'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -67,11 +72,12 @@ const list_palette_color = [
   d3.interpolateSinebow
 ]
 
-const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({
-  applicationData,
+const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEditionElementTags> = ({
+  new_data,
   elementTagNameProp,
 }) => {
-  const { new_data } = applicationData
+  // Data -------------------------------------------------------------------------------
+
   const { t } = new_data
 
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------

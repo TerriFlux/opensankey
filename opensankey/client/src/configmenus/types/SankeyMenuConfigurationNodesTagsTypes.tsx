@@ -1,4 +1,4 @@
-import { SankeyNode, applicationDataType } from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -7,15 +7,7 @@ import { SankeyNode, applicationDataType } from '../../types/LegacyType'
    *
    * @type {*}
    */
-export type SankeyMenuConfigurationNodesTagsFType = {
-  applicationData : applicationDataType,
-  menu_for_modal:boolean
+export type FCType_SankeyMenuConfigurationNodesTags = {
+  new_data: Type_GenericApplicationDataOS,
+  menu_for_modal: boolean
 }
-
-
-// Check if all value of the attribute "k" is the same in the selected nodes (or selected style)
-// If the value come from local attribute or the style of the node doesn't matter, we look only the value
-export type IsAllNodeTagsSame=(
-  m_s_n:SankeyNode[],
-  key_tag:string,key_grp_tag:string
-)=> [boolean,boolean]

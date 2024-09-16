@@ -18,7 +18,7 @@ import { faRotate } from '@fortawesome/free-solid-svg-icons'
 
 /*************************************************************************************************/
 import {
-  SankeyMenuConfigurationLinksTypes
+  FCType_SankeyMenuConfigurationLinks
 } from './types/SankeyMenuConfigurationLinksTypes'
 import {
   OSTooltip
@@ -35,17 +35,16 @@ import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodes
 
 
 /*************************************************************************************************/
-const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
+const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigurationLinks> = (
   {
-    applicationData,
+    new_data,
     menu_config_link_data,
     menu_config_link_attr,
   }
 ) => {
+
   // Data -------------------------------------------------------------------------------
 
-  // Data
-  const { new_data } = applicationData
   // Traduction
   const { t } =new_data
 
@@ -127,7 +126,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       idTab={'link_attr_tab_id'}
     />,
     'Flux.IS': <MenuConfigurationLinksTooltip
-      applicationData={applicationData}
+      new_data={new_data}
       menu_for_modal={false}
     />
   }
@@ -137,7 +136,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     (new_data.menu_configuration.isGivenAccordionShowed('EF'))
   ) {
     ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
-      applicationData={applicationData}
+      new_data={new_data}
       menu_for_modal={false}
     />
   }
@@ -221,7 +220,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               // Delete all selected links
-              applicationData.new_data.drawing_area.deleteSelectedLinks()
+              new_data.drawing_area.deleteSelectedLinks()
               // Toogle saving indicator
               refreshThisAndUpdateRelatedComponents()
             }}>

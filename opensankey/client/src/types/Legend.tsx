@@ -391,7 +391,7 @@ export class Class_Legend
             //     d3.selectAll(' .opensankey .gg_links text').style('opacity', 1)
             //     d3.selectAll(' .opensankey .ggg_nodes').attr('opacity', 1)
             // }).on('contextmenu', (evt) => {
-            //     if (!window.SankeyToolsStatic) {
+            //     if (!this.drawing_area.application_data.is_static) {
             //         evt.preventDefault()
             //         pointer_pos.current = [evt.pageX, evt.pageY]
             //         tagContext.current![0][1](tag[0])

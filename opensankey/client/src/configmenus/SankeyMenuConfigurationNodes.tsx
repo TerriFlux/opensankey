@@ -16,13 +16,11 @@ import {
 /*************************************************************************************************/
 
 import type {
-  AdditionalMenusType,
-  applicationDataType,
-} from '../types/LegacyType'
-import type {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
 import type {
+  Type_AdditionalMenus,
+  Type_GenericApplicationDataOS,
   Type_GenericNodeElementOS
 } from '../types/TypesOS'
 
@@ -39,17 +37,17 @@ import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNo
 
 /*************************************************************************************************/
 
-type SankeyEditionTypes = {
-  applicationData: applicationDataType,
+type FCType_SankeyNodeEdition = {
+  new_data: Type_GenericApplicationDataOS,
   menu_configuration_nodes_attributes:JSX.Element,
-  additionalMenus : AdditionalMenusType
+  additionalMenus : Type_AdditionalMenus
 }
 
 /*************************************************************************************************/
 
-const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
+const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
   {
-    applicationData,
+    new_data,
     menu_configuration_nodes_attributes,
     additionalMenus
   }
@@ -58,9 +56,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // Datas ------------------------------------------------------------------------------
 
   // Traduction
-  const { t } = applicationData.new_data
-  // Data class
-  const { new_data } = applicationData
+  const { t } = new_data
 
   // Nodes to select --------------------------------------------------------------------
 
@@ -111,7 +107,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       idTab={'node_attr'}
     />,
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
-      applicationData={applicationData}
+      new_data={new_data}
       menu_for_modal={false}
     />,
     ...additionalMenus.additional_menu_configuration_nodes
@@ -119,13 +115,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
   if (new_data.drawing_area.sankey.node_taggs_list.length > 0 ) {
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
-      applicationData={applicationData}
+      new_data={new_data}
       menu_for_modal={false}
     />
   }
 
   ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
-    applicationData={applicationData}
+    new_data={new_data}
     menu_for_modal={false}
   />
 
@@ -266,7 +262,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {
-        (!applicationData.new_data.has_free_account && new_data.drawing_area.sankey.nodes_list.length > 15) ?
+        (!new_data.has_free_account && new_data.drawing_area.sankey.nodes_list.length > 15) ?
           <Box
             as='span'
             layerStyle='menuconfigpanel_warn_msg'
@@ -285,7 +281,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={!applicationData.new_data.has_free_account && nodes.length > 15}
+            isDisabled={!new_data.has_free_account && nodes.length > 15}
             onClick={() => {
               // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
@@ -311,7 +307,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onClick={
               () => {
                 // Delete all selected nodes
-                applicationData.new_data.drawing_area.deleteSelectedNodes()
+                new_data.drawing_area.deleteSelectedNodes()
                 // Update all menus
                 refreshThisAndUpdateRelatedComponents()
               }}>

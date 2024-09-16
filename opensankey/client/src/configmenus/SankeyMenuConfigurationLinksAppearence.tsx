@@ -67,7 +67,7 @@ import {
   font_families
 } from '../types/Utils'
 import {
-  MenuConfigurationLinksAppearenceFType,
+  FCType_MenuConfigurationLinksAppearence,
 } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
 
 /*************************************************************************************************/
@@ -135,8 +135,8 @@ const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24
 
 /*************************************************************************************************/
 
-export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurationLinksAppearenceFType> = ({
-  applicationData,
+export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({
+  new_data,
   additional_link_appearence_items,
   menu_for_style
 }) => {
@@ -144,10 +144,9 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<MenuConfigurati
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t } = applicationData.new_data
+  const { t } = new_data
 
   // Get data
-  const { new_data } = applicationData
   const { ref_selected_style_link } = new_data.menu_configuration
 
   // Elements on which this menu applies ------------------------------------------------

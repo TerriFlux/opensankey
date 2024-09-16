@@ -28,7 +28,7 @@ import {
 // Local libs
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
-import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurationTypes'
+import { FCType_OpenSankeyConfigurationsMenus } from './types/SankeyMenuConfigurationTypes'
 
 // COMPONENTS ===========================================================================
 
@@ -36,8 +36,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
  *  Define configuration menu
   *
   * @param {*} {
-  *     applicationData,
-  *     applicationContext,
+  *     new_data,
   *     menu_configuration_layout,
   *     menu_configuration_node_tags,
   *     menu_configuration_link_tags,
@@ -49,9 +48,9 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
   *   }
   * @return {*}
   */
-export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigurationsMenusFType> = (
+export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyConfigurationsMenus> = (
   {
-    applicationData,
+    new_data,
     menu_configuration_layout,
     menu_configuration_node_tags,
     menu_configuration_link_tags,
@@ -66,14 +65,13 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = applicationData.new_data
-  const { new_data } = applicationData
+  const { t } = new_data
   const config_object = new_data.menu_configuration
 
   // Component updater ------------------------------------------------------------------
 
   const [, setCount] = useState(0)
-  config_object.ref_to_menu_config_updater.current = ()=>setCount(a=>a+1)
+  config_object.ref_to_menu_config_updater.current = () => setCount(a => a + 1)
 
   // JSX Component ----------------------------------------------------------------------
 
@@ -148,7 +146,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
             </AccordionButton>
             <AccordionPanel>
               <SankeyNodeEdition
-                applicationData={applicationData}
+                new_data={new_data}
                 menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
                 additionalMenus={additional_menus}
               />
@@ -171,7 +169,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<OpenSankeyConfigur
             </AccordionButton>
             <AccordionPanel>
               <SankeyMenuConfigurationLinks
-                applicationData={applicationData}
+                new_data={new_data}
                 menu_config_link_data={menu_config_link_data}
                 menu_config_link_attr={menu_config_link_attr}
               />

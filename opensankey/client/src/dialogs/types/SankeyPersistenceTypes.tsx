@@ -1,8 +1,7 @@
 
-import { SankeyData, applicationDataType } from '../../types/LegacyType'
+import { SankeyData } from '../../types/LegacyType'
 import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 import { Type_JSON } from '../../types/Utils'
-
 
 /**
  * Description placeholder
@@ -10,7 +9,7 @@ import { Type_JSON } from '../../types/Utils'
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export type CounterType = {
+export type FCType_Counter = {
   url_prefix: string,
   finishReconciliation: (x: boolean) => void,
   value: number[],
@@ -18,35 +17,42 @@ export type CounterType = {
   set_result: (_: string) => void
 }
 
-export type ProcessExampleFuncType = (
+export type FType_ProcessExample = (
   applicationData: Type_GenericApplicationDataOS,
   postProcessLoadExcel: (server_data: SankeyData) => void,
 ) => void
 
-export type RetrieveExcelResultsFuncType = (
-  applicationData: applicationDataType,
+export type FType_RetrieveExcelResults = (
+  new_data: Type_GenericApplicationDataOS,
   text: string,
 ) => void
 
-export type SaveDiagramOptionsType = {
+export type Type_SaveDiagramOptions = {
   mode_save?: boolean,
   mode_visible_element?: boolean
 }
 
-export type ClickSaveDiagramFuncType = (
-  ApplicationClass: Type_GenericApplicationDataOS
+export type FType_ClickSaveDiagram = (
+  new_data: Type_GenericApplicationDataOS
 ) => void
 
-export type DownloadExamplesFuncType = (file_name: string, the_url_prefix: string, filetype: string) => void
+export type FType_DownloadExamples = (
+  file_name: string,
+  filetype: string
+) => void
 
-export type UploadExcelImplFuncType = (set_show_excel_dialog: (b: boolean) => void, input_file: Blob, the_url_prefix: string) => void
+export type FType_UploadExcelImpl = (
+  set_show_excel_dialog: (b: boolean) => void,
+  input_file: Blob,
+  the_url_prefix: string
+) => void
 
-export type UploadExempleFuncType = (
+export type FType_UploadExemple = (
   file_name: string,
   applicationData: Type_GenericApplicationDataOS
 ) => void
 
-export type ClickSaveExcelFuncType = (
+export type FType_ClickSaveExcel = (
   url_prefix: string,
   data_as_JSON: Type_JSON,
   file_name?: string

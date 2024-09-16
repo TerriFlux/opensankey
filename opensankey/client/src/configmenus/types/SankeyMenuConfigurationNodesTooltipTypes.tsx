@@ -1,6 +1,6 @@
-import { applicationDataType } from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type SankeyMenuConfigurationNodesTooltipFType = {
-  applicationData:applicationDataType,
-  menu_for_modal:boolean
+export type FCType_SankeyMenuConfigurationNodesTooltip = {
+  new_data: Type_GenericApplicationDataOS,
+  menu_for_modal: boolean
 }
