@@ -13,6 +13,11 @@ exit_if_error() {
 pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
 
+# Install deps
+cd ./submodules/sankeyexcelparser
+bash build.sh
+cd ../..
+
 # Flake8
 cd opensankey/server
 flake8  || exit_if_error $?
