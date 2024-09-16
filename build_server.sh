@@ -14,9 +14,7 @@ pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
 
 # Install deps
-pwd
 cd ./submodules/SankeyExcelParser
-ls
 bash build.sh || exit_if_error $?
 cd ../..
 
