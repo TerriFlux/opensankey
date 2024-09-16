@@ -1,6 +1,3 @@
-
-
-
 import { Type_JSON } from './Utils'
 import colormap from 'colormap'
 import { FaCaretRight } from 'react-icons/fa'
@@ -96,6 +93,7 @@ export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): San
   node_style.name = 'Noeud de type produit'
   return node_style
 }
+
 // Return default style configuration for link
 export const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
   return {
@@ -127,15 +125,8 @@ export const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     custom_digit: false,
     nb_digit: 0,
     dashed: false
-
   }
 }
-
-
-
-
-
-
 
 /**
  * Permet de convertir les fichier de sauvegarde JSON pré-classes vers un standard attendu.
@@ -211,8 +202,6 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-
-
 
   clean_data_local(data_to_convert)
 }
@@ -467,73 +456,11 @@ export const ToPrecision: ToPrecisionFuncType = (
    * @returns {SankeyData}
    */
 export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
-  const data: Omit<SankeyData, 'style_node' | 'style_link'> = {
-    version: '0.8',
-    couleur_fond_sankey: '#f2f2f2',
-    displayed_node_selector: false,
-    displayed_link_selector: false,
-    nodes: {},
-    links: {},
-    user_scale: 20,
-
-    accordeonToShow: ['MEP'],
-
-    width: window.innerWidth - 50,
-    height: window.innerHeight - 50,
-    linkZIndex: [],
-
-    h_space: 200,
-    v_space: 50,
-
-    show_structure: 'reconciled',
-    fit_screen: window.SankeyToolsStatic,
-
-    left_shift: 0,
-    right_shift: 1,
-    display_style: {
-      filter: 0,
-      filter_label: 0,
-      font_family: ['Arial,sans-serif', 'Helvetica,sans-serif', 'Verdana,sans-serif', 'Calibri,sans-serif', 'Noto,sans-serif', 'Lucida Sans,sans-serif', 'Gill Sans,sans-serif', 'Century Gothic,sans-serif', 'Candara,sans-serif', 'Futara,sans-serif', 'Franklin Gothic Medium,sans-serif', 'Trebuchet MS,sans-serif', 'Geneva,sans-serif', 'Segoe UI,sans-serif', 'Optima,sans-serif', 'Avanta Garde,sans-serif',
-        'Times New Roman,serif', 'Big Caslon,serif', 'Bodoni MT,serif', 'Book Antiqua,serif', 'Bookman,serif', 'New Century Schoolbook,serif', 'Calisto MT,serif', 'Cambria,serif', 'Didot,serif', 'Garamond,serif', 'Georgia,serif', 'Goudy Old Style,serif', 'Hoefler Text,serif', 'Lucida Bright,serif', 'Palatino,serif', 'Perpetua,serif', 'Rockwell,serif', 'Rockwell Extra Bold,serif', 'Baskerville,serif',
-        'Consolas,monospace', 'Courier,monospace', 'Courier New,monospace', 'Lucida Console,monospace', 'Lucidatypewriter,monospace', 'Lucida Sans Typewriter,monospace', 'Monaco,monospace', 'Andale Mono,monospace',
-        'Comic Sans,cursive', 'Comic Sans MS,cursive', 'Apple Chancery,cursive', 'Zapf Chancery,cursive', 'Bradley Hand,cursive', 'Brush Script MT,cursive', 'Brush Script Std,cursive', 'Snell Roundhan,cursive', 'URW Chancery,cursive', 'Coronet script,cursive', 'Florence,cursive', 'Parkavenue,cursive'
-      ],
-    },
-    grid_square_size: 50,
-    grid_visible: true,
-
-
-    nodeTags: {},
-    dataTags: {},
-    fluxTags: {},
-    levelTags: {},
-
-    colorMap: 'no_colormap',
-    nodesColorMap: 'no_colormap',
-    linksColorMap: 'no_colormap',
-
-    legend_width: 180,
-    legend_position: [0, 0],
-    mask_legend: false,
-    display_legend_scale: false,
-    legend_police: 16,
-    legend_bg_border: false,
-    legend_bg_color: default_element_color,
-    legend_bg_opacity: 0,
-    legend_show_dataTags: false,
-    node_label_separator: ' - '
-
+  const data = {
+    version: '0.8'
   }
-  const node_style_sect = DefaultNodeSectorStyle()
-  const node_style_prod = DefaultNodeProductStyle()
-  const default_data = {
-    ...data,
-    style_node: { 'default': DefaultNodeStyle(), 'NodeSectorStyle': node_style_sect, 'NodeProductStyle': node_style_prod },
-    style_link: { 'default': DefaultLinkStyle() }
-  }
-  return (default_data as unknown as SankeyData)
+  return (data as unknown as SankeyData)
 }
-
 
 
 /**
@@ -747,11 +674,6 @@ export const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.i
   d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
   d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
   d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
-
-export const GetRandomInt = (max: number) => {
-  return Math.floor(Math.random() * max)
-}
-
 
 export const windowSankey = window as Window &
   typeof globalThis & {
@@ -1517,14 +1439,14 @@ export const convert_nodes: convert_nodesFuncType = (
     data.nodes[n.idNode] = n
 
 
-    // Convert dimension for application version >= 0.9 
+    // Convert dimension for application version >= 0.9
     Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
       const dim_level = nt[1][0]
-      if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length >0) {
+      if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
         n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level) + 1
       }
-      // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3) 
-      
+      // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
+
       // const dim_level_list=nt[1]
       // dim_level_list.forEach(node_dim=>{
       //   n.dimensions[nt[0]].level=Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(node_dim)+1
@@ -1532,7 +1454,7 @@ export const convert_nodes: convert_nodesFuncType = (
       // if(n.dimensions[nt[0]]){
       //   n.dimensions[nt[0].level=Object.keys(data_to_convert.levelTags[nt[0]]).indexOf(dim_level)+1]
       // }
-      
+
       delete n.tags[nt[0]]
     })
   }

@@ -37,7 +37,7 @@ import {
 
 // Local types
 import type {
-  OpenSankeyConfigurationNodesAttributesFType,
+  FCType_OpenSankeyConfigurationNodesAttributes,
   SankeyWrapperConfigInModalOrMenuType
 } from './types/SankeyMenuConfigurationNodesAttributesTypes'
 import type { Type_GenericNodeElementOS } from '../types/TypesOS'
@@ -92,7 +92,7 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
  *
  * @param {*} {
  *   applicationContext,
- *   applicationData,
+ *   new_data,
  *   applicationState,
  *   menu_for_style,
  *   ref_selected_style_node,
@@ -103,8 +103,8 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
  * }
  * @return {*}
  */
-export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
-  applicationData,
+export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_OpenSankeyConfigurationNodesAttributes> = ({
+  new_data,
   menu_for_style,
   advanced_appearence_content,
   advanced_label_content,
@@ -114,9 +114,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<OpenSanke
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t } = applicationData.new_data
-  // Get data
-  const { new_data } = applicationData
+  const { t } = new_data
 
   // Elements on which this menu applies ------------------------------------------------
 

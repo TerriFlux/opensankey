@@ -1,20 +1,17 @@
-import { TFunction } from 'i18next'
-import { 
-  applicationDataType } from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type setDiagramFuncType = (
-  the_diagram:string,
-  applicationData:applicationDataType
+export type FType_SetDiagram = (
+  the_diagram: string,
+  new_data: Type_GenericApplicationDataOS
 ) => void
 
-export type addSimpleLevelDropDownFType = {
-  applicationData:applicationDataType
+export type FType_AddSimpleLevelDropDown = {
+  new_data: Type_GenericApplicationDataOS
 }
 
-
-export type addAllDropDownNodeFType = {
-  applicationData:applicationDataType,
-  level:boolean,
+export type FCType_AddAllDropDownNode = {
+  new_data: Type_GenericApplicationDataOS,
+  level: boolean,
 }
 
 /**
@@ -22,27 +19,24 @@ export type addAllDropDownNodeFType = {
  * @param {applicationContextType} applicationContext
  * @param {applicationDataType} applicationData
  */
-export type AddAllDropDownFluxFType = {
-  applicationData: applicationDataType
+export type FCType_AddAllDropDownFluxFType = {
+  new_data: Type_GenericApplicationDataOS
 }
 
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
-export type ToolbarBuilderFType = {
-  
-  applicationData:applicationDataType,
-  url_prefix: string,
-  additional_link_visual_filter_content:JSX.Element[],
+export type FCType_ToolbarBuilder = {
+  new_data: Type_GenericApplicationDataOS,
+  additional_link_visual_filter_content: JSX.Element[],
 }
 
-export type stretchButtonsFType=(
-  applicationData : applicationDataType,
-  t:TFunction
-)=>JSX.Element
+export type FType_StretchButtons = (
+  new_data: Type_GenericApplicationDataOS
+) => JSX.Element
 
 
-export type DataTagSelectorType = {
-  applicationData:applicationDataType,
-  in_popover:boolean
+export type FCType_DataTagSelector = {
+  new_data: Type_GenericApplicationDataOS,
+  in_popover: boolean
 }

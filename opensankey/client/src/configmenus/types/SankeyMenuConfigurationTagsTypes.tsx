@@ -1,10 +1,7 @@
 import { Type_MacroTagGroup } from '../../types/Utils'
-import {
-  applicationDataType
-} from '../../types/LegacyType'
+import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type SankeySettingsEditionElementTagsTypes = {
-
-  applicationData : applicationDataType,
+export type FType_SankeySettingsEditionElementTags = {
+  new_data : Type_GenericApplicationDataOS,
   elementTagNameProp: Type_MacroTagGroup
 }

@@ -5,20 +5,19 @@ import {
   Input,
 } from '@chakra-ui/react'
 
-import { OpenSankeyMenuConfigurationLayoutFType } from './types/SankeyMenuConfigurationLayoutTypes'
+import { FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 // MENU COMPONENT ***********************************************************************
 
-export const OpenSankeyMenuConfigurationLayout: FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
-  applicationData,
+export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSankeyMenuConfigurationLayout> = ({
+  new_data,
   extra_background_element
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
   const { t } = new_data
 
   // Components updaters ---------------------------------------------------------------
