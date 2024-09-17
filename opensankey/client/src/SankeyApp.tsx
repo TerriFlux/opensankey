@@ -56,17 +56,17 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
-  let inital_data: Type_JSON | undefined = undefined
+  let initial_data: Type_JSON | undefined = undefined
 
   // If there is, store the data in the sankey_data
   if (json_data !== null && json_data != '' && json_data != 'null') {
     const new_data = JSON.parse(json_data)
-    inital_data = new_data
+    initial_data = new_data
   }
 
   // Initialize data
   const new_data = initializeApplicationData(
-    inital_data
+    initial_data
   )
 
   // Link loading toast ref for remote trigger from ApplicatioData

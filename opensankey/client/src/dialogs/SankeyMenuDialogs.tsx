@@ -36,7 +36,7 @@ import {
 
 import {
   FCType_ApplyLayoutDialog,
-  FType_OpenSankeyDiagramSelector
+  FType_DiagramSelector
 } from './types/SankeyMenuDialogsTypes'
 import { OSTooltip } from '../types/Utils'
 import {
@@ -704,7 +704,7 @@ export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
 
 }
 
-export const OpenSankeyDiagramSelector: FType_OpenSankeyDiagramSelector = (
+export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
   new_data,
   data_var_to_update,
 ) => {
