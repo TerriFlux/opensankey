@@ -41,6 +41,7 @@ declare const window: Window &
   }
 
 /*************************************************************************************************/
+
 export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   initializeApplicationData,
   initializeMenuConfiguration,
@@ -296,7 +297,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
               additionalMenus.additional_nav_item
             }
             apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
-            DiagramSelector={initializeDiagrammSelector(new_data)}
+            diagramSelector={initializeDiagrammSelector(new_data)}
           />
         </>
         <ApplySaveJSONDialog

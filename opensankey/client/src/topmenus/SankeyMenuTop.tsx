@@ -77,7 +77,7 @@ import {
 
 import {
   FCType_OpenSankeySaveButton,
-  MenuDraggableFType,
+  FCType_MenuDraggable,
   FCType_ModalTuto,
   FType_ModalResolutionPNG,
   FType_OpenSankeyMenus,
@@ -100,7 +100,7 @@ import {
 } from '../dialogs/SankeyPersistence'
 
 import {
-  UploadExcelImpl
+  uploadExcelImpl
 } from '../dialogs/SankeyPersistence'
 import {
   DownloadExamples
@@ -984,12 +984,12 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     reinitialization,
     additional_nav_item,
     apply_transformation_additional_elements,
-    DiagramSelector,
+    diagramSelector,
     formations_menu,
     // postProcessLoadExcel,
   }
 ) => {
-  const { t, url_prefix, logo, app_name, logo_terriflux } = new_data
+  const { t, logo, app_name, logo_terriflux } = new_data
   const { ref_setter_show_modal_tuto, ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
@@ -1366,13 +1366,13 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       <ApplyLayoutDialog
         new_data={new_data}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
-        diagramSelector={DiagramSelector}
+        diagramSelector={diagramSelector}
       />
 
       <ExcelModal
         new_data={new_data}
         launch={processFunctions.launch}
-        UploadExcelImpl={UploadExcelImpl}
+        uploadExcelImpl={uploadExcelImpl}
         Reinitialization={reinitialization}
       />
 
@@ -1414,7 +1414,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
 }
 
 
-export const MenuDraggable: FunctionComponent<MenuDraggableFType> = ({
+export const MenuDraggable: FunctionComponent<FCType_MenuDraggable> = ({
   dict_hook_ref_setter_show_dialog_components,
   dialog_name,
   content,
