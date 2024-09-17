@@ -22,12 +22,12 @@ import {
 } from '../types/Utils'
 import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
-import { FCType_SankeyModalStyleLink, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
+import { FCType_SankeyModalStyleLink, FCType_SankeyModalStyleNode } from './types/SankeyStyleTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { default_style_id } from '../types/Utils'
 
 
-export const SankeyModalStyleNode: FunctionComponent<SankeyModalStyleNodeFType> = ({
+export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode> = ({
   new_data,
   node_attribute_tab
 }) => {

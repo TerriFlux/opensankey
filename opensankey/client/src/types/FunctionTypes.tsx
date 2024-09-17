@@ -36,7 +36,7 @@ export type FCType_SankeyApp = {
 
 export type FCType_ExcelModal = {
   new_data: Type_GenericApplicationDataOS,
-  UploadExcelImpl: FType_UploadExcelImpl,
+  uploadExcelImpl: FType_UploadExcelImpl,
   launch: (path: string) => void,
   Reinitialization: () => void,
 }
@@ -51,7 +51,7 @@ export type FCType_Menu = {
   new_data: Type_GenericApplicationDataOS,
   processFunctions: FType_ProcessFunctions,
   reinitialization: () => void,
-  DiagramSelector: FType_OpenSankeyDiagramSelector,
+  diagramSelector: FType_OpenSankeyDiagramSelector,
   configurations_menus: JSX.Element,
   menus: { [s: string]: JSX.Element[] | JSX.Element },
   cardsTemplate: JSX.Element,

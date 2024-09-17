@@ -652,13 +652,13 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
 /**
  * Return the modal when we try to open an excel file
  *
- * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
+ * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
 export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
   {
     new_data,
-    UploadExcelImpl,
+    uploadExcelImpl,
     launch,
     Reinitialization
   }
@@ -687,7 +687,7 @@ export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
           () => {
             Reinitialization()
             launch((input_file_name as unknown as { [name: string]: string }).name)
-            UploadExcelImpl(
+            uploadExcelImpl(
               new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current, input_file_name as Blob, url_prefix
             )
           }
@@ -778,7 +778,7 @@ export const OpenSankeyDiagramSelector: FType_OpenSankeyDiagramSelector = (
 //           applicationData,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,node_function.recomputeDisplayedElement
 //         )}</>
 //       ) : (<>
-//         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
+//         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !new_data.is_static ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
 //     </Popover.Body>
 //   </Popover>
 // }

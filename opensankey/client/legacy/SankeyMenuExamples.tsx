@@ -1,33 +1,33 @@
 
 import React from 'react'
-import { applicationDataType } from '../types/LegacyType'
+import { applicationDataType } from '../src/types/LegacyType'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../src/dialogs/SankeyPersistence'
 
 /**
  * Description placeholder
  *
  * @type {*}
  */
-export type ExempleMenuTypes = {[_:string]:ExempleMenuTypes|string[]}
+type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
 
-type subtypeFileList={[_:string]:string[]}
-type subtypeObjectList={[_:string]:ExempleMenuTypes}
+type subtypeFileList = { [_: string]: string[] }
+type subtypeObjectList = { [_: string]: ExempleMenuTypes }
 
 /**
  * Description placeholder
  *
  * @type {{ exemple_menu: any; url_prefix: any; data: any; set_data: any; current_path: any; multi_selected_nodes: any; multi_selected_links: any; multi_selected_label: any; launch: any; }}
  */
-export type ExempleItemTypes = {
-  
-  applicationData:applicationDataType,
-  exemple_menu : JSX.Element | ExempleMenuTypes,
-  current_path : string,
-  launch: (s:string) => void,
+type ExempleItemTypes = {
+
+  applicationData: applicationDataType,
+  exemple_menu: JSX.Element | ExempleMenuTypes,
+  current_path: string,
+  launch: (s: string) => void,
   Reinitialization: () => void,
-  initial_list:boolean
+  initial_list: boolean
 }
 
 /**
@@ -36,7 +36,7 @@ export type ExempleItemTypes = {
  * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
  * @returns {*}
  */
-export const ExempleItem = (
+const ExempleItem = (
   {
     applicationData,
     exemple_menu,
@@ -45,14 +45,14 @@ export const ExempleItem = (
     Reinitialization
   }: ExempleItemTypes
 ) => {
-  let content=<></>
-  let item=Object.keys(exemple_menu).map(
+  let content = <></>
+  let item = Object.keys(exemple_menu).map(
     (key, index) => {
-      const tmp_title = key.replaceAll('_','__').split('__')
-      if(tmp_title.length>1){
+      const tmp_title = key.replaceAll('_', '__').split('__')
+      if (tmp_title.length > 1) {
         tmp_title.shift()
       }
-      let title=tmp_title.join(' ')
+      let title = tmp_title.join(' ')
       if (title === 'Formations') {
         title = 'Démos'
       }
@@ -95,7 +95,7 @@ export const ExempleItem = (
               width="1rem"
             >
               <ChevronRightIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
               />
             </Box>
           </MenuButton>
@@ -114,10 +114,10 @@ export const ExempleItem = (
     }
   )
   if ('Files' in exemple_menu) {
-    const files_item=(exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
+    const files_item = (exemple_menu as subtypeFileList)['Files'].map((item, index) => {
       // let path = current_path+'/sankey/'+item
       // if (item.includes('.xlsx')) {
-      const path = current_path+'/'+item
+      const path = current_path + '/' + item
       //}
       return (
         <MenuItem
@@ -128,23 +128,23 @@ export const ExempleItem = (
             applicationData.new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
-            } 
+            }
             UploadExemple(
               path, applicationData.new_data
             )
           }
-          }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
-            : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
+          }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled', ' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
+            : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json', ' sankey') : item.replace('afmsankey_0.9.0.', '')
           }</MenuItem>
       )
     }
     ) as JSX.Element[]
-    item = [...item,...files_item]
+    item = [...item, ...files_item]
     // content=<>
     //   {list_item}
     // </>
   }
-  content=<>{item}</>
+  content = <>{item}</>
 
   return content
 

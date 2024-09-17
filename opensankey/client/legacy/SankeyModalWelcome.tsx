@@ -24,10 +24,30 @@ import {
   Text,
 } from '@chakra-ui/react'
 
-import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
-import { windowSankey } from '../types/Legacy'
+import { FCType_SankeyModalWelcome } from './types/FCType_SankeyModalWelcome'
 
-export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = ({
+const windowSankey = window as Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+    sankey: {
+      sankey_data_file: RequestInfo
+      sous_filieres: { [key: string]: string }
+      units: string[]
+      flask_logo?: string
+      flask_header?: string
+      logo_width?: number
+      legend_average: string
+      legend_uncert: string
+      help_text: string
+      welcome_text: string
+      excel: string
+      logo: string,
+      advanced: boolean,
+      intro: string
+    }
+  }
+
+export const SankeyModalWelcome : FunctionComponent<FCType_SankeyModalWelcome> = ({
   applicationData,
   t,
   active_page,
@@ -47,7 +67,6 @@ export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = (
     <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
     <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
     <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
-
   </>
 
   const content_rc_not_static=<Accordion

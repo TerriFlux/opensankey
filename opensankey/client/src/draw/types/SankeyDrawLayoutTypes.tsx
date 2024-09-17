@@ -5,7 +5,11 @@ import {
   applicationDataType
 } from '../../types/LegacyType'
 
-export type ComputeAutoSankeyFuncType = (applicationData: applicationDataType, h_space: number, launched_from_process: boolean) => void
+export type FType_ComputeAutoSankey = (
+  applicationData: applicationDataType,
+  h_space: number,
+  launched_from_process: boolean
+) => void
 
 /**
  * Explore all node's branches to compute all their nodes horizontal index

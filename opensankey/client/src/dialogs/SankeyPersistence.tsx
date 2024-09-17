@@ -324,7 +324,7 @@ export const ClickSaveExcel: FType_ClickSaveExcel = (
  * @param {Blob} input_file
  * @param {string} the_url_prefix
  */
-export const UploadExcelImpl: FType_UploadExcelImpl = (
+export const uploadExcelImpl: FType_UploadExcelImpl = (
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
   the_url_prefix: string
