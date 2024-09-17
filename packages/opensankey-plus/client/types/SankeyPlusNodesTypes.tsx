@@ -1,17 +1,11 @@
-import { OSPApplicationDataType } from './Types'
+import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 
-
-export type OSPNodeIconFType = {
-  applicationData:OSPApplicationDataType,
-  menu_for_modal:boolean,
+export type FCType_NodeIconOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP,
+  menu_for_modal: boolean,
 }
 
-export type OSPHyperLinkFType={
-  applicationData:OSPApplicationDataType,
-  is_activated:boolean,
+export type FCType_NodeHyperLinkOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP,
+  is_activated: boolean,
 }
-
-export type ContextNodeIconFType = (
-  application_data:OSPApplicationDataType
-)=> JSX.Element
-

@@ -6,11 +6,11 @@
 // import {
 //   reorganize_node_outputLinksIdOSTyped, reorganize_node_inputLinksIdOSTyped
 // } from './import/OpenSankey'
-// import { OSPMenuConfigurationNodesAgregationFType } from '../types/SankeyPlusNodesAggregationTypes'
+// import { FType_MenuConfigurationNodesAgregationOSP } from '../types/SankeyPlusNodesAggregationTypes'
 
 // import { OSPData, OSPLink, OSPNode } from '../types/Types'
 
-// export const OSPMenuConfigurationNodesAgregation: OSPMenuConfigurationNodesAgregationFType = (
+// export const menuConfigurationNodesAgregationOSP: FType_MenuConfigurationNodesAgregationOSP = (
 //   t: TFunction,
 //   data: OSPData,
 //   set_data: (d: OSPData) => void,

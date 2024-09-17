@@ -164,8 +164,8 @@ export abstract class Class_DrawingAreaPlus
       this.d3_selection_bg
         ?.append('image')
         .attr('id', 'bg_image')
-        .attr('width', this.getWidth())
-        .attr('height', this.getHeight())
+        .attr('width', this.width)
+        .attr('height', this.height)
         .attr('href', this._background_image)
         .style('background-size', 'contain')
         .style('background-repeat', 'no-repeat')
@@ -211,7 +211,7 @@ export abstract class Class_DrawingAreaPlus
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
     if ((max_x > this._width - this.grid_size) || ((max_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
-      this.setWidth(max_x + this._grid_size)
+      this.width = (max_x + this._grid_size)
       this.drawGrid()
     }
 
@@ -219,7 +219,7 @@ export abstract class Class_DrawingAreaPlus
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
     if (max_y > this._height - this.grid_size || ((max_y + this._grid_size <= this._height) && (max_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
-      this.setHeight(max_y + this._grid_size)
+      this.height = (max_y + this._grid_size)
       this.drawGrid()
     }
     return [max_x, max_y]

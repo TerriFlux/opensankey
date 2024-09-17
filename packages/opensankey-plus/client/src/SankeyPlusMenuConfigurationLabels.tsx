@@ -1,6 +1,5 @@
 // Standard libs
 import React, { useState, ChangeEvent, FunctionComponent, useRef } from 'react'
-import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import ReactQuill from 'react-quill'
@@ -36,11 +35,10 @@ import { OSTooltip } from './deps/OpenSankey/types/Utils'
 // Local libs
 // import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import {
-  OSPMenuConfigurationFreeLabelsFType,
-  OSPMenuPreferenceLabelsFType,
-  blur_ZDT_wysiwygFType,
-  context_zdtFType,
-  ZDTMenuAsAccordeonItemType
+  FCType_MenuConfigurationFreeLabelsOSP,
+  FCType_MenuPreferenceLabelsOSP,
+  FCType_ContextZDTOSP,
+  FCType_ZDTMenuAsAccordeonItemOSP
 } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 import { Type_GenericContainerElement } from './types/TypesOSP'
 
@@ -48,25 +46,20 @@ import { Type_GenericContainerElement } from './types/TypesOSP'
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
 /**
- *  TODO
- *
- * @param { TFunction } t - TODO description
- * @param { OSPData } data - TODO description
- * @param { Function } set_data - TODO description
- *
+ *  TODO Description
+ * @param { * } new_data_plus
  */
-export const OSPMenuPreferenceLabels: FunctionComponent<OSPMenuPreferenceLabelsFType> = ({
-  applicationData
+export const MenuPreferenceLabelsOSP: FunctionComponent<FCType_MenuPreferenceLabelsOSP> = ({
+  new_data_plus
 }) => {
-  const {new_data}=applicationData
-  const [,setCount]=useState(0)
+  const [, setCount] = useState(0)
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
-    defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('MEP')} onChange={() => {
-      new_data.menu_configuration.toggleGivenAccordion('MEP')
-      setCount(a=>a+1)
+    defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('MEP')} onChange={() => {
+      new_data_plus.menu_configuration.toggleGivenAccordion('MEP')
+      setCount(a => a + 1)
     }}>
-    {new_data.t('Menu.LL')}
+    {new_data_plus.t('Menu.LL')}
   </Checkbox>
 }
 
@@ -78,24 +71,23 @@ export const OSPMenuPreferenceLabels: FunctionComponent<OSPMenuPreferenceLabelsF
  */
 export interface selected_type { 'label': string; 'value': string }
 
-export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurationFreeLabelsFType> = ({
-  applicationData,
+export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfigurationFreeLabelsOSP> = ({
+  new_data_plus,
 }) => {
-  const { new_data } = applicationData
-  const { t } = new_data
-  const selected_zdt = new_data.drawing_area.selected_containers_list
+  const { t } = new_data_plus
+  const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
   const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'zdt') : 'zdt')
   const [button_icon_or_image, set_button_icon_or_image] = useState<'zdt' | 'image'>(zdt_or_image)
 
-  const INITIAL_OPTIONS_label = new_data.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
+  const INITIAL_OPTIONS_label = new_data_plus.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
   const selected_label = selected_zdt.map((d) => { return { 'label': d.title, 'value': d.id } })
 
   //const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
   const [forceUpdate, setForceUpdate] = useState(false)
   // Link current component updater to menu config class
-  new_data.menu_configuration.ref_to_menu_config_containers_updater.current = () => setForceUpdate(!forceUpdate)
+  new_data_plus.menu_configuration.ref_to_menu_config_containers_updater.current = () => setForceUpdate(!forceUpdate)
   //applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
 
   // if (selected_zdt.length == 0 && s_editor_content_fo_zdt != '') {
@@ -104,13 +96,13 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: Type_GenericContainerElement) => {
-    new_data.drawing_area.sankey.moveUpFreeLabelOrder(i)
+    new_data_plus.drawing_area.sankey.moveUpFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleDownlabel = (i: Type_GenericContainerElement) => {
-    new_data.drawing_area.sankey.moveDownFreeLabelOrder(i)
+    new_data_plus.drawing_area.sankey.moveDownFreeLabelOrder(i)
     setForceUpdate(!forceUpdate)
   }
 
@@ -131,7 +123,7 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
           width='10rem'
         >
           <MultiSelect
-            disabled={!new_data.has_sankey_plus}
+            disabled={!new_data_plus.has_sankey_plus}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
             }}
@@ -143,12 +135,12 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
             onChange={(entries: Type_MenuSelectionEntry[]) => {
               // Update selection list
               const entries_values = entries.map(d => d.value)
-              new_data.drawing_area.sankey.containers_list.forEach(zdt => {
+              new_data_plus.drawing_area.sankey.containers_list.forEach(zdt => {
                 if (entries_values.includes(zdt.id)) {
-                  new_data.drawing_area.addContainerToSelection(zdt)
+                  new_data_plus.drawing_area.addContainerToSelection(zdt)
                 }
                 else {
-                  new_data.drawing_area.removeFreeLabelFromSelection(zdt)
+                  new_data_plus.drawing_area.removeFreeLabelFromSelection(zdt)
                 }
               })
               redrawAndRefresh()
@@ -232,12 +224,12 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
     'align'
   ]
 
-  const disable_options = new_data.has_sankey_plus ? (selected_zdt.length === 0) : true
+  const disable_options = new_data_plus.has_sankey_plus ? (selected_zdt.length === 0) : true
 
 
   const content_image = <>
     {/* Import image */}
-    <OSTooltip label={!new_data.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
+    <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
 
       <Box
         as='span'
@@ -276,13 +268,13 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
       layerStyle='menuconfigpanel_zdt_row_droplist'
     >
       <Button
-        isDisabled={!new_data.has_sankey_plus}
+        isDisabled={!new_data_plus.has_sankey_plus}
         variant='menuconfigpanel_add_button'
         onClick={() => {
           // Create default node
-          const new_node = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
+          const new_node = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
           // Add node to selection
-          new_data.drawing_area.addContainerToSelection(new_node)
+          new_data_plus.drawing_area.addContainerToSelection(new_node)
           // Update menus
           redrawAndRefresh()
         }
@@ -295,7 +287,7 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
         isDisabled={disable_options}
         onClick={() => {
           // Delete all selected nodes
-          applicationData.new_data.drawing_area.sankey.deleteSelectedFreeLabels()
+          new_data_plus.drawing_area.sankey.deleteSelectedFreeLabels()
           // Update all menus
           redrawAndRefresh()
         }
@@ -546,7 +538,7 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
           type='color'
           id='form_color_border_zdt'
           name='form_color_border_zdt'
-          disabled={!new_data.has_sankey_plus && !valAllLabelBorderTransparent}
+          disabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
           value={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
           onChange={evt => {
             const val = evt.target.value
@@ -577,30 +569,24 @@ export const OSPMenuConfigurationFreeLabels: FunctionComponent<OSPMenuConfigurat
 }
 
 
-export const ContextZDT: FunctionComponent<context_zdtFType> = ({
-
-  applicationData,
-
-}
+export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
+  { new_data_plus }
 ) => {
-  const { new_data } = applicationData
-  const { t } = new_data
-  // const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<OSPLabel>()
-  // const { _ref_to_menu_config_free_label_updater } = ComponentUpdater
-  const selected_zdt = new_data.drawing_area.selected_containers_list
-  const zdt_to_contextualise = new_data.drawing_area.contextualised_container
-  // contextualised_zdt.current = set_zdt_to_contextualise
-  // dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
+  const { t } = new_data_plus
+
+  const selected_zdt = new_data_plus.drawing_area.selected_containers_list
+  const zdt_to_contextualise = new_data_plus.drawing_area.contextualised_container
+
   const [, setCount] = useState(0)
 
   let style_c_zdd = '0px 0px auto auto'
   if (zdt_to_contextualise) {
-    style_c_zdd = (new_data.drawing_area.pointer_pos[1] - 20) + 'px auto auto ' + (new_data.drawing_area.pointer_pos[0] + 10) + 'px'
+    style_c_zdd = (new_data_plus.drawing_area.pointer_pos[1] - 20) + 'px auto auto ' + (new_data_plus.drawing_area.pointer_pos[0] + 10) + 'px'
   }
 
   const redrawAndRefresh = () => {
     // Refresh menu config free label
-    new_data.menu_configuration.ref_to_menu_config_containers_updater.current()
+    new_data_plus.menu_configuration.ref_to_menu_config_containers_updater.current()
     // Redraw selected elements
     selected_zdt.forEach(zdt => zdt.draw())
     // Refresh this menu
@@ -609,7 +595,7 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
 
   const closeContextMenu = () => {
     // Unset contextualized node
-    new_data.drawing_area.contextualised_container = undefined
+    new_data_plus.drawing_area.contextualised_container = undefined
     setCount(a => a + 1)
 
   }
@@ -639,9 +625,10 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
     </Button>
   </>
 
+  const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 
   const button_open_layout = <Button onClick={() => {
-    new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
+    new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
 
   }} variant='contextmenu_button'>{t('Menu.LL')} {icon_open_modal}</Button>
@@ -657,37 +644,25 @@ export const ContextZDT: FunctionComponent<context_zdtFType> = ({
   </Box> : <></>
 }
 
-const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
-
-export const blur_ZDT_wysiwyg: blur_ZDT_wysiwygFType = (
-  r_editor_ZDT: { current: ReactQuill }
-) => {
-  if (r_editor_ZDT && r_editor_ZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor') ?? false)) {
-    r_editor_ZDT.current.getEditor().focus()
-    r_editor_ZDT.current.getEditor().blur()
-  }
-}
-
 /**
  *Function that return content_menu_zdt with JSX to imbricate it in the config menu
 *
 * @param {*} {
-*   applicationData,
+*   new_data_plus,
 *   content_menu_zdt
 * }
 * @return {*}
 */
-export const ZDTMenuAsAccordeonItem: FunctionComponent<ZDTMenuAsAccordeonItemType> = ({
-  applicationData,
+export const ZDTMenuAsAccordeonItemOSP: FunctionComponent<FCType_ZDTMenuAsAccordeonItemOSP> = ({
+  new_data_plus,
   content_menu_zdt
 }) => {
-  const { new_data } = applicationData
-  const { t } = new_data
+  const { t } = new_data_plus
   return <AccordionItem
-    // style={{ 'display': (new_data.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
+  // style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
   >
     <AccordionButton
-      ref={new_data.menu_configuration.zdt_accordion_ref}
+      ref={new_data_plus.menu_configuration.zdt_accordion_ref}
       onClick={() => {
         const scroll_x = window.scrollX
         const scroll_y = window.scrollY

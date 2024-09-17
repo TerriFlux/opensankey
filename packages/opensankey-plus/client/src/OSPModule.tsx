@@ -7,62 +7,56 @@
 // ==================================================================================================
 
 // External imports
-import React, { useRef } from 'react'
-import { t } from 'i18next'
-import {
-  Box,
-  Button,
-  Input,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
-} from '@chakra-ui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
+import React from 'react'
 
 // OpenSankey imports
 import {
-  module_dialogsType,
-  InitalizeSelectorDetailNodesType
-} from './deps/OpenSankey/types/LegacyType'
-import { AddAllDropDownNode, setDiagram } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
-import { MenuDraggable } from './deps/OpenSankey/topmenus/SankeyMenuTop'
+  MenuDraggable
+} from './deps/OpenSankey/topmenus/SankeyMenuTop'
+import {
+  initializeReinitialization
+} from './deps/OpenSankey/OSModule'
+import {
+  FType_InitializeReinitialization
+} from './deps/OpenSankey/types/FunctionTypes'
+import {
+  IType_DictHookRefSetterShowDialogComponents
+} from './deps/OpenSankey/types/MenuConfig'
 
 // Local imports
 import {
-  OSPApplicationDataType,
-  OSPApplicationDataVarType,
-  OSPData,
-  OSPGetDefaultData,
-  OSPInitializeAdditionalMenusType,
-  OSPInitializeApplicationDataVarType,
-  OSPInitializeReinitializationType} from '../types/Types'
-import { ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, ContextZDT, OSPMenuPreferenceLabels } from './SankeyPlusMenuConfigurationLabels'
-import { OSPHyperLink, OSPNodeIcon } from './SankeyPlusNodes'
+  FType_InitializeAdditionalMenusOSP,
+  FType_ModuleDialogsOSP
+} from '../types/FunctionsTypes'
+import {
+  FType_InitializeApplicationDataOSP
+} from '../types/FunctionsTypes'
+import {
+  ZDTMenuAsAccordeonItemOSP,
+  MenuConfigurationFreeLabelsOSP,
+  ContextZDTOSP,
+  MenuPreferenceLabelsOSP
+} from './SankeyPlusMenuConfigurationLabels'
+import { NodeHyperLinkOSP, NodeIconOSP } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
 } from './SankeyPlusUtils'
 
 import {
-  ModalTransparentViewAttr,
-  MenuEnregistrerView,
-  Modal_view_not_saved,
-  OSPBannerView,
-  OSPMenuPreferenceView,
+  ModalTransparentViewAttrOSP,
+  MenuEnregistrerViewOSP,
+  ModalViewNotSavedOSP,
+  BannerViewsOSP,
+  MenuPreferenceViewOSP,
   ViewsAccordion,
 } from './SankeyPlusViews'
 
-import ModalSelectionIcon from './SankeyPlusCatalogIcon'
+import ModalSelectionIconsOSP from './SankeyPlusCatalogIcon'
 
-import { OSPNodeFO } from './SankeyPlusForeignObject'
-import { dict_hook_ref_setter_show_dialog_componentsType } from './deps/OpenSankey/types/MenuConfig'
-import { MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
-import { Class_ApplicationDataOSP } from './types/TypesOSP'
-import { OSPTransformationElements } from './SankeyPlusConvert'
+import { NodeForeignObjectOSP } from './SankeyPlusForeignObject'
+import { MenuConfLinkApparenceGradientOSP } from './SankeyPlusGradient'
+import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
+import { TransformationElementsOSP } from './SankeyPlusConvert'
 
 // TODO toujours utile ?
 // declare const window: Window &
@@ -71,87 +65,57 @@ import { OSPTransformationElements } from './SankeyPlusConvert'
 //   }
 
 
-export const OSPDefaultData = () => {
-  return {
-    is_catalog: false,
-    view: [],
-    current_view: 'none',
-    labels: {},
-    icon_catalog: {},
-    // style_link: { 'default': DefaultOSPStyleLink() },
-    // unitary_node:[],
-    // unit_link_value_display:'percent',
-    background_image: ''
-  }
-}
-
-export const OSPInitializeApplicationData: OSPInitializeApplicationDataVarType = (
-  data,
-  set_data,
-  get_default_data,
-  _initial_data
+export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = (
+  initial_data
 ) => {
-  const data_plus = data as OSPData
-
-  const set_data_plus = set_data as (_: OSPData) => void
-  const plus_get_defaut_data = get_default_data as OSPGetDefaultData
-  // const useOpenSankeySetDiagram = (master_data && master_data.view.length > 0) || window.SankeyToolsStatic
-
-  // If initial data has views & has a current view then update current data to the view (and initial data become master data)
-
-  const class_dataplus = new Class_ApplicationDataOSP(false)
-
+  // Init application data
+  const new_data_plus = new Class_ApplicationDataOSP(false)
   // Read data from cache if it exist
-  if (_initial_data !== undefined) {
-    class_dataplus.fromJSON(_initial_data)
+  if (initial_data !== undefined) {
+    new_data_plus.fromJSON(initial_data)
   }
-
-  return {
-    data: data_plus,
-    set_data: set_data_plus,
-    get_default_data: plus_get_defaut_data,
-    new_data: class_dataplus,
-    dataVarToUpdate: useRef(['']),
-    setDiagram: setDiagram,
-  } as OSPApplicationDataVarType
+  return new_data_plus
 }
 
-// export const OSPcloseAllMenu = closeAllMenu
-
-export const OSPInitializeReinitialization: OSPInitializeReinitializationType = (
-) => () => {
-  localStorage.removeItem('icon_imported')
-  sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
+export const initializeReinitializationOSP: FType_InitializeReinitialization = (
+  new_data
+) => {
+  return () => {
+    initializeReinitialization(new_data)()
+    localStorage.removeItem('icon_imported')
+    sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
+  }
 }
-
 
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
  *  we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
  * @param {*} additionalMenus
- * @param {*} applicationData
+ * @param {*} new_data_plus
  */
-export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
+export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = (
   additionalMenus,
-  applicationData,
+  new_data
 ) => {
 
   // Data -------------------------------------------------------------------------------
-  // const OSPApplicationContext=applicationContext as OSPApplicationContextType
-  const applicationDataOSP = applicationData as unknown as OSPApplicationDataType
+  const new_data_plus = new_data as Type_GenericApplicationDataOSP
 
   // Local variables --------------------------------------------------------------------
-  const is_static = applicationDataOSP.new_data.is_static
-  const has_views = applicationDataOSP.new_data.has_views
+  const is_static = new_data_plus.is_static
+  const has_views = new_data_plus.has_views
 
   // JSX Elements for views navbar ------------------------------------------------------
   // AddMenu accordion views
-  additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<ViewsAccordion applicationData={applicationDataOSP} />)
-
+  additionalMenus.additional_configuration_menus_primary_accordion_elements.push(
+    <ViewsAccordion
+      new_data_plus={new_data_plus}
+    />
+  )
 
   if (!is_static || has_views) {
-    additionalMenus.externale_navbar_item['view'] = <OSPBannerView
-      applicationData={applicationDataOSP}
+    additionalMenus.externale_navbar_item['view'] = <BannerViewsOSP
+      new_data_plus={new_data_plus}
     />
   }
 
@@ -162,55 +126,50 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   // additionalMenus.external_file_export_item.push(<OSPItemExport />)
 
   // Page settings
-  // TODO : re implement ImportImageAsSvgBg with class
   additionalMenus.extra_background_element = <ImportImageAsSvgBg
-    applicationData={applicationDataOSP}
-    has_open_sankey_plus={true}
+    new_data_plus={new_data_plus}
   />
-
-  // TODO : re implement OSPBannerView with class
 
   // Menu conf nodes
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <OSPNodeIcon
-    applicationData={applicationDataOSP}
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
+    new_data_plus={new_data_plus}
     menu_for_modal={false}
-
   />
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <OSPNodeFO
-    applicationData={applicationDataOSP}
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <NodeForeignObjectOSP
+    new_data_plus={new_data_plus}
+    is_activated={true}
+  />
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl'] = <NodeHyperLinkOSP
+    new_data_plus={new_data_plus}
     is_activated={true}
   />
 
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl'] = <OSPHyperLink
-    applicationData={applicationDataOSP}
-    is_activated={true}
-  />
   //Links
-  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
-    applicationData={applicationDataOSP}
+  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradientOSP
+    new_data_plus={new_data_plus}
     is_activated={true}
     menu_for_style={false}
   />)
 
   //Preferences
-  // TODO : re implement OSPMenuPreferenceLabels with class
   additionalMenus.additional_preferences.push(
-    <OSPMenuPreferenceLabels
-      applicationData={applicationDataOSP}
+    <MenuPreferenceLabelsOSP
+      new_data_plus={new_data_plus}
+    />
+  )
+  additionalMenus.additional_preferences.push(
+    <MenuPreferenceViewOSP
+      new_data_plus={new_data_plus}
     />
   )
 
-  // TODO : re implement OSPMenuPreferenceView with class
-  additionalMenus.additional_preferences.push(
-    <OSPMenuPreferenceView applicationData={applicationDataOSP} />
-  )
   //- Builds Configuration Menus FreeLabel
   additionalMenus.additional_configuration_menus_edition_elements.push(
-    <ZDTMenuAsAccordeonItem
-      applicationData={applicationDataOSP}
+    <ZDTMenuAsAccordeonItemOSP
+      new_data_plus={new_data_plus}
       content_menu_zdt={
-        <OSPMenuConfigurationFreeLabels
-          applicationData={applicationDataOSP}
+        <MenuConfigurationFreeLabelsOSP
+          new_data_plus={new_data_plus}
         />
       }
     />
@@ -218,8 +177,8 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
 
   // Addition chackbox for dialog save JSON dagram
   additionalMenus.additional_file_save_json_option.push(
-    <MenuEnregistrerView
-      applicationData={applicationDataOSP}
+    <MenuEnregistrerViewOSP
+      new_data_plus={new_data_plus}
     />
   )
 
@@ -227,72 +186,43 @@ export const OSPInitializeAdditionalMenus: OSPInitializeAdditionalMenusType = (
   // (Only add these options if connected with OSP)
 
   // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
-  additionalMenus.apply_transformation_additional_elements.push(<OSPTransformationElements
-    applicationData={applicationDataOSP}
-  />)
+  additionalMenus.apply_transformation_additional_elements.push(
+    <TransformationElementsOSP
+      new_data_plus={new_data_plus}
+    />
+  )
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
 // we don't need to recast it ( and don't need additionnal parameters for OSP dialogs)
-export const OSPModuleDialogs: module_dialogsType = (
-  applicationData,
+export const ModuleDialogsOSP: FType_ModuleDialogsOSP = (
+  new_data,
 ) => {
-  const OSP_dict_app_data = applicationData as unknown as OSPApplicationDataType
-  const { new_data } = OSP_dict_app_data
-  const content_draggable_menu_zdt = <OSPMenuConfigurationFreeLabels
-    applicationData={OSP_dict_app_data}
+  // Cast type
+  const new_data_plus = new_data as Type_GenericApplicationDataOSP
+
+  // Add new_menus
+  const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
+    new_data_plus={new_data_plus}
   />
   return [
     <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog_plus as unknown as dict_hook_ref_setter_show_dialog_componentsType}
-      dialog_name={'ref_setter_show_menu_zdt' as keyof dict_hook_ref_setter_show_dialog_componentsType}
+      dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration.dict_setter_show_dialog_plus as unknown as IType_DictHookRefSetterShowDialogComponents}
+      dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
       content={content_draggable_menu_zdt}
-      title={new_data.t('Menu.LL')}
+      title={new_data_plus.t('Menu.LL')}
     />,
-    <ContextZDT
-      applicationData={OSP_dict_app_data}
+    <ContextZDTOSP
+      new_data_plus={new_data_plus}
     />,
-    <ModalTransparentViewAttr
-      applicationData={OSP_dict_app_data}
+    <ModalTransparentViewAttrOSP
+      new_data_plus={new_data_plus}
     />,
-    <Modal_view_not_saved
-      applicationData={OSP_dict_app_data}
+    <ModalViewNotSavedOSP
+      new_data_plus={new_data_plus}
     />,
-    <ModalSelectionIcon
-      applicationData={OSP_dict_app_data}
+    <ModalSelectionIconsOSP
+      new_data_plus={new_data_plus}
     />
   ]
-}
-
-export const OSPInitalizeSelectorDetailNodes: InitalizeSelectorDetailNodesType = (
-  applicationData,
-) => {
-
-  const mutiple_level_tag_filter = <AddAllDropDownNode
-    applicationData={applicationData}
-    level={true}
-
-  />
-  return <Popover placement='left' id='popover_details_level' >
-    <PopoverTrigger>
-      <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
-        <FontAwesomeIcon icon={faFolderTree} />
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent>
-      <PopoverArrow />
-      <PopoverCloseButton />
-
-      <PopoverHeader>{applicationData.new_data.t('Banner.ndd')}</PopoverHeader>
-      <PopoverBody style={{ maxHeight: '600px', overflowY: 'auto' }}>
-        <Box as='span' layerStyle='popover_sidebar_row_tag_filter'>
-          <Box>{t('Menu.group')}</Box>
-        </Box>
-        <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
-          {mutiple_level_tag_filter}</>
-        ) : (<>
-          <Input placeholder="Pas de filtrage" isDisabled /></>)}</>
-      </PopoverBody>
-    </PopoverContent>
-  </Popover>
 }

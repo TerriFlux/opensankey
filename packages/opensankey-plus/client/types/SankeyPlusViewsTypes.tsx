@@ -1,24 +1,11 @@
-import {
-  OSPApplicationDataType,
-  OSPShowMenuComponentsType,
-} from './Types'
-
 import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 
-export type ViewToastFType = {
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType
+export type FCType_SelecteurView = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-export type ViewToast_update_viewFType = {
-  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType
-}
-
-export type SelecteurViewFType = {
-  new_data:Type_GenericApplicationDataOSP
-}
-
-export type viewsAccordionFType = {
-  applicationData:OSPApplicationDataType,
+export type FCType_ViewAccordion = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
 /**
@@ -33,32 +20,28 @@ export type viewsAccordionFType = {
  * a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
  *
  * @param {*} {
- *   applicationData,
- *   applicationContext,
- *   dict_hook_ref_setter_show_dialog_components,
- *   convert_data,
- *   view_selector
+ *  new_data_plus
  * }
  * @return {*}
  */
-export type OSPBannerViewFType = {
-  applicationData:OSPApplicationDataType
+export type FCType_BannerViewsOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-export type OSPMenuPreferenceViewFType = {
-  applicationData:OSPApplicationDataType
+export type FCType_MenuPreferenceViewOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
-export type modal_view_not_savedFType = {
-  applicationData:OSPApplicationDataType
+export type FCType_ModalViewNotSavedOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-export type modal_transparent_view_attrFType = {
-  applicationData: OSPApplicationDataType,
+export type FCType_ModalTransparentViewAttrOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-export type MenuEnregistrerViewFType = {
-applicationData:OSPApplicationDataType
+export type FCType_MenuEnregistrerViewOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }

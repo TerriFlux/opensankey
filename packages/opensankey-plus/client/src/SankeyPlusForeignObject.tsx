@@ -1,27 +1,34 @@
-// // External imports
-import { Box, Textarea, TabPanel, Checkbox, Button } from '@chakra-ui/react'
+// External imports
 import React, { FunctionComponent, useState, useRef, MutableRefObject } from 'react'
-import ReactQuill from 'react-quill'
-// 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
-// to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
+import ReactQuill from 'react-quill' // 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
+
+import {
+  Box,
+  Textarea,
+  TabPanel,
+  Checkbox,
+  Button
+} from '@chakra-ui/react'
+
+// OpenSankey imports
 import { OSTooltip } from './deps/OpenSankey/types/Utils'
-import { OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
-import { Type_GenericNodeElementOSP } from './types/TypesOSP'
 
+// Local imports
+import type { FCType_NodeForeignObjectOSP } from '../types/SankeyPlusForeignObjectTypes'
+import type { Type_GenericNodeElementOSP } from './types/TypesOSP'
 
-
-export const OSPNodeFO: FunctionComponent<OSPNodeFOFType> = ({
-  applicationData,
+export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP> = ({
+  new_data_plus,
   is_activated,
 }) => {
+  const { drawing_area, t } = new_data_plus
+
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [, setCount] = useState(0)
-  const { new_data } = applicationData
-  const { drawing_area, t } = new_data
   const selected_nodes = drawing_area.selected_nodes_list
 
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
-  new_data.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
+  new_data_plus.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
   let s_tmp_editor_content_changed = false
   if (selected_nodes.length > 0) {
@@ -38,16 +45,23 @@ export const OSPNodeFO: FunctionComponent<OSPNodeFOFType> = ({
       [{ 'color': [] }, { 'background': [] }],
       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       [{ 'align': [] }],
-
       ['clean'],
     ],
   }
 
-  const formats = ['font', 'size',
-    'bold', 'italic', 'underline', 'strike', 'color', 'background',
-    'list', 'bullet', 'align'
+  const formats = [
+    'font',
+    'size',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'color',
+    'background',
+    'list',
+    'bullet',
+    'align'
   ]
-
 
   /**
    *

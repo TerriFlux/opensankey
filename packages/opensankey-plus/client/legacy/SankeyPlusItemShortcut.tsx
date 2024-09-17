@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react'
 
 // Local libs
-import {OSPShortcutFType} from '../types/SankeyPlusItemShortcutTypes'
+import type {OSPShortcutFType} from './types/SankeyPlusItemShortcutTypes'
 
 export const OSPShortcut : OSPShortcutFType =(t:TFunction)=>{
   return (

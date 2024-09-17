@@ -1,27 +1,18 @@
-import {   OSPApplicationDataType } from './Types'
-import ReactQuill from 'react-quill'
+import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 
-export type OSPMenuPreferenceLabelsFType={
-  applicationData:OSPApplicationDataType,
+export type FCType_MenuPreferenceLabelsOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-export interface selected_type  {'label':string;'value':string}
-
-export type OSPMenuConfigurationFreeLabelsFType = {
-  applicationData:OSPApplicationDataType,
+export type FCType_MenuConfigurationFreeLabelsOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-
-export type context_zdtFType={
-  applicationData:OSPApplicationDataType,
+export type FCType_ContextZDTOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
-export type blur_ZDT_wysiwygFType=(
-  r_editor_ZDT:{current:ReactQuill}
-) =>void
-
-export type ZDTMenuAsAccordeonItemType={
-  applicationData:OSPApplicationDataType
-  content_menu_zdt:JSX.Element
-
+export type FCType_ZDTMenuAsAccordeonItemOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP
+  content_menu_zdt: JSX.Element
 }

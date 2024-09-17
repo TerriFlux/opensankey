@@ -13,16 +13,16 @@ import {
   Checkbox,
   TabPanel,
   Input,
-  InputGroup} from '@chakra-ui/react'
+  InputGroup
+} from '@chakra-ui/react'
 import { faIcons, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
-  ContextNodeIconFType,
-  OSPHyperLinkFType,
-  OSPNodeIconFType,
+  FCType_NodeHyperLinkOSP,
+  FCType_NodeIconOSP,
 } from '../types/SankeyPlusNodesTypes'
 
 // OpenSankey ts-code
@@ -35,17 +35,16 @@ declare const window: Window &
     SankeyToolsStatic: boolean
   }
 
-export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
-  applicationData,
+export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
+  new_data_plus,
   menu_for_modal,
 }) => {
-  const { new_data } = applicationData
-  const { t } = new_data
-  const is_activated = new_data.has_sankey_plus
+  const { t } = new_data_plus
+  const is_activated = new_data_plus.has_sankey_plus
   const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(false)
-  const selected_nodes = new_data.drawing_area.sankey.nodes_list
-  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
+  const selected_nodes = new_data_plus.drawing_area.sankey.nodes_list
+  new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
 
   const redrawIllustrationAndRefresh = () => {
     selected_nodes.forEach(zdt => zdt.drawIllustration())
@@ -53,7 +52,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   }
 
   const redrawAndRefresh = () => {
-    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current()
+    new_data_plus.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current()
     selected_nodes.forEach(zdt => zdt.draw())
     setForceUpdate(!forceUpdate)
   }
@@ -112,7 +111,7 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
                 variant='menuconfigpanel_option_button'
                 disabled={!is_activated}
                 onClick={() => {
-                  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current!(true)
+                  new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current!(true)
                 }}
               >
                 <FontAwesomeIcon icon={faIcons} />
@@ -355,15 +354,14 @@ export const OSPNodeIcon: FunctionComponent<OSPNodeIconFType> = ({
   </TabPanel>
 }
 
-export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
-  applicationData,
+export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
+  new_data_plus,
   is_activated,
 }) => {
-  const {new_data}=applicationData
-  const {drawing_area,t}=new_data
-  const selected_nodes=drawing_area.selected_nodes_list
+  const { drawing_area, t } = new_data_plus
+  const selected_nodes = drawing_area.selected_nodes_list
 
-  const [,setCount]=useState(0)
+  const [, setCount] = useState(0)
 
   const hasHyperLink = () => {
     let visible = ''
@@ -396,7 +394,7 @@ export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
               onChange={(evt) => {
                 selected_nodes
                   .forEach(d => d.hyperlink = evt.target.value)
-                setCount(a=>a+1)
+                setCount(a => a + 1)
               }}
             />
           </InputGroup>
@@ -432,9 +430,6 @@ export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
     {content_image_tab}
   </TabPanel>
 }
-
-
-
 
 // const branchAnimate = (
 //   data: SankeyData,
@@ -536,19 +531,3 @@ export const OSPHyperLink: FunctionComponent<OSPHyperLinkFType> = ({
 //   }
 //   return max
 
-export const ContextNodeIcon: ContextNodeIconFType = (
-  application_data
-) => {
-  const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
-  return <Button
-    variant='menuconfigpanel_option_button'
-    onClick={() => {
-      application_data.new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current!(true)
-      application_data.new_data.drawing_area.node_contextualised=undefined // unselect contextualised node
-      application_data.new_data.menu_configuration.ref_to_menu_context_nodes_updater.current() // update context menu node, it should close because there no more contextualised node
-    }}
-  >
-    {application_data.new_data.t('Noeud.icon.icon')}
-    {icon_open_modal}
-  </Button>
-}

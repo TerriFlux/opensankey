@@ -44,13 +44,13 @@ import {
 
 // Local libs
 import {
-  OSPBannerViewFType,
-  OSPMenuPreferenceViewFType,
-  SelecteurViewFType,
-  viewsAccordionFType,
-  MenuEnregistrerViewFType,
-  modal_view_not_savedFType,
-  modal_transparent_view_attrFType
+  FCType_BannerViewsOSP,
+  FCType_MenuPreferenceViewOSP,
+  FCType_SelecteurView,
+  FCType_ViewAccordion,
+  FCType_MenuEnregistrerViewOSP,
+  FCType_ModalViewNotSavedOSP,
+  FCType_ModalTransparentViewAttrOSP
 } from '../types/SankeyPlusViewsTypes'
 
 import {
@@ -71,7 +71,6 @@ declare const window: Window &
     } & { [key: string]: OSPData }
   }
 
-
 /**
  * Fucntion that return a toolbar to navigate,create or modify view, it contain :
  * - a button to return to master data
@@ -84,22 +83,17 @@ declare const window: Window &
  * a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
  *
  * @param {*} {
- *   applicationData,
- *   applicationContext,
- *   dict_hook_ref_setter_show_dialog_components,
- *   convert_data,
- *   view_selector
+ *   new_data_plus
  * }
  * @return {*}
  */
-export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
-  applicationData
+export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
+  new_data_plus
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
-  const { t } = new_data
+  const { t } = new_data_plus
 
   // Component updater ------------------------------------------------------------------
 
@@ -109,7 +103,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   const refreshThis = () => {
     setCount(a => a + 1)
   }
-  new_data.menu_configuration.ref_to_banner_views_updater.current = refreshThis
+  new_data_plus.menu_configuration.ref_to_banner_views_updater.current = refreshThis
 
   // Ref to trigger other components ----------------------------------------------------
 
@@ -117,11 +111,11 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   // Local variables --------------------------------------------------------------------
 
-  const has_sankey_plus = new_data.has_sankey_plus
-  const has_views = new_data.has_views
-  const is_view_master = new_data.is_view_master
-  const has_view_before = new_data.has_view_before
-  const has_view_after = new_data.has_view_after
+  const has_sankey_plus = new_data_plus.has_sankey_plus
+  const has_views = new_data_plus.has_views
+  const is_view_master = new_data_plus.is_view_master
+  const has_view_before = new_data_plus.has_view_before
+  const has_view_after = new_data_plus.has_view_after
 
   // Button to create a view ------------------------------------------------------------
 
@@ -200,7 +194,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
         onClick={
           // Delete the view
           () => {
-            new_data.deleteCurrentView()
+            new_data_plus.deleteCurrentView()
           }
         }
       >
@@ -439,7 +433,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
         isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
         onClick={
           () => {
-            new_data.menu_configuration.ref_to_modal_view_attributes_switcher.current(true)
+            new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current(true)
           }
         }
       >
@@ -563,7 +557,7 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
             const JSON_data = JSON.parse(file_content)
 
             // Extract view of files
-            new_data.extractViewsFromJSON(JSON_data as Type_JSON)
+            new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON)
           }
         })()
         // Permet d'executer la transformation des blob en vues tout en evitant la var length
@@ -577,14 +571,14 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
 
   return <>
     {/* Load + Save  */}
-    {new_data.is_static ? <></> : input_loader_json_catalog}
-    {new_data.is_static ? <></> : create_data_catalog}
+    {new_data_plus.is_static ? <></> : input_loader_json_catalog}
+    {new_data_plus.is_static ? <></> : create_data_catalog}
 
     {/* Return to Sankey master button */}
-    {new_data.is_static ? <></> : button_to_return_to_master}
+    {new_data_plus.is_static ? <></> : button_to_return_to_master}
 
     {/* Create, switch between or delete views */}
-    {new_data.is_static ? <></> : button_to_create_view}
+    {new_data_plus.is_static ? <></> : button_to_create_view}
     {button_to_prev_view}
     {button_to_next_view}
     <Box
@@ -593,11 +587,11 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
       alignSelf='center'
       alignContent='center'
     >
-      <SelecteurView new_data={new_data} />
+      <SelecteurView new_data_plus={new_data_plus} />
 
     </Box>
     {
-      new_data.is_static ?
+      new_data_plus.is_static ?
         <></> :
         <>
           {button_to_delete_actual_view}
@@ -607,23 +601,20 @@ export const OSPBannerView: FunctionComponent<OSPBannerViewFType> = ({
   </>
 }
 
-
 /**
  * View selector for navbar or menuconfig
  * @param {*} {
- *   applicationData,
- *   applicationState,
- *   set_view_not_saved,
+ *   new_data_plus
  * }
  * @return {*}
  */
-export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
-  new_data
-}) => {
+export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
+  { new_data_plus }
+) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t } = new_data_plus
 
   // Components updaters ----------------------------------------------------------------
 
@@ -631,19 +622,19 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update views components
-    new_data.menu_configuration.updateComponentRelatedToViews()
+    new_data_plus.menu_configuration.updateComponentRelatedToViews()
   }
 
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Local variables --------------------------------------------------------------------
 
-  const cur_view = new_data.drawing_area
-  const has_sankey_plus = new_data.has_sankey_plus
-  const has_views = new_data.has_views
-  const is_view_master = new_data.is_view_master
+  const cur_view = new_data_plus.drawing_area
+  const has_sankey_plus = new_data_plus.has_sankey_plus
+  const has_views = new_data_plus.has_views
+  const is_view_master = new_data_plus.is_view_master
 
   // JSX elements -----------------------------------------------------------------------
 
@@ -660,7 +651,7 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
     }}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
-        new_data.setCurrentView(evt.target.value)
+        new_data_plus.setCurrentView(evt.target.value)
         refreshThisAndUpdateRelatedComponents()
       }
     }
@@ -673,7 +664,7 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
       {t('view.actual')}
     </option>
     {
-      new_data.views
+      new_data_plus.views
         .filter(view => view.id !== default_main_sankey_id)
         .map(view => {
           return <option
@@ -705,31 +696,29 @@ export const SelecteurView: FunctionComponent<SelecteurViewFType> = ({
 /**
  * Sub accordion for view config in menu configuration
  * @param {*} {
- *   applicationData,
+ *   new_data_plus,
  * }
  * @return {*}
  */
-export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
-  applicationData,
-}
+export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
+  { new_data_plus }
 ) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { new_data } = applicationData
-  const { t } = new_data
+  const { t } = new_data_plus
 
   // Components updaters ----------------------------------------------------------------
 
   const [, setCount] = useState(0)
   const refreshThis = () => setCount(a => a + 1)
-  new_data.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
+  new_data_plus.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
 
   // Local variables --------------------------------------------------------------------
 
-  const is_activated = new_data.has_sankey_plus
-  const curr_view = new_data.drawing_area
-  const list_view = new_data.views //include master
+  const is_activated = new_data_plus.has_sankey_plus
+  const curr_view = new_data_plus.drawing_area
+  const list_view = new_data_plus.views //include master
 
   // JSX elements -----------------------------------------------------------------------
 
@@ -737,7 +726,7 @@ export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
 
   return <>
     <AccordionItem
-      style={{ 'display': (new_data.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
+      style={{ 'display': (new_data_plus.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
     >
       <AccordionButton onClick={() => {
         const scroll_x = window.scrollX
@@ -762,7 +751,7 @@ export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
             </Box>
             <InputGroup
               variant='menuconfigpanel_option_input'>
-              <SelecteurView new_data={new_data} />
+              <SelecteurView new_data_plus={new_data_plus} />
             </InputGroup>
           </Box>
           <Table size='sm'>
@@ -787,18 +776,18 @@ export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
                         isDisabled={!is_activated || (d.id == default_main_sankey_id)}
                         onChange={evt => {
                           d.name = evt.target.value
-                          new_data.menu_configuration.updateComponentRelatedToViews()
+                          new_data_plus.menu_configuration.updateComponentRelatedToViews()
                         }}
                       />
                     </Td>
                     <Td>
                       {/* Change the position of the view in the liste of view from master data */}
                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data.moveViewUpInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
+                        onClick={() => { new_data_plus.moveViewUpInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
                       ><FaArrowUp />
                       </Button>
                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data.moveViewDownInOrder(d.id); new_data.menu_configuration.updateComponentRelatedToViews() }}
+                        onClick={() => { new_data_plus.moveViewDownInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
                       ><FaArrowDown />
                       </Button>
                     </Td>
@@ -808,8 +797,8 @@ export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
                       onClick={
                         // Delete the view
                         () => {
-                          new_data.deleteView(d.id)
-                          new_data.menu_configuration.updateComponentRelatedToViews()
+                          new_data_plus.deleteView(d.id)
+                          new_data_plus.menu_configuration.updateComponentRelatedToViews()
                         }
                       }
                     ><FaMinus /></Button></Td>
@@ -885,39 +874,35 @@ export const ViewsAccordion: FunctionComponent<viewsAccordionFType> = ({
 //   }
 // }
 
-
-
-export const OSPMenuPreferenceView: FunctionComponent<OSPMenuPreferenceViewFType> = ({
-  applicationData
-}
+export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewOSP> = (
+  { new_data_plus }
 ) => {
   const [, setCount] = useState(0)
-  const { new_data } = applicationData
-  const { t } = new_data
+  const { t } = new_data_plus
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
-    defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('Vis')} onChange={() => {
-      new_data.menu_configuration.toggleGivenAccordion('Vis')
+    defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
+    onChange={() => {
+      new_data_plus.menu_configuration.toggleGivenAccordion('Vis')
       setCount(a => a + 1)
     }}>
     {t('view.storytelling')}
   </Checkbox>
 }
 
-
-
 /**
  * Modal to ask user if he want to save unsaved view change before switching view
  *
- * @param {*} {applicationData}
+ * @param {*} {new_data_plus}
  * @return {*}
  */
-export const Modal_view_not_saved: FunctionComponent<modal_view_not_savedFType> = ({ applicationData }) => {
+export const ModalViewNotSavedOSP: FunctionComponent<FCType_ModalViewNotSavedOSP> = (
+  { new_data_plus }
+) => {
 
-  const { new_data } = applicationData
-  const { t } = new_data
+  const { t } = new_data_plus
   const [show_modal, setShowModal] = useState(false)
-  new_data.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current = setShowModal
+  new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current = setShowModal
 
   return (
     <Modal
@@ -939,7 +924,7 @@ export const Modal_view_not_saved: FunctionComponent<modal_view_not_savedFType> 
           <Button
             variant='menuconfigpanel_del_button'
             onClick={() => {
-              new_data.resetViewWithOriginal()
+              new_data_plus.resetViewWithOriginal()
               setShowModal(false)
             }}
           >
@@ -948,7 +933,7 @@ export const Modal_view_not_saved: FunctionComponent<modal_view_not_savedFType> 
           <Button
             variant='menuconfigpanel_add_button'
             onClick={() => {
-              new_data.saveBeforeChangingView()
+              new_data_plus.saveBeforeChangingView()
               setShowModal(false)
 
             }}
@@ -960,15 +945,11 @@ export const Modal_view_not_saved: FunctionComponent<modal_view_not_savedFType> 
     </Modal>)
 }
 
-
-export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_attrFType> = (
-  {
-    applicationData
-  }
+export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTransparentViewAttrOSP> = (
+  { new_data_plus }
 ): JSX.Element => {
 
-  const { new_data } = applicationData
-  const { t } = new_data
+  const { t } = new_data_plus
 
   const [state, setState] = useState({
     show_modal: false,
@@ -984,11 +965,11 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
     })
   }
 
-  new_data.menu_configuration.ref_to_modal_view_attributes_switcher.current = switchThis
+  new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current = switchThis
 
-  const has_sankey_plus = new_data.has_sankey_plus
-  const has_master_sankey = new_data.has_master_sankey
-  const is_view_master = new_data.is_view_master
+  const has_sankey_plus = new_data_plus.has_sankey_plus
+  const has_master_sankey = new_data_plus.has_master_sankey
+  const is_view_master = new_data_plus.is_view_master
 
   if (has_sankey_plus && has_master_sankey && !is_view_master) {
 
@@ -1021,7 +1002,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.addNode')}
@@ -1037,7 +1019,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.removeNode')}
@@ -1053,7 +1036,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.addFlux')}
@@ -1068,7 +1052,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.removeFlux')}
@@ -1091,7 +1076,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}>
                 {t('Menu.Transformation.PosNoeud')}
               </Button>
@@ -1105,7 +1091,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.posFlux')}
@@ -1126,7 +1113,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {update_modes.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
@@ -1147,7 +1135,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.attrNode')}
@@ -1163,7 +1152,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.attrFlux')}
@@ -1184,7 +1174,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.tagNode')}
@@ -1199,7 +1190,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.tagFlux')}
@@ -1214,7 +1206,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {t('Menu.Transformation.tagData')}
@@ -1235,7 +1228,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {update_modes.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
@@ -1256,7 +1250,8 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
                   }
                   setState({
                     show_modal: show_modal,
-                    update_modes: update_modes})
+                    update_modes: update_modes
+                  })
                 }}
               >
                 {update_modes.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
@@ -1268,10 +1263,10 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
         <ModalFooter>
           <Button
             onClick={() => {
-              const master_view = new_data.master_view
+              const master_view = new_data_plus.master_view
               if (master_view) {
-                new_data.drawing_area.updateFrom(master_view, update_modes)
-                new_data.drawing_area.reset()
+                new_data_plus.drawing_area.updateFrom(master_view, update_modes)
+                new_data_plus.drawing_area.reset()
               }
             }}
           >
@@ -1284,22 +1279,21 @@ export const ModalTransparentViewAttr: FunctionComponent<modal_transparent_view_
   return <></>
 }
 
-export const MenuEnregistrerView: FunctionComponent<MenuEnregistrerViewFType> = ({
-  applicationData
+export const MenuEnregistrerViewOSP: FunctionComponent<FCType_MenuEnregistrerViewOSP> = ({
+  new_data_plus
 }) => {
   const [, setCount] = useState(0)
-  const { new_data } = applicationData
-  const { t } = new_data
-  applicationData.new_data.menu_configuration.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
+  const { t } = new_data_plus
+  new_data_plus.menu_configuration.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
 
-  return (new_data.has_views && !new_data.is_view_master) ? <Checkbox
+  return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
     variant='menuconfigpanel_option_checkbox'
     isChecked={
-      applicationData.new_data.options_save_json.only_current_view
+      new_data_plus.options_save_json.only_current_view
     }
     onChange={(evt) => {
-      applicationData.new_data.options_save_json.only_current_view = evt.target.checked
-      new_data.menu_configuration.updateComponentSaveDiagramJSON()
+      new_data_plus.options_save_json.only_current_view = evt.target.checked
+      new_data_plus.menu_configuration.updateComponentSaveDiagramJSON()
     }}>
     <OSTooltip label={t('view.tooltips.buttonExportView')}>
       {t('view.export')}

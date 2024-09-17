@@ -8,7 +8,7 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { SaveDiagramOptionsType } from '../deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
+import { Type_SaveDiagramOptions } from '../deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
 import { default_save_JSON_options, isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
@@ -20,7 +20,7 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
 import { Class_SankeyPlus } from './SankeyPlus'
 
-export interface SaveDiagramPlusOptionsType extends SaveDiagramOptionsType {
+export interface Type_SaveDiagramOptionsPlus extends Type_SaveDiagramOptions {
   only_current_view?: boolean
 }
 
@@ -50,7 +50,7 @@ export abstract class Class_ApplicationDataPlus
   // PUBLIC ATTRIBUTES =================================================================
 
   // Save JSON options
-  public override options_save_json: SaveDiagramPlusOptionsType = default_save_JSON_options
+  public override options_save_json: Type_SaveDiagramOptionsPlus = default_save_JSON_options
 
   /**
    * Configuration Menu

@@ -1,35 +1,23 @@
-// // External libs
+// External libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
-
-
-
-// // Internal imports
-import { DefaultLinkStyle } from './deps/OpenSankey/types/Legacy'
-import {
-  DefaultOSPStyleLinkFType,
-  ImportImageAsSvgBgFType,
-} from '../types/SankeyPlusUtilsTypes'
-import { OSPLinkStyle } from '../types/Types'
-import { Box, Checkbox, Button, Input } from '@chakra-ui/react'
 import { FaFileImport } from 'react-icons/fa'
-import { CustomFaEyeCheckIcon, OSTooltip } from './deps/OpenSankey/types/Utils'
+import { Box, Checkbox, Button, Input } from '@chakra-ui/react'
 
+// Internal imports
+import {
+  FCType_ImportImageAsSvgBg,
+} from '../types/SankeyPlusUtilsTypes'
+import {
+  CustomFaEyeCheckIcon,
+  OSTooltip
+} from './deps/OpenSankey/types/Utils'
 
-export const DefaultOSPStyleLink: DefaultOSPStyleLinkFType = () => {
-  const style = DefaultLinkStyle() as OSPLinkStyle
-  style.gradient = false
-  return style
-}
-
-
-export const ImportImageAsSvgBg: FunctionComponent<ImportImageAsSvgBgFType> = ({
-  applicationData,
-  has_open_sankey_plus,
+export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
+  new_data_plus,
 }) => {
   const _load_image = useRef<HTMLInputElement>(null)
   const [, setCount] = useState(0)
-  const { new_data } = applicationData
-  const { drawing_area, t } = new_data
+  const { drawing_area, t, has_sankey_plus } = new_data_plus
   const content_image = <>
     {/* Import image */}
     <Box
@@ -39,8 +27,8 @@ export const ImportImageAsSvgBg: FunctionComponent<ImportImageAsSvgBgFType> = ({
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
         isChecked={drawing_area.show_background_image}
-        isDisabled={!has_open_sankey_plus}
-        icon={<CustomFaEyeCheckIcon/>}
+        isDisabled={!has_sankey_plus}
+        icon={<CustomFaEyeCheckIcon />}
         onChange={(evt) => {
           drawing_area.show_background_image = evt.target.checked
           drawing_area.drawBgImage()
@@ -49,11 +37,11 @@ export const ImportImageAsSvgBg: FunctionComponent<ImportImageAsSvgBgFType> = ({
       >
         {t('MEP.show_image')}
       </Checkbox>
-      <OSTooltip label={!has_open_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
+      <OSTooltip label={!has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
         <Box>
           <Button
             variant='menuconfigpanel_option_button'
-            isDisabled={!drawing_area.show_background_image || !has_open_sankey_plus}
+            isDisabled={!drawing_area.show_background_image || !has_sankey_plus}
             onClick={() => {
               if (_load_image.current) {
                 _load_image.current.name = ''
@@ -69,7 +57,7 @@ export const ImportImageAsSvgBg: FunctionComponent<ImportImageAsSvgBgFType> = ({
             accept='image/*'
             type="file"
             value={''}
-            disabled={!has_open_sankey_plus}
+            disabled={!has_sankey_plus}
             onChange={(evt: ChangeEvent) => {
               const files = (evt.target as HTMLFormElement).files
               const reader = new FileReader()

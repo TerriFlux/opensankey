@@ -1,9 +1,8 @@
-import { OSPApplicationDataType } from './Types'
+import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
 
-
-export type OSPNodeFOFType = {
-    applicationData:OSPApplicationDataType,
-  is_activated:boolean,
- }
+export type FCType_NodeForeignObjectOSP = {
+  new_data_plus: Type_GenericApplicationDataOSP,
+  is_activated: boolean,
+}
 
 
