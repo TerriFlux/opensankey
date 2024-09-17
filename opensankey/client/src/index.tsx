@@ -52,14 +52,14 @@ root.render(
     // Ref to some key ui element in the application
     initializeAdditionalMenus={initializeAdditionalMenus}
 
-    // Submenus to add in the application
-    moduleDialogs={moduleDialogs}
-
     // Input data used for updateLayout
     // (OS only use data from imported file
     // but OSP can use its view as imported data
     // )
     initializeDiagrammSelector={()=>OpenSankeyDiagramSelector}
+
+    // Submenus to add in the application
+    moduleDialogs={moduleDialogs}
 
     // BackEnd
     ClickSaveDiagram={ClickSaveDiagram}

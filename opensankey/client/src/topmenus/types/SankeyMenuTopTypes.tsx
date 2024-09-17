@@ -1,5 +1,5 @@
 import {
-  dict_hook_ref_setter_show_dialog_componentsType
+  IType_DictHookRefSetterShowDialogComponents
 } from '../../types/MenuConfig'
 import {
   Type_GenericApplicationDataOS
@@ -12,8 +12,8 @@ import {
 } from '../../types/FunctionTypes'
 
 export type FCType_MenuDraggable = {
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  dialog_name: keyof dict_hook_ref_setter_show_dialog_componentsType,
+  dict_hook_ref_setter_show_dialog_components: IType_DictHookRefSetterShowDialogComponents,
+  dialog_name: keyof IType_DictHookRefSetterShowDialogComponents,
   content: JSX.Element | JSX.Element[],
   title: string,
 }

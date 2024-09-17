@@ -1,14 +1,14 @@
 import { MutableRefObject } from 'react'
 import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type FType_OpenSankeyDiagramSelector = (
+export type FType_DiagramSelector = (
   new_data: Type_GenericApplicationDataOS,
   elementToDispose: MutableRefObject<string[]>,
 ) => JSX.Element
 
 export type FType_InitializeDiagrammSelector = (
   new_data: Type_GenericApplicationDataOS
-) => FType_OpenSankeyDiagramSelector
+) => FType_DiagramSelector
 
 /**
  * Define ApplyLayoutDialog
@@ -17,7 +17,7 @@ export type FType_InitializeDiagrammSelector = (
  */
 export type FCType_ApplyLayoutDialog = {
   new_data: Type_GenericApplicationDataOS,
-  diagramSelector: FType_OpenSankeyDiagramSelector,
+  diagramSelector: FType_DiagramSelector,
   apply_transformation_additional_elements: JSX.Element[],
 }
 
