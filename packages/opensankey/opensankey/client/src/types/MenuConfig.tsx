@@ -13,12 +13,12 @@ import { Type_MacroTagGroup } from './Utils'
 
 // SPECIFIC TYPES **********************************************************************/
 
-export type textForToastPromiseType = {
+export type Type_TextForToastPromise = {
   success?: string
   loading?: string
 }
 
-export interface dict_hook_ref_setter_show_dialog_componentsType {
+export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Nodes
   ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -50,7 +50,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Trigger Waiting spinner
-  ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: textForToastPromiseType) => void>
+  ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
 }
 
 // CLASS MENU CONFIG *******************************************************************/
@@ -95,7 +95,7 @@ export class Class_MenuConfig {
 
   // Ref to launch _function_on_wait & create a toast with a spinner to show we have to wait
   // Optional arguments to show custom message while loading & when finished
-  private _ref_lauchToast: MutableRefObject<(intake?: textForToastPromiseType) => void>
+  private _ref_lauchToast: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
 
   /* ========================================
    Ref to button on the configuration menu in the app
@@ -203,7 +203,7 @@ export class Class_MenuConfig {
     Dict of ref of setter of dialogs menu
   =========================================== */
 
-  private _dict_setter_show_dialog: dict_hook_ref_setter_show_dialog_componentsType
+  private _dict_setter_show_dialog: IType_DictHookRefSetterShowDialogComponents
 
   /* ========================================
     Visible Nodes / Links selectors
@@ -869,7 +869,7 @@ export class Class_MenuConfig {
     return this._ref_menu_opened
   }
 
-  public get ref_trigger_waiting_spinner_toast(): MutableRefObject<(intake?: textForToastPromiseType) => void> {
+  public get ref_trigger_waiting_spinner_toast(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> {
     return this._ref_lauchToast
   }
 
@@ -1032,7 +1032,7 @@ export class Class_MenuConfig {
   }
 
   // Getter dict of ref setter show dialog
-  public get dict_setter_show_dialog(): dict_hook_ref_setter_show_dialog_componentsType {
+  public get dict_setter_show_dialog(): IType_DictHookRefSetterShowDialogComponents {
     return this._dict_setter_show_dialog
   }
 

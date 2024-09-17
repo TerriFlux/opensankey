@@ -10,7 +10,7 @@ import {
   Type_JSON
 } from './Utils'
 import {
-  textForToastPromiseType
+  Type_TextForToastPromise
 } from './MenuConfig'
 import {
   FType_ClickSaveDiagram,
@@ -18,7 +18,7 @@ import {
   FType_UploadExcelImpl
 } from '../dialogs/types/SankeyPersistenceTypes'
 import {
-  FType_OpenSankeyDiagramSelector,
+  FType_DiagramSelector,
   FType_InitializeDiagrammSelector
 } from '../dialogs/types/SankeyMenuDialogsTypes'
 
@@ -51,7 +51,7 @@ export type FCType_Menu = {
   new_data: Type_GenericApplicationDataOS,
   processFunctions: FType_ProcessFunctions,
   reinitialization: () => void,
-  diagramSelector: FType_OpenSankeyDiagramSelector,
+  diagramSelector: FType_DiagramSelector,
   configurations_menus: JSX.Element,
   menus: { [s: string]: JSX.Element[] | JSX.Element },
   cardsTemplate: JSX.Element,
@@ -81,7 +81,7 @@ export type FType_InitializeApplicationData = (
 export type FType_LaunchToastConstructor = (
   new_data: Type_GenericApplicationDataOS,
   toast: CreateToastFnReturn,
-  intake?: textForToastPromiseType
+  intake?: Type_TextForToastPromise
 ) => void
 
 export type FType_InitializeReinitialization = (

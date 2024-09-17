@@ -107,7 +107,8 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
 export const moduleDialogs: FType_ModuleDialogs = (
   new_data,
   additional_menus,
-  menu_configuration_nodes_attributes
+  menu_configuration_nodes_attributes,
+  _processFunction // TODO unused
 ) => {
   const { t } = new_data
   return [
