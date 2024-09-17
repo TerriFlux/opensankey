@@ -21,9 +21,6 @@ import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
 /*************************************************************************************************/
 
-import {
-  initializeCloseAllMenuContextType,
-} from './types/LegacyType'
 import { Class_ApplicationDataOS, Type_GenericApplicationDataOS } from './types/TypesOS'
 import { retrieveExcelResults } from './dialogs/SankeyPersistence'
 import { MenuDraggable, OpenSankeySaveButton } from './topmenus/SankeyMenuTop'
@@ -194,16 +191,6 @@ export const moduleDialogs: FType_ModuleDialogs = (
       title={t('Menu.flux') + ' ' + t('Flux.IB')}
     />
   ]
-}
-
-export const initializeCloseAllMenuContext: initializeCloseAllMenuContextType = (
-  tagContext,
-  showContextZDDRef
-) => {
-  return () => {
-    tagContext.current![0][1](undefined)
-    showContextZDDRef.current![1](false)
-  }
 }
 
 //- BackEnd

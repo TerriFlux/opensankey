@@ -1,10 +1,7 @@
-import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
+import { MutableRefObject } from 'react'
 import { FType_SetDiagram } from '../configmenus/types/SankeyMenuBannerTypes'
 import { Type_GenericApplicationDataOS } from './TypesOS'
 import { Type_JSON } from './Utils'
-import { TFunction } from 'i18next'
-import { Class_MenuConfig } from './MenuConfig'
-import { FType_ProcessFunctions } from './FunctionTypes'
 
 export type SankeyNodeAttrLocal = {
   local_aggregation?: boolean,
@@ -17,7 +14,8 @@ export type SankeyNodeAttrLocal = {
   shape?: 'ellipse' | 'rect' | 'arrow',
   node_arrow_angle_factor?: number,
   node_arrow_angle_direction?: string,
-  colorSustainable?: boolean,  // Parameter of node label
+  colorSustainable?: boolean,
+  // Parameter of node label
   font_family?: string,
   font_size?: number,
   uppercase?: boolean,
@@ -27,22 +25,18 @@ export type SankeyNodeAttrLocal = {
   label_color?: boolean,
   label_vert?: string,
   label_horiz?: string,
-  label_background?: boolean,  // Parameter of node value label
+  label_background?: boolean,
+  // Parameter of node value label
   show_value?: boolean,
   label_vert_valeur?: string,
   label_horiz_valeur?: string,
   value_font_size?: number,
 }
 
-type ValueOf<T> = T[keyof T];
-
-export type KeysTypeSankeyNodeAttrLocal = keyof SankeyNodeAttrLocal
-
-export type ValuesTypeSankeyNodeAttrLocal = Exclude<ValueOf<SankeyNodeAttrLocal>, undefined>// Same as Local node attribute but with required value as now style attributes is the default attributes of node
-
 export type SankeyNodeStyle = {
   idNode: string,
-  name: string,  // Parameter of node shape
+  name: string,
+  // Parameter of node shape
   shape_visible: boolean,
   label_visible: boolean,
   node_width: number,
@@ -51,7 +45,8 @@ export type SankeyNodeStyle = {
   shape: 'ellipse' | 'rect' | 'arrow',
   node_arrow_angle_factor: number,
   node_arrow_angle_direction: string,
-  colorSustainable: boolean,  // Parameter of node label
+  colorSustainable: boolean,
+  // Parameter of node label
   font_family: string,
   font_size: number,
   uppercase: boolean,
@@ -61,7 +56,8 @@ export type SankeyNodeStyle = {
   label_color: boolean,
   label_vert: string,
   label_horiz: string,
-  label_background: boolean,  // Parameter of node value label
+  label_background: boolean,
+  // Parameter of node value label
   show_value: boolean,
   label_vert_valeur: string,
   label_horiz_valeur: string,
@@ -71,19 +67,22 @@ export type SankeyNodeStyle = {
 export type SankeyNode = {
   // identification
   idNode: string,
-  name: string,  //- level attributes
+  name: string,
+  //- level attributes
   dimensions: {
     [_: string]: {
       parent_name?: string,
       level?: number,
     }
   },  local?: SankeyNodeAttrLocal,  colorParameter: string,
-  colorTag: string,  // geometry
+  colorTag: string,
+  // geometry
   position: 'absolute' | 'relative',
   x: number,
   y: number,
   x_label?: number,
-  y_label?: number,  tooltip_text?: string,  // topology
+  y_label?: number,  tooltip_text?: string,
+  // topology
   inputLinksId: string[],
   outputLinksId: string[],
   tags: { [_: string]: string[] },
@@ -111,11 +110,13 @@ export type SankeyLinkAttrLocal = {
   curvature?: number,
   curved?: boolean,
   recycling?: boolean,
-  arrow_size?: number,  // Geometry link labels
+  arrow_size?: number,
+  // Geometry link labels
   label_position?: string,
   orthogonal_label_position?: string,
   label_on_path?: boolean,
-  label_pos_auto?: boolean,  //Attributes link
+  label_pos_auto?: boolean,
+  //Attributes link
   arrow?: boolean,
   color?: string,
   opacity?: number,
@@ -135,7 +136,8 @@ export type SankeyLinkAttrLocal = {
 
 export type SankeyLinkStyle = {
   idLink: string,
-  name: string,  // Geometry/appearence
+  name: string,
+  // Geometry/appearence
   orientation: string,
   arrow: boolean,
   color: string,
@@ -169,11 +171,13 @@ export type SankeyLink = {
   idLink: string,
   idSource: string,
   idTarget: string,
-  colorTag: string,  value: SankeyLinkValueDict | SankeyLinkValue,  tooltip_text?: string,  // geometry
+  colorTag: string,
+  value: SankeyLinkValueDict | SankeyLinkValue,
+  tooltip_text?: string,
+  // geometry
   x_label?: number,
   y_label?: number,
   drag_label_offset?: number
-
   //style
   style: string,  local?: SankeyLinkAttrLocal
 }
@@ -194,7 +198,11 @@ export type TagsGroup = {
   activated: boolean,
   siblings: string[]
 }
-export type TagsCatalog = { [_: string]: TagsGroup }//-------------------------
+
+type TagsCatalog = { [_: string]: TagsGroup }
+
+//-------------------------
+
 export type display_styleType = {
   filter: number,
   filter_label: number,
@@ -207,49 +215,46 @@ export type SankeyData = {
   file_name?: string,
   couleur_fond_sankey: string,
   displayed_node_selector: boolean,
-  displayed_link_selector: boolean,  user_scale: number,  maximum_flux?: number | null,
+  displayed_link_selector: boolean,
+  user_scale: number,
+  maximum_flux?: number | null,
   minimum_flux?: number | null,
   accordeonToShow: string[]
   style_node: { [_: string]: SankeyNodeStyle },
-  style_link: { [_: string]: SankeyLinkStyle },  show_structure: 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval',
+  style_link: { [_: string]: SankeyLinkStyle },
+  show_structure: 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval',
   fit_screen: boolean,
   height: number,
   width: number,
   h_space: number,
   v_space: number,
   left_shift: number,
-  right_shift: number,  legend_position: number[],
+  right_shift: number,
+  legend_position: number[],
   display_legend_scale: boolean,
   legend_police: number,
   mask_legend: boolean,
   legend_bg_color: string,
   legend_bg_opacity: number,
   legend_bg_border: boolean,
-  legend_show_dataTags: boolean,  nodes: { [_: string]: SankeyNode },
+  legend_show_dataTags: boolean,
+  nodes: { [_: string]: SankeyNode },
   links: { [_: string]: SankeyLink },
-  display_style: display_styleType,  linkZIndex: string[],
+  display_style: display_styleType,
+  linkZIndex: string[],
   grid_square_size: number,
-  grid_visible: boolean,  nodeTags: TagsCatalog,
+  grid_visible: boolean,
+  nodeTags: TagsCatalog,
   dataTags: TagsCatalog,
   fluxTags: TagsCatalog,
   levelTags: TagsCatalog,
   colorMap: string,
   nodesColorMap: string,
-  linksColorMap: string,  legend_width: number,
+  linksColorMap: string,
+  legend_width: number,
   node_label_separator: string
 }
 
-export interface SankeyMenuState {
-  processing: boolean
-}
-
-export interface SankeyAppState {
-  show_readme: boolean
-  show_legend: boolean
-  show_entry: boolean
-
-  data: SankeyData
-}
 export interface treeFolderType {
   id: string
   name: string,
@@ -257,26 +262,12 @@ export interface treeFolderType {
   checked?: 1 | 0.5 | 0
 }
 
-export type initializeCloseAllMenuContextType = (
-  tagContext: RefObject<[string | undefined, Dispatch<SetStateAction<string | undefined>>][]>,
-  showContextZDDRef: MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>] | undefined>
-) => () => void
-
-export type applicationDrawType = {
-  all_element_UpdateLayout: string[]
-  start_point: React.MutableRefObject<number[]>,
-}
-
-export type agregationType = {
-  showAgregationRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
-  isAgregationRef: MutableRefObject<boolean>,
-  agregationNode: MutableRefObject<SankeyNode | undefined>
-}
 export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
 
 /*****************************************************************************/
+
 // Data
-export type OSGetDefaultData = () => SankeyData
+type OSGetDefaultData = () => SankeyData
 
 export type applicationDataType = {
   data: SankeyData,
@@ -289,16 +280,12 @@ export type applicationDataType = {
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: FType_SetDiagram,
   new_data: Type_GenericApplicationDataOS
-}/*****************************************************************************/
+}
 
-export type CreateLinksOnSVGFType = (links_to_update: SankeyLink[]) => void
+/*****************************************************************************/
 
-export type DrawAllType = () => void
+// ===================CONVERTER LEGACY CODE========================
 
-export type initializeProcessFunctionsType = (
-  applicationData: applicationDataType,
-) => FType_ProcessFunctions
-/*****************************************************************************/// ===================CONVERTER LEGACY CODE========================
 export interface ConvertSankeyValue {
   color_tag?: { [key: string]: string }
   extension: {
@@ -427,10 +414,6 @@ export type ConvertDataLegacyFuncType = (
   json_object: Type_JSON,
 ) => void
 
-/**
-   *
-   * @typedef {layout_type}
-   */
 export type layout_type = {
   layout: SankeyData
 }
@@ -457,25 +440,15 @@ export type SetNodeStyleToTypeNode = (data: SankeyData) => void
 
 export type SetNodeStyleToTypeNodeFuncType = (data: SankeyData) => void
 
-export type ToPrecisionFuncType = (v: number, t: TFunction, nb_scientific?: number) => string | number
-
 export type ReturnValueNodeFuncType = (data: SankeyData, n: SankeyNode, k: keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle) => string | number | boolean
 
 export type ReturnLocalNodeValueFuncType = (n: SankeyNode, key: keyof SankeyNodeAttrLocal) => string | number | boolean | null | undefined
-
-export type AssignNodeStyleAttributeFuncType = (n: SankeyNodeStyle, k: keyof SankeyNodeStyle, v: boolean | string | number) => void
 
 export type ReturnValueLinkFuncType = (data: SankeyData, l: SankeyLink, k: keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle) => string | number | boolean
 
 export type ReturnLocalLinkValueFuncType = (n: SankeyLink, key: keyof SankeyLinkAttrLocal) => string | number | boolean | null | undefined
 
 export type AssignLinkLocalAttributeFuncType = (n: SankeyLink, k: keyof SankeyLinkAttrLocal, v: boolean | string | number) => void
-
-export type AssignLinkStyleAttributeFuncType = (n: SankeyLinkStyle, k: keyof SankeyLinkStyle, v: boolean | string | number) => void
-
-export type NodeContextHasAggregateFuncType = (n: SankeyNode, data: SankeyData) => boolean
-
-export type NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyData) => boolean
 
 export type compute_initial_colorsFType = (
   data: SankeyData
@@ -510,6 +483,3 @@ export interface DataSuiteType {
   is_catalog?: boolean,
   view?: { id: string, view_data: object, nom: string, details: string }[],
 }
-
-export type getterConfigType = () => Class_MenuConfig
-export type setterConfigType = (_: Class_MenuConfig) => void

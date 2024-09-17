@@ -7,20 +7,20 @@ import {
 import {
   FType_ComputeHorizontalIndex,
   FType_ComputeRecyclingHorizontalIndex,
-  FType_ReorganizeAllInputOutputLinksId,
+  // FType_ReorganizeAllInputOutputLinksId,
   FType_HasAggregationLinkToNode,
 } from './types/SankeyDrawLayoutTypes'
+// import {
+//   FType_ReorganizeNodeInputLinksId,
+//   FType_ReorganizeNodeOutputLinksId
+// } from './types/SankeyDrawLayoutTypes'
 import {
-  FType_ReorganizeNodeInputLinksId,
-  FType_ReorganizeNodeOutputLinksId
-} from './types/SankeyDrawLayoutTypes'
-import {
-  ComputeAutoSankeyFuncType,
+  FType_ComputeAutoSankey,
   FType_Agregation,
   FType_Desagregation,
 } from './types/SankeyDrawLayoutTypes'
 
-import { ReturnValueLink } from '../types/Legacy'
+// import { ReturnValueLink } from '../types/Legacy'
 
 
 /**
@@ -199,7 +199,7 @@ export const computeRecyclingHorizontalIndex: FType_ComputeRecyclingHorizontalIn
  * @param {SankeyData} data Data structure for Sankey
  * @param {number} h_space Horizontal spacing factor
  */
-export const ComputeAutoSankey: ComputeAutoSankeyFuncType = (
+export const ComputeAutoSankey: FType_ComputeAutoSankey = (
   // applicationData,
   // h_space : number,
   // launched_from_process
@@ -572,180 +572,180 @@ export const ComputeAutoSankey: ComputeAutoSankeyFuncType = (
   // reorganizeAllInputOutputLinksId(data,data.nodes, data.links)
 }
 
-/**
- * Reorganize vertically all input / output position
- * of given links to / from given nodes
- *
- * @param {SankeyData} data Data structure for Sankey
- * @param {object} nodes Dict of node to reorganize
- * @param {object} links Dict of links to reorganize
- */
-const reorganizeAllInputOutputLinksId: FType_ReorganizeAllInputOutputLinksId = (
-  data: SankeyData,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => {
-  Object.values(nodes)
-    .forEach(node => {
-      ReorganizeNodeInputLinksId(data, node, nodes, links)
-      ReorganizeNodeOutputLinksId(data, node, nodes, links)
-    })
-}
+// /**
+//  * Reorganize vertically all input / output position
+//  * of given links to / from given nodes
+//  *
+//  * @param {SankeyData} data Data structure for Sankey
+//  * @param {object} nodes Dict of node to reorganize
+//  * @param {object} links Dict of links to reorganize
+//  */
+// const reorganizeAllInputOutputLinksId: FType_ReorganizeAllInputOutputLinksId = (
+//   data: SankeyData,
+//   nodes: { [idNode: string]: SankeyNode },
+//   links: { [idLink: string]: SankeyLink }
+// ) => {
+//   Object.values(nodes)
+//     .forEach(node => {
+//       ReorganizeNodeInputLinksId(data, node, nodes, links)
+//       ReorganizeNodeOutputLinksId(data, node, nodes, links)
+//     })
+// }
 
-const ReorganizeNodeInputLinksId: FType_ReorganizeNodeInputLinksId = (
-  data: SankeyData,
-  node: SankeyNode,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => {
-  // Get list of input links of given node
-  const input_links = Object.values(links).filter(
-    link => (link.idTarget === node.idNode)
-  )
+// const ReorganizeNodeInputLinksId: FType_ReorganizeNodeInputLinksId = (
+//   data: SankeyData,
+//   node: SankeyNode,
+//   nodes: { [idNode: string]: SankeyNode },
+//   links: { [idLink: string]: SankeyLink }
+// ) => {
+//   // Get list of input links of given node
+//   const input_links = Object.values(links).filter(
+//     link => (link.idTarget === node.idNode)
+//   )
 
-  // Sorting algorithm between two input links
-  input_links.sort((l1, l2) => {
-    const n1Id = l1.idSource
-    const n2Id = l2.idSource
-    const l1_recy = ReturnValueLink(data, l1, 'recycling')
-    const l2_recy = ReturnValueLink(data, l2, 'recycling')
-    const l1_v_s = ReturnValueLink(data, l1, 'vert_shift') as number
-    const l2_v_s = ReturnValueLink(data, l2, 'vert_shift') as number
-    const l1_ori = ReturnValueLink(data, l1, 'orientation')
-    const l2_ori = ReturnValueLink(data, l2, 'orientation')
+//   // Sorting algorithm between two input links
+//   input_links.sort((l1, l2) => {
+//     const n1Id = l1.idSource
+//     const n2Id = l2.idSource
+//     const l1_recy = ReturnValueLink(data, l1, 'recycling')
+//     const l2_recy = ReturnValueLink(data, l2, 'recycling')
+//     const l1_v_s = ReturnValueLink(data, l1, 'vert_shift') as number
+//     const l2_v_s = ReturnValueLink(data, l2, 'vert_shift') as number
+//     const l1_ori = ReturnValueLink(data, l1, 'orientation')
+//     const l2_ori = ReturnValueLink(data, l2, 'orientation')
 
-    if (n1Id !== n2Id) {
-      const n1 = nodes[n1Id]
-      const n2 = nodes[n2Id]
-      if (n2.position == 'relative') {
-        return 1
-      }
-      if (n1.position == 'relative') {
-        return -1
-      }
-      if (l1_recy && !l2_recy) {
-        if (l1_v_s && l1_v_s < 0) {
-          return -1
-        }
-        return 1
-      }
-      if (!l1_recy && l2_recy) {
-        if (l2_v_s && l2_v_s < 0) {
-          return 1
-        }
-        return -1
-      }
-      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
-        if (n1 && n2 && n1.x < n2.x) {
-          return -1
-        }
-        return 1
-      }
-      if (n1 && n2 && n1.y < n2.y) {
-        return -1
-      }
-      return 1
-    } else {
-      const n1 = nodes[n1Id]
-      if (n1) {
-        const output_l1_index = n1.outputLinksId.indexOf(l1.idLink)
-        const output_l2_index = n1.outputLinksId.indexOf(l2.idLink)
-        const l1_index = input_links.indexOf(l1)
-        const l2_index = input_links.indexOf(l1)
-        if ((output_l1_index < output_l2_index && l1_index < l2_index) ||
-          (output_l1_index > output_l2_index && l1_index > l2_index)) {
-          return 1
-        }
-        return -1
-      } else {
-        return 1
-      }
-    }
-  })
-  node.inputLinksId = input_links.map(l => l.idLink)
-}
+//     if (n1Id !== n2Id) {
+//       const n1 = nodes[n1Id]
+//       const n2 = nodes[n2Id]
+//       if (n2.position == 'relative') {
+//         return 1
+//       }
+//       if (n1.position == 'relative') {
+//         return -1
+//       }
+//       if (l1_recy && !l2_recy) {
+//         if (l1_v_s && l1_v_s < 0) {
+//           return -1
+//         }
+//         return 1
+//       }
+//       if (!l1_recy && l2_recy) {
+//         if (l2_v_s && l2_v_s < 0) {
+//           return 1
+//         }
+//         return -1
+//       }
+//       if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
+//         if (n1 && n2 && n1.x < n2.x) {
+//           return -1
+//         }
+//         return 1
+//       }
+//       if (n1 && n2 && n1.y < n2.y) {
+//         return -1
+//       }
+//       return 1
+//     } else {
+//       const n1 = nodes[n1Id]
+//       if (n1) {
+//         const output_l1_index = n1.outputLinksId.indexOf(l1.idLink)
+//         const output_l2_index = n1.outputLinksId.indexOf(l2.idLink)
+//         const l1_index = input_links.indexOf(l1)
+//         const l2_index = input_links.indexOf(l1)
+//         if ((output_l1_index < output_l2_index && l1_index < l2_index) ||
+//           (output_l1_index > output_l2_index && l1_index > l2_index)) {
+//           return 1
+//         }
+//         return -1
+//       } else {
+//         return 1
+//       }
+//     }
+//   })
+//   node.inputLinksId = input_links.map(l => l.idLink)
+// }
 
-/**
- * Reorganize vertically all output links
- * from given node
- *
- * @param {SankeyData} data Data structure for Sankey
- * @param {SankeyNode} node Node on which output links positions must be reorganized
- * @param {object} nodes Dict of node to reorganize
- * @param {object} links Dict of links to reorganize
- */
-const ReorganizeNodeOutputLinksId: FType_ReorganizeNodeOutputLinksId = (
-  data: SankeyData,
-  node: SankeyNode,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => {
-  // Get list of output links of given node
-  const output_links = Object.values(links).filter(
-    l => l.idSource === node.idNode
-  )
+// /**
+//  * Reorganize vertically all output links
+//  * from given node
+//  *
+//  * @param {SankeyData} data Data structure for Sankey
+//  * @param {SankeyNode} node Node on which output links positions must be reorganized
+//  * @param {object} nodes Dict of node to reorganize
+//  * @param {object} links Dict of links to reorganize
+//  */
+// const ReorganizeNodeOutputLinksId: FType_ReorganizeNodeOutputLinksId = (
+//   data: SankeyData,
+//   node: SankeyNode,
+//   nodes: { [idNode: string]: SankeyNode },
+//   links: { [idLink: string]: SankeyLink }
+// ) => {
+//   // Get list of output links of given node
+//   const output_links = Object.values(links).filter(
+//     l => l.idSource === node.idNode
+//   )
 
-  // Sorting algorithm
-  output_links.sort((l1, l2) => {
-    const n1Id = l1.idTarget
-    const n2Id = l2.idTarget
-    const l1_recy = ReturnValueLink(data, l1, 'recycling')
-    const l2_recy = ReturnValueLink(data, l2, 'recycling')
-    const l1_v_s = ReturnValueLink(data, l1, 'vert_shift') as number
-    const l2_v_s = ReturnValueLink(data, l2, 'vert_shift') as number
-    const l1_ori = ReturnValueLink(data, l1, 'orientation')
-    const l2_ori = ReturnValueLink(data, l2, 'orientation')
+//   // Sorting algorithm
+//   output_links.sort((l1, l2) => {
+//     const n1Id = l1.idTarget
+//     const n2Id = l2.idTarget
+//     const l1_recy = ReturnValueLink(data, l1, 'recycling')
+//     const l2_recy = ReturnValueLink(data, l2, 'recycling')
+//     const l1_v_s = ReturnValueLink(data, l1, 'vert_shift') as number
+//     const l2_v_s = ReturnValueLink(data, l2, 'vert_shift') as number
+//     const l1_ori = ReturnValueLink(data, l1, 'orientation')
+//     const l2_ori = ReturnValueLink(data, l2, 'orientation')
 
-    if (n1Id !== n2Id) {
-      const n1 = nodes[n1Id]
-      const n2 = nodes[n2Id]
-      if (n2.position == 'relative') {
-        return -1
-      }
-      if (n1.position == 'relative') {
-        return 1
-      }
-      if (l1_recy && !l2_recy) {
-        if (l1_v_s && l1_v_s < 0) {
-          return 1
-        }
-        return -1
-      }
-      if (!l1_recy && l2_recy) {
-        if (l2_v_s && l2_v_s < 0) {
-          return 1
-        }
-        return -1
-      }
-      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
-        if (n1 && n2 && n1.x < n2.x) {
-          return -1
-        }
-        return 1
-      }
-      if (n1 && n2 && n1.y < n2.y) {
-        return -1
-      }
-      return 1
-    } else {
-      const n1 = nodes[n1Id]
-      if (n1) {
-        const input_l1_index = n1.inputLinksId.indexOf(l1.idLink)
-        const input_l2_index = n1.inputLinksId.indexOf(l2.idLink)
-        const l1_index = output_links.indexOf(l1)
-        const l2_index = output_links.indexOf(l1)
-        if ((input_l1_index < input_l2_index && l1_index < l2_index) ||
-          (input_l1_index > input_l2_index && l1_index > l2_index)) {
-          return 1
-        }
-        return -1
-      } else {
-        return 1
-      }
-    }
-  })
-  node.outputLinksId = output_links.map(l => l.idLink)
-}
+//     if (n1Id !== n2Id) {
+//       const n1 = nodes[n1Id]
+//       const n2 = nodes[n2Id]
+//       if (n2.position == 'relative') {
+//         return -1
+//       }
+//       if (n1.position == 'relative') {
+//         return 1
+//       }
+//       if (l1_recy && !l2_recy) {
+//         if (l1_v_s && l1_v_s < 0) {
+//           return 1
+//         }
+//         return -1
+//       }
+//       if (!l1_recy && l2_recy) {
+//         if (l2_v_s && l2_v_s < 0) {
+//           return 1
+//         }
+//         return -1
+//       }
+//       if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
+//         if (n1 && n2 && n1.x < n2.x) {
+//           return -1
+//         }
+//         return 1
+//       }
+//       if (n1 && n2 && n1.y < n2.y) {
+//         return -1
+//       }
+//       return 1
+//     } else {
+//       const n1 = nodes[n1Id]
+//       if (n1) {
+//         const input_l1_index = n1.inputLinksId.indexOf(l1.idLink)
+//         const input_l2_index = n1.inputLinksId.indexOf(l2.idLink)
+//         const l1_index = output_links.indexOf(l1)
+//         const l2_index = output_links.indexOf(l1)
+//         if ((input_l1_index < input_l2_index && l1_index < l2_index) ||
+//           (input_l1_index > input_l2_index && l1_index > l2_index)) {
+//           return 1
+//         }
+//         return -1
+//       } else {
+//         return 1
+//       }
+//     }
+//   })
+//   node.outputLinksId = output_links.map(l => l.idLink)
+// }
 
 /**
  * Function that display the parent node of the node in parameter

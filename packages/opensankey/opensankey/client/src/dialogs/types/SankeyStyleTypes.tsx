@@ -1,6 +1,6 @@
 import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
-export type SankeyModalStyleNodeFType = {
+export type FCType_SankeyModalStyleNode = {
   new_data: Type_GenericApplicationDataOS,
   node_attribute_tab: JSX.Element,
 }

@@ -1,16 +1,46 @@
 import { Type_JSON } from './Utils'
 import colormap from 'colormap'
-import { FaCaretRight } from 'react-icons/fa'
-import React from 'react'
-import * as d3 from 'd3'
-import { SankeyNode, SankeyNodeStyle, ConvertDataLegacyFuncType, SankeyNodeAttrLocal, SankeyLinkAttrLocal, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, TagsGroup, SankeyData, ConvertSankeyData, compute_flux_maxFType, compute_initial_colorsFType, convert_booleanFType, SankeyLinkStyle, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType, ReturnValueNodeFuncType, AssignLinkLocalAttributeFuncType, AssignLinkStyleAttributeFuncType, AssignNodeStyleAttributeFuncType, CreateObjectFuncType, DefaultLinkFuncType, DefaultLinkStyleFuncType, DefaultNodeFuncType, DefaultNodeProductStyleFuncStyle, DefaultNodeSectorStyleFuncStyle, DefaultNodeStyleFuncType, DefaultSankeyDataFuncType, GetLinkValueFuncType, NodeContextHasAggregateFuncType, NodeContextHasDesaggregateFuncType, ReturnLocalLinkValueFuncType, ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, SetNodeStyleToTypeNodeFuncType, ToPrecisionFuncType, ConvertSankeyLink, ConvertSankeyNode, ConvertSankeyValue } from './LegacyType'
+import {
+  SankeyNode,
+  SankeyNodeStyle,
+  ConvertDataLegacyFuncType,
+  SankeyNodeAttrLocal,
+  SankeyLinkAttrLocal,
+  SankeyLink,
+  SankeyLinkValue,
+  SankeyLinkValueDict,
+  TagsGroup,
+  SankeyData,
+  ConvertSankeyData,
+  compute_flux_maxFType,
+  compute_initial_colorsFType,
+  convert_booleanFType,
+  SankeyLinkStyle,
+  complete_sankey_dataFunctType,
+  convert_linksFuncType,
+  convert_nodesFuncType,
+  convert_tagsFuncType,
+  ReturnValueNodeFuncType,
+  AssignLinkLocalAttributeFuncType,
+  CreateObjectFuncType,
+  DefaultLinkFuncType,
+  DefaultLinkStyleFuncType,
+  DefaultNodeFuncType,
+  DefaultNodeProductStyleFuncStyle,
+  DefaultNodeSectorStyleFuncStyle,
+  DefaultNodeStyleFuncType,
+  DefaultSankeyDataFuncType,
+  GetLinkValueFuncType,
+  ReturnLocalLinkValueFuncType,
+  ReturnLocalNodeValueFuncType,
+  ReturnValueLinkFuncType,
+  SetNodeStyleToTypeNodeFuncType,
+  ConvertSankeyLink,
+  ConvertSankeyNode,
+  ConvertSankeyValue
+} from './LegacyType'
 
-export const default_element_color = '#a9a9a9'
-
-declare const window: Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-  }
+const default_element_color = '#a9a9a9'
 
 /**
  * Return a Sankey Node, used at the creation of a new node
@@ -43,7 +73,7 @@ export const DefaultNode: DefaultNodeFuncType = (
 }
 
 // Return default style configuration for node
-export const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
+const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
   return {
     idNode: 'default',
     name: 'Style par défaut',
@@ -78,7 +108,7 @@ export const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
   }
 }
 
-export const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
+const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = DefaultNodeStyle()
   node_style.idNode = 'NodeSectorStyle'
   node_style.name = 'Noeud de type secteur'
@@ -86,7 +116,7 @@ export const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
 }
 
 
-export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): SankeyNodeStyle => {
+const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): SankeyNodeStyle => {
   const node_style = DefaultNodeStyle()
   node_style.shape = 'ellipse'
   node_style.idNode = 'NodeProductStyle'
@@ -95,7 +125,7 @@ export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): San
 }
 
 // Return default style configuration for link
-export const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
+const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
   return {
     idLink: 'default',
     name: 'Style par défaut',
@@ -237,7 +267,6 @@ const clean_data_local = (data: SankeyData) => {
     }
   })
 }
-
 
 export const complete_sankey_data: complete_sankey_dataFunctType = (
   data: SankeyData,
@@ -390,67 +419,6 @@ export const GetLinkValue: GetLinkValueFuncType = (
 }
 
 /**
-   * Outputs max value from a given link dict.
-   *
-   * @param {number} max_node_value
-   * @param {SankeyLinkValueDict} value_dict
-   * @returns {number}
-   */
-// export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
-//   max_node_value: number,
-//   value_dict: SankeyLinkValueDict | SankeyLinkValue
-// ): number => {
-//   let new_max_node_value = max_node_value
-//   // If input does not exist or does not contain any info, return
-//   if (value_dict === undefined || Object.values(value_dict).length === 0) {
-//     return new_max_node_value
-//   }
-//   // We need a recurrence here, because values are at the bottom of nested dicts (datatags)
-//   // Such as :
-//   // 'value': {
-//   //   'value': {
-//   //     ... {
-//   //           'value': float
-//   //           ... }
-//   //     ... }
-//   //   ... }
-//   const child = Object.values(value_dict)[0]
-//   if (typeof child === 'object') {
-//     // Each link can contain multiple values, so we loop on each dict entry
-//     Object.values(value_dict).forEach(v => {
-//       const cur_max_value = FindMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
-//       new_max_node_value = (cur_max_value > new_max_node_value) ? cur_max_value : new_max_node_value
-//     })
-//   }
-//   else { // If we reached the value, we can compare with ref max value
-//     const tmp=(value_dict as SankeyLinkValue).value as number
-//     new_max_node_value = (tmp && (tmp > new_max_node_value)) ? tmp : new_max_node_value
-//   }
-//   return new_max_node_value
-// }
-
-
-/**
-   * Transform the value with scientific display
-   *
-   * @param {number} v
-   * @returns {*}
-   */
-export const ToPrecision: ToPrecisionFuncType = (
-  v: number,
-  t,
-  nb_scientific = 3
-): string | number => {
-  if (!isNaN(v)) {
-    if (v > Math.pow(10, nb_scientific)) {
-      return v.toPrecision(nb_scientific)
-    }
-    return String(parseFloat(v.toPrecision(nb_scientific))).replace('.', t('sep_decimal'))
-  }
-  return v
-}
-
-/**
    * return a default sankey_data, use at the initialisation or re-initialisation of the application
    *
    * @returns {SankeyData}
@@ -461,7 +429,6 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
   }
   return (data as unknown as SankeyData)
 }
-
 
 /**
    *
@@ -523,7 +490,6 @@ export const DefaultLink: DefaultLinkFuncType = (data: SankeyData): SankeyLink =
   }
 }
 
-
 export const SetNodeStyleToTypeNode: SetNodeStyleToTypeNodeFuncType = (data: SankeyData): void => {
   if (Object.keys(data.nodeTags).includes('Type de noeud')) {
     Object.values(data.nodes).forEach(node => {
@@ -537,8 +503,6 @@ export const SetNodeStyleToTypeNode: SetNodeStyleToTypeNodeFuncType = (data: San
     })
   }
 }
-
-
 
 // Return the value of an attribute from node :
 // - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
@@ -557,12 +521,6 @@ export const ReturnLocalNodeValue: ReturnLocalNodeValueFuncType = (n: SankeyNode
   return n.local?.[key]
 }
 
-
-// Assign the value to attribute of node style "n"
-export const AssignNodeStyleAttribute: AssignNodeStyleAttributeFuncType = (n: SankeyNodeStyle, k: keyof SankeyNodeStyle, v: boolean | string | number): void => {
-  (n[k] as unknown) = v
-}
-
 // Return the value of an attribute from link :
 // - If the link has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the link has (a link always has a style )
@@ -575,9 +533,8 @@ export const ReturnValueLink: ReturnValueLinkFuncType = (data: SankeyData, l: Sa
   return value
 }
 
-
 // Return value of local link variable attribute that can be undefined ('local' and 'local[key]' can be undefined)
-export const ReturnLocalLinkValue: ReturnLocalLinkValueFuncType = (l: SankeyLink, key: keyof SankeyLinkAttrLocal) => {
+const ReturnLocalLinkValue: ReturnLocalLinkValueFuncType = (l: SankeyLink, key: keyof SankeyLinkAttrLocal) => {
   if (l === undefined) {
     return undefined
   }
@@ -595,109 +552,8 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
   }
   Object.assign(l.local, { [k.toString()]: v })
 }
-// Assign the value to attribute of link style "l"
-export const AssignLinkStyleAttribute: AssignLinkStyleAttributeFuncType = (l: SankeyLinkStyle, k: keyof SankeyLinkStyle, v: boolean | string | number) => {
-  (l[k] as unknown) = v
-}
-export const NodeContextHasAggregate: NodeContextHasAggregateFuncType = (n: SankeyNode, data: SankeyData) => {
-  if (!n.dimensions) {
-    return false
-  }
 
-  const parent_names: string[] = []
-  const dim_names: string[] = []
-  Object.keys(n.dimensions).forEach(
-    dim => {
-      if (dim === 'Primaire') {
-        if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-          parent_names.push(n.idNode)
-          dim_names.push(dim)
-        }
-      } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
-        parent_names.push(n.dimensions[dim].parent_name as string)
-        dim_names.push(dim)
-      }
-    }
-  )
-
-  if (parent_names.length > 0) {
-    return true
-  } else {
-    return false
-  }
-
-}
-export const NodeContextHasDesaggregate: NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyData) => {
-  if (!n.dimensions) {
-    return false
-  }
-
-  const child_names: string[] = []
-  const dim_names: string[] = []
-  Object.values(data.nodes).forEach(n2 => {
-    for (const dim in n2.dimensions) {
-      if (dim === 'Primaire') {
-        if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-          child_names.push(n2.idNode)
-          dim_names.push(dim)
-        }
-      } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
-        if (dim_names.indexOf(dim) === -1) {
-          child_names.push(n2.idNode)
-          dim_names.push(dim)
-        }
-      }
-    }
-    return false
-  })
-
-  if (child_names.length > 0) {
-    return true
-  } else {
-    return false
-  }
-
-}
-
-// Create emptyicon for treefolder component
-export const FileIcon = () => {
-  return <FaCaretRight style={{ opacity: 0 }} />
-}
-export const FolderIcon = () => {
-  return <></>
-}
-export const FolderOpenIcon = () => {
-  return <></>
-}
-
-export const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
-  d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
-  d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
-  d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
-
-export const windowSankey = window as Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-    sankey: {
-      sankey_data_file: RequestInfo
-      sous_filieres: { [key: string]: string }
-      units: string[]
-      flask_logo?: string
-      flask_header?: string
-      logo_width?: number
-      legend_average: string
-      legend_uncert: string
-      help_text: string
-      welcome_text: string
-      excel: string
-      logo: string,
-      advanced: boolean,
-      intro: string
-    }
-  }
-
-
-export const compute_initial_colors: compute_initial_colorsFType = (
+const compute_initial_colors: compute_initial_colorsFType = (
   data: SankeyData
 ) => {
   Object.values(data.nodeTags).forEach(
@@ -773,7 +629,7 @@ export const compute_initial_colors: compute_initial_colorsFType = (
   )
 }
 
-export const convert_boolean: convert_booleanFType = (
+const convert_boolean: convert_booleanFType = (
   data: SankeyData
 ) => {
 
@@ -797,7 +653,7 @@ export const convert_boolean: convert_booleanFType = (
   )
 }
 
-export const compute_flux_max: compute_flux_maxFType = (
+const compute_flux_max: compute_flux_maxFType = (
   data: SankeyData
 ): void => {
   let flux_max = 0
@@ -838,7 +694,7 @@ export const compute_flux_max: compute_flux_maxFType = (
   }
 }
 
-export const convert_tags: convert_tagsFuncType = (
+const convert_tags: convert_tagsFuncType = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
@@ -1197,7 +1053,7 @@ export const convert_tags: convert_tagsFuncType = (
 
 }
 
-export const convert_nodes: convert_nodesFuncType = (
+const convert_nodes: convert_nodesFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
@@ -1465,7 +1321,7 @@ export const convert_nodes: convert_nodesFuncType = (
 
 }
 
-export const convert_links: convert_linksFuncType = (
+const convert_links: convert_linksFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
@@ -1952,9 +1808,11 @@ export const convert_links: convert_linksFuncType = (
 
 
 }
+
 const has_not_converted_nodeTags_as_levelTags = (data: SankeyData) => {
   return Object.values(data.nodeTags).filter(nt => nt.banner == 'level').length > 0
 }
+
 const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
