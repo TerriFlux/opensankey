@@ -27,10 +27,10 @@ import {
 import {
   FType_InitializeAdditionalMenusOSP,
   FType_ModuleDialogsOSP
-} from '../types/FunctionsTypes'
+} from './ftypes/SankeyPlusApplication'
 import {
   FType_InitializeApplicationDataOSP
-} from '../types/FunctionsTypes'
+} from './ftypes/SankeyPlusApplication'
 import {
   ZDTMenuAsAccordeonItemOSP,
   MenuConfigurationFreeLabelsOSP,

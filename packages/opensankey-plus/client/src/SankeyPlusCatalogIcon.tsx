@@ -21,7 +21,7 @@ import {
   Tabs
 } from '@chakra-ui/react'
 
-import type { FCType_ModalSelectionIconsOSP } from '../types/FunctionsTypes'
+import type { FCType_ModalSelectionIconsOSP } from './ftypes/SankeyPlusApplication'
 
 import SankeyListIcons from './icons/lib_of_icons.json'
 

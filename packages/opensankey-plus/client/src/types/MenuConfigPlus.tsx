@@ -15,7 +15,7 @@ import { MutableRefObject, useRef, RefObject, Dispatch, SetStateAction } from 'r
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 
 // Local imports
-import { OSPShowMenuComponentsVarType } from '../../types/Types'
+import { OSPShowMenuComponentsVarType } from './LegacyTypes'
 
 // CLASS MENU CONFIG PLUS ***************************************************************
 

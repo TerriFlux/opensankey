@@ -8,10 +8,10 @@ import type {
   SankeyLinkStyle,
   SankeyNode,
   SankeyNodeStyle
-} from '../src/deps/OpenSankey/types/LegacyType'
-import type { IType_DictHookRefSetterShowDialogComponents } from '../src/deps/OpenSankey/types/MenuConfig'
+} from '../deps/OpenSankey/types/LegacyType'
+import type { IType_DictHookRefSetterShowDialogComponents } from '../deps/OpenSankey/types/MenuConfig'
 
-import type { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
+import type { Type_GenericApplicationDataOSP } from './TypesOSP'
 
 
 export type DiffType = {

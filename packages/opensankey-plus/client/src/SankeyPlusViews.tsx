@@ -51,11 +51,11 @@ import {
   FCType_MenuEnregistrerViewOSP,
   FCType_ModalViewNotSavedOSP,
   FCType_ModalTransparentViewAttrOSP
-} from '../types/SankeyPlusViewsTypes'
+} from './ftypes/SankeyPlusViewsTypes'
 
 import {
   OSPData
-} from '../types/Types'
+} from './types/LegacyTypes'
 
 // TODO Est-ce toujours utile ?
 declare const window: Window &

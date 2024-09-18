@@ -22,7 +22,6 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
-    "types"
+    "src"
   ]
 }

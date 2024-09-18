@@ -11,7 +11,7 @@
 import { Type_JSON, default_main_sankey_id, default_style_id, getJSONFromJSON } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
-import type { ViewType } from '../../types/Types'
+import type { ViewType } from './LegacyTypes'
 import type { Class_MenuConfigPlus } from './MenuConfigPlus'
 import type { Class_NodeElementPlus } from './NodePlus'
 import type { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'

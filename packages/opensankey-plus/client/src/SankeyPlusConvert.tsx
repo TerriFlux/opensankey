@@ -9,7 +9,7 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Box, Button } from '@chakra-ui/react'
 
-import type { FCType_TransformationElementsOSP } from '../types/SankeyPlusConvertTypes'
+import type { FCType_TransformationElementsOSP } from './ftypes/SankeyPlusConvertTypes'
 import { OSTooltip } from './deps/OpenSankey/types/Utils'
 
 // import { FaCheck } from 'react-icons/fa'
@@ -38,7 +38,7 @@ import { OSTooltip } from './deps/OpenSankey/types/Utils'
 //   FType_DiagramSelectorOSP,
 //   FCType_TransformationElementsOSP,
 //   FType_ConvertDataOSP,
-//   FType_sankeyLayoutOSP
+//   FType_SankeyLayoutOSP
 // } from '../types/SankeyPlusConvertTypes'
 // import {
 //   DefaultLink,
@@ -429,7 +429,7 @@ export const TransformationElementsOSP: FunctionComponent<FCType_TransformationE
     </OSTooltip></>
 }
 
-// export const sankeyLayoutOSP : FType_sankeyLayoutOSP =(
+// export const sankeyLayoutOSP : FType_SankeyLayoutOSP =(
 //   data:OSPData,
 //   new_layout:OSPData,
 //   mode:string[]

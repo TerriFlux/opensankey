@@ -7,7 +7,7 @@ import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
 import { isAttributeOverloaded } from './deps/OpenSankey/types/Link'
 
 // Local imports
-import type { FCType_MenuConfLinkApparenceGradientOSP } from '../types/SankeyPlusGradientTypes'
+import type { FCType_MenuConfLinkApparenceGradientOSP } from './ftypes/SankeyPlusGradientTypes'
 import type { Class_LinkStylePlus } from './types/LinkPlus'
 import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './types/TypesOSP'
 

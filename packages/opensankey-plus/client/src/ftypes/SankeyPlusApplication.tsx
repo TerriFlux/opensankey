@@ -1,15 +1,15 @@
 // OpenSankey imports
 import type {
   FType_InitializeAdditionalMenus
-} from '../src/deps/OpenSankey/types/FunctionTypes'
+} from '../deps/OpenSankey/types/FunctionTypes'
 import type {
   Type_JSON
-} from '../src/deps/OpenSankey/types/Utils'
+} from '../deps/OpenSankey/types/Utils'
 
 // Local imports
 import type {
   Type_GenericApplicationDataOSP
-} from '../src/types/TypesOSP'
+} from '../types/TypesOSP'
 
 // Generic Type that with given argument return a functionType that return a given type,
 // Usefull when we want to only recast the returned value of OS function in submodule

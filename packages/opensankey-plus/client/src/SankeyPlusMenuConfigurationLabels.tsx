@@ -39,7 +39,7 @@ import {
   FCType_MenuPreferenceLabelsOSP,
   FCType_ContextZDTOSP,
   FCType_ZDTMenuAsAccordeonItemOSP
-} from '../types/SankeyPlusMenuConfigurationLabelsTypes'
+} from './ftypes/SankeyPlusMenuConfigurationLabelsTypes'
 import { Type_GenericContainerElement } from './types/TypesOSP'
 
 

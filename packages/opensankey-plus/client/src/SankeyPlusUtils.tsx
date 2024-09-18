@@ -6,7 +6,7 @@ import { Box, Checkbox, Button, Input } from '@chakra-ui/react'
 // Internal imports
 import {
   FCType_ImportImageAsSvgBg,
-} from '../types/SankeyPlusUtilsTypes'
+} from './ftypes/SankeyPlusUtilsTypes'
 import {
   CustomFaEyeCheckIcon,
   OSTooltip

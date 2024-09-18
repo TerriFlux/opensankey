@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { OSPData, OSPLink, OSPNode } from './Types'
+import { OSPData, OSPLink, OSPNode } from '../types/LegacyTypes'
 
 export type FType_MenuConfigurationNodesAgregationOSP = (
   t: TFunction,

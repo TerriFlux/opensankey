@@ -1,4 +1,4 @@
-import { Type_GenericApplicationDataOSP } from '../src/types/TypesOSP'
+import { Type_GenericApplicationDataOSP } from '../types/TypesOSP'
 
 export type FCType_NodeIconOSP = {
   new_data_plus: Type_GenericApplicationDataOSP,

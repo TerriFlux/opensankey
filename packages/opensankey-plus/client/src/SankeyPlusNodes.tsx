@@ -23,7 +23,7 @@ import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 import {
   FCType_NodeHyperLinkOSP,
   FCType_NodeIconOSP,
-} from '../types/SankeyPlusNodesTypes'
+} from './ftypes/SankeyPlusNodesTypes'
 
 // OpenSankey ts-code
 import { default_shape_visible, isAttributeOverloaded } from './deps/OpenSankey/types/Node'

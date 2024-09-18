@@ -8,7 +8,7 @@
     "//": "Comment on craco : It overrides  react-script webpack config file ",
     "start": "craco start",
     "build": "craco build",
-    "lint": "eslint --fix ./src ./types",
+    "lint": "eslint --fix ./src",
     "dist": "tsc -p .",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
