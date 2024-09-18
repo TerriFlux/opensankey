@@ -28,6 +28,7 @@ import {
 } from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
+import { modalWelcomeBuilder } from './welcome/ModalWelcome'
 
 // CONSTANTS =========================================================================================
 
@@ -60,6 +61,9 @@ root.render(
 
     // Submenus to add in the application
     moduleDialogs={moduleDialogs}
+
+    // Welcome modal
+    modalWelcome={modalWelcomeBuilder}
 
     // BackEnd
     ClickSaveDiagram={ClickSaveDiagram}
