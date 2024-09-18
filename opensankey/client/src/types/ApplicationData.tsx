@@ -22,6 +22,7 @@ import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
 
 // SPECIFIC CONSTANTS ******************************************************************/
+
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
 export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
@@ -62,6 +63,8 @@ export abstract class Class_ApplicationData
   // App
   public version: string = '0.9'
   public fit_screen: boolean
+  public static_path: string = 'static/opensankey'
+  public options: {[_: string]: boolean | string } = {}
 
   // Save JSON options
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
@@ -116,8 +119,13 @@ export abstract class Class_ApplicationData
     * @param {boolean} published_mode
     * @memberof Class_ApplicationData
     */
-  constructor(published_mode: boolean) {
+  constructor(
+    published_mode: boolean,
+    options: {[_: string]: boolean | string} = {}
+  ) {
     super()
+    // Options for application
+    this.options = options
     // Deals with UI menu updates / each modifications
     this._menu_configuration = new Class_MenuConfig
     // Contains all drawn objects
@@ -128,27 +136,23 @@ export abstract class Class_ApplicationData
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
 
-    // Get logo PNG
-    let logo = ''
+    // Get OpenSankey logo
+    let logo_opensankey = ''
     try {
-      /* eslint-disable */
-      // @ts-ignore
-      logo = require('../css/opensankey.png')
-      /* eslint-enable */
+      logo_opensankey = require('../css/opensankey.png')
       const path = window.location.href
       if (!path.includes('localhost')) {
-        logo = logo.replace('static/', 'static/opensankey/')
+        logo_opensankey = logo_opensankey.replace('static/', 'static/opensankey/')
       }
     } catch (expt) {
       console.log('opensankey.png not found')
     }
+    this._logo_opensankey = logo_opensankey
 
+    // Get TerriFlux logo
     let logo_terriflux = ''
     try {
-      /* eslint-disable */
-      // @ts-ignore
       logo_terriflux = require('../css/terriflux.png')
-      /* eslint-enable */
       const path = window.location.href
       if (!path.includes('localhost')) {
         logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
@@ -156,10 +160,10 @@ export abstract class Class_ApplicationData
     } catch (expt) {
       console.log('terriflux.png not found')
     }
-
-    this._logo = logo
-    this._logo_opensankey = logo
     this._logo_terriflux = logo_terriflux
+
+    // Default logo for app
+    this._logo = logo_opensankey
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -363,6 +367,7 @@ export abstract class Class_ApplicationData
 
   // GETTERS / SETTERS ==================================================================
 
+  public get t(): TFunction { return this._t }
   public get is_static(): boolean { return this._drawing_area.static }
 
   public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
@@ -372,21 +377,12 @@ export abstract class Class_ApplicationData
   protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get has_free_account(): boolean { return this._has_free_account }
-  public set has_free_account(value: boolean) { this._has_free_account = value }
-
-  public get t(): TFunction { return this._t }
 
   public get url_prefix(): string { return this._url_prefix }
-  public set url_prefix(value: string) { this._url_prefix = value }
 
-  public get logo(): string { return this._logo }
-  public set logo(value: string) { this._logo = value }
-
+  public get logo(): string { return this._logo_opensankey }
   public get logo_opensankey(): string { return this._logo_opensankey }
-  public set logo_opensankey(value: string) { this._logo_opensankey = value }
-
   public get logo_terriflux(): string { return this._logo_terriflux }
-  public set logo_terriflux(value: string) { this._logo_terriflux = value }
 
   public get logo_width(): number { return this._logo_width }
   public set logo_width(value: number) { this._logo_width = value }

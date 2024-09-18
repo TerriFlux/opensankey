@@ -21,6 +21,9 @@ import {
   FType_DiagramSelector,
   FType_InitializeDiagrammSelector
 } from '../dialogs/types/SankeyMenuDialogsTypes'
+import {
+  FType_ModalWelcomeBuilder
+} from '../welcome/types/ModalWelcome'
 
 // Function components prototypes =================================================================
 
@@ -31,6 +34,7 @@ export type FCType_SankeyApp = {
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   initializeDiagrammSelector: FType_InitializeDiagrammSelector,
   moduleDialogs: FType_ModuleDialogs,
+  modalWelcome: FType_ModalWelcomeBuilder,
   ClickSaveDiagram: FType_ClickSaveDiagram,
 }
 
