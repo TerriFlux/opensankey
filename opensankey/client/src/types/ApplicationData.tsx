@@ -92,11 +92,18 @@ export abstract class Class_ApplicationData
    */
   protected _menu_configuration: Class_MenuConfig
 
+  /**
+   * Application logo
+   * @private
+   * @type {string}
+   * @memberof Class_ApplicationData
+   */
+  protected _logo: string // path to logo
+
   // PRIVATE ATTRIBUTES =================================================================
 
   // General attributes for the application
   private _t: TFunction = useTranslation().t //traductor
-  private _logo: string // path to logo
   private _logo_opensankey: string // path to logo
   private _logo_terriflux: string  //path to logo_terriflux
   private _logo_width: number = 100
@@ -142,7 +149,7 @@ export abstract class Class_ApplicationData
       logo_opensankey = require('../css/opensankey.png')
       const path = window.location.href
       if (!path.includes('localhost')) {
-        logo_opensankey = logo_opensankey.replace('static/', 'static/opensankey/')
+        logo_opensankey = logo_opensankey.replace('static/', this.static_path)
       }
     } catch (expt) {
       console.log('opensankey.png not found')
@@ -155,7 +162,7 @@ export abstract class Class_ApplicationData
       logo_terriflux = require('../css/terriflux.png')
       const path = window.location.href
       if (!path.includes('localhost')) {
-        logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
+        logo_terriflux = logo_terriflux.replace('static/', this.static_path)
       }
     } catch (expt) {
       console.log('terriflux.png not found')
