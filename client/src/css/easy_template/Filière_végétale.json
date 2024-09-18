@@ -1,0 +1,6862 @@
+{
+  "version": "0.8",
+  "couleur_fond_sankey": "#f2f2f2",
+  "displayed_node_selector": false,
+  "displayed_link_selector": false,
+  "nodes": {
+    "node0": {
+      "name": "Harvest",
+      "idNode": "node0",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 450,
+      "y": 250,
+      "inputLinksId": [
+        "link176",
+        "link175",
+        "link174",
+        "link173",
+        "link172",
+        "link171",
+        "link170",
+        "link169",
+        "link168",
+        "link167",
+        "link166",
+        "link163",
+        "link13",
+        "link12",
+        "link11",
+        "link10",
+        "link9",
+        "link8",
+        "link7",
+        "link6",
+        "link5",
+        "link4",
+        "link3",
+        "link0"
+      ],
+      "outputLinksId": [
+        "link27",
+        "link26",
+        "link25",
+        "link24",
+        "link23",
+        "link22",
+        "link21",
+        "link20",
+        "link19",
+        "link18",
+        "link17",
+        "link14",
+        "link70",
+        "link69",
+        "link68",
+        "link67",
+        "link66",
+        "link65",
+        "link64",
+        "link63",
+        "link62",
+        "link61",
+        "link60",
+        "link57",
+        "link99",
+        "link98",
+        "link97",
+        "link96",
+        "link95",
+        "link94",
+        "link93",
+        "link92",
+        "link91",
+        "link90",
+        "link89",
+        "link86",
+        "link123",
+        "link122",
+        "link121",
+        "link120",
+        "link119",
+        "link118",
+        "link117",
+        "link116",
+        "link115",
+        "link114",
+        "link113",
+        "link110",
+        "link147",
+        "link146",
+        "link145",
+        "link144",
+        "link143",
+        "link142",
+        "link141",
+        "link140",
+        "link139",
+        "link138",
+        "link137",
+        "link134",
+        "link56",
+        "link55",
+        "link54",
+        "link53",
+        "link52",
+        "link51",
+        "link50",
+        "link49",
+        "link48",
+        "link47",
+        "link46",
+        "link43"
+      ],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "middle",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node1": {
+      "name": "Transformation",
+      "idNode": "node1",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 850,
+      "y": 200,
+      "inputLinksId": [
+        "link27",
+        "link26",
+        "link25",
+        "link24",
+        "link23",
+        "link22",
+        "link21",
+        "link20",
+        "link19",
+        "link18",
+        "link17",
+        "link14",
+        "link191",
+        "link190",
+        "link189",
+        "link188",
+        "link187",
+        "link186",
+        "link185",
+        "link184",
+        "link183",
+        "link182",
+        "link181",
+        "link180",
+        "link177",
+        "link42",
+        "link41",
+        "link40",
+        "link39",
+        "link38",
+        "link37",
+        "link36",
+        "link35",
+        "link34",
+        "link33",
+        "link32",
+        "link31",
+        "link28"
+      ],
+      "outputLinksId": [
+        "link85",
+        "link84",
+        "link83",
+        "link82",
+        "link81",
+        "link80",
+        "link79",
+        "link78",
+        "link77",
+        "link76",
+        "link75",
+        "link74",
+        "link71",
+        "link109",
+        "link108",
+        "link107",
+        "link106",
+        "link105",
+        "link104",
+        "link103",
+        "link100",
+        "link133",
+        "link132",
+        "link131",
+        "link130",
+        "link129",
+        "link128",
+        "link127",
+        "link124",
+        "link162",
+        "link161",
+        "link160",
+        "link159",
+        "link158",
+        "link157",
+        "link156",
+        "link155",
+        "link154",
+        "link153",
+        "link152",
+        "link151",
+        "link148",
+        "link42",
+        "link41",
+        "link40",
+        "link39",
+        "link38",
+        "link37",
+        "link36",
+        "link35",
+        "link34",
+        "link33",
+        "link32",
+        "link31",
+        "link28"
+      ],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "x_label": 79.87663376027302,
+      "y_label": 5.03875732421875,
+      "local": {
+        "label_vert": "top",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node2": {
+      "name": "Stock addition",
+      "idNode": "node2",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 562.8212890625,
+      "y": 650.9116821289062,
+      "inputLinksId": [
+        "link56",
+        "link55",
+        "link54",
+        "link53",
+        "link52",
+        "link51",
+        "link50",
+        "link49",
+        "link48",
+        "link47",
+        "link46",
+        "link43"
+      ],
+      "outputLinksId": [],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node3": {
+      "name": "Stock withdrawal",
+      "idNode": "node3",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 562.506103515625,
+      "y": 100.29290008544922,
+      "inputLinksId": [],
+      "outputLinksId": [
+        "link13",
+        "link12",
+        "link11",
+        "link10",
+        "link9",
+        "link8",
+        "link7",
+        "link6",
+        "link5",
+        "link4",
+        "link3",
+        "link0"
+      ],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "top",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node4": {
+      "name": "Animal husbandry",
+      "idNode": "node4",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 1151.4141845703125,
+      "y": 334.85284423828125,
+      "inputLinksId": [
+        "link85",
+        "link84",
+        "link83",
+        "link82",
+        "link81",
+        "link80",
+        "link79",
+        "link78",
+        "link77",
+        "link76",
+        "link75",
+        "link74",
+        "link71",
+        "link70",
+        "link69",
+        "link68",
+        "link67",
+        "link66",
+        "link65",
+        "link64",
+        "link63",
+        "link62",
+        "link61",
+        "link60",
+        "link57"
+      ],
+      "outputLinksId": [],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "middle",
+        "label_horiz": "right",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node5": {
+      "name": "Other use and consumption",
+      "idNode": "node5",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 1150,
+      "y": 500,
+      "inputLinksId": [
+        "link109",
+        "link108",
+        "link107",
+        "link106",
+        "link105",
+        "link104",
+        "link103",
+        "link100",
+        "link99",
+        "link98",
+        "link97",
+        "link96",
+        "link95",
+        "link94",
+        "link93",
+        "link92",
+        "link91",
+        "link90",
+        "link89",
+        "link86"
+      ],
+      "outputLinksId": [],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "middle",
+        "label_horiz": "right",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node6": {
+      "name": "Seeds and losses",
+      "idNode": "node6",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 1150,
+      "y": 600,
+      "inputLinksId": [
+        "link133",
+        "link132",
+        "link131",
+        "link130",
+        "link129",
+        "link128",
+        "link127",
+        "link124",
+        "link123",
+        "link122",
+        "link121",
+        "link120",
+        "link119",
+        "link118",
+        "link117",
+        "link116",
+        "link115",
+        "link114",
+        "link113",
+        "link110"
+      ],
+      "outputLinksId": [],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "middle",
+        "label_horiz": "right",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node7": {
+      "name": "Import - Harvest",
+      "idNode": "node7",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 464.2161865234375,
+      "y": 100.189208984375,
+      "inputLinksId": [],
+      "outputLinksId": [
+        "link176",
+        "link175",
+        "link174",
+        "link173",
+        "link172",
+        "link171",
+        "link170",
+        "link169",
+        "link168",
+        "link167",
+        "link166",
+        "link163"
+      ],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "top",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node8": {
+      "name": "Import - Transformation",
+      "idNode": "node8",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 850,
+      "y": 100,
+      "inputLinksId": [],
+      "outputLinksId": [
+        "link191",
+        "link190",
+        "link189",
+        "link188",
+        "link187",
+        "link186",
+        "link185",
+        "link184",
+        "link183",
+        "link182",
+        "link181",
+        "link180",
+        "link177"
+      ],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "label_vert": "top",
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node9": {
+      "name": "Export - Harvest",
+      "idNode": "node9",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 450.8233642578125,
+      "y": 649.9116821289062,
+      "inputLinksId": [
+        "link147",
+        "link146",
+        "link145",
+        "link144",
+        "link143",
+        "link142",
+        "link141",
+        "link140",
+        "link139",
+        "link138",
+        "link137",
+        "link134"
+      ],
+      "outputLinksId": [],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    },
+    "node10": {
+      "name": "Export - Transformation",
+      "idNode": "node10",
+      "colorParameter": "groupTag",
+      "position": "absolute",
+      "x": 850,
+      "y": 650,
+      "inputLinksId": [
+        "link162",
+        "link161",
+        "link160",
+        "link159",
+        "link158",
+        "link157",
+        "link156",
+        "link155",
+        "link154",
+        "link153",
+        "link152",
+        "link151",
+        "link148"
+      ],
+      "outputLinksId": [],
+      "tags": {
+        "Primaire": [
+          "1"
+        ]
+      },
+      "colorTag": "Produit",
+      "dimensions": {
+        "Primaire": {
+          "level": 1
+        }
+      },
+      "style": "default",
+      "label_visible": true,
+      "show_value": false,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "colorSustainable": false,
+      "local": {
+        "font_size": 17,
+        "bold": true,
+        "label_box_width": 110,
+        "label_horiz_valeur": "milieu",
+        "label_vert_valeur": "bas",
+        "node_width": 10,
+        "node_height": 10,
+        "color": "grey"
+      }
+    }
+  },
+  "links": {
+    "link0": {
+      "idLink": "link0",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "1": {
+          "value": 26094,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 26094,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 23300,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 434.25871012362757,
+      "y_label": 158.6,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link3": {
+      "idLink": "link3",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 2794,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 420.1593325840754,
+      "y_label": 156.13333333333333,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link4": {
+      "idLink": "link4",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link5": {
+      "idLink": "link5",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link6": {
+      "idLink": "link6",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link7": {
+      "idLink": "link7",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link8": {
+      "idLink": "link8",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link9": {
+      "idLink": "link9",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link10": {
+      "idLink": "link10",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link11": {
+      "idLink": "link11",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link12": {
+      "idLink": "link12",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link13": {
+      "idLink": "link13",
+      "idSource": "node3",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link14": {
+      "idLink": "link14",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "1": {
+          "value": 79606,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 30731,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 23851,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 566.8869196853117,
+      "y_label": 318.1396429497709,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link17": {
+      "idLink": "link17",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 6880,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 566.5429142291769,
+      "y_label": 301.5347540416703,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link18": {
+      "idLink": "link18",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 48875,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link19": {
+      "idLink": "link19",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 7572,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 565.8549033169072,
+      "y_label": 293.72590127085675,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link20": {
+      "idLink": "link20",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 6160,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 565.5108978607725,
+      "y_label": 286.3060862799343,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link21": {
+      "idLink": "link21",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 33523,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 565.1668924046378,
+      "y_label": 264.86416097518804,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link22": {
+      "idLink": "link22",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 1620,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 564.8228869485029,
+      "y_label": 245.8753350047549,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link23": {
+      "idLink": "link23",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link24": {
+      "idLink": "link24",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link25": {
+      "idLink": "link25",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link26": {
+      "idLink": "link26",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link27": {
+      "idLink": "link27",
+      "idSource": "node0",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link28": {
+      "idLink": "link28",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "1": {
+          "value": 528,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Transformed products"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 528,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain products"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 410.42499999999995,
+      "y_label": 305.4878101495634,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 26.1616455078125,
+        "right_horiz_shift": -26.86129150390625,
+        "vert_shift": 18.1298828125,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link32": {
+      "idLink": "link32",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables prducts (incl. wine, sugar and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link33": {
+      "idLink": "link33",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link34": {
+      "idLink": "link34",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link35": {
+      "idLink": "link35",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link36": {
+      "idLink": "link36",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link37": {
+      "idLink": "link37",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Processed feed"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link38": {
+      "idLink": "link38",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "1": {
+          "value": 9265,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 410.3959090909091,
+      "y_label": 314.3589521915795,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 28.99447021484375,
+        "right_horiz_shift": -30.26070556640625,
+        "vert_shift": 11.897705078125,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link39": {
+      "idLink": "link39",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 8735,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 27.8613525390625,
+        "right_horiz_shift": -29.6941162109375,
+        "vert_shift": 12.464263916015625,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link42": {
+      "idLink": "link42",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 530,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 13.130761718750001,
+        "right_horiz_shift": -14.963708496093751,
+        "vert_shift": 39.6590576171875,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link43": {
+      "idLink": "link43",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "1": {
+          "value": 25655,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 25655,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 22740,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 511.43723523817755,
+      "y_label": 509.6201118123397,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link46": {
+      "idLink": "link46",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 2915,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 497.575062678309,
+      "y_label": 509.2802075828746,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link47": {
+      "idLink": "link47",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link48": {
+      "idLink": "link48",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link49": {
+      "idLink": "link49",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link50": {
+      "idLink": "link50",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link51": {
+      "idLink": "link51",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link52": {
+      "idLink": "link52",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link53": {
+      "idLink": "link53",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link54": {
+      "idLink": "link54",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link55": {
+      "idLink": "link55",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link56": {
+      "idLink": "link56",
+      "idSource": "node0",
+      "idTarget": "node2",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link57": {
+      "idLink": "link57",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "1": {
+          "value": 92535,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 20801,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 19562,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 641.0474554047435,
+      "y_label": 307.94250886141606,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link60": {
+      "idLink": "link60",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 1239,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 640.1062277263864,
+      "y_label": 296.70309933431315,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link61": {
+      "idLink": "link61",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link62": {
+      "idLink": "link62",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link63": {
+      "idLink": "link63",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link64": {
+      "idLink": "link64",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link65": {
+      "idLink": "link65",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link66": {
+      "idLink": "link66",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "2": {
+          "value": 71734,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link67": {
+      "idLink": "link67",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 31755,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 633.5176339778873,
+      "y_label": 278.87544307080486,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link68": {
+      "idLink": "link68",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 23424,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 632.5764062995303,
+      "y_label": 249.06056021440304,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link69": {
+      "idLink": "link69",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 14687,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 631.6351786211733,
+      "y_label": 228.46803406241895,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link70": {
+      "idLink": "link70",
+      "idSource": "node0",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 1868,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 630.6939509428163,
+      "y_label": 219.5228667761736,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link71": {
+      "idLink": "link71",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "1": {
+          "value": 19469,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Transformed products"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain products"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 527.4909090909091,
+      "y_label": 268.671327915622,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link74": {
+      "idLink": "link74",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link75": {
+      "idLink": "link75",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables prducts (incl. wine, sugar and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link76": {
+      "idLink": "link76",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link77": {
+      "idLink": "link77",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link78": {
+      "idLink": "link78",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link79": {
+      "idLink": "link79",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link80": {
+      "idLink": "link80",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "2": {
+          "value": 19469,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Processed feed"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link81": {
+      "idLink": "link81",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "1": {
+          "value": 5869,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 522.2545454545455,
+      "y_label": 254.9804400449555,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link82": {
+      "idLink": "link82",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "2": {
+          "value": 1986,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link83": {
+      "idLink": "link83",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 869,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 728.4865186620244,
+      "y_label": 240.36772715483704,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link84": {
+      "idLink": "link84",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "3": {
+          "value": 1117,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 727.7891672626673,
+      "y_label": 239.2946312786375,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link85": {
+      "idLink": "link85",
+      "idSource": "node1",
+      "idTarget": "node4",
+      "value": {
+        "2": {
+          "value": 3883,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link86": {
+      "idLink": "link86",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "1": {
+          "value": 8263,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 163,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 8,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 624.5027232644593,
+      "y_label": 396.93816460620735,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link89": {
+      "idLink": "link89",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 155,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 623.6031622527689,
+      "y_label": 396.85009077548193,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link90": {
+      "idLink": "link90",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "2": {
+          "value": 8100,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link91": {
+      "idLink": "link91",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 3150,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 621.8040402293882,
+      "y_label": 395.06429929973194,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link92": {
+      "idLink": "link92",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link93": {
+      "idLink": "link93",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link94": {
+      "idLink": "link94",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 4950,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 619.1053571943171,
+      "y_label": 390.68762427595743,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link95": {
+      "idLink": "link95",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link96": {
+      "idLink": "link96",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link97": {
+      "idLink": "link97",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link98": {
+      "idLink": "link98",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link99": {
+      "idLink": "link99",
+      "idSource": "node0",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link100": {
+      "idLink": "link100",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "1": {
+          "value": 23943,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Transformed products"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 7517,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain products"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 6325,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 721.0626462821349,
+      "y_label": 336.1861329644679,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.1769856687521909,
+        "right_horiz_shift": 0.9612907286118872,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link103": {
+      "idLink": "link103",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 1192,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 720.4198403373232,
+      "y_label": 332.12447047635516,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19181211500284762,
+        "right_horiz_shift": 0.9918121150028476,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link104": {
+      "idLink": "link104",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "2": {
+          "value": 16426,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables prducts (incl. wine, sugar and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link105": {
+      "idLink": "link105",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 6459,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 719.1342284477,
+      "y_label": 327.9904037347627,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link106": {
+      "idLink": "link106",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 2960,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 718.4914225028883,
+      "y_label": 322.9010331114377,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link107": {
+      "idLink": "link107",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 5647,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 717.8486165580766,
+      "y_label": 318.25041065098986,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link108": {
+      "idLink": "link108",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "3": {
+          "value": 1360,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 717.2058106132649,
+      "y_label": 314.4643165903,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link109": {
+      "idLink": "link109",
+      "idSource": "node1",
+      "idTarget": "node5",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Processed feed"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link110": {
+      "idLink": "link110",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "1": {
+          "value": 12658,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 2903,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 2600,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 613.7079911241751,
+      "y_label": 454.7518803492695,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link113": {
+      "idLink": "link113",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 303,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 612.8084301124848,
+      "y_label": 453.18330163395865,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link114": {
+      "idLink": "link114",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "2": {
+          "value": 1613,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link115": {
+      "idLink": "link115",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 1613,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 611.009308089104,
+      "y_label": 452.14802887524854,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link116": {
+      "idLink": "link116",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link117": {
+      "idLink": "link117",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link118": {
+      "idLink": "link118",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link119": {
+      "idLink": "link119",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "2": {
+          "value": 8142,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link120": {
+      "idLink": "link120",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link121": {
+      "idLink": "link121",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 5896,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 605.611942018962,
+      "y_label": 448.09068902913464,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link122": {
+      "idLink": "link122",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 2098,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 604.7123810072717,
+      "y_label": 443.77128901184403,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link123": {
+      "idLink": "link123",
+      "idSource": "node0",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 148,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 603.8128199955813,
+      "y_label": 442.55770727068386,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link124": {
+      "idLink": "link124",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "1": {
+          "value": 4849,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Transformed products"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain products"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 513.7454545454545,
+      "y_label": 337.89735886573874,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.16035599415561053,
+        "right_horiz_shift": 0.9603559941556103,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link127": {
+      "idLink": "link127",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link128": {
+      "idLink": "link128",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "2": {
+          "value": 4849,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables prducts (incl. wine, sugar and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.18155216656685808,
+        "right_horiz_shift": 0.981552166566858,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link129": {
+      "idLink": "link129",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 1069,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 713.9917808892068,
+      "y_label": 383.7038557966629,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link130": {
+      "idLink": "link130",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 2420,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 713.3489749443951,
+      "y_label": 381.81864355494076,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link131": {
+      "idLink": "link131",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link132": {
+      "idLink": "link132",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "3": {
+          "value": 1360,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 712.0633630547718,
+      "y_label": 379.7761952105127,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link133": {
+      "idLink": "link133",
+      "idSource": "node1",
+      "idTarget": "node6",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Processed feed"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 0.19999999999999996,
+        "right_horiz_shift": 1,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link134": {
+      "idLink": "link134",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "1": {
+          "value": 35565,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 31165,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 28900,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 442.1803190109795,
+      "y_label": 496.70470879801735,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link137": {
+      "idLink": "link137",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 2265,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 425.34092677444454,
+      "y_label": 496.33147123521894,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link138": {
+      "idLink": "link138",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "2": {
+          "value": 4400,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link139": {
+      "idLink": "link139",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 2500,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 422.7662531339155,
+      "y_label": 495.5849961096222,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link140": {
+      "idLink": "link140",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link141": {
+      "idLink": "link141",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link142": {
+      "idLink": "link142",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 1900,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 420.3888000345811,
+      "y_label": 494.465283421227,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link143": {
+      "idLink": "link143",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link144": {
+      "idLink": "link144",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link145": {
+      "idLink": "link145",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link146": {
+      "idLink": "link146",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link147": {
+      "idLink": "link147",
+      "idSource": "node0",
+      "idTarget": "node9",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link148": {
+      "idLink": "link148",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "1": {
+          "value": 10175,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Transformed products"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 4415,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain products"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 3900,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 625.8657711593326,
+      "y_label": 448.28797224863837,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link151": {
+      "idLink": "link151",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 515,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 623.4802131062505,
+      "y_label": 447.0371984957206,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link152": {
+      "idLink": "link152",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "2": {
+          "value": 5760,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables prducts (incl. wine, sugar and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link153": {
+      "idLink": "link153",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 3508,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 621.3064645111092,
+      "y_label": 444.53565098988497,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link154": {
+      "idLink": "link154",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 1460,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 618.6221038298609,
+      "y_label": 443.28487723696725,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link155": {
+      "idLink": "link155",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link156": {
+      "idLink": "link156",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 792,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 617.4052801072015,
+      "y_label": 440.78332973113163,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link157": {
+      "idLink": "link157",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Processed feed"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link158": {
+      "idLink": "link158",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "1": {
+          "value": 2409,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 503.27272727272725,
+      "y_label": 382.3595141350394,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link159": {
+      "idLink": "link159",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "2": {
+          "value": 1751,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link160": {
+      "idLink": "link160",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 1098,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 616.3840559349875,
+      "y_label": 435.7802347194605,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link161": {
+      "idLink": "link161",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "3": {
+          "value": 653,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 615.4379376675024,
+      "y_label": 434.52946096654273,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link162": {
+      "idLink": "link162",
+      "idSource": "node1",
+      "idTarget": "node10",
+      "value": {
+        "2": {
+          "value": 658,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link163": {
+      "idLink": "link163",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "1": {
+          "value": 8662,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Crops"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 3370,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grains"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 1250,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 511.0941255295236,
+      "y_label": 156.4,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link166": {
+      "idLink": "link166",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 2120,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops grains"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 509.2732125875335,
+      "y_label": 157.616,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link167": {
+      "idLink": "link167",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "2": {
+          "value": 5292,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables (incl. wine grapes, beets and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link168": {
+      "idLink": "link168",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 4905,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 505.4773925823463,
+      "y_label": 160.048,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link169": {
+      "idLink": "link169",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine grapes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link170": {
+      "idLink": "link170",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link171": {
+      "idLink": "link171",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 387,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 502.61796490014694,
+      "y_label": 163.696,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link172": {
+      "idLink": "link172",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link173": {
+      "idLink": "link173",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grazed biomass"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link174": {
+      "idLink": "link174",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Hay"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link175": {
+      "idLink": "link175",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Maize silage"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link176": {
+      "idLink": "link176",
+      "idSource": "node7",
+      "idTarget": "node0",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Other fodder"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link177": {
+      "idLink": "link177",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "1": {
+          "value": 6810,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Transformed products"
+            ]
+          },
+          "extension": {}
+        },
+        "2": {
+          "value": 778,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain products"
+            ]
+          },
+          "extension": {}
+        },
+        "3": {
+          "value": 463,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 654.4781922711161,
+      "y_label": 156.01,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link180": {
+      "idLink": "link180",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 315,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 654.0578153367338,
+      "y_label": 157.49,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link181": {
+      "idLink": "link181",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 6032,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables prducts (incl. wine, sugar and potatoes)"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link182": {
+      "idLink": "link182",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 3464,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Fruits and vegetables products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 652.0159073225556,
+      "y_label": 160.45,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link183": {
+      "idLink": "link183",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 678,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Wine products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 649.7778594276822,
+      "y_label": 161.93,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link184": {
+      "idLink": "link184",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link185": {
+      "idLink": "link185",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 1890,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Potatoes products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 648.3902913460707,
+      "y_label": 164.89,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link186": {
+      "idLink": "link186",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 0,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Processed feed"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link187": {
+      "idLink": "link187",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "1": {
+          "value": 5504,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 286.8,
+      "y_label": 340.98750756462346,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link188": {
+      "idLink": "link188",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 5431,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Grain byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link189": {
+      "idLink": "link189",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 395,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 647.1556367251665,
+      "y_label": 170.81,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link190": {
+      "idLink": "link190",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 5036,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 644.221103138238,
+      "y_label": 172.29000000000002,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link191": {
+      "idLink": "link191",
+      "idSource": "node8",
+      "idTarget": "node1",
+      "value": {
+        "2": {
+          "value": 73,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Sugar beets byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "label_pos_auto": false,
+      "local": {
+        "orientation": "vv",
+        "left_horiz_shift": 0.09999999999999998,
+        "right_horiz_shift": 0.9,
+        "curved": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link41": {
+      "idLink": "link41",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 6785,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 611.192091294199,
+      "y_label": 345.69162271980633,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 29.47884521484375,
+        "right_horiz_shift": -29.85457763671875,
+        "vert_shift": 12.40216064453125,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link40": {
+      "idLink": "link40",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 1950,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Cereal byproducts"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 611.1957276578354,
+      "y_label": 342.5739171781793,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 28.43905029296875,
+        "right_horiz_shift": -28.83016357421875,
+        "vert_shift": 13.357421875,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    },
+    "link31": {
+      "idLink": "link31",
+      "idSource": "node1",
+      "idTarget": "node1",
+      "value": {
+        "3": {
+          "value": 528,
+          "display_value": "",
+          "tags": {
+            "Produit": [
+              "Oilcrops products"
+            ]
+          },
+          "extension": {}
+        }
+      },
+      "colorParameter": "groupTag",
+      "colorTag": "Produit",
+      "gradient": false,
+      "style": "default",
+      "shift_gap": 0.1,
+      "x_label": 611.2284549305626,
+      "y_label": 341.6078066914498,
+      "label_pos_auto": false,
+      "local": {
+        "left_horiz_shift": 28.64095458984375,
+        "right_horiz_shift": -29.42476806640625,
+        "vert_shift": 11.89208984375,
+        "curved": true,
+        "recycling": true,
+        "orthogonal_label_position": "default",
+        "to_precision": true
+      }
+    }
+  },
+  "user_scale": 92536,
+  "accordeonToShow": [
+    "MEP",
+    "EN",
+    "EF",
+    "ED",
+    "LL",
+    "Vis",
+    "Leg"
+  ],
+  "width": 1880,
+  "height": 782.9375,
+  "h_space": 200,
+  "v_space": 100,
+  "show_structure": "reconciled",
+  "fit_screen": false,
+  "left_shift": 0.4,
+  "right_shift": 0.5,
+  "max_shift": 0.2,
+  "display_style": {
+    "node_font_size": 14,
+    "link_font_size": 14,
+    "sector_uppercase": true,
+    "sector_bold": true,
+    "sector_italic": false,
+    "product_uppercase": false,
+    "product_bold": false,
+    "product_italic": true,
+    "unit": false,
+    "filter": 0,
+    "filter_label": 92536,
+    "global_curvature": 0.5,
+    "null_flux": false,
+    "font_family": [
+      "Arial,sans-serif",
+      "Helvetica,sans-serif",
+      "Verdana,sans-serif",
+      "Calibri,sans-serif",
+      "Noto,sans-serif",
+      "Lucida Sans,sans-serif",
+      "Gill Sans,sans-serif",
+      "Century Gothic,sans-serif",
+      "Candara,sans-serif",
+      "Futara,sans-serif",
+      "Franklin Gothic Medium,sans-serif",
+      "Trebuchet MS,sans-serif",
+      "Geneva,sans-serif",
+      "Segoe UI,sans-serif",
+      "Optima,sans-serif",
+      "Avanta Garde,sans-serif",
+      "Times New Roman,serif",
+      "Big Caslon,serif",
+      "Bodoni MT,serif",
+      "Book Antiqua,serif",
+      "Bookman,serif",
+      "New Century Schoolbook,serif",
+      "Calisto MT,serif",
+      "Cambria,serif",
+      "Didot,serif",
+      "Garamond,serif",
+      "Georgia,serif",
+      "Goudy Old Style,serif",
+      "Hoefler Text,serif",
+      "Lucida Bright,serif",
+      "Palatino,serif",
+      "Perpetua,serif",
+      "Rockwell,serif",
+      "Rockwell Extra Bold,serif",
+      "Baskerville,serif",
+      "Consolas,monospace",
+      "Courier,monospace",
+      "Courier New,monospace",
+      "Lucida Console,monospace",
+      "Lucidatypewriter,monospace",
+      "Lucida Sans Typewriter,monospace",
+      "Monaco,monospace",
+      "Andale Mono,monospace",
+      "Comic Sans,cursive",
+      "Comic Sans MS,cursive",
+      "Apple Chancery,cursive",
+      "Zapf Chancery,cursive",
+      "Bradley Hand,cursive",
+      "Brush Script MT,cursive",
+      "Brush Script Std,cursive",
+      "Snell Roundhan,cursive",
+      "URW Chancery,cursive",
+      "Coronet script,cursive",
+      "Florence,cursive",
+      "Parkavenue,cursive"
+    ],
+    "node_font_family_selected": "Cormorant",
+    "link_font_family_selected": "Cormorant"
+  },
+  "grid_square_size": 50,
+  "grid_visible": true,
+  "static_sankey": false,
+  "nodeTags": {},
+  "dataTags": {
+    "Niveau produit": {
+      "group_name": "Niveau produit",
+      "show_legend": false,
+      "tags": {
+        "1": {
+          "name": "1",
+          "selected": false,
+          "color": "#000083"
+        },
+        "2": {
+          "name": "2",
+          "selected": false,
+          "color": "#05ffff"
+        },
+        "3": {
+          "name": "3",
+          "selected": true,
+          "color": "#fc5500"
+        }
+      },
+      "banner": "one",
+      "color_map": "jet",
+      "activated": true,
+      "siblings": []
+    }
+  },
+  "fluxTags": {
+    "Produit": {
+      "group_name": "Produit",
+      "show_legend": true,
+      "tags": {
+        "Crops": {
+          "name": "Crops",
+          "selected": true,
+          "color": "#000083"
+        },
+        "Grains": {
+          "name": "Grains",
+          "selected": true,
+          "color": "#000f8d"
+        },
+        "Cereal grains": {
+          "name": "Cereal grains",
+          "selected": true,
+          "color": "#001e97"
+        },
+        "Oilcrops grains": {
+          "name": "Oilcrops grains",
+          "selected": true,
+          "color": "#002da0"
+        },
+        "Fruits and vegetables (incl. wine grapes, beets and potatoes)": {
+          "name": "Fruits and vegetables (incl. wine grapes, beets and potatoes)",
+          "selected": true,
+          "color": "#003caa"
+        },
+        "Fruits and vegetables": {
+          "name": "Fruits and vegetables",
+          "selected": true,
+          "color": "#0158b6"
+        },
+        "Wine grapes": {
+          "name": "Wine grapes",
+          "selected": true,
+          "color": "#0174c2"
+        },
+        "Sugar beets": {
+          "name": "Sugar beets",
+          "selected": true,
+          "color": "#0290ce"
+        },
+        "Potatoes": {
+          "name": "Potatoes",
+          "selected": true,
+          "color": "#03abdb"
+        },
+        "Fodder": {
+          "name": "Fodder",
+          "selected": true,
+          "color": "#04c7e7"
+        },
+        "Grazed biomass": {
+          "name": "Grazed biomass",
+          "selected": true,
+          "color": "#04e3f3"
+        },
+        "Hay": {
+          "name": "Hay",
+          "selected": true,
+          "color": "#05ffff"
+        },
+        "Maize silage": {
+          "name": "Maize silage",
+          "selected": true,
+          "color": "#29ffdb"
+        },
+        "Other fodder": {
+          "name": "Other fodder",
+          "selected": true,
+          "color": "#4cffb6"
+        },
+        "Transformed products": {
+          "name": "Transformed products",
+          "selected": true,
+          "color": "#70ff92"
+        },
+        "Grain products": {
+          "name": "Grain products",
+          "selected": true,
+          "color": "#94ff6d"
+        },
+        "Cereal products": {
+          "name": "Cereal products",
+          "selected": true,
+          "color": "#b8ff49"
+        },
+        "Oilcrops products": {
+          "name": "Oilcrops products",
+          "selected": true,
+          "color": "#dbff24"
+        },
+        "Fruits and vegetables prducts (incl. wine, sugar and potatoes)": {
+          "name": "Fruits and vegetables prducts (incl. wine, sugar and potatoes)",
+          "selected": true,
+          "color": "#ffff00"
+        },
+        "Fruits and vegetables products": {
+          "name": "Fruits and vegetables products",
+          "selected": true,
+          "color": "#fedb00"
+        },
+        "Wine products": {
+          "name": "Wine products",
+          "selected": true,
+          "color": "#feb600"
+        },
+        "Sugar beets products": {
+          "name": "Sugar beets products",
+          "selected": true,
+          "color": "#fd9200"
+        },
+        "Potatoes products": {
+          "name": "Potatoes products",
+          "selected": true,
+          "color": "#fc6d00"
+        },
+        "Processed feed": {
+          "name": "Processed feed",
+          "selected": true,
+          "color": "#fb4900"
+        },
+        "Byproducts": {
+          "name": "Byproducts",
+          "selected": true,
+          "color": "#fb2400"
+        },
+        "Grain byproducts": {
+          "name": "Grain byproducts",
+          "selected": true,
+          "color": "#fa0000"
+        },
+        "Cereal byproducts": {
+          "name": "Cereal byproducts",
+          "selected": true,
+          "color": "#d10000"
+        },
+        "Oilcrops byproducts": {
+          "name": "Oilcrops byproducts",
+          "selected": true,
+          "color": "#a90000"
+        },
+        "Sugar beets byproducts": {
+          "name": "Sugar beets byproducts",
+          "selected": true,
+          "color": "#800000"
+        }
+      },
+      "banner": "multi",
+      "color_map": "jet",
+      "activated": true,
+      "siblings": []
+    }
+  },
+  "colorMap": "Produit",
+  "legend_width": 300,
+  "legend_position": [
+    10,
+    10
+  ],
+  "display_legend_scale": false,
+  "legend_police": 16,
+  "style_node": {
+    "default": {
+      "idNode": "default",
+      "name": "par défaut",
+      "shape": "rect",
+      "node_arrow_angle_factor": 30,
+      "node_arrow_angle_direction": "right",
+      "shape_visible": true,
+      "label_visible": true,
+      "node_width": 40,
+      "node_height": 40,
+      "color": "#a9a9a9",
+      "colorSustainable": false,
+      "not_to_scale": false,
+      "not_to_scale_direction": "right",
+      "font_family": "Cormorant",
+      "font_size": 14,
+      "uppercase": false,
+      "bold": false,
+      "italic": false,
+      "label_vert": "bottom",
+      "label_horiz": "middle",
+      "label_background": false,
+      "show_value": false,
+      "label_vert_valeur": "top",
+      "label_horiz_valeur": "middle",
+      "value_font_size": 14,
+      "label_box_width": 150,
+      "label_color": false,
+      "display": true,
+      "node_visible": true,
+      "iconName": "none",
+      "iconColor": "#fff",
+      "iconRatio": 80,
+      "iconVisible": true,
+      "colorParameter": "local",
+      "position": "absolute",
+      "x": 100,
+      "y": 100,
+      "inputLinksId": [],
+      "outputLinksId": [],
+      "tags": {},
+      "colorTag": "",
+      "dimensions": {},
+      "style": "",
+      "display_style": {
+        "font_family": "Cormorant",
+        "font_size": 14,
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "unit": false,
+        "filter": 0,
+        "filter_label": 0,
+        "global_curvature": 0.5,
+        "null_flux": false,
+        "label_vert": "bas",
+        "label_horiz": "milieu",
+        "label_vert_valeur": "milieu",
+        "label_horiz_valeur": "milieu",
+        "value_font_size": 14,
+        "label_box_width": 110
+      }
+    }
+  },
+  "style_link": {
+    "default": {
+      "idLink": "default",
+      "name": "Style par défaut",
+      "color": "#a9a9a9",
+      "recycling": false,
+      "curved": false,
+      "arrow": true,
+      "text_color": "black",
+      "label_position": "middle",
+      "orthogonal_label_position": "middle",
+      "curvature": 0.5,
+      "label_visible": true,
+      "label_on_path": true,
+      "label_font_size": 20,
+      "orientation": "hh",
+      "left_horiz_shift": 0.05,
+      "right_horiz_shift": 0.95,
+      "vert_shift": 0,
+      "opacity": 0.85,
+      "to_precision": false,
+      "scientific_precision": 5,
+      "arrow_size": 10,
+      "font_family": "Arial,serif",
+      "label_unit_visible": false,
+      "label_unit": "",
+      "custom_digit": false,
+      "nb_digit": 0,
+      "dashed": false,
+      "gradient": false,
+      "idSource": "None",
+      "idTarget": "None",
+      "colorParameter": "",
+      "colorTag": "",
+      "value": {},
+      "tooltip_text": "",
+      "x_label": 0,
+      "y_label": 0,
+      "shift_gap": 0.1,
+      "style": ""
+    }
+  },
+  "view": [],
+  "current_view": "none",
+  "labels": {},
+  "icon_catalog": {},
+  "show_banner": true,
+  "agregation": {
+    "dimension": "Primaire",
+    "level": 1
+  },
+  "trade_hspace": 200,
+  "trade_close_hspace": 50,
+  "trade_close_vspace": 20,
+  "file_name": "/home/ubuntu/dev_opensankey/sankeysuitemanager/MFAData/OpenSankey/sankey/Filière_végétale_layout.json",
+  "linkZIndex": [
+    "link0",
+    "link3",
+    "link4",
+    "link5",
+    "link6",
+    "link7",
+    "link8",
+    "link9",
+    "link10",
+    "link11",
+    "link12",
+    "link13",
+    "link14",
+    "link17",
+    "link18",
+    "link19",
+    "link20",
+    "link21",
+    "link22",
+    "link23",
+    "link24",
+    "link25",
+    "link26",
+    "link27",
+    "link28",
+    "link32",
+    "link33",
+    "link34",
+    "link35",
+    "link36",
+    "link37",
+    "link38",
+    "link39",
+    "link42",
+    "link43",
+    "link46",
+    "link47",
+    "link48",
+    "link49",
+    "link50",
+    "link51",
+    "link52",
+    "link53",
+    "link54",
+    "link55",
+    "link56",
+    "link57",
+    "link60",
+    "link61",
+    "link62",
+    "link63",
+    "link64",
+    "link65",
+    "link66",
+    "link67",
+    "link68",
+    "link69",
+    "link70",
+    "link71",
+    "link74",
+    "link75",
+    "link76",
+    "link77",
+    "link78",
+    "link79",
+    "link80",
+    "link81",
+    "link82",
+    "link83",
+    "link84",
+    "link85",
+    "link86",
+    "link89",
+    "link90",
+    "link91",
+    "link92",
+    "link93",
+    "link94",
+    "link95",
+    "link96",
+    "link97",
+    "link98",
+    "link99",
+    "link100",
+    "link103",
+    "link104",
+    "link105",
+    "link106",
+    "link107",
+    "link108",
+    "link109",
+    "link110",
+    "link113",
+    "link114",
+    "link115",
+    "link116",
+    "link117",
+    "link118",
+    "link119",
+    "link120",
+    "link121",
+    "link122",
+    "link123",
+    "link124",
+    "link127",
+    "link128",
+    "link129",
+    "link130",
+    "link131",
+    "link132",
+    "link133",
+    "link134",
+    "link137",
+    "link138",
+    "link139",
+    "link140",
+    "link141",
+    "link142",
+    "link143",
+    "link144",
+    "link145",
+    "link146",
+    "link147",
+    "link148",
+    "link151",
+    "link152",
+    "link153",
+    "link154",
+    "link155",
+    "link156",
+    "link157",
+    "link158",
+    "link159",
+    "link160",
+    "link161",
+    "link162",
+    "link163",
+    "link166",
+    "link167",
+    "link168",
+    "link169",
+    "link170",
+    "link171",
+    "link172",
+    "link173",
+    "link174",
+    "link175",
+    "link176",
+    "link177",
+    "link180",
+    "link181",
+    "link182",
+    "link183",
+    "link184",
+    "link185",
+    "link186",
+    "link187",
+    "link188",
+    "link189",
+    "link190",
+    "link191",
+    "link41",
+    "link40",
+    "link31"
+  ],
+  "levelTags": {
+    "Primaire": {
+      "group_name": "Primaire",
+      "color_map": "jet",
+      "show_legend": false,
+      "banner": "level",
+      "tags": {
+        "1": {
+          "name": "1",
+          "selected": true
+        }
+      },
+      "activated": true,
+      "siblings": []
+    }
+  },
+  "nodesColorMap": "no_colormap",
+  "linksColorMap": "Produit",
+  "mask_legend": false,
+  "legend_bg_border": false,
+  "legend_bg_color": "grey",
+  "legend_bg_opacity": 0,
+  "legend_show_dataTags": false,
+  "node_label_separator": "",
+  "show_uncert": false,
+  "trade_sectors": [],
+  "trade_left_shift": 0.04999,
+  "trade_right_shift": 0.95,
+  "trade_max_shift": 0.2,
+  "units_names": [
+    []
+  ],
+  "tooltip_names": [],
+  "is_catalog": false,
+  "unitary_node": [],
+  "unit_link_value_display": "percent",
+  "background_image": "",
+  "process_transfo_ref": {},
+  "show_background_image": false,
+  "free_null_link_visible": true
+}
