@@ -204,6 +204,11 @@ export abstract class Class_ApplicationDataPlus
 
   // PUBLIC METHODS =====================================================================
 
+  public override unsetTokens() {
+    super.unsetTokens()
+    this._has_sankey_plus = false
+  }
+
   /**
    * Extract application data attribute from JSON then extract info for  views
    *
