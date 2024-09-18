@@ -178,6 +178,10 @@ export abstract class Class_ApplicationData
     this.menu_configuration.updateAllMenuComponents()
   }
 
+  public unsetTokens() {
+    this._has_free_account = false
+  }
+
   /**
    * Reset value of drawing_area and substructur with data from JSON
    * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
