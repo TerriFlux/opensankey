@@ -32,6 +32,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Layout
   ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Welcome
+  ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<string>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -306,6 +307,7 @@ export class Class_MenuConfig {
       // Config menu - Layout
       ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Welcome
+      ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<string>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),

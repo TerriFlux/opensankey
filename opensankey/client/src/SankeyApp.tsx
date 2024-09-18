@@ -1,6 +1,7 @@
 import React, {
   FunctionComponent,
   useEffect,
+  useRef,
 } from 'react'
 import i18next from 'i18next'
 import LZString from 'lz-string'
@@ -49,6 +50,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   initializeAdditionalMenus,
   initializeDiagrammSelector,
   moduleDialogs,
+  modalWelcome,
   ClickSaveDiagram,
 }) => {
   // Init loading toast
@@ -232,6 +234,11 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
             menu_configuration_nodes_attributes,
             processFunctions
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
+        }
+        {
+          modalWelcome(
+            new_data
+          )
         }
         <>
           <Menu
