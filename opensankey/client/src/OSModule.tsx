@@ -47,6 +47,27 @@ import {
 } from './types/FunctionTypes'
 
 
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
+
+/**
+ * Set up data with initial value as Type_JSON
+ *
+ * @param {*} initial_data
+ * @return {*}
+ */
+export const initializeApplicationData: FType_InitializeApplicationData = (
+  initial_data
+) => {
+  const application_data = new Class_ApplicationDataOS(window.SankeyToolsStatic)
+  if (initial_data !== undefined) {
+    application_data.fromJSON(initial_data)
+  }
+  return application_data
+}
+
 /**
  * Réinitialise data et vide les noeud/liens sélectionnés
  * @param {Type_GenericApplicationDataOS} new_data
@@ -68,22 +89,6 @@ export const initializeReinitialization: FType_InitializeReinitialization = (
     sessionStorage.setItem('dismiss_warning_sankey_mfa', '0')
   }
 )
-
-/**
- * Set up data with initial value as Type_JSON
- *
- * @param {*} initial_data
- * @return {*}
- */
-export const initializeApplicationData: FType_InitializeApplicationData = (
-  initial_data
-) => {
-  const application_data = new Class_ApplicationDataOS(false)
-  if (initial_data !== undefined) {
-    application_data.fromJSON(initial_data)
-  }
-  return application_data
-}
 
 /**
  * Additional menus components.
