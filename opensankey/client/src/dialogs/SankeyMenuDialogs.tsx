@@ -125,9 +125,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
         <Box layerStyle='menuconfigpanel_grid' >
 
           {
-            diagramSelector(
-              new_data,
-              data_var_to_update)
+            diagramSelector(new_data)
           }
 
           <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -705,10 +703,9 @@ export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
 }
 
 export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
-  new_data,
-  data_var_to_update,
+  new_data
 ) => {
-  const { t } = new_data
+  const { t, data_var_to_update } = new_data
   const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Box>
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
@@ -740,7 +737,6 @@ export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
                     new_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
                     new_data.drawing_area.drawElements()
                     new_data.menu_configuration.updateAllMenuComponents()
-
                   }
                 }
               )
