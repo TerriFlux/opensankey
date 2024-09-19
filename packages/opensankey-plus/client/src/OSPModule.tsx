@@ -58,18 +58,18 @@ import { MenuConfLinkApparenceGradientOSP } from './SankeyPlusGradient'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 
-// TODO toujours utile ?
-// declare const window: Window &
-//   typeof globalThis & {
-//     SankeyToolsStatic: boolean
-//   }
-
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
 
 export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = (
   initial_data
 ) => {
   // Init application data
-  const new_data_plus = new Class_ApplicationDataOSP(false)
+  const new_data_plus = new Class_ApplicationDataOSP(window.SankeyToolsStatic)
+  // Activate sankey plus token
+  new_data_plus.has_sankey_plus = true
   // Read data from cache if it exist
   if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)

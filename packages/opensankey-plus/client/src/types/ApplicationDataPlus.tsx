@@ -52,6 +52,9 @@ export abstract class Class_ApplicationDataPlus
   // Save JSON options
   public override options_save_json: Type_SaveDiagramOptionsPlus = default_save_JSON_options
 
+  // Static path
+  public override static_path: string = 'static/sankeyanimation'
+
   /**
    * Configuration Menu
    *
@@ -63,7 +66,7 @@ export abstract class Class_ApplicationDataPlus
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected _has_sankey_plus: boolean = true // token for sankeyplus (if user is connected with an account)
+  protected _has_sankey_plus: boolean = false // token for sankeyplus (if user is connected with an account)
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -82,26 +85,31 @@ export abstract class Class_ApplicationDataPlus
    * @param {boolean} published_mode
    * @memberof Class_ApplicationDataPlus
    */
-  constructor(published_mode: boolean) {
-    super(published_mode)
+  constructor(
+    published_mode: boolean,
+    options: {[_: string]: boolean | string} = {}
+  ) {
+    super(published_mode, options)
 
-    // OVERRIDE Drawing_Area & MENU CONFIG TO TAKE INTO ACCOUNT ALL NEW VAR. & FUNCTIONS OF OSP
+    // OVERRIDE some values for OpenSankey+ purpose
     this._menu_configuration = new Class_MenuConfigPlus()
 
-    //let logo_sankey_plus = ''
+    // Get OpenSankey+ logo
+    let logo_sankey_plus = ''
     try {
       /* eslint-disable */
       // @ts-ignore
-      _logo_sankey_plus = require('../css/OSP.png')
+      logo_sankey_plus = require('../css/OSP.png')
       /* eslint-enable */
       const path = window.location.href
       if (!path.includes('localhost')) {
-        this._logo_sankey_plus = this._logo_sankey_plus.replace('static/', 'static/opensankey/')
+        logo_sankey_plus = logo_sankey_plus.replace('static/', this.static_path)
       }
     } catch (expt) {
       console.log('terriflux.png not found')
     }
-    this.logo = this._logo_sankey_plus
+    this._logo_sankey_plus = logo_sankey_plus
+    this._logo = this._logo_sankey_plus
   }
 
   // PROTECTED METHODS =====================================================================
@@ -511,18 +519,17 @@ export abstract class Class_ApplicationDataPlus
 
   // GETTERS / SETTERS ==================================================================
 
+  public get logo(): string { return this._logo_sankey_plus }
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
-  public set logo_sankey_plus(value: string) { this._logo_sankey_plus = value }
 
   public get has_sankey_plus(): boolean { return this._has_sankey_plus }
   public set has_sankey_plus(value: boolean) { this._has_sankey_plus = value }
 
   // Override getter & setter so we can get new type
-  public get menu_configuration(): Class_MenuConfigPlus {
-    return this._menu_configuration as Class_MenuConfigPlus
-  }
+  public get menu_configuration(): Class_MenuConfigPlus { return this._menu_configuration as Class_MenuConfigPlus }
   public set menu_configuration(_: Class_MenuConfigPlus) { this._menu_configuration = _ }
 
+  // Views
   public get views(): Type_GenericDrawingArea[] {
     return Object.values(this._views)
   }

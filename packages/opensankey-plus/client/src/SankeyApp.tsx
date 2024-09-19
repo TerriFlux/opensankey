@@ -19,7 +19,7 @@ import {
   ModuleDialogsOSP,
 } from './OSPModule'
 import type { Type_GenericApplicationDataOSP } from './types/TypesOSP'
-
+import { ModalWelcomeBuilderOSP } from './welcome/ModalWelcomeOSP'
 
 // OpenSankey imports ===============================================================================
 
@@ -88,6 +88,7 @@ export const SankeyAppOSP = <SankeyApp
       ]
     }
   }
+  ModalWelcome={ModalWelcomeBuilderOSP}
   ClickSaveDiagram={
     (new_data) => { ClickSaveDiagram(new_data) }
   }
