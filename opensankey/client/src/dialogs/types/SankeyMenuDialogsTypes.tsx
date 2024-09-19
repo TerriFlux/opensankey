@@ -1,9 +1,7 @@
-import { MutableRefObject } from 'react'
 import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
 export type FType_DiagramSelector = (
-  new_data: Type_GenericApplicationDataOS,
-  elementToDispose: MutableRefObject<string[]>,
+  new_data: Type_GenericApplicationDataOS
 ) => JSX.Element
 
 export type FType_InitializeDiagrammSelector = (

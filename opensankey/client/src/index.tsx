@@ -57,7 +57,7 @@ root.render(
     // (OS only use data from imported file
     // but OSP can use its view as imported data
     // )
-    initializeDiagrammSelector={()=>OpenSankeyDiagramSelector}
+    initializeDiagrammSelector={initializeDiagrammSelector}
 
     // Submenus to add in the application
     moduleDialogs={moduleDialogs}
