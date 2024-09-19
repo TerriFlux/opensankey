@@ -61,7 +61,10 @@ declare const window: Window &
 export const initializeApplicationData: FType_InitializeApplicationData = (
   initial_data
 ) => {
+  // Set openSankey
   const application_data = new Class_ApplicationDataOS(window.SankeyToolsStatic)
+  application_data.activateAllTokens()
+
   if (initial_data !== undefined) {
     application_data.fromJSON(initial_data)
   }
@@ -106,6 +109,12 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
       />
     )
   }
+}
+
+export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
+  _new_data
+) => {
+  return OpenSankeyDiagramSelector
 }
 
 // Modal Dialogs

@@ -111,8 +111,7 @@ export abstract class Class_ApplicationData
   private _url_prefix: string = '/opensankey/' // path for server call
   private _node_label_separator = '-'
 
-  private _has_free_account: boolean = true // token for opensankey (if user is connected with an account)
-
+  private _has_free_account: boolean = false // token for opensankey (if user is connected with an account)
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -191,6 +190,16 @@ export abstract class Class_ApplicationData
 
   public unsetTokens() {
     this._has_free_account = false
+    this.menu_configuration.updateAllMenuComponents()
+  }
+
+  public activateFreeAccount() {
+    this._has_free_account = true
+    this.menu_configuration.updateAllMenuComponents()
+  }
+
+  public activateAllTokens() {
+    this.activateFreeAccount()
   }
 
   /**
