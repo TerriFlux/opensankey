@@ -1,5 +1,5 @@
 
-import { Dispatch, MutableRefObject, SetStateAction } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, FunctionComponent } from 'react'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import {
@@ -22,7 +22,7 @@ import {
   FType_InitializeDiagrammSelector
 } from '../dialogs/types/SankeyMenuDialogsTypes'
 import {
-  FType_ModalWelcomeBuilder
+  FCType_ModalWelcomeBuilder
 } from '../welcome/types/ModalWelcome'
 
 // Function components prototypes =================================================================
@@ -34,7 +34,7 @@ export type FCType_SankeyApp = {
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   initializeDiagrammSelector: FType_InitializeDiagrammSelector,
   moduleDialogs: FType_ModuleDialogs,
-  modalWelcome: FType_ModalWelcomeBuilder,
+  ModalWelcome: FunctionComponent<FCType_ModalWelcomeBuilder>,
   ClickSaveDiagram: FType_ClickSaveDiagram,
 }
 
