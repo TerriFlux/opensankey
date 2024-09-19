@@ -213,8 +213,18 @@ export abstract class Class_ApplicationDataPlus
   // PUBLIC METHODS =====================================================================
 
   public override unsetTokens() {
-    super.unsetTokens()
     this._has_sankey_plus = false
+    super.unsetTokens()
+  }
+
+  public activateSankeyPlus() {
+    this._has_sankey_plus = true
+    this.menu_configuration.updateAllMenuComponents()
+  }
+
+  public activateAllTokens() {
+    this.activateSankeyPlus()
+    super.activateAllTokens()
   }
 
   /**
@@ -523,7 +533,6 @@ export abstract class Class_ApplicationDataPlus
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
   public get has_sankey_plus(): boolean { return this._has_sankey_plus }
-  public set has_sankey_plus(value: boolean) { this._has_sankey_plus = value }
 
   // Override getter & setter so we can get new type
   public get menu_configuration(): Class_MenuConfigPlus { return this._menu_configuration as Class_MenuConfigPlus }

@@ -69,7 +69,7 @@ export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = 
   // Init application data
   const new_data_plus = new Class_ApplicationDataOSP(window.SankeyToolsStatic)
   // Activate sankey plus token
-  new_data_plus.has_sankey_plus = true
+  new_data_plus.activateAllTokens()
   // Read data from cache if it exist
   if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
@@ -87,6 +87,12 @@ export const initializeReinitializationOSP: FType_InitializeReinitialization = (
   }
 }
 
+export const initializeDiagrammSelectorOSP: FType_InitializeDiagrammSelector = (
+  _new_data
+) => {
+  return OpenSankeyDiagramSelector
+}
+
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
  *  we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
@@ -97,6 +103,19 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus,
   new_data
 ) => {
+
+  // No initialisation if static --------------------------------------------------------
+
+  if (new_data.is_static) {
+    return
+  }
+
+  // OpenSankey initialisation ----------------------------------------------------------
+
+  initializeAdditionalMenus(
+    additionalMenus,
+    new_data
+  )
 
   // Data -------------------------------------------------------------------------------
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
@@ -195,9 +214,20 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 // module_dialogsType return a JSX.Element array wich is a react type
 // we don't need to recast it ( and don't need additionnal parameters for OSP dialogs)
-export const ModuleDialogsOSP: FType_ModuleDialogsOSP = (
+export const moduleDialogsOSP: FType_ModuleDialogs = (
   new_data,
+  additional_menus,
+  menu_configuration_nodes_attributes,
+  processFunctions
 ) => {
+  // OpenSankey Menu
+  const moduleDialogsOS = moduleDialogs(
+      new_data,
+      additional_menus,
+      menu_configuration_nodes_attributes,
+      processFunctions
+    )
+
   // Cast type
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
 
@@ -205,7 +235,8 @@ export const ModuleDialogsOSP: FType_ModuleDialogsOSP = (
   const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
     new_data_plus={new_data_plus}
   />
-  return [
+
+  const moduleDialogsOSP = [
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration.dict_setter_show_dialog_plus as unknown as IType_DictHookRefSetterShowDialogComponents}
       dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
@@ -224,5 +255,10 @@ export const ModuleDialogsOSP: FType_ModuleDialogsOSP = (
     <ModalSelectionIconsOSP
       new_data_plus={new_data_plus}
     />
+  ]
+
+  return [
+    ...moduleDialogsOS,
+    ...moduleDialogsOSP
   ]
 }

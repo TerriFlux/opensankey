@@ -39,7 +39,3 @@ type PType_InitializeAdditionalMenus = Parameters<FType_InitializeAdditionalMenu
 type PType_InitializeAdditionalMenusOSP = [...PType_InitializeAdditionalMenus]
 export type FType_InitializeAdditionalMenusOSP = RecastReturnTypeOfFunction<PType_InitializeAdditionalMenusOSP, void>
 
-export type FType_ModuleDialogsOSP = (
-  new_data_plus: Type_GenericApplicationDataOSP
-) => JSX.Element[]
-
