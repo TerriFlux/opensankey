@@ -1,9 +1,6 @@
 // Standard lib
 import React, {
-  Dispatch,
   FunctionComponent,
-  MutableRefObject,
-  SetStateAction,
   useState
 } from 'react'
 import { Carousel } from 'react-bootstrap'
@@ -18,9 +15,12 @@ import {
   Box,
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
+  Button,
   ButtonGroup,
   Card,
   CardBody,
+  CardFooter,
   Checkbox,
   Heading,
   Image,
@@ -29,22 +29,21 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalFooter,
-  Text,
   Stack,
-  CardFooter,
-  Button,
-  BreadcrumbLink,
   Table,
   Tbody,
   Td,
+  Text,
+  Th,
+  Thead,
   Tr,
 } from '@chakra-ui/react'
 
-import { FCType_ModalWelcome, FType_ModalWelcomeBuilder } from './types/ModalWelcome'
+import { FCType_ModalWelcome, FCType_ModalWelcomeBuilder } from './types/ModalWelcome'
 import { Type_GenericApplicationDataOS } from '../types/TypesOS'
 import { faArrowPointer, faShareNodes, faFolderTree, faSliders, faArrowsUpDown, faArrowsLeftRight, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { FaUser, FaAngleDoubleLeft, FaHome, FaCaretSquareLeft, FaCaretSquareRight } from 'react-icons/fa'
+import { FaUser, FaAngleDoubleLeft } from 'react-icons/fa'
 
 export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   new_data,
@@ -73,49 +72,7 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
     defaultIndex={0}
     allowToggle
   >
-    <AccordionItem
-    // eventKey='OS'
-    >
-      <AccordionButton>
-        <Box
-          as='span'
-          layerStyle='menuconfig_entry'
-        >
-          {t('Menu.rcc_titre_princ')}
-        </Box>
-        <AccordionIcon />
-      </AccordionButton>
-      <AccordionPanel>
-        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_select')}:</Heading>
-        <p><b>{t('Menu.rcc_cn_bold')}</b>{t('Menu.rcc_cn')}</p>
-        <p><b>{t('Menu.rcc_ctrl_cn_bold')}</b>{t('Menu.rcc_ctrl_cn')}</p>
-        <p><b>{t('Menu.rcc_cf_bold')}</b>{t('Menu.rcc_cf')}</p>
-        <p><b>{t('Menu.rcc_ctrl_cf_bold')}</b>{t('Menu.rcc_ctrl_cf')}</p>
-        <p><b>{t('Menu.rcc_cs_bold')}</b>{t('Menu.rcc_cs')}</p>
-        <p><b>{t('Menu.rcc_click_and_drag_bold')}</b>{t('Menu.rcc_click_and_drag')}</p>
-        <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-        <p><b>{t('Menu.rcc_ad_bold')}</b>{t('Menu.rcc_ad')}</p>
-
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_edi')} :</Heading>
-
-        <p><b>{t('Menu.rcc_e_cn_bold')}</b>{t('Menu.rcc_e_cn')}</p>
-        <p><b>{t('Menu.rcc_e_ds_bold')}</b>{t('Menu.rcc_e_ds')}</p>
-        <p><b>{t('Menu.rcc_e_dn_bold')}</b>{t('Menu.rcc_e_dn')}</p>
-
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_autre')} :</Heading>
-
-        <p><b>{t('Menu.rcc_a_s_bold')}</b>{t('Menu.rcc_a_s')}</p>
-        <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
-        <p><b>{t('Menu.rcc_a_dbm_bold')}</b>{t('Menu.rcc_a_dbm')}</p>
-        <p><b>{t('Menu.rcc_a_ech_bold')}</b>{t('Menu.rcc_a_ech')}</p>
-        <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      </AccordionPanel>
-    </AccordionItem>
+    {external_content['rc']}
   </Accordion>
 
   external_content['rc'] = new_data.is_static ? content_rc_static : content_rc_not_static
@@ -279,8 +236,8 @@ export const CardsTemplateBuilder = (
   </>
 }
 
-export const modalWelcomeBuilder: FType_ModalWelcomeBuilder = (
-  new_data,
+export const ModalWelcomeBuilder: FunctionComponent<FCType_ModalWelcomeBuilder> = (
+  { new_data }
 ) => {
   const welcome_text = (new_data.options?.welcome_text as string) ?? ''
   const has_welcome_text = welcome_text.length > 0
@@ -504,30 +461,86 @@ export const ModalWelcomeContent = (
   page_links['rc'] = <BreadcrumbLink onClick={() => { set_active_page('rc') }}>
     {t('welcome.breadcrumbs.rc')}
   </BreadcrumbLink>
-  page_content['rc'] = <></>
+  page_content['rc'] = <AccordionItem
+  // eventKey='OS'
+  >
+    <AccordionButton>
+      <Box
+        as='span'
+        layerStyle='menuconfig_entry'
+      >
+        {t('Menu.rcc_titre_princ')}
+      </Box>
+      <AccordionIcon />
+    </AccordionButton>
+    <AccordionPanel>
+      <Box
+        display='grid'
+        gridTemplateColumns='50% 50%'
+        gridColumnGap='0.25rem'
+        width='100%'
+        justifySelf='center'
+      >
+        <Table
+          variant='table_welcome_buttons'
+        >
+          <Thead><Th colSpan={2}>{t('Menu.rcc_titre_select')}</Th></Thead>
+          <Tbody>
+            <Tr><Td>{t('Menu.rcc_cn_bold')}</Td><Td>{t('Menu.rcc_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_cn_bold')}</Td><Td>{t('Menu.rcc_ctrl_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_cf_bold')}</Td><Td>{t('Menu.rcc_cf')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_cf_bold')}</Td><Td>{t('Menu.rcc_ctrl_cf')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_cs_bold')}</Td><Td>{t('Menu.rcc_cs')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_click_and_drag_bold')}</Td><Td>{t('Menu.rcc_click_and_drag')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_cdn_bold')}</Td><Td>{t('Menu.rcc_cdn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ad_bold')}</Td><Td>{t('Menu.rcc_ad')}</Td></Tr>
+          </Tbody>
+        </Table>
+        <Table
+          variant='table_welcome_buttons'
+        >
+          <Thead><Th colSpan={2}>{t('Menu.rcc_titre_edi')}</Th></Thead>
+          <Tbody>
+            <Tr><Td>{t('Menu.rcc_e_cn_bold')}</Td><Td>{t('Menu.rcc_e_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_e_ds_bold')}</Td><Td>{t('Menu.rcc_e_ds')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_e_dn_bold')}</Td><Td>{t('Menu.rcc_e_dn')}</Td></Tr>
+          </Tbody>
+          <Thead><Th colSpan={2}>{t('Menu.rcc_titre_autre')}</Th></Thead>
+          <Tbody>
+            <Tr><Td>{t('Menu.rcc_a_s_bold')}</Td><Td>{t('Menu.rcc_a_s')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_a_fc_bold')}</Td><Td>{t('Menu.rcc_a_fc')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_a_dbm_bold')}</Td><Td>{t('Menu.rcc_a_dbm')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_a_ech_bold')}</Td><Td>{t('Menu.rcc_a_ech')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_scrll_bold')}</Td><Td>{t('Menu.rcc_ctrl_scrll')}</Td></Tr>
+          </Tbody>
+        </Table>
+      </Box>
+    </AccordionPanel>
+  </AccordionItem>
 
   if (!new_data.is_static) {
     page_links['licence'] = <BreadcrumbLink onClick={() => { set_active_page('licence') }}>
       {t('welcome.breadcrumbs.licence')}
     </BreadcrumbLink>
-    page_content['licence'] = <>
-      {/* OpenSankey */}
-      <Box layerStyle='licence_row'>
-        <Box>
-          <img src={new_data.logo_opensankey} alt='logo_OS' style={{ 'objectFit': 'contain', 'width': '225px' }} />
-        </Box>
-        <Box layerStyle='licence_desc'>
-          <span>{t('Menu.presentation_OS')}</span>
-          <span style={{ fontWeight: 'bold' }}>{t('Menu.presentation_OS_limit_node')}</span>
-          <Button variant='btn_desc_licence'
-            onClick={() => {
-              window.open('https://terriflux.com/downloads/open-sankey/')
-            }}>
-            {t('contribute_to_os')}
-          </Button>
-        </Box>
+    page_content['licence'] = <Box layerStyle='licence_row'>
+      <Box>
+        <img
+          src={new_data.logo_opensankey}
+          alt='logo_OS'
+          style={{ 'objectFit': 'contain', 'width': '225px' }}
+        />
       </Box>
-    </>
+      <Box layerStyle='licence_desc'>
+        <span>{t('Menu.presentation_OS')}</span>
+        <span style={{ fontWeight: 'bold' }}>{t('Menu.presentation_OS_limit_node')}</span>
+        <Button variant='btn_desc_licence'
+          onClick={() => {
+            window.open('https://terriflux.com/downloads/open-sankey/')
+          }}>
+          {t('contribute_to_os')}
+        </Button>
+      </Box>
+    </Box>
   }
 
   return [

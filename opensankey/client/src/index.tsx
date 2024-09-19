@@ -28,7 +28,7 @@ import {
 } from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
-import { modalWelcomeBuilder } from './welcome/ModalWelcome'
+import { ModalWelcomeBuilder } from './welcome/ModalWelcome'
 
 // CONSTANTS =========================================================================================
 
@@ -63,7 +63,7 @@ root.render(
     moduleDialogs={moduleDialogs}
 
     // Welcome modal
-    modalWelcome={modalWelcomeBuilder}
+    ModalWelcome={ModalWelcomeBuilder}
 
     // BackEnd
     ClickSaveDiagram={ClickSaveDiagram}
