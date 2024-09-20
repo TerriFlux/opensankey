@@ -1,0 +1,148 @@
+// ==================================================================================================
+// Authors :
+//  - Vincent CLAVEL
+//  - Julien ALAPETITE
+//  - Vincent LE DOZE
+// All rights reserved for TerriFlux SARL
+// ==================================================================================================
+
+// External imports =================================================================================
+
+import React, { FunctionComponent} from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { ChakraProvider } from '@chakra-ui/react'
+
+// OpenSankey imports ===============================================================================
+
+import SankeyApp from './deps/OpenSankey+/deps/OpenSankey/SankeyApp'
+import { opensankey_theme } from './deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
+import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
+
+// OpenSankey+ imports ===============================================================================
+
+import {
+  initializeDiagrammSelectorOSP,
+  initializeReinitializationOSP,
+  moduleDialogsOSP
+} from './deps/OpenSankey+/OSPModule'
+import {
+  initializeMenuConfiguration
+} from './deps/OpenSankey+/deps/OpenSankey/OSModule'
+import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeOSP'
+import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/TypesOSP'
+
+// Local imports ====================================================================================
+
+import { initializeAdditionalMenus, initializeApplicationDataSA } from './ModulesSA'
+import Account from './components/UserPages/Account'
+import Dashboard from './components/UserPages/Dashboard'
+import Register from './components/Register/Register'
+import Login from './components/Login/Login'
+
+// SankeyApp for OpenSankey+ ========================================================================
+
+export const SankeyAppSA: FunctionComponent = () => {
+
+  // const [update, set_update] = useState<boolean>(true) // useState OK
+
+  const new_data_plus = new Class_ApplicationDataOSP(false)
+
+  const sankeyApp =
+    <SankeyApp
+      initializeReinitialization={initializeReinitializationOSP}
+      initializeApplicationData={
+        (initial_data) => {
+          return initializeApplicationDataSA(
+            new_data_plus,
+            initial_data
+          )
+        }
+      }
+      initializeMenuConfiguration={initializeMenuConfiguration}
+      initializeAdditionalMenus={initializeAdditionalMenus}
+      initializeDiagrammSelector={initializeDiagrammSelectorOSP}
+      moduleDialogs={moduleDialogsOSP}
+      ModalWelcome={ModalWelcomeBuilderOSP}
+      ClickSaveDiagram={
+        (new_data) => { ClickSaveDiagram(new_data) }
+      }
+    />
+
+  const exemple_menu = {} as { [_: string]: JSX.Element }
+
+  // if (!new_data_plus?.is_static) {
+  //   // Menus are not presents in mode publish
+  //   const path = window.location.origin
+  //   const url = path + '/opensankey/sankey/menu_examples'
+  //   // let formations_menu = {} as { [_: string]: JSX.Element }
+  //   fetch(url, fetchData).then(response => {
+  //     response.text().then(text => {
+  //       const json_data = JSON.parse(text)
+  //       exemple_menu = json_data.exemples_menu
+  //       if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
+  //         // formations_menu = Object.fromEntries(
+  //         //   Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
+  //         // ) as { [_: string]: JSX.Element }
+  //         delete json_data.exemples_menu['Formations']['Tutoriels']
+  //       }
+  //     }).catch(() => {
+  //       exemple_menu = {}
+  //       // formations_menu = {}
+  //     }).then(() => {
+  //       renderPage()
+  //     })
+  //   })
+  // }
+
+  const blockers = {}
+
+  if (new_data_plus.is_static)
+    return sankeyApp
+  else
+    return <ChakraProvider
+      resetCSS={false}
+      theme={opensankey_theme}
+    >
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path='/register'
+            element={
+              <Register
+                new_data_plus={new_data_plus}
+              />
+            }
+          />
+          <Route
+            path='/login'
+            element={
+              <Login
+                new_data_plus={new_data_plus}
+              />
+            }
+          />
+          <Route
+            path='/dashboard'
+            element={
+              <Dashboard
+                new_data_plus={new_data_plus}
+                exemple_menu={exemple_menu}
+              />
+            }
+          />
+          <Route
+            path='/account'
+            element={
+              <Account
+                new_data_plus={new_data_plus}
+                blocker_suite_sankey={blockers}
+              />
+            }
+          />
+          <Route path='/' element={sankeyApp} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
+    </ChakraProvider>
+
+}

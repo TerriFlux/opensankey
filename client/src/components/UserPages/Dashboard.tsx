@@ -1,5 +1,4 @@
 import React, { FunctionComponent } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
 
@@ -13,7 +12,7 @@ import {
   SimpleGrid
 } from '@chakra-ui/react'
 
-import { Type_GenericApplicationDataOS } from '../../deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
+import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
 
 import { logOutUser } from '../Login/LoginFunctions'
 
@@ -38,31 +37,25 @@ export type SankeyLabelTypes = {
 }
 
 export type DashboardTypes = {
-  new_data: Type_GenericApplicationDataOS,
-  navbar_logo: string,
-  exemple_menu: object,
-  update: boolean,
-  set_update: (_: boolean) => void
+  new_data_plus: Type_GenericApplicationDataOSP
+  exemple_menu: object
 }
 
 // Dashboard, Register or Buy License
 const Dashboard: FunctionComponent<DashboardTypes> = ({
-  new_data,
-  navbar_logo,
-  update,
-  set_update,
+  new_data_plus,
 }) => {
   // Initialise traduction function
-  const { t } = useTranslation()
+  const { t, logo } = new_data_plus
+
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
   const returnToApp = () => {
-    set_update(!update)
     navigate('/')
   }
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data.has_free_account) {
+  if (!new_data_plus.has_free_account) {
     returnToApp()
   }
 
@@ -73,7 +66,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   }
   //Logout
   const loginOut = () => {
-    logOutUser(new_data.unsetTokens)
+    logOutUser(new_data_plus.unsetTokens)
     returnToApp()
   }
 
@@ -91,7 +84,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   //   let img = image_preview(image)
   //   const path = window.location.href
   //   if (!path.includes('localhost')) {
-  //     img = img.replace('static/', 'static/sankeysuite/')
+  //     img = img.replace('static/', 'static/sankeyapp/')
   //   }
   //   return img
   // })
@@ -161,7 +154,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
           >
             <Image
               height='4rem'
-              src={navbar_logo}
+              src={logo}
               alt='navigation logo'
               onClick={() => returnToApp()}
             />

@@ -152,7 +152,7 @@ export async function registerNewLicenseSankeySuite(
 export async function activateLicenseToken(
   app_name: string,
   req_url: string,
-  setLicenseToken:(token:boolean)=>void)
+  setLicenseToken:()=>void)
 {
   // Check AFM license
   fetch(req_url)
@@ -169,7 +169,7 @@ export async function activateLicenseToken(
       ).then(data_edd => {
         if (data_edd.success && data_edd.license === 'valid') {
           sessionStorage.setItem(app_name, LZString.compress(JSON.stringify(true)))
-          setLicenseToken(true)
+          setLicenseToken()
         }
       })
     })

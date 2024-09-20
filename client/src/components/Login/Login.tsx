@@ -1,21 +1,24 @@
 import React, { FunctionComponent, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Box, Button, Card, CardBody, CardHeader, Image } from '@chakra-ui/react'
 
 import { loginUser } from './LoginFunctions'
 
+import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
+
 export type LoginTypes = {
-  navbar_logo: string,
-  set_update: (_: boolean) => void
-  update: boolean
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
 // Login, Register or Buy License
 const Login: FunctionComponent<LoginTypes> = ({
-  navbar_logo,
-  set_update, update
+  new_data_plus,
 }) => {
+
+  // App data
+  const { t, logo } = new_data_plus
+
+  // States
   const [email, setUserName] = useState('')
   const [password, setPassword] = useState('')
   const [remember] = useState(false)
@@ -23,12 +26,9 @@ const Login: FunctionComponent<LoginTypes> = ({
     button: ''
   }
 
-  // Initialise traduction function
-  const { t } = useTranslation()
   // Initialise navigation function
   const navigate = useNavigate()
   const returnToApp = () => {
-    set_update(!update)
     navigate('/')
   }
 
@@ -41,16 +41,14 @@ const Login: FunctionComponent<LoginTypes> = ({
   const handleSubmit = async () => {
     if (state.button === 'login') {
       await loginUser(
-        t,
+        new_data_plus,
         {
           email,
           password,
           remember
         },
-        update,set_update,
         navigate
       )
-      // set_update(!update)
     }
   }
 
@@ -75,7 +73,7 @@ const Login: FunctionComponent<LoginTypes> = ({
           >
             <Image
               height='4rem'
-              src={navbar_logo}
+              src={logo}
               alt='navigation logo'
               onClick={() => returnToApp()}
             />
@@ -86,7 +84,6 @@ const Login: FunctionComponent<LoginTypes> = ({
             justifySelf='right'
             onClick={() => {
               navigate('/')
-              set_update(!update)
             }}>
             {t('UserPages.to_app')}
           </Button>

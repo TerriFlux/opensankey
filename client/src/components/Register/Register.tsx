@@ -3,7 +3,6 @@ import * as d3 from 'd3'
 import React, { FunctionComponent, useState, useRef } from 'react'
 import i18next from 'i18next'
 
-import { useTranslation } from 'react-i18next'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { useNavigate } from 'react-router-dom'
 import { FaCheck } from 'react-icons/fa'
@@ -28,6 +27,8 @@ import {
 
 import { opensankey_theme } from '../../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 
+import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
+
 import TermsOfUse from './TermsOfUse'
 import {
   registerNewLicenseOpenOSP,
@@ -45,7 +46,7 @@ async function userSignUp(
   license_sankeysuite: string,
   navigate:(route:string)=>void
 ) {
-  //const navigate = useNavigate()
+
   d3.select('.LogError').selectAll('*').remove()
   // Enregistrement dans la base de donnée utilisateur
   fetch(window.location.origin + '/auth/signup', {
@@ -92,18 +93,15 @@ async function userSignUp(
 
 // UI : License checkin
 export type RegisterType = {
-  navbar_logo: string,
-
-  set_update: (_: boolean) => void
-  update: boolean
-
+  new_data_plus: Type_GenericApplicationDataOSP
 }
 
 const Register: FunctionComponent<RegisterType> = ({
-  navbar_logo,
-
-  set_update, update
+  new_data_plus,
 }) => {
+
+  // App data
+  const { t, logo } = new_data_plus
 
   // License registrering informations
   const [userName, setUserName] = useState('')
@@ -113,12 +111,11 @@ const Register: FunctionComponent<RegisterType> = ({
   const [license_opensankeyplus, setUserLicenseOpenOSP] = useState('')
   const [license_sankeysuite, setUserLicenseSankeySuite] = useState('')
   const captchaRef = useRef<ReCAPTCHA>(null)
-  // Initialise traduction function
-  const { t } = useTranslation()
+
   // Initialise navigation function
   const navigate = useNavigate()
   const returnToApp = () => {
-    set_update(!update)
+    // set_update(!update)
     navigate('/')
   }
   // Terms of use modal
@@ -158,7 +155,6 @@ const Register: FunctionComponent<RegisterType> = ({
       document.cookie = tmp
       // suiteApplicationContext.has_free_account = false
       // setSuiteApplicationContext({ ...suiteApplicationContext })
-      set_update(!update)
     }
     else {
       d3.select('.LogError').html('<p style="color:red">' + t('err.captcha', { ns: 'register' }) + '</p>')
@@ -185,7 +181,7 @@ const Register: FunctionComponent<RegisterType> = ({
           >
             <Image
               height='4rem'
-              src={navbar_logo}
+              src={logo}
               alt='navigation logo'
               onClick={() => returnToApp()}
             />
@@ -196,7 +192,6 @@ const Register: FunctionComponent<RegisterType> = ({
             justifySelf='right'
             onClick={() => {
               returnToApp()
-              set_update(!update)
             }}>
             {t('UserPages.to_app')}
           </Button>

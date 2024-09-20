@@ -1,7 +1,6 @@
 
 import * as d3 from 'd3'
 import React, { FunctionComponent, useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
 import {
@@ -16,13 +15,13 @@ import {
   Text
 } from '@chakra-ui/react'
 
-import { Type_GenericApplicationDataOS } from '../../deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
+import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
 
 import {
   checkLicenseOpenOSP,
   checkLicenseSankeySuite,
   registerNewLicenseOpenOSP,
-  registerNewLicenseSankeySuite
+  // registerNewLicenseSankeySuite
 } from '../Register/LicenseFunctions'
 import {
   logOutUser,
@@ -48,33 +47,27 @@ interface UserData {
 
 // Account
 export type AccountTypes = {
-  navbar_logo: string,
-  new_data: Type_GenericApplicationDataOS,
+  new_data_plus: Type_GenericApplicationDataOSP,
   blocker_suite_sankey: { [_: string]: JSX.Element }
-  set_update: (_: boolean) => void
-  update: boolean
 }
 
 const Account: FunctionComponent<AccountTypes> = ({
-  navbar_logo,
-  new_data,
+  new_data_plus,
   blocker_suite_sankey,
-  set_update, update
 }) => {
+
   // Initialise traduction function
-  const { t } = useTranslation()
+  const { t, logo } = new_data_plus
 
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
   const returnToApp = () => {
-    set_update(!update)
     navigate('/')
   }
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data.has_free_account) {
+  if (!new_data_plus.has_free_account) {
     returnToApp()
-
   }
 
   //If we are logged the the following behaviors are defined
@@ -85,7 +78,7 @@ const Account: FunctionComponent<AccountTypes> = ({
 
   //Logout
   const loginOut = () => {
-    logOutUser(new_data.unsetTokens)
+    logOutUser(new_data_plus.unsetTokens)
     returnToApp()
   }
 
@@ -121,7 +114,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             userData_.license_opensankeyplus_validity = ''
             setUserData(userData_)
             setReqCount(1)
-            activateLicensesTokens(update,set_update) //Update tokens
+            activateLicensesTokens(new_data_plus) //Update tokens
             // setSuiteApplicationContext({...suiteApplicationContext})
           }).catch(error =>
             console.log('POST /user_infos/license_opensankeyplus : ERROR - ', error)
@@ -133,47 +126,47 @@ const Account: FunctionComponent<AccountTypes> = ({
     }
   }
 
-  // Activate and save a new license SankeySuite
-  const signupNewLicenseSankeySuite = () => {
-    // Check licence and activate from EDD
-    registerNewLicenseSankeySuite(newLicenseSankeySuite)
-      .then(() => {
-        // Save in db
-        const path = window.location.origin
-        const url = path + '/user_infos/license_sankeysuite'
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            license_id: newLicenseSankeySuite,
-          })
-        }).then(response => {
-          if (response.ok) {
-            return response.json()
-          } else {
-            return Promise.reject(response)
-          }
-        }).then(() => {
-          // console.log('POST /user_infos/license_sankeysuite : SUCCESS - ', data_resp.message)
-          const userData_ = userData
-          userData_.loading_sankeysuite = true
-          userData_.license_sankeysuite_id = newLicenseSankeySuite
-          userData_.license_sankeysuite_active = ''
-          userData_.license_sankeysuite_validity = ''
-          setUserData(userData_)
-          setReqCount(1)
-          activateLicensesTokens(update,set_update) //Update tokens
-          // set_update(!update)
-        }).catch(error =>
-          console.log('POST /user_infos/license_sankeysuite : ERROR - ', error)
-        )
-      })
-      .catch(error => {
-        console.log('signupNewLicenseSankeySuite : ERROR - ', error)
-      })
-  }
+  // // Activate and save a new license SankeySuite
+  // const signupNewLicenseSankeySuite = () => {
+  //   // Check licence and activate from EDD
+  //   registerNewLicenseSankeySuite(newLicenseSankeySuite)
+  //     .then(() => {
+  //       // Save in db
+  //       const path = window.location.origin
+  //       const url = path + '/user_infos/license_sankeysuite'
+  //       fetch(url, {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({
+  //           license_id: newLicenseSankeySuite,
+  //         })
+  //       }).then(response => {
+  //         if (response.ok) {
+  //           return response.json()
+  //         } else {
+  //           return Promise.reject(response)
+  //         }
+  //       }).then(() => {
+  //         // console.log('POST /user_infos/license_sankeysuite : SUCCESS - ', data_resp.message)
+  //         const userData_ = userData
+  //         userData_.loading_sankeysuite = true
+  //         userData_.license_sankeysuite_id = newLicenseSankeySuite
+  //         userData_.license_sankeysuite_active = ''
+  //         userData_.license_sankeysuite_validity = ''
+  //         setUserData(userData_)
+  //         setReqCount(1)
+  //         activateLicensesTokens(update,set_update) //Update tokens
+  //         // set_update(!update)
+  //       }).catch(error =>
+  //         console.log('POST /user_infos/license_sankeysuite : ERROR - ', error)
+  //       )
+  //     })
+  //     .catch(error => {
+  //       console.log('signupNewLicenseSankeySuite : ERROR - ', error)
+  //     })
+  // }
 
   const userDataDefault: UserData = {
     count: 0,
@@ -196,8 +189,8 @@ const Account: FunctionComponent<AccountTypes> = ({
   const [reqCount, setReqCount] = useState(1)
   const [newLicenseOpenOSP, setNewLicenseOpenOSP] = useState('')
   const [newLicenseOpenOSPToCheck, setNewLicenseOpenOSPToCheck] = useState(false)
-  const [newLicenseSankeySuite, setNewLicenseSankeySuite] = useState('')
-  const [newLicenseSankeySuiteToCheck, setNewLicenseSankeySuiteToCheck] = useState(false)
+  // const [newLicenseSankeySuite, setNewLicenseSankeySuite] = useState('')
+  // const [newLicenseSankeySuiteToCheck, setNewLicenseSankeySuiteToCheck] = useState(false)
 
   // Get user's data
   useEffect(() => {
@@ -371,7 +364,7 @@ const Account: FunctionComponent<AccountTypes> = ({
           >
             <Image
               height='4rem'
-              src={navbar_logo}
+              src={logo}
               alt='navigation logo'
               onClick={() => returnToApp()}
             />
@@ -461,7 +454,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                 </Box>
 
                 {/* Infos licence SankeySuite  --------------------------------------------------------- */}
-                <Box layerStyle='account_row'>
+                {/* <Box layerStyle='account_row'>
                   <Box>
                     {has_blockers ? <>
                       {blocker_suite_sankey['block_ssm']}</>
@@ -492,7 +485,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                       <Text>{userData.license_sankeysuite_validity}</Text>
                     </>
                   )}
-                </Box>
+                </Box> */}
               </Box>
             )}
             <div className='LogError' style={{ 'color': 'red' }}></div>
