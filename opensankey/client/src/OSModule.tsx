@@ -21,8 +21,19 @@ import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
 
 /*************************************************************************************************/
 
-import { Class_ApplicationDataOS, Type_GenericApplicationDataOS } from './types/TypesOS'
-import { retrieveExcelResults } from './dialogs/SankeyPersistence'
+import {
+  FType_InitalizeSelectorDetailNodes,
+  FType_InitializeAdditionalMenus,
+  FType_InitializeApplicationData,
+  FType_InitializeMenuConfiguration,
+  FType_InitializeReinitialization,
+  FType_ModuleDialogs,
+  FType_ProcessFunctions
+} from './types/FunctionTypes'
+import {
+  Class_ApplicationDataOS,
+  Type_GenericApplicationDataOS
+} from './types/TypesOS'
 import { MenuDraggable, OpenSankeySaveButton } from './topmenus/SankeyMenuTop'
 import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
@@ -36,15 +47,9 @@ import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfigura
 import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
 import { AddSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
 
-import {
-  FType_InitalizeSelectorDetailNodes,
-  FType_InitializeAdditionalMenus,
-  FType_InitializeApplicationData,
-  FType_InitializeMenuConfiguration,
-  FType_InitializeReinitialization,
-  FType_ModuleDialogs,
-  FType_ProcessFunctions
-} from './types/FunctionTypes'
+import { retrieveExcelResults } from './dialogs/SankeyPersistence'
+import { FType_InitializeDiagrammSelector } from './dialogs/types/SankeyMenuDialogsTypes'
+import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 
 
 declare const window: Window &
