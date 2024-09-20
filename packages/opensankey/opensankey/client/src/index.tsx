@@ -17,18 +17,22 @@ import { createRoot } from 'react-dom/client'
 
 // Local imports ====================================================================================
 
-import SankeyApp from './SankeyApp'
 import './traduction'
+import SankeyApp from './SankeyApp'
 import {
   initializeApplicationData,
   initializeReinitialization,
   initializeAdditionalMenus,
   moduleDialogs,
-  initializeMenuConfiguration
+  initializeMenuConfiguration,
+  initializeDiagrammSelector
 } from './OSModule'
-import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
-import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
-import { ModalWelcomeBuilder } from './welcome/ModalWelcome'
+import {
+  ClickSaveDiagram
+} from './dialogs/SankeyPersistence'
+import {
+  ModalWelcomeBuilder
+} from './welcome/ModalWelcome'
 
 // CONSTANTS =========================================================================================
 
