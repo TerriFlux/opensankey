@@ -17,6 +17,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import SankeyApp from './deps/OpenSankey+/deps/OpenSankey/SankeyApp'
 import { opensankey_theme } from './deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
+import { initializeMenuConfiguration } from './deps/OpenSankey+/deps/OpenSankey/OSModule'
 
 // OpenSankey+ imports ===============================================================================
 
@@ -25,15 +26,12 @@ import {
   initializeReinitializationOSP,
   moduleDialogsOSP
 } from './deps/OpenSankey+/OSPModule'
-import {
-  initializeMenuConfiguration
-} from './deps/OpenSankey+/deps/OpenSankey/OSModule'
 import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeOSP'
-import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/TypesOSP'
 
 // Local imports ====================================================================================
 
-import { initializeAdditionalMenus, initializeApplicationDataSA } from './ModulesSA'
+import { Class_ApplicationDataSA } from './ApplicationData'
+import { initializeAdditionalMenusSA, initializeApplicationDataSA } from './ModulesSA'
 import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
@@ -45,7 +43,7 @@ export const SankeyAppSA: FunctionComponent = () => {
 
   // const [update, set_update] = useState<boolean>(true) // useState OK
 
-  const new_data_plus = new Class_ApplicationDataOSP(false)
+  const new_data_app = new Class_ApplicationDataSA(false)
 
   const sankeyApp =
     <SankeyApp
@@ -53,24 +51,29 @@ export const SankeyAppSA: FunctionComponent = () => {
       initializeApplicationData={
         (initial_data) => {
           return initializeApplicationDataSA(
-            new_data_plus,
+            new_data_app,
             initial_data
           )
         }
       }
       initializeMenuConfiguration={initializeMenuConfiguration}
-      initializeAdditionalMenus={initializeAdditionalMenus}
+      initializeAdditionalMenus={(additionalMenus, new_data) => {
+        initializeAdditionalMenusSA(
+          additionalMenus,
+          new_data as Class_ApplicationDataSA
+        )
+      }}
       initializeDiagrammSelector={initializeDiagrammSelectorOSP}
       moduleDialogs={moduleDialogsOSP}
       ModalWelcome={ModalWelcomeBuilderOSP}
       ClickSaveDiagram={
-        (new_data) => { ClickSaveDiagram(new_data) }
+        (new_data_app) => { ClickSaveDiagram(new_data_app) }
       }
     />
 
   const exemple_menu = {} as { [_: string]: JSX.Element }
 
-  // if (!new_data_plus?.is_static) {
+  // if (!new_data_app?.is_static) {
   //   // Menus are not presents in mode publish
   //   const path = window.location.origin
   //   const url = path + '/opensankey/sankey/menu_examples'
@@ -96,7 +99,7 @@ export const SankeyAppSA: FunctionComponent = () => {
 
   const blockers = {}
 
-  if (new_data_plus.is_static)
+  if (new_data_app.is_static)
     return sankeyApp
   else
     return <ChakraProvider
@@ -109,7 +112,7 @@ export const SankeyAppSA: FunctionComponent = () => {
             path='/register'
             element={
               <Register
-                new_data_plus={new_data_plus}
+                new_data_app={new_data_app}
               />
             }
           />
@@ -117,7 +120,7 @@ export const SankeyAppSA: FunctionComponent = () => {
             path='/login'
             element={
               <Login
-                new_data_plus={new_data_plus}
+                new_data_app={new_data_app}
               />
             }
           />
@@ -125,7 +128,7 @@ export const SankeyAppSA: FunctionComponent = () => {
             path='/dashboard'
             element={
               <Dashboard
-                new_data_plus={new_data_plus}
+                new_data_app={new_data_app}
                 exemple_menu={exemple_menu}
               />
             }
@@ -134,7 +137,7 @@ export const SankeyAppSA: FunctionComponent = () => {
             path='/account'
             element={
               <Account
-                new_data_plus={new_data_plus}
+                new_data_app={new_data_app}
                 blocker_suite_sankey={blockers}
               />
             }

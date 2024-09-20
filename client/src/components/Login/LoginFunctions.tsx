@@ -6,11 +6,11 @@ import {
   app_name_opensankeyplus,
   app_name_sankeysuite
 } from '../Register/LicenseFunctions'
-import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 // Activate license Tokens if licenses are valid
 export function activateLicensesTokens(
-  new_data: Type_GenericApplicationDataOSP
+  new_data_app: Class_ApplicationDataSA
   // update: boolean,
   // set_update: (_: boolean) => void
 ) {
@@ -26,7 +26,7 @@ export function activateLicensesTokens(
   activateLicenseToken(
     app_name_opensankeyplus,
     '/user_infos/license_opensankeyplus',
-    () => {new_data.activateSankeyPlus()}
+    () => {new_data_app.activateSankeyPlus()}
   )
   // // Check if has dev acc
   // fetch('/user_infos/is_developer',)
@@ -46,7 +46,7 @@ export function activateLicensesTokens(
 
 // Check if login if valid
 export async function loginUser(
-  new_data_plus: Type_GenericApplicationDataOSP,
+  new_data_app: Class_ApplicationDataSA,
   credentials: {
     email: string;
     password: string;
@@ -54,7 +54,7 @@ export async function loginUser(
   },
   navigate: (route: string) => void
 ) {
-  const { t } = new_data_plus
+  const { t } = new_data_app
   // Remove all errors from screen
   d3.select('.LogError').selectAll('*').remove()
   // Fetch Login
@@ -77,9 +77,11 @@ export async function loginUser(
     })
     .then(data => {
       if (data['is_connected']) {
-
+        // Activate free account
+        new_data_app.activateFreeAccount()
         sessionStorage.setItem('token', LZString.compress(JSON.stringify(true)))
-        activateLicensesTokens(new_data_plus)
+        // Activate licence
+        activateLicensesTokens(new_data_app)
 
         const path = window.location.origin
         const url = path + '/user_infos'

@@ -1,5 +1,5 @@
 
-import React from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
@@ -17,39 +17,45 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 
-import { FType_InitializeAdditionalMenusOSP } from './deps/OpenSankey+/ftypes/SankeyPlusApplication'
-import { Type_GenericApplicationDataOSP } from './deps/OpenSankey+/types/TypesOSP'
-import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 import { CardsTemplateBuilder } from './deps/OpenSankey+/deps/OpenSankey/welcome/ModalWelcome'
+import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
+
+import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 
 import { loginOut } from './components/Login/LoginFunctions'
 import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { Class_ApplicationDataSA } from './ApplicationData'
 
 export const initializeApplicationDataSA = (
-  new_data_plus : Type_GenericApplicationDataOSP,
+  new_data_app: Class_ApplicationDataSA,
   initial_data: Type_JSON | undefined
 ) => {
   // Read data from cache if it exist
   if (initial_data !== undefined) {
-    new_data_plus.fromJSON(initial_data)
+    new_data_app.fromJSON(initial_data)
   }
-  return new_data_plus
+  return new_data_app
 }
+
+type FType_InitializeAdditionalMenusSA = (
+  additional_menus: Type_AdditionalMenus,
+  new_data: Class_ApplicationDataSA
+) => void
 
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
  *  we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
  * @param {*} additionalMenus
- * @param {*} new_data_plus
+ * @param {*} new_data_app
  */
-export const initializeAdditionalMenus: FType_InitializeAdditionalMenusOSP = (
+export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
-  new_data
+  new_data_app
 ) => {
 
   // No initialisation if static --------------------------------------------------------
 
-  if (new_data.is_static) {
+  if (new_data_app.is_static) {
     return
   }
 
@@ -57,26 +63,49 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenusOSP = (
 
   initializeAdditionalMenusOSP(
     additionalMenus,
-    new_data
+    new_data_app
   )
 
   // New modules -------------------------------------------------------------------------
 
-  const { t } = new_data
+  additionalMenus.additional_nav_item.push(
+    <UserPagesButtons
+      new_data_app={new_data_app}
+    />
+  )
+
+  additionalMenus.cards_template = CardsTemplateBuilder(new_data_app)
+}
+
+type FCType_UserPagesButtons = {
+  new_data_app: Class_ApplicationDataSA
+}
+
+const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
+  { new_data_app }
+) => {
+  // Traduction
+  const { t } = new_data_app
 
   // If windowSankey.SankeyToolsStatic is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
   // and if the app is in publication mode we aren't in one
   const navigate = useNavigate()
   const returnToApp = () => {
     navigate('/')
-    // applicationData.set_data({ ...applicationData.data })
+    new_data_app.menu_configuration.updateComponentsRelatedToSA()
   }
 
-  const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  const [count, setCount] = useState(0)
+  const refreshThis = () => {
+    setCount(count+1)
+  }
+  new_data_app.menu_configuration.ref_to_additional_menus_updater.current = refreshThis
+
+  const indicateSankeyToSaveInCache = () => new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
-  const btn_navigate_to_login_register_dashboard = !new_data.has_free_account ? <Menu
+  const btn_navigate_to_login_register_dashboard = !new_data_app.has_free_account ? <Menu
     variant='menu_button_subnav_account_style'
     placement='bottom-end'
   >
@@ -108,15 +137,15 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenusOSP = (
           // applicationData.function_on_wait.current = () => {
           //   localStorage.setItem('data', LZString.compress(JSON.stringify((applicationData as suiteApplicationDataType).master_data)))
           //   localStorage.setItem('last_save', 'true')
-          //   new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          //   new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(true)
           //   navigate('/login')
           // }
           // dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
-          new_data.menu_configuration.function_on_wait.current = () => {
+          new_data_app.menu_configuration.function_on_wait.current = () => {
             indicateSankeyToSaveInCache()
             navigate('/login')
           }
-          new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
+          new_data_app.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
         }}
       >
         {t('connect')}
@@ -140,26 +169,27 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenusOSP = (
         // applicationData.function_on_wait.current = () => {
         //   localStorage.setItem('data', LZString.compress(JSON.stringify((applicationData as suiteApplicationDataType).master_data)))
         //   localStorage.setItem('last_save', 'true')
-        //   new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+        //   new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(true)
         //   navigate('/dashboard')
         // }
         // dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
-        new_data.menu_configuration.function_on_wait.current = () => {
+        new_data_app.menu_configuration.function_on_wait.current = () => {
           indicateSankeyToSaveInCache()
           navigate('/dashboard')
         }
-        new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
+        new_data_app.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
       }}>
       <FaUser />
     </Button>
     <Button
       variant='menutop_button_logout'
-      onClick={() => loginOut(new_data.unsetTokens, returnToApp)}>
+      onClick={() => loginOut(
+        () => {new_data_app.unsetTokens()},
+        returnToApp
+      )}>
       <FaPowerOff />
     </Button>
   </Box>
 
-  additionalMenus.additional_nav_item.push(btn_navigate_to_login_register_dashboard)
-
-  additionalMenus.cards_template = CardsTemplateBuilder(new_data)
+  return btn_navigate_to_login_register_dashboard
 }

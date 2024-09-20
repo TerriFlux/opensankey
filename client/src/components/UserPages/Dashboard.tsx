@@ -12,9 +12,8 @@ import {
   SimpleGrid
 } from '@chakra-ui/react'
 
-import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
-
-import { logOutUser } from '../Login/LoginFunctions'
+import { loginOut, logOutUser } from '../Login/LoginFunctions'
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 
 export type SankeyLabelTypes = {
@@ -37,16 +36,16 @@ export type SankeyLabelTypes = {
 }
 
 export type DashboardTypes = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_app: Class_ApplicationDataSA
   exemple_menu: object
 }
 
 // Dashboard, Register or Buy License
 const Dashboard: FunctionComponent<DashboardTypes> = ({
-  new_data_plus,
+  new_data_app,
 }) => {
   // Initialise traduction function
-  const { t, logo } = new_data_plus
+  const { t, logo } = new_data_app
 
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
@@ -55,7 +54,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   }
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data_plus.has_free_account) {
+  if (!new_data_app.has_free_account) {
     returnToApp()
   }
 
@@ -63,11 +62,6 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   //Go to myAccount
   const myAccount = () => {
     navigate('/account')
-  }
-  //Logout
-  const loginOut = () => {
-    logOutUser(new_data_plus.unsetTokens)
-    returnToApp()
   }
 
   /* eslint-disable */
@@ -180,7 +174,10 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
             <Button
               variant='menutop_button_logout'
               onClick={() => {
-                loginOut()
+                loginOut(
+                  () => {new_data_app.unsetTokens()},
+                  returnToApp
+                )
               }}
             >
               <FaPowerOff />

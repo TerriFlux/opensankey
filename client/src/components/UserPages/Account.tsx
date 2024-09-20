@@ -15,7 +15,6 @@ import {
   Text
 } from '@chakra-ui/react'
 
-import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
 
 import {
   checkLicenseOpenOSP,
@@ -27,6 +26,7 @@ import {
   logOutUser,
   activateLicensesTokens
 } from '../Login/LoginFunctions'
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 // UserData interface
 interface UserData {
@@ -47,26 +47,27 @@ interface UserData {
 
 // Account
 export type AccountTypes = {
-  new_data_plus: Type_GenericApplicationDataOSP,
+  new_data_app: Class_ApplicationDataSA,
   blocker_suite_sankey: { [_: string]: JSX.Element }
 }
 
 const Account: FunctionComponent<AccountTypes> = ({
-  new_data_plus,
+  new_data_app,
   blocker_suite_sankey,
 }) => {
 
   // Initialise traduction function
-  const { t, logo } = new_data_plus
+  const { t, logo } = new_data_app
 
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
   const returnToApp = () => {
     navigate('/')
+    new_data_app.menu_configuration.updateComponentsRelatedToSA()
   }
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data_plus.has_free_account) {
+  if (!new_data_app.has_free_account) {
     returnToApp()
   }
 
@@ -78,7 +79,7 @@ const Account: FunctionComponent<AccountTypes> = ({
 
   //Logout
   const loginOut = () => {
-    logOutUser(new_data_plus.unsetTokens)
+    logOutUser(() => new_data_app.unsetTokens())
     returnToApp()
   }
 
@@ -114,7 +115,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             userData_.license_opensankeyplus_validity = ''
             setUserData(userData_)
             setReqCount(1)
-            activateLicensesTokens(new_data_plus) //Update tokens
+            activateLicensesTokens(new_data_app) //Update tokens
             // setSuiteApplicationContext({...suiteApplicationContext})
           }).catch(error =>
             console.log('POST /user_infos/license_opensankeyplus : ERROR - ', error)

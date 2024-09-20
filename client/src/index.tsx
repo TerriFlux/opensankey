@@ -38,7 +38,7 @@ import i18next from './traduction'
 
 // OpenSankey+ imports ===========================================================================
 
-// import { Type_GenericApplicationDataOSP } from './deps/OpenSankey+/types/TypesOSP'
+// import { Class_ApplicationDataSA } from './deps/OpenSankey+/types/TypesOSP'
 
 // Local modules =================================================================================
 
@@ -71,10 +71,9 @@ i18next.changeLanguage(navigator.language.includes('fr') ? 'fr' : 'en')
 
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)
-const fetchData = { method: 'POST' }
 
 // let exemple_menu = {} as { [_: string]: JSX.Element }
-
+// const fetchData = { method: 'POST' }
 // if (!window.SankeyToolsStatic) {
 //   // Menus are not presents in mode publish
 //   const path = window.location.origin
@@ -105,6 +104,6 @@ const renderPage = () => {
   )
 }
 
-if (window.SankeyToolsStatic) {
+// if (window.SankeyToolsStatic) {
   renderPage()
-}
+// }

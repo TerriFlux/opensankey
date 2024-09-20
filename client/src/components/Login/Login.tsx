@@ -2,21 +2,20 @@ import React, { FunctionComponent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Button, Card, CardBody, CardHeader, Image } from '@chakra-ui/react'
 
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { loginUser } from './LoginFunctions'
 
-import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
-
 export type LoginTypes = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_app: Class_ApplicationDataSA
 }
 
 // Login, Register or Buy License
 const Login: FunctionComponent<LoginTypes> = ({
-  new_data_plus,
+  new_data_app,
 }) => {
 
   // App data
-  const { t, logo } = new_data_plus
+  const { t, logo } = new_data_app
 
   // States
   const [email, setUserName] = useState('')
@@ -30,6 +29,7 @@ const Login: FunctionComponent<LoginTypes> = ({
   const navigate = useNavigate()
   const returnToApp = () => {
     navigate('/')
+    new_data_app.menu_configuration.updateComponentsRelatedToSA()
   }
 
   // Handler : Si demande d'envoi vers page de création de compte
@@ -41,7 +41,7 @@ const Login: FunctionComponent<LoginTypes> = ({
   const handleSubmit = async () => {
     if (state.button === 'login') {
       await loginUser(
-        new_data_plus,
+        new_data_app,
         {
           email,
           password,
@@ -82,9 +82,8 @@ const Login: FunctionComponent<LoginTypes> = ({
             variant='btn_lone_navigation'
             alignSelf='center'
             justifySelf='right'
-            onClick={() => {
-              navigate('/')
-            }}>
+            onClick={() => returnToApp()}
+          >
             {t('UserPages.to_app')}
           </Button>
         </Box>

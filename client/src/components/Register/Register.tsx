@@ -27,13 +27,12 @@ import {
 
 import { opensankey_theme } from '../../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 
-import { Type_GenericApplicationDataOSP } from '../../deps/OpenSankey+/types/TypesOSP'
-
 import TermsOfUse from './TermsOfUse'
 import {
   registerNewLicenseOpenOSP,
   registerNewLicenseSankeySuite
 } from './LicenseFunctions'
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 
 // Check Licence and register account if everything is Ok
@@ -93,15 +92,15 @@ async function userSignUp(
 
 // UI : License checkin
 export type RegisterType = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_app: Class_ApplicationDataSA
 }
 
 const Register: FunctionComponent<RegisterType> = ({
-  new_data_plus,
+  new_data_app,
 }) => {
 
   // App data
-  const { t, logo } = new_data_plus
+  const { t, logo } = new_data_app
 
   // License registrering informations
   const [userName, setUserName] = useState('')
