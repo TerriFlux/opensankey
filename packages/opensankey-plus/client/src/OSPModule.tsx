@@ -14,10 +14,13 @@ import {
   MenuDraggable
 } from './deps/OpenSankey/topmenus/SankeyMenuTop'
 import {
-  initializeReinitialization
+  initializeAdditionalMenus,
+  initializeReinitialization,
+  moduleDialogs
 } from './deps/OpenSankey/OSModule'
 import {
-  FType_InitializeReinitialization
+  FType_InitializeReinitialization,
+  FType_ModuleDialogs
 } from './deps/OpenSankey/types/FunctionTypes'
 import {
   IType_DictHookRefSetterShowDialogComponents
@@ -25,8 +28,7 @@ import {
 
 // Local imports
 import {
-  FType_InitializeAdditionalMenusOSP,
-  FType_ModuleDialogsOSP
+  FType_InitializeAdditionalMenusOSP
 } from './ftypes/SankeyPlusApplication'
 import {
   FType_InitializeApplicationDataOSP
@@ -57,6 +59,8 @@ import { NodeForeignObjectOSP } from './SankeyPlusForeignObject'
 import { MenuConfLinkApparenceGradientOSP } from './SankeyPlusGradient'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
+import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
+import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/dialogs/types/SankeyMenuDialogsTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -222,11 +226,11 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
 ) => {
   // OpenSankey Menu
   const moduleDialogsOS = moduleDialogs(
-      new_data,
-      additional_menus,
-      menu_configuration_nodes_attributes,
-      processFunctions
-    )
+    new_data,
+    additional_menus,
+    menu_configuration_nodes_attributes,
+    processFunctions
+  )
 
   // Cast type
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
