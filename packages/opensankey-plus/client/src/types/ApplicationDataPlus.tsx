@@ -87,12 +87,16 @@ export abstract class Class_ApplicationDataPlus
    */
   constructor(
     published_mode: boolean,
-    options: {[_: string]: boolean | string} = {}
+    options: { [_: string]: boolean | string } = {}
   ) {
     super(published_mode, options)
 
     // OVERRIDE some values for OpenSankey+ purpose
     this._menu_configuration = this.menu_configuration
+
+    // Assign master in views
+    this._views[this._drawing_area.id] = this._drawing_area
+    this.pushViewIdInViewOrder(this._drawing_area.id)
 
     // Get OpenSankey+ logo
     let logo_sankey_plus = ''
@@ -238,7 +242,7 @@ export abstract class Class_ApplicationDataPlus
     if (views) {
       // Save master in view
       this._views[default_main_sankey_id] = this._drawing_area
-      this._views_order.push(default_main_sankey_id)
+      this.pushViewIdInViewOrder(default_main_sankey_id)
 
       // Create other views
       Object.entries(views).forEach(ent_view => {
@@ -246,7 +250,7 @@ export abstract class Class_ApplicationDataPlus
         tmp.fromJSON(ent_view[1] as Type_JSON, false)
         // Add new sankey to views
         this._views[ent_view[0]] = tmp
-        this._views_order.push(ent_view[0])
+        this.pushViewIdInViewOrder(ent_view[0])
       })
 
       // Set view to the one active when saved
@@ -276,7 +280,7 @@ export abstract class Class_ApplicationDataPlus
         tmp.fromJSON(ent_view[1] as Type_JSON, false)
         // Add new DA to views
         this._views[ent_view[0]] = tmp
-        this._views_order.push(ent_view[0])
+        this.pushViewIdInViewOrder(ent_view[0])
       })
 
       this._views_order = Array.from(new Set([...this._views_order]))
@@ -353,7 +357,7 @@ export abstract class Class_ApplicationDataPlus
     // If no view existed previously, we add the active sankey as master sankey
     if (this.views.length === 0) {
       this._views[default_main_sankey_id] = this._drawing_area
-      this._views_order.push(default_main_sankey_id)
+      this.pushViewIdInViewOrder(default_main_sankey_id)
     }
     // Create the new sankey
     const new_DA = this.createNewDrawingArea(makeId('view'))
@@ -361,7 +365,7 @@ export abstract class Class_ApplicationDataPlus
     new_DA.updateFrom(base_DA, ['*'])
     // Add new sankey to views
     this._views[new_DA.id] = new_DA
-    this._views_order.push(new_DA.id)
+    this.pushViewIdInViewOrder(new_DA.id)
     // In case we add a new view with an existing key it automatically change in the dict but we need to delete all duplicate in _views_order
 
     // Shown sankey = new sanke
@@ -525,6 +529,20 @@ export abstract class Class_ApplicationDataPlus
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
 
+  }
+
+
+/**
+ * Function used to push view id in order array,
+ * it check if the id isn't already in order because duplicate id can cause so issue when navigating views
+ *
+ * @param {string} id
+ * @memberof Class_ApplicationDataPlus
+ */
+public pushViewIdInViewOrder(id:string){
+    if(!this._views_order.includes(id)){
+      this._views_order.push(id)
+    }
   }
 
   // GETTERS / SETTERS ==================================================================

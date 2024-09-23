@@ -652,7 +652,8 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         new_data_plus.setCurrentView(evt.target.value)
-        refreshThisAndUpdateRelatedComponents()
+        // Update views components (without updating save in cache button)
+        new_data_plus.menu_configuration.updateComponentRelatedToViews()
       }
     }
     value={cur_view.id}
