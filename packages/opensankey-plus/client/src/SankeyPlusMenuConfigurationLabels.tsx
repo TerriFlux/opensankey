@@ -383,9 +383,11 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
       className='quill_editor'
       value={selected_zdt.length > 0 ? selected_zdt[0].content : ''}
       ref={r_editor_ZDT}
-      onChange={(evt) => {
-        selected_zdt.forEach(n => n.content = evt)
-        redrawAndRefresh()
+      onChange={(evt,_,src) => {
+        if(src=='user'){
+          selected_zdt.forEach(n => n.content = evt)
+          redrawAndRefresh()
+        }
       }}
       theme="snow"
       modules={modules}

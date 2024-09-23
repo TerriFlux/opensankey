@@ -50,6 +50,8 @@ export class Class_ContainerElement
 
   // PROTECTED ATTRIBUTES ===============================================================
 
+  protected d3_selection_g_shape:d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+
   /**
    * Display attributes
    * @protected
@@ -173,6 +175,7 @@ export class Class_ContainerElement
     super.draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_labels')
+    this.d3_selection_g_shape=this.d3_selection?.append('g').attr('class','label_shape')??null
     this.drawShape()
     this.drawContent()
   }
@@ -184,17 +187,17 @@ export class Class_ContainerElement
    */
   public drawShape() {
     // Clean previous shape
-    this.d3_selection?.selectAll('.zdt_shape').remove()
+    this.d3_selection_g_shape?.selectAll('.zdt_shape').remove()
 
     // Apply shape value
-    this.d3_selection?.append('rect')
+    this.d3_selection_g_shape?.append('rect')
       .classed('zdt_shape', true)
       .attr('width', this._label_width)
       .attr('height', this._label_height)
       .attr('rx', 5)
 
     // Apply common properties
-    this.d3_selection?.selectAll('.zdt_shape')
+    this.d3_selection_g_shape?.selectAll('.zdt_shape')
       .attr('id', this.id)
       .attr('fill-opacity', this._opacity / 100)
       .attr('fill', this._color)
