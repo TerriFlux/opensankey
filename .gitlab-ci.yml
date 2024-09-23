@@ -79,6 +79,7 @@ dev_opensankey:
     - git pull
     - git config --global --add safe.directory $FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $FOLDER/submodules/OpenSankey+/submodules/OpenSankey
+    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/sankeyapplication/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
     - git submodule update --init --recursive
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx #-e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__
