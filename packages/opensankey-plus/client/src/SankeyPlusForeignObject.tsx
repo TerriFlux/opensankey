@@ -26,7 +26,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [, setCount] = useState(0)
   const selected_nodes = drawing_area.selected_nodes_list
-
+  new_data_plus.menu_configuration.r_editor_content_fo_node_updater.current=()=>setCount(a=>a+1)
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
   new_data_plus.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
@@ -63,6 +63,8 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     'align'
   ]
 
+  const has_FO = (selected_nodes[0]?.has_FO ?? false)
+  const is_FO_raw = (selected_nodes[0]?.is_FO_raw ?? false)
   /**
    *
    * function that go throught all Type_NodeElement of an array & check if they're all equals
@@ -83,7 +85,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const editor_fo = <Box style={{ 'height': '300px' }}>
     <ReactQuill
       className='quill_editor'
-      value={s_editor_content_fo_node}
+      value={selected_nodes.length>0?selected_nodes[0].FO_content:''}
       onChange={(evt, _, s) => {
         if (s === 'user') {
           s_tmp_editor_content_fo_node = evt
@@ -100,8 +102,8 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
       formats={formats}
       readOnly={!is_activated}
       style={{
-        color: (!is_activated || !selected_nodes[0].has_FO) ? '#666666' : '',
-        backgroundColor: (!is_activated || !selected_nodes[0].has_FO) ? '#cccccc' : '',
+        color: (!is_activated || !has_FO) ? '#666666' : '',
+        backgroundColor: (!is_activated || !has_FO) ? '#cccccc' : '',
         overflowY: 'scroll'
       }}
     />
@@ -110,8 +112,8 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   const editor_fo_raw = <Textarea
     rows={5}
-    color={(!is_activated || !selected_nodes[0].has_FO) ? '#666666' : ''}
-    backgroundColor={(!is_activated || !selected_nodes[0].has_FO) ? '#cccccc' : ''}
+    color={(!is_activated || !has_FO) ? '#666666' : ''}
+    backgroundColor={(!is_activated || !has_FO) ? '#cccccc' : ''}
     disabled={!is_activated}
     ref={inputRef}
     defaultValue={s_editor_content_fo_node}
@@ -135,7 +137,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         variant='menuconfigpanel_option_checkbox'
         isDisabled={!is_activated}
         isIndeterminate={is_indeterminated}
-        isChecked={selected_nodes[0].has_FO}
+        isChecked={has_FO}
         onChange={(evt) => {
           selected_nodes
             .forEach(d => {
@@ -151,7 +153,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         variant='menuconfigpanel_option_checkbox'
         isDisabled={!is_activated}
         isIndeterminate={is_indeterminated}
-        isChecked={selected_nodes[0].is_FO_raw}
+        isChecked={is_FO_raw}
         onChange={(evt) => {
           selected_nodes
             .forEach(d => {
@@ -167,9 +169,9 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
       {
         (selected_nodes.length > 0) ?
 
-          <OSTooltip label={is_activated ? (!selected_nodes[0].has_FO ? t('Noeud.foreign_object.not_activated') : '') : t('Menu.sankeyOSPDisabled')}>
+          <OSTooltip label={is_activated ? (!has_FO ? t('Noeud.foreign_object.not_activated') : '') : t('Menu.sankeyOSPDisabled')}>
             {
-              (selected_nodes[0].is_FO_raw) ?
+              (is_FO_raw) ?
                 editor_fo_raw :
                 editor_fo
             }

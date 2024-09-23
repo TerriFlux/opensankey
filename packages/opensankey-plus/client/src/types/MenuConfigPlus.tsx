@@ -51,6 +51,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   // Button that open the sub menu links of elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
+  private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)> 
 
   // CONSTRUCTOR ========================================================================
 
@@ -69,6 +70,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node = useRef(() => null)
+    this._r_editor_content_fo_node_updater = useRef(() => null)
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
       ref_setter_show_modal_import_icons: useRef(() => null),
@@ -164,6 +166,11 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     )
   }
 
+  public override updateAllComponentsRelatedToNodesConfig(){
+    super.updateAllComponentsRelatedToNodesConfig()
+    this._r_editor_content_fo_node_updater.current()
+  }
+
 
   // PROTECTED METHODS ==================================================================
 
@@ -188,4 +195,6 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
 
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> {return this._ref_to_save_diagram_only_view_updater}
+
+  public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> {return this._r_editor_content_fo_node_updater}
 }

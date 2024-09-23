@@ -532,15 +532,15 @@ export abstract class Class_ApplicationDataPlus
   }
 
 
-/**
- * Function used to push view id in order array,
- * it check if the id isn't already in order because duplicate id can cause so issue when navigating views
- *
- * @param {string} id
- * @memberof Class_ApplicationDataPlus
- */
-public pushViewIdInViewOrder(id:string){
-    if(!this._views_order.includes(id)){
+  /**
+   * Function used to push view id in order array,
+   * it check if the id isn't already in order because duplicate id can cause so issue when navigating views
+   *
+   * @param {string} id
+   * @memberof Class_ApplicationDataPlus
+   */
+  public pushViewIdInViewOrder(id: string) {
+    if (!this._views_order.includes(id)) {
       this._views_order.push(id)
     }
   }
