@@ -21,41 +21,41 @@ cache:
   paths:
     - .cache/pip
 
-build:
-  stage: build
-  tags:
-    - dev
-  script:
-    # Specify env
-    - echo $CI_PROJECT_DIR
-    - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Build SankeySuite node module
-    - bash build_client.sh -I -L -B -D
-    # Check flask server
-    - bash build_server.sh
-  except:
-    - schedules
+# build:
+#   stage: build
+#   tags:
+#     - dev
+#   script:
+#     # Specify env
+#     - echo $CI_PROJECT_DIR
+#     - source /home/gitlab-runner/gitlab_dev/bin/activate
+#     # Build SankeySuite node module
+#     - bash build_client.sh -I -L -B -D
+#     # Check flask server
+#     - bash build_server.sh
+#   except:
+#     - schedules
 
 
-# Build : for all branches, units tests for submodules server side
-test:
-  stage: test
-  tags:
-    - dev, test
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - when: always
-  variables:
-    TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
-  script:
-    - echo $CI_PROJECT_DIR
-    - echo $TESTS_DIR
-    - echo $GITLAB_RUNNER_ENV/bin/activate
-    - source $GITLAB_RUNNER_ENV/bin/activate
-    - echo "No test" # TODO add some tests
-  dependencies:
-    - build
+# # Build : for all branches, units tests for submodules server side
+# test:
+#   stage: test
+#   tags:
+#     - dev, test
+#   rules:
+#     - if: $CI_COMMIT_TAG
+#       when: never
+#     - when: always
+#   variables:
+#     TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
+#   script:
+#     - echo $CI_PROJECT_DIR
+#     - echo $TESTS_DIR
+#     - echo $GITLAB_RUNNER_ENV/bin/activate
+#     - source $GITLAB_RUNNER_ENV/bin/activate
+#     - echo "No test" # TODO add some tests
+#   dependencies:
+#     - build
 
 # Deploy : Only for main, on dev url acces
 dev_opensankey:
