@@ -79,7 +79,7 @@ body {
 /* Cursor when in edition mode */
 .edition_mode {
 
-	#bg_drawing_area,
+	#g_background,
 	.gg_nodes {
 		cursor: url(pen-nib.svg) 0 24, auto;
 	}
