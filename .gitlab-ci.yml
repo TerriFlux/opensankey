@@ -7,7 +7,9 @@ stages:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
+  GITLAB_RUNNER_ENV: /home/gitlab-runner/gitlab_test
+  TAG_TEST: test
+  TAG_PROD: prod # or v1.1
 
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
@@ -25,8 +27,6 @@ build:
   script:
     # Specify env
     - echo $CI_PROJECT_DIR
-    - echo $EIGEN_INCLUDE
-    - echo $TESTS_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     # Build SankeySuite node module
     - bash build_client.sh -I -L -B -D
@@ -35,17 +35,213 @@ build:
   except:
     - schedules
 
-# test:
-#   stage: test
-#   tags:
-#     - dev, test, prod
+
+# Build : for all branches, units tests for submodules server side
+test:
+  stage: test
+  tags:
+    - dev, test, prod
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+  variables:
+    TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
+  script:
+    - echo $CI_PROJECT_DIR
+    - echo $TESTS_DIR
+    - echo $GITLAB_RUNNER_ENV/bin/activate
+    - source $GITLAB_RUNNER_ENV/bin/activate
+    - echo "No test" # TODO add some tests
+  dependencies:
+    - build
+
+# Deploy : Only for main, on dev url acces
+dev_opensankey:
+  stage: deploy
+  variables:
+    NODE_ENV: "production"
+    FOLDER: /home/ubuntu/dev_opensankey/sankeyapplication
+    ENV: dev
+    APP_NAME: dev_sankeyapp
+  tags:
+    - dev
+  environment:
+    name: dev
+  script:
+    - echo $FOLDER
+    - git config --global --add safe.directory $FOLDER
+    - cd $FOLDER
+    - git reset --hard
+    - git clean -fdx -e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__ # -e MFAData
+    - git fetch
+    - git pull
+    - git submodule update --init --recursive
+    # - git config --global --add safe.directory $FOLDER/eigen
+    # - git config --global --add safe.directory $FOLDER/Tests
+    # - git config --global --add safe.directory $FOLDER/MFASankey
+    # - git config --global --add safe.directory $FOLDER/OpenSankey
+    # - git config --global --add safe.directory $FOLDER/OpenSankey+
+    # - git config --global --add safe.directory $FOLDER/SankeyDev
+    # - git config --global --add safe.directory $FOLDER/SankeyExamples
+    # - git config --global --add safe.directory $FOLDER/SankeyExcelParser
+    # - git config --global --add safe.directory $FOLDER/SankeyIcons
+    # - git config --global --add safe.directory $FOLDER/SankeySuite
+    # - git config --global --add safe.directory $FOLDER/SankeyViewer
+    # - git config --global --add safe.directory $FOLDER/SCMFA
+    - git submodule foreach --recursive git reset --hard
+    - git submodule foreach --recursive git clean -fdx #-e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__
+    - git submodule update --recursive
+    - source /home/ubuntu/dev_opensankey/dev_opensankey/bin/activate
+    - bash deploy_SankeyApp.sh
+    # - alembic upgrade head
+    - bash restart_site.sh dev
+
+# test_sankeysuite:
+#   stage: deploy
 #   variables:
-#     GIT_STRATEGY: none
+#     NODE_ENV: "production"
+#     FOLDER: /home/ubuntu/test_sankeysuite/sankeysuitemanager
+#     TESTS_DIR: $FOLDER/Tests
+#     EIGEN_INCLUDE: $FOLDER/eigen
+#     ENV: test
+#     APP_NAME : test_sankeysuite
+#   tags:
+#     - test
+#   environment:
+#     name: test
+#   rules:
+#     - if: $CI_COMMIT_REF_NAME == $TAG_TEST
 #   script:
-#     - echo $CI_PROJECT_DIR
+#     - echo $FOLDER
+#     - echo $TAG_TEST
 #     - echo $EIGEN_INCLUDE
 #     - echo $TESTS_DIR
-#     - source /home/gitlab-runner/gitlab_dev/bin/activate
-#     - bash test.sh
-#   dependencies:
-#     - build
+#     - git config --global --add safe.directory $FOLDER
+#     - cd $FOLDER
+#     - git reset --hard
+#     - git clean -fdx -e MFAData
+#     - git fetch
+#     - git checkout main
+#     - git pull origin -f
+#     - git pull origin -f --tags
+#     - git checkout -f $TAG_TEST
+#     - git submodule init
+#     - git config --global --add safe.directory $FOLDER/eigen
+#     - git config --global --add safe.directory $FOLDER/Tests
+#     - git config --global --add safe.directory $FOLDER/MFASankey
+#     - git config --global --add safe.directory $FOLDER/OpenSankey
+#     - git config --global --add safe.directory $FOLDER/OpenSankey+
+#     - git config --global --add safe.directory $FOLDER/SankeyDev
+#     - git config --global --add safe.directory $FOLDER/SankeyExamples
+#     - git config --global --add safe.directory $FOLDER/SankeyExcelParser
+#     - git config --global --add safe.directory $FOLDER/SankeyIcons
+#     - git config --global --add safe.directory $FOLDER/SankeySuite
+#     - git config --global --add safe.directory $FOLDER/SCMFA
+#     - git submodule foreach --recursive git reset --hard
+#     - git submodule foreach --recursive git clean -fdx -e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__
+#     - git submodule update
+#     - source /home/ubuntu/test_sankeysuite/test_sankeysuite/bin/activate
+#     - bash deploy_SankeySuite.sh
+#     - cd SankeySuite
+#     - alembic upgrade head
+#     - cd ..
+#     - bash restart_site.sh test
+
+# prod_sankeysuite:
+#   stage: deploy
+#   variables:
+#     NODE_ENV: "production"
+#     FOLDER: /home/ubuntu/prod_sankeysuite/sankeysuitemanager
+#     TESTS_DIR: $FOLDER/Tests
+#     EIGEN_INCLUDE: $FOLDER/eigen
+#     ENV   : prod
+#     APP_NAME : prod_sankeysuite
+#   tags:
+#     - prod
+#   environment:
+#     name: prod
+#   rules:
+#     - if: $CI_COMMIT_REF_NAME == $TAG_PROD
+#   script:
+#     - echo $FOLDER
+#     - echo $TAG_PROD
+#     - echo $EIGEN_INCLUDE
+#     - echo $TESTS_DIR
+#     - git config --global --add safe.directory $FOLDER
+#     - cd $FOLDER
+#     - git reset --hard
+#     - git clean -fdx -e MFAData
+#     - git fetch
+#     - git checkout main
+#     - git pull origin -f
+#     - git pull origin -f --tags
+#     - git checkout -f $TAG_PROD
+#     - git submodule init
+#     - git config --global --add safe.directory $FOLDER/eigen
+#     - git config --global --add safe.directory $FOLDER/Tests
+#     - git config --global --add safe.directory $FOLDER/MFASankey
+#     - git config --global --add safe.directory $FOLDER/OpenSankey
+#     - git config --global --add safe.directory $FOLDER/OpenSankey+
+#     - git config --global --add safe.directory $FOLDER/SankeyDev
+#     - git config --global --add safe.directory $FOLDER/SankeyExamples
+#     - git config --global --add safe.directory $FOLDER/SankeyExcelParser
+#     - git config --global --add safe.directory $FOLDER/SankeyIcons
+#     - git config --global --add safe.directory $FOLDER/SankeySuite
+#     - git config --global --add safe.directory $FOLDER/SCMFA
+#     - git submodule foreach --recursive git reset --hard
+#     - git submodule foreach --recursive git clean -fdx -e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__
+#     - git submodule update
+#     - source /home/ubuntu/prod_sankeysuite/prod_sankeysuite/bin/activate
+#     - bash deploy_SankeySuite.sh
+#     - cd SankeySuite
+#     - alembic upgrade head
+#     - cd ..
+#     - bash restart_site.sh prod
+
+# Tag Release:
+#   stage: tag-release
+#   variables:
+#     OAUTH2_TOKEN: glpat-sx8UdDDQ7sLqtWFV4Ywp
+#     OAUTH2_EMAIL: vincent.le-doze@terriflux.fr
+#     OAUTH2_NAME: Vincent LE DOZE
+#   tags:
+#     - dev, test, prod
+#   except:
+#     - tags
+#   only:
+#     - /^v[0-9]+(?:.[0-9]+)+$/ # regular expression for vX.Y.Z branch
+#   script:
+#     - VERSION=v"$(php -r "echo json_decode(file_get_contents('$CI_PROJECT_DIR/SankeySuite/client/package.json'), true)['version'];")";
+#     - MESSAGE="$(php -r "echo json_encode(['name' => 'Version $VERSION', 'tag_name' => '$VERSION', 'description' => '']);")"; # file_get_contents('$CI_PROJECT_DIR/changelog/$VERSION.md')]);")";
+#     - >
+#       if [[ `git config --get user.email` =~ $OAUTH2_EMAIL ]]; then
+#         echo "Ok user.email"
+#       else
+#         echo "Config user.email"
+#         git config user.email $OAUTH2_EMAIL
+#       fi
+#     - >
+#       if [[ `git config --get user.name` =~ $OAUTH2_NAME ]]; then
+#         echo "Ok user.name"
+#       else
+#         echo "Config user.name"
+#         git config user.name $OAUTH2_NAME
+#       fi
+#     - if [[ `git config --get http.sslVerify` =~ true ]]; then git config http.sslVerify false; fi
+#     - >
+#       if [[ `git remote` =~ .*api-origin.* ]]; then
+#         echo "remote api-origin existant"
+#       else
+#         echo "remote api-origin ajoute"
+#         git remote add api-origin https://oauth2:${OAUTH2_TOKEN}@gitlab.com/su-model/sankeysuitemanager
+#       fi
+#     - >
+#       if [ $(git tag -l "$VERSION") ]; then
+#         echo "Version $VERSION already exists"
+#       else
+#         echo "Version $VERSION cree"
+#         git tag -a $VERSION -m "Version $VERSION"
+#         git push api-origin $VERSION
+#       fi
+
