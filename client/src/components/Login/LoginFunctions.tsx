@@ -108,11 +108,11 @@ export async function loginUser(
 }
 
 // Properly logOut user
-export async function logOutUser(
-  logOut: () => void
+async function logOutUser(
+  unsetTokens: () => void
 ) {
   // Set all tokens to false
-  logOut()
+  unsetTokens()
   // LogOut on server
   const path = window.location.origin
   const url = path + '/auth/logout'

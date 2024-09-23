@@ -23,8 +23,8 @@ import {
   // registerNewLicenseSankeySuite
 } from '../Register/LicenseFunctions'
 import {
-  logOutUser,
-  activateLicensesTokens
+  activateLicensesTokens,
+  loginOut
 } from '../Login/LoginFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 
@@ -75,12 +75,6 @@ const Account: FunctionComponent<AccountTypes> = ({
   //Return to Dashboard
   const returnToDashboard = () => {
     navigate('/dashboard')
-  }
-
-  //Logout
-  const loginOut = () => {
-    logOutUser(() => new_data_app.unsetTokens())
-    returnToApp()
   }
 
   // Activate and save a new license OpenSankey+
@@ -391,7 +385,10 @@ const Account: FunctionComponent<AccountTypes> = ({
             <Button
               variant='menutop_button_logout'
               onClick={() => {
-                loginOut()
+                loginOut(
+                  () => {new_data_app.unsetTokens()},
+                  returnToApp
+                )
               }}
             >
               <FaPowerOff />

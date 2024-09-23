@@ -12,7 +12,7 @@ import {
   SimpleGrid
 } from '@chakra-ui/react'
 
-import { loginOut, logOutUser } from '../Login/LoginFunctions'
+import { loginOut } from '../Login/LoginFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 

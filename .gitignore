@@ -8,6 +8,7 @@ client/coverage
 
 # production
 client/build
+client/dist
 
 # server
 __pycache__

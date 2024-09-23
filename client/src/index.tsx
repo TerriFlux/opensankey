@@ -105,5 +105,5 @@ const renderPage = () => {
 }
 
 // if (window.SankeyToolsStatic) {
-  renderPage()
+renderPage()
 // }
