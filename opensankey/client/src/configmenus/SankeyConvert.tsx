@@ -644,11 +644,11 @@ export const convert_tags:convert_tagsFuncType = (
       //     })
       //   }
       }
-      if (n_convert.position) {
-        if (data.style_node[n.style].position !== n_convert.position) {
-          AssignNodeLocalAttribute(n,'position',n_convert.position)          
-        }
-      }
+      // if (n_convert.position) {
+      //   if (data.style_node[n.style].position !== n_convert.position) {
+      //     AssignNodeLocalAttribute(n,'position',n_convert.position)          
+      //   }
+      // }
     }
   )
 
