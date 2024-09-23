@@ -12,13 +12,13 @@
 // CSS ============================================================================================
 
 import './deps/OpenSankey+/deps/OpenSankey/css/main.css'
+import './deps/OpenSankey+/deps/OpenSankey/css/bootstrap.css'
 import './deps/OpenSankey+/css/main.css'
 import './deps/OpenSankey+/css/colors/red.css'
 import './deps/OpenSankey+/css/style_elements_sankey.css'
 import './deps/OpenSankey+/css/react-quill.css'
 import './css/Login.css'
 import './css/Register.css'
-
 // External imports ===============================================================================
 
 import React from 'react'
