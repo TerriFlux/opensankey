@@ -16,15 +16,17 @@ SANKEY_DIR=`pwd`
 # Build scripts for SankeyApp client
 printf "SankeyApp Client --------------------------------------------------\n"
 cd $SANKEY_DIR
-bash build_client -I -B || exit_if_error $?
+bash build_client.sh -I -B || exit_if_error $?
 
 # Need to change static paths in built SankeyApp client
 printf "Change static paths in built SankeyApp client ---------------------\n"
 cd $SANKEY_DIR/client
-sed -i -e 's/\/static\//\/static\/SankeyApp\//g' ./build/index.html || exit_if_error $?
-sed -i -e 's/..\/static\//..\/..\/static\/SankeyApp\//g' ./build/static/css/*.css || exit_if_error $?
+sed -i -e 's/\/static\//\/static\/sankeyapp\//g' ./build/index.html || exit_if_error $?
+sed -i -e 's/..\/static\//..\/..\/static\/sankeyapp\//g' ./build/static/css/*.css || exit_if_error $?
+sed -i -e 's/\/sankeyanimation/\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
+sed -i -e 's/\/opensankey/\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
 
 # Then build server side and documentation for submodules
 printf "SankeyApp Server --------------------------------------------------\n"
 cd $SANKEY_DIR
-bash build_server || exit_if_error $?
+bash build_server.sh || exit_if_error $?

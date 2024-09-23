@@ -41,7 +41,7 @@ build:
 test:
   stage: test
   tags:
-    - dev, test, prod
+    - dev, test
   rules:
     - if: $CI_COMMIT_TAG
       when: never
@@ -77,25 +77,14 @@ dev_opensankey:
     - git clean -fdx -e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__ # -e MFAData
     - git fetch
     - git pull
+    - git config --global --add safe.directory $FOLDER/submodules/OpenSankey+
     - git submodule update --init --recursive
-    # - git config --global --add safe.directory $FOLDER/eigen
-    # - git config --global --add safe.directory $FOLDER/Tests
-    # - git config --global --add safe.directory $FOLDER/MFASankey
-    # - git config --global --add safe.directory $FOLDER/OpenSankey
-    # - git config --global --add safe.directory $FOLDER/OpenSankey+
-    # - git config --global --add safe.directory $FOLDER/SankeyDev
-    # - git config --global --add safe.directory $FOLDER/SankeyExamples
-    # - git config --global --add safe.directory $FOLDER/SankeyExcelParser
-    # - git config --global --add safe.directory $FOLDER/SankeyIcons
-    # - git config --global --add safe.directory $FOLDER/SankeySuite
-    # - git config --global --add safe.directory $FOLDER/SankeyViewer
-    # - git config --global --add safe.directory $FOLDER/SCMFA
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx #-e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git submodule update --recursive
     - source /home/ubuntu/dev_opensankey/dev_opensankey/bin/activate
     - bash deploy_SankeyApp.sh
-    # - alembic upgrade head
+    - alembic upgrade head
     - bash restart_site.sh dev
 
 # test_sankeysuite:
