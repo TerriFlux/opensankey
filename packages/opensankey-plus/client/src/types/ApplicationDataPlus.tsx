@@ -92,7 +92,7 @@ export abstract class Class_ApplicationDataPlus
     super(published_mode, options)
 
     // OVERRIDE some values for OpenSankey+ purpose
-    this._menu_configuration = new Class_MenuConfigPlus()
+    this._menu_configuration = this.menu_configuration
 
     // Get OpenSankey+ logo
     let logo_sankey_plus = ''

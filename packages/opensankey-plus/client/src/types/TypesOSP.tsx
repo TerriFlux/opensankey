@@ -17,6 +17,7 @@ import { Class_NodeElementPlus } from './NodePlus'
 import { Class_LinkAttributePlus, Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
+import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 
 // STANDARD TYPES FOR OPENSANKEY+ AND MORE **********************************************
 
@@ -38,7 +39,12 @@ export class Class_ApplicationDataOSP
     Class_NodeElementOSP,
     Class_LinkElementOSP
   > {
-  public createNewDrawingArea(id?:string): Class_DrawingAreaOSP {
+
+  public createNewMenuConfiguration(): Class_MenuConfigPlus {
+    return new Class_MenuConfigPlus()
+  }
+
+  public createNewDrawingArea(id?: string): Class_DrawingAreaOSP {
     const drawing_area = new Class_DrawingAreaOSP(
       initial_window_height,
       initial_window_width,
@@ -57,8 +63,8 @@ export class Class_DrawingAreaOSP
     Class_NodeElementOSP,
     Class_LinkElementOSP
   > {
-  protected createNewSankey(id?:string) {
-    const sankey = new Class_SankeyOSP(this, this.application_data.menu_configuration,id)
+  protected createNewSankey(id?: string) {
+    const sankey = new Class_SankeyOSP(this, this.application_data.menu_configuration, id)
     return sankey
   }
 
