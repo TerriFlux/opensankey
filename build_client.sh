@@ -15,7 +15,6 @@ install=false
 linter=false
 build=false
 dist=false
-skip_gdeps=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -33,10 +32,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-dist | -D)
       dist=true
-      shift # past argument
-      ;;
-    --skip_gdeps)
-      skip_gdeps=true
       shift # past argument
       ;;
     --help | -H)
@@ -63,8 +58,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Install global dependencies
-if [ "$skip_gdeps" = false ] ; then
-  printf "Global dependencies -------------------------------------------------\n"
+printf "Global dependencies -------------------------------------------------\n"
+if ! command -v pnpm &> /dev/null
+then
   global=`npm root -g`
   printf ">>> Installation dans "${global}"\n"
   npm install -g pnpm
