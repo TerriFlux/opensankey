@@ -1,0 +1,10 @@
+alembic
+flask
+flask_login
+flask_cors
+werkzeug
+sphinx
+sphinx_rtd_theme
+sphinx-multibuild
+SQLAlchemy==1.4.25
+Flask-SQLAlchemy==2.5.1
