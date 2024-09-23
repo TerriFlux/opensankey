@@ -65,6 +65,7 @@
     "react-router-dom": "^6.26.2",
     "react-scripts": "^5.0.1",
     "shx": "^0.3.4",
+    "ts-loader": "^9.5.1",
     "typescript": "^5.6.2",
     "web-vitals": "^3.5.2"
   },
@@ -84,7 +85,6 @@
     "babel-loader": "^9.2.1",
     "eslint-plugin-mocha": "^10.5.0",
     "eslint-plugin-react": "^7.36.1",
-    "ts-loader": "^9.5.1",
     "typescript-eslint": "^7.18.0"
   },
   "overrides": {
