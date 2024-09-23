@@ -74,7 +74,7 @@ printf "OK ------------------------------------------------------------------\n"
 # Clean deps first
 printf "\nClean deps ----------------------------------------------------------\n"
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-bash $SCRIPT_DIR/submodules/OpenSankey+/build_client_.sh &> /dev/null || exit_if_error $?
+bash $SCRIPT_DIR/submodules/OpenSankey+/build_client.sh &> /dev/null || exit_if_error $?
 for dir in node_modules dist build; do
   if [ -d "$SCRIPT_DIR/submodules/OpenSankey+/client/$dir" ] ; then
     echo "removing $SCRIPT_DIR/submodules/OpenSankey+/client/$dir"
