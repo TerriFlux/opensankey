@@ -133,7 +133,7 @@ export abstract class Class_ApplicationData
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
-    this._menu_configuration = new Class_MenuConfig
+    this._menu_configuration = this.createNewMenuConfiguration()
     // Contains all drawn objects
     this._drawing_area = this.createNewDrawingArea()
     // Link keyboard listener with app key down detection
@@ -175,6 +175,7 @@ export abstract class Class_ApplicationData
   // ABSTRACT METHODS ===================================================================
 
   public abstract createNewDrawingArea(id?: string): Type_GenericDrawingArea
+  public abstract createNewMenuConfiguration(): Class_MenuConfig
 
   // PUBLIC METHODS =====================================================================
 
