@@ -162,6 +162,7 @@ export abstract class Class_NodeElement
 
   // PROTECTED ATTRIBUTE ================================================================
 
+  protected d3_selection_g_shape:d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   // Definition of abstract attribut from Class_Element
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -410,6 +411,8 @@ export abstract class Class_NodeElement
     // Apply styles
     this.d3_selection?.style('display', 'inline')
     this.d3_selection?.style('font-family', this.name_label_font_family)
+    // Init <g> containing shape elements
+    this.d3_selection_g_shape=this.d3_selection?.append('g').attr('class','g_node_shape')??null
     // Draw shape
     this.drawShape()
     // Draw label
@@ -1418,7 +1421,7 @@ export abstract class Class_NodeElement
    */
   private drawShape() {
     // Clean previous shape
-    this.d3_selection?.selectAll('.node_shape').remove()
+    this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
     if (this.shape_visible) {
       // Compute shape attributes
@@ -1427,14 +1430,14 @@ export abstract class Class_NodeElement
       const color = this.getShapeColorToUse()
       // Apply shape value
       if (this.shape_type === 'rect') {
-        this.d3_selection?.append('rect')
+        this.d3_selection_g_shape?.append('rect')
           .classed('node', true)
           .classed('node_shape', true)
           .attr('width', width)
           .attr('height', height)
       }
       else if (this.shape_type === 'ellipse') {
-        this.d3_selection?.append('ellipse')
+        this.d3_selection_g_shape?.append('ellipse')
           .classed('node', true)
           .classed('node_shape', true)
           .attr('cx', width / 2)
@@ -1443,13 +1446,13 @@ export abstract class Class_NodeElement
           .attr('ry', height / 2)
       }
       else if (this.shape_type === 'arrow') {
-        this.d3_selection?.append('path')
+        this.d3_selection_g_shape?.append('path')
           .classed('node', true)
           .classed('node_shape', true)
           .attr('d', this.getArrowPath())
       }
       // Apply common properties
-      this.d3_selection?.selectAll('.node_shape')
+      this.d3_selection_g_shape?.selectAll('.node_shape')
         .attr('id', this.id)
         .attr('fill-opacity', this.shape_visible ? '1' : '0')
         .attr('fill', color)
