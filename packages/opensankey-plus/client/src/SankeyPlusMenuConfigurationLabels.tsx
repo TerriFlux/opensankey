@@ -273,6 +273,8 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         onClick={() => {
           // Create default node
           const new_node = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
+          //Deselect previously selected container
+          new_data_plus.drawing_area.purgeSelectionOfContainer()
           // Add node to selection
           new_data_plus.drawing_area.addContainerToSelection(new_node)
           // Update menus
