@@ -709,6 +709,23 @@ export abstract class Class_DrawingArea
     if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
+    /**
+   * Remove all node selected
+   * @memberof Class_DrawingArea
+   */
+    public purgeSelectionOfNode(reset = true) {
+      // Unselect elements
+      this.selected_nodes_list
+        .forEach(node => {
+          this.removeNodeFromSelection(node)
+        })
+      // Reset config menu
+      // Sometime this function is used then updateAllComponentsRelatedToNodes is also called,
+      //  this mean that the hook referenced go from true -> false -> true before the rerender
+      // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
+      if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
   /**
    * Delete all selected links -> link will not exist anymore
    *
