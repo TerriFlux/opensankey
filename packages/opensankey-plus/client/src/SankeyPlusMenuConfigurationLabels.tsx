@@ -107,7 +107,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   }
 
   const redrawAndRefresh = () => {
-    selected_zdt.forEach(zdt => zdt.draw())
+    selected_zdt.forEach(zdt => zdt.drawAsSelected())
     setForceUpdate(!forceUpdate)
   }
 

@@ -656,8 +656,8 @@ export class Class_ContainerElement
         zdt_selected
           .forEach(n => {
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            n.drawDragHandlers()
           })
-        this.drawDragHandlers()
       }
     }
   }

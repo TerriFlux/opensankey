@@ -16,6 +16,7 @@ import { Class_NodeElement } from '../deps/OpenSankey/types/Node'
 import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
 
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
+import { Class_ContainerElement } from './FreeLabel'
 
 export abstract class Class_AbstractApplicationDataPlus
   <
@@ -48,7 +49,7 @@ export abstract class Class_AbstractDrawingAreaPlus
   > {
   public abstract d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract addContainerToSelection(_: Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>): void
-  public abstract get selected_containers_list(): Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
+  public abstract get selected_containers_list(): Class_ContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
 }
 
 export abstract class Class_AbstractSankeyPlus
