@@ -1344,6 +1344,9 @@ export abstract class Class_NodeElement
       target.setPosXY(this.position_x, this.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
+      // Close the menu config the time to draw place target
+      this.drawing_area.closeAllMenus()
+
       // Ref newly created link this var to be used in other mouse event
       this.drawing_area.ghost_link = new Class_GhostLinkElement<Type_GenericDrawingArea, Type_GenericSankey, this>(
         'ghost_link',
