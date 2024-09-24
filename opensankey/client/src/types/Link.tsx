@@ -978,7 +978,7 @@ export abstract class  Class_LinkElement
         .attr('stroke', () => this.getPathColorToUse())
         .attr('stroke-opacity', this.shape_opacity)
         .attr('stroke-width', this.thickness)
-        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '5,3' : '')
+        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '10,2' : '')
     }
   }
 
