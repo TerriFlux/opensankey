@@ -43,7 +43,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const is_activated = new_data_plus.has_sankey_plus
   const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(false)
-  const selected_nodes = new_data_plus.drawing_area.sankey.nodes_list
+  const selected_nodes = new_data_plus.drawing_area.selected_nodes_list
   new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
 
   const redrawIllustrationAndRefresh = () => {
