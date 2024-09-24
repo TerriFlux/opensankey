@@ -190,6 +190,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   }
   // Assign default value to missing variable
   const defaut_data = DefaultSankeyData()
+  console.log(defaut_data)
   Object.entries(data_to_convert.style_link).forEach(s => {
     s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
     data_to_convert.style_link[s[0]] = s[1]
@@ -424,10 +425,71 @@ export const GetLinkValue: GetLinkValueFuncType = (
    * @returns {SankeyData}
    */
 export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
-  const data = {
-    version: '0.8'
+  const data: Omit<SankeyData, 'style_node' | 'style_link'> = {
+    version: '0.8',
+    couleur_fond_sankey: '#f2f2f2',
+    displayed_node_selector: false,
+    displayed_link_selector: false,
+    nodes: {},
+    links: {},
+    user_scale: 20,
+
+    accordeonToShow: ['MEP'],
+
+    width: window.innerWidth - 50,
+    height: window.innerHeight - 50,
+    linkZIndex: [],
+
+    h_space: 200,
+    v_space: 50,
+
+    show_structure: 'reconciled',
+    fit_screen: false,
+
+    left_shift: 0,
+    right_shift: 1,
+    display_style: {
+      filter: 0,
+      filter_label: 0,
+      font_family: ['Arial,sans-serif', 'Helvetica,sans-serif', 'Verdana,sans-serif', 'Calibri,sans-serif', 'Noto,sans-serif', 'Lucida Sans,sans-serif', 'Gill Sans,sans-serif', 'Century Gothic,sans-serif', 'Candara,sans-serif', 'Futara,sans-serif', 'Franklin Gothic Medium,sans-serif', 'Trebuchet MS,sans-serif', 'Geneva,sans-serif', 'Segoe UI,sans-serif', 'Optima,sans-serif', 'Avanta Garde,sans-serif',
+        'Times New Roman,serif', 'Big Caslon,serif', 'Bodoni MT,serif', 'Book Antiqua,serif', 'Bookman,serif', 'New Century Schoolbook,serif', 'Calisto MT,serif', 'Cambria,serif', 'Didot,serif', 'Garamond,serif', 'Georgia,serif', 'Goudy Old Style,serif', 'Hoefler Text,serif', 'Lucida Bright,serif', 'Palatino,serif', 'Perpetua,serif', 'Rockwell,serif', 'Rockwell Extra Bold,serif', 'Baskerville,serif',
+        'Consolas,monospace', 'Courier,monospace', 'Courier New,monospace', 'Lucida Console,monospace', 'Lucidatypewriter,monospace', 'Lucida Sans Typewriter,monospace', 'Monaco,monospace', 'Andale Mono,monospace',
+        'Comic Sans,cursive', 'Comic Sans MS,cursive', 'Apple Chancery,cursive', 'Zapf Chancery,cursive', 'Bradley Hand,cursive', 'Brush Script MT,cursive', 'Brush Script Std,cursive', 'Snell Roundhan,cursive', 'URW Chancery,cursive', 'Coronet script,cursive', 'Florence,cursive', 'Parkavenue,cursive'
+      ],
+    },
+    grid_square_size: 50,
+    grid_visible: true,
+
+
+    nodeTags: {},
+    dataTags: {},
+    fluxTags: {},
+    levelTags: {},
+
+    colorMap: 'no_colormap',
+    nodesColorMap: 'no_colormap',
+    linksColorMap: 'no_colormap',
+
+    legend_width: 180,
+    legend_position: [0, 0],
+    mask_legend: false,
+    display_legend_scale: false,
+    legend_police: 16,
+    legend_bg_border: false,
+    legend_bg_color: default_element_color,
+    legend_bg_opacity: 0,
+    legend_show_dataTags: false,
+    node_label_separator: ' - '
+
   }
-  return (data as unknown as SankeyData)
+  const node_style_sect = DefaultNodeSectorStyle()
+  const node_style_prod = DefaultNodeProductStyle()
+  const default_data = {
+    ...data,
+    style_node: { 'default': DefaultNodeStyle(), 'NodeSectorStyle': node_style_sect, 'NodeProductStyle': node_style_prod },
+    style_link: { 'default': DefaultLinkStyle() }
+  }
+  return (default_data as unknown as SankeyData)
 }
 
 /**
