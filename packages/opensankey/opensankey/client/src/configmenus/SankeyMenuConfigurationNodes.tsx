@@ -285,6 +285,8 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
             onClick={() => {
               // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
+              //Deselect previously selected nodes
+              new_data.drawing_area.purgeSelectionOfNode()
               // Add node to selection
               new_data.drawing_area.addNodeToSelection(new_node)
               // Update all menus

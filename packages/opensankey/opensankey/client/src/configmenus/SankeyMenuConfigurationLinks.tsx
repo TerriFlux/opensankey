@@ -199,6 +199,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
             () => {
               // Create new link
               const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
+              //Deselect previously selected links
+              new_data.drawing_area.purgeSelectionOfLinks()
               // Add link to selection
               new_data.drawing_area.addLinkToSelection(new_link)
               // Toogle saving indicator
