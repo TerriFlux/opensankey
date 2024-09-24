@@ -23,8 +23,8 @@ printf "Change static paths in built SankeyApp client ---------------------\n"
 cd $SANKEY_DIR/client
 sed -i -e 's/\/static\//\/static\/sankeyapp\//g' ./build/index.html || exit_if_error $?
 sed -i -e 's/..\/static\//..\/..\/static\/sankeyapp\//g' ./build/static/css/*.css || exit_if_error $?
-# sed -i -e 's/\/sankeyanimation/\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
-# sed -i -e 's/\/opensankey/\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
+sed -i -e 's/static\/sankeyanimation/\static\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
+sed -i -e 's/static\/opensankey/\/static\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
 
 # Then build server side and documentation for submodules
 printf "SankeyApp Server --------------------------------------------------\n"
