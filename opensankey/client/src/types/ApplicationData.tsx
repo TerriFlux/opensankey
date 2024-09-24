@@ -264,7 +264,7 @@ export abstract class Class_ApplicationData
     const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
     const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
     const evtKeyTab = (evt.key === 'Tab') && evtOnDrawingArea
-    const evtKeyDel = (evt.key === 'Del') && evtOnDrawingArea
+    const evtKeyDel = (evt.key === 'Delete') && evtOnDrawingArea
     const evtKeyEsc = (evt.key === 'Escape') && evtOnDrawingArea
     const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
