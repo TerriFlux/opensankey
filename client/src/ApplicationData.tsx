@@ -20,7 +20,10 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   ) {
     super(published_mode, options)
     // OVERRIDE
-    this._menu_configuration = new Class_MenuConfigSA()
+    this._menu_configuration = this.menu_configuration
+  }
+  public createNewMenuConfiguration(): Class_MenuConfigSA {
+    return new Class_MenuConfigSA()
   }
 
 
