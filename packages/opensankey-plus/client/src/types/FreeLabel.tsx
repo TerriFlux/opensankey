@@ -227,7 +227,7 @@ export class Class_ContainerElement
    * @memberof Class_ContainerElement
    */
   public drawAsSelected() {
-    this.drawShape()
+    this.draw()
     this.drawDragHandlers()
   }
 
@@ -306,8 +306,6 @@ export class Class_ContainerElement
   private drawContentText() {
     this.d3_selection?.append('foreignObject')
       .classed('content', true)
-      .attr('width', this._label_width)
-      .attr('height', this._label_height)
       .style('width', this._label_width)
       .style('height', this._label_height)
       .attr('id', this.id + '_text')
@@ -370,7 +368,7 @@ export class Class_ContainerElement
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_height -= event.dy
       this.position_y=this.position_y +event.dy
-      this.drawShape()
+      this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
       this.drawDragHandlers()
@@ -387,7 +385,7 @@ export class Class_ContainerElement
   private dragBottomHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_height += event.dy
-      this.drawShape()
+      this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
       this.drawDragHandlers()
@@ -405,7 +403,7 @@ export class Class_ContainerElement
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_width -= event.dx
       this.setPosXY(this.position_x + event.dx, this.position_y)
-      this.drawShape()
+      this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
       this.drawDragHandlers()
@@ -422,7 +420,7 @@ export class Class_ContainerElement
   private dragRightHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_width += event.dx
-      this.drawShape()
+      this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
       this.drawDragHandlers()
