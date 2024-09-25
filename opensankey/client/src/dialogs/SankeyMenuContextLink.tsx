@@ -279,7 +279,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
         })
       refreshThisAndToggleSaving()
     }}
-    variant='light'
+    variant='contextmenu_button'
     >
       {
         context_link_label_visible ?
