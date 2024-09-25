@@ -93,7 +93,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   const [, setCount] = useState(0)
   const updateThis = () => {
     if (tags_group_dict[tags_group_entry_id])
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     else
       setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
   }
@@ -157,6 +157,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update this menu
     new_data.menu_configuration.updateAllComponentsRelatedToTagsType(elementTagNameProp)
+    // Redraw legend since we can show displayed tag
+    new_data.drawing_area.legend.draw()
   }
 
   const updateThisAndRelatedComponents = () => {
@@ -192,7 +194,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     setTagsGroupEntryId(tag_group.id)
 
     // if we create a data_tag group then we add it selector in the navbar
-    if(elementTagNameProp==='data_taggs'){
+    if (elementTagNameProp === 'data_taggs') {
       new_data.menu_configuration.ref_to_menu_updater.current()
     }
   }
@@ -336,7 +338,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
               const nb_tags = tags_entry.length
               const colors = colormap({
                 colormap: evt.target.value,
-                nshades:  nb_tags,
+                nshades: nb_tags,
                 format: 'hex',
                 alpha: 1
               })
