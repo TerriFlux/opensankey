@@ -144,17 +144,16 @@ export function isPositionOverloaded(
  * @extends {Class_AbstractNodeElement}
  */
 export abstract class Class_NodeElement
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey,
-  Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
->
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey,
+    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
+  >
   extends Class_AbstractNodeElement
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
->
-{
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -162,7 +161,7 @@ export abstract class Class_NodeElement
 
   // PROTECTED ATTRIBUTE ================================================================
 
-  protected d3_selection_g_shape:d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   // Definition of abstract attribut from Class_Element
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -412,7 +411,7 @@ export abstract class Class_NodeElement
     this.d3_selection?.style('display', 'inline')
     this.d3_selection?.style('font-family', this.name_label_font_family)
     // Init <g> containing shape elements
-    this.d3_selection_g_shape=this.d3_selection?.append('g').attr('class','g_node_shape')??null
+    this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
     // Draw shape
     this.drawShape()
     // Draw label
@@ -1296,28 +1295,25 @@ export abstract class Class_NodeElement
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list as this[]
     if (nodes_selected.length == 0) {
+      this.output_links_list.forEach(link => {
+        link.target.applyPosition()
+      })
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
     } else if (nodes_selected.includes(this)) {
       // Only trigger the drag if we drag a selected node
-
-      // EDITION MODE ===========================================================
-      if (drawing_area.isInEditionMode() && nodes_selected.length > 0) {
-        // /* TODO définir  */
-      }
-      // SELECTION MODE =========================================================
-      else {
-        // redraw node on target of output links
-        nodes_selected
-          .forEach(n => {
-            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-            n.output_links_list.forEach(link => {
-              link.target.applyPosition()
-            })
+      // redraw node on target of output links
+      nodes_selected
+        .forEach(n => {
+          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          n.output_links_list.forEach(link => {
+            link.target.applyPosition()
           })
-        // Move all elements so none of them are outside the DA
-        this.drawing_area.recenterElements()
-      }
+        })
+
+      // Move all elements so none of them are outside the DA
+      this.drawing_area.recenterElements()
+
     }
   }
 
@@ -1386,10 +1382,10 @@ export abstract class Class_NodeElement
     // Apply parent behavior first
     super.eventMouseOver(event)
     // ALT
-    if (event.altKey && (event.target as HTMLElement).tagName!=='tspan' ) {
+    if (event.altKey && (event.target as HTMLElement).tagName !== 'tspan') {
       // Show tooltip
       this.drawTooltip()
-      this.d3_selection?.classed('tooltip_shown',true)
+      this.d3_selection?.classed('tooltip_shown', true)
     }
   }
 
@@ -1402,7 +1398,7 @@ export abstract class Class_NodeElement
  */
   protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
-    if(event.altKey){
+    if (event.altKey) {
       this.moveTooltip(event)
     }
   }
@@ -1412,7 +1408,7 @@ export abstract class Class_NodeElement
 
     // Clear tooltip
     d3.selectAll('.sankey-tooltip').remove()
-    this.d3_selection?.classed('tooltip_shown',false)
+    this.d3_selection?.classed('tooltip_shown', false)
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1718,10 +1714,10 @@ export abstract class Class_NodeElement
       const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
       let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size + this.value_label_vert_shift
       if (this.value_label_vert === 'top') {
-        label_pos_y = -label_pos_dy+this.value_label_vert_shift
+        label_pos_y = -label_pos_dy + this.value_label_vert_shift
       }
       else if (this.value_label_vert === 'middle') {
-        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2)+this.value_label_vert_shift
+        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2) + this.value_label_vert_shift
       }
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
@@ -1849,29 +1845,29 @@ export abstract class Class_NodeElement
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            break
-          case 'top':
-            node_face_size = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size = sumLinkTop
-            break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size2 = sumLinkRight
-            break
-          case 'top':
-            node_face_size2 = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size2 = sumLinkTop
-            break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2048,7 +2044,7 @@ export abstract class Class_NodeElement
           dx_bottom = dx_bottom + thickness
         }
 
-        this._handle_output_links[link.id].d3_selection?.attr('class','node_io '+link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
+        this._handle_output_links[link.id].d3_selection?.attr('class', 'node_io ' + link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
 
         link.target.drawLinksArrow() //redraw arrow of node target of output links visible
 
@@ -2076,7 +2072,7 @@ export abstract class Class_NodeElement
           this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
           dx_bottom = dx_bottom + thickness
         }
-        this._handle_input_links[link.id].d3_selection?.attr('class','node_io '+link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
+        this._handle_input_links[link.id].d3_selection?.attr('class', 'node_io ' + link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
       }
     })
     this.drawLinksArrow()
@@ -2109,7 +2105,7 @@ export abstract class Class_NodeElement
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
  * @memberof Class_NodeElement
  */
-  private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
+  private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     d3.selectAll('.sankey-tooltip')
       .style('top', event.pageY + 'px')
       .style('left', event.pageX + 'px')
@@ -2610,7 +2606,7 @@ export abstract class Class_NodeElement
    * Position type can be parametric absolute or relative
    * @memberof Class_NodeElement
    */
-  public set position_type(_:Type_Position) {
+  public set position_type(_: Type_Position) {
     this._display.position.type = _
   }
 
@@ -2631,7 +2627,7 @@ export abstract class Class_NodeElement
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public set position_dx(_:number) {
+  public set position_dx(_: number) {
     this._display.position.dx = _
   }
 
@@ -3485,13 +3481,13 @@ export abstract class Class_NodeElement
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
     // Input links
     if (this.hasInputLinks()) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.inputs') + '</p>' 
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.inputs') + '</p>'
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.prov') + '</th>' 
-      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>' 
-      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.rat') + '</th>' 
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.prov') + '</th>'
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>'
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.rat') + '</th>'
       this.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
@@ -3533,13 +3529,13 @@ export abstract class Class_NodeElement
     }
     // Output links
     if (this.hasOutputLinks()) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.outputs') + '</p>' 
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.outputs') + '</p>'
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.dest') + '</th>' 
-      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>' 
-      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.rat') + '</th>' 
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.dest') + '</th>'
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>'
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.rat') + '</th>'
       this.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
@@ -3906,7 +3902,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   private _references: { [_: string]: Type_AnyNodeElement } = {}
 
-  private _position : Type_ElementPosition
+  private _position: Type_ElementPosition
 
   // CONSTRUCTOR ========================================================================
 
@@ -3934,10 +3930,10 @@ export class Class_NodeStyle extends Class_NodeAttribute {
       y: 10,
       u: 0,
       v: 0,
-      dx : default_dx,
-      dy : default_dy,
-      relative_dx : default_relative_dx,
-      relative_dy : default_relative_dy
+      dx: default_dx,
+      dy: default_dy,
+      relative_dx: default_relative_dx,
+      relative_dy: default_relative_dy
     }
 
     // Parameters for shape
@@ -4045,8 +4041,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    */
   public set name(_: string) { this._name = _ }
 
-  public get position() {return this._position}
-  public set position(_) {this._position = _}
+  public get position() { return this._position }
+  public set position(_) { this._position = _ }
 }
 
 
