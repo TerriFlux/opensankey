@@ -1009,13 +1009,9 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   new_data.menu_configuration.ref_menu_opened.current = show_nav
   new_data.menu_configuration.positionToolBar(menu_config_width)
 
-
-  const [update, setUpdate] = useState(false)
-
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
-    setUpdate(!update)
   }
 
   const menuButton = () => {
