@@ -3485,13 +3485,13 @@ export abstract class Class_NodeElement
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
     // Input links
     if (this.hasInputLinks()) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + 'Entrées' + '</p>' // TODO traduction manquante sur "entrées"
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.inputs') + '</p>' 
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>' + 'Provenances' + '</th>' // TODO traduction manquante
-      tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction manquante
-      tooltip_html += '      <th>' + 'Ratios' + '</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.prov') + '</th>' 
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>' 
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.rat') + '</th>' 
       this.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
@@ -3533,13 +3533,13 @@ export abstract class Class_NodeElement
     }
     // Output links
     if (this.hasOutputLinks()) {
-      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + 'Sortie' + '</p>' // TODO traduction manquante sur "sorties"
+      tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.outputs') + '</p>' 
       tooltip_html += '<table class="table" style="margin-bottom: 5px;">'
       tooltip_html += '  <thead>'
       tooltip_html += '    <tr>'
-      tooltip_html += '      <th>' + 'Destinations' + '</th>' // TODO traduction manquante
-      tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction manquante
-      tooltip_html += '      <th>' + 'Ratios' + '</th>' // TODO traduction manquante
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.dest') + '</th>' 
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>' 
+      tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.rat') + '</th>' 
       this.sankey.flux_taggs_list
         .forEach(tagg =>
           tooltip_html += '      <th>' + tagg.name + '</th>')
