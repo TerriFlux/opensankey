@@ -81,7 +81,7 @@ export class Class_MenuConfig {
   =========================================== */
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
-  protected _waiting_time_for_processes: number = 500 // ms
+  protected _waiting_time_for_processes: number = 50 // ms
 
   // PRIVATE ATTRIBUTES =================================================================
 
