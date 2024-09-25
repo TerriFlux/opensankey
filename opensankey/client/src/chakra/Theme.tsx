@@ -43,7 +43,8 @@ import {
   toolbar_button_6,
   toolbar_main_button,
   menuconfigpanel_option_button_secondary_activated,
-  menuconfigpanel_option_button_tertiary_activated
+  menuconfigpanel_option_button_tertiary_activated,
+  btn_datatag_navbar
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -185,6 +186,7 @@ export const opensankey_theme = extendTheme({
         toolbar_button_5,
         toolbar_button_6,
         toolbar_main_button,
+        btn_datatag_navbar,
       }
     },
     ButtonGroup:{
