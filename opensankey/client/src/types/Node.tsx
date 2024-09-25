@@ -1386,7 +1386,7 @@ export abstract class Class_NodeElement
     // Apply parent behavior first
     super.eventMouseOver(event)
     // ALT
-    if (event.altKey) {
+    if (event.altKey && (event.target as HTMLElement).tagName!=='tspan' ) {
       // Show tooltip
       this.drawTooltip()
       this.d3_selection?.classed('tooltip_shown',true)
@@ -1557,7 +1557,7 @@ export abstract class Class_NodeElement
 
 
         label_text?.call(d3.drag<SVGTextElement, unknown>()
-          .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+          .filter(evt => (evt.which == 1) && evt.altKey && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
           .on('start', ev => this.dragTextStart(ev))
           .on('drag', ev => this.dragTextMove(ev))
           .on('end', ev => this.dragTextend(ev))
