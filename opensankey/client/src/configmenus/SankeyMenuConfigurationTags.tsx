@@ -190,6 +190,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     new_data.menu_configuration.updateAllComponentsRelatedToTags()
     // Update this menu
     setTagsGroupEntryId(tag_group.id)
+
+    // if we create a data_tag group then we add it selector in the navbar
+    if(elementTagNameProp==='data_taggs'){
+      new_data.menu_configuration.ref_to_menu_updater.current()
+    }
   }
 
   /**
