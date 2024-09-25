@@ -1287,6 +1287,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     if (this._show_legend !== value) {
       this._show_legend = value
       this.updateTagsReferences()
+      this._ref_sankey.drawing_area.legend.draw()
     }
   }
 }
