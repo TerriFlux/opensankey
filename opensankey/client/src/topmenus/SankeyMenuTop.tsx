@@ -8,6 +8,7 @@ import {
 
 import FileSaver from 'file-saver'
 import {
+  faBars,
   faCheck,
   faCloudArrowUp,
   faDownload,
@@ -71,6 +72,13 @@ import {
   Tabs,
   Text,
   Toast,
+  Popover,
+  PopoverTrigger,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverArrow,
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -1137,10 +1145,40 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     menutop_grid_template = '100px 30fr auto ' + data_rem + ' ' + unit_rem
   }
   if (show_data) {
+
     DDDT = <DataTagSelector
       new_data={new_data}
       in_popover={false}
     />
+
+    if (new_data.drawing_area.sankey.data_taggs_list.length >= 2) {
+      DDDT = <Popover
+        variant='toolbar_popover_window'
+        placement='bottom'
+        id='popover_data_tag_filter'
+      >
+        <PopoverTrigger>
+          <Button
+            variant='btn_datatag_navbar'
+            id='btn_open_popover_data_tag_filter_navabar'
+          >
+            {new_data.t('Banner.data') + ' '}
+            <FontAwesomeIcon icon={faBars} />
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent>
+          <PopoverArrow />
+          <PopoverCloseButton />
+          <PopoverHeader >{t('Banner.sdd')}</PopoverHeader>
+          <PopoverBody>
+            {DDDT}
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+    }
+
+
   }
   const modal_resolution_png = modalResolutionPNG(new_data)
 
