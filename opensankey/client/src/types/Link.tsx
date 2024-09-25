@@ -3066,7 +3066,7 @@ export abstract class  Class_LinkElement
     tooltip_html += '  <tbody>'
     // Show data
     tooltip_html += '    <tr>'
-    tooltip_html += '      <th>' + 'Valeurs' + '</th>' // TODO traduction
+    tooltip_html += '      <th>' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.val') + '</th>'
     tooltip_html += '      <td>' + this.data_label + '</td>'
     tooltip_html += '    </tr>'
     // Show flux tags
