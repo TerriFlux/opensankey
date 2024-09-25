@@ -11,10 +11,12 @@ import type { TFunction } from 'i18next'
 import type { Class_AbstractLinkElement, Class_AbstractLinkStyle } from './AbstractLink'
 import type { Class_AbstractNodeElement, Class_AbstractNodeStyle, Class_AbstractNodeDimension } from './AbstractNode'
 import type { Class_MenuConfig } from './MenuConfig'
+import { Class_Legend } from './Legend'
+import { Type_GenericSankeyOS } from './TypesOS'
 
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
-
+type Type_GenericDrawingArea = Class_AbstractDrawingArea
 export abstract class Class_AbstractApplicationData {
   // Mandatory attributes
   public abstract version: string
@@ -43,6 +45,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
   // Mandatory getters
   public abstract get sankey(): Class_AbstractSankey
+  public abstract get legend(): Class_Legend<Type_GenericDrawingArea,Type_GenericSankeyOS>
   public abstract get scale(): number
   public abstract get scaleValueToPx(): (_: number) => number
   public abstract get minimum_flux(): number | undefined
@@ -63,6 +66,7 @@ export abstract class Class_AbstractDrawingArea {
 }
 
 export abstract class Class_AbstractSankey {
+  public abstract drawing_area: Type_GenericDrawingArea
   // Mandatory getters
   public abstract get is_visible(): boolean
   public abstract get nodes_dict(): { [_: string]: Type_AbstractNodeElement }
