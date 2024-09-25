@@ -1500,7 +1500,7 @@ export abstract class Class_DrawingArea
    *
    * @param {*} drawing_area
    */
-  private drawBackground() {
+  protected drawBackground() {
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
     // Draw background
