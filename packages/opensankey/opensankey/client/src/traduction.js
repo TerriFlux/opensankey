@@ -396,6 +396,15 @@ export const open_resources = {
           SlctInLink: 'Allow to select all incoming links to the node(s)',
           IB: 'Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node.',
         },
+        drawing_area_tooltip:{
+          outputs:'Outputs',
+          inputs:'Inputs',
+          dest:'Destination',
+          val:'Values',
+          rat:'Ratios',
+          prov:'Origin',
+
+        },
         tabs: {
           apparence: 'Appearence',
           infos: 'Additional info.',
@@ -1143,6 +1152,16 @@ export const open_resources = {
           SlctOutLink: 'Permettre de sélectionner tous les flux sortants du/des noeud(s)',
           SlctInLink: 'Permettre de sélectionner tous les flux entrants vers le/les noeud(s)',
           IB: 'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud',
+        },
+        drawing_area_tooltip:{
+          outputs:'Sorties',
+          inputs:'Entrées',
+          dest:'Déstination',
+          val:'Valeurs',
+          rat:'Ratios',
+          prov:'Provenance',
+          dest:'',
+          dest:'',
         },
         tabs: {
           apparence: 'Apparence',
