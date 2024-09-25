@@ -36,8 +36,6 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
   // Component's state
   const [, setForceUpdate] = useBoolean()
   const [selected_node_style_id, setSelectedNodeStyleId] = useState(default_style_id)
-  // Shared refs with external components
-  new_data.menu_configuration.ref_selected_style_node.current = selected_node_style_id
 
   // Dict of nodes styles
   const node_styles_dict = new_data.drawing_area.sankey.node_styles_dict
@@ -57,6 +55,7 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
           new_data.menu_configuration.ref_selected_style_node.current = new_style.id
           new_data.menu_configuration.updateAllComponentsRelatedToNodes()
           new_data.menu_configuration.updateComponentRelatedToNodesStyles()
+          setSelectedNodeStyleId(new_style.id)
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
         }}>
