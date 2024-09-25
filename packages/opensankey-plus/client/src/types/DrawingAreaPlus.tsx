@@ -151,6 +151,11 @@ export abstract class Class_DrawingAreaPlus
     this.sankey.containers_list.forEach(container => container.draw())
   }
 
+  public override drawBackground() {
+    super.drawBackground()
+    this.drawBgImage()
+  }
+
   /**
  * Functon that add an image in in the background of the svg,
  * the image is imported in the config menu
