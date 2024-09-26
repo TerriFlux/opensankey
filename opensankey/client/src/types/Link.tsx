@@ -494,10 +494,18 @@ export abstract class  Class_LinkElement
    * @memberof Class_LinkElement
    */
   public inverse() {
+
     const tmp_target = this._target
+    tmp_target.removeInputLink(this) // remove link from curr IO dict 
+
     const tmp_source = this._source
+    tmp_source.removeOutputLink(this) // remove link from curr IO dict 
+
     this._source = tmp_target
     this._target = tmp_source
+    this._source.addOutputLink(this) // add link to corresponding IO
+    this._target.addInputLink(this) // add link to corresponding IO
+
     this.drawElements()
   }
 
