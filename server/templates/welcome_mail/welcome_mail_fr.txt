@@ -1,0 +1,10 @@
+Bienvenue <utilisateur>
+
+Votre compte OpenSankey est désormais créé.
+
+Pour vous connecter, rendez-vous sur https://open-sankey.fr/login ou connectez-vous via le
+menu de connexion situé en haut à droite.
+
+Une documentation et des tutoriels sont disponible depuis le menu d’aide de l’application.
+
+L’équipe TerriFlux

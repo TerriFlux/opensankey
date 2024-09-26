@@ -1,13 +1,56 @@
 #  coding: utf-8
-from flask import render_template
-from flask import request
+#
+# Auteur : Vincent LE DOZE
+# Date de modification : 26/09/2024
+
+# ---------------------------------------------------------------
+# External libs
+import os
 import requests
 
-try:
-    from . import sankeyapp
-except Exception:
-    import sankeyapp
+# Flask imports
+from flask import Blueprint
+from flask import render_template
+from flask import request
+from flask import Response
 
+# ---------------------------------------------------------------
+# Local imports
+from .mailing import mail
+from .mailing import create_welcome_mail_fr
+
+# ---------------------------------------------------------------
+# Create sankey_app app blueprint
+
+template_folder = os.path.join(
+    os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__))),
+        'client'),
+    'build'
+)
+static_folder = os.path.join(
+    os.path.join(
+        os.path.join(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.abspath(__file__))),
+            'client'),
+        'build'),
+    'static'
+)
+sankeyapp = Blueprint(
+    'sankeyapp',
+    __name__,
+    static_folder=static_folder,
+    template_folder=template_folder,
+    static_url_path='/static/sankeyapp'
+)
+
+
+# ---------------------------------------------------------------
+# Define all routes
 
 @sankeyapp.route('/')
 def start():
@@ -48,3 +91,17 @@ def check_license():
     res = requests.post('https://terriflux.com/edd-sl/', req_dict)
     # Return EDD response as JSON
     return res.json()
+
+
+@sankeyapp.route('/mail/welcome')
+def mail_welcome():
+    try:
+        msg = create_welcome_mail_fr("vincent.le-doze@terriflux.fr")
+        mail.send(msg)
+    except Exception as excpt:
+        response = Response(
+            response='mail_welcome : ' + str(excpt),
+            status=402
+        )
+        return response
+    return msg.html

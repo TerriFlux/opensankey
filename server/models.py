@@ -3,20 +3,47 @@
 # Auteur : Vincent LE DOZE
 # Date de création : 25/01/2023
 
+# ---------------------------------------------------------------
 # Flask imports
+
 from flask import Blueprint
 from flask import jsonify
 from flask import request
-from flask_login import UserMixin
-from flask_login import login_required
 from flask_login import current_user
+from flask_login import login_required
+from flask_login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
 
-# Local imports
-from . import db
 
+# ---------------------------------------------------------------
 # Create user blue print
-connected_user = Blueprint('connected_user', __name__)
 
+connected_user = Blueprint('connected_user', __name__)
+db = SQLAlchemy()
+
+
+# ---------------------------------------------------------------
+# Define specific functions
+
+def init_db(app):
+    """
+    Init database
+
+    Parameters
+    ----------
+    :param app: _description_
+    :type app: _type_
+
+    Optional parameters
+    -------------------
+    """
+    app.config['SECRET_KEY'] = 'secret-key-goes-here'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+    db.init_app(app)
+
+
+# ---------------------------------------------------------------
+# Define specific functions
 
 class User(UserMixin, db.Model):
     """
@@ -41,6 +68,7 @@ class User(UserMixin, db.Model):
     is_developer = db.Column(db.Boolean)
 
 
+# ---------------------------------------------------------------
 @connected_user.route('/user_infos')
 @login_required
 def user_infos():
