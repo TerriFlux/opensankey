@@ -53,6 +53,8 @@ export abstract class Class_AbstractNodeElement
   public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
+  public abstract removeInputLink(_: Type_AbstractLinkElement):void
+  public abstract removeOutputLink(_: Type_AbstractLinkElement):void
 }
 
 export abstract class Class_AbstractNodeDimension {

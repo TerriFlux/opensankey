@@ -2176,11 +2176,10 @@ export abstract class Class_NodeElement
    * Remove link reference from all related attributes it this node.
    * /!\ Keep as private method. This can create dangling ref for links
    *
-   * @private
    * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  private removeInputLink(link: Type_GenericLinkElement) {
+  public removeInputLink(link: Type_GenericLinkElement) {
     this._handle_input_links[link.id]?.delete()
     delete this._handle_input_links[link.id]
     delete this._input_links[link.id]
@@ -2190,11 +2189,10 @@ export abstract class Class_NodeElement
   /**
    * Remove link reference from all related attributes it this node.
    * /!\ Keep as private method. This can create dangling ref for links
-   * @private
    * @param {Type_GenericLinkElement} link
    * @memberof Class_NodeElement
    */
-  private removeOutputLink(link: Type_GenericLinkElement) {
+  public removeOutputLink(link: Type_GenericLinkElement) {
     this._handle_output_links[link.id]?.delete()
     delete this._handle_output_links[link.id]
     delete this._output_links[link.id]
