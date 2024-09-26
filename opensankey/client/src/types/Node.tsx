@@ -1515,10 +1515,10 @@ export abstract class Class_NodeElement
 
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
-      if( this.name_label_vert=='top') {
-        box_pos_y-= this.name_label_font_size
-      }else if( this.name_label_vert=='middle') {
-        box_pos_y-= this.name_label_font_size/2
+      if (this.name_label_vert == 'top') {
+        box_pos_y -= this.name_label_font_size
+      } else if (this.name_label_vert == 'middle') {
+        box_pos_y -= this.name_label_font_size / 2
       }
       if (label_anchor === 'end') {
         box_pos_x = box_pos_x - box_width
@@ -1711,7 +1711,7 @@ export abstract class Class_NodeElement
         label_align = 'end'
       }
       else if (this.value_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2 + + this.value_label_horiz_shift
+        label_pos_x = shape_width / 2 + this.value_label_horiz_shift
         label_anchor = 'middle'
         label_align = 'center'
       }
@@ -3257,7 +3257,7 @@ export abstract class Class_NodeElement
    * TODO Description
    * @memberof Class_NodeElement
    */
-  public get value_label_horiz_shift_shift() {
+  public get value_label_horiz_shift() {
     if (this._display.attributes.value_label_horiz_shift !== undefined) {
       return this._display.attributes.value_label_horiz_shift
     } else if (this._display.style.value_label_horiz_shift !== undefined) {
