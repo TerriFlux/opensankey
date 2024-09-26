@@ -6,11 +6,6 @@ import openpyxl
 import tempfile
 import os
 import json
-
-from flask import current_app
-from flask import abort
-from PIL import Image
-
 import imgkit
 import pdfkit
 import re
@@ -22,14 +17,17 @@ except Exception:
     pass
 
 # External modules
+from PIL import Image
 from threading import Thread
 
 # Flask modules imports
+from flask import abort
 from flask import Blueprint
+from flask import current_app
+from flask import render_template
 from flask import request
 from flask import Response
 from flask import send_file
-from flask import render_template
 from flask import session
 
 # ---------------------------------------------------------------
@@ -43,9 +41,9 @@ from SankeyExcelParser.sankey import Sankey
 # Local modules
 from . import converter
 
-
 # ---------------------------------------------------------------
 # Create opensankey app blueprint
+
 template_folder = os.path.join(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
     'build'
