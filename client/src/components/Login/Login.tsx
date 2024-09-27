@@ -32,11 +32,6 @@ const Login: FunctionComponent<LoginTypes> = ({
     new_data_app.menu_configuration.updateComponentsRelatedToSA()
   }
 
-  // Handler : Si demande d'envoi vers page de création de compte
-  const handleRegister = () => {
-    navigate('/register')
-  }
-
   // Handler : Si demande de connection
   const handleSubmit = async () => {
     if (state.button === 'login') {
@@ -64,7 +59,7 @@ const Login: FunctionComponent<LoginTypes> = ({
         <Box
           className='MenuNavigation'
           layerStyle='menutop_layout_style'
-          gridTemplateColumns='minmax(7vw, 150px) auto'
+          gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
         >
           <Box
             margin='0.25rem'
@@ -78,13 +73,18 @@ const Login: FunctionComponent<LoginTypes> = ({
               onClick={() => returnToApp()}
             />
           </Box>
+          <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            alignSelf='center'
-            justifySelf='right'
             onClick={() => returnToApp()}
           >
             {t('UserPages.to_app')}
+          </Button>
+          <Button
+            variant='btn_lone_navigation_secondary'
+            onClick={() => navigate('/register')}
+          >
+            {t('UserPages.to_reg')}
           </Button>
         </Box>
       </Box>
@@ -106,26 +106,18 @@ const Login: FunctionComponent<LoginTypes> = ({
             </Box>
             <div className='LogError' style={{ 'color': 'red' }}></div>
             <div style={{ 'textAlign': 'center' }}>
-              <button
-                style={{ 'marginTop': '15px' }}
-                className='btn-login'
+              <Button
+                variant='btn_lone_navigation_tertiary'
                 type="submit"
                 onClick={() => {
                   (state.button = 'login')
                   handleSubmit()
                 }}>
                 {t('Login.con')}
-              </button>
+              </Button>
             </div>
           </CardBody>
         </Card>
-        <button
-          style={{ 'marginTop': '15px' }}
-          className='btn-login to-register'
-          type="button"
-          onClick={() => handleRegister()}>
-          {t('UserPages.to_reg')}
-        </button>
       </div>
     </div>
   )
