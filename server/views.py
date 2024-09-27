@@ -17,7 +17,7 @@ from flask import Response
 # ---------------------------------------------------------------
 # Local imports
 from .mailing import mail
-from .mailing import create_welcome_mail_fr
+from .mailing import create_welcome_mail
 
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
@@ -96,7 +96,11 @@ def check_license():
 @sankeyapp.route('/mail/welcome')
 def mail_welcome():
     try:
-        msg = create_welcome_mail_fr("vincent.le-doze@terriflux.fr")
+        msg = create_welcome_mail(
+            "vincent.le-doze@terriflux.fr",
+            "vincent",
+            "en"
+            )
         mail.send(msg)
     except Exception as excpt:
         response = Response(
@@ -104,4 +108,4 @@ def mail_welcome():
             status=402
         )
         return response
-    return msg.html
+    return Response(status=200)

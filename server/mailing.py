@@ -40,7 +40,11 @@ def init_mailing(app):
     mail.init_app(app)
 
 
-def create_welcome_mail_fr(dest_mail):
+def create_welcome_mail(
+    dest_mail,
+    dest_first_name,
+    language='fr'
+):
     """
     Create welcome mail in French
 
@@ -52,54 +56,43 @@ def create_welcome_mail_fr(dest_mail):
     Optional parameters
     -------------------
     """
+    # Protection
+    if language not in ['en', 'fr']:
+        language = 'en'
+    # Mail object
+    subject = {}
+    subject['en'] = "Welcome on OpenSankey"
+    subject['fr'] = "Bienvenue sur OpenSankey"
     # Instanciate msg
     msg = Message(
-        subject="Bienvenue sur OpenSankey",
+        subject=subject[language],
         sender=("Contact TerriFlux", sending_mail),
         recipients=[dest_mail],
     )
     # Add body to msg
-    msg.body = render_template('welcome_mail/welcome_mail_fr.txt')
+    msg.body = render_template(
+        'welcome_mail/welcome_mail_{}.txt'.format(language),
+        first_name=dest_first_name)
     msg.html = render_template(
-        'welcome_mail/welcome_mail_fr.html',
+        'welcome_mail/welcome_mail_{}.html'.format(language),
         logo_OS='cid:logo_OS',
         logo_TerriFlux='cid:logo_TerriFlux',
-        first_name='michel')
-    # Add attached images
+        first_name=dest_first_name)
+    # Get abs path
     path = os.path.dirname(os.path.abspath(__file__))
+    # Add openSankey logo
     msg.attach(
         'logo_OS.jpg',
         'image/jpg',
-        open(path + "/templates/welcome_mail/image001.jpg", 'rb').read(),
+        open(path + "/templates/welcome_mail/logo_OS.jpg", 'rb').read(),
         'inline',
         headers={'Content-ID': '<logo_OS>'})
+    # Add TerriFlux logo
     msg.attach(
         'logo_TerriFlux.jpg',
         'image/jpg',
-        open(path + "/templates/welcome_mail/image003.jpg", 'rb').read(),
+        open(path + "/templates/welcome_mail/logo_TerriFlux.jpg", 'rb').read(),
         'inline',
         headers={'Content-ID': '<logo_TerriFlux>'})
     return msg
 
-
-def create_welcome_mail_en(dest_mail):
-    """
-    Create welcome mail in English
-
-    Parameters
-    ----------
-    :param dest_mail: _description_
-    :type dest_mail: _type_
-
-    Optional parameters
-    -------------------
-    """
-    # Instanciate msg
-    msg = Message(
-        subject="Welcome to OpenSankey",
-        sender=("Contact TerriFlux", sending_mail),
-        recipients=[dest_mail],
-    )
-    # Add body to msg
-    msg.body = "This is a mailing test"
-    return msg
