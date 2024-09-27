@@ -243,20 +243,20 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
 
   // Link to ConfigMenuNumberInput state variable
   const number_of_input = 9
-  const ref_set_number_inputs: MutableRefObject<(_: number | null | undefined) => void>[] = []
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: number | null | undefined) => null))
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
 
   // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(shape_arrow_size)
-  ref_set_number_inputs[1].current(shape_starting_curve * 100)
-  ref_set_number_inputs[2].current(shape_ending_curve * 100)
-  ref_set_number_inputs[3].current(shape_starting_tangeant * 100)
-  ref_set_number_inputs[4].current(shape_ending_tangeant * 100)
-  ref_set_number_inputs[5].current(shape_opacity)
-  ref_set_number_inputs[6].current(value_label_scientific_precision)
-  ref_set_number_inputs[7].current(value_label_nb_digit)
-  ref_set_number_inputs[8].current(value_label_font_size)
+  ref_set_number_inputs[0].current(String(shape_arrow_size))
+  ref_set_number_inputs[1].current(String(shape_starting_curve * 100))
+  ref_set_number_inputs[2].current(String(shape_ending_curve * 100))
+  ref_set_number_inputs[3].current(String(shape_starting_tangeant * 100))
+  ref_set_number_inputs[4].current(String(shape_ending_tangeant * 100))
+  ref_set_number_inputs[5].current(String(shape_opacity))
+  ref_set_number_inputs[6].current(String(value_label_scientific_precision))
+  ref_set_number_inputs[7].current(String(value_label_nb_digit))
+  ref_set_number_inputs[8].current(String(value_label_font_size))
 
   /**
    * Function used to reset menu UI

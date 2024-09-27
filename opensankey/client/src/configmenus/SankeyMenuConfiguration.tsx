@@ -356,7 +356,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState<number | null | undefined>(default_value)
+  const [value, setValue] = useState<string | null | undefined>(String(default_value))
   ref_to_set_value.current = setValue
 
   // Add stepper addon if specified
@@ -389,7 +389,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
           }, 3000)
         }
         // Update displayed value_as_number
-        setValue((value_as_string !== '') ? value_as_number : null)
+        setValue((value_as_string !== '') ? value_as_string : null)
       }}
       onKeyDown={e => {
         if (e.key === 'Enter') {
@@ -404,7 +404,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
             clearTimeout(is_modifying.current)
           }
           // Update selected elements value
-          function_on_blur(value)
+          function_on_blur(Number(value))
         }}
       />
       {stepperBtn}
@@ -415,7 +415,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
 
 export type FCType_ConfigMenuNumberInput = {
   default_value: number | null | undefined,
-  ref_to_set_value: MutableRefObject<(_: number | null | undefined) => void>,
+  ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_on_blur: (val: number | null | undefined) => void,
   menu_for_style?: boolean,
   minimum_value?: number,
