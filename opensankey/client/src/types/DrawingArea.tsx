@@ -1370,6 +1370,20 @@ export abstract class Class_DrawingArea
     this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
   }
 
+
+/**
+ * Reposition visible nodes so that their left/top side is close to a grid line
+ *
+ * @memberof Class_DrawingArea
+ */
+public arrangeNodesToGrid(){
+  this._sankey.visible_nodes_list.forEach(node=>{
+    const shift_x=node.position_x-(node.position_x%this.grid_size)// get position so that the node position_x is set to previous horizontal grid line
+    const shift_y=node.position_y-(node.position_y%this.grid_size)// get position so that the node position_y is set to previous vertical grid line
+    node.setPosXY(shift_x,shift_y)
+  })
+  }
+
   /**
    * Export current drawing area & its contents as json struct
    *
