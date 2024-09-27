@@ -21,23 +21,24 @@ cache:
   paths:
     - .cache/pip
 
-# build:
-#   stage: build
-#   tags:
-#     - dev
-#   script:
-#     # Specify env
-#     - echo $CI_PROJECT_DIR
-#     - source /home/gitlab-runner/gitlab_dev/bin/activate
-#     # Build SankeySuite node module
-#     - bash build_client.sh -I -L -B -D
-#     # Check flask server
-#     - bash build_server.sh
-#   except:
-#     - schedules
+# Build : for all branches, units tests for submodules server side
+build:
+  stage: build
+  tags:
+    - dev
+  script:
+    # Specify env
+    - echo $CI_PROJECT_DIR
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
+    # Build SankeySuite node module
+    - bash build_client.sh -I -L -B -D
+    # Check flask server
+    - bash build_server.sh
+  except:
+    - schedules
 
 
-# # Build : for all branches, units tests for submodules server side
+# # Test : for all branches, units tests for submodules server side
 # test:
 #   stage: test
 #   tags:
