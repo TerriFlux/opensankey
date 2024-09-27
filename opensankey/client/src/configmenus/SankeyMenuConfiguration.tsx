@@ -376,7 +376,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
       max={maximum_value}
       step={step}
       value={value ?? ''}
-      onChange={(value_as_string, value_as_number) => {
+      onChange={(value_as_string) => {
         // Launch/reset timeout before the input auto blur (and update the value in data)
         if (!menu_for_style) {
           // reset timeout if exist

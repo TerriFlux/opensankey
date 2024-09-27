@@ -1070,7 +1070,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   />
 
   // Create the menu nav that can be slightly different if it in static
-  const menu_nav = <Box layerStyle='menuconfigpanel_grid'>
+  const menu_nav = <Box>
     <Tabs variant={'tabs_navbar'}>
       <TabList>
         {Object.keys(ordered_menu).map((m, i) => {
