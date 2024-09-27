@@ -93,19 +93,30 @@ def check_license():
     return res.json()
 
 
-@sankeyapp.route('/mail/welcome')
-def mail_welcome():
+@sankeyapp.route('/mail/send_welcome', methods=['POST'])
+def mail_send_welcome():
+    """
+    Send welcome message
+
+    Input JSON request
+    - 'email' (String) : user's email
+    - 'firstname' (String) : user's firstname
+    - 'lang' (String) : Selected language for mail
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
     try:
         msg = create_welcome_mail(
-            "vincent.le-doze@terriflux.fr",
-            "vincent",
-            "en"
-            )
+            request.json.get("email"),
+            request.json.get("firstname"),
+            request.json.get("lang"))
         mail.send(msg)
     except Exception as excpt:
         response = Response(
-            response='mail_welcome : ' + str(excpt),
-            status=402
-        )
+            response='mail_send_welcome : ' + str(excpt),
+            status=402)
         return response
     return Response(status=200)
