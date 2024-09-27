@@ -28,20 +28,20 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
 
   // Link to ConfigMenuNumberInput state variable
   const number_of_input = 9
-  const ref_set_number_inputs: MutableRefObject<(_: number | null | undefined) => void>[] = []
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: number | null | undefined) => null))
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
 
   // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(new_data.drawing_area.scale)
-  ref_set_number_inputs[1].current(new_data.drawing_area.minimum_flux)
-  ref_set_number_inputs[2].current(new_data.drawing_area.maximum_flux)
-  ref_set_number_inputs[3].current(new_data.drawing_area.legend.legend_police)
-  ref_set_number_inputs[4].current(new_data.drawing_area.legend.legend_bg_opacity)
-  ref_set_number_inputs[5].current(new_data.drawing_area.legend.position_x)
-  ref_set_number_inputs[6].current(new_data.drawing_area.legend.position_y)
-  ref_set_number_inputs[7].current(new_data.drawing_area.legend.width)
-  ref_set_number_inputs[8].current(new_data.drawing_area.grid_size)
+  ref_set_number_inputs[0].current(String(new_data.drawing_area.scale))
+  ref_set_number_inputs[1].current(String(new_data.drawing_area.minimum_flux))
+  ref_set_number_inputs[2].current(String(new_data.drawing_area.maximum_flux))
+  ref_set_number_inputs[3].current(String(new_data.drawing_area.legend.legend_police))
+  ref_set_number_inputs[4].current(String(new_data.drawing_area.legend.legend_bg_opacity))
+  ref_set_number_inputs[5].current(String(new_data.drawing_area.legend.position_x))
+  ref_set_number_inputs[6].current(String(new_data.drawing_area.legend.position_y))
+  ref_set_number_inputs[7].current(String(new_data.drawing_area.legend.width))
+  ref_set_number_inputs[8].current(String(new_data.drawing_area.grid_size))
 
   /**
    * Function used to reset menu UI
