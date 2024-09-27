@@ -441,42 +441,6 @@ export const resources = {
         'recycle-fabric':'recycle-fabric',
 
       }
-    },
-    register: {
-      id: {
-        'label': 'E-mail',
-        'placeholder': 'E-mail is needed to create your account',
-        'error': 'Please enter a valid e-mail adress.'
-      },
-      pwd: {
-        'label': 'Password',
-        'placeholder': 'Choose a good password',
-        'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
-        'show': 'show',
-        'hide': 'hide',
-      },
-      err: {
-        'captcha': 'Error : Captcha invalid',
-        'email in use': 'Error : An account already exists with this e-mail'
-      },
-      msg: {
-        'ok account created': 'Account created - You will be redirected to the login page in a moment'
-      },
-      'fn': 'First Name',
-      'ln': 'Last Name',
-      'reg_win': 'Create an account',
-      'lic': 'Add your licenses number (Optional)',
-      'OS+_lic': 'OpenSankey+',
-      'OS+_link': 'infos',
-      'SS_lic': 'SankeySuite',
-      'SS_link': 'infos',
-      'reg': 'Sign up'
-    },
-    terms_of_uses: {
-      'title': 'Terms and conditions of use',
-      'text': 'english_terms.html',
-      'open': 'Please read and accept the terms and conditions',
-      'accept': 'Accept the terms and conditions of use'
     }
   },
   //=======================================================
@@ -890,42 +854,6 @@ export const resources = {
 
       }
     },
-    register: {
-      id: {
-        'label': 'E-mail',
-        'placeholder': 'Veuillez saisir votre e-mail',
-        'error': 'L\'adresse e-mail n\'est pas valide'
-      },
-      pwd: {
-        'label': 'Mot de passe',
-        'placeholder': 'Choisissez un bon mot de passe',
-        'error': 'Le mot de passe doit comporter plus de huit caractères, dont au moins une lettre, un chiffre et un caractère spécial',
-        'show': 'montrer',
-        'hide': 'cacher',
-      },
-      err: {
-        'captcha': 'Erreur : Captcha invalide',
-        'email in use': 'Erreur : Un compte existe déjà avec cet e-mail'
-      },
-      msg: {
-        'ok account created': 'Compte créé - Vous allez être redirigé vers la page de connexion'
-      },
-      'fn': 'Prénom',
-      'ln': 'Nom',
-      'reg_win': 'Créer un compte',
-      'lic': 'Ajouter vos Licences (Optionel)',
-      'OS+_lic': 'OpenSankey+',
-      'OS+_link': 'infos',
-      'SS_lic': 'SankeySuite',
-      'SS_link': 'infos',
-      'reg': 'S\'enregistrer'
-    },
-    terms_of_uses: {
-      'title': 'Conditions d\'utilisation',
-      'text': 'francais_terms.html',
-      'open': 'Lire et accepter les conditions d\'utilisation',
-      'accept': 'Accepter les conditions d\'utilisation'
-    }
   }
 }
 
