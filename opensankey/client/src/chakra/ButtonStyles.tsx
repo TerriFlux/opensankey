@@ -8,6 +8,7 @@ export const button_base_style = defineStyle({
   borderRadius: '6px',
   color: 'white',
   fill: 'white',
+  path: 'white',
   borderColor: 'primaire.3',
   bg: 'primaire.3',
   bgColor: 'primaire.3',
@@ -310,9 +311,6 @@ export const menuconfigpanel_option_button_tertiary_activated = defineStyle({
 })
 
 export const toolbar_button_1 = defineStyle({
-  path: {
-    fill: 'white'
-  },
   bgColor: 'primaire.1',
   borderColor: 'secondaire.1',
   _hover: {
@@ -322,9 +320,6 @@ export const toolbar_button_1 = defineStyle({
 })
 
 export const toolbar_button_2 = defineStyle({
-  path: {
-    fill: 'white'
-  },
   bgColor: 'primaire.2',
   borderColor: 'secondaire.2',
   _hover: {
@@ -334,9 +329,6 @@ export const toolbar_button_2 = defineStyle({
 })
 
 export const toolbar_button_3 = defineStyle({
-  path: {
-    fill: 'white'
-  },
   bgColor: 'primaire.3',
   borderColor: 'secondaire.3',
   _hover: {
@@ -346,9 +338,6 @@ export const toolbar_button_3 = defineStyle({
 })
 
 export const toolbar_button_4 = defineStyle({
-  path: {
-    fill: 'white'
-  },
   bgColor: 'primaire.4',
   borderColor: 'secondaire.4',
   _hover: {
@@ -358,9 +347,6 @@ export const toolbar_button_4 = defineStyle({
 })
 
 export const toolbar_button_5 = defineStyle({
-  path: {
-    fill: 'white'
-  },
   bgColor: 'primaire.5',
   borderColor: 'secondaire.5',
   _hover: {
@@ -370,9 +356,6 @@ export const toolbar_button_5 = defineStyle({
 })
 
 export const toolbar_button_6 = defineStyle({
-  path: {
-    fill: 'white'
-  },
   bgColor: 'primaire.6',
   borderColor: 'secondaire.6',
   _hover: {
@@ -382,9 +365,6 @@ export const toolbar_button_6 = defineStyle({
 })
 
 export const toolbar_main_button = defineStyle({
-  path: {
-    fill: 'white'
-  },
   height: '6rem',
   bgColor: 'primaire.1',
   borderColor: 'primaire.1',
@@ -529,11 +509,40 @@ export const btn_desc_licence = defineStyle({
   },
 })
 
-export const btn_lone_navigation = defineStyle({
+const _btn_lone_navigation = defineStyle({
   height: '3rem',
   maxW: '11rem',
-  marginLeft: 'auto',
+  marginLeft: '1rem',
   marginRight: '1rem',
   paddingTop: '1rem',
-  paddingBottom: '1rem'
+  paddingBottom: '1rem',
+  alignSelf: 'center',
+  justifySelf: 'center',
+  textAlign: 'center'
+})
+export const btn_lone_navigation = defineStyle(_btn_lone_navigation)
+
+export const btn_lone_navigation_secondary = defineStyle({
+  ..._btn_lone_navigation,
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  borderColor: 'primaire.2',
+  _hover: {
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+    borderColor: 'secondaire.2',
+  },
+})
+
+export const btn_lone_navigation_tertiary = defineStyle({
+  ..._btn_lone_navigation,
+  bg: 'primaire.5',
+  bgColor: 'primaire.5',
+  borderColor: 'tertiaire.5',
+  border: 'solid 2px',
+  _hover: {
+    bg: 'secondaire.5',
+    bgColor: 'secondaire.5',
+    borderColor: 'secondaire.5',
+  },
 })
