@@ -19,7 +19,7 @@ export const card_base_style = definePartsStyle({
 export const card_icon_selected = definePartsStyle({
   container: {
     borderWidth: '4px',
-    borderColor: 'openSankey.50'
+    borderColor: 'primaire.5'
   }
 })
 
@@ -43,7 +43,10 @@ export const card_account = definePartsStyle({
     marginTop: '6rem',
   },
   header: {
-    bg: 'openSankey.50'
+    textAlign: 'center',
+    bg: 'primaire.5',
+    color: 'white',
+    textStyle: 'h2',
   },
   body: {
     width: '100%'
@@ -55,12 +58,13 @@ export const card_register = definePartsStyle({
     marginTop: '175px',
     borderWidth: '1px',
     borderStyle:'solid',
-    borderColor: 'openSankey.50',
+    borderColor: 'primaire.5',
     minW: '40vw',
   },
   header: {
     textAlign: 'center',
-    bg: 'openSankey.50',
+    bg: 'primaire.5',
+    color: 'white',
     textStyle: 'h2',
   },
   body: {

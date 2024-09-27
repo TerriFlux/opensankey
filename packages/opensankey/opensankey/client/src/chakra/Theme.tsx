@@ -8,11 +8,14 @@ import {
   badge_base_style
 } from './BadgeStyle'
 import {
+  btn_datatag_navbar,
   btn_desc_licence,
-  contextmenu_button,
+  btn_lone_navigation_secondary,
+  btn_lone_navigation_tertiary,
   btn_lone_navigation,
   btn_navigation,
   button_base_style,
+  contextmenu_button,
   menuconfigpanel_add_button,
   menuconfigpanel_del_button_in_table,
   menuconfigpanel_del_button,
@@ -24,7 +27,9 @@ import {
   menuconfigpanel_option_button_in_table,
   menuconfigpanel_option_button_left,
   menuconfigpanel_option_button_right,
+  menuconfigpanel_option_button_secondary_activated,
   menuconfigpanel_option_button_secondary,
+  menuconfigpanel_option_button_tertiary_activated,
   menuconfigpanel_option_button_tertiary,
   menuconfigpanel_option_button,
   menutop_button_goto_dashboard,
@@ -42,9 +47,6 @@ import {
   toolbar_button_5,
   toolbar_button_6,
   toolbar_main_button,
-  menuconfigpanel_option_button_secondary_activated,
-  menuconfigpanel_option_button_tertiary_activated,
-  btn_datatag_navbar
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -153,6 +155,8 @@ export const opensankey_theme = extendTheme({
       variants: {
         btn_desc_licence,
         btn_lone_navigation,
+        btn_lone_navigation_secondary,
+        btn_lone_navigation_tertiary,
         btn_navigation,
         contextmenu_button,
         menuconfigpanel_add_button,
