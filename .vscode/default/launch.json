@@ -1,0 +1,63 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "justMyCode": false,
+            "env": {
+                "FLASK_APP": "SankeySuite/app.py"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": false
+        },
+        {
+            "name": "Launch localhost",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Unit Test : Regenerate results",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "-- generate_results"
+            ]
+        },
+        {
+            "name": "Python: Current File (Integrated Terminal)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["-- generate_results"]
+        },
+        {
+            "name": "reconciliation no uncert Fruits et Légumes",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "module": "mfa_problem.bin.run_reconciliation",
+            "console": "integratedTerminal",
+            "args": [
+                "--input_file",
+                "./mfadata/Filières/Agricole/FruitsLégumes/Fruits_et_légumes_V2.xlsx",
+                "--output_dir",
+                "input"
+            ]
+        }
+    ]
+}

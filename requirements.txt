@@ -1,10 +1,11 @@
 alembic
 flask
-flask_login
 flask_cors
-werkzeug
+flask_login
+flask-mail
+flask-SQLAlchemy==2.5.1
 sphinx
 sphinx_rtd_theme
 sphinx-multibuild
 SQLAlchemy==1.4.25
-Flask-SQLAlchemy==2.5.1
+werkzeug

@@ -3,27 +3,65 @@
 # Auteur : Vincent LE DOZE
 # Date de création : 25/01/2023
 
+# ---------------------------------------------------------------
 # Flask imports
-from flask import Blueprint
-from flask import request
-from flask import jsonify
-from flask_login import login_user
-from flask_login import logout_user
-from flask_login import login_required
-from flask_cors import cross_origin
 
+from flask import Blueprint
+from flask import jsonify
+from flask import request
+from flask_cors import cross_origin
+from flask_login import login_required
+from flask_login import login_user
+from flask_login import LoginManager
+from flask_login import logout_user
+
+# ---------------------------------------------------------------
 # System imports
+
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
-
 import requests
 
+# ---------------------------------------------------------------
 # Local imports
-from . import db
-from .models import User
 
+from .models import User
+from .models import db
+
+# ---------------------------------------------------------------
 # Create auth blue print
+
 auth = Blueprint('auth', __name__)
+login_manager = LoginManager()
+
+
+# ---------------------------------------------------------------
+# Define specific functions
+
+def init_logging_manager(app):
+    """
+    Init logging manager
+
+    Parameters
+    ----------
+    :param app: _description_
+    :type app: _type_
+
+    Optional parameters
+    -------------------
+    """
+    login_manager.login_view = 'auth.login_post'
+    login_manager.init_app(app)
+
+
+# ---------------------------------------------------------------
+# Define all routes
+
+@login_manager.user_loader
+def load_user(user_id):
+    # since the user_id is just the primary key of our user table,
+    # use it in the query for the user
+    return User.query.get(int(user_id))
 
 
 @auth.route('/auth/login', methods=['POST'])
