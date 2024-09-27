@@ -155,8 +155,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         onClick={() => {
           new_data.menu_configuration.function_on_wait.current = () => {
 
-            // TODO re-implment function when computeautosankey is re-implemented with classes
-            // ComputeAutoSankey(applicationData, node_hspace, false)
+            new_data.drawing_area.computeAutoSankey(false)
 
             indicateSankeyToSaveInCache()
           }
@@ -180,9 +179,8 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
   const button_an = <Button variant='contextmenu_button'
     onClick={() => {
-      // TODO re-implement arrange nodes with classes
-      // arrangeNodes(data)
 
+      new_data.drawing_area.arrangeNodesToGrid()
       indicateSankeyToSaveInCache()
 
     }}>
