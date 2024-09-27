@@ -95,4 +95,3 @@ def create_welcome_mail(
         'inline',
         headers={'Content-ID': '<logo_TerriFlux>'})
     return msg
-
