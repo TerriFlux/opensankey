@@ -231,20 +231,20 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
 
   // Node to ConfigMenuNumberInput state variable
   const number_of_input = 9
-  const ref_set_number_inputs: MutableRefObject<(_: number | null | undefined) => void>[] = []
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: number | null | undefined) => null))
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
 
   // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(shape_min_height)
-  ref_set_number_inputs[1].current(shape_min_width)
-  ref_set_number_inputs[2].current(value_label_font_size)
-  ref_set_number_inputs[3].current(name_label_font_size)
-  ref_set_number_inputs[4].current(name_label_box_width)
-  ref_set_number_inputs[5].current(name_label_horiz_shift)
-  ref_set_number_inputs[6].current(name_label_vert_shift)
-  ref_set_number_inputs[7].current(value_label_horiz_shift)
-  ref_set_number_inputs[8].current(value_label_vert_shift)
+  ref_set_number_inputs[0].current(String(shape_min_height))
+  ref_set_number_inputs[1].current(String(shape_min_width))
+  ref_set_number_inputs[2].current(String(value_label_font_size))
+  ref_set_number_inputs[3].current(String(name_label_font_size))
+  ref_set_number_inputs[4].current(String(name_label_box_width))
+  ref_set_number_inputs[5].current(String(name_label_horiz_shift))
+  ref_set_number_inputs[6].current(String(name_label_vert_shift))
+  ref_set_number_inputs[7].current(String(value_label_horiz_shift))
+  ref_set_number_inputs[8].current(String(value_label_vert_shift))
 
 
   // JSX menu components ---------------------------------------------------------------
