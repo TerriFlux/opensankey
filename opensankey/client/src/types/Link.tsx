@@ -2459,7 +2459,7 @@ export abstract class  Class_LinkElement
   public set shape_starting_curve(_: number) {
     if (_ >= 0 && _ < this.shape_ending_curve) {
       this._display.attributes.shape_starting_curve = _
-      this.drawPath()
+      this.drawElements()
       this.drawControlPoint()
     }
   }
@@ -2484,7 +2484,7 @@ export abstract class  Class_LinkElement
   public set shape_ending_curve(_: number) {
     if (_ <= 1 && _ > this.shape_starting_curve) {
       this._display.attributes.shape_ending_curve = _
-      this.drawPath()
+      this.drawElements()
       this.drawControlPoint()
     }
   }
@@ -2509,7 +2509,7 @@ export abstract class  Class_LinkElement
   public set shape_starting_tangeant(_: number) {
     if (_ > 0) {
       this._display.attributes.shape_starting_tangeant = _
-      this.drawPath()
+      this.drawElements()
       this.drawControlPoint()
     }
   }
@@ -2534,7 +2534,7 @@ export abstract class  Class_LinkElement
   public set shape_ending_tangeant(_: number) {
     if (_ > 0) {
       this._display.attributes.shape_ending_tangeant = _
-      this.drawPath()
+      this.drawElements()
       this.drawControlPoint()
     }
   }
@@ -2558,7 +2558,7 @@ export abstract class  Class_LinkElement
    */
   public set shape_middle_recycling(_: number) {
     this._display.attributes.shape_middle_recycling = _
-    this.drawPath()
+    this.drawElements()
     this.drawControlPoint()
   }
 
@@ -2579,7 +2579,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawPath() }
+  public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawElements() }
 
   /**
    * TODO Description
@@ -2598,7 +2598,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawPath() }
+  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements() }
 
   /**
    * TODO Description
@@ -2640,7 +2640,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawPath() }
+  public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawElements() }
 
   /**
    * TODO Description
@@ -2742,7 +2742,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawPath() }
+  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawElements() }
 
   /**
    * TODO Description
@@ -2761,7 +2761,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawPath() }
+  public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
 
   /**
    * TODO Description
@@ -2780,7 +2780,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawPath() }
+  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawElements() }
 
   /**
    * TODO Description
@@ -2799,7 +2799,7 @@ export abstract class  Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawPath() }
+  public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawElements() }
 
   /**
    * TODO Description
