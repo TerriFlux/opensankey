@@ -127,6 +127,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
           onChange={evt => {
             new_data.drawing_area.horizontal_spacing = +evt
             indicateSankeyToSaveInCache()
+            setForceUpdate(!forceUpdate)
           }}>
           <NumberInputField />
         </NumberInput>
@@ -145,6 +146,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
           onChange={evt => {
             new_data.drawing_area.vertical_spacing = +evt
             indicateSankeyToSaveInCache()
+            setForceUpdate(!forceUpdate)
           }}>
           <NumberInputField />
         </NumberInput>
@@ -154,9 +156,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       <Button variant='contextmenu_button'
         onClick={() => {
           new_data.menu_configuration.function_on_wait.current = () => {
-
             new_data.drawing_area.computeAutoSankey(false)
-
             indicateSankeyToSaveInCache()
           }
           new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
