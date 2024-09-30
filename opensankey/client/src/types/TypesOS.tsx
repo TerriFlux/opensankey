@@ -8,7 +8,7 @@ import { Class_ApplicationData, initial_window_height, initial_window_width } fr
 import { Class_DrawingArea } from './DrawingArea'
 import { Class_Sankey } from './Sankey'
 import { Class_LinkAttribute, Class_LinkElement, Class_LinkStyle } from './Link'
-import { Class_NodeElement } from './Node'
+import { Class_NodeElement, Class_NodeStyle } from './Node'
 import { Class_MenuConfig } from './MenuConfig'
 import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from './Utils'
 import { Class_ZoneSelection } from './Selection_Zone'
@@ -40,6 +40,7 @@ export type Type_AdditionalMenus = {
   additional_menu_configuration_nodes: { [_: string]: JSX.Element },
   additional_context_element_menu: JSX.Element[],
   additional_context_element_other: JSX.Element[],
+  additional_node_label_layout_content:JSX.Element[],
 
   // Links
   additional_data_element: JSX.Element[],
@@ -133,6 +134,7 @@ export class Class_SankeyOS
   > {
 
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
+  protected _node_styles: { [_: string]: Class_NodeStyle } = {}
 
   constructor(
     drawing_area: Class_DrawingAreaOS,
@@ -156,6 +158,10 @@ export class Class_SankeyOS
   protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
     const style = new Class_LinkStyle(id, name, is_deletable)
     return style
+  }
+
+  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
+    return new Class_NodeStyle(id,name,is_deletable)
   }
 
   public get default_link_style() {

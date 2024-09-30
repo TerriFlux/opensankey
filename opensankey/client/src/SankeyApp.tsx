@@ -118,6 +118,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_menu_configuration_nodes: {},
     additional_context_element_menu: [],
     additional_context_element_other: [],
+    additional_node_label_layout_content:[],
 
     // Links
     additional_data_element: [],
@@ -165,9 +166,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
     new_data={new_data}
     menu_for_style={false}
-    advanced_appearence_content={additionalMenus.advanced_appearence_content}
-    advanced_label_content={additionalMenus.advanced_label_content}
-    advanced_label_value_content={additionalMenus.advanced_label_value_content}
+    additional_menus={additionalMenus}
   />
 
   const config_link_data = <MenuConfigurationLinksData
@@ -260,9 +259,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
                     <OpenSankeyConfigurationNodesAttributes
                       new_data={new_data}
                       menu_for_style={true}
-                      advanced_appearence_content={additionalMenus.advanced_appearence_content}
-                      advanced_label_content={additionalMenus.advanced_label_content}
-                      advanced_label_value_content={additionalMenus.advanced_label_value_content}
+                      additional_menus={additionalMenus}
                     />
                   }
                 />
