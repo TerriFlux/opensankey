@@ -65,6 +65,8 @@ export class Class_Legend
   private _legend_show_dataTags: boolean = false
   private _node_label_separator: string = ''
   private _width: number = 180
+  private _info_link_value_void: boolean = false
+
 
   /**
    * Attribute for legend content positionning.
@@ -152,8 +154,8 @@ export class Class_Legend
       this.drawInfoDataType()
     }
     // Draw explication for dashed links
-    const sankey_has_dashed_links = d3.selectAll('.gg_links').nodes().filter(lv => d3.select(lv).attr('stroke-dasharray') !== '').length > 0
-    if (sankey_has_dashed_links) {
+    const sankey_has_dashed_links = d3.selectAll('.gg_links').nodes().filter(lv => d3.select(lv).attr('stroke-dasharray') !== null).length > 0
+    if (sankey_has_dashed_links && this._info_link_value_void) {
       this.drawInfoDashedLink()
     }
     if (this._display_legend_scale) {
@@ -590,5 +592,8 @@ export class Class_Legend
 
   public get width(): number { return this._width }
   public set width(value: number) { this._width = value; this.draw() }
+
+  public get info_link_value_void(): boolean {return this._info_link_value_void}
+  public set info_link_value_void(value: boolean) {this._info_link_value_void = value; this.draw()}
 
 }
