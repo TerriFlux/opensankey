@@ -709,22 +709,22 @@ export abstract class Class_DrawingArea
     if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
-    /**
-   * Remove all node selected
-   * @memberof Class_DrawingArea
-   */
-    public purgeSelectionOfNode(reset = true) {
-      // Unselect elements
-      this.selected_nodes_list
-        .forEach(node => {
-          this.removeNodeFromSelection(node)
-        })
-      // Reset config menu
-      // Sometime this function is used then updateAllComponentsRelatedToNodes is also called,
-      //  this mean that the hook referenced go from true -> false -> true before the rerender
-      // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
-      if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    }
+  /**
+ * Remove all node selected
+ * @memberof Class_DrawingArea
+ */
+  public purgeSelectionOfNode(reset = true) {
+    // Unselect elements
+    this.selected_nodes_list
+      .forEach(node => {
+        this.removeNodeFromSelection(node)
+      })
+    // Reset config menu
+    // Sometime this function is used then updateAllComponentsRelatedToNodes is also called,
+    //  this mean that the hook referenced go from true -> false -> true before the rerender
+    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
+    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+  }
 
   /**
    * Delete all selected links -> link will not exist anymore
@@ -913,7 +913,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+      (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1364,24 +1364,27 @@ export abstract class Class_DrawingArea
       }
     }
 
-    this.width = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
-    this.height = (v_margin * 2 + max_height_cumul)
+    const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
+    const possible_height = (v_margin * 2 + max_height_cumul)
+
+    this.width = (initial_window_width < possible_witdh) ? possible_witdh : initial_window_width
+    this.height = (initial_window_height < possible_height) ? possible_height : initial_window_height
 
     this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
   }
 
 
-/**
- * Reposition visible nodes so that their left/top side is close to a grid line
- *
- * @memberof Class_DrawingArea
- */
-public arrangeNodesToGrid(){
-  this._sankey.visible_nodes_list.forEach(node=>{
-    const shift_x=node.position_x-(node.position_x%this.grid_size)// get position so that the node position_x is set to previous horizontal grid line
-    const shift_y=node.position_y-(node.position_y%this.grid_size)// get position so that the node position_y is set to previous vertical grid line
-    node.setPosXY(shift_x,shift_y)
-  })
+  /**
+   * Reposition visible nodes so that their left/top side is close to a grid line
+   *
+   * @memberof Class_DrawingArea
+   */
+  public arrangeNodesToGrid() {
+    this._sankey.visible_nodes_list.forEach(node => {
+      const shift_x = node.position_x - (node.position_x % this.grid_size)// get position so that the node position_x is set to previous horizontal grid line
+      const shift_y = node.position_y - (node.position_y % this.grid_size)// get position so that the node position_y is set to previous vertical grid line
+      node.setPosXY(shift_x, shift_y)
+    })
   }
 
   /**
@@ -1916,8 +1919,8 @@ public arrangeNodesToGrid(){
   // Mode
   public isInSelectionMode() { return this._mode === 'selection' }
   protected setSelectionMode() { this._mode = 'selection'; this.drawCursor() }
-  public isInEditionMode() { return this._mode === 'edition'}
-  protected setEditionMode() { this._mode = 'edition'; this.drawCursor()}
+  public isInEditionMode() { return this._mode === 'edition' }
+  protected setEditionMode() { this._mode = 'edition'; this.drawCursor() }
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
@@ -1926,10 +1929,10 @@ public arrangeNodesToGrid(){
     this.application_data.menu_configuration.ref_to_toolbar_updater.current()
   }
 
-  public setToModeEdition(_:boolean){
-    if(_){
+  public setToModeEdition(_: boolean) {
+    if (_) {
       this.setEditionMode()
-    }else{
+    } else {
       this.setSelectionMode()
     }
   }
@@ -2004,9 +2007,9 @@ public arrangeNodesToGrid(){
 
   // Size
   public get width() { return this._width }
-  public set width(_: number) { this._width = _; this.drawBackground() }
+  public set width(_: number) { this._width = _; this.drawBackground(); this.drawGrid() }
   public get height() { return this._height }
-  public set height(_: number) { this._height = _; this.drawBackground() }
+  public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }
