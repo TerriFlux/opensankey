@@ -504,6 +504,19 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
       >
         {t('MEP.leg_show_dataTags')}
       </Checkbox>
+      
+      {/* Afficher l'info concernant les flux null*/}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.drawing_area.legend.info_link_value_void}
+        checked={new_data.drawing_area.legend.info_link_value_void}
+        onChange={(evt) => {
+          new_data.drawing_area.legend.info_link_value_void = evt.target.checked
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        {t('MEP.leg_show_info_link_void')}
+      </Checkbox>
     </Box>
   </>
 }
