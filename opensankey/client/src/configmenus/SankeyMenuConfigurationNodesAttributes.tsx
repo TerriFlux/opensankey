@@ -43,7 +43,6 @@ import type {
 import type { Type_GenericNodeElementOS } from '../types/TypesOS'
 import {
   type Class_NodeStyle,
-  default_label_background,
   default_label_bold,
   default_label_box_width,
   default_label_color,
@@ -106,9 +105,7 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_OpenSankeyConfigurationNodesAttributes> = ({
   new_data,
   menu_for_style,
-  advanced_appearence_content,
-  advanced_label_content,
-  advanced_label_value_content,
+  additional_menus,
 }) => {
 
   // Datas ------------------------------------------------------------------------------
@@ -173,7 +170,6 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   const name_label_vert_shift = (elements[0]?.name_label_vert_shift ?? default_name_label_vert_shift)
   const name_label_horiz = (elements[0]?.name_label_horiz ?? default_name_label_horiz)
   const name_label_horiz_shift = (elements[0]?.name_label_horiz_shift ?? default_name_label_horiz_shift)
-  const name_label_background = (elements[0]?.name_label_background ?? default_label_background)
   const value_label_visible = (elements[0]?.value_label_visible ?? default_value_label_visible)
   const value_label_vert = (elements[0]?.value_label_vert ?? default_value_label_vert)
   const value_label_vert_shift = (elements[0]?.value_label_vert_shift ?? default_value_label_vert_shift)
@@ -286,7 +282,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
     </Box>
 
     {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
-    {advanced_appearence_content.splice(1, 1)}
+    {additional_menus.advanced_appearence_content.splice(1, 1)}
 
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Menu.edition')}
@@ -572,7 +568,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         />
       </Box>
     </OSTooltip>
-    {advanced_appearence_content}
+    {additional_menus.advanced_appearence_content}
   </Box>
 
   const content_label = <Box layerStyle='menuconfigpanel_grid' >
@@ -727,27 +723,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
             />
           </Box>
 
-          {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
-
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isIndeterminate={is_indeterminated}
-            isChecked={name_label_background}
-            onChange={(evt) => {
-              elements.forEach(element => element.name_label_background = evt.target.checked)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-              {t('Noeud.labels.l_bg')}
-            </OSTooltip>
-            {
-              (!menu_for_style) &&
-                isAttributeOverloaded(selected_nodes, 'name_label_background') ?
-                TooltipValueSurcharge('node_var', t) :
-                <></>
-            }
-          </Checkbox>
+              {/* Additional input to modify attr from submodule */}
+            {additional_menus.additional_node_label_layout_content}
 
           <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
             {t('MEP.leg_pos')}
@@ -972,7 +949,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
             </Box>
           </OSTooltip>
 
-          {advanced_label_content}
+          {additional_menus.advanced_label_content}
         </Box> :
         <></>
     }
@@ -1161,7 +1138,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 </OSTooltip>
               </Box>
             </Box>
-            {advanced_label_value_content}
+            {additional_menus.advanced_label_value_content}
           </Box>
           {/* Position de la valeur du noeud par rapport à l'ancre*/}
           <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dx')}>
