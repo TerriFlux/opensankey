@@ -39,7 +39,7 @@ import {
   ContextZDTOSP,
   MenuPreferenceLabelsOSP
 } from './SankeyPlusMenuConfigurationLabels'
-import { NodeHyperLinkOSP, NodeIconOSP } from './SankeyPlusNodes'
+import { NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
 } from './SankeyPlusUtils'
@@ -166,6 +166,15 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus={new_data_plus}
     is_activated={true}
   />
+
+  additionalMenus.additional_node_label_layout_content.push(
+    <NodeBgLabel
+      new_data={new_data_plus}
+      menu_for_style={false}
+    />
+  )
+
+
 
   //Links
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradientOSP

@@ -9,3 +9,8 @@ export type FCType_NodeHyperLinkOSP = {
   new_data_plus: Type_GenericApplicationDataOSP,
   is_activated: boolean,
 }
+
+export type FCType_NodeBgLabelOSP={
+  new_data:Type_GenericApplicationDataOSP,
+  menu_for_style:boolean
+}

@@ -38,20 +38,27 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
 
+
+
   /* ========================================
     Updater of components for views related menus
     ========================================*/
 
   private _ref_to_banner_views_updater: MutableRefObject<() => void>
   private _ref_to_accordion_views_updater: MutableRefObject<() => void>
-  private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_:boolean) => void>
+  private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
   private _ref_to_save_diagram_only_view_updater: MutableRefObject<(() => void)>
 
 
-  // Button that open the sub menu links of elements
+  /* ========================================
+  Updater of component for node plus related menus
+  ========================================*/
+  private _ref_to_menu_config_node_name_label_bg_updater: MutableRefObject<(() => void)>
+
+  // config ref related to node FO elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
-  private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)> 
+  private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)>
 
   // CONSTRUCTOR ========================================================================
 
@@ -66,16 +73,17 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_menu_config_container_updater = useRef(() => null)
     this._ref_to_banner_views_updater = useRef(() => null)
     this._ref_to_accordion_views_updater = useRef(() => null)
-    this._ref_to_save_diagram_only_view_updater=useRef(()=>null)
+    this._ref_to_save_diagram_only_view_updater = useRef(() => null)
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node = useRef(() => null)
     this._r_editor_content_fo_node_updater = useRef(() => null)
+    this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
       ref_setter_show_modal_import_icons: useRef(() => null),
       ref_setter_show_menu_zdt: useRef(() => null),
-      ref_setter_show_menu_view_not_saved:useRef(()=>null)
+      ref_setter_show_menu_view_not_saved: useRef(() => null)
     }
   }
 
@@ -106,7 +114,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     }, 200)
   }
 
-  public override updateComponentSaveDiagramJSON(){
+  public override updateComponentSaveDiagramJSON() {
     super.updateComponentSaveDiagramJSON()
     this.ref_to_save_diagram_only_view_updater.current()
   }
@@ -166,9 +174,10 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     )
   }
 
-  public override updateAllComponentsRelatedToNodesConfig(){
+  public override updateAllComponentsRelatedToNodesConfig() {
     super.updateAllComponentsRelatedToNodesConfig()
     this._r_editor_content_fo_node_updater.current()
+    this._ref_to_menu_config_node_name_label_bg_updater.current()
   }
 
 
@@ -194,7 +203,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_accordion_views_updater(): MutableRefObject<() => void> { return this._ref_to_accordion_views_updater }
   public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
 
-  public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> {return this._ref_to_save_diagram_only_view_updater}
+  public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
 
-  public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> {return this._r_editor_content_fo_node_updater}
+  public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
+
+  public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 }

@@ -21,13 +21,19 @@ import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
+  FCType_NodeBgLabelOSP,
   FCType_NodeHyperLinkOSP,
   FCType_NodeIconOSP,
 } from './ftypes/SankeyPlusNodesTypes'
 
 // OpenSankey ts-code
 import { default_shape_visible, isAttributeOverloaded } from './deps/OpenSankey/types/Node'
+import {isAttributeOverloaded as isAttributeOverloadedPlus } from './types/NodePlus'
 import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
+import { Type_GenericNodeElementOSP } from './types/TypesOSP'
+import { Class_NodeStylePlus } from './types/NodePlus'
+
+export const default_label_background = false
 
 
 declare const window: Window &
@@ -431,6 +437,62 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
   </TabPanel>
 }
 
+export const NodeBgLabel:FunctionComponent<FCType_NodeBgLabelOSP>=({new_data,menu_for_style})=>{
+  {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
+
+  const { drawing_area, t } = new_data
+  const selected_nodes = drawing_area.selected_nodes_list
+
+  const [, setCount] = useState(0)
+  new_data.menu_configuration.ref_to_menu_config_node_name_label_bg_updater.current=()=>setCount(a=>a+1)
+  
+  // Elements on which menu modification applies
+  let elements: Class_NodeStylePlus[] | Type_GenericNodeElementOSP[]
+  if (menu_for_style) {
+    elements = [new_data.drawing_area.sankey.node_styles_dict[new_data.menu_configuration.ref_selected_style_node.current]]
+  }
+  else {
+    elements = selected_nodes
+  }
+
+  const name_label_background = (elements[0]?.name_label_background ?? default_label_background)
+
+  /**
+   * Function used to reset menu UI
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    if (menu_for_style) {
+      // Update menus for node's apparence in case we use this for style
+      new_data.menu_configuration.updateComponentRelatedToNodesStyles()
+      // Redraw all visible nodes if we modifie node style
+      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+    }
+    // And update this menu also
+    setCount(a=>a+1)
+  }  
+
+  return <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isIndeterminate={false}
+    isChecked={name_label_background}
+    onChange={(evt) => {
+      elements.forEach(element => element.name_label_background = evt.target.checked)
+      refreshThisAndUpdateRelatedComponents()
+    }}
+  >
+    <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
+      {t('Noeud.labels.l_bg')}
+    </OSTooltip>
+    {
+      (!menu_for_style) &&
+      isAttributeOverloadedPlus(selected_nodes,'name_label_background') ?
+        TooltipValueSurcharge('node_var', t) :
+        <></>
+    }
+  </Checkbox>
+}
 // const branchAnimate = (
 //   data: SankeyData,
 //   nodeData: SankeyNode,
