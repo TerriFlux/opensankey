@@ -23,3 +23,5 @@ server/db.sqlite
 client/pnpm-lock.yaml
 client/package-lock.json
 
+#local server
+.vscode
