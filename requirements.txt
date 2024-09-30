@@ -9,3 +9,4 @@ sphinx_rtd_theme
 sphinx-multibuild
 SQLAlchemy==1.4.25
 werkzeug
+itsdangerous
