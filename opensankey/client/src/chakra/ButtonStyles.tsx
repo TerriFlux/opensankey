@@ -546,3 +546,21 @@ export const btn_lone_navigation_tertiary = defineStyle({
     borderColor: 'secondaire.5',
   },
 })
+
+export const btn_lone_navigation_tertiary_negative = defineStyle({
+  ..._btn_lone_navigation,
+  color: 'primaire.5',
+  fill: 'primaire.5',
+  path: 'primaire.5',
+  bg: 'white',
+  bgColor: 'white',
+  border: 'none',
+  _hover: {
+    color: 'tertiaire.5',
+    fill: 'tertiaire.5',
+    path: 'tertiaire.5',
+    bg: 'white',
+    bgColor: 'white',
+    border: 'none',
+  },
+})
