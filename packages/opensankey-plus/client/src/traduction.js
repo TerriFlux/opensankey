@@ -161,41 +161,6 @@ export const resources = {
         'labels': 'Labels',
         'title': 'Title'
       },
-
-      Login: {
-        'con': 'Login',
-        'dec': 'Log off',
-        'con_win': 'Connect to the application',
-        'err_appel_serveur': 'An error occurred when calling the server',
-        'err_login': 'Error, your email or password is incorrect, please check your login information and try again'
-      },
-      UserPages: {
-        'to_app': 'Back to the application',
-        'to_con': 'Sign in',
-        'to_reg': 'Sign up',
-        'to_acc': 'My account',
-        'to_dbd': 'Dashboard',
-        'id': 'E-mail',
-        'mdp': 'Password',
-        'pnom': 'Firstname',
-        'nom': 'Name',
-        'OS+_lic': 'OpenSankey+ license',
-        'SS_lic': 'SankeySuite license',
-        'update_lic': 'Register new license number',
-        'win_acc_infos': 'Account details',
-        'win_db_template': 'Availables templates',
-        'db_desc_template': 'Template description',
-        'usr_no_lic': 'No license currently registered',
-        'usr_lic_validdate': 'Date of validity : ',
-        'usr_lic_expdate': 'Expired on : ',
-        'usr_lic_valid': 'Valid license',
-        'usr_lic_invalid': 'Invalid license',
-        'usr_lic_deactivated': 'License deactivated',
-        'usr_lic_err': 'License number invalid',
-        'err_get_user_infos': 'Error while trying to access the user\'s infos',
-        'err_get_OS+_infos': 'Error while trying to access the OpenSankey+ license server',
-        'err_get_SS_infos': 'Error while trying to access the SankeySuite license server'
-      },
       view: {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
@@ -572,41 +537,6 @@ export const resources = {
         'labels': 'Style police',
 
         'title': 'Titre'
-      },
-
-      Login: {
-        'con': 'Connexion',
-        'dec': 'Deconnexion',
-        'con_win': 'Se connecter à l\'application',
-        'err_appel_serveur': 'Une erreur est survenue lors de l\'appel au serveur',
-        'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer'
-      },
-      UserPages: {
-        'to_app': 'Retour à l\'application',
-        'to_con': 'Se connecter',
-        'to_reg': 'Créer un compte',
-        'to_acc': 'Mon compte',
-        'to_dbd': 'Dashboard',
-        'id': 'E-mail',
-        'mdp': 'Mot de passe',
-        'pnom': 'Prénom',
-        'nom': 'Nom',
-        'OS+_lic': 'Licence OpenSankey+',
-        'SS_lic': 'Licence SankeySuite',
-        'update_lic': 'Enregistrer',
-        'win_acc_infos': 'Mes informations',
-        'win_db_template': 'Modèles proposés',
-        'db_desc_template': 'Description du modèle',
-        'usr_no_lic': 'Pas de licence enregistrée',
-        'usr_lic_validdate': 'Date de validité : ',
-        'usr_lic_expdate': 'Expirée depuis le : ',
-        'usr_lic_valid': 'Licence valide',
-        'usr_lic_invalid': 'Licence non valide',
-        'usr_lic_deactivated': 'Licence desactivée',
-        'usr_lic_err': 'Erreur numéro licence',
-        'err_get_user_infos': 'Erreur lors de l\'accès aux données de l\'utilisateur',
-        'err_get_OS+_infos': 'Erreur lors de l\'accès au serveur de licences OpenSankey+',
-        'err_get_SS_infos': 'Erreur lors de l\'accès au serveur de licences SankeySuite'
       },
       view: {
         'unit': 'Unit.',
