@@ -75,9 +75,8 @@ class User(UserMixin, db.Model):
     @staticmethod
     def verify_reset_token(token):
         serializer = Serializer(current_app.config['SECRET_KEY'])
-        import pdb; pdb.set_trace()
         try:
-            user_id = serializer.loads(token, max_age=1800) #age in sec
+            user_id = serializer.loads(token, max_age=1800)  # age in sec
         except Exception:
             return None
         return User.query.get(user_id)
