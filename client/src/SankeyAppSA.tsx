@@ -36,6 +36,7 @@ import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
 import Login from './components/Login/Login'
+import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
 
 // SankeyApp for OpenSankey+ ========================================================================
 
@@ -120,6 +121,22 @@ export const SankeyAppSA: FunctionComponent = () => {
             path='/login'
             element={
               <Login
+                new_data_app={new_data_app}
+              />
+            }
+          />
+          <Route
+            path='/login/forgot'
+            element={
+              <PasswordResetFromMail
+                new_data_app={new_data_app}
+              />
+            }
+          />
+          <Route
+            path='/login/reset/:token'
+            element={
+              <PasswordResetFromToken
                 new_data_app={new_data_app}
               />
             }

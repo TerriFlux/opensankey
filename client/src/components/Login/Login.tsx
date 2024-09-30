@@ -45,6 +45,9 @@ const Login: FunctionComponent<LoginTypes> = ({
         navigate
       )
     }
+    if (state.button === 'forgot') {
+      navigate('/login/forgot')
+    }
   }
 
   // React output
@@ -114,6 +117,15 @@ const Login: FunctionComponent<LoginTypes> = ({
                   handleSubmit()
                 }}>
                 {t('Login.con')}
+              </Button>
+              <Button
+                variant='btn_lone_navigation_tertiary_negative'
+                type="submit"
+                onClick={() => {
+                  (state.button = 'forgot')
+                  handleSubmit()
+                }}>
+                {t('Login.forgot_ask')}
               </Button>
             </div>
           </CardBody>

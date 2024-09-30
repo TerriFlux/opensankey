@@ -162,13 +162,20 @@ const resources = {
         'labels': 'Labels',
         'title': 'Title'
       },
-
       Login: {
         'con': 'Login',
+        'forgot_ask': 'Password forgotten ?',
+        'forgot_sub': 'Reset',
         'dec': 'Log off',
         'con_win': 'Connect to the application',
-        'err_appel_serveur': 'An error occurred when calling the server',
-        'err_login': 'Error, your email or password is incorrect, please check your login information and try again'
+        'forgot_win': 'Reset password',
+        'forgot_sent': 'A password reset e-mail has been sent to you.',
+        'forgot_ok': 'The password has been successfully replaced.',
+        'err_server': 'An error occurred when calling the server',
+        'err_login': 'Error, your email or password is incorrect, please check your login information and try again',
+        'err_user_already_connected': 'Error, you\'re already logged in.',
+        'err_user_inexistant': 'Error, given account does not exists',
+        'err_token_expire': 'Error, the request has expired.'
       },
       UserPages: {
         'to_app': 'Back to the application',
@@ -523,13 +530,20 @@ const resources = {
 
         'title': 'Titre'
       },
-
       Login: {
         'con': 'Connexion',
+        'forgot_ask': 'Mot de passe oublié ?',
+        'forgot_sub': 'Réinitialiser',
         'dec': 'Deconnexion',
         'con_win': 'Se connecter à l\'application',
-        'err_appel_serveur': 'Une erreur est survenue lors de l\'appel au serveur',
-        'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer'
+        'forgot_win': 'Reinitialiser le mot de passe',
+        'forgot_sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
+        'forgot_ok': 'Le mot de passe a été remplacé avec succès.',
+        'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
+        'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer',
+        'err_user_already_connected': 'Erreur, vous êtes déjà connecté.',
+        'err_user_inexistant': 'Erreur, ce compte n\'existe pas.',
+        'err_token_expire': 'Erreur, la demande a expiré.'
       },
       UserPages: {
         'to_app': 'Retour à l\'application',
@@ -560,7 +574,6 @@ const resources = {
       },
       view: {
         'unit': 'Unit.',
-
         'storytelling': 'Gestion des vues',
         'select': 'Sélection Vue',
         'actual': 'Sankey maître',

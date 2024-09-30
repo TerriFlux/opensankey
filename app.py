@@ -1,6 +1,7 @@
 #  coding: utf-8
 import flaskfilemanager
 import os
+import secrets
 
 try:
     from .server import create_app
@@ -14,7 +15,7 @@ except Exception:
 
 app = create_app()
 # app.register_blueprint(doc_blueprint, url_prefix='/doc')
-app.secret_key = 'super secret key'
+app.secret_key = secrets.token_urlsafe(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 mfa_data_dir = os.environ.get('MFAData')
 app.config['FLASKFILEMANAGER_FILE_PATH'] = os.path.join(mfa_data_dir)

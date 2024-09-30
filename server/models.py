@@ -7,12 +7,14 @@
 # Flask imports
 
 from flask import Blueprint
+from flask import current_app
 from flask import jsonify
 from flask import request
 from flask_login import current_user
 from flask_login import login_required
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from itsdangerous import URLSafeTimedSerializer as Serializer
 
 
 # ---------------------------------------------------------------
@@ -37,7 +39,6 @@ def init_db(app):
     Optional parameters
     -------------------
     """
-    app.config['SECRET_KEY'] = 'secret-key-goes-here'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
     db.init_app(app)
 
@@ -66,6 +67,19 @@ class User(UserMixin, db.Model):
     license_opensankeyplus = db.Column(db.String(2000))
     license_sankeysuite = db.Column(db.String(2000))
     is_developer = db.Column(db.Boolean)
+
+    def get_reset_token(self):
+        serializer = Serializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps(self.id)
+
+    @staticmethod
+    def verify_reset_token(token):
+        serializer = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = serializer.loads(token, max_age=1800)  # age in sec
+        except Exception:
+            return None
+        return User.query.get(user_id)
 
 
 # ---------------------------------------------------------------
