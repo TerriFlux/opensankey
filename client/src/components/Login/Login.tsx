@@ -119,7 +119,7 @@ const Login: FunctionComponent<LoginTypes> = ({
                 {t('Login.con')}
               </Button>
               <Button
-                variant='btn_lone_navigation_tertiary' // TODO Changer variant
+                variant='btn_lone_navigation_tertiary_negative'
                 type="submit"
                 onClick={() => {
                   (state.button = 'forgot')
