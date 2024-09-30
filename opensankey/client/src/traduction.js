@@ -260,6 +260,7 @@ export const open_resources = {
         leg_pos: 'size & position',
         leg_info: 'Informations',
         leg_show_dataTags: 'DataTags',
+        leg_show_info_link_void:'Show info concerning null link',
 
         links_size: 'Links size',
         MaxFlux: 'Max',
@@ -1020,6 +1021,8 @@ export const open_resources = {
         leg_pos: 'Taille et position',
         leg_info: 'Informations',
         leg_show_dataTags: 'Etiquettes de données',
+        leg_show_info_link_void:'Affiche info concernant les flux null',
+
         MaxFlux: 'Max',
         MinFlux: 'Min',
         link_size_limit: 'Taille limite des flux',
