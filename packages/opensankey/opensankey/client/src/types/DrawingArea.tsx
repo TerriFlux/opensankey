@@ -1270,7 +1270,7 @@ export abstract class Class_DrawingArea
               // Node is lone node
               node.name_label_horiz = 'middle'
               node.name_label_vert = 'middle'
-              node.name_label_background = true
+              // node.name_label_background = true
             }
             else if (node.input_links_list.length === 0) {
               // Node is a source : no input link
@@ -1286,7 +1286,7 @@ export abstract class Class_DrawingArea
               // Node is in the middle of the sankey
               node.name_label_horiz = 'left'
               node.name_label_vert = 'middle'
-              node.name_label_background = true
+              // node.name_label_background = true
             }
           }
 

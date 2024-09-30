@@ -537,6 +537,7 @@ export class Class_MenuConfig {
       'updateMenuConfigNodeApparence',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_nodes_apparence_updater.current()
+        
       }
     )
   }
