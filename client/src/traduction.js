@@ -574,7 +574,6 @@ const resources = {
       },
       view: {
         'unit': 'Unit.',
-
         'storytelling': 'Gestion des vues',
         'select': 'Sélection Vue',
         'actual': 'Sankey maître',
