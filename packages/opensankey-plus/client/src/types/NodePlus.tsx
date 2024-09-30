@@ -280,7 +280,7 @@ export abstract class Class_NodeElementPlus
   private drawIllustrationImage() {
     this.d3_selection?.append('image')
       .attr('id', 'image_node_' + this.id)
-      .attr('class', 'illustration')
+      .attr('class', 'illustration image')
       .attr('href', this.image_src)
       .attr('height', this.getShapeHeightToUse())
       .attr('width', this.getShapeWidthToUse())
@@ -289,7 +289,7 @@ export abstract class Class_NodeElementPlus
   private drawIllustrationIcon() {
     this.d3_selection?.append('svg')
       .attr('id', 'icon_node_' + this.id)
-      .attr('class', 'icon_node')
+      .attr('class', 'illustration icon_node')
       .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
       .attr('height', this.getShapeHeightToUse())
       .attr('width', this.getShapeWidthToUse())
