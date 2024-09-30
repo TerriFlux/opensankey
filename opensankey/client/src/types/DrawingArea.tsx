@@ -1599,6 +1599,18 @@ export abstract class Class_DrawingArea
       this.d3_selection_zoom_area?.call(
         this.zoomListener)
         .on('dblclick.zoom', null) // deactivate dbl click zoom
+        .on('wheel.zoom', (event: WheelEvent) => {
+          event.preventDefault()
+          if (!event.ctrlKey && this.d3_selection_zoom_area) {
+            const currentZoom = this.d3_selection_zoom_area.property("__zoom").k || 1;
+            // Use trackpad with 2 fingers to pan.
+            this.zoomListener.translateBy(
+              this.d3_selection_zoom_area,
+              -(event.deltaX / currentZoom),
+              -(event.deltaY / currentZoom)
+            );
+          }
+        })
       // Mouse cursor move
       this.d3_selection_zoom_area?.on(
         'wheel',
