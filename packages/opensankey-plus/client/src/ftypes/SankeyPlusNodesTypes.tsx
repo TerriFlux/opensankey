@@ -14,3 +14,8 @@ export type FCType_NodeBgLabelOSP={
   new_data:Type_GenericApplicationDataOSP,
   menu_for_style:boolean
 }
+
+export type FCType_NodeValueOSP={
+  new_data:Type_GenericApplicationDataOSP,
+  menu_for_style:boolean
+}
