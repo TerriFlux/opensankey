@@ -68,11 +68,6 @@ def goto(path):
         return index()
 
 
-@sankeyapp.route("/favicon.ico")
-def favicon():
-    return sankeyapp.send_static_file('favicon.ico')
-
-
 @sankeyapp.route('/api/edd_license', methods=['POST'])
 def check_license():
     '''
