@@ -9,7 +9,7 @@
 // External imports =================================================================================
 
 import React, { FunctionComponent} from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
 
 // OpenSankey imports ===============================================================================
@@ -107,7 +107,7 @@ export const SankeyAppSA: FunctionComponent = () => {
       resetCSS={false}
       theme={opensankey_theme}
     >
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route
             path='/register'
@@ -119,28 +119,32 @@ export const SankeyAppSA: FunctionComponent = () => {
           />
           <Route
             path='/login'
-            element={
-              <Login
-                new_data_app={new_data_app}
-              />
-            }
-          />
-          <Route
-            path='/login/forgot'
-            element={
-              <PasswordResetFromMail
-                new_data_app={new_data_app}
-              />
-            }
-          />
-          <Route
-            path='/login/reset/:token'
-            element={
-              <PasswordResetFromToken
-                new_data_app={new_data_app}
-              />
-            }
-          />
+          >
+            <Route
+              index
+              element={
+                <Login
+                  new_data_app={new_data_app}
+                />
+              }
+            />
+            <Route
+              path='forgot'
+              element={
+                <PasswordResetFromMail
+                  new_data_app={new_data_app}
+                />
+              }
+            />
+            <Route
+              path='reset/:token'
+              element={
+                <PasswordResetFromToken
+                  new_data_app={new_data_app}
+                />
+              }
+            />
+          </Route>
           <Route
             path='/dashboard'
             element={
@@ -162,7 +166,7 @@ export const SankeyAppSA: FunctionComponent = () => {
           <Route path='/' element={sankeyApp} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </ChakraProvider>
 
 }

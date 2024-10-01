@@ -157,7 +157,7 @@ def send_pw_reset_email(
         recipients=[user.email])
     # Add body to msg
     file = 'password_reset_mail/password_reset_mail_{}'.format(language)
-    url = 'https://open-sankey.fr/login/reset/' + token
+    url = 'https://open-sankey.fr/#/login/reset/' + token
     msg.body = render_template(
         file + '.txt',
         first_name=user.firstname,

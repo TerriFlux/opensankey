@@ -52,7 +52,7 @@ sankeyapp = Blueprint(
 # Define all routes
 
 @sankeyapp.route('/')
-def start():
+def index():
     return render_template(
         'index.html',
         filename='',
@@ -60,10 +60,17 @@ def start():
     )
 
 
-@sankeyapp.route('/<adress>')
-def goto(adress):
-    return render_template(adress)
+@sankeyapp.route('/<path:path>')
+def goto(path):
+   try:
+       return render_template(path)
+   except Exception:
+       return index()
 
+
+@sankeyapp.route("/favicon.ico")
+def favicon():
+    return app.send_static_file('favicon.ico')
 
 @sankeyapp.route('/api/edd_license', methods=['POST'])
 def check_license():
