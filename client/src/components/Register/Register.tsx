@@ -59,7 +59,8 @@ async function userSignUp(
       firstname: firstname,
       lastname: lastname,
       license_opensankeyplus: license_opensankeyplus,
-      license_sankeysuite: license_sankeysuite
+      license_sankeysuite: license_sankeysuite,
+      lang: i18next.language
     })
   })
     .then((response) => response.json())
