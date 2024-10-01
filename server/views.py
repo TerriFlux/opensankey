@@ -62,15 +62,16 @@ def index():
 
 @sankeyapp.route('/<path:path>')
 def goto(path):
-   try:
-       return render_template(path)
-   except Exception:
-       return index()
+    try:
+        return render_template(path)
+    except Exception:
+        return index()
 
 
 @sankeyapp.route("/favicon.ico")
 def favicon():
-    return app.send_static_file('favicon.ico')
+    return sankeyapp.send_static_file('favicon.ico')
+
 
 @sankeyapp.route('/api/edd_license', methods=['POST'])
 def check_license():
