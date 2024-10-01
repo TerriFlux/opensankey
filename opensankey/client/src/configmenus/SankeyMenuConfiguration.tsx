@@ -356,7 +356,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState<string | null | undefined>(String(default_value))
+  const [value, setValue] = useState<string | null | undefined>(String(default_value??''))
   ref_to_set_value.current = setValue
 
   // Add stepper addon if specified
@@ -439,7 +439,8 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
   ref_to_set_value,
   function_get_value,
   function_on_blur,
-  menu_for_style = false
+  menu_for_style = false,
+  disabled=false
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
@@ -448,6 +449,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
 
   return <InputGroup>
     <Input
+      isDisabled={disabled}
       ref={ref_input}
       variant='menuconfigpanel_option_input'
       value={value ?? ''}
@@ -487,5 +489,6 @@ export type FCType_ConfigMenuTextInput = {
   ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_get_value: () => string | null | undefined,
   function_on_blur: (_: string | null | undefined) => void,
-  menu_for_style?: boolean
+  menu_for_style?: boolean,
+  disabled?:boolean,
 }
