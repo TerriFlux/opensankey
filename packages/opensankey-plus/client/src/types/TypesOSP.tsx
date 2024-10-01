@@ -17,7 +17,6 @@ import { Class_NodeElementPlus } from './NodePlus'
 import { Class_LinkAttributePlus, Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
-import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 
 // STANDARD TYPES FOR OPENSANKEY+ AND MORE **********************************************
 

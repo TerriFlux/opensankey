@@ -367,18 +367,18 @@ export abstract class Class_DrawingAreaPlus
     this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
   }
 
-      /**
+  /**
    * Remove all container selected
    * @memberof Class_DrawingArea
    */
-      public purgeSelectionOfContainer() {
-        // Unselect elements
-        this.selected_containers_list
-          .forEach(zdt => {
-            this.removeContainerFromSelection(zdt)
-          })
-        this.application_data.menu_configuration.updateComponentRelatedToContainers()
-      }
+  public purgeSelectionOfContainer() {
+    // Unselect elements
+    this.selected_containers_list
+      .forEach(zdt => {
+        this.removeContainerFromSelection(zdt)
+      })
+    this.application_data.menu_configuration.updateComponentRelatedToContainers()
+  }
 
   // GETTERS / SETTERS ==================================================================
 
