@@ -63,9 +63,9 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const value_update = updated_selected_links[0]?.value
 
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.data_value) ?? null)
+    ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
     // Update input text value
-    ref_set_text_value_input.current(value_update?.text_value ?? null)
+    ref_set_text_value_input.current(value_update?.text_value ?? '')
   }
 
   // Function used to force this component to reload
@@ -241,7 +241,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(String(value?.data_value) ?? null)
+    ref_set_data_value_input.current(String(value?.data_value ?? ''))
   }
 
   // Function used to force this component to reload

@@ -79,9 +79,9 @@ export class Class_ApplicationDataOS
     Class_DrawingAreaOS, Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
   > {
 
-    public createNewMenuConfiguration(): Class_MenuConfig {
-      return new Class_MenuConfig()
-    }
+  public createNewMenuConfiguration(): Class_MenuConfig {
+    return new Class_MenuConfig()
+  }
   public createNewDrawingArea(id?:string): Class_DrawingAreaOS {
     const drawing_area = new Class_DrawingAreaOS(
       initial_window_height,

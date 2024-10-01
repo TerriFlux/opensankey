@@ -1159,12 +1159,10 @@ export const open_resources = {
         drawing_area_tooltip:{
           outputs:'Sorties',
           inputs:'Entrées',
-          dest:'Déstination',
           val:'Valeurs',
           rat:'Ratios',
           prov:'Provenance',
-          dest:'',
-          dest:'',
+          dest:'Destination',
         },
         tabs: {
           apparence: 'Apparence',
