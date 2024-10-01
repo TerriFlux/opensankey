@@ -172,7 +172,7 @@ def signup_post():
 
     # Send welcome mail
     send_welcome_mail(
-        user,
+        new_user,
         request.json.get("lang"))
 
     # Return response
