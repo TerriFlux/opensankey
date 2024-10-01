@@ -268,7 +268,7 @@ def reset(token):
         try:
             user = User.verify_reset_token(token)
             if user is not None:
-                user.password = request.json.get('password')
+                user.password = generate_password_hash(request.json.get('password'), method='sha256')
                 db.session.commit()
                 response['passwd_is_updated'] = True
         except Exception as excpt:
