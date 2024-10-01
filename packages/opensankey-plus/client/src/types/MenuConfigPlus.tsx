@@ -55,6 +55,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   ========================================*/
   private _ref_to_menu_config_node_name_label_bg_updater: MutableRefObject<(() => void)>
 
+  private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
+
   // config ref related to node FO elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
@@ -79,6 +81,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._r_setter_editor_content_fo_node = useRef(() => null)
     this._r_editor_content_fo_node_updater = useRef(() => null)
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
+    this._ref_to_menu_config_link_data_text_updater = useRef(() => null)
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
       ref_setter_show_modal_import_icons: useRef(() => null),
@@ -180,6 +183,20 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_menu_config_node_name_label_bg_updater.current()
   }
 
+    /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+    public updateComponentRelatedToLinksData() {
+      this._add_waiting_process(
+        'updateComponentRelatedToLinksData',
+        (_this: Class_MenuConfigPlus) => {
+          _this.ref_to_menu_config_links_data_updater.current()
+          _this._ref_to_menu_config_link_data_text_updater.current()
+        }
+      )
+    }
+
 
   // PROTECTED METHODS ==================================================================
 
@@ -207,5 +224,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
 
+ 
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
+
+  public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> {return this._ref_to_menu_config_link_data_text_updater}
 }

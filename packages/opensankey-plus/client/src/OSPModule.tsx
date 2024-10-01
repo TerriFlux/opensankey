@@ -56,7 +56,7 @@ import {
 import ModalSelectionIconsOSP from './SankeyPlusCatalogIcon'
 
 import { NodeForeignObjectOSP } from './SankeyPlusForeignObject'
-import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP } from './SankeyPlusGradient'
+import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText } from './SankeyPlusGradient'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
@@ -185,14 +185,16 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Add dashed config
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP 
     new_data_plus={new_data_plus}
-    is_activated={true}
     menu_for_style={false}
   />)
   // Add gradient config
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradientOSP
     new_data_plus={new_data_plus}
-    is_activated={true}
     menu_for_style={false}
+  />)
+  // Add config link data text value
+  additionalMenus.additional_data_element.push(<MenuConfLinkDataText
+  new_data_plus={new_data_plus}
   />)
 
 
