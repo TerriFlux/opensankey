@@ -913,7 +913,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-      (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1602,13 +1602,13 @@ export abstract class Class_DrawingArea
         .on('wheel.zoom', (event: WheelEvent) => {
           event.preventDefault()
           if (!event.ctrlKey && this.d3_selection_zoom_area) {
-            const currentZoom = this.d3_selection_zoom_area.property("__zoom").k || 1;
+            const currentZoom = this.d3_selection_zoom_area.property('__zoom').k || 1
             // Use trackpad with 2 fingers to pan.
             this.zoomListener.translateBy(
               this.d3_selection_zoom_area,
               -(event.deltaX / currentZoom),
               -(event.deltaY / currentZoom)
-            );
+            )
           }
         })
       // Mouse cursor move
