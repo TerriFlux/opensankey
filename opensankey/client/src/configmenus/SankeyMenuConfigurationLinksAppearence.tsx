@@ -199,7 +199,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   const shape_is_arrow = (elements[0]?.shape_is_arrow ?? default_shape_is_arrow)
   const shape_color = (elements[0]?.shape_color ?? default_shape_color)
   const shape_opacity = (elements[0]?.shape_opacity ?? default_shape_opacity)
-  const shape_is_dashed = (elements[0]?.shape_is_dashed ?? default_shape_is_dashed)
   const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_value_label_is_visible)
   const value_label_font_size = (elements[0]?.value_label_font_size ?? default_value_label_font_size)
   const value_label_color = (elements[0]?.value_label_color ?? default_value_label_color)
@@ -633,25 +632,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       </InputGroup>
     </Box>
 
-    {/* Flux hachuré */}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isIndeterminate={is_indeterminate}
-      isChecked={shape_is_dashed}
-      onChange={(evt) => {
-        elements.forEach(element => element.shape_is_dashed = evt.target.checked)
-        refreshThisAndUpdateRelatedComponents()
-      }}>
-      <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
-        {t('Flux.apparence.hach') + ' '}
-      </OSTooltip>
-      {
-        (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'shape_is_dashed') ?
-          TooltipValueSurcharge('link_var_', t) :
-          <></>
-      }
-    </Checkbox>
 
     {additional_link_appearence_items.map((el,i)=><React.Fragment key={'additional_config_link_'+i}>{el}</React.Fragment>)}
 
