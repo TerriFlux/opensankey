@@ -5,3 +5,9 @@ export type FCType_MenuConfLinkApparenceGradientOSP = {
   is_activated: boolean,
   menu_for_style: boolean,
 }
+
+export type FCType_MenuConfLinkApparenceDashedOSP={
+  new_data_plus:Type_GenericApplicationDataOSP,
+  is_activated:boolean,
+  menu_for_style:boolean
+}
