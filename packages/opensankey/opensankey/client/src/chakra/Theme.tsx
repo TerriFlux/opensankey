@@ -47,6 +47,7 @@ import {
   toolbar_button_5,
   toolbar_button_6,
   toolbar_main_button,
+  btn_lone_navigation_tertiary_negative,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -157,6 +158,7 @@ export const opensankey_theme = extendTheme({
         btn_lone_navigation,
         btn_lone_navigation_secondary,
         btn_lone_navigation_tertiary,
+        btn_lone_navigation_tertiary_negative,
         btn_navigation,
         contextmenu_button,
         menuconfigpanel_add_button,
