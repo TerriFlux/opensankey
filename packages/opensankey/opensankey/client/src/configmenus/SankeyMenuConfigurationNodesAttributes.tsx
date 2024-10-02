@@ -185,7 +185,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
     if (selected_nodes.length !== 0) {
       const style = selected_nodes[0].style
       let inchangee = true
-      selected_nodes.map(node => {
+      selected_nodes.forEach(node => {
         inchangee = (node.style.id === style.id) ? inchangee : false
       })
       return (inchangee) ?
@@ -718,7 +718,9 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
           </Box>
 
               {/* Additional input to modify attr from submodule */}
-            {additional_menus.additional_node_label_layout_content}
+            {additional_menus.additional_node_label_layout_content.map((content,idx)=>{
+              return <React.Fragment key={idx}>{content}</React.Fragment>
+            })}
 
           <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
             {t('MEP.leg_pos')}
@@ -967,19 +969,19 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         {
           new_data.drawing_area.sankey.node_styles_list_sorted
             .map(style => {
-              return (
+              return (<React.Fragment key={style.id}>
                 <MenuItem
                   key={style.id}
                   onClick={() => {
                     new_data.menu_configuration.ref_selected_style_node.current = style.id
-                    selected_nodes.map(node => {
+                    selected_nodes.forEach(node => {
                       node.style = style
                     })
                     refreshThisAndUpdateRelatedComponents()
                   }}
                 >
                   {style.id}
-                </MenuItem>
+                </MenuItem></React.Fragment>
               )
             })
         }
@@ -1006,7 +1008,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
     <React.Fragment key={'sep_2'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
     <React.Fragment key={'lab'}>{content_label}</React.Fragment>
     <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
-    <React.Fragment key={'val'}>{additional_menus.additional_node_apparence_content}</React.Fragment>
+    {additional_menus.additional_node_apparence_content.map((content,idx)=><React.Fragment key={idx}>{content}</React.Fragment>)}
   </>
 }
 
