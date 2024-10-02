@@ -40,8 +40,6 @@ import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfiguratio
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { OpenSankeyMenuConfigurationLayout } from './configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
-import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
-import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { AddSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
@@ -181,24 +179,6 @@ export const moduleDialogs: FType_ModuleDialogs = (
         menu_for_modal={true}
       />}
       title={t('Menu.Noeuds') + ' ' + t('Noeud.IS')}
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_node_tags'}
-      content={<SankeyMenuConfigurationNodesTags
-        new_data={new_data}
-        menu_for_modal={true}
-      />}
-      title={t('Menu.Noeuds') + ' ' + t('Menu.Etiquettes')}
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_link_tags'}
-      content={<MenuConfigurationLinksTags
-        new_data={new_data}
-        menu_for_modal={true}
-      />}
-      title={t('Menu.Flux') + ' ' + t('Menu.Etiquettes')}
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}

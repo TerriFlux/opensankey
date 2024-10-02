@@ -121,6 +121,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_node_label_layout_content: [],
     additional_node_apparence_content: [],
     // Links
+    additional_menu_configuration_links:{},
     additional_data_element: [],
     additional_link_appearence_items: [],
     additional_link_visual_filter_content: [],

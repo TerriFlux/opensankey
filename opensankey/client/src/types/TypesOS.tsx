@@ -43,6 +43,7 @@ export type Type_AdditionalMenus = {
   additional_node_label_layout_content:JSX.Element[],
   additional_node_apparence_content:JSX.Element[],
   // Links
+  additional_menu_configuration_links:{ [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
   additional_link_appearence_items: JSX.Element[],
   additional_link_visual_filter_content: JSX.Element[],
