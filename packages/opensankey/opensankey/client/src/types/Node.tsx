@@ -1668,7 +1668,6 @@ export abstract class Class_NodeElement
         label_baseline = 'middle'
       }
     }
-    console.log(this.name,label_pos_y)
     return [label_pos_x,label_pos_y,label_anchor,label_align,label_baseline]
   }
 
