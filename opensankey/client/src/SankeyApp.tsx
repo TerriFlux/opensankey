@@ -118,8 +118,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_menu_configuration_nodes: {},
     additional_context_element_menu: [],
     additional_context_element_other: [],
-    additional_node_label_layout_content:[],
-    additional_node_apparence_content:[],
+    additional_node_label_layout_content: [],
+    additional_node_apparence_content: [],
     // Links
     additional_data_element: [],
     additional_link_appearence_items: [],
@@ -130,9 +130,9 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
     // Configuration Menu
     additional_configuration_menus_edition_elements: [],
-    additional_configuration_menus_primary_accordion_elements:[],
+    additional_configuration_menus_primary_accordion_elements: [],
 
-    additional_conf_tag_item:[],
+    additional_conf_tag_item: [],
 
     additional_edition_item: [],
     additional_file_save_json_option: [],
@@ -146,6 +146,16 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     example_menu: {},
     formations_menu: {},
 
+    toolbar_elements: {},
+    toolbar_order: ['mode_souris',
+      'aggragation',
+      'node_tag_filter',
+      'link_tag_filter',
+      'data_tag_filter',
+      'node_type',
+      'strectch_zdd',
+      'help',
+      'fullscreen'],
     cards_template: <></>
   }
 
@@ -189,7 +199,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   ) {
     sankey_menus['toolbar'] = <ToolbarBuilder
       new_data={new_data}
-      additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
+      additionalMenu={additionalMenus}
     />
   }
 
