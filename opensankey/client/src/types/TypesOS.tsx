@@ -53,7 +53,7 @@ export type Type_AdditionalMenus = {
   // Configuration Menu
   additional_configuration_menus_edition_elements: JSX.Element[]
   additional_configuration_menus_primary_accordion_elements: JSX.Element[]
-  additional_conf_tag_item:JSX.Element[]
+
   // Other menus
   additional_edition_item: JSX.Element[],
   additional_file_save_json_option: JSX.Element[],

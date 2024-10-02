@@ -44,7 +44,6 @@ import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfig
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
-import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
 import { AddSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
 
 import { retrieveExcelResults } from './dialogs/SankeyPersistence'
