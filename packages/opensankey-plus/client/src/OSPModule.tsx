@@ -38,8 +38,8 @@ import {
   MenuConfigurationFreeLabelsOSP,
   ContextZDTOSP,
   MenuPreferenceLabelsOSP
-} from './SankeyPlusMenuConfigurationLabels'
-import { NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './SankeyPlusNodes'
+} from './MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
+import { NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './MenuConfigEdition/SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
   MenuConfEditionTag,
@@ -56,21 +56,21 @@ import {
   BannerViewsOSP,
   MenuPreferenceViewOSP,
   ViewsAccordion,
-} from './SankeyPlusViews'
+} from './MenuConfigEdition/SankeyPlusViews'
 
-import { SankeyMenuConfigurationNodesTooltip } from './SankeyPlusMenuConfigurationNodesTooltip'
+import { SankeyMenuConfigurationNodesTooltip } from './MenuConfigEdition/SankeyPlusMenuConfigurationNodesTooltip'
 
-import ModalSelectionIconsOSP from './SankeyPlusCatalogIcon'
+import ModalSelectionIconsOSP from './MenuConfigEdition/SankeyPlusCatalogIcon'
 
-import { NodeForeignObjectOSP } from './SankeyPlusForeignObject'
-import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText } from './SankeyPlusLink'
+import { NodeForeignObjectOSP } from './MenuConfigEdition/SankeyPlusForeignObject'
+import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText } from './MenuConfigEdition/SankeyPlusLink'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
 import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/dialogs/types/SankeyMenuDialogsTypes'
-import { SankeyMenuConfigurationNodesTags } from './SankeyPlusMenuConfigurationNodesTags'
-import { MenuConfigurationLinksTags } from './SankeyPlusMenuConfigurationLinksTags'
-import { MenuConfigurationLinksTooltip } from './SankeyPlusMenuConfigurationLinksTooltip'
+import { SankeyMenuConfigurationNodesTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationNodesTags'
+import { MenuConfigurationLinksTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationLinksTags'
+import { MenuConfigurationLinksTooltip } from './MenuConfigEdition/SankeyPlusMenuConfigurationLinksTooltip'
 
 declare const window: Window &
   typeof globalThis & {

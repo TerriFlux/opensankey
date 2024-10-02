@@ -3,14 +3,14 @@ import React, { FunctionComponent, useRef, useState } from 'react'
 import { Box, Checkbox } from '@chakra-ui/react'
 
 // OpenSankey imports
-import { OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
-import { default_shape_is_dashed, isAttributeOverloaded } from './deps/OpenSankey/types/Link'
+import { OSTooltip, TooltipValueSurcharge } from '../deps/OpenSankey/types/Utils'
+import { default_shape_is_dashed, isAttributeOverloaded } from '../deps/OpenSankey/types/Link'
 
 // Local imports
-import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP } from './ftypes/SankeyPlusGradientTypes'
-import type { Class_LinkStylePlus } from './types/LinkPlus'
-import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './types/TypesOSP'
-import { ConfigMenuTextInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP } from './types/SankeyPlusGradientTypes'
+import type { Class_LinkStylePlus } from '../types/LinkPlus'
+import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from '../types/TypesOSP'
+import { ConfigMenuTextInput } from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 
 export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConfLinkApparenceGradientOSP> = ({

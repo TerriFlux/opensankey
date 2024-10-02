@@ -8,11 +8,11 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { Class_Tag } from './deps/OpenSankey/types/Tag'
-import type { Type_GenericLinkElementOS } from './deps/OpenSankey/types/TypesOS'
+import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
+import type { Type_GenericLinkElementOS } from '../deps/OpenSankey/types/TypesOS'
 import type {
   FCType_MenuConfigurationLinksTags
-} from './ftypes/SankeyMenuConfigurationLinksTagsTypes'
+} from './types/SankeyMenuConfigurationLinksTagsTypes'
 
 /*************************************************************************************************/
 

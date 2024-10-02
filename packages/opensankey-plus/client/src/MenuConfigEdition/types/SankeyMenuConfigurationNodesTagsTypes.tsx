@@ -1,4 +1,4 @@
-import { Type_GenericApplicationDataOS } from '../deps/OpenSankey/types/TypesOS'
+import { Type_GenericApplicationDataOS } from '../../deps/OpenSankey/types/TypesOS'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group

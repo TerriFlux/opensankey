@@ -14,7 +14,7 @@ import {
   CustomFaEyeCheckIcon,
   OSTooltip
 } from './deps/OpenSankey/types/Utils'
-import { SankeySettingsEditionElementTags } from './SankeyPlusMenuConfigurationTags'
+import { SankeySettingsEditionElementTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationTags'
 import { faDatabase, faSliders } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/OpenSankey/configmenus/SankeyMenuBanner'

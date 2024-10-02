@@ -29,8 +29,8 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // OpenSankey ts-code
 // import { preferenceCheck } from './deps/OpenSankey/dialogs/SankeyMenuPreferences'
-import { Type_MenuSelectionEntry } from './deps/OpenSankey/topmenus/SankeyMenuTop'
-import { OSTooltip } from './deps/OpenSankey/types/Utils'
+import { Type_MenuSelectionEntry } from '../deps/OpenSankey/topmenus/SankeyMenuTop'
+import { OSTooltip } from '../deps/OpenSankey/types/Utils'
 
 // Local libs
 // import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
@@ -39,8 +39,8 @@ import {
   FCType_MenuPreferenceLabelsOSP,
   FCType_ContextZDTOSP,
   FCType_ZDTMenuAsAccordeonItemOSP
-} from './ftypes/SankeyPlusMenuConfigurationLabelsTypes'
-import { Type_GenericContainerElement } from './types/TypesOSP'
+} from './types/SankeyPlusMenuConfigurationLabelsTypes'
+import { Type_GenericContainerElement } from '../types/TypesOSP'
 
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />

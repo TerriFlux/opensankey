@@ -23,8 +23,8 @@ import {
   getStringOrUndefinedFromJSON
 } from '../deps/OpenSankey/types/Utils'
 import { Class_NodeAttribute, Class_NodeStyle } from '../deps/OpenSankey/types/Node'
-import { default_label_background } from '../SankeyPlusNodes'
-import { Class_DrawingAreaOSP, Class_SankeyOSP, Type_GenericNodeElementOSP } from './TypesOSP'
+import { default_label_background } from '../MenuConfigEdition/SankeyPlusNodes'
+import { Type_GenericNodeElementOSP } from './TypesOSP'
 
 export function isAttributeOverloaded(
   nodes: Type_GenericNodeElementOSP[],

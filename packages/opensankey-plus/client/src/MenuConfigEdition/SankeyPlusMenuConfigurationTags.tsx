@@ -28,7 +28,7 @@ import {
 // Local types
 import type {
   FType_SankeySettingsEditionElementTags
-} from './ftypes/SankeyMenuConfigurationTagsTypes'
+} from './types/SankeyMenuConfigurationTagsTypes'
 import type {
   Class_Tag,
   Class_TagGroup,
@@ -37,7 +37,7 @@ import type {
   Class_DataTag,
   Class_LevelTagGroup,
   Class_DataTagGroup
-} from './deps/OpenSankey/types/Tag'
+} from '../deps/OpenSankey/types/Tag'
 
 // Local functions / components
 
@@ -45,7 +45,7 @@ import {
   default_grey_color,
   GetRandomInt,
   OSTooltip
-} from './deps/OpenSankey/types/Utils'
+} from '../deps/OpenSankey/types/Utils'
 
 const list_palette_color = [
   d3.interpolateBlues,

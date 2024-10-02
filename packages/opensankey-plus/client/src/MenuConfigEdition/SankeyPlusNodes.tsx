@@ -28,16 +28,16 @@ import {
   FCType_NodeHyperLinkOSP,
   FCType_NodeIconOSP,
   FCType_NodeValueOSP,
-} from './ftypes/SankeyPlusNodesTypes'
+} from './types/SankeyPlusNodesTypes'
 
 // OpenSankey ts-code
-import { default_label_font_size, default_shape_visible, default_value_label_horiz, default_value_label_horiz_shift, default_value_label_vert, default_value_label_vert_shift, default_value_label_visible, isAttributeOverloaded } from './deps/OpenSankey/types/Node'
-import { isAttributeOverloaded as isAttributeOverloadedPlus } from './types/NodePlus'
-import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge } from './deps/OpenSankey/types/Utils'
-import { Type_GenericNodeElementOSP } from './types/TypesOSP'
-import { Class_NodeStylePlus } from './types/NodePlus'
-import { ConfigMenuNumberInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
-import { svg_label_top, svg_label_center, svg_label_bottom } from './deps/OpenSankey/configmenus/SankeyMenuConfigurationNodesAttributes'
+import { default_label_font_size, default_shape_visible, default_value_label_horiz, default_value_label_horiz_shift, default_value_label_vert, default_value_label_vert_shift, default_value_label_visible, isAttributeOverloaded } from '../deps/OpenSankey/types/Node'
+import { isAttributeOverloaded as isAttributeOverloadedPlus } from '../types/NodePlus'
+import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge } from '../deps/OpenSankey/types/Utils'
+import { Type_GenericNodeElementOSP } from '../types/TypesOSP'
+import { Class_NodeStylePlus } from '../types/NodePlus'
+import { ConfigMenuNumberInput } from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+import { svg_label_top, svg_label_center, svg_label_bottom } from '../deps/OpenSankey/configmenus/SankeyMenuConfigurationNodesAttributes'
 
 export const default_label_background = false
 
