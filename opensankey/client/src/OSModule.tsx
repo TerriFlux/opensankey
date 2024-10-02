@@ -255,24 +255,6 @@ export const initializeMenuConfiguration: FType_InitializeMenuConfiguration = (
         extra_background_element={additional_menus.extra_background_element}
       />
     }
-    menu_configuration_node_tags={
-      <SankeySettingsEditionElementTags
-        new_data={new_data}
-        elementTagNameProp='node_taggs'
-      />
-    }
-    menu_configuration_link_tags={
-      <SankeySettingsEditionElementTags
-        new_data={new_data}
-        elementTagNameProp='flux_taggs'
-      />
-    }
-    menu_configuration_data_tags={
-      <SankeySettingsEditionElementTags
-        new_data={new_data}
-        elementTagNameProp='data_taggs'
-      />
-    }
     menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
     menu_config_link_data={config_link_data}
     menu_config_link_attr={config_link_attr}
