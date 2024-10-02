@@ -1,7 +1,7 @@
 // External libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import { FaFileImport } from 'react-icons/fa'
-import { Box, Checkbox, Button, Input, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, PopoverContent, NumberInput, NumberInputField, Popover, PopoverBody, PopoverCloseButton, PopoverHeader, PopoverTrigger, Slider, SliderFilledTrack, SliderThumb, SliderTrack, Text, Accordion } from '@chakra-ui/react'
+import { Box, Checkbox, Button, Input, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, PopoverContent, NumberInput, NumberInputField, Popover, PopoverBody, PopoverCloseButton, PopoverHeader, PopoverTrigger, Slider, SliderFilledTrack, SliderThumb, SliderTrack, Text, Accordion, PopoverArrow, Select } from '@chakra-ui/react'
 
 // Internal imports
 import {
@@ -9,13 +9,15 @@ import {
   FCType_MenuConfEditionDataTag,
   FCType_ToolBarLinkVisualFilter,
   FCType_ToolBarTagFilter,
+  FType_AddSimpleLevelDropDown,
+  FType_InitalizeSelectorDetailNodes,
 } from './ftypes/SankeyPlusUtilsTypes'
 import {
   CustomFaEyeCheckIcon,
   OSTooltip
 } from './deps/OpenSankey/types/Utils'
 import { SankeySettingsEditionElementTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationTags'
-import { faDatabase, faSliders } from '@fortawesome/free-solid-svg-icons'
+import { faDatabase, faFolderTree, faSliders } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
 
@@ -365,10 +367,10 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
 }
 
 export const ToolBarNodeTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
-  const [,setCount]=useState(0)
+  const [, setCount] = useState(0)
   const { drawing_area, t } = new_data_plus
   const { sankey } = drawing_area
-  new_data_plus.menu_configuration.ref_to_toolbar_node_tag_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_toolbar_node_tag_updater.current = () => setCount(a => a + 1)
   // Logo of the button
   const logo_btn_node = <svg xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -441,10 +443,10 @@ export const ToolBarNodeTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 }
 
 export const ToolBarLinkTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
-  const [,setCount]=useState(0)
+  const [, setCount] = useState(0)
   const { drawing_area, t } = new_data_plus
   const { sankey } = drawing_area
-  new_data_plus.menu_configuration.ref_to_toolbar_link_tag_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_toolbar_link_tag_updater.current = () => setCount(a => a + 1)
 
   // Logo of the button
   const logo_btn_filter_link = <svg xmlns="http://www.w3.org/2000/svg"
@@ -509,10 +511,10 @@ export const ToolBarLinkTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 }
 
 export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
-  const [,setCount]=useState(0)
+  const [, setCount] = useState(0)
   const { t } = new_data_plus
 
-  new_data_plus.menu_configuration.ref_to_toolbar_data_tag_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_toolbar_data_tag_updater.current = () => setCount(a => a + 1)
 
   // Title in the popover
   const legend_filter = <Box
@@ -558,4 +560,132 @@ export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 
   return btn_show_data_filter
 
+}
+
+
+export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
+
+  const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
+
+  return (level_filter) ? <>
+    <OSTooltip
+      placement='left'
+      label={new_data_plus.t('Banner.hlp_1_txt_2')}>
+      {
+        initalizeSelectorDetailNodes(new_data_plus)
+      }
+    </OSTooltip>
+  </> :
+    <></>
+}
+
+/**
+ * TODO Description
+ * @param {*} new_data
+ * @return {*}
+ */
+export const initalizeSelectorDetailNodes: FType_InitalizeSelectorDetailNodes = (
+  new_data
+) => {
+  const { t } = new_data
+
+  return <Popover placement='left' id='popover_details_level'>
+    <PopoverTrigger>
+      <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
+        <FontAwesomeIcon icon={faFolderTree} />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverCloseButton />
+      <PopoverHeader>{t('Banner.ndd')}</PopoverHeader>
+      <PopoverBody>
+        <>
+          {
+            (new_data.drawing_area.sankey.level_taggs_list.length > 0) ?
+              (<>
+                {
+                  <AddSimpleLevelDropDown
+                    new_data={new_data}
+                  />
+                }
+              </>) :
+              (<>
+                <Input
+                  placeholder="Pas de filtrage"
+                  isDisabled
+                />
+              </>)
+          }
+        </>
+      </PopoverBody>
+    </PopoverContent>
+
+  </Popover>
+}
+
+
+/**
+ * Drop down to select primary level tag
+ * @param {*} {
+ *   new_data,
+ * }
+ * @return {*}
+ */
+export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropDown> = (
+  {
+    new_data
+  }
+) => {
+  // Data -------------------------------------------------------------------------------
+  const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
+
+  // Component updater ------------------------------------------------------------------
+  const [, setCount] = useState(0)
+  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+
+  // JSX Component ----------------------------------------------------------------------
+  if (Object.keys(level_taggs).includes('Primaire')) {
+    const primary_level_tags = level_taggs['Primaire'].tags_list
+
+    if (primary_level_tags.length < 2) {
+      return <></>
+    }
+    else {
+      return (
+        <>
+          {
+            <Select
+              key={level_taggs['Primaire'].id}
+              value={level_taggs['Primaire'].selected_tags_list[0]?.id ?? ''}
+              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                level_taggs['Primaire'].selectTagsFromId(evt.target.value)
+                new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
+                // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
+                // (it isn't done for link not directly displayed after fromJSON)
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+                new_data.drawing_area.checkAndUpdateAreaSize()
+              }}
+            >
+              {
+                level_taggs['Primaire'].tags_list
+                  .map(tag => {
+                    return (
+                      <option
+                        key={tag.id}
+                        value={tag.id}
+                      >
+                        {tag.name}
+                      </option>)
+                  })
+              }
+            </Select>
+          }
+        </>
+      )
+    }
+  }
+  else {
+    return <></>
+  }
 }

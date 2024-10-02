@@ -14,3 +14,11 @@ export type FCType_ToolBarLinkVisualFilter={
 export type FCType_ToolBarTagFilter={
   new_data_plus: Type_GenericApplicationDataOSP
 }
+
+export type FType_InitalizeSelectorDetailNodes = (
+  new_data: Type_GenericApplicationDataOSP
+) => JSX.Element
+
+export type FType_AddSimpleLevelDropDown = {
+  new_data: Type_GenericApplicationDataOSP
+}

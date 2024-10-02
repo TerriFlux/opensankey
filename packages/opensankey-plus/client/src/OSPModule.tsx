@@ -44,6 +44,7 @@ import {
   ImportImageAsSvgBg,
   MenuConfEditionTag,
   ToolBarDataTagFilter,
+  ToolBarLevelFilter,
   ToolBarLinkTagFilter,
   ToolBarLinkVisualFilter,
   ToolBarNodeTagFilter,
@@ -272,10 +273,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.toolbar_elements['node_tag_filter'] = <ToolBarNodeTagFilter new_data_plus={new_data_plus} />
   additionalMenus.toolbar_elements['link_tag_filter'] = <ToolBarLinkTagFilter new_data_plus={new_data_plus} />
   additionalMenus.toolbar_elements['data_tag_filter'] = <ToolBarDataTagFilter new_data_plus={new_data_plus} />
-
+  additionalMenus.toolbar_elements['aggregation'] = <ToolBarLevelFilter new_data_plus={new_data_plus} />
   // Place new button in desired order in the toolbar
-  additionalMenus.toolbar_order.splice(1, 0, 'link_visual_filter')
-  additionalMenus.toolbar_order.splice(2, 0, 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
+  additionalMenus.toolbar_order.splice(1, 0, 'aggregation', 'link_visual_filter', 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
 
 
 
