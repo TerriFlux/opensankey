@@ -29,7 +29,6 @@ import {
 
 /*************************************************************************************************/
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
-import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 
 
@@ -39,6 +38,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
     new_data,
     menu_config_link_data,
     menu_config_link_attr,
+    additionalMenus
   }
 ) => {
 
@@ -124,10 +124,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
       for_modal={false}
       idTab={'link_attr_tab_id'}
     />,
-    'Flux.IS': <MenuConfigurationLinksTooltip
-      new_data={new_data}
-      menu_for_modal={false}
-    />
+    ...additionalMenus.additional_menu_configuration_links
   }
 
 

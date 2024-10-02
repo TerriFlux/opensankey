@@ -39,8 +39,6 @@ import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigur
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { OpenSankeyMenuConfigurationLayout } from './configmenus/SankeyMenuConfigurationLayout'
-import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
-import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 import { AddSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
 
@@ -171,24 +169,8 @@ export const moduleDialogs: FType_ModuleDialogs = (
       />}
       title={t('Menu.MEP')}
     />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_node_tooltip'}
-      content={<SankeyMenuConfigurationNodesTooltip
-        new_data={new_data}
-        menu_for_modal={true}
-      />}
-      title={t('Menu.Noeuds') + ' ' + t('Noeud.IS')}
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_link_tooltip'}
-      content={<MenuConfigurationLinksTooltip
-        new_data={new_data}
-        menu_for_modal={true}
-      />}
-      title={t('Menu.flux') + ' ' + t('Flux.IB')}
-    />
+
+
   ]
 }
 
