@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Card, CardBody, CardHeader, Image } from '@chakra-ui/react'
+import { Box, Button, Card, CardBody, CardHeader, FormControl, Image, Input, InputGroup, InputLeftAddon, InputRightElement } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { loginUser } from './LoginFunctions'
@@ -20,6 +20,7 @@ const Login: FunctionComponent<LoginTypes> = ({
   // States
   const [email, setUserName] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [remember] = useState(false)
   const state = {
     button: ''
@@ -93,22 +94,57 @@ const Login: FunctionComponent<LoginTypes> = ({
       </Box>
 
       <div className="login-wrapper">
-        <Card variant='card_register'>
+        <Card variant='card_register' width='33vw'>
           <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.con_win')}</CardHeader>
           <CardBody>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('UserPages.id')}
-              </Box>
-              <input type="text" onChange={e => setUserName(e.target.value)} />
-            </Box>
+            {/* User id */}
+            <FormControl>
+              <InputGroup variant='register_input'>
+                <InputLeftAddon>
+                  {t('id.label', { ns: 'register' })}
+                </InputLeftAddon>
+                <Input
+                  isRequired
+                  type='text'
+                  placeholder={t('id.placeholder', { ns: 'register' })}
+                  onChange={e => setUserName(e.target.value)}
+                />
+              </InputGroup>
+            </FormControl>
 
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>{t('UserPages.mdp')}</Box>
-              <input type="password" onChange={e => setPassword(e.target.value)} />
-            </Box>
+            {/* Password */}
+            <FormControl>
+              <InputGroup variant='register_input'>
+                <InputLeftAddon>
+                  {t('pwd.label', { ns: 'register' })}
+                </InputLeftAddon>
+                <Input
+                  isRequired
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={t('pwd.placeholder', { ns: 'register' })}
+                  onChange={e => setPassword(e.target.value)}
+                />
+                <InputRightElement width='4.5rem' marginRight='0.25em'>
+                  <Button
+                    h='1.75rem'
+                    size='sm'
+                    border='0px'
+                    bg='gray.50'
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? t('pwd.hide', { ns: 'register' }) : t('pwd.show', { ns: 'register' })}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
+            </FormControl>
+
             <div className='LogError' style={{ 'color': 'red' }}></div>
-            <div style={{ 'textAlign': 'center' }}>
+
+            <Box
+              display='grid'
+              gridAutoFlow='row'
+              gridRowGap='0,25rem'
+            >
               <Button
                 variant='btn_lone_navigation_tertiary'
                 type="submit"
@@ -127,7 +163,7 @@ const Login: FunctionComponent<LoginTypes> = ({
                 }}>
                 {t('Login.forgot_ask')}
               </Button>
-            </div>
+            </Box>
           </CardBody>
         </Card>
       </div>
