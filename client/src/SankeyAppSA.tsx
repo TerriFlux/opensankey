@@ -8,7 +8,7 @@
 
 // External imports =================================================================================
 
-import React, { FunctionComponent} from 'react'
+import React, { FunctionComponent } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
 
@@ -37,6 +37,8 @@ import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
 import Login from './components/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
+import { PrivateRoute } from './components/Routes/PrivateRoutes'
+import { PublicRoute } from './components/Routes/PublicRoutes'
 
 // SankeyApp for OpenSankey+ ========================================================================
 
@@ -112,8 +114,13 @@ export const SankeyAppSA: FunctionComponent = () => {
           <Route
             path='/register'
             element={
-              <Register
+              <PublicRoute
                 new_data_app={new_data_app}
+                component={
+                  <Register
+                    new_data_app={new_data_app}
+                  />
+                }
               />
             }
           />
@@ -123,24 +130,39 @@ export const SankeyAppSA: FunctionComponent = () => {
             <Route
               index
               element={
-                <Login
+                <PublicRoute
                   new_data_app={new_data_app}
+                  component={
+                    <Login
+                      new_data_app={new_data_app}
+                    />
+                  }
                 />
               }
             />
             <Route
               path='forgot'
               element={
-                <PasswordResetFromMail
+                <PublicRoute
                   new_data_app={new_data_app}
+                  component={
+                    <PasswordResetFromMail
+                      new_data_app={new_data_app}
+                    />
+                  }
                 />
               }
             />
             <Route
               path='reset/:token'
               element={
-                <PasswordResetFromToken
+                <PublicRoute
                   new_data_app={new_data_app}
+                  component={
+                    <PasswordResetFromToken
+                      new_data_app={new_data_app}
+                    />
+                  }
                 />
               }
             />
@@ -148,18 +170,28 @@ export const SankeyAppSA: FunctionComponent = () => {
           <Route
             path='/dashboard'
             element={
-              <Dashboard
+              <PrivateRoute
                 new_data_app={new_data_app}
-                exemple_menu={exemple_menu}
+                component={
+                  <Dashboard
+                    new_data_app={new_data_app}
+                    exemple_menu={exemple_menu}
+                  />
+                }
               />
             }
           />
           <Route
             path='/account'
             element={
-              <Account
+              <PrivateRoute
                 new_data_app={new_data_app}
-                blocker_suite_sankey={blockers}
+                component={
+                  <Account
+                    new_data_app={new_data_app}
+                    blocker_suite_sankey={blockers}
+                  />
+                }
               />
             }
           />
