@@ -147,7 +147,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
     toolbar_elements: {},
     toolbar_order: ['mode_souris',
-      'aggragation',
       'node_type',
       'strectch_zdd',
       'help',

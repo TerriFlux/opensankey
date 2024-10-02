@@ -4,25 +4,9 @@ import React, {
   useRef
 } from 'react'
 
-import {
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
-  Button,
-  Input
-} from '@chakra-ui/react'
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFolderTree } from '@fortawesome/free-solid-svg-icons'
-
 /*************************************************************************************************/
 
 import {
-  FType_InitalizeSelectorDetailNodes,
   FType_InitializeAdditionalMenus,
   FType_InitializeApplicationData,
   FType_InitializeMenuConfiguration,
@@ -40,7 +24,6 @@ import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfiguratio
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { OpenSankeyMenuConfigurationLayout } from './configmenus/SankeyMenuConfigurationLayout'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
-import { AddSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
 
 import { retrieveExcelResults } from './dialogs/SankeyPersistence'
 import { FType_InitializeDiagrammSelector } from './dialogs/types/SankeyMenuDialogsTypes'
@@ -225,49 +208,5 @@ export const initializeMenuConfiguration: FType_InitializeMenuConfiguration = (
 
 /***************************************************************************************/
 
-/**
- * TODO Description
- * @param {*} new_data
- * @return {*}
- */
-export const initalizeSelectorDetailNodes: FType_InitalizeSelectorDetailNodes = (
-  new_data
-) => {
-  const { t } = new_data
-
-  return <Popover placement='left' id='popover_details_level'>
-    <PopoverTrigger>
-      <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
-        <FontAwesomeIcon icon={faFolderTree} />
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent>
-      <PopoverArrow />
-      <PopoverCloseButton />
-      <PopoverHeader>{t('Banner.ndd')}</PopoverHeader>
-      <PopoverBody>
-        <>
-          {
-            (new_data.drawing_area.sankey.level_taggs_list.length > 0) ?
-              (<>
-                {
-                  <AddSimpleLevelDropDown
-                    new_data={new_data}
-                  />
-                }
-              </>) :
-              (<>
-                <Input
-                  placeholder="Pas de filtrage"
-                  isDisabled
-                />
-              </>)
-          }
-        </>
-      </PopoverBody>
-    </PopoverContent>
-
-  </Popover>
-}
 
 

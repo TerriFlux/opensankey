@@ -50,7 +50,6 @@ import {
 import {
   FCType_AddAllDropDownNode,
   FCType_AddAllDropDownFluxFType,
-  FType_AddSimpleLevelDropDown,
   FCType_DataTagSelector,
   FType_SetDiagram,
   FType_StretchButtons,
@@ -65,9 +64,6 @@ import {
 import {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
-import {
-  initalizeSelectorDetailNodes
-} from '../OSModule'
 
 
 // CONSTANTS ============================================================================
@@ -108,70 +104,7 @@ export const setDiagram: FType_SetDiagram = (
 
 // COMPONENTS ===========================================================================
 
-/**
- * Drop down to select primary level tag
- * @param {*} {
- *   new_data,
- * }
- * @return {*}
- */
-export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropDown> = (
-  {
-    new_data
-  }
-) => {
-  // Data -------------------------------------------------------------------------------
-  const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
-  // Component updater ------------------------------------------------------------------
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
-
-  // JSX Component ----------------------------------------------------------------------
-  if (Object.keys(level_taggs).includes('Primaire')) {
-    const primary_level_tags = level_taggs['Primaire'].tags_list
-
-    if (primary_level_tags.length < 2) {
-      return <></>
-    }
-    else {
-      return (
-        <>
-          {
-            <Select
-              key={level_taggs['Primaire'].id}
-              value={level_taggs['Primaire'].selected_tags_list[0]?.id ?? ''}
-              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                level_taggs['Primaire'].selectTagsFromId(evt.target.value)
-                new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
-                // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
-                // (it isn't done for link not directly displayed after fromJSON)
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-                new_data.drawing_area.checkAndUpdateAreaSize()
-              }}
-            >
-              {
-                level_taggs['Primaire'].tags_list
-                  .map(tag => {
-                    return (
-                      <option
-                        key={tag.id}
-                        value={tag.id}
-                      >
-                        {tag.name}
-                      </option>)
-                  })
-              }
-            </Select>
-          }
-        </>
-      )
-    }
-  }
-  else {
-    return <></>
-  }
-}
 
 /**
  *
@@ -658,7 +591,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   new_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
   let btn_mouse_mode_edition = <></>
 
-  const level_filter = Object.entries(sankey.level_taggs_dict).length > 0
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
 
@@ -667,14 +599,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     new_data.drawing_area.legend.draw()
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
-
-  const legend_filter = <Box
-  as='span'
-  layerStyle='popover_sidebar_row_tag_filter'
-  >
-  <Box textStyle='h2'>{t('Menu.group')}</Box>
-  <Box textStyle='h2'>{t('Menu.color')}</Box>
-  </Box>
 
   const struc_data_reconciled = <Popover
     variant='toolbar_popover_window'
@@ -793,16 +717,7 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     </>
   }
 
-  const btn_aggrega_level = (level_filter) ? <>
-    <OSTooltip
-      placement='left'
-      label={t('Banner.hlp_1_txt_2')}>
-      {
-        initalizeSelectorDetailNodes(new_data)
-      }
-    </OSTooltip>
-  </> :
-    <></>
+
 
 
 
@@ -834,7 +749,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
 const init_toolbar_elements:{[_:string]:JSX.Element}={
 
   'mode_souris': btn_mouse_mode_edition,
-  'aggragation': btn_aggrega_level,
   'node_type': btn_show_data_type,
   'strectch_zdd': stretchButtons(new_data),
   'help': btn_show_help_in_static,
