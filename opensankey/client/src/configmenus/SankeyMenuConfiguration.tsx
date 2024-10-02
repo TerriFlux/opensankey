@@ -29,7 +29,6 @@ import {
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { FCType_OpenSankeyConfigurationsMenus } from './types/SankeyMenuConfigurationTypes'
-import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
 
 // COMPONENTS ===========================================================================
 
@@ -73,11 +72,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
 
   // JSX Component ----------------------------------------------------------------------
 
-  const show_menu_config_tag = (
-    config_object.isGivenAccordionShowed('EN') ||
-    config_object.isGivenAccordionShowed('EF') ||
-    config_object.isGivenAccordionShowed('ED')
-  )
 
   const menu_items = [
     config_object.isGivenAccordionShowed('MEP') ?
@@ -178,96 +172,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
       </AccordionPanel>
     </AccordionItem>,
 
-    show_menu_config_tag ?
-      <AccordionItem>
-        {
-          //MENU ETIQUETTES
-        }
-        <AccordionButton
-          onClick={() => {
-            const scroll_x = window.scrollX
-            const scroll_y = window.scrollY
-            setTimeout(() => {
-              document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-            }, 50)
-          }}
-        >
-          <Box
-            as='span'
-            layerStyle='menuconfig_entry'>
-            {t('Menu.Etiquettes')}
-          </Box>
-          <AccordionIcon />
-        </AccordionButton>
-        <AccordionPanel>
-          <Accordion
-            allowToggle
-            variant="accordion_sublevel_style"
-          >
-            <AccordionItem
-              style={{ 'display': (config_object.isGivenAccordionShowed('EN')) ? 'initial' : 'none' }}
-            >
-              {
-                //MENU ETIQUETTES DE NOEUDS
-              }
-              <AccordionButton
-                onClick={() => {
-                  const scroll_x = window.scrollX
-                  const scroll_y = window.scrollY
-                  setTimeout(() => {
-                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-                  }, 50)
-                }}>
-                <Box
-                  as='span'
-                  layerStyle='submenuconfig_entry'>
-                  {t('Menu.EN')}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                <SankeySettingsEditionElementTags
-                  new_data={new_data}
-                  elementTagNameProp='node_taggs'
-                />
-              </AccordionPanel>
-            </AccordionItem>
-
-            <AccordionItem
-              style={{ 'display': (config_object.isGivenAccordionShowed('EF')) ? 'initial' : 'none' }}
-            >
-              {
-                //MENU ETIQUETTES DE FLUX
-              }
-              <AccordionButton
-                onClick={() => {
-                  const scroll_x = window.scrollX
-                  const scroll_y = window.scrollY
-                  setTimeout(() => {
-                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-                  }, 50)
-                }}
-              >
-                <Box
-                  as='span'
-                  layerStyle='submenuconfig_entry'>
-                  {t('Menu.EF')}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                <SankeySettingsEditionElementTags
-                  new_data={new_data}
-                  elementTagNameProp='flux_taggs'
-                />
-              </AccordionPanel>
-            </AccordionItem>
-              {additional_menus.additional_conf_tag_item}
-            
-          </Accordion>
-        </AccordionPanel>
-      </AccordionItem> :
-      <></>,
     //Add extra accordionItem (for example views with OpenSankey+ submodule)
     <>{additional_menus.additional_configuration_menus_primary_accordion_elements.map((c: ReactElementLike, i: number) => {
       return <React.Fragment key={i}>{c}</React.Fragment>

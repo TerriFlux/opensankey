@@ -132,8 +132,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_configuration_menus_edition_elements: [],
     additional_configuration_menus_primary_accordion_elements: [],
 
-    additional_conf_tag_item: [],
-
     additional_edition_item: [],
     additional_file_save_json_option: [],
     additional_file_item: [],
@@ -149,9 +147,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     toolbar_elements: {},
     toolbar_order: ['mode_souris',
       'aggragation',
-      'node_tag_filter',
-      'link_tag_filter',
-      'data_tag_filter',
       'node_type',
       'strectch_zdd',
       'help',
