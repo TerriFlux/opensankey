@@ -61,7 +61,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const value_update = updated_selected_links[0]?.value
 
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.data_value?? '') )
+    ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
   }
 
   // Function used to force this component to reload
@@ -176,9 +176,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     </OSTooltip>
 
 
-   
-
-    {additional_data_element}
+    {additional_data_element.map((content, idx) => <React.Fragment key={idx}>{content}</React.Fragment>)}
 
   </Box>
 
