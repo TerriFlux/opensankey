@@ -66,6 +66,8 @@ import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './type
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
 import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/dialogs/types/SankeyMenuDialogsTypes'
+import { SankeyMenuConfigurationNodesTags } from './SankeyPlusMenuConfigurationNodesTags'
+import { MenuConfigurationLinksTags } from './SankeyPlusMenuConfigurationLinksTags'
 
 declare const window: Window &
   typeof globalThis & {
@@ -134,11 +136,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const has_views = new_data_plus.has_views
 
   // JSX Elements for views navbar ------------------------------------------------------
-    // Edition DataTag
-    additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<MenuConfEditionTag
-      new_data_plus={new_data_plus}
-    />)
-  
+  // Edition DataTag
+  additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<MenuConfEditionTag
+    new_data_plus={new_data_plus}
+  />)
+
   // AddMenu accordion views
   additionalMenus.additional_configuration_menus_primary_accordion_elements.push(
     <ViewsAccordion
@@ -161,6 +163,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Page settings
   additionalMenus.extra_background_element = <ImportImageAsSvgBg
     new_data_plus={new_data_plus}
+  />
+
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
+    new_data={new_data}
+    menu_for_modal={false}
   />
 
   // Menu conf nodes
@@ -192,6 +199,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 
   //Links
+  additionalMenus.additional_menu_configuration_links['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
+    new_data={new_data}
+    menu_for_modal={false}
+  />
+
   // Add dashed config
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP
     new_data_plus={new_data_plus}
@@ -248,7 +260,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Place new button in desired order in the toolbar
   additionalMenus.toolbar_order.splice(1, 0, 'link_visual_filter')
-  additionalMenus.toolbar_order.splice(2, 0, 'node_tag_filter','link_tag_filter','data_tag_filter')
+  additionalMenus.toolbar_order.splice(2, 0, 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
 
 
 
@@ -271,6 +283,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   menu_configuration_nodes_attributes,
   processFunctions
 ) => {
+
   // OpenSankey Menu
   const moduleDialogsOS = moduleDialogs(
     new_data,
@@ -305,7 +318,25 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     />,
     <ModalSelectionIconsOSP
       new_data_plus={new_data_plus}
-    />
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_node_tags'}
+      content={<SankeyMenuConfigurationNodesTags
+        new_data={new_data}
+        menu_for_modal={true}
+      />}
+      title={new_data_plus.t('Menu.Noeuds') + ' ' + new_data_plus.t('Menu.Etiquettes')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_link_tags'}
+      content={<MenuConfigurationLinksTags
+        new_data={new_data}
+        menu_for_modal={true}
+      />}
+      title={new_data_plus.t('Menu.Flux') + ' ' + new_data_plus.t('Menu.Etiquettes')}
+    />,
   ]
 
   return [
