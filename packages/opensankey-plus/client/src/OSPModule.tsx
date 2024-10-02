@@ -139,17 +139,22 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const has_views = new_data_plus.has_views
 
   // JSX Elements for views navbar ------------------------------------------------------
-  // Edition DataTag
-  additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<MenuConfEditionTag
-    new_data_plus={new_data_plus}
-  />)
-
-  // AddMenu accordion views
-  additionalMenus.additional_configuration_menus_primary_accordion_elements.push(
-    <ViewsAccordion
+  if (new_data_plus.has_sankey_plus) {
+    // Edition DataTag
+    additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<MenuConfEditionTag
       new_data_plus={new_data_plus}
-    />
-  )
+    />)
+
+    // AddMenu accordion views
+    additionalMenus.additional_configuration_menus_primary_accordion_elements.push(
+      <ViewsAccordion
+        new_data_plus={new_data_plus}
+      />
+    )
+  }
+
+
+
 
   if (!is_static || has_views) {
     additionalMenus.externale_navbar_item['view'] = <BannerViewsOSP
@@ -184,11 +189,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <NodeForeignObjectOSP
     new_data_plus={new_data_plus}
-    is_activated={true}
+    is_activated={new_data_plus.has_sankey_plus}
   />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl'] = <NodeHyperLinkOSP
     new_data_plus={new_data_plus}
-    is_activated={true}
+    is_activated={new_data_plus.has_sankey_plus}
   />
 
   additionalMenus.additional_node_label_layout_content.push(

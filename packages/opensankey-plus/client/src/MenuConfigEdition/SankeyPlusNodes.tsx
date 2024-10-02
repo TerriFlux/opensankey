@@ -403,6 +403,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
           >
             <Input
               placeholder={node_hyperlink}
+              isDisabled={!is_activated}
               onChange={(evt) => {
                 selected_nodes
                   .forEach(d => d.hyperlink = evt.target.value)
