@@ -31,7 +31,6 @@ import {
 } from '../types/Utils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
-import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
 
 
 /*************************************************************************************************/
@@ -104,10 +103,6 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
       menu_to_wrap={menu_configuration_nodes_attributes}
       for_modal={false}
       idTab={'node_attr'}
-    />,
-    'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
-      new_data={new_data}
-      menu_for_modal={false}
     />,
     ...additionalMenus.additional_menu_configuration_nodes
   }

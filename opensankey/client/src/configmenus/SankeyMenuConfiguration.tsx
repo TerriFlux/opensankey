@@ -164,6 +164,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
                 new_data={new_data}
                 menu_config_link_data={menu_config_link_data}
                 menu_config_link_attr={menu_config_link_attr}
+                additionalMenus={additional_menus}
               />
             </AccordionPanel>
           </AccordionItem>
