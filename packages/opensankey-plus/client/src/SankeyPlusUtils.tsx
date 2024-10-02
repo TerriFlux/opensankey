@@ -1,16 +1,19 @@
 // External libs
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import { FaFileImport } from 'react-icons/fa'
-import { Box, Checkbox, Button, Input } from '@chakra-ui/react'
+import { Box, Checkbox, Button, Input, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel } from '@chakra-ui/react'
 
 // Internal imports
 import {
   FCType_ImportImageAsSvgBg,
+  FCType_MenuConfEditionDataTag,
 } from './ftypes/SankeyPlusUtilsTypes'
 import {
   CustomFaEyeCheckIcon,
   OSTooltip
 } from './deps/OpenSankey/types/Utils'
+import { t } from 'i18next'
+import { SankeySettingsEditionElementTags } from './deps/OpenSankey/configmenus/SankeyMenuConfigurationTags'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -77,4 +80,40 @@ export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = 
     </Box>
   </>
   return content_image
+}
+
+
+export const MenuConfEditionDataTag: FunctionComponent<FCType_MenuConfEditionDataTag> = ({
+  new_data_plus
+}) => {
+  return <AccordionItem
+    isDisabled={new_data_plus.has_sankey_plus}
+    style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('ED')) ? 'initial' : 'none' }}
+  >
+    {
+      //MENU ETIQUETTES DE DONNÉES
+    }
+    <AccordionButton
+      onClick={() => {
+        const scroll_x = window.scrollX
+        const scroll_y = window.scrollY
+        setTimeout(() => {
+          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+        }, 50)
+      }}
+    >
+      <Box
+        as='span'
+        layerStyle='submenuconfig_entry'>
+        {t('Menu.ED')}
+      </Box>
+      <AccordionIcon />
+    </AccordionButton>
+    <AccordionPanel>
+      <SankeySettingsEditionElementTags
+        new_data={new_data_plus}
+        elementTagNameProp='data_taggs'
+      />
+    </AccordionPanel>
+  </AccordionItem>
 }

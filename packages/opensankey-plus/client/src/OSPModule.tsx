@@ -42,6 +42,7 @@ import {
 import { NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
+  MenuConfEditionDataTag,
 } from './SankeyPlusUtils'
 
 import {
@@ -194,6 +195,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />)
   // Add config link data text value
   additionalMenus.additional_data_element.push(<MenuConfLinkDataText
+  new_data_plus={new_data_plus}
+  />)
+
+  // Edition DataTag
+  additionalMenus.additional_conf_tag_item.push(<MenuConfEditionDataTag
   new_data_plus={new_data_plus}
   />)
 
