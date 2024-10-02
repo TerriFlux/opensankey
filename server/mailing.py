@@ -6,6 +6,7 @@
 # ---------------------------------------------------------------
 # External imports
 import os
+import re
 
 # Flask imports
 from flask_mail import Mail, Message
@@ -18,6 +19,27 @@ sending_mail = 'contact@terriflux.fr'
 
 
 # ---------------------------------------------------------------
+def is_email_valid(mail_to_check):
+    """
+    Check if mail is valid
+
+    Parameters
+    ----------
+    :param mail_to_check: _description_
+    :type mail_to_check: _type_
+
+    Optional parameters
+    -------------------
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
+    # regex : https://emailregex.com/
+    regex_mail = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]{2,4}$)"
+    return re.fullmatch(regex_mail, mail_to_check) is not None
+
+
 def init_mailing(app):
     """
     Initialize mail service for app
@@ -40,58 +62,127 @@ def init_mailing(app):
     mail.init_app(app)
 
 
-def create_welcome_mail(
-    dest_mail,
-    dest_first_name,
+def send_welcome_mail(
+    user,
     language='fr'
 ):
     """
-    Create welcome mail in French
+    Send welcome mail for newly created user
 
     Parameters
     ----------
-    :param dest_mail: _description_
-    :type dest_mail: _type_
+    :param user: _description_
+    :type user: _type_
 
     Optional parameters
     -------------------
+    :param language: _description_
+    :type language: str, optional (defaults to 'fr')
     """
-    # Protection
+    # Protections
+    if not is_email_valid(user.email):
+        return
     if language not in ['en', 'fr']:
         language = 'en'
     # Mail object
     subject = {}
-    subject['en'] = "Welcome on OpenSankey"
-    subject['fr'] = "Bienvenue sur OpenSankey"
+    subject['en'] = "[OpenSankey] Welcome"
+    subject['fr'] = "[OpenSankey] Bienvenue"
     # Instanciate msg
     msg = Message(
         subject=subject[language],
         sender=("Contact TerriFlux", sending_mail),
-        recipients=[dest_mail],
-    )
+        recipients=[user.email])
     # Add body to msg
+    file = 'welcome_mail/welcome_mail_{}'.format(language)
     msg.body = render_template(
-        'welcome_mail/welcome_mail_{}.txt'.format(language),
-        first_name=dest_first_name)
+        file + '.txt',
+        first_name=user.firstname)
     msg.html = render_template(
-        'welcome_mail/welcome_mail_{}.html'.format(language),
+        file + '.html',
         logo_OS='cid:logo_OS',
         logo_TerriFlux='cid:logo_TerriFlux',
-        first_name=dest_first_name)
+        first_name=user.firstname)
     # Get abs path
     path = os.path.dirname(os.path.abspath(__file__))
     # Add openSankey logo
     msg.attach(
         'logo_OS.jpg',
         'image/jpg',
-        open(path + "/templates/welcome_mail/logo_OS.jpg", 'rb').read(),
+        open(path + "/templates/logo_OS.jpg", 'rb').read(),
         'inline',
         headers={'Content-ID': '<logo_OS>'})
     # Add TerriFlux logo
     msg.attach(
         'logo_TerriFlux.jpg',
         'image/jpg',
-        open(path + "/templates/welcome_mail/logo_TerriFlux.jpg", 'rb').read(),
+        open(path + "/templates/logo_TerriFlux.jpg", 'rb').read(),
         'inline',
         headers={'Content-ID': '<logo_TerriFlux>'})
-    return msg
+    # Send mail
+    mail.send(msg)
+
+
+def send_pw_reset_email(
+    user,
+    language='fr'
+):
+    """
+    Create custom mail for password reseting
+
+    Parameters
+    ----------
+    :param user: _description_
+    :type user: _type_
+
+    Optional parameters
+    -------------------
+    """
+    # Protection
+    if not is_email_valid(user.email):
+        return
+    if language not in ['en', 'fr']:
+        language = 'en'
+    # Get reseting token
+    token = user.get_reset_token()
+    # Mail object
+    subject = {}
+    subject['en'] = "[OpenSankey] Your password reset request"
+    subject['fr'] = \
+        "[OpenSankey] Votre demande de reinitialisation du mot de passe"
+    # Instanciate msg
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", sending_mail),
+        recipients=[user.email])
+    # Add body to msg
+    file = 'password_reset_mail/password_reset_mail_{}'.format(language)
+    url = 'https://open-sankey.fr/#/login/reset/' + token
+    msg.body = render_template(
+        file + '.txt',
+        first_name=user.firstname,
+        reset_url=url)
+    msg.html = render_template(
+        file + '.html',
+        logo_OS='cid:logo_OS',
+        logo_TerriFlux='cid:logo_TerriFlux',
+        first_name=user.firstname,
+        reset_url=url)
+    # Get abs path
+    path = os.path.dirname(os.path.abspath(__file__))
+    # Add openSankey logo
+    msg.attach(
+        'logo_OS.jpg',
+        'image/jpg',
+        open(path + "/templates/logo_OS.jpg", 'rb').read(),
+        'inline',
+        headers={'Content-ID': '<logo_OS>'})
+    # Add TerriFlux logo
+    msg.attach(
+        'logo_TerriFlux.jpg',
+        'image/jpg',
+        open(path + "/templates/logo_TerriFlux.jpg", 'rb').read(),
+        'inline',
+        headers={'Content-ID': '<logo_TerriFlux>'})
+    # Send mail
+    mail.send(msg)

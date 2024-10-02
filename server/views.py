@@ -16,8 +16,7 @@ from flask import Response
 
 # ---------------------------------------------------------------
 # Local imports
-from .mailing import mail
-from .mailing import create_welcome_mail
+from .mailing import send_welcome_mail
 
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
@@ -53,7 +52,7 @@ sankeyapp = Blueprint(
 # Define all routes
 
 @sankeyapp.route('/')
-def start():
+def index():
     return render_template(
         'index.html',
         filename='',
@@ -61,9 +60,12 @@ def start():
     )
 
 
-@sankeyapp.route('/<adress>')
-def goto(adress):
-    return render_template(adress)
+@sankeyapp.route('/<path:path>')
+def goto(path):
+    try:
+        return render_template(path)
+    except Exception:
+        return index()
 
 
 @sankeyapp.route('/api/edd_license', methods=['POST'])
@@ -109,14 +111,13 @@ def mail_send_welcome():
     :rtype: _type_
     """
     try:
-        msg = create_welcome_mail(
+        send_welcome_mail(
             request.json.get("email"),
             request.json.get("firstname"),
             request.json.get("lang"))
-        mail.send(msg)
     except Exception as excpt:
         response = Response(
             response='mail_send_welcome : ' + str(excpt),
-            status=402)
+            status=500)
         return response
     return Response(status=200)

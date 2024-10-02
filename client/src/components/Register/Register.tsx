@@ -59,7 +59,8 @@ async function userSignUp(
       firstname: firstname,
       lastname: lastname,
       license_opensankeyplus: license_opensankeyplus,
-      license_sankeysuite: license_sankeysuite
+      license_sankeysuite: license_sankeysuite,
+      lang: i18next.language
     })
   })
     .then((response) => response.json())
@@ -73,8 +74,6 @@ async function userSignUp(
         if (license_sankeysuite !== '') {
           registerNewLicenseSankeySuite(license_sankeysuite)
         }
-        // Envoi du mail de bienvenue
-        sendWelcomeMail(email, firstname)
         // On retourne vers la page de login
         d3.select('.LogError')
           .html('<p style="color:green">' + i18next.t('msg.ok account created', { ns: 'register' }) + '</p>')
@@ -90,33 +89,6 @@ async function userSignUp(
     .catch(error =>
       console.log('POST signup : ERROR', error)
     )
-}
-
-// Check a license status
-async function sendWelcomeMail(
-  email: string,
-  firstname: string
-) {
-  // Get server api url
-  const path = window.location.origin
-  const url = path + '/mail/send_welcome'
-  // use server as proxy to fetch informations
-  // -> Avoid "Same-Origin" problem with CORS
-  const data = fetch(
-    url,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        'email': email,
-        'firstname': firstname,
-        'lang': i18next.language
-      })
-    }
-  )
-  return data
 }
 
 // UI : License checkin
