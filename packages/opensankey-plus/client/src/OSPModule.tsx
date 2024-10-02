@@ -58,6 +58,8 @@ import {
   ViewsAccordion,
 } from './SankeyPlusViews'
 
+import { SankeyMenuConfigurationNodesTooltip } from './SankeyPlusMenuConfigurationNodesTooltip'
+
 import ModalSelectionIconsOSP from './SankeyPlusCatalogIcon'
 
 import { NodeForeignObjectOSP } from './SankeyPlusForeignObject'
@@ -68,6 +70,7 @@ import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuD
 import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/dialogs/types/SankeyMenuDialogsTypes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyPlusMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './SankeyPlusMenuConfigurationLinksTags'
+import { MenuConfigurationLinksTooltip } from './SankeyPlusMenuConfigurationLinksTooltip'
 
 declare const window: Window &
   typeof globalThis & {
@@ -171,10 +174,14 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />
 
   // Menu conf nodes
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
-    new_data_plus={new_data_plus}
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.infos'] = <SankeyMenuConfigurationNodesTooltip
+    new_data={new_data}
     menu_for_modal={false}
-  />
+  />,
+    additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
+      new_data_plus={new_data_plus}
+      menu_for_modal={false}
+    />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <NodeForeignObjectOSP
     new_data_plus={new_data_plus}
     is_activated={true}
@@ -203,7 +210,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data={new_data}
     menu_for_modal={false}
   />
-
+  additionalMenus.additional_menu_configuration_links['Flux.IS'] = <MenuConfigurationLinksTooltip
+    new_data={new_data}
+    menu_for_modal={false}
+  />
   // Add dashed config
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP
     new_data_plus={new_data_plus}
@@ -337,6 +347,24 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       />}
       title={new_data_plus.t('Menu.Flux') + ' ' + new_data_plus.t('Menu.Etiquettes')}
     />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_node_tooltip'}
+      content={<SankeyMenuConfigurationNodesTooltip
+        new_data={new_data}
+        menu_for_modal={true}
+      />}
+      title={new_data_plus.t('Menu.Noeuds') + ' ' + new_data_plus.t('Noeud.IS')}
+    />,
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_menu_link_tooltip'}
+      content={<MenuConfigurationLinksTooltip
+        new_data={new_data}
+        menu_for_modal={true}
+      />}
+      title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Flux.IB')}
+    />
   ]
 
   return [
