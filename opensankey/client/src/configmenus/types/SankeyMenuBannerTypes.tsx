@@ -5,9 +5,6 @@ export type FType_SetDiagram = (
   new_data: Type_GenericApplicationDataOS
 ) => void
 
-export type FType_AddSimpleLevelDropDown = {
-  new_data: Type_GenericApplicationDataOS
-}
 
 export type FCType_AddAllDropDownNode = {
   new_data: Type_GenericApplicationDataOS,

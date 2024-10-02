@@ -97,9 +97,6 @@ export type FType_InitializeAdditionalMenus = (
   new_data: Type_GenericApplicationDataOS
 ) => void
 
-export type FType_InitalizeSelectorDetailNodes = (
-  new_data: Type_GenericApplicationDataOS
-) => JSX.Element
 
 export type FType_InitializeMenuConfiguration = (
   new_data: Type_GenericApplicationDataOS,
