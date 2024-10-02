@@ -43,6 +43,7 @@ import { NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './SankeyP
 import {
   ImportImageAsSvgBg,
   MenuConfEditionDataTag,
+  ToolBarLinkVisualFilter,
 } from './SankeyPlusUtils'
 
 import {
@@ -234,6 +235,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
     />
   )
+
+  // Add new button for the toolbar 
+  additionalMenus.toolbar_elements['link_visual_filter']=<ToolBarLinkVisualFilter new_data_plus={new_data_plus}/>
+  additionalMenus.toolbar_order.splice(1,0,'link_visual_filter')
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)

@@ -353,7 +353,6 @@ export abstract class Class_NodeElementPlus
 
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
-      console.log(label_pos_y)
       if (this.name_label_vert == 'top') {
         box_pos_y -= this.name_label_font_size
       } else if (this.name_label_vert == 'middle') {

@@ -5,5 +5,8 @@ export type FCType_ImportImageAsSvgBg = {
 }
 export type FCType_MenuConfEditionDataTag={
   new_data_plus: Type_GenericApplicationDataOSP
+}
 
+export type FCType_ToolBarLinkVisualFilter={
+  new_data_plus: Type_GenericApplicationDataOSP
 }
