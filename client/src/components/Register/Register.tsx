@@ -96,6 +96,11 @@ export type RegisterType = {
   new_data_app: Class_ApplicationDataSA
 }
 
+export const email_regex_str = '(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]{2,4}$)'
+export const pwd_regex_str = '^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9\n\r\t]).{8,}$'
+export const name_regex_str = '^[a-zéèêïA-Z ,.\'-]+$'
+export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
+
 const Register: FunctionComponent<RegisterType> = ({
   new_data_app,
 }) => {
@@ -209,8 +214,10 @@ const Register: FunctionComponent<RegisterType> = ({
 
           {/* User e-mail*/}
           <FormControl isInvalid={okUserName === 1}>
-            <InputGroup>
-              <InputLeftAddon width='25%'>
+            <InputGroup
+              variant='register_input'
+            >
+              <InputLeftAddon>
                 {t('id.label', { ns: 'register' })}
               </InputLeftAddon>
               <Input
@@ -219,7 +226,7 @@ const Register: FunctionComponent<RegisterType> = ({
                 placeholder={t('id.placeholder', { ns: 'register' })}
                 onChange={e => {
                   // Control e-amil format
-                  if (e.target.value.match('[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}') != null) {
+                  if (e.target.value.match(email_regex_str) != null) {
                     setUserName(e.target.value)
                     setOkUserName(2)
                   }
@@ -239,8 +246,10 @@ const Register: FunctionComponent<RegisterType> = ({
 
           {/* User password*/}
           <FormControl isInvalid={okPassword === 1}>
-            <InputGroup>
-              <InputLeftAddon width='25%'>
+            <InputGroup
+              variant='register_input'
+            >
+              <InputLeftAddon>
                 {t('pwd.label', { ns: 'register' })}
               </InputLeftAddon>
               <Input
@@ -248,7 +257,7 @@ const Register: FunctionComponent<RegisterType> = ({
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('pwd.placeholder', { ns: 'register' })}
                 onChange={e => {
-                  if (e.target.value.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9\n\r\t]).{8,}$') != null) {
+                  if (e.target.value.match(pwd_regex_str) != null) {
                     setPassword(e.target.value)
                     setOkPassword(2)
                   }
@@ -281,8 +290,10 @@ const Register: FunctionComponent<RegisterType> = ({
 
           {/* User first name  */}
           <FormControl isInvalid={okUserFirstName === 1}>
-            <InputGroup>
-              <InputLeftAddon width='25%'>
+            <InputGroup
+              variant='register_input'
+            >
+              <InputLeftAddon>
                 {t('fn', { ns: 'register' })}
               </InputLeftAddon>
               <Input
@@ -290,7 +301,7 @@ const Register: FunctionComponent<RegisterType> = ({
                 type='text'
                 onChange={e => {
                   // Control format
-                  if (e.target.value.match('^[a-zéèêïA-Z ,.\'-]+$') != null) {
+                  if (e.target.value.match(name_regex_str) != null) {
                     setUserFirstName(e.target.value)
                     setOkUserFirstName(2)
                   }
@@ -305,8 +316,10 @@ const Register: FunctionComponent<RegisterType> = ({
 
           {/* User last name  */}
           <FormControl isInvalid={okUserLastName === 1}>
-            <InputGroup>
-              <InputLeftAddon width='25%'>
+            <InputGroup
+              variant='register_input'
+            >
+              <InputLeftAddon>
                 {t('ln', { ns: 'register' })}
               </InputLeftAddon>
               <Input
@@ -314,7 +327,7 @@ const Register: FunctionComponent<RegisterType> = ({
                 type='text'
                 onChange={e => {
                   // Control format
-                  if (e.target.value.match('^[a-zA-Z ,.\'-]+$') != null) {
+                  if (e.target.value.match(name_regex_str) != null) {
                     setUserLastName(e.target.value)
                     setOkUserLastName(2)
                   }
@@ -333,15 +346,17 @@ const Register: FunctionComponent<RegisterType> = ({
 
           {/* OpenSankey+ licence number  */}
           <FormControl>
-            <InputGroup>
-              <InputLeftAddon width='25%'>
+            <InputGroup
+              variant='register_input'
+            >
+              <InputLeftAddon>
                 {t('OS+_lic', { ns: 'register' })}
               </InputLeftAddon>
               <Input
                 type='text'
                 onChange={e => {
                   // Control format
-                  if (e.target.value.match('^([a-zA-Z0-9- ]{2,})$') != null) {
+                  if (e.target.value.match(lic_regex_str) != null) {
                     setUserLicenseOpenOSP(e.target.value)
                   }
                   else {
@@ -368,15 +383,18 @@ const Register: FunctionComponent<RegisterType> = ({
 
           {/* Sankey suite Licence number  */}
           {/* <FormControl>
-              <InputGroup>
-                <InputLeftAddon width='25%'>
+
+            <InputGroup
+              variant='register_input'
+            >
+                <InputLeftAddon>
                   {t('SS_lic', { ns: 'register' })}
                 </InputLeftAddon>
                 <Input
                   type='text'
                   onChange={e => {
                     // Control format
-                    if (e.target.value.match('^([a-zA-Z0-9- ]{2,})$') != null) {
+                    if (e.target.value.match(lic_regex_str) != null) {
                       setUserLicenseSankeySuite(e.target.value)
                     }
                     else {
