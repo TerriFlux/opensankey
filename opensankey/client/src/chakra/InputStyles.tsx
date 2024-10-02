@@ -8,7 +8,7 @@ export const input_base_style = definePartsStyle({
     height: '2rem',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'gray.50',
+    borderColor: 'gray.100',
     textStyle: 'h4',
     bg: 'gray.50',
     bgColor: 'gray.50',
@@ -17,7 +17,7 @@ export const input_base_style = definePartsStyle({
     height: '2rem',
     border: 'solid 1px ',
     borderRadius: '6px',
-    borderColor: 'gray.50',
+    borderColor: 'gray.100',
     textStyle: 'h4',
     bg: 'white',
     bgColor: 'white',
@@ -29,6 +29,15 @@ export const input_base_style = definePartsStyle({
       border: 'solid 2px ',
       borderColor: 'primaire.2',
     }
+  }
+})
+
+export const register_input = definePartsStyle({
+  addon: {
+    minWidth: '10rem'
+  },
+  field: {
+    width: '100%'
   }
 })
 

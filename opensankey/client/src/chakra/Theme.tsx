@@ -81,7 +81,8 @@ import {
   input_base_style,
   menuconfigpanel_option_input,
   menuconfigpanel_option_input_color,
-  menuconfigpanel_option_input_table
+  menuconfigpanel_option_input_table,
+  register_input
 } from './InputStyles'
 import {
   menu_button_base_style,
@@ -236,7 +237,8 @@ export const opensankey_theme = extendTheme({
       variants: {
         menuconfigpanel_option_input,
         menuconfigpanel_option_input_color,
-        menuconfigpanel_option_input_table
+        menuconfigpanel_option_input_table,
+        register_input
       }
     },
     Modal:{

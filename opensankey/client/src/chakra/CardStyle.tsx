@@ -59,7 +59,7 @@ export const card_register = definePartsStyle({
     borderWidth: '1px',
     borderStyle:'solid',
     borderColor: 'primaire.5',
-    minW: '40vw',
+    width: '40vw',
   },
   header: {
     textAlign: 'center',
@@ -68,10 +68,12 @@ export const card_register = definePartsStyle({
     textStyle: 'h2',
   },
   body: {
+    width: '90%',
     display: 'grid',
     gridRowGap: '10px',
   },
 })
+
 export const cards_template = definePartsStyle({
   container: {
     borderWidth: '1px',
