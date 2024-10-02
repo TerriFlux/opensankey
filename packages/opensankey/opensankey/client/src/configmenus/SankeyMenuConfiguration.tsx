@@ -29,6 +29,7 @@ import {
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { FCType_OpenSankeyConfigurationsMenus } from './types/SankeyMenuConfigurationTypes'
+import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
 
 // COMPONENTS ===========================================================================
 
@@ -52,9 +53,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
   {
     new_data,
     menu_configuration_layout,
-    menu_configuration_node_tags,
-    menu_configuration_link_tags,
-    menu_configuration_data_tags,
     menu_configuration_nodes_attributes,
     menu_config_link_data,
     menu_config_link_attr,
@@ -228,7 +226,10 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
-                {menu_configuration_node_tags}
+                <SankeySettingsEditionElementTags
+                  new_data={new_data}
+                  elementTagNameProp='node_taggs'
+                />
               </AccordionPanel>
             </AccordionItem>
 
@@ -255,36 +256,14 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
-                {menu_configuration_link_tags}
+                <SankeySettingsEditionElementTags
+                  new_data={new_data}
+                  elementTagNameProp='flux_taggs'
+                />
               </AccordionPanel>
             </AccordionItem>
-
-            <AccordionItem
-              style={{ 'display': (config_object.isGivenAccordionShowed('ED')) ? 'initial' : 'none' }}
-            >
-              {
-                //MENU ETIQUETTES DE DONNÉES
-              }
-              <AccordionButton
-                onClick={() => {
-                  const scroll_x = window.scrollX
-                  const scroll_y = window.scrollY
-                  setTimeout(() => {
-                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-                  }, 50)
-                }}
-              >
-                <Box
-                  as='span'
-                  layerStyle='submenuconfig_entry'>
-                  {t('Menu.ED')}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                {menu_configuration_data_tags}
-              </AccordionPanel>
-            </AccordionItem>
+              {additional_menus.additional_conf_tag_item}
+            
           </Accordion>
         </AccordionPanel>
       </AccordionItem> :
@@ -356,7 +335,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState<string | null | undefined>(String(default_value??''))
+  const [value, setValue] = useState<string | null | undefined>(String(default_value ?? ''))
   ref_to_set_value.current = setValue
 
   // Add stepper addon if specified
@@ -440,7 +419,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
   function_get_value,
   function_on_blur,
   menu_for_style = false,
-  disabled=false
+  disabled = false
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
@@ -490,5 +469,5 @@ export type FCType_ConfigMenuTextInput = {
   function_get_value: () => string | null | undefined,
   function_on_blur: (_: string | null | undefined) => void,
   menu_for_style?: boolean,
-  disabled?:boolean,
+  disabled?: boolean,
 }
