@@ -38,7 +38,12 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
 
-
+  /* ========================================
+    Updater of component for toolbar tags related menus
+    ========================================*/
+  private _ref_to_toolbar_node_tag_updater: MutableRefObject<(() => void)>
+  private _ref_to_toolbar_link_tag_updater: MutableRefObject<(() => void)>
+  private _ref_to_toolbar_data_tag_updater: MutableRefObject<(() => void)>
 
   /* ========================================
     Updater of components for views related menus
@@ -82,6 +87,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._r_editor_content_fo_node_updater = useRef(() => null)
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
     this._ref_to_menu_config_link_data_text_updater = useRef(() => null)
+    this._ref_to_toolbar_node_tag_updater=useRef(()=>null)
+    this._ref_to_toolbar_link_tag_updater=useRef(()=>null)
+    this._ref_to_toolbar_data_tag_updater=useRef(()=>null)
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
       ref_setter_show_modal_import_icons: useRef(() => null),
@@ -183,6 +191,28 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_menu_config_node_name_label_bg_updater.current()
   }
 
+  public override updateAllComponentsRelatedToTags() {
+    super.updateAllComponentsRelatedToTags()
+    this.ref_to_toolbar_node_tag_updater.current()
+    this.ref_to_toolbar_link_tag_updater.current()
+    this.ref_to_toolbar_data_tag_updater.current()
+  }
+
+  public override updateAllComponentsRelatedToNodeTags(){
+    super.updateAllComponentsRelatedToNodeTags()
+    this.ref_to_toolbar_node_tag_updater.current()
+  }
+
+  public override updateAllComponentsRelatedToFluxTags(){
+    super.updateAllComponentsRelatedToFluxTags()
+    this.ref_to_toolbar_link_tag_updater.current()
+  }
+
+  public override updateAllComponentsRelatedToDataTags(){
+    super.updateAllComponentsRelatedToDataTags()
+    this.ref_to_toolbar_data_tag_updater.current()
+  }
+
     /**
    * Update component with timeOut to avoid multiple refreshs
    * @memberof Class_MenuConfig
@@ -223,9 +253,13 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
 
   public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
-
  
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
   public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> {return this._ref_to_menu_config_link_data_text_updater}
+
+  public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_node_tag_updater}
+  public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_tag_updater}
+  public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_data_tag_updater}
+
 }

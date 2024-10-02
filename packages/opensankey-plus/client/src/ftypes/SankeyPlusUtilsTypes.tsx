@@ -10,3 +10,7 @@ export type FCType_MenuConfEditionDataTag={
 export type FCType_ToolBarLinkVisualFilter={
   new_data_plus: Type_GenericApplicationDataOSP
 }
+
+export type FCType_ToolBarTagFilter={
+  new_data_plus: Type_GenericApplicationDataOSP
+}

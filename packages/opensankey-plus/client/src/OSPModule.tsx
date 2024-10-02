@@ -42,8 +42,11 @@ import {
 import { NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
-  MenuConfEditionDataTag,
+  MenuConfEditionTag,
+  ToolBarDataTagFilter,
+  ToolBarLinkTagFilter,
   ToolBarLinkVisualFilter,
+  ToolBarNodeTagFilter,
 } from './SankeyPlusUtils'
 
 import {
@@ -58,7 +61,7 @@ import {
 import ModalSelectionIconsOSP from './SankeyPlusCatalogIcon'
 
 import { NodeForeignObjectOSP } from './SankeyPlusForeignObject'
-import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText } from './SankeyPlusGradient'
+import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText } from './SankeyPlusLink'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
@@ -131,6 +134,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const has_views = new_data_plus.has_views
 
   // JSX Elements for views navbar ------------------------------------------------------
+    // Edition DataTag
+    additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<MenuConfEditionTag
+      new_data_plus={new_data_plus}
+    />)
+  
   // AddMenu accordion views
   additionalMenus.additional_configuration_menus_primary_accordion_elements.push(
     <ViewsAccordion
@@ -185,7 +193,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   //Links
   // Add dashed config
-  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP 
+  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP
     new_data_plus={new_data_plus}
     menu_for_style={false}
   />)
@@ -196,13 +204,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />)
   // Add config link data text value
   additionalMenus.additional_data_element.push(<MenuConfLinkDataText
-  new_data_plus={new_data_plus}
+    new_data_plus={new_data_plus}
   />)
 
-  // Edition DataTag
-  additionalMenus.additional_conf_tag_item.push(<MenuConfEditionDataTag
-  new_data_plus={new_data_plus}
-  />)
 
 
   //Preferences
@@ -237,8 +241,16 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   )
 
   // Add new button for the toolbar 
-  additionalMenus.toolbar_elements['link_visual_filter']=<ToolBarLinkVisualFilter new_data_plus={new_data_plus}/>
-  additionalMenus.toolbar_order.splice(1,0,'link_visual_filter')
+  additionalMenus.toolbar_elements['link_visual_filter'] = <ToolBarLinkVisualFilter new_data_plus={new_data_plus} />
+  additionalMenus.toolbar_elements['node_tag_filter'] = <ToolBarNodeTagFilter new_data_plus={new_data_plus} />
+  additionalMenus.toolbar_elements['link_tag_filter'] = <ToolBarLinkTagFilter new_data_plus={new_data_plus} />
+  additionalMenus.toolbar_elements['data_tag_filter'] = <ToolBarDataTagFilter new_data_plus={new_data_plus} />
+
+  // Place new button in desired order in the toolbar
+  additionalMenus.toolbar_order.splice(1, 0, 'link_visual_filter')
+  additionalMenus.toolbar_order.splice(2, 0, 'node_tag_filter','link_tag_filter','data_tag_filter')
+
+
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
