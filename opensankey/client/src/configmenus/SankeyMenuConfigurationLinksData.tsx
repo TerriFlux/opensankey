@@ -217,7 +217,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(String(value?.data_value) ?? null)
+    ref_set_data_value_input.current(String(value?.data_value ?? ''))
   }
 
   // Function used to force this component to reload

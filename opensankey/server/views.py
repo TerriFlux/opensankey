@@ -110,7 +110,7 @@ def save_excel():
     except Exception as excpt:
         return Response(
             response='save_excel: ' + str(excpt),
-            status=401)
+            status=500)
     # Save Sankey structure in Excel
     try:
         cwd = os.getcwd()
@@ -130,7 +130,7 @@ def save_excel():
     except Exception as excpt:
         response = Response(
             response='write_excel_from_sankey : ' + str(excpt),
-            status=402
+            status=500
         )
         return response
     return Response(status=200)
