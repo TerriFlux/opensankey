@@ -13,7 +13,6 @@ import {
   PopoverContent,
   PopoverTrigger,
   PopoverCloseButton,
-  Text,
   Box,
   NumberInput,
   NumberInputField,
@@ -667,7 +666,7 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
 export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   {
     new_data,
-    additional_link_visual_filter_content,
+    additionalMenu,
   }
 ) => {
   // Data -------------------------------------------------------------------------------
@@ -689,8 +688,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   const level_filter = Object.entries(sankey.level_taggs_dict).length > 0
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
-  // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
 
   const redrawNodeLinkLegend = () => {
     sankey.draw()
@@ -705,137 +702,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     <Box textStyle='h2'>{t('Menu.group')}</Box>
     <Box textStyle='h2'>{t('Menu.color')}</Box>
   </Box>
-
-
-
-  // ===================Create the popover diplayed near the buttons========================
-  // Checkbox that adjust the label position according to the link stroke width
-
-  //Popover element to handle filter on links, it contians :
-  // - filter on link (if value of link is inferior to filter then the link is not displayed)
-  // - filter on link label
-  const popover_link_visual_filter = <Popover
-    variant='toolbar_popover_window'
-    placement='left'
-    id="popover_link_value_filter"
-  >
-    <PopoverTrigger>
-      <Button
-        variant='toolbar_button_3'
-        id='btn_open_popover_link_value_filter'
-      >
-        <FontAwesomeIcon icon={faSliders} />
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent>
-      <PopoverCloseButton />
-      <PopoverHeader >{t('Banner.p_aff')}</PopoverHeader>
-      <PopoverBody >
-        <Box
-          layerStyle='menuconfigpanel_grid'
-          gridTemplateColumns='1fr'
-        >
-          <Text
-            fontSize='h3'
-          >
-            {t('Banner.p_aff_filtre_links')}
-          </Text>
-
-          <Box
-            layerStyle='popover_sidebar_layout_filter'
-          >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Banner.filtre')}
-            </Box>
-            <Slider
-              min={0}
-              max={max_link_value}
-              defaultValue={new_data.drawing_area.filter_link_value}
-              onChange={evt => {
-                new_data.drawing_area.filter_link_value = +evt
-                setCount(a => a + 1)
-                // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-                new_data.drawing_area.sankey.draw()
-              }
-              } >
-              <SliderTrack>
-                <SliderFilledTrack />
-              </SliderTrack>
-              <SliderThumb />
-            </Slider>
-
-            <NumberInput
-              allowMouseWheel
-              min={0}
-              max={max_link_value}
-              value={new_data.drawing_area.filter_link_value}
-              onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
-                }
-                new_data.drawing_area.filter_link_value = tmp
-                setCount(a => a + 1)
-
-              }}
-              onBlur={() => {
-                // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-                new_data.drawing_area.sankey.draw()
-
-              }}
-            >
-              <NumberInputField />
-            </NumberInput>
-          </Box>
-
-          <Box
-            layerStyle='popover_sidebar_layout_filter'
-          >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Banner.fl')}
-            </Box>
-            <Slider
-              min={0}
-              max={max_link_value}
-              value={new_data.drawing_area.filter_label}
-              onChange={(evt) => {
-                new_data.drawing_area.filter_label = +evt
-                setCount(a => a + 1)
-                new_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawLabel())
-              }}
-            >
-              <SliderTrack>
-                <SliderFilledTrack />
-              </SliderTrack>
-              <SliderThumb />
-            </Slider>
-
-            <NumberInput
-              allowMouseWheel
-              min={0}
-              max={max_link_value}
-              value={new_data.drawing_area.filter_label}
-              onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
-                }
-                new_data.drawing_area.filter_label = tmp
-                setCount(a => a + 1)
-                new_data.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
-              }}
-            >
-              <NumberInputField />
-            </NumberInput>
-          </Box>
-          {additional_link_visual_filter_content}
-        </Box>
-      </PopoverBody>
-    </PopoverContent>
-  </Popover>
-
 
   const struc_data_reconciled = <Popover
     variant='toolbar_popover_window'
@@ -1056,11 +922,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   </> :
     <></>
 
-  const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
-    {popover_link_visual_filter}
-  </OSTooltip>
-  {/* Popover to display the link-filter */}
-  </>
 
 
   const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
@@ -1102,28 +963,30 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   </OSTooltip> : <></>
 
 
+
+
+const init_toolbar_elements:{[_:string]:JSX.Element}={
+
+  'mode_souris': btn_mouse_mode_edition,
+  'aggragation': btn_aggrega_level,
+  'node_tag_filter': btn_show_node_filter,
+  'link_tag_filter': btn_show_link_filter,
+  'data_tag_filter': btn_show_data_filter,
+  'node_type': btn_show_data_type,
+  'strectch_zdd': stretchButtons(new_data),
+  'help': btn_show_help_in_static,
+  'fullscreen': button_fullscreen,
+  
+  ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
+}
+
+
+
   // ===================Assemble different item for the toolbar========================
-
   return <>
-    {btn_mouse_mode_edition}
-
-    {/* Add the button to choose the aggregation level  */}
-    {btn_aggrega_level}
-
-    {/* Popover to display the link visual filter */}
-    {btn_link_display}
-
-    {/* Button to display node, link & data Tags filter */}
-    {btn_show_node_filter}
-    {btn_show_link_filter}
-    {btn_show_data_filter}
-    {btn_show_data_type}
-
-    {stretchButtons(new_data)}
-
-    {btn_show_help_in_static}
-
-    {button_fullscreen}
+    {additionalMenu.toolbar_order.map((key, id) => {
+     return <React.Fragment key={id}>{init_toolbar_elements[key]}</React.Fragment>
+    })}
   </>
 }
 
@@ -1142,11 +1005,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-      <FontAwesomeIcon icon={faArrowsUpDown} />
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip></>
 }
 
 

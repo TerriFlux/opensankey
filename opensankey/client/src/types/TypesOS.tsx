@@ -67,6 +67,9 @@ export type Type_AdditionalMenus = {
   example_menu: { [k: string]: JSX.Element; }
   formations_menu: { [k: string]: JSX.Element; },
 
+  toolbar_order:string[],
+  toolbar_elements:{ [k: string]: JSX.Element; }
+
   cards_template: JSX.Element
 }
 
