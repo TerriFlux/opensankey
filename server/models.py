@@ -263,7 +263,7 @@ def licence_required(license_name=''):
 # ---------------------------------------------------------------
 @connected_user.route(
     '/user/update/license/<license_name>',
-    method['POST'])
+    methods=['POST'])
 @login_required
 def set_licence(license_name):
     # Get license id or create it
