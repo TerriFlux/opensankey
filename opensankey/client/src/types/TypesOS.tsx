@@ -50,6 +50,9 @@ export type Type_AdditionalMenus = {
   additional_link_appearence_value:JSX.Element[]
   additional_link_visual_filter_content: JSX.Element[],
 
+  context_link_order:string[],
+  additional_context_link_element:{ [_: string]: JSX.Element },
+
   // Preferences
   additional_preferences: JSX.Element[],
 
