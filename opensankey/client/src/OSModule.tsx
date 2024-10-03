@@ -138,7 +138,7 @@ export const moduleDialogs: FType_ModuleDialogs = (
       dialog_name={'ref_setter_show_menu_link_appearence'}
       content={<MenuConfigurationLinksAppearence
         new_data={new_data}
-        additional_link_appearence_items={additional_menus.additional_link_appearence_items}
+        additionMenus={additional_menus}
         menu_for_style={false}
       />}
       title={t('Menu.flux') + ' ' + t('Flux.apparence.apparence')}
