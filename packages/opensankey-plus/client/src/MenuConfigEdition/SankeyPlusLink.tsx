@@ -1,16 +1,19 @@
 // External imports
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import { Box, Checkbox } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 
 // OpenSankey imports
 import { OSTooltip, TooltipValueSurcharge } from '../deps/OpenSankey/types/Utils'
 import { default_shape_is_dashed, default_value_label_scientific_precision, default_value_label_to_precision, isAttributeOverloaded } from '../deps/OpenSankey/types/Link'
 
 // Local imports
-import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP, FCType_MenuConfLinkScientificPrecision } from './types/SankeyPlusGradientTypes'
+import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP, FCType_MenuConfLinkScientificPrecision, FCType_MenuContextLink } from './types/SankeyPlusGradientTypes'
 import type { Class_LinkStylePlus } from '../types/LinkPlus'
 import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from '../types/TypesOSP'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+import { icon_open_modal } from '../deps/OpenSankey/dialogs/SankeyMenuContextNode'
+import { ChevronRightIcon } from '@chakra-ui/icons'
+import { checked, sep } from '../deps/OpenSankey/dialogs/SankeyMenuContextLink'
 
 
 export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConfLinkApparenceGradientOSP> = ({
@@ -318,4 +321,111 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         <></>
     }</>
 
+}
+
+export const ButtonLinkContextShowTooltipMenu: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
+  const { t } = new_data
+  const { ref_setter_show_menu_link_tooltip } = new_data.menu_configuration.dict_setter_show_dialog
+
+  return <Button
+    onClick={() => {
+      ref_setter_show_menu_link_tooltip.current(true)
+      new_data.drawing_area.link_contextualised = undefined
+    }}
+    variant='contextmenu_button'
+  >
+    {t('Flux.IS')}
+    {icon_open_modal}
+  </Button>
+}
+
+export const ButtonLinkContextShowTagMenu: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
+  const { t } = new_data
+  const { ref_setter_show_menu_link_tags } = new_data.menu_configuration.dict_setter_show_dialog
+
+  return <Button
+    onClick={() => {
+      ref_setter_show_menu_link_tags.current(true)
+      new_data.drawing_area.link_contextualised = undefined
+    }}
+    variant='contextmenu_button'
+  >
+    {t('Menu.Etiquettes')}
+    {icon_open_modal}
+  </Button>
+}
+
+export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
+  const { t } = new_data
+  const contextualised_link = new_data.drawing_area.link_contextualised
+  const has_flux_tags = Object.values(new_data.drawing_area.sankey.flux_taggs_dict).length > 0
+  const selected_links = new_data.drawing_area.visible_and_selected_links_list
+  const [, setCount] = useState(0)
+  const refreshThisAndToggleSaving = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+    // Refresh this menu
+    setCount(a => a + 1)
+    // Refresh context menu
+    new_data.menu_configuration.ref_to_menu_context_links_updater.current()
+  }
+  return (
+    (contextualised_link !== undefined) &&
+    (has_flux_tags)
+  ) ? <>
+    {sep}
+    <Menu placement='end'>
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {t('Menu.Transformation.tagFlux_assign')}
+      </MenuButton>
+
+      <MenuList>
+        {
+          new_data.drawing_area.sankey.flux_taggs_list
+            .filter(tagg => tagg.has_tags)
+            .map((tagg, i) => {
+              return <Menu key={i} placement='end'>
+                <MenuButton
+                  variant='contextmenu_button'
+                  as={Button}
+                  rightIcon={<ChevronRightIcon />}
+                  className="dropdown-basic"
+                >
+                  {tagg.name}
+                </MenuButton>
+                <MenuList>
+                  {
+                    tagg.tags_list
+                      .map(tag => {
+                        const has_tag = contextualised_link.hasGivenTag(tag)
+                        return <MenuItem
+                          onClick={() => {
+                            // Assign tag to selected links
+                            if (has_tag) {
+                              selected_links.forEach(l => l.addTag(tag))
+                            }
+                            else {
+                              selected_links.forEach(l => l.removeTag(tag))
+                            }
+                            refreshThisAndToggleSaving()
+                          }}
+                        >
+                          {t.name}
+                          {checked(has_tag)}
+                        </MenuItem>
+                      })
+                  }
+                </MenuList>
+              </Menu>
+            })
+        }
+      </MenuList>
+    </Menu></> :
+    <></>
 }

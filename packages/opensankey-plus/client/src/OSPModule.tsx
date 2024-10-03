@@ -64,7 +64,7 @@ import { SankeyMenuConfigurationNodesTooltip } from './MenuConfigEdition/SankeyP
 import ModalSelectionIconsOSP from './MenuConfigEdition/SankeyPlusCatalogIcon'
 
 import { NodeForeignObjectOSP } from './MenuConfigEdition/SankeyPlusForeignObject'
-import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText, MenuConfLinkScientificPrecision } from './MenuConfigEdition/SankeyPlusLink'
+import { ButtonLinkContextAssignTag, ButtonLinkContextShowTagMenu, ButtonLinkContextShowTooltipMenu, MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText, MenuConfLinkScientificPrecision } from './MenuConfigEdition/SankeyPlusLink'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
@@ -244,6 +244,13 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus={new_data_plus}
   />)
 
+  additionalMenus.context_link_order.push('drag_tooltip','drag_tag')
+  additionalMenus.additional_context_link_element['drag_tooltip'] = <ButtonLinkContextShowTooltipMenu new_data={new_data_plus} />
+  additionalMenus.additional_context_link_element['drag_tag'] = <ButtonLinkContextShowTagMenu new_data={new_data_plus} />
+  additionalMenus.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
+  // Insert OSP Button at a specific place in the link context menu
+  const idx_sep_4 = additionalMenus.context_link_order.indexOf('sep_4')
+  additionalMenus.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
 
 
   //Preferences
