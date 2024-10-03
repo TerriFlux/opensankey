@@ -908,7 +908,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       // target -> right
       xt += scale(node_size_t_width)
       yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+      if (l_arrow ) {
         xt = xt + l_arrow_size
       }
     } else {
@@ -917,7 +917,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       xs += scale(node_size_s_width)
       ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
       yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+      if (l_arrow ) {
         xt = xt - l_arrow_size
       }
     }
@@ -929,7 +929,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
       xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
       yt += scale(node_size_t_height)
-      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+      if (l_arrow ) {
         yt = yt + l_arrow_size
       }
     } else {
@@ -937,7 +937,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
       ys += scale(node_size_s_height)
       xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+      if (l_arrow ) {
         yt = yt - l_arrow_size
       }
     }
@@ -950,14 +950,14 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           yt = yt + l_arrow_size
         }
       } else {
         //source is top right target. left and down
         ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           yt = yt - 30
         }
       }
@@ -968,7 +968,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           yt = yt + l_arrow_size
         }
       } else {
@@ -976,7 +976,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         xs += scale(node_size_s_width)
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           yt = yt - l_arrow_size
         }
       }
@@ -990,7 +990,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           xt += l_arrow_size
         }
       } else {
@@ -999,7 +999,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         ys += scale(node_size_s_height)
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           xt += l_arrow_size
         }
       }
@@ -1008,7 +1008,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         //source is bottom left target. Arrow goes left and go down to the top side
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           xt = xt - l_arrow_size
         }
       } else {
@@ -1016,7 +1016,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
         ys += scale(node_size_s_height)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        if (l_arrow ) {
           xt = xt - l_arrow_size
         }
       }
