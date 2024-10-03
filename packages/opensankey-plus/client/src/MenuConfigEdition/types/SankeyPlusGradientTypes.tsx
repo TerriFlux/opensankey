@@ -13,3 +13,7 @@ export type FCType_MenuConfLinkApparenceDashedOSP={
 export type FCType_MenuConfLinkDataTextOSP={
   new_data_plus:Type_GenericApplicationDataOSP,
 }
+
+export type FCType_MenuConfLinkScientificPrecision={
+  new_data_plus:Type_GenericApplicationDataOSP
+}

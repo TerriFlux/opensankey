@@ -1,16 +1,16 @@
 // External imports
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { Box, Checkbox } from '@chakra-ui/react'
 
 // OpenSankey imports
 import { OSTooltip, TooltipValueSurcharge } from '../deps/OpenSankey/types/Utils'
-import { default_shape_is_dashed, isAttributeOverloaded } from '../deps/OpenSankey/types/Link'
+import { default_shape_is_dashed, default_value_label_scientific_precision, default_value_label_to_precision, isAttributeOverloaded } from '../deps/OpenSankey/types/Link'
 
 // Local imports
-import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP } from './types/SankeyPlusGradientTypes'
+import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP, FCType_MenuConfLinkScientificPrecision } from './types/SankeyPlusGradientTypes'
 import type { Class_LinkStylePlus } from '../types/LinkPlus'
 import type { Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from '../types/TypesOSP'
-import { ConfigMenuTextInput } from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 
 export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConfLinkApparenceGradientOSP> = ({
@@ -150,7 +150,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
 
 export const MenuConfLinkDataText: FunctionComponent<FCType_MenuConfLinkDataTextOSP> = ({ new_data_plus }) => {
   {/* Afficher ou non les donnée sur le Sankey  */ }
-  const {drawing_area,menu_configuration, t } = new_data_plus
+  const { drawing_area, menu_configuration, t } = new_data_plus
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
@@ -186,11 +186,11 @@ export const MenuConfLinkDataText: FunctionComponent<FCType_MenuConfLinkDataText
   // Save current component updater to a variable 
   menu_configuration.ref_to_menu_config_link_data_text_updater.current = () => {
     updateInputsValues()
-    setCount(a=>a+1)
+    setCount(a => a + 1)
   }
 
   // Updater of component related to link data
-  const refreshThisAndUpdateRelatedComponents=()=>{
+  const refreshThisAndUpdateRelatedComponents = () => {
     menu_configuration.updateComponentRelatedToLinksData()
   }
 
@@ -215,4 +215,107 @@ export const MenuConfLinkDataText: FunctionComponent<FCType_MenuConfLinkDataText
       />
     </Box>
   </OSTooltip>
+}
+
+
+export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus }) => {
+  {/* Afficher ou non les donnée sur le Sankey  */ }
+  const { drawing_area, menu_configuration, t } = new_data_plus
+
+  // Function used to force this component to reload
+  const [, setCount] = useState(0)
+  menu_configuration.ref_to_menu_config_link_scientific_precision_updater.current = () => setCount(a => a + 1)
+  // Ref to input displayed value
+
+  let selected_links: Type_GenericLinkElementOSP[]
+  if (!menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    selected_links = drawing_area.selected_links_list_sorted
+  }
+  else {
+    // Only visible links
+    selected_links = drawing_area.visible_and_selected_links_list_sorted
+  }
+
+
+  const value_label_to_precision = (selected_links[0]?.value_label_to_precision ?? default_value_label_to_precision)
+  const value_label_scientific_precision = (selected_links[0]?.value_label_scientific_precision ?? default_value_label_scientific_precision)
+
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
+  ref_set_number_inputs.current(String(value_label_scientific_precision))
+
+
+  const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
+    return (selected_links[0].shape_is_gradient == curr.shape_is_gradient)
+  }
+  const is_indeterminate = !selected_links.every(check_indeterminate)
+
+
+  /**
+ * Function used to reset menu UI
+ */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setCount(a => a + 1)
+    // if (menu_for_style) {
+    //   new_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    //   // Update menus for link's apparence in case we use this for style
+    //   new_data.menu_configuration.updateComponentRelatedToLinksStyles()
+    //   // Redraw all visible nodes if we modifie link style
+    //   new_data.drawing_area.sankey.visible_links_list.forEach(link => link.draw())
+    // }
+    // And update this menu also
+    new_data_plus.menu_configuration.updateComponentRelatedToLinksApparence()
+  }
+
+
+  return <>
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminate}
+      isChecked={value_label_to_precision}
+      onChange={(evt) => {
+        selected_links.forEach(element => {
+          element.value_label_custom_digit = false
+          element.value_label_to_precision = evt.target.checked
+        })
+        refreshThisAndUpdateRelatedComponents()
+      }}>
+      <OSTooltip label={t('Flux.label.tooltips.toPrecision')}>
+        {t('Flux.label.toPrecision') + ' '}
+      </OSTooltip>
+      {
+        // (!menu_for_style) &&
+        //   isAttributeOverloaded(selected_links, 'value_label_to_precision') ?
+        //   TooltipValueSurcharge('link_var_', t) :
+        //   <></>
+      }
+    </Checkbox>
+
+    {
+      value_label_to_precision ?
+        <>{/* Choose number of significant number */}
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.label.NbPrecision')}
+            </Box>
+            <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs}
+                default_value={value_label_scientific_precision}
+                menu_for_style={false}
+                minimum_value={0}
+                stepper={true}
+                function_on_blur={(value) => {
+                  selected_links.forEach(element =>
+                    element.value_label_scientific_precision = value ?? default_value_label_scientific_precision)
+                  refreshThisAndUpdateRelatedComponents()
+                }}
+              />
+            </OSTooltip>
+          </Box></> :
+        <></>
+    }</>
+
 }

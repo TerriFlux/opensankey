@@ -64,7 +64,7 @@ import { SankeyMenuConfigurationNodesTooltip } from './MenuConfigEdition/SankeyP
 import ModalSelectionIconsOSP from './MenuConfigEdition/SankeyPlusCatalogIcon'
 
 import { NodeForeignObjectOSP } from './MenuConfigEdition/SankeyPlusForeignObject'
-import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText } from './MenuConfigEdition/SankeyPlusLink'
+import { MenuConfLinkApparenceDashedOSP, MenuConfLinkApparenceGradientOSP, MenuConfLinkDataText, MenuConfLinkScientificPrecision } from './MenuConfigEdition/SankeyPlusLink'
 import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP } from './types/TypesOSP'
 import { TransformationElementsOSP } from './SankeyPlusConvert'
 import { OpenSankeyDiagramSelector } from './deps/OpenSankey/dialogs/SankeyMenuDialogs'
@@ -118,7 +118,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus,
   new_data
 ) => {
-
   // No initialisation if static --------------------------------------------------------
 
   if (new_data.is_static) {
@@ -230,6 +229,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus={new_data_plus}
     menu_for_style={false}
   />)
+  additionalMenus.additional_link_appearence_value.push(<MenuConfLinkScientificPrecision 
+    new_data_plus={new_data_plus}
+    />
+  )
   // Add config link data text value
   additionalMenus.additional_data_element.push(<MenuConfLinkDataText
     new_data_plus={new_data_plus}

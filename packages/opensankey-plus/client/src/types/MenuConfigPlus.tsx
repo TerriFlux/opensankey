@@ -61,6 +61,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _ref_to_menu_config_node_name_label_bg_updater: MutableRefObject<(() => void)>
 
   private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_config_link_scientific_precision_updater: MutableRefObject<(() => void)>
+
+
 
   // config ref related to node FO elements
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
@@ -87,6 +90,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._r_editor_content_fo_node_updater = useRef(() => null)
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
     this._ref_to_menu_config_link_data_text_updater = useRef(() => null)
+    this._ref_to_menu_config_link_scientific_precision_updater=useRef(()=>null)
     this._ref_to_toolbar_node_tag_updater=useRef(()=>null)
     this._ref_to_toolbar_link_tag_updater=useRef(()=>null)
     this._ref_to_toolbar_data_tag_updater=useRef(()=>null)
@@ -190,6 +194,15 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._r_editor_content_fo_node_updater.current()
     this._ref_to_menu_config_node_name_label_bg_updater.current()
   }
+  public override updateComponentRelatedToLinksApparence() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksApparence',
+      (_this: Class_MenuConfig) => {
+        _this.ref_to_menu_config_links_apparence_updater.current()
+        this._ref_to_menu_config_link_scientific_precision_updater.current()
+      }
+    )
+  }
 
   public override updateAllComponentsRelatedToTags() {
     super.updateAllComponentsRelatedToTags()
@@ -257,6 +270,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
   public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> {return this._ref_to_menu_config_link_data_text_updater}
+  public get ref_to_menu_config_link_scientific_precision_updater(): MutableRefObject<(() => void)> {return this._ref_to_menu_config_link_scientific_precision_updater}
 
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_node_tag_updater}
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_tag_updater}
