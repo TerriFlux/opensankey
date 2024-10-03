@@ -24,6 +24,7 @@ import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
+  FCType_ButtonNodeContextShowTagMenu,
   FCType_NodeBgLabelOSP,
   FCType_NodeHyperLinkOSP,
   FCType_NodeIconOSP,
@@ -38,6 +39,7 @@ import { Type_GenericNodeElementOSP } from '../types/TypesOSP'
 import { Class_NodeStylePlus } from '../types/NodePlus'
 import { ConfigMenuNumberInput } from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 import { svg_label_top, svg_label_center, svg_label_bottom } from '../deps/OpenSankey/configmenus/SankeyMenuConfigurationNodesAttributes'
+import { icon_open_modal } from '../deps/OpenSankey/dialogs/SankeyMenuContextNode'
 
 export const default_label_background = false
 
@@ -903,3 +905,77 @@ export const NodeValue: FunctionComponent<FCType_NodeValueOSP> = ({ new_data, me
 //   }
 //   return max
 
+export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+  const { ref_setter_show_menu_node_tags } = new_data.menu_configuration.dict_setter_show_dialog
+
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area.node_contextualised = undefined
+    // Refresh this menu
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+  }
+  return <Button
+    onClick={() => {
+      ref_setter_show_menu_node_tags.current(true)
+      closeContextMenu()
+    }}
+    variant='contextmenu_button'
+  >
+    {t('Menu.Etiquettes')}
+    {icon_open_modal}
+  </Button>
+}
+
+export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+  const { ref_setter_show_menu_node_tooltip } = new_data.menu_configuration.dict_setter_show_dialog
+
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area.node_contextualised = undefined
+    // Refresh this menu
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+  }
+
+  return <Button
+    onClick={() => {
+      ref_setter_show_menu_node_tooltip.current(true)
+      closeContextMenu()
+    }}
+    variant='contextmenu_button'
+  >
+    {t('Noeud.IS')}
+    {icon_open_modal}
+  </Button>
+}
+
+export const ButtonNodeContextMaskValue: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+  const [,setCount]=useState(0)
+  const contextualised_node = new_data.drawing_area.node_contextualised
+  const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_visible : false
+
+  const selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
+
+  const refreshThisAndToggleSaving = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Refresh this menu
+    setCount(a=>a+1)
+  }
+
+  return <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      selected_nodes.forEach(n => n.value_label_visible = !contextualised_node_value_visible)
+      refreshThisAndToggleSaving()
+    }}
+  >
+    {
+      contextualised_node_value_visible ?
+        t('Noeud.apparence.hide_value') :
+        t('Noeud.apparence.display_value')
+    }
+  </Button>
+} 
