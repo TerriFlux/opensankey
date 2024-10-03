@@ -923,6 +923,7 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
     shape: 'rect',
     node_arrow_angle_factor:30,
     node_arrow_angle_direction:'right',
+    orphan_node_visible: true,
     shape_visible: true,
     label_visible: true,
     node_width: 40,

@@ -113,6 +113,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   }
 
   const list_of_key = [
+    'orphan_node_visible',
     'shape_visible',
     'colorSustainable',
     'label_visible',
@@ -155,6 +156,31 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
     }
   }
 
+  const orphan_node_visible = <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
+    <Checkbox
+      variant='menuconfigpanel_part_title_1_checkbox'
+      icon={(list_value['orphan_node_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
+      isChecked={list_value['orphan_node_visible'][0] as boolean}
+      isIndeterminate={list_value['orphan_node_visible'][1]}
+      onChange={(evt) => {
+        Object.values(parameter_to_modify)
+          .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+          .forEach(d => AssignNodeValueToCorrectVar(d,'orphan_node_visible',evt.target.checked,menu_for_style))
+        updateMenus[1](!updateMenus[0])
+        updateMenuConfigNode()
+      }}
+    >
+      <OSTooltip label={t('Noeud.apparence.tooltips.OrphelinVisibilité')}>
+        {t('Noeud.apparence.OrphelinVisibilité')}
+      </OSTooltip>
+      {
+        IsNodeDisplayingValueLocal(multi_selected_nodes, 'orphan_node_visible', menu_for_style)?
+          TooltipValueSurcharge('node_var',t):
+          <></>
+      }
+    </Checkbox>
+  </Box>
+
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
   const content_appearence=<Box layerStyle='menuconfigpanel_grid' >
 
@@ -170,6 +196,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
             .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,menu_for_style))
           updateMenus[1](!updateMenus[0])
+          updateMenuConfigNode()
         }}
       >
         <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')}>
@@ -234,7 +261,6 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
                 .values(parameter_to_modify)
                 .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
-              updateMenuConfigNode()
               updateMenuConfigNode()
             }}
           >
@@ -1492,6 +1518,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
     <React.Fragment key={'lab'}>{content_label}</React.Fragment>
     <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
     <React.Fragment key={'val'}>{content_label_value}</React.Fragment>
+    {menu_for_style ? <React.Fragment key={'val'}>{orphan_node_visible}</React.Fragment>: <></>}
   </>
 }
 

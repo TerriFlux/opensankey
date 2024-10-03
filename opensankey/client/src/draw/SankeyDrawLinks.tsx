@@ -592,9 +592,9 @@ export const drawLinkShape:drawLinkShapeFType  = (
                     data.show_structure !== 'free_interval' &&
                     data.show_structure !== 'free_value'
     if (TestLinkValue(applicationData, d,GetLinkValue) === 0) {
-      if (is_free && special_data_cast.free_null_link_visible ) {
-        return 'inline'
-      }
+      // if (is_free && special_data_cast.free_null_link_visible ) {
+      //   return 'inline'
+      // }
       return 'none'
     }
     return 'inline'
