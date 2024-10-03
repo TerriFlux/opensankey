@@ -37,7 +37,7 @@ import {
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
 import { DeleteGLinks } from '../draw/SankeyDrawLinks'
-import { DeleteGNodes } from '../draw/SankeyDrawNodes'
+import { DeleteGNodes, HasLinksZero } from '../draw/SankeyDrawNodes'
 import { Tooltip } from '@chakra-ui/react'
 
 
@@ -864,7 +864,11 @@ export const LinkVisible: LinkVisibleFunctType=(
   if ( val === undefined) {
     return false
   }
+
   const v = (val as unknown) as SankeyLinkValue
+  if ( v.value === 0 ) {
+    return false
+  }
   let visible = true
   Object.keys(data.fluxTags).forEach(tag_group => {
     const v_tags = v.tags[tag_group]
@@ -1622,12 +1626,13 @@ export const NodeDisplayed:NodeDisplayedFuncType = (
   data:SankeyData,
   node:SankeyNode
 ): boolean=>{
+  const has_links = !HasLinksZero(data,node)
   const has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
   const local_level=has_local_level ?? NodeHasDisplayedLevel(data,node)
-  return NodeHasDisplayedTags(data,node) && ( local_level )
+  return NodeHasDisplayedTags(data,node) && local_level && has_links
 }
 
-const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
+export const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
   let to_display=true
 
   Object.entries(data.nodeTags).filter(nt=> nt[0] !== 'Type de noeud' && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{

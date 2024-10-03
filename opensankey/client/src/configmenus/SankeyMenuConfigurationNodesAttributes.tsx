@@ -166,8 +166,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
         Object.values(parameter_to_modify)
           .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
           .forEach(d => AssignNodeValueToCorrectVar(d,'orphan_node_visible',evt.target.checked,menu_for_style))
-        updateMenus[1](!updateMenus[0])
-        updateMenuConfigNode()
+       applicationData.set_data({...applicationData.data})
       }}
     >
       <OSTooltip label={t('Noeud.apparence.tooltips.OrphelinVisibilité')}>

@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { SankeyData, SankeyNode} from '../types/Types'
 import { AddDrawNodesFType, DeleteGNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
-import { GetLinkValue, NodeColor,NodeDisplayed,ReturnValueNode} from '../configmenus/SankeyUtils'
+import { GetLinkValue, NodeColor,NodeHasDisplayedLevel,NodeHasDisplayedTags,ReturnLocalNodeValue,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
   SetNodeHeight,
   nodeTransform,NodeStrokeWidth,PathNodeArrowShape, 
@@ -14,6 +14,7 @@ import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
 import { EventNodeContextMenu } from './SankeyDrawEventFunction'
 import { DragGNodeEvent } from './SankeyDragNodes'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
+import { NodeDisplayedFuncType } from '../configmenus/types/SankeyUtilsTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -271,21 +272,24 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
     SetNodeHeight(n,applicationData,scale,inv_scale,GetLinkValue)
     d3.select(' .opensankey #gg_' + n.idNode)
       .style('display', () => {
-        if (HasLinksZero(data,n)) {
-          return 'none'
-        }
-        // if (n.position === 'relative') { 
-        //   return 'none'
-        // } 
         return 'inline'
       })
       
   })
 }
 
+const NodeDisplayed:NodeDisplayedFuncType = (
+  data:SankeyData,
+  node:SankeyNode
+): boolean=>{
+  const has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
+  const local_level=has_local_level ?? NodeHasDisplayedLevel(data,node)
+  return NodeHasDisplayedTags(data,node) && local_level
+}
+
 // Check if incoming and/or outgoing links have all 0 for value, if that the case we we returne false
 // We can short-circuit the function if the variable null_flux is true or the variable is show_structur is 'structure' (doesn't care about links value)
-const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
+export const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
   if((ReturnValueNode(data,node,'orphan_node_visible') == true && node.outputLinksId.length==0 && node.inputLinksId.length==0) 
     || data.show_structure == 'structure' || data.show_structure == 'data' 
   ) {
@@ -403,12 +407,6 @@ export const drawAddNodes : drawNodeShapeFType = (
       // On gere la visibilité directement sur gg_nodes avec un display <inline />
       // Cela permettra de mieux gérer des zooms sur les éléments visibles
         .style('display', (d) => {
-          if (HasLinksZero(data,d)) {
-            return 'none'
-          }
-          // if (d.position === 'relative') { 
-          //   return 'none'
-          // } 
           return 'inline'
         })
         .style('font-family', (d) => {
