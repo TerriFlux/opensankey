@@ -101,7 +101,7 @@ def login_post():
     # the hashed password in the database
     if not user or not check_password_hash(user.password, password):
         response['message'] = 'Please check your login details and try again.'
-        return jsonify(response), 400
+        return jsonify(response), 200
 
     # if the above check passes,
     # then we know the user has the right credentials

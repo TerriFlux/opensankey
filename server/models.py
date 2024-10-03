@@ -5,7 +5,7 @@
 
 # ---------------------------------------------------------------
 
-import datetime
+from datetime import datetime
 from functools import wraps
 
 # Flask imports
@@ -86,12 +86,75 @@ class User(UserMixin, db.Model):
         cascade="all, delete")
     licenses = association_proxy('user_licenses', 'license')
 
+    def is_from_terriflux(self):
+        # Get related license to terriflux
+        license = License.query.filter_by(name='terriflux').first()
+        # Check if user is related to this specific license
+        return (
+            UserLicences.query.filter_by(
+                license=license,
+                user=self).first() is not None)
+
+    def get_license_expiry(self, license_name):
+        # If from Terriflux - skip all process
+        if self.is_from_terriflux():
+            return 'never'
+        # Get related license to given name
+        license = License.query.filter_by(name=license_name).first()
+        # Get relation between license and user
+        this_license = UserLicences.query.filter_by(
+            license=license,
+            user=self).first()
+        # Check if this relation exists and return its validty
+        if this_license is not None:
+            return this_license.license_expiry
+        # Otherwise return None
+        return None
+
+    def is_license_valid(self, license_name):
+        # Check if this relation exsits and its validity
+        expiry = self.get_license_expiry(license_name)
+        if expiry is not None:
+            if expiry == 'never':
+                return True
+            cur_time = datetime.now()
+            try:
+                exp_time = datetime.fromisoformat(expiry)
+            except Exception:
+                return False
+            return (exp_time >= cur_time)
+        # Otherwise not valid
+        return False
+
     def get_reset_token(self):
+        """
+        Create a random token for password reset
+
+        Returns
+        -------
+        :return: Timed serialized token
+        :rtype: string
+        """
         serializer = Serializer(current_app.config['SECRET_KEY'])
         return serializer.dumps(self.id)
 
     @staticmethod
     def verify_reset_token(token):
+        """
+        Verify the validity of given token
+
+        Parameters
+        ----------
+        :param token: Timed serialized token
+        :type token: string
+
+        Optional parameters
+        -------------------
+        Returns
+        -------
+        :return: User id that correspond to given token
+        :rtype: db.Integer
+        """
         serializer = Serializer(current_app.config['SECRET_KEY'])
         try:
             user_id = serializer.loads(token, max_age=1800)  # age in sec
@@ -108,9 +171,6 @@ class UserLicences(db.Model):
     ----------
     :param db: _description_
     :type db: _type_
-
-    Optional parameters
-    -------------------
     """
     __tablename__ = 'user_licenses'
     # primary keys are required by SQLAlchemy
@@ -136,9 +196,6 @@ class License(db.Model):
     ----------
     :param db: _description_
     :type db: _type_
-
-    Optional parameters
-    -------------------
     """
     __tablename__ = 'license'
     # primary keys are required by SQLAlchemy
@@ -155,46 +212,84 @@ class License(db.Model):
 
 
 def login_required(f):
+    """
+    Decorator that alow given function f to run if current user is connected
+
+    Parameters
+    ----------
+    :param f: GET or POST function to run
+    :type f: _type_
+
+    Returns
+    -------
+    :return: HTTP response (text, status)
+    :rtype: string, int
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return 401, "Not connected"
+            return "Not connected", 401
         return f(*args, **kwargs)
     return decorated_function
 
 
 def licence_required(license_name=''):
     """
+    Decorator that alow given function f to run if current user has given license
     see: https://flask.palletsprojects.com/en/2.1.x/patterns/viewdecorators/
+
+    Parameters
+    ----------
+    :param f: GET or POST function to run
+    :type f: _type_
+
+    Returns
+    -------
+    :return: HTTP response (text, status)
+    :rtype: string, int
     """
     def wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                return 401, "Not connected"
-            license = License.query.filter_by(name=license_name).first()
-            if license not in current_user.licenses:
-                return 401, "No valid license"
+                return "Not connected", 401
+            if (not current_user.is_license_valid(license_name)):
+                return "No valid license", 401
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
 
 
 # ---------------------------------------------------------------
-@connected_user.route('/test')
-@licence_required('test')
-def get_test():
-    return 200, 'OK license'
-
-
-@connected_user.route('/set_test')
+@connected_user.route(
+    '/user/update/license/<license_name>',
+    method['POST'])
 @login_required
-def set_licence():
+def set_licence(license_name):
     # Get license id or create it
     license = License.query.filter_by(name='test').first()
     if license is None:
-        # TODO return here instead of creating
-        license = License(name='test')
+        return "Invalid license name", 400
+
+    # Get license token
+    token = request.json.get('token')
+    try:
+        [user_id, license_id, duration] = serializer.loads(token, max_age=1800)
+    except Exception:
+        return "Invalid token", 400
+
+    # Verify infos
+    if (
+        (current_user.id != user_id) or
+        (license.id != license_id)
+    ):
+        return "User - License does not match", 400
+
+    # Expiration date
+    expiry = (
+        datetime.now() +
+        datetime.timedelta(days=duration)
+    ).isoformat()
 
     # Get association or create it
     user_license = UserLicences.query.filter_by(
@@ -202,20 +297,18 @@ def set_licence():
         license=license
     ).first()
     if (user_license is None):
-        expiry = (
-            datetime.datetime.now() +
-            datetime.timedelta(days=365)
-        ).isoformat()
         user_license = UserLicences(
             user=current_user,
             license=license,
             license_expiry=expiry)
+    else:
+        user_license.license_expiry = expiry
 
-    # db.session.commit()
-    return 200, 'OK set licenses'
+    # Apply modification to database
+    db.session.commit()
+    return 'OK', 200
 
-
-@connected_user.route('/user_infos')
+@connected_user.route('/user/infos')
 @login_required
 def user_infos():
     '''
@@ -240,7 +333,22 @@ def user_infos():
     return jsonify(response)
 
 
-@connected_user.route('/user_infos/license_opensankeyplus')
+@connected_user.route('/user/infos/license_expiry/<license_name>')
+@login_required
+def get_license_expiry(license_name):
+    return current_user.get_license_expiry(license_name)
+    if expiry is None:
+        return 'No license', 401
+    return expiry, 200
+
+
+@connected_user.route('/user/infos/license_validity/<license_name>')
+@licence_required(license_name='<license_name>')
+def get_license_validity(license_name):
+    return "OK", 200
+
+
+@connected_user.route('/user/infos/license_opensankeyplus')
 @login_required
 def user_infos_license_opensankeyplus():
     '''
@@ -257,7 +365,7 @@ def user_infos_license_opensankeyplus():
     return jsonify(response)
 
 
-@connected_user.route('/user_infos/license_opensankeyplus', methods=['POST'])
+@connected_user.route('/user/infos/license_opensankeyplus', methods=['POST'])
 @login_required
 def user_set_license_opensankeyplus():
     '''
@@ -280,7 +388,7 @@ def user_set_license_opensankeyplus():
     return jsonify(response)
 
 
-@connected_user.route('/user_infos/license_sankeysuite')
+@connected_user.route('/user/infos/license_sankeysuite')
 @login_required
 def user_infos_license_mfasankey():
     '''
@@ -297,7 +405,7 @@ def user_infos_license_mfasankey():
     return jsonify(response)
 
 
-@connected_user.route('/user_infos/license_sankeysuite', methods=['POST'])
+@connected_user.route('/user/infos/license_sankeysuite', methods=['POST'])
 @login_required
 def user_set_license_mfasankey():
     '''
@@ -320,7 +428,7 @@ def user_set_license_mfasankey():
     return jsonify(response)
 
 
-@connected_user.route('/user_infos/is_developer')
+@connected_user.route('/user/infos/is_developer')
 @login_required
 def user_infos_is_developer():
     '''

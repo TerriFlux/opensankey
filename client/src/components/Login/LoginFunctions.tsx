@@ -17,7 +17,7 @@ export function activateLicensesTokens(
   // // Check AFM license
   // activateLicenseToken(
   //   app_name_sankeysuite,
-  //   '/user_infos/license_sankeysuite',
+  //   '/user/infos/license_sankeysuite',
   //   () => {
   //     set_update(!update)
   //   }
@@ -25,11 +25,11 @@ export function activateLicensesTokens(
   // Check OpenSankey+ licence
   activateLicenseToken(
     app_name_opensankeyplus,
-    '/user_infos/license_opensankeyplus',
+    '/user/infos/license_opensankeyplus',
     () => {new_data_app.activateSankeyPlus()}
   )
   // // Check if has dev acc
-  // fetch('/user_infos/is_developer',)
+  // fetch('/user/infos/is_developer',)
   //   .then(response => {
   //     if (response.ok) {
   //       return response.json()
@@ -84,7 +84,7 @@ export async function loginUser(
         activateLicensesTokens(new_data_app)
 
         const path = window.location.origin
-        const url = path + '/user_infos'
+        const url = path + '/user/infos'
         fetch(url)
           .then(response => {
             if (response.ok) {

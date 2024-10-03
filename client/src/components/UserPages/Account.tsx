@@ -85,7 +85,7 @@ const Account: FunctionComponent<AccountTypes> = ({
         .then(() => {
           // Save in db
           const path = window.location.origin
-          const url = path + '/user_infos/license_opensankeyplus'
+          const url = path + '/user/infos/license_opensankeyplus'
           fetch(url, {
             method: 'POST',
             headers: {
@@ -101,7 +101,7 @@ const Account: FunctionComponent<AccountTypes> = ({
               return Promise.reject(response)
             }
           }).then(() => {
-            // console.log('POST /user_infos/license_opensankeyplus : SUCCESS - ', data.message)
+            // console.log('POST /user/infos/license_opensankeyplus : SUCCESS - ', data.message)
             const userData_ = userData
             userData_.loading_opensankeyplus = true
             userData_.license_opensankeyplus_id = newLicenseOpenOSP
@@ -112,7 +112,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             activateLicensesTokens(new_data_app) //Update tokens
             // setSuiteApplicationContext({...suiteApplicationContext})
           }).catch(error =>
-            console.log('POST /user_infos/license_opensankeyplus : ERROR - ', error)
+            console.log('POST /user/infos/license_opensankeyplus : ERROR - ', error)
           )
         })
         .catch(error => {
@@ -128,7 +128,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   //     .then(() => {
   //       // Save in db
   //       const path = window.location.origin
-  //       const url = path + '/user_infos/license_sankeysuite'
+  //       const url = path + '/user/infos/license_sankeysuite'
   //       fetch(url, {
   //         method: 'POST',
   //         headers: {
@@ -144,7 +144,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   //           return Promise.reject(response)
   //         }
   //       }).then(() => {
-  //         // console.log('POST /user_infos/license_sankeysuite : SUCCESS - ', data_resp.message)
+  //         // console.log('POST /user/infos/license_sankeysuite : SUCCESS - ', data_resp.message)
   //         const userData_ = userData
   //         userData_.loading_sankeysuite = true
   //         userData_.license_sankeysuite_id = newLicenseSankeySuite
@@ -155,7 +155,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   //         activateLicensesTokens(update,set_update) //Update tokens
   //         // set_update(!update)
   //       }).catch(error =>
-  //         console.log('POST /user_infos/license_sankeysuite : ERROR - ', error)
+  //         console.log('POST /user/infos/license_sankeysuite : ERROR - ', error)
   //       )
   //     })
   //     .catch(error => {
@@ -197,7 +197,7 @@ const Account: FunctionComponent<AccountTypes> = ({
       let reqCount_ = reqCount
       // Get user's infos
       const path = window.location.origin
-      const url = path + '/user_infos'
+      const url = path + '/user/infos'
       fetch(url)
         .then(response => {
           if (response.ok) {
