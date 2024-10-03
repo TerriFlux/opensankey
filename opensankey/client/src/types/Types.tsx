@@ -17,6 +17,7 @@ import { opposing_DragElementsFuncType } from '../draw/types/SankeyDragTypes'
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
   // Parameter of node shape
+  orphan_node_visible?: boolean
   shape_visible?: boolean,
   label_visible?: boolean,
   node_width?: number,
@@ -63,6 +64,7 @@ export type SankeyNodeStyle ={
   name: string,
 
   // Parameter of node shape
+  orphan_node_visible: boolean,
   shape_visible: boolean,
   label_visible: boolean,
   node_width: number,

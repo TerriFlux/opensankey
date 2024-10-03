@@ -286,9 +286,11 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
 // Check if incoming and/or outgoing links have all 0 for value, if that the case we we returne false
 // We can short-circuit the function if the variable null_flux is true or the variable is show_structur is 'structure' (doesn't care about links value)
 const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
-  if((node.outputLinksId.length==0 && node.inputLinksId.length==0) || data.show_structure == 'structure' || data.show_structure == 'data'){
+  if((ReturnValueNode(data,node,'orphan_node_visible') == true && node.outputLinksId.length==0 && node.inputLinksId.length==0) 
+    || data.show_structure == 'structure' || data.show_structure == 'data' 
+  ) {
     return false
-  }else{
+  } else{
     let total_input = 0
     if (node.inputLinksId.length > 0) {
       const special_data_cast=data as unknown as {free_null_link_visible:boolean}

@@ -402,6 +402,7 @@ export const open_resources = {
         },
         apparence:{
           apparence:'Appearence',
+          OrphelinVisibilité: 'Orphans Visible',
           Visibilité:'Shape',
           Couleur:'Color',
           CouleurPérenne:'Static color',
@@ -431,6 +432,7 @@ export const open_resources = {
           display_value:'Display the value',
           hide_value:'Hide the value',
           tooltips: {
+            OrphelinVisibilité: 'Visibility of Orphans Nodes without input or output flux',
             Visibilité:'Makes the selected node(s) visible or invisible',
             Couleur:'Choose the color of the selected node(s)',
             CouleurPérenne:'Keep the color of the node(s) if any flux or data filter is activated, otherwise node turns grey (default color)',
@@ -1127,6 +1129,7 @@ export const open_resources = {
         apparence:{
           apparence:'Apparence',
           Visibilité:'Forme',
+          OrphelinVisibilité: 'Orphelins Visibles',
           Couleur:'Couleur',
           CouleurPérenne:'Couleur fixe',
           Forme:'Géométrie',
@@ -1155,6 +1158,7 @@ export const open_resources = {
           display_value:'Afficher la valeur',
           hide_value:'Masquer la valeur',
           tooltips: {
+            OrphelinVisibilité: 'Visibilité des Noeud orphelins sans flux entrants ni flux sortants',
             Visibilité:'Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)',
             Couleur:'Choisir la couleur du/des noeud(s) selectionné(s)',
             CouleurPérenne:'Garder la couleur du/des noeud(s) en cas de filtrage des flux ou données. Sinon le noeud reste en gris (couleur par defaut).',
