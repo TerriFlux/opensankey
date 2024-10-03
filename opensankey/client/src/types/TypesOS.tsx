@@ -38,10 +38,11 @@ export type Type_AdditionalMenus = {
   advanced_label_content: JSX.Element[],
   advanced_label_value_content: JSX.Element[],
   additional_menu_configuration_nodes: { [_: string]: JSX.Element },
-  additional_context_element_menu: JSX.Element[],
-  additional_context_element_other: JSX.Element[],
   additional_node_label_layout_content:JSX.Element[],
   additional_node_apparence_content:JSX.Element[],
+
+  context_node_order:string[],
+  additional_context_node_element:{ [_: string]: JSX.Element },
   // Links
   additional_menu_configuration_links:{ [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
