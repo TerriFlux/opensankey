@@ -590,6 +590,7 @@ export const convert_tags:convert_tagsFuncType = (
         })
         delete n_convert.subchain
       }
+      delete n_convert.position
       if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'].includes('échange')) {
         n.tags['Type de noeud'].push('echange')
         n.tags['Type de noeud'].splice(n.tags['Type de noeud'].indexOf('échange'),1)
