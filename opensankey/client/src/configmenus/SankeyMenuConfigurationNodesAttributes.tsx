@@ -1518,7 +1518,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
     <React.Fragment key={'lab'}>{content_label}</React.Fragment>
     <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
     <React.Fragment key={'val'}>{content_label_value}</React.Fragment>
-    {menu_for_style ? <React.Fragment key={'val'}>{orphan_node_visible}</React.Fragment>: <></>}
+    <React.Fragment key={'val'}>{orphan_node_visible}</React.Fragment>
   </>
 }
 
