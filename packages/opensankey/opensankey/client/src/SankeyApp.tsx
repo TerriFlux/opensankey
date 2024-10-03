@@ -116,15 +116,15 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     advanced_label_content: [],
     advanced_label_value_content: [],
     additional_menu_configuration_nodes: {},
-    additional_context_element_menu: [],
-    additional_context_element_other: [],
     additional_node_label_layout_content: [],
     additional_node_apparence_content: [],
+    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    additional_context_node_element: {},
     // Links
-    additional_menu_configuration_links:{},
+    additional_menu_configuration_links: {},
     additional_data_element: [],
     additional_link_appearence_items: [],
-    additional_link_appearence_value:[],
+    additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
 
     // Preferences
@@ -319,8 +319,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
       </div>
       <ContextMenuNode
         new_data={new_data}
-        additional_context_element_menu={additionalMenus.additional_context_element_menu}
-        additional_context_element_other={additionalMenus.additional_context_element_other}
+        additionalMenu={additionalMenus}
       />
       <ContextMenuLink
         new_data={new_data}

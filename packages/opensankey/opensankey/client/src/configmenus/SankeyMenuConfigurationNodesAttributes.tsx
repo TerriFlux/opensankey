@@ -63,11 +63,6 @@ import {
   default_shape_min_width,
   default_shape_type,
   default_shape_visible,
-  default_value_label_horiz,
-  default_value_label_horiz_shift,
-  default_value_label_vert,
-  default_value_label_vert_shift,
-  default_value_label_visible,
   isAttributeOverloaded
 } from '../types/Node'
 import {
