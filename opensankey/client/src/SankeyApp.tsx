@@ -126,6 +126,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
+    context_link_order: ['inverse','sep_1','style','sep_2','zIndex','mask_label','edit_value','sep_3','aasign_tag','sep_4','drag_link_data','drag_apparence','drag_tag'],
+    additional_context_link_element: {},
 
     // Preferences
     additional_preferences: [],
@@ -323,6 +325,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
       />
       <ContextMenuLink
         new_data={new_data}
+        additionalMenus={additionalMenus}
       />
       <ContextMenuZdd
         new_data={new_data}
