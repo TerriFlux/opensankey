@@ -13,10 +13,15 @@ from flask import Blueprint
 from flask import current_app
 from flask import jsonify
 from flask import request
+
+# Flask_login imports
 from flask_login import current_user
-from flask_login import login_required
+# from flask_login import login_required
 from flask_login import UserMixin
+
+# SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.associationproxy import association_proxy
 
 # Itsdangerous - serialize URLs for secured API transactions
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -74,7 +79,12 @@ class User(UserMixin, db.Model):
     license_sankeysuite = db.Column(db.String(2000))
     is_developer = db.Column(db.Boolean)
     # Relationships
-    licenses = db.relationship('License', secondary='user_licenses')
+    # Cascade - delete entries in UserLicense if this db entry is deleted
+    user_licenses = db.relationship(
+        'UserLicences',
+        back_populates='user',
+        cascade="all, delete")
+    licenses = association_proxy('user_licenses', 'license')
 
     def get_reset_token(self):
         serializer = Serializer(current_app.config['SECRET_KEY'])
@@ -88,6 +98,34 @@ class User(UserMixin, db.Model):
         except Exception:
             return None
         return User.query.get(user_id)
+
+
+class UserLicences(db.Model):
+    """
+    Define the user-license association table
+
+    Parameters
+    ----------
+    :param db: _description_
+    :type db: _type_
+
+    Optional parameters
+    -------------------
+    """
+    __tablename__ = 'user_licenses'
+    # primary keys are required by SQLAlchemy
+    id = db.Column(db.Integer(), primary_key=True)
+    # Db relation for user - at least one entry is needed + relationship
+    user_id = db.Column(
+        db.Integer(),
+        db.ForeignKey('user.id', ondelete='CASCADE'))
+    user = db.relationship('User', back_populates='user_licenses')
+    # Db relation for license - at least one entry is needed + relationship
+    license_id = db.Column(
+        db.Integer(), db.ForeignKey('license.id', ondelete='CASCADE'))
+    license = db.relationship('License', back_populates='user_licenses')
+    # Db extra entries
+    license_expiry = db.Column(db.String(50), unique=True)
 
 
 class License(db.Model):
@@ -107,30 +145,25 @@ class License(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     # Db entries
     name = db.Column(db.String(50), unique=True)
+    # Relationships
+    # Cascade - delete entries in UserLicense if this db entry is deleted
+    user_licenses = db.relationship(
+        'UserLicences',
+        back_populates='license',
+        cascade="all, delete")
+    users = association_proxy('user_licenses', 'user')
 
 
-class UserLicences(db.Model):
-    """
-    Define the user-license association table
-
-    Parameters
-    ----------
-    :param db: _description_
-    :type db: _type_
-
-    Optional parameters
-    -------------------
-    """
-    __tablename__ = 'user_licenses'
-    # primary keys are required by SQLAlchemy
-    id = db.Column(db.Integer(), primary_key=True)
-    # Db entries
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
-    license_id = db.Column(db.Integer(), db.ForeignKey('license.id', ondelete='CASCADE'))
-    license_expiry = db.Column(db.String(50), unique=True)
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return 401, "Not connected"
+        return f(*args, **kwargs)
+    return decorated_function
 
 
-def licence_required(license=''):
+def licence_required(license_name=''):
     """
     see: https://flask.palletsprojects.com/en/2.1.x/patterns/viewdecorators/
     """
@@ -138,19 +171,21 @@ def licence_required(license=''):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                return "Not connected"
-            license_id = License.query.filter_by(name=license).first()
-            if license_id not in current_user.licenses:
-                return "No valid license"
+                return 401, "Not connected"
+            license = License.query.filter_by(name=license_name).first()
+            if license not in current_user.licenses:
+                return 401, "No valid license"
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
+
 
 # ---------------------------------------------------------------
 @connected_user.route('/test')
 @licence_required('test')
 def get_test():
-    return 'OK license'
+    return 200, 'OK license'
+
 
 @connected_user.route('/set_test')
 @login_required
@@ -158,27 +193,26 @@ def set_licence():
     # Get license id or create it
     license = License.query.filter_by(name='test').first()
     if license is None:
+        # TODO return here instead of creating
         license = License(name='test')
-
-    import pdb; pdb.set_trace()
 
     # Get association or create it
     user_license = UserLicences.query.filter_by(
-        user_id = current_user.id,
-        license_id = license.id
+        user=current_user,
+        license=license
     ).first()
     if (user_license is None):
-        expiry = (datetime.datetime.now() + datetime.timedelta(days=365)).isoformat()
+        expiry = (
+            datetime.datetime.now() +
+            datetime.timedelta(days=365)
+        ).isoformat()
         user_license = UserLicences(
-            user_id=current_user.id,
-            license_id=license.id,
+            user=current_user,
+            license=license,
             license_expiry=expiry)
 
-    # # Add licence if not here
-    # current_user.licenses.append(license)
-
     # db.session.commit()
-    return 'OK set licenses'
+    return 200, 'OK set licenses'
 
 
 @connected_user.route('/user_infos')
