@@ -124,6 +124,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_menu_configuration_links:{},
     additional_data_element: [],
     additional_link_appearence_items: [],
+    additional_link_appearence_value:[],
     additional_link_visual_filter_content: [],
 
     // Preferences
@@ -183,7 +184,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
   const config_link_attr = <MenuConfigurationLinksAppearence
     new_data={new_data}
-    additional_link_appearence_items={additionalMenus.additional_link_appearence_items}
+    additionMenus={additionalMenus}
     menu_for_style={false}
   />
 
@@ -256,7 +257,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
               <React.Fragment key={'modale_style_link'}>
                 <SankeyModalStyleLink
                   new_data={new_data}
-                  additional_link_appearence_items={[]}
+                  additionalMenus={additionalMenus}
                 />
               </React.Fragment>,
               <React.Fragment key={'modale_style_node'}>

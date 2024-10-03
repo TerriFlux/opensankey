@@ -36,7 +36,6 @@ import {
   default_shape_ending_tangeant,
   default_shape_is_arrow,
   default_shape_is_curved,
-  default_shape_is_dashed,
   default_shape_is_recycling,
   default_shape_opacity,
   default_shape_orientation,
@@ -53,7 +52,6 @@ import {
   default_value_label_pos_auto,
   default_value_label_position,
   default_value_label_scientific_precision,
-  default_value_label_to_precision,
   default_value_label_unit,
   default_value_label_unit_visible,
   isAttributeOverloaded,
@@ -137,7 +135,7 @@ const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24
 
 export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({
   new_data,
-  additional_link_appearence_items,
+  additionMenus,
   menu_for_style
 }) => {
 
@@ -202,8 +200,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_value_label_is_visible)
   const value_label_font_size = (elements[0]?.value_label_font_size ?? default_value_label_font_size)
   const value_label_color = (elements[0]?.value_label_color ?? default_value_label_color)
-  const value_label_to_precision = (elements[0]?.value_label_to_precision ?? default_value_label_to_precision)
-  const value_label_scientific_precision = (elements[0]?.value_label_scientific_precision ?? default_value_label_scientific_precision)
   const value_label_font_family = (elements[0]?.value_label_font_family ?? default_value_label_font_family)
   const value_label_unit_visible = (elements[0]?.value_label_unit_visible ?? default_value_label_unit_visible)
   const value_label_unit = (elements[0]?.value_label_unit ?? default_value_label_unit)
@@ -241,7 +237,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   }
 
   // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 9
+  const number_of_input = 8
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
@@ -253,9 +249,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   ref_set_number_inputs[3].current(String(shape_starting_tangeant * 100))
   ref_set_number_inputs[4].current(String(shape_ending_tangeant * 100))
   ref_set_number_inputs[5].current(String(shape_opacity))
-  ref_set_number_inputs[6].current(String(value_label_scientific_precision))
-  ref_set_number_inputs[7].current(String(value_label_nb_digit))
-  ref_set_number_inputs[8].current(String(value_label_font_size))
+  ref_set_number_inputs[6].current(String(value_label_nb_digit))
+  ref_set_number_inputs[7].current(String(value_label_font_size))
 
   /**
    * Function used to reset menu UI
@@ -633,7 +628,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     </Box>
 
 
-    {additional_link_appearence_items.map((el,i)=><React.Fragment key={'additional_config_link_'+i}>{el}</React.Fragment>)}
+    {additionMenus.additional_link_appearence_items.map((el,i)=><React.Fragment key={'additional_config_link_'+i}>{el}</React.Fragment>)}
 
   </Box>
 
@@ -668,56 +663,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
 
     {value_label_is_visible ? <>
 
-      {/* Choose number of significant number */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.label.NbPrecision')}
-        </Box>
-        <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[6]}
-            default_value={value_label_scientific_precision}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            stepper={true}
-            function_on_blur={(value) => {
-              elements.forEach(element =>
-                element.value_label_scientific_precision = value ?? undefined)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          />
-        </OSTooltip>
-      </Box>
-
-      {/* Choix d'affichage en notation scientifique  */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={value_label_to_precision}
-        onChange={(evt) => {
-          elements.forEach(element => {
-            element.value_label_custom_digit = false
-            element.value_label_to_precision = evt.target.checked
-          })
-          refreshThisAndUpdateRelatedComponents()
-        }}>
-        <OSTooltip label={t('Flux.label.tooltips.toPrecision')}>
-          {t('Flux.label.toPrecision') + ' '}
-        </OSTooltip>
-        {
-          (!menu_for_style) &&
-            isAttributeOverloaded(selected_links, 'value_label_to_precision') ?
-            TooltipValueSurcharge('link_var_', t) :
-            <></>
-        }
-      </Checkbox>
-
-      {
-        value_label_to_precision ?
-          <></> :
-          <></>
-      }
-
       {/* Choix d'affichage du nombre de chiffre après la virgule  */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -749,7 +694,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           </Box>
           <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
             <ConfigMenuNumberInput
-              ref_to_set_value={ref_set_number_inputs[7]}
+              ref_to_set_value={ref_set_number_inputs[6]}
               default_value={value_label_nb_digit}
               menu_for_style={menu_for_style}
               minimum_value={0}
@@ -811,6 +756,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           </> :
           <></>
       }
+
+      {additionMenus.additional_link_appearence_value.map((el,i)=><React.Fragment key={'additional_config_link__value_'+i}>{el}</React.Fragment>)}
 
       <Box
         layerStyle='menuconfigpanel_grid'
@@ -921,7 +868,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           </Select>
 
           <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[8]}
+            ref_to_set_value={ref_set_number_inputs[7]}
             default_value={value_label_font_size}
             menu_for_style={menu_for_style}
             minimum_value={11}
