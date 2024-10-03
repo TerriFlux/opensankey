@@ -1,8 +1,8 @@
-"""message changement apporté à base de donnée
+"""Created license and user_licenses tables
 
-Revision ID: cf5373297a2a
+Revision ID: a491b5c772c9
 Revises: f0d499aa7d66
-Create Date: 2024-10-03 12:22:34.037268
+Create Date: 2024-10-03 13:00:09.256042
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'cf5373297a2a'
+revision = 'a491b5c772c9'
 down_revision = 'f0d499aa7d66'
 branch_labels = None
 depends_on = None
