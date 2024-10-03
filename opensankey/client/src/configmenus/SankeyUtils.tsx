@@ -357,7 +357,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
-      if (extension.display_thin || is_free ) {
+      if (extension.display_thin || is_free && +v!==0) {
         // if flux is displayed thin
         offset_width_top += inv_scale(applicationData.min_link_thickness)
       } else {
@@ -392,7 +392,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
-      if (extension.display_thin || is_free) {
+      if (extension.display_thin || is_free && +v!==0) {
         // if flux is displayed thin
         offset_width_bottom += inv_scale(applicationData.min_link_thickness)
       } else {
@@ -428,7 +428,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
-      if (extension.display_thin || is_free) {
+      if (extension.display_thin || is_free&& +v!==0) {
         // if flux is displayed thin
         offset_height_left += inv_scale(applicationData.min_link_thickness)
       } else {
@@ -463,7 +463,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
-      if (extension.display_thin || is_free) {
+      if (extension.display_thin || is_free && +v!==0) {
         // if flux is displayed thin
         offset_height_right += inv_scale(applicationData.min_link_thickness)
       } else {

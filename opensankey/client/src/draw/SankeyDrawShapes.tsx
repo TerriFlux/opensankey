@@ -818,7 +818,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       }
     } else if (data.show_structure === 'reconciled') {
       const link_value_is_free = (theLinkValue.extension?.free_mini !== undefined)
-      if (link_value_is_free) {
+      if (link_value_is_free && link_value!==0) {
         // If the link is free we check if data allow indeterminate free null link
         //  to be considerate as visible
         is_structure = true
