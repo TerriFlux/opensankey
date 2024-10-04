@@ -157,29 +157,6 @@ export const moduleDialogs: FType_ModuleDialogs = (
   ]
 }
 
-//- BackEnd
-export const initializeProcessFunctions: (
-  new_data: Type_GenericApplicationDataOS,
-) => FType_ProcessFunctions = (new_data) => {
-  const _ = {
-    ref_processing: useRef(false),
-    ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-    failure: useRef(false),
-    not_started: useRef(true),
-    ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
-    path: useRef(''),
-    retrieveExcelResults,
-    launch: (cur_path: string) => {
-      _.path.current = cur_path
-      new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
-      _.ref_setter_processing.current(true)
-      _.failure.current = true
-      _.not_started.current = false
-      _.ref_result.current('')
-    }
-  }
-  return _
-}
 
 /***************************************************************************************/
 

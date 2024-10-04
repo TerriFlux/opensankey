@@ -114,9 +114,9 @@ const ExempleItem = (
   )
   if ('Files' in exemple_menu) {
     const files_item = (exemple_menu as subtypeFileList)['Files'].map((item, index) => {
-      let path = current_path+'/sankey/'+item
-      if (item.includes('.xlsx')) {
-        path = current_path + '/' + item
+      let path =   current_path + '/' + item
+      if (item.includes('.json')) {
+        path =current_path+'/sankey/'+item
       }
 
       // Text of the button in the menu

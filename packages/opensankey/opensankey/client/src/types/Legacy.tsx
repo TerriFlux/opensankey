@@ -190,7 +190,6 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   }
   // Assign default value to missing variable
   const defaut_data = DefaultSankeyData()
-  console.log(defaut_data)
   Object.entries(data_to_convert.style_link).forEach(s => {
     s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
     data_to_convert.style_link[s[0]] = s[1]

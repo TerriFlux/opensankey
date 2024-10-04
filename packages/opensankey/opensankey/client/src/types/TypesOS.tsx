@@ -70,8 +70,8 @@ export type Type_AdditionalMenus = {
 
   additional_nav_item: JSX.Element[],
 
-  example_menu: { [k: string]: JSX.Element; }
-  formations_menu: { [k: string]: JSX.Element; },
+  example_menu: object,
+  formations_menu: object,
 
   toolbar_order:string[],
   toolbar_elements:{ [k: string]: JSX.Element; }

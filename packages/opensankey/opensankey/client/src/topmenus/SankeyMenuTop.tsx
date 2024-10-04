@@ -1731,7 +1731,7 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
               <Button variant='toolbar_button_6'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/Tutoriels/' + (d[0]) + '/' + dd), new_data
+                    ('Formations/Tutoriels/' + (d[0]) + '/sankey/' + dd), new_data
                   )
                   set_show_tuto(false)
                 }}
