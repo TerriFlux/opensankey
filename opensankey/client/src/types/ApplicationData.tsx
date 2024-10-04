@@ -5,14 +5,14 @@
 // ==================================================================================================
 
 // External imports
-import { MutableRefObject, useRef } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 // Local imports
 import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
-import { ClickSaveDiagram, ClickSaveExcel } from '../dialogs/SankeyPersistence'
+import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
 import { Class_MenuConfig } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
@@ -20,6 +20,7 @@ import { Type_JSON } from './Utils'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
+import { FType_ProcessFunctions } from './FunctionTypes'
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
@@ -65,6 +66,8 @@ export abstract class Class_ApplicationData
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: {[_: string]: boolean | string } = {}
+
+  private _processFunction: FType_ProcessFunctions
 
   // Save JSON options
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
@@ -170,6 +173,24 @@ export abstract class Class_ApplicationData
 
     // Default logo for app
     this._logo = logo_opensankey
+
+    this._processFunction= {
+      ref_processing: useRef(false),
+      ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      failure: useRef(false),
+      not_started: useRef(true),
+      ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
+      path: useRef(''),
+      retrieveExcelResults,
+      launch: (cur_path: string) => {
+        this._processFunction.path.current = cur_path
+        this.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
+        this._processFunction.ref_setter_processing.current(true)
+        this._processFunction.failure.current = true
+        this._processFunction.not_started.current = false
+        this._processFunction.ref_result.current('')
+      }
+    }
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -409,5 +430,7 @@ export abstract class Class_ApplicationData
 
   public get node_label_separator() { return this._node_label_separator }
   public set node_label_separator(_: string) { this._node_label_separator = _; this._drawing_area.sankey.draw() }
+
+  public get processFunction(): FType_ProcessFunctions {return this._processFunction}
 }
 

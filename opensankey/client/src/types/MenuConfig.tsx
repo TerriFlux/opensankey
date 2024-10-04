@@ -797,7 +797,6 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToToolbar(){
-    console.trace('here')
     this._ref_to_toolbar_updater.current()
   }
 

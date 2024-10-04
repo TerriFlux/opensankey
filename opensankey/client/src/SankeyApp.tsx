@@ -27,7 +27,6 @@ import {
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
 import { Type_JSON } from './types/Utils'
-import { initializeProcessFunctions } from './OSModule'
 
 import { FCType_SankeyApp } from './types/FunctionTypes'
 import { Type_AdditionalMenus } from './types/TypesOS'
@@ -75,7 +74,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     launchToastConstructor(new_data, toast, intake)
   }
 
-  const processFunctions = initializeProcessFunctions(new_data)
 
   /*************************************************************************************************/
 
@@ -242,7 +240,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
             new_data,
             additionalMenus,
             menu_configuration_nodes_attributes,
-            processFunctions
+            new_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
@@ -253,7 +251,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
         <>
           <Menu
             new_data={new_data}
-            processFunctions={processFunctions}
+            processFunctions={new_data.processFunction}
             configurations_menus={menu_configuration}
             menus={sankey_menus}
             cardsTemplate={additionalMenus.cards_template}
