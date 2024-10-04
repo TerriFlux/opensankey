@@ -1359,9 +1359,19 @@ const convert_nodes: convert_nodesFuncType = (
 
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
-      const dim_level = nt[1][0]
+      const dim_level = nt[1]
       if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
-        n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level) + 1
+        if(dim_level.length==1){
+          // If node has only 1 tag for this levelTag then save it in level
+          n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
+        }else{
+          // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
+          n.dimensions[nt[0]].child_tags =dim_level
+          let possible_parent='' 
+          possible_parent=Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
+          n.dimensions[nt[0]].parent_tag =possible_parent
+        }
+
       }
       // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
 
