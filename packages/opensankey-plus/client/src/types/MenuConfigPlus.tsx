@@ -32,6 +32,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
 
+  private _ref_to_toolbar_link_visual_filter_updater: MutableRefObject<(() => void)>
+
   /* ========================================
     Updater of component for containers related menus
     ========================================*/
@@ -94,6 +96,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_toolbar_node_tag_updater=useRef(()=>null)
     this._ref_to_toolbar_link_tag_updater=useRef(()=>null)
     this._ref_to_toolbar_data_tag_updater=useRef(()=>null)
+
+    this._ref_to_toolbar_link_visual_filter_updater=useRef(()=>null)
+
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
       ref_setter_show_modal_import_icons: useRef(() => null),
@@ -132,6 +137,14 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public override updateComponentSaveDiagramJSON() {
     super.updateComponentSaveDiagramJSON()
     this.ref_to_save_diagram_only_view_updater.current()
+  }
+
+  public override updateAllComponentsRelatedToToolbar(): void {
+    super.updateAllComponentsRelatedToToolbar()
+    this._ref_to_toolbar_link_visual_filter_updater.current()
+    this.ref_to_toolbar_node_tag_updater.current()
+    this.ref_to_toolbar_link_tag_updater.current()
+    this.ref_to_toolbar_data_tag_updater.current()
   }
 
 
@@ -275,5 +288,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_node_tag_updater}
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_tag_updater}
   public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_data_tag_updater}
+
+  public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_visual_filter_updater}
 
 }

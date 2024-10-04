@@ -14,12 +14,19 @@ import {
 } from './ftypes/SankeyPlusUtilsTypes'
 import {
   CustomFaEyeCheckIcon,
-  OSTooltip
+  getBooleanFromJSON,
+  getJSONOrUndefinedFromJSON,
+  getNumberFromJSON,
+  getNumberOrUndefinedFromJSON,
+  getStringFromJSON,
+  OSTooltip,
+  Type_JSON
 } from './deps/OpenSankey/types/Utils'
 import { SankeySettingsEditionElementTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationTags'
 import { faDatabase, faFolderTree, faSliders } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
+import { default_container_content } from './types/FreeLabel'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -233,6 +240,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()))) + 1
   const [, setCount] = useState(0)
+  new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current=()=>setCount(a=>a+1)
   {/* Popover to display the link-filter */ }
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
@@ -687,5 +695,26 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
   }
   else {
     return <></>
+  }
+}
+
+export const convert_data_plus_legacy=(json_object:Type_JSON)=>{
+  const containers=getJSONOrUndefinedFromJSON(json_object,'labels')
+  if(containers){
+    // Convert name of variable from legacy Free label to variable name of new Free labels 
+    Object.values(containers).forEach(el=>{
+      const cont =el as Type_JSON
+      const container_content=getStringFromJSON(cont,'name',default_container_content)
+      const container_opacity=getBooleanFromJSON(cont,'transparent',false)
+
+      if(container_opacity){
+        cont['opacity']=0
+      }else{
+        cont['opacity']=100
+      }
+      console.log(container_content)
+      cont['content']=container_content
+
+    })
   }
 }
