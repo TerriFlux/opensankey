@@ -410,6 +410,8 @@ export interface ConvertSankeyData {
   show_structure: boolean | string
   show_data?: boolean
   view: { id: string, view_data: object, nom: string, details: string }[]
+  filter_link_value:number,
+  filter_label:number
 }
 
 export type ConvertDataLegacyFuncType = (
