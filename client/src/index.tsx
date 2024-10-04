@@ -79,7 +79,7 @@ const fetchData = {
 }
 
 let exemple_menu = {} as ExempleMenuTypes
-let formations_menu = {} as { [_: string]: JSX.Element }
+let formations_menu = {} as ExempleMenuTypes
 
 // Create a default sankey
 // const data = DefaultSankeyData()
@@ -92,7 +92,7 @@ fetch(url, fetchData).then(response => {
     if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
       formations_menu = Object.fromEntries(
         Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
-      ) as { [_: string]: JSX.Element }
+      ) as { [_: string]: ExempleMenuTypes }
       delete json_data.exemples_menu['Formations']['Tutoriels']
     }
   }).catch(() => {
@@ -106,7 +106,7 @@ fetch(url, fetchData).then(response => {
 
 const renderPage = () => {
   root.render(
-    <SankeyAppSA example_menu={exemple_menu}/>
+    <SankeyAppSA example_menu={exemple_menu} formations_menu={formations_menu} />
   )
 }
 

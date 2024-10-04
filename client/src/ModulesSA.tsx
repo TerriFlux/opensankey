@@ -45,6 +45,7 @@ type FType_InitializeAdditionalMenusSA = (
   additional_menus: Type_AdditionalMenus,
   new_data: Class_ApplicationDataSA,
   example_menu: ExempleMenuTypes,
+  formations_menu: ExempleMenuTypes,
   reinitialization:()=>void
 ) => void
 
@@ -58,6 +59,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
   new_data_app,
   example_menu,
+  formations_menu,
   reinitialization
 ) => {
 
@@ -82,12 +84,13 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     />
   )
 
+  additionalMenus.formations_menu=formations_menu
   
   additionalMenus.externale_navbar_item['demo'] = <ExempleItem
     new_data={new_data_app}
     exemple_menu={example_menu}
     current_path={''}
-    launch={() => null}
+    launch={new_data_app.processFunction.launch}
     Reinitialization={reinitialization}
     initial_list={true}
   />

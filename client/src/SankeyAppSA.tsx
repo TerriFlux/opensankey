@@ -40,11 +40,10 @@ import { PasswordResetFromMail, PasswordResetFromToken } from './components/Logi
 
 // SankeyApp for OpenSankey+ ========================================================================
 type SankeyAppSAType={
-  example_menu: ExempleMenuTypes
+  example_menu: ExempleMenuTypes,
+  formations_menu: ExempleMenuTypes
 }
-export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu}) => {
-
-  // const [update, set_update] = useState<boolean>(true) // useState OK
+export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,formations_menu}) => {
 
   const new_data_app = new Class_ApplicationDataSA(false)
   const reinit =initializeReinitializationOSP(new_data_app)
@@ -65,6 +64,7 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu}) 
           additionalMenus,
           new_data as Class_ApplicationDataSA,
           example_menu,
+          formations_menu,
           reinit
         )
       }}
