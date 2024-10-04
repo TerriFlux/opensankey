@@ -240,18 +240,17 @@ export function isAttributeOverloaded(
  *
  * @class Class_LinkElement
  */
-export abstract class  Class_LinkElement
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey,
-  Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
->
+export abstract class Class_LinkElement
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey,
+    Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
+  >
   extends Class_AbstractLinkElement
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
->
-{
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // ABSTRACT ATTRIBUTES ===============================================================
 
@@ -760,6 +759,7 @@ export abstract class  Class_LinkElement
     // TODO revoir : la couleur d'un flux devrait aussi être definie par la couleur de ses noeuds sources / target
     // Default color
     let shape_color = this.shape_color
+    const dataTagColorActivated = this.sankey.selected_data_tags_list.filter(tag => tag.group.show_legend)
     // Do we apply color of flux tags ?
     const flux_taggs_activated = this.flux_taggs_list
       .filter(tagg => tagg.show_legend)
@@ -771,11 +771,25 @@ export abstract class  Class_LinkElement
       if (tags_for_colormap.length > 0)
         shape_color = tags_for_colormap[0].color
     }
-    else {
+    else if (dataTagColorActivated.length > 0) {
       // Do we apply colors of data tags ?
-      this.sankey.selected_data_tags_list
-        .filter(tag => tag.group.show_legend)
+      dataTagColorActivated
         .forEach(tag => shape_color = tag.color)
+    } else {
+      // Do we apply colors of node source/target tags ?
+      const src_taggs_activated = this._source.taggs_list
+        .filter(tagg => tagg.show_legend)
+
+      const trgt_taggs_activated = this._target.taggs_list
+        .filter(tagg => tagg.show_legend)
+
+      if (src_taggs_activated.length > 0) {
+        // If source has a tag from a group of which we display the palette
+        shape_color = this._source.getShapeColorToUse()
+      } else if (trgt_taggs_activated) {
+        // If target has a tag from a group of which we display the palette
+        shape_color = this._target.getShapeColorToUse()
+      }
     }
     return shape_color
   }
@@ -916,7 +930,7 @@ export abstract class  Class_LinkElement
     if (event.altKey) {
       // Show tooltip
       this.drawTooltip()
-      this.d3_selection?.classed('tooltip_shown',true)
+      this.d3_selection?.classed('tooltip_shown', true)
 
     } else if (this.thickness < 15) {
       this._artifical_enlargement = true
@@ -934,7 +948,7 @@ export abstract class  Class_LinkElement
  */
   protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
-    if(event.altKey){
+    if (event.altKey) {
       this.moveTooltip(event)
     }
   }
@@ -952,7 +966,7 @@ export abstract class  Class_LinkElement
 
     // Clear tooltip
     d3.selectAll('.sankey-tooltip').remove()
-    this.d3_selection?.classed('tooltip_shown',false)
+    this.d3_selection?.classed('tooltip_shown', false)
 
     // reset link thickness
     if (this._artifical_enlargement) {
@@ -1316,7 +1330,7 @@ export abstract class  Class_LinkElement
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_LinkElement
    */
-  private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>){
+  private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     d3.selectAll('.sankey-tooltip')
       .style('top', event.pageY + 'px')
       .style('left', event.pageX + 'px')
@@ -2012,7 +2026,7 @@ export abstract class  Class_LinkElement
     )
   }
 
-  public get display(){
+  public get display() {
     return this._display
   }
 
@@ -2207,13 +2221,13 @@ export abstract class  Class_LinkElement
 
       if (this.source.position_type == 'parametric') {
         // if the positioning mode of source is parametric we need to reposition all nodes below
-        const same_source_u = this.sankey.visible_nodes_list.filter(n=>n.position_u == this.source.position_u && n.position_v > this.source.position_v)
-        same_source_u.forEach(n=>n.draw())
+        const same_source_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.source.position_u && n.position_v > this.source.position_v)
+        same_source_u.forEach(n => n.draw())
       }
       if (this.target.position_type == 'parametric') {
         // if the positioning mode of target is parametric we need to reposition all nodes below
-        const same_target_u = this.sankey.visible_nodes_list.filter(n=>n.position_u == this.target.position_u && n.position_v > this.target.position_v)
-        same_target_u.forEach(n=>n.draw())
+        const same_target_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.target.position_u && n.position_v > this.target.position_v)
+        same_target_u.forEach(n => n.draw())
       }
     }
   }
@@ -3883,9 +3897,9 @@ export class Class_LinkValueTree {
       .forEach(([id, sub_json_object]) => {
         if (typeof sub_json_object === 'object')
           this.children[id]?.fromJSON(
-              sub_json_object as Type_JSON,
-              matching_taggs_id,
-              matching_tags_id
+            sub_json_object as Type_JSON,
+            matching_taggs_id,
+            matching_tags_id
           )
       })
     //}
@@ -3913,8 +3927,8 @@ export class Class_LinkValueTree {
       .forEach(child => {
         const _ = child.getAllValues()
         out = {
-          ... out,
-          ... _
+          ...out,
+          ..._
         }
       })
     Object.values(out)
@@ -4305,18 +4319,17 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
 // CLASS GHOST LINK *********************************************************************
 
 export class Class_GhostLinkElement
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey,
-  Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
->
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey,
+    Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
+  >
   extends Class_LinkElement
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey,
-  Type_GenericNodeElement
->
-{
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey,
+    Type_GenericNodeElement
+  > {
 
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -4337,8 +4350,8 @@ export class Class_GhostLinkElement
     target: Type_GenericNodeElement,
     drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig
-  ){
-    super(id,source,target,drawing_area,menu_config)
+  ) {
+    super(id, source, target, drawing_area, menu_config)
     // Display
     this._display = {
       drawing_area: drawing_area,
@@ -4348,15 +4361,15 @@ export class Class_GhostLinkElement
         type: 'absolute',
         x: 0,
         y: 0,
-        u:0,
-        v:0
+        u: 0,
+        v: 0
       },
       position_ending: {
         type: 'absolute',
         x: 0,
         y: 0,
-        u:0,
-        v:0
+        u: 0,
+        v: 0
       },
       style: drawing_area.sankey.default_link_style as Class_LinkStyle,
       attributes: new Class_LinkAttribute()
