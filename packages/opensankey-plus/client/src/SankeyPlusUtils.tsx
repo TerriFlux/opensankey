@@ -712,7 +712,6 @@ export const convert_data_plus_legacy=(json_object:Type_JSON)=>{
       }else{
         cont['opacity']=100
       }
-      console.log(container_content)
       cont['content']=container_content
 
     })
