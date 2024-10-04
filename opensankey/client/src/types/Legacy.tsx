@@ -233,7 +233,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-
+  // Convert name variable for data version>0.9
+  data_to_convert.filter_link_value=data_to_convert.display_style.filter
+  data_to_convert.filter_label=data_to_convert.display_style.filter_label
   clean_data_local(data_to_convert)
 }
 

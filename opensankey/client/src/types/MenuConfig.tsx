@@ -680,7 +680,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLayoutApparence()
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
-    this._ref_to_toolbar_updater.current()
+    this.updateAllComponentsRelatedToToolbar()
     Object.values(this._ref_to_menu_config_tags_updater)
       .forEach(ref => ref.current())
   }
@@ -758,7 +758,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksSelection()
     this.updateComponentRelatedToLinksTags()
     this.updateComponentRelatedToLinksData()
-    this._ref_to_toolbar_updater.current()
+    this.updateAllComponentsRelatedToToolbar()
   }
 
   public updateAllComponentsRelatedToLevelTags() {
@@ -794,6 +794,11 @@ export class Class_MenuConfig {
       this.updateAllComponentsRelatedToNodeTags()
     else
       this.updateAllComponentsRelatedToLevelTags()
+  }
+
+  public updateAllComponentsRelatedToToolbar(){
+    console.trace('here')
+    this._ref_to_toolbar_updater.current()
   }
 
   public toggle_selector_on_visible_nodes() {

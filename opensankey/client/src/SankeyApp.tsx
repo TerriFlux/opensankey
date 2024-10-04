@@ -5,7 +5,7 @@ import React, {
 import i18next from 'i18next'
 import LZString from 'lz-string'
 import { ChakraProvider, useToast } from '@chakra-ui/react'
-
+import * as d3 from 'd3'
 /*************************************************************************************************/
 
 import { setDiagram, ToolbarBuilder } from './configmenus/SankeyMenuBanner'
@@ -126,7 +126,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
-    context_link_order: ['inverse','sep_1','style','sep_2','zIndex','mask_label','edit_value','sep_3','aasign_tag','sep_4','drag_link_data','drag_apparence','drag_tag'],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
     additional_context_link_element: {},
 
     // Preferences
@@ -228,6 +228,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   /*************************************************************************************************/
 
   useEffect(() => {
+    // Delete potential duplicat
+    d3.select('#draw_zoom').remove()
     new_data.drawing_area?.reset()
   })
 
