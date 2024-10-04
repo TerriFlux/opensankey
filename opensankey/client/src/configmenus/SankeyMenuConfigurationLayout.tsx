@@ -222,9 +222,13 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
                 // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
+              }else{
+                new_data.drawing_area.removeMinimumLinkThickness()
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+                refreshThisAndUpdateRelatedComponents()
+
               }
             }}
-            minimum_value={1}
             maximum_value={new_data.drawing_area.maximum_flux}
             stepper={true}
             unit_text={right_addon_pixel(new_data.drawing_area.minimum_flux!)}
@@ -245,6 +249,10 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
               if (value) {
                 new_data.drawing_area.maximum_flux = value
                 // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+                refreshThisAndUpdateRelatedComponents()
+              }else{
+                new_data.drawing_area.removeMaximumLinkThickness()
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
               }
