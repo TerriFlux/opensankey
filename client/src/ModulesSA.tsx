@@ -25,10 +25,12 @@ import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 import { loginOut } from './components/Login/LoginFunctions'
 import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataSA } from './ApplicationData'
+import ExempleItem from './deps/OpenSankey+/deps/OpenSankey/welcome/MenuExamples'
 
 export const initializeApplicationDataSA = (
   new_data_app: Class_ApplicationDataSA,
-  initial_data: Type_JSON | undefined
+  initial_data: Type_JSON | undefined,
+
 ) => {
   // Read data from cache if it exist
   if (initial_data !== undefined) {
@@ -37,9 +39,13 @@ export const initializeApplicationDataSA = (
   return new_data_app
 }
 
+export type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
+
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: Type_AdditionalMenus,
-  new_data: Class_ApplicationDataSA
+  new_data: Class_ApplicationDataSA,
+  example_menu: ExempleMenuTypes,
+  reinitialization:()=>void
 ) => void
 
 /**
@@ -50,7 +56,9 @@ type FType_InitializeAdditionalMenusSA = (
  */
 export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
-  new_data_app
+  new_data_app,
+  example_menu,
+  reinitialization
 ) => {
 
   // No initialisation if static --------------------------------------------------------
@@ -73,6 +81,16 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
       new_data_app={new_data_app}
     />
   )
+
+  
+  additionalMenus.externale_navbar_item['demo'] = <ExempleItem
+    new_data={new_data_app}
+    exemple_menu={example_menu}
+    current_path={''}
+    launch={() => null}
+    Reinitialization={reinitialization}
+    initial_list={true}
+  />
 
   additionalMenus.cards_template = CardsTemplateBuilder(new_data_app)
 }

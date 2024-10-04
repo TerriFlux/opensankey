@@ -31,7 +31,7 @@ import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeO
 // Local imports ====================================================================================
 
 import { Class_ApplicationDataSA } from './ApplicationData'
-import { initializeAdditionalMenusSA, initializeApplicationDataSA } from './ModulesSA'
+import { ExempleMenuTypes, initializeAdditionalMenusSA, initializeApplicationDataSA } from './ModulesSA'
 import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
@@ -39,13 +39,15 @@ import Login from './components/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
 
 // SankeyApp for OpenSankey+ ========================================================================
-
-export const SankeyAppSA: FunctionComponent = () => {
+type SankeyAppSAType={
+  example_menu: ExempleMenuTypes
+}
+export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu}) => {
 
   // const [update, set_update] = useState<boolean>(true) // useState OK
 
   const new_data_app = new Class_ApplicationDataSA(false)
-
+  const reinit =initializeReinitializationOSP(new_data_app)
   const sankeyApp =
     <SankeyApp
       initializeReinitialization={initializeReinitializationOSP}
@@ -61,7 +63,9 @@ export const SankeyAppSA: FunctionComponent = () => {
       initializeAdditionalMenus={(additionalMenus, new_data) => {
         initializeAdditionalMenusSA(
           additionalMenus,
-          new_data as Class_ApplicationDataSA
+          new_data as Class_ApplicationDataSA,
+          example_menu,
+          reinit
         )
       }}
       initializeDiagrammSelector={initializeDiagrammSelectorOSP}
