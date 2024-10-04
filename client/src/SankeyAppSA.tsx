@@ -39,6 +39,7 @@ import Login from './components/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
 import { PrivateRoute } from './components/Routes/PrivateRoutes'
 import { PublicRoute } from './components/Routes/PublicRoutes'
+import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
 
 // SankeyApp for OpenSankey+ ========================================================================
 
@@ -181,6 +182,45 @@ export const SankeyAppSA: FunctionComponent = () => {
               />
             }
           />
+          <Route
+            path='/license'
+          >
+            <Route
+              index
+              element={
+                <PrivateRoute
+                  new_data_app={new_data_app}
+                  component={
+                    <PaiementPage
+                      new_data_app={new_data_app}
+                    />
+                  }
+                />
+              }
+            />
+            <Route
+              path='checkout'
+              element={
+                <PrivateRoute
+                  new_data_app={new_data_app}
+                  component={
+                    <PaiementCheckout />
+                  }
+                />
+              }
+            />
+            <Route
+              path='return'
+              element={
+                <PrivateRoute
+                  new_data_app={new_data_app}
+                  component={
+                    <PaiementReturn />
+                  }
+                />
+              }
+            />
+          </Route>
           <Route
             path='/account'
             element={

@@ -14,7 +14,6 @@ from flask import request
 from flask import Response
 from flask_cors import cross_origin
 from flask_login import current_user
-from flask_login import login_required
 from flask_login import login_user
 from flask_login import LoginManager
 from flask_login import logout_user
@@ -29,12 +28,13 @@ from .mailing import send_welcome_mail
 from .mailing import send_pw_reset_email
 from .mailing import is_email_valid
 from .models import User
+from .models import login_required
 from .models import db
 
 # ---------------------------------------------------------------
 # Create auth blue print
 
-auth = Blueprint('auth', __name__)
+auth_blueprint = Blueprint('auth_blueprint', __name__)
 login_manager = LoginManager()
 
 
@@ -53,7 +53,7 @@ def init_logging_manager(app):
     Optional parameters
     -------------------
     """
-    login_manager.login_view = 'auth.login_post'
+    login_manager.login_view = 'auth_blueprint.login_post'
     login_manager.init_app(app)
 
 
@@ -67,7 +67,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@auth.route('/auth/login', methods=['POST'])
+@auth_blueprint.route('/auth/login', methods=['POST'])
 def login_post():
     '''
     HTTP POST request to check if credentials are valid
@@ -110,7 +110,7 @@ def login_post():
     return jsonify(response), 200
 
 
-@auth.route('/auth/signup', methods=['POST'])
+@auth_blueprint.route('/auth/signup', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def signup_post():
     '''
@@ -180,7 +180,7 @@ def signup_post():
     return jsonify(response), 200
 
 
-@auth.route('/auth/logout')
+@auth_blueprint.route('/auth/logout')
 @login_required
 def logout():
     '''
@@ -192,14 +192,14 @@ def logout():
     return 'ok', 200
 
 
-@auth.route('/auth/check_captcha', methods=['POST'])
+@auth_blueprint.route('/auth/check_captcha', methods=['POST'])
 def check_captcha():
     token = request.json.get('token')
     res = requests.post('https://www.google.com/recaptcha/api/siteverify?secret=6Les5JwmAAAAAK2qIlZsNkiEKsvHLmPoK1JiQcOD&response='+token)  # noqa
     return res.json(), res.status_code
 
 
-@auth.route('/auth/forgot_pw', methods=['POST'])
+@auth_blueprint.route('/auth/forgot_pw', methods=['POST'])
 def forgot():
     """
     Trigger password reseting
@@ -239,7 +239,7 @@ def forgot():
     return jsonify(response), 200
 
 
-@auth.route('/auth/reset_pw/<token>', methods=['POST'])
+@auth_blueprint.route('/auth/reset_pw/<token>', methods=['POST'])
 def reset(token):
     """
     Reset password for user if token match

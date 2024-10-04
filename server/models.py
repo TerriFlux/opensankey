@@ -16,7 +16,6 @@ from flask import request
 
 # Flask_login imports
 from flask_login import current_user
-# from flask_login import login_required
 from flask_login import UserMixin
 
 # SQLAlchemy

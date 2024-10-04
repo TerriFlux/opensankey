@@ -2,19 +2,32 @@ import React, { FunctionComponent, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import i18next from 'i18next'
 
-import { Box, Button, Card, CardBody, CardHeader, FormControl, FormErrorMessage, Image, Input, InputGroup, InputLeftAddon, InputRightElement } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  FormControl,
+  FormErrorMessage,
+  Image,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightElement
+} from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { applyPasswordReset, triggerPasswordReset } from './LoginFunctions'
 import { email_regex_str, pwd_regex_str } from '../Register/Register'
 
 
-type PasswordResetFromToken = {
+type FCType_PasswordResetFromToken = {
   new_data_app: Class_ApplicationDataSA
 }
 
 // Password resetin page
-export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> = ({
+export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromToken> = ({
   new_data_app
 }) => {
 
