@@ -1722,6 +1722,35 @@ export const updateLayout: updateLayoutFuncType = (
     if (differences) {
       differences.forEach((difference) => applyChange(data.levelTags, {}, difference))
     }
+    // Finds the corresponding tag group by name and apply the "dynamic" attributes
+    // activate, show_legend and selected.
+    // Object.values(data.levelTags).forEach(nodeTag=>{
+    //   Object.values(new_layout.levelTags).filter(_=>_.group_name === nodeTag.group_name).forEach(_=>{
+    //     nodeTag.activated=_.activated
+    //     nodeTag.show_legend = _.show_legend
+    //     Object.values(nodeTag.tags).forEach(tag=>
+    //       Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
+    //         tag.selected = ltag.selected
+    //         if (ltag.color) {
+    //           tag.color = ltag.color
+    //         }
+    //       })
+    //     )
+    //   })
+    // })
+    // Object.keys(new_layout.levelTags).forEach(tagGroup=>{
+    //   if (!(tagGroup in data.levelTags)) {
+    //     data.levelTags[tagGroup] = {...new_layout.levelTags[tagGroup]}
+    //   }
+    //   Object.values(data.nodes).forEach(n=>{
+    //     if (!n.tags[tagGroup]) {
+    //       n.tags[tagGroup] = []
+    //     }
+    //     if (new_layout.nodes[n.idNode]?.tags[tagGroup] ?? false) {
+    //       n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
+    //     }
+    //   })
+    // })
   }
 
   if (mode.includes('tagNode')) {
