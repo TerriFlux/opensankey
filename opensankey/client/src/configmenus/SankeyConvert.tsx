@@ -5,7 +5,8 @@ import {
   DefaultNodeProductStyle,DefaultNodeSectorStyle,DefaultNodeImportStyle,DefaultNodeExportStyle,
   DefaultLinkImportStyle,
   DefaultLinkExportStyle,
-  AssignNodeLocalAttribute
+  AssignNodeLocalAttribute,
+  ReturnValueNode
 } from './SankeyUtils'
 
 import { ConvertDataFuncType, complete_sankey_dataFunctType, compute_flux_maxFType, compute_initial_colorsFType, convert_booleanFType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from './types/SankeyConvertTypes'
@@ -432,6 +433,8 @@ export const convert_tags:convert_tagsFuncType = (
   const new_dataTags = Object.entries(data.dataTags).filter(([key,tag_group])=>tag_group.banner !== 'display' && key !== 'flux_types' && key !=='Uncert')
   data.dataTags = Object.assign({}, ...new_dataTags.map(([key,v]) => ({ [key]: { ...v } })))
 
+  const has_relative = Object.values(data.nodes).filter(n => ReturnValueNode(data,n,'position')==='relative' || (n as unknown as ConvertSankeyNode).position === 'relative' ).length > 0
+
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   if (has_product) {
     if (!('Type de noeud' in data.nodeTags)) {
@@ -499,9 +502,15 @@ export const convert_tags:convert_tagsFuncType = (
     }
     if(!Object.keys(data.style_node).includes('NodeImportStyle')){
       data.style_node['NodeImportStyle']=DefaultNodeImportStyle()
+      if (!has_relative) {
+        data.style_node['NodeImportStyle'].position = 'absolute'
+      }
     }
     if(!Object.keys(data.style_node).includes('NodeExportStyle')){
       data.style_node['NodeExportStyle']=DefaultNodeExportStyle()
+      if (!has_relative) {
+        data.style_node['NodeExportStyle'].position = 'absolute'
+      }
     }
     if(!Object.keys(data.style_link).includes('LinkImportStyle')){
       data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
@@ -590,6 +599,7 @@ export const convert_tags:convert_tagsFuncType = (
         })
         delete n_convert.subchain
       }
+      const has_position = 'position' in n_convert
       delete n_convert.position
       if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'].includes('échange')) {
         n.tags['Type de noeud'].push('echange')
@@ -602,8 +612,10 @@ export const convert_tags:convert_tagsFuncType = (
           } else if (n.outputLinksId.length === 0) {
             n.style = 'NodeExportStyle'
           }
-          AssignNodeLocalAttribute(n,'relative_dx',n.x)
-          AssignNodeLocalAttribute(n,'relative_dy',n.y)
+          if (has_relative && has_position) {
+            AssignNodeLocalAttribute(n,'relative_dx',n.x)
+            AssignNodeLocalAttribute(n,'relative_dy',n.y)
+          }
         }
         //     const link =  data.links[n.outputLinksId[0]]
         //     if (!link) {

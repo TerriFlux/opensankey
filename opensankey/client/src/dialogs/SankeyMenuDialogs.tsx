@@ -513,7 +513,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
                     .forEach(style=>style.position = 'parametric')
-                  ComputeParametrization(applicationData)
+                  ComputeParametrization(applicationData,false)
                 } else {
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
@@ -535,7 +535,20 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
                     .forEach(style=>style.position = 'parametric')
-                  ComputeParametrization(applicationData)
+                    Object.values(data.nodes).forEach(
+                      n => {
+                        if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'].includes('echange')) {
+                          if (n.style == 'default') {
+                            if (n.inputLinksId.length === 0) {
+                              n.style = 'NodeImportStyle'
+                            } else if (n.outputLinksId.length === 0) {
+                              n.style = 'NodeExportStyle'
+                            }
+                          }
+                        }
+                      }
+                    )
+                  ComputeParametrization(applicationData,false)
                 } else {
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')

@@ -20,6 +20,7 @@ import {
 } from '../types/Types'
 import {
   AggregateFuncType,
+  ArrangeTradeType,
   ComputeParametrizationType,
   DesaggregateFuncType,
   computeHorizontalIndexFuncType,
@@ -817,13 +818,98 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   })
 }
 
+export const ArrangeTrade : ArrangeTradeType = (
+  applicationData,
+  compute_xy
+) => {
+  const {data} = applicationData
+  const {nodes,links } = data
+  let import_nodes = Object.values(nodes).filter(n=>(('Type de noeud'in n.tags)) && n.tags['Type de noeud'][0]=='echange' && n.outputLinksId.length > 0)
+  let export_nodes = Object.values(nodes).filter(n=>(('Type de noeud'in n.tags)) && n.tags['Type de noeud'][0]=='echange' && n.inputLinksId.length > 0 )
+
+  let max_vertical_offset = 0
+  const compute_offset = (node:SankeyNode) => {
+    if (!node.y) {
+      return
+    }
+    if ('Type de noeud' in node.tags && node.tags['Type de noeud'] && node.tags['Type de noeud'][0] == 'echange' && node.inputLinksId.length > 0) {
+      return
+    }
+    max_vertical_offset = Math.max(node.y, max_vertical_offset)
+  }
+
+  Object.values(nodes).filter(n=>NodeDisplayed(data,n)).forEach(compute_offset)
+  max_vertical_offset = max_vertical_offset + 200
+
+  import_nodes.forEach(node => {
+    const output_link = links[node.outputLinksId[0]]
+    const target_node = nodes[output_link.idTarget]
+    node.u = target_node.u
+    if (compute_xy) {
+      const x = Math.round(target_node.x/data.style_node['default'].dx)*data.style_node['default'].dx - data.style_node['default'].dx
+      node.x = x
+      node.y = 20
+    }
+  })
+
+  export_nodes.forEach(node => {
+    const input_link = links[node.inputLinksId[0]]
+    const source_node = nodes[input_link.idSource]
+    node.u = source_node.u
+    if (compute_xy) {
+      const x = Math.round(source_node.x/data.style_node['default'].dx)*data.style_node['default'].dx+data.style_node['default'].dx
+      node.x = x
+      node.y = max_vertical_offset
+    }
+  })
+
+  let columns : {[_:number]:SankeyNode[]} = {}
+  Object.values(import_nodes).forEach(n=>{
+    if (columns[n.u]) {
+      columns[n.u].push(n)
+    } else {
+      columns[n.u] = [n]
+    }
+  })
+
+
+    Object.values(columns).forEach(column=>{
+      column.sort((n1,n2)=>n1.y-n2.y)
+      Object.values(data.levelTags).forEach( tagGroup=> {
+        let current_v = -100
+        column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
+      }
+    )
+  })
+  columns = {}
+  Object.values(export_nodes).forEach(n=>{
+    if (columns[n.u]) {
+      columns[n.u].push(n)
+    } else {
+      columns[n.u] = [n]
+    }
+  })
+
+  Object.values(columns).forEach(column=>{
+    column.sort((n1,n2)=>n1.y-n2.y)
+    Object.values(data.levelTags).forEach( tagGroup=> {
+      let current_v = 1000
+      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
+    })
+  })
+}
+
 export const ComputeParametrization:ComputeParametrizationType = (
-  applicationData
+  applicationData,
+  compute_xy
 ) => {
   const { display_nodes,data } = applicationData
   const columns : {[_:number]:SankeyNode[]} = {}
   let smaller_x : number
   Object.values(display_nodes).forEach(n=>{
+    if (('Type de noeud' in n.tags) && n.tags['Type de noeud'][0] === 'echange') {
+      return
+    }
     if (smaller_x === undefined) {
       smaller_x = n.x
     }
@@ -833,8 +919,7 @@ export const ComputeParametrization:ComputeParametrizationType = (
   })
 
   Object.values(display_nodes).forEach(n=>{
-
-    if (ReturnValueNode(data,n,'position') === 'relative' ) {
+    if (('Type de noeud' in n.tags) && n.tags['Type de noeud'][0] === 'echange') {
       return
     }
     n.u = Math.floor((n.x-smaller_x/3)/data.style_node['default'].dx)
@@ -844,6 +929,7 @@ export const ComputeParametrization:ComputeParametrizationType = (
       columns[n.u].push(n)
     }
   })
+  ArrangeTrade(applicationData,compute_xy)
   ComputeParametricV(applicationData)
 }
 
@@ -2018,7 +2104,7 @@ export const ComputeParametricV = (applicationData: applicationDataType) => {
   const { data } = applicationData
 
   const columns : {[_:number]:SankeyNode[]} = {}
-  Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange').forEach(n=>{
+  Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && ReturnValueNode(data,n,'position') !== 'relative' ).forEach(n=>{
     if (columns[n.u]) {
       columns[n.u].push(n)
     } else {
