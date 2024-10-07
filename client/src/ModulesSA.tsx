@@ -111,58 +111,78 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
-  const btn_navigate_to_login_register_dashboard = !new_data_app.has_free_account ? <Menu
-    variant='menu_button_subnav_account_style'
-    placement='bottom-end'
+  const user_navigation_bar_free = <Box
+    layerStyle='menutop_layout_style'
+    height='5rem'
+    gridTemplateColumns='11rem 11rem'
   >
-    <MenuButton>
-      <Box
-        gridColumn='1'
-        gridRow='1'
-        justifySelf='end'
-      >
-        <FaUser
-          style={{ 'height': '2rem', 'width': '2rem' }}
-        />
-      </Box>
-      <Box
-        gridColumn='2'
-        gridRow='1'
-        height='1rem'
-        width='1rem'
-        alignSelf='end'
-      >
-        <ChevronDownIcon
-          style={{ 'height': '1rem', 'width': '1rem' }}
-        />
-      </Box>
-    </MenuButton>
-    <MenuList>
-      <MenuItem
-        onClick={() => {
-          // applicationData.function_on_wait.current = () => {
-          //   localStorage.setItem('data', LZString.compress(JSON.stringify((applicationData as suiteApplicationDataType).master_data)))
-          //   localStorage.setItem('last_save', 'true')
-          //   new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-          //   navigate('/login')
-          // }
-          // dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
-          new_data_app.menu_configuration.function_on_wait.current = () => {
-            indicateSankeyToSaveInCache()
-            navigate('/login')
-          }
-          new_data_app.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
-        }}
-      >
-        {t('connect')}
-      </MenuItem>
-      <MenuItem
-        onClick={() => navigate('/register')}
-      >
-        {t('UserPages.to_reg')}
-      </MenuItem>
-    </MenuList>
-  </Menu> : <Box
+    <Button
+      variant='btn_lone_navigation_primary'
+      onClick={() => navigate('/license?buy')}
+    >
+      {t('UserNav.buy')}
+    </Button>
+    <Button
+      variant='btn_lone_navigation_secondary'
+      onClick={() => navigate('/login')}
+    >
+      {t('UserNav.connect')}
+    </Button>
+  </Box>
+  // const user_navigation_bar_free = <Menu
+  //   variant='menu_button_subnav_account_style'
+  //   placement='bottom-end'
+  // >
+  //   <MenuButton>
+  //     <Box
+  //       gridColumn='1'
+  //       gridRow='1'
+  //       justifySelf='end'
+  //     >
+  //       <FaUser
+  //         style={{ 'height': '2rem', 'width': '2rem' }}
+  //       />
+  //     </Box>
+  //     <Box
+  //       gridColumn='2'
+  //       gridRow='1'
+  //       height='1rem'
+  //       width='1rem'
+  //       alignSelf='end'
+  //     >
+  //       <ChevronDownIcon
+  //         style={{ 'height': '1rem', 'width': '1rem' }}
+  //       />
+  //     </Box>
+  //   </MenuButton>
+  //   <MenuList>
+  //     <MenuItem
+  //       onClick={() => {
+  //         // applicationData.function_on_wait.current = () => {
+  //         //   localStorage.setItem('data', LZString.compress(JSON.stringify((applicationData as suiteApplicationDataType).master_data)))
+  //         //   localStorage.setItem('last_save', 'true')
+  //         //   new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+  //         //   navigate('/login')
+  //         // }
+  //         // dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
+  //         new_data_app.menu_configuration.function_on_wait.current = () => {
+  //           indicateSankeyToSaveInCache()
+  //           navigate('/login')
+  //         }
+  //         new_data_app.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
+  //       }}
+  //     >
+  //       {t('connect')}
+  //     </MenuItem>
+  //     <MenuItem
+  //       onClick={() => navigate('/register')}
+  //     >
+  //       {t('UserPages.to_reg')}
+  //     </MenuItem>
+  //   </MenuList>
+  // </Menu>
+
+  const user_navigation_bar_connected = <Box
     alignSelf='center'
     justifySelf='center'
     display='grid'
@@ -197,5 +217,6 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     </Button>
   </Box>
 
-  return btn_navigate_to_login_register_dashboard
+
+  return (!new_data_app.has_free_account ? user_navigation_bar_free : user_navigation_bar_connected)
 }

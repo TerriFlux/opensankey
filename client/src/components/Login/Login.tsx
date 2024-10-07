@@ -58,7 +58,6 @@ const Login: FunctionComponent<LoginTypes> = ({
         width="100%"
       >
         <Box
-          className='MenuNavigation'
           layerStyle='menutop_layout_style'
           gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
         >
@@ -68,7 +67,7 @@ const Login: FunctionComponent<LoginTypes> = ({
             justifySelf='center'
           >
             <Image
-              height='4rem'
+              height='5rem'
               src={logo}
               alt='navigation logo'
               onClick={() => returnToApp(new_data_app, navigate)}

@@ -344,7 +344,6 @@ const Account: FunctionComponent<AccountTypes> = ({
         width="100%"
       >
         <Box
-          className='MenuNavigation'
           layerStyle='menutop_layout_style'
           gridTemplateColumns='minmax(7vw, 150px) auto'
         >
@@ -354,7 +353,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             justifySelf='left'
           >
             <Image
-              height='4rem'
+              height='5rem'
               src={logo}
               alt='navigation logo'
               onClick={() => returnToApp(new_data_app, navigate)}
