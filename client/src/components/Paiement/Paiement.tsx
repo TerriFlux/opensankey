@@ -166,7 +166,7 @@ export const PaiementPage: FunctionComponent<{
               variant='btn_lone_navigation'
               onClick={() => returnToApp(new_data_app, navigate)}
             >
-              {t('UserPages.to_app')}
+              {t('UserNav.to_app')}
             </Button>
           </Box>
         </Box>

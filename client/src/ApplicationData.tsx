@@ -33,4 +33,12 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   public get menu_configuration(): Class_MenuConfigSA { return this._menu_configuration }
   public set menu_configuration(_: Class_MenuConfigSA) { this._menu_configuration = _ }
 
+  // Overrride logo
+  public get logo() {
+    if (!this.has_free_account)
+      return this.logo_opensankey
+    else
+      return this.logo_sankey_plus
+  }
+
 }

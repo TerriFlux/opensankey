@@ -160,13 +160,13 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
               variant='btn_lone_navigation'
               onClick={() => returnToApp(new_data_app, navigate)}
             >
-              {t('UserPages.to_app')}
+              {t('UserNav.to_app')}
             </Button>
             <Button
               variant='btn_lone_navigation'
               onClick={() => myAccount()}
             >
-              {t('UserPages.to_acc')}
+              {t('UserNav.to_acc')}
             </Button>
             <Button
               variant='menutop_button_logout'

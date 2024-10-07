@@ -191,12 +191,12 @@ const Register: FunctionComponent<RegisterType> = ({
         <Button
           variant='btn_lone_navigation'
           onClick={() => { returnToApp(new_data_app, navigate) }}>
-          {t('UserPages.to_app')}
+          {t('UserNav.to_app')}
         </Button>
         <Button
           variant='btn_lone_navigation_secondary'
           onClick={() => navigate('/login')}>
-          {t('UserPages.to_con')}
+          {t('UserNav.to_con')}
         </Button>
       </Box>
     </Box>

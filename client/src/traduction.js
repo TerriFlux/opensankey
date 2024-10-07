@@ -162,6 +162,13 @@ const resources = {
         'labels': 'Labels',
         'title': 'Title'
       },
+      UserNav: {
+        'to_con': 'Sign in',
+        'to_buy': 'Try OpenSankey+',
+        'to_app': 'Back to the application',
+        'to_acc': 'My account',
+        'to_dbd': 'Dashboard',
+      },
       Login: {
         'con': 'Login',
         'forgot_ask': 'Password forgotten ?',
@@ -178,11 +185,7 @@ const resources = {
         'err_token_expire': 'Error, the request has expired.'
       },
       UserPages: {
-        'to_app': 'Back to the application',
-        'to_con': 'Sign in',
         'to_reg': 'Sign up',
-        'to_acc': 'My account',
-        'to_dbd': 'Dashboard',
         'id': 'E-mail',
         'mdp': 'Password',
         'pnom': 'Firstname',
@@ -539,6 +542,13 @@ const resources = {
 
         'title': 'Titre'
       },
+      UserNav: {
+        'to_con': 'Se connecter',
+        'to_buy': 'Essayer OpenSankey+',
+        'to_app': 'Retour à l\'application',
+        'to_acc': 'Mon compte',
+        'to_dbd': 'Dashboard',
+      },
       Login: {
         'con': 'Connexion',
         'forgot_ask': 'Mot de passe oublié ?',
@@ -555,11 +565,6 @@ const resources = {
         'err_token_expire': 'Erreur, la demande a expiré.'
       },
       UserPages: {
-        'to_app': 'Retour à l\'application',
-        'to_con': 'Se connecter',
-        'to_reg': 'Créer un compte',
-        'to_acc': 'Mon compte',
-        'to_dbd': 'Dashboard',
         'id': 'E-mail',
         'mdp': 'Mot de passe',
         'pnom': 'Prénom',
