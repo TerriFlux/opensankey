@@ -5,7 +5,6 @@
 // ==================================================================================================
 
 // Import OpenSankey
-import { initial_window_height, initial_window_width } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
@@ -45,8 +44,6 @@ export class Class_ApplicationDataOSP
 
   public createNewDrawingArea(id?: string): Class_DrawingAreaOSP {
     const drawing_area = new Class_DrawingAreaOSP(
-      initial_window_height,
-      initial_window_width,
       this,
       id
     )
