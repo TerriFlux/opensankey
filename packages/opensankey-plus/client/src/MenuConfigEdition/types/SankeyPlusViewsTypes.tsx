@@ -1,4 +1,4 @@
-import { Type_GenericApplicationDataOSP } from '../types/TypesOSP'
+import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 
 export type FCType_SelecteurView = {
   new_data_plus: Type_GenericApplicationDataOSP

@@ -37,10 +37,10 @@ import {
   default_main_sankey_id,
   OSTooltip,
   Type_JSON,
-} from './deps/OpenSankey/types/Utils'
+} from '../deps/OpenSankey/types/Utils'
 import {
   ConfigMenuTextInput
-} from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+} from '../deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 // Local libs
 import {
@@ -51,11 +51,11 @@ import {
   FCType_MenuEnregistrerViewOSP,
   FCType_ModalViewNotSavedOSP,
   FCType_ModalTransparentViewAttrOSP
-} from './ftypes/SankeyPlusViewsTypes'
+} from './types/SankeyPlusViewsTypes'
 
 import {
   OSPData
-} from './types/LegacyTypes'
+} from '../types/LegacyTypes'
 
 // TODO Est-ce toujours utile ?
 declare const window: Window &
@@ -725,8 +725,7 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
-  return <>
-    <AccordionItem
+  return <AccordionItem
       style={{ 'display': (new_data_plus.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
     >
       <AccordionButton onClick={() => {
@@ -767,8 +766,9 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
               </Tr>
             </Thead>
             <Tbody>
-              {list_view.map(d => {
+              {list_view.map((d,idx) => {
                 return (
+                  <React.Fragment key={idx}>
                   <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
                     <Td>
                       <Input
@@ -804,17 +804,15 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
                       }
                     ><FaMinus /></Button></Td>
                   </Tr>
+                  </React.Fragment>
                 )
               })}
             </Tbody>
           </Table>
         </Box>
 
-
       </AccordionPanel>
     </AccordionItem>
-
-  </>
 }
 
 // TODO Voir si toujours utile

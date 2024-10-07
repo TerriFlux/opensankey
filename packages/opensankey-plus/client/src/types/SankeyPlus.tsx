@@ -13,7 +13,7 @@ import { Type_JSON, default_main_sankey_id, default_style_id, getJSONFromJSON } 
 // Local imports
 import type { ViewType } from './LegacyTypes'
 import type { Class_MenuConfigPlus } from './MenuConfigPlus'
-import type { Class_NodeElementPlus } from './NodePlus'
+import type { Class_NodeElementPlus, Class_NodeStylePlus } from './NodePlus'
 import type { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
 import { type Class_AbstractDrawingAreaPlus, Class_AbstractSankeyPlus } from './Abstract'
 import { Class_ContainerElement } from './FreeLabel'
@@ -42,6 +42,7 @@ export abstract class Class_SankeyPlus
   // ABSTRACT ATTRIBUTES ================================================================
 
   protected abstract _link_styles: { [_: string]: Class_LinkStylePlus }
+  protected abstract _node_styles: { [_: string]: Class_NodeStylePlus }
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -344,5 +345,11 @@ export abstract class Class_SankeyPlus
   public get default_link_style() { return this._link_styles[default_style_id] }
   public get link_styles_dict() {
     return this._link_styles
+  }
+
+  // Nodes styles
+  public get default_node_style() { return this._node_styles[default_style_id] }
+  public get node_styles_dict() {
+    return this._node_styles
   }
 }

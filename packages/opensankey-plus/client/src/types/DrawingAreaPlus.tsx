@@ -27,8 +27,10 @@ import {
   default_main_sankey_id,
   getBooleanFromJSON,
   getStringFromJSON,
+  getStringOrUndefinedFromJSON,
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
+import { convert_data_plus_legacy } from '../SankeyPlusUtils'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -300,6 +302,14 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   public fromJSON(json_object: Type_JSON, redraw?: boolean, match_and_update?: boolean): void {
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      convert_data_plus_legacy(json_object) // FIXME
+    }
     super.fromJSON(json_object, redraw, match_and_update)
     // New attributes
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)

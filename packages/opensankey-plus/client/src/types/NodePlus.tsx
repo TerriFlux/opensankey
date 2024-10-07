@@ -16,11 +16,24 @@ import {
 import type { Class_MenuConfigPlus } from './MenuConfigPlus'
 import type { Class_LinkElementPlus } from './LinkPlus'
 import {
+  Type_ElementPosition,
   type Type_JSON,
   getBooleanFromJSON,
   getStringFromJSON,
   getStringOrUndefinedFromJSON
 } from '../deps/OpenSankey/types/Utils'
+import { Class_NodeAttribute, Class_NodeStyle } from '../deps/OpenSankey/types/Node'
+import { default_label_background } from '../MenuConfigEdition/SankeyPlusNodes'
+import { Type_GenericNodeElementOSP } from './TypesOSP'
+
+export function isAttributeOverloaded(
+  nodes: Type_GenericNodeElementOSP[],
+  attr: keyof Class_NodeAttributePlus
+) {
+  let overloaded = false
+  nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
+  return overloaded
+}
 
 // CLASS NODE ELEMENT PLUS **************************************************************
 
@@ -44,6 +57,16 @@ export abstract class Class_NodeElementPlus
   > {
 
   // PROTECTED ATTRIBUTE ================================================================
+  protected abstract _display: {
+    drawing_area: Type_GenericDrawingArea,
+    sankey: Type_GenericSankey,
+    position: Type_ElementPosition,
+    style: Class_NodeStylePlus,
+    attributes: Class_NodeAttributePlus
+    position_x_label?: number// Relative x position of label when dragged (optionnal)
+    position_y_label?: number// Relative y position of label when dragged (optionnal)
+  }
+
 
   /**
    * Config menu ref to html element & function to update it
@@ -114,6 +137,7 @@ export abstract class Class_NodeElementPlus
 
   public override draw() {
     super.draw()
+    this.drawNodeLabelBg()
     this.drawIllustration()
     this.drawFO()
   }
@@ -193,6 +217,10 @@ export abstract class Class_NodeElementPlus
     this._hyperlink = node_to_copy._hyperlink
   }
 
+  public isAttributeOverloaded(attr: keyof Class_NodeAttributePlus) {
+    return this._display.attributes[attr] !== undefined
+  }
+
   public override isEqual(
     _: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
   ): boolean {
@@ -234,6 +262,11 @@ export abstract class Class_NodeElementPlus
     if (this._hyperlink != _._hyperlink) {
       return false
     }
+
+    if (this.name_label_background !== _.name_label_background) {
+      return false
+    }
+
     return true
   }
 
@@ -300,6 +333,57 @@ export abstract class Class_NodeElementPlus
       .attr('d', this.sankey.getIconFromCatalog(this.iconName))
   }
 
+  /**
+   * Draw a background to the name label to highlight the name label
+   *
+   * @private
+   * @memberof Class_NodeElementPlus
+   */
+  private drawNodeLabelBg() {
+    // Preventively delete previous label bg
+    this.d3_selection?.select('.node_label_bg').remove()
+
+    // Draw label BG if attr is at true but also if we display label
+    if (this.name_label_visible && this.name_label_background) {
+      const box_width = Math.min(
+        this.name_label.length * this.name_label_font_size,
+        this.name_label_box_width)
+
+      const [label_pos_x, label_pos_y, label_anchor] = this.getNameLabelPos()
+
+      let box_pos_x = label_pos_x
+      let box_pos_y = label_pos_y
+      if (this.name_label_vert == 'top') {
+        box_pos_y -= this.name_label_font_size
+      } else if (this.name_label_vert == 'middle') {
+        box_pos_y -= this.name_label_font_size / 2
+      }
+      if (label_anchor === 'end') {
+        box_pos_x = box_pos_x - box_width
+      }
+      else if (label_anchor === 'middle') {
+        box_pos_x = box_pos_x - box_width / 2
+      }
+      const box_height = this.name_label_font_size
+
+      this.d3_selection?.insert('g', '.name_label_text')
+        .attr('class', 'node_label_bg')
+        .append('rect')
+        .classed('name_label', true)
+        .classed('name_label_background', true)
+        .attr('id', 'name_label_background_' + this.id)
+        .attr('width', box_width)
+        .attr('height', box_height)
+        .attr('fill', 'white')
+        .attr('fill-opacity', 0.55)
+        .attr('rx', 4)
+        .style('stroke', 'none')
+        .attr('x', box_pos_x)
+        .attr('y', box_pos_y)
+
+    }
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   // Overrides --------------------------------------------------------------------------
@@ -342,4 +426,100 @@ export abstract class Class_NodeElementPlus
   public get FO_content(): string { return this._FO_content }
   public set FO_content(value: string) { this._FO_content = value }
 
+
+  /**
+   * Getter of attribute name_label_background, get it either from display attribute if it exist else use value from related node style
+   * @memberof Class_NodeElement
+   */
+  public get name_label_background() {
+    if (this._display.attributes.name_label_background !== undefined) {
+      return this._display.attributes.name_label_background
+    } else if (this._display.style.name_label_background !== undefined) {
+      return this._display.style.name_label_background
+    }
+    return default_label_background
+  }
+
+  /**
+ * Set name_label_background value to node display attribute 
+ * @memberof Class_NodeElement
+ */
+  public set name_label_background(_: boolean) {
+    this._display.attributes.name_label_background = _
+    this.drawNodeLabelBg()
+  }
+
+}
+
+
+/**
+ * Define all attributes that can be applyied to a link
+ *
+ * @export
+ * @class Class_LinkAttribute
+ */
+export class Class_NodeAttributePlus extends Class_NodeAttribute {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _name_label_background?: boolean | undefined
+
+  // PUBLIC METHODES ====================================================================
+
+  public toJSON() {
+    const json_object = super.toJSON()
+    if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
+
+    return json_object
+  }
+
+  public fromJSON(json_local_object: Type_JSON) {
+    super.fromJSON(json_local_object)
+    if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
+
+  }
+
+  public copyFrom(element: Class_NodeAttributePlus) {
+    super.copyFrom(element)
+    this._name_label_background = element._name_label_background
+
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  // GETTERS ============================================================================
+
+  public get name_label_background(): boolean | undefined { return this._name_label_background }
+
+  // SETTERS ============================================================================
+
+  public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
+
+}
+
+
+export class Class_NodeStylePlus extends Class_NodeStyle {
+
+  // PRIVATE ATTRIBUTES =================================================================
+  private _name_label_background: boolean
+
+  // CONSTRUCTOR ========================================================================
+  constructor(
+    id: string,
+    name: string,
+    is_deletable: boolean = true
+  ) {
+    // Instantiate super class
+    super(id, name, is_deletable)
+    // Update new attributes
+    this._name_label_background = default_label_background
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  // PRIVATE METHODS ====================================================================
+
+  // GETTERS ============================================================================
+  public get name_label_background(): boolean { return this._name_label_background }
+  public set name_label_background(value: boolean) { this._name_label_background = value }
 }
