@@ -83,13 +83,7 @@ export const PaiementReturn = () => {
 
   if (status === 'complete') {
     return (
-      <section id="success">
-        <p>
-          We appreciate your business! A confirmation email will be sent to {customerEmail}.
-
-          If you have any questions, please email <a href="mailto:contact@terriflux.fr">contact@terriflux.fr</a>.
-        </p>
-      </section>
+      <Navigate to="/license?p=success" />
     )
   }
 
@@ -103,49 +97,43 @@ export const PaiementPage: FunctionComponent<{
 }) => {
     // App data
     const { t, logo } = new_data_app
-
-    // // States
-    // const [publishableKey, setPublishableKey] = useState('')
-
+    const [searchParams, ] = useSearchParams();
 
     // Initialise navigation function
     const navigate = useNavigate()
     const returnToApp = () => { navigate('/') }
     const goToCheckout = () => { navigate('/license/checkout') }
 
-    // // Handler
-    // const handleSubmit = async () => {
-    //   // Get Stripe object
-    //   getStripePublishableKey()
-    //   .then(publishableKey => loadStripe(publishableKey))
-    //   .then(stripe => {
-    //     if (stripe !== null) {
-    //     // Get Checkout Session ID
-    //     checkoutLicense()
-    //       .then((data) => {
-    //         console.log(data);
-    //         // Redirect to Stripe Checkout
-    //         return stripe.redirectToCheckout({ sessionId: data.sessionId })
-    //       })
-    //       .then((res) => {
-    //         console.log(res);
-    //       });
-    //     }
-    //     else {
-    //       return Promise.reject(stripe)
-    //     }
-    //   })
-    // }
-
-    // // Effects
-    // const fetchPublishableKey = async () => {
-    //   const key = await getStripePublishableKey()
-    //   setPublishableKey(key)
-    // }
-    // useEffect(() => {
-    //   fetchPublishableKey();
-    // }, []);
-
+    // Init what is displayed
+    const status = searchParams.get("p")
+    let content, header
+    if (status === 'buy'){
+      header = t('Paiement.win_header_buy')
+      content = <>
+        <Box>
+          {t('Paiement.win_content_buy')}
+        </Box>
+        <Button
+          variant='btn_lone_navigation_tertiary'
+          type="submit"
+          onClick={goToCheckout}
+        >
+          {t('Paiement.btn_checkout')}
+        </Button>
+      </>
+    }
+    else if (status === 'success') {
+      header = t('Paiement.win_header_success')
+      content = <Box>
+        {t('Paiement.win_content_success')}
+      </Box>
+    }
+    else {
+      header = t('Paiement.win_header_error')
+      content = <Box>
+        {t('Paiement.win_content_error')}
+      </Box>
+    }
     return (
       <div>
         <Box
@@ -186,23 +174,12 @@ export const PaiementPage: FunctionComponent<{
             <CardHeader
               style={{ 'textAlign': 'center' }}
             >
-              {t('Paiement.license_checkout_win')}
+              {header}
             </CardHeader>
             <CardBody>
               <div style={{ 'textAlign': 'center' }}>
-                <Button
-                  variant='btn_lone_navigation_tertiary'
-                  type="submit"
-                  onClick={goToCheckout}
-                >
-                  {t('Paiement.checkout_btn')}
-                </Button>
+                {content}
               </div>
-              {/* <StripeProvider
-              publishableKey={publishableKey}
-              urlScheme="open-sankey" // required for 3D Secure and bank redirects
-            >
-            </StripeProvider> */}
             </CardBody>
           </Card>
         </div>

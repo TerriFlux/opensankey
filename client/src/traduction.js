@@ -204,6 +204,15 @@ const resources = {
         'err_get_OS+_infos': 'Error while trying to access the OpenSankey+ license server',
         'err_get_SS_infos': 'Error while trying to access the SankeySuite license server'
       },
+      Paiement: {
+        'win_header_buy': 'Buy OpenSankey+',
+        'win_header_success': 'Thank you for your subscription to OpenSankey+',
+        'win_header_error': 'Oops, somethings goes wrong',
+        'win_content_buy': 'Create and share Sankey\'s diagrams like a pro.',
+        'win_content_success': 'OpenSankey+ is now activated for your account.',
+        'win_content_error': 'Something went wrong during the paiement process',
+        'btn_checkout': 'I want OpenSankey+ !'
+      },
       view: {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
@@ -571,6 +580,15 @@ const resources = {
         'err_get_user_infos': 'Erreur lors de l\'accès aux données de l\'utilisateur',
         'err_get_OS+_infos': 'Erreur lors de l\'accès au serveur de licences OpenSankey+',
         'err_get_SS_infos': 'Erreur lors de l\'accès au serveur de licences SankeySuite'
+      },
+      Paiement: {
+        'win_header_buy' : 'Acheter OpenSankey+',
+        'win_header_success' : 'Merci d\'avoir choisi OpenSankey+',
+        'win_header_error' : 'Oups, le paiement n\'a pas abouti',
+        'win_content_buy' : 'Créez et partagez vos diagrammes de Sankey comme un pro.',
+        'win_content_success' : 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
+        'win_content_error' : 'Quelque chose s\'est mal passé pendant le processus de paiement.',
+        'btn_checkout' : 'Je veux OpenSankey+ !'
       },
       view: {
         'unit': 'Unit.',
