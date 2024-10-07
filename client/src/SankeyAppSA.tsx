@@ -31,7 +31,7 @@ import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeO
 // Local imports ====================================================================================
 
 import { Class_ApplicationDataSA } from './ApplicationData'
-import { initializeAdditionalMenusSA, initializeApplicationDataSA } from './ModulesSA'
+import { ExempleMenuTypes, initializeAdditionalMenusSA, initializeApplicationDataSA } from './ModulesSA'
 import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
@@ -42,13 +42,14 @@ import { PublicRoute } from './components/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
 
 // SankeyApp for OpenSankey+ ========================================================================
-
-export const SankeyAppSA: FunctionComponent = () => {
-
-  // const [update, set_update] = useState<boolean>(true) // useState OK
+type SankeyAppSAType={
+  example_menu: ExempleMenuTypes,
+  formations_menu: ExempleMenuTypes
+}
+export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,formations_menu}) => {
 
   const new_data_app = new Class_ApplicationDataSA(false)
-
+  const reinit =initializeReinitializationOSP(new_data_app)
   const sankeyApp =
     <SankeyApp
       initializeReinitialization={initializeReinitializationOSP}
@@ -64,7 +65,10 @@ export const SankeyAppSA: FunctionComponent = () => {
       initializeAdditionalMenus={(additionalMenus, new_data) => {
         initializeAdditionalMenusSA(
           additionalMenus,
-          new_data as Class_ApplicationDataSA
+          new_data as Class_ApplicationDataSA,
+          example_menu,
+          formations_menu,
+          reinit
         )
       }}
       initializeDiagrammSelector={initializeDiagrammSelectorOSP}
