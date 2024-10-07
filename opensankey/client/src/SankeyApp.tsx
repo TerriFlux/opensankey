@@ -5,7 +5,7 @@ import React, {
 import i18next from 'i18next'
 import LZString from 'lz-string'
 import { ChakraProvider, useToast } from '@chakra-ui/react'
-
+import * as d3 from 'd3'
 /*************************************************************************************************/
 
 import { setDiagram, ToolbarBuilder } from './configmenus/SankeyMenuBanner'
@@ -27,7 +27,6 @@ import {
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
 import { Type_JSON } from './types/Utils'
-import { initializeProcessFunctions } from './OSModule'
 
 import { FCType_SankeyApp } from './types/FunctionTypes'
 import { Type_AdditionalMenus } from './types/TypesOS'
@@ -75,7 +74,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     launchToastConstructor(new_data, toast, intake)
   }
 
-  const processFunctions = initializeProcessFunctions(new_data)
 
   /*************************************************************************************************/
 
@@ -116,20 +114,25 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     advanced_label_content: [],
     advanced_label_value_content: [],
     additional_menu_configuration_nodes: {},
-    additional_context_element_menu: [],
-    additional_context_element_other: [],
-
+    additional_node_label_layout_content: [],
+    additional_node_apparence_content: [],
+    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    additional_context_node_element: {},
     // Links
+    additional_menu_configuration_links: {},
     additional_data_element: [],
     additional_link_appearence_items: [],
+    additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    additional_context_link_element: {},
 
     // Preferences
     additional_preferences: [],
 
     // Configuration Menu
     additional_configuration_menus_edition_elements: [],
-    additional_configuration_menus_primary_accordion_elements:[],
+    additional_configuration_menus_primary_accordion_elements: [],
 
     additional_edition_item: [],
     additional_file_save_json_option: [],
@@ -143,6 +146,12 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     example_menu: {},
     formations_menu: {},
 
+    toolbar_elements: {},
+    toolbar_order: ['mode_souris',
+      'node_type',
+      'strectch_zdd',
+      'help',
+      'fullscreen'],
     cards_template: <></>
   }
 
@@ -165,9 +174,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
     new_data={new_data}
     menu_for_style={false}
-    advanced_appearence_content={additionalMenus.advanced_appearence_content}
-    advanced_label_content={additionalMenus.advanced_label_content}
-    advanced_label_value_content={additionalMenus.advanced_label_value_content}
+    additional_menus={additionalMenus}
   />
 
   const config_link_data = <MenuConfigurationLinksData
@@ -177,7 +184,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
   const config_link_attr = <MenuConfigurationLinksAppearence
     new_data={new_data}
-    additional_link_appearence_items={additionalMenus.additional_link_appearence_items}
+    additionMenus={additionalMenus}
     menu_for_style={false}
   />
 
@@ -188,7 +195,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   ) {
     sankey_menus['toolbar'] = <ToolbarBuilder
       new_data={new_data}
-      additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
+      additionalMenu={additionalMenus}
     />
   }
 
@@ -219,6 +226,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   /*************************************************************************************************/
 
   useEffect(() => {
+    // Delete potential duplicat
+    d3.select('#draw_zoom').remove()
     new_data.drawing_area?.reset()
   })
 
@@ -231,7 +240,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
             new_data,
             additionalMenus,
             menu_configuration_nodes_attributes,
-            processFunctions
+            new_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
@@ -242,7 +251,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
         <>
           <Menu
             new_data={new_data}
-            processFunctions={processFunctions}
+            processFunctions={new_data.processFunction}
             configurations_menus={menu_configuration}
             menus={sankey_menus}
             cardsTemplate={additionalMenus.cards_template}
@@ -250,7 +259,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
               <React.Fragment key={'modale_style_link'}>
                 <SankeyModalStyleLink
                   new_data={new_data}
-                  additional_link_appearence_items={[]}
+                  additionalMenus={additionalMenus}
                 />
               </React.Fragment>,
               <React.Fragment key={'modale_style_node'}>
@@ -260,9 +269,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
                     <OpenSankeyConfigurationNodesAttributes
                       new_data={new_data}
                       menu_for_style={true}
-                      advanced_appearence_content={additionalMenus.advanced_appearence_content}
-                      advanced_label_content={additionalMenus.advanced_label_content}
-                      advanced_label_value_content={additionalMenus.advanced_label_value_content}
+                      additional_menus={additionalMenus}
                     />
                   }
                 />
@@ -314,11 +321,11 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
       </div>
       <ContextMenuNode
         new_data={new_data}
-        additional_context_element_menu={additionalMenus.additional_context_element_menu}
-        additional_context_element_other={additionalMenus.additional_context_element_other}
+        additionalMenu={additionalMenus}
       />
       <ContextMenuLink
         new_data={new_data}
+        additionalMenus={additionalMenus}
       />
       <ContextMenuZdd
         new_data={new_data}

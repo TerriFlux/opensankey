@@ -45,7 +45,6 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   }
 
   // Data tags and values --------------------------------------------------------------
-
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
   const value = selected_links[0]?.value
 
@@ -53,7 +52,6 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
   // Refs used to trigger refreshing of number & text inputs
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
     // so selected_links can have the list of previous selected links wich can lead to incorrect links value
@@ -64,16 +62,14 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
     // Update input data value
     ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
-    // Update input text value
-    ref_set_text_value_input.current(value_update?.text_value ?? '')
   }
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
 
   const refreshThis = () => {
-    setCount(a => a + 1)
     updateInputsValues()
+    setCount(a => a + 1)
   }
 
   // Link this menu's update function
@@ -81,7 +77,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    refreshThis()
+    new_data.menu_configuration.updateComponentRelatedToLinksData()
   }
   new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis
 
@@ -180,29 +176,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     </OSTooltip>
 
 
-    {/* Afficher ou non les donnée sur le Sankey  */}
-
-    <OSTooltip label={t('Flux.data.tooltips.affichage')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Flux.data.affichage')}
-        </Box>
-        <ConfigMenuTextInput
-          ref_to_set_value={ref_set_text_value_input}
-          function_get_value={() => { return value?.text_value }}
-          function_on_blur={(_) => {
-            // Update text for links
-            selected_links.forEach(link => {
-              link.text_value = (_ ?? '')
-            })
-            // Update this menu
-            refreshThisAndUpdateRelatedComponents()
-          }}
-        />
-      </Box>
-    </OSTooltip>
-
-    {additional_data_element}
+    {additional_data_element.map((content, idx) => <React.Fragment key={idx}>{content}</React.Fragment>)}
 
   </Box>
 

@@ -21,7 +21,7 @@ import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 
 /*************************************************************************************************/
 
-const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
+export const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
 // MENU COMPONENT ***********************************************************************
@@ -29,8 +29,7 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   {
     new_data,
-    additional_context_element_menu,
-    additional_context_element_other
+    additionalMenu
   }
 ) => {
 
@@ -41,7 +40,6 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     ref_setter_show_menu_node_apparence,
     ref_setter_show_menu_node_tooltip,
     ref_setter_show_menu_node_io,
-    ref_setter_show_menu_node_tags
   } = new_data.menu_configuration.dict_setter_show_dialog
 
   // Node on which this menu applies ----------------------------------------------------
@@ -71,14 +69,13 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const contextualised_node_shape_visible = contextualised_node !== undefined ? contextualised_node.shape_visible : false
   const contextualised_node_label_visible = contextualised_node !== undefined ? contextualised_node.name_label_visible : false
-  const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_visible : false
 
   const selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
 
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [ , refreshThis] = useBoolean()
+  const [, refreshThis] = useBoolean()
 
   // Link this menu's update function
   new_data.menu_configuration.ref_to_menu_context_nodes_updater.current = () => refreshThis.toggle()
@@ -92,9 +89,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     refreshThis.toggle()
   }
 
-  const closeContextMenu=()=>{
+  const closeContextMenu = () => {
     // Unset contextualized node
-    new_data.drawing_area.node_contextualised=undefined
+    new_data.drawing_area.node_contextualised = undefined
     // Refresh this menu
     refreshThis.toggle()
   }
@@ -167,16 +164,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     {icon_open_modal}
   </Button>
 
-  const dropdown_c_n_tooltip = <Button
-    onClick={() => {
-      ref_setter_show_menu_node_tooltip.current(true)
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-  >
-    {t('Noeud.IS')}
-    {icon_open_modal}
-  </Button>
+
 
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select = <Menu placement='end'>
@@ -191,8 +179,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     <MenuList>
       {
         new_data.drawing_area.sankey.node_styles_list_sorted
-          .map((sn,i) => {
-            return <MenuItem key={'context_node_item_'+i} onClick={() => {
+          .map((sn, i) => {
+            return <MenuItem key={'context_node_item_' + i} onClick={() => {
               if (contextualised_node) {
                 selected_nodes.map(node => {
                   node.style = sn
@@ -547,33 +535,45 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     }
   </Button>
 
-  const btn_mask_value = <Button
+
+
+
+
+  const btn_delete = <Button
     variant='contextmenu_button'
     onClick={() => {
-      selected_nodes
-        .forEach(n => {
-          n.value_label_visible = !contextualised_node_value_visible
-        })
+      new_data.drawing_area.deleteSelectedNodes()
+      new_data.drawing_area.node_contextualised = undefined
       refreshThisAndToggleSaving()
-    }}
-  >
-    {
-      contextualised_node_value_visible ?
-        t('Noeud.apparence.hide_value') :
-        t('Noeud.apparence.display_value')
-    }
-  </Button>
-
-  const btn_c_n_show_tags_menu = <Button
-    onClick={() => {
-      ref_setter_show_menu_node_tags.current(true)
       closeContextMenu()
     }}
-    variant='contextmenu_button'
   >
-    {t('Menu.Etiquettes')}
-    {icon_open_modal}
+    {t('Menu.suppr')}
   </Button>
+
+  const context_content: { [_: string]: JSX.Element } = {
+    'aggregate': btn_aggregate,
+    'desaggregate': btn_desagregate,
+    'sep_1': sep,
+
+    'align': selected_nodes.length > 1 ? <>{dropdown_c_n_align}{sep}</> : <></>,
+    'edit_name': button_edit_label_node,
+    'delete': btn_delete,
+    'sep_2': sep,
+
+    'style': dropdown_c_n_style,
+    'mask_shape': btn_mask_shape,
+    'mask_label': btn_mask_label,   
+    'sep_3': sep,
+
+    'reorg': btn_reorganise_link_io,
+    'select_link': drp_dwn_slct_link,
+    'sep_4': sep,
+
+    'drag_apparence': dropdown_c_n_apparence,
+    'drag_io': selected_nodes.length == 1 ? dropdown_c_n_io : <></>,
+    ...additionalMenu.additional_context_node_element
+  }
 
   // Pop over that serve as context menu
   return contextualised_node !== undefined ?
@@ -591,49 +591,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         orientation='vertical'
         isAttached
       >
-        {btn_aggregate}
-        {btn_desagregate}
-        {sep}
-
-        {selected_nodes.length > 1 ? <>
-          {dropdown_c_n_align}
-          {sep}</> : <></>
-        }
-
-        {additional_context_element_other}
-
-        {button_edit_label_node}
-        <Button
-          variant='contextmenu_button'
-          onClick={() => {
-            new_data.drawing_area.deleteSelectedNodes()
-            new_data.drawing_area.node_contextualised = undefined
-            refreshThisAndToggleSaving()
-            closeContextMenu()
-          }}
-        >
-          {t('Menu.suppr')}
-        </Button>
-
-        {sep}
-
-        {dropdown_c_n_style}
-        {btn_mask_shape}
-        {btn_mask_label}
-        {btn_mask_value}
-
-        {sep}
-
-        {btn_reorganise_link_io}
-        {drp_dwn_slct_link}
-
-        {sep}
-
-        {dropdown_c_n_apparence}
-        {btn_c_n_show_tags_menu}
-        {selected_nodes.length == 1 ? dropdown_c_n_io : <></>}
-        {dropdown_c_n_tooltip}
-        {additional_context_element_menu}
+        {additionalMenu.context_node_order.map((key, id) => {
+          return <React.Fragment key={id}>{context_content[key]}</React.Fragment>
+        })}
       </ButtonGroup>
     </Box> :
     <></>

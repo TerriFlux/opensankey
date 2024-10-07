@@ -29,8 +29,6 @@ import {
 
 /*************************************************************************************************/
 import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
-import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
-import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 
 
@@ -40,6 +38,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
     new_data,
     menu_config_link_data,
     menu_config_link_attr,
+    additionalMenus
   }
 ) => {
 
@@ -125,21 +124,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
       for_modal={false}
       idTab={'link_attr_tab_id'}
     />,
-    'Flux.IS': <MenuConfigurationLinksTooltip
-      new_data={new_data}
-      menu_for_modal={false}
-    />
+    ...additionalMenus.additional_menu_configuration_links
   }
 
-  if (
-    (new_data.drawing_area.sankey.flux_taggs_list.length > 0) &&
-    (new_data.menu_configuration.isGivenAccordionShowed('EF'))
-  ) {
-    ui['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
-      new_data={new_data}
-      menu_for_modal={false}
-    />
-  }
+
 
   // Selection menu for links -----------------------------------------------------------
 

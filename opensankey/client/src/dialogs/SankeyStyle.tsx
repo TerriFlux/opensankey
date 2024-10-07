@@ -170,7 +170,7 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
 //Modal et fonctions pour l'edition et affectation des style de flux
 export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink> = ({
   new_data,
-  additional_link_appearence_items
+  additionalMenus
 }) => {
   const { t } = new_data
   const { ref_selected_style_link } = new_data.menu_configuration
@@ -299,7 +299,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
     {
       <MenuConfigurationLinksAppearence
         new_data={new_data}
-        additional_link_appearence_items={additional_link_appearence_items}
+        additionMenus={additionalMenus}
         menu_for_style={true}
       />
     }

@@ -184,7 +184,7 @@ export const CardsTemplateBuilder = (
   // })
   /* eslint-enable */
   return <>
-    {(imageList as string[]).map((_, /*idx*/) => {
+    {(imageList as string[]).map((_, idx) => {
       // _ is the path to the image, it contain '/' because it is in a folder tree
       // so we take the name of file by removing the path & keeping the file name
       const tmp = _.split('/')
@@ -192,7 +192,7 @@ export const CardsTemplateBuilder = (
       // so we take only the name by removing extra (number + file extension)
       const title = tmp[tmp.length - 1].split('.')[0]
       return (
-        <Card variant='cards_template'>
+        <Card key={idx} variant='cards_template'>
           <CardBody>
             <Stack>
               <Heading variant='heading_template_dashboard'>{title.replaceAll('_', ' ')}</Heading>
@@ -309,11 +309,11 @@ export const ModalWelcomeContent = (
           interval={null}
         >
           {
-            (imageList as string[]).map((_) => {
+            (imageList as string[]).map((_,idx) => {
               let title = _.split('/').pop()
               title = title!.split('.').splice(0, 1).join('')
               return (
-                <Carousel.Item>
+                <Carousel.Item key={idx}>
                   <div
                     style={{
                       'display': 'grid',
