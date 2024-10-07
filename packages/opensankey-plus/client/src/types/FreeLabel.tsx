@@ -31,6 +31,16 @@ import {
 } from './Abstract'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 
+
+export const default_container_content = 'Text Label ...'
+export const default_container_label_width = 100
+export const default_container_label_height = 25
+export const default_container_color = 'white'
+export const default_container_color_border = 'black'
+export const default_container_opacity = 100
+export const default_container_transparent_border = false
+export const default_container_is_image = false
+export const default_container_image_src = ''
 // CLASS FREE LABEL ELEMENT *************************************************************
 
 export class Class_ContainerElement
@@ -50,7 +60,7 @@ export class Class_ContainerElement
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected d3_selection_g_shape:d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
   /**
    * Display attributes
@@ -117,16 +127,15 @@ export class Class_ContainerElement
     }
     // Free labels attributs
     this._title = 'Zone de texte ' + this.id
-    this._content = 'Text Label ...'
-    this._label_width = 100
-    this._label_height = 25
-    this._color = 'white'
-    this._color_border = 'black'
-    this._opacity = 100
-    this._transparent_border = false
-
-    this._is_image = false
-    this._image_src = ''
+    this._content = default_container_content
+    this._label_width = default_container_label_width
+    this._label_height = default_container_label_height
+    this._color = default_container_color
+    this._color_border = default_container_color_border
+    this._opacity = default_container_opacity
+    this._transparent_border = default_container_transparent_border
+    this._is_image = default_container_is_image
+    this._image_src = default_container_image_src
 
     // Free labels drag handlers
     this._drag_handler = {
@@ -175,7 +184,7 @@ export class Class_ContainerElement
     super.draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_labels')
-    this.d3_selection_g_shape=this.d3_selection?.append('g').attr('class','label_shape')??null
+    this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
     this.drawShape()
     this.drawContent()
   }
@@ -238,7 +247,6 @@ export class Class_ContainerElement
    * @memberof Class_ContainerElement
    */
   public fromJSON(json_object: Type_JSON) {
-
     this._title = getStringFromJSON(json_object, 'title', this.title)
     this._content = getStringFromJSON(json_object, 'content', this.content)
     this._opacity = getNumberFromJSON(json_object, 'opacity', this.opacity)
@@ -249,6 +257,9 @@ export class Class_ContainerElement
     this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
     this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
     this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
+
+    this._display.position.x = getNumberFromJSON(json_object, 'x', 0)
+    this._display.position.y = getNumberFromJSON(json_object, 'y', 0)
   }
 
   /**
@@ -270,6 +281,10 @@ export class Class_ContainerElement
     json_object['image_src'] = this._image_src
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
+
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
+
 
     return json_object
   }
@@ -367,7 +382,7 @@ export class Class_ContainerElement
   private dragTopHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       this._label_height -= event.dy
-      this.position_y=this.position_y +event.dy
+      this.position_y = this.position_y + event.dy
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label

@@ -13,7 +13,7 @@ import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_ApplicationDataPlus } from './ApplicationDataPlus'
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
 import { Class_SankeyPlus } from './SankeyPlus'
-import { Class_NodeElementPlus } from './NodePlus'
+import { Class_NodeAttributePlus, Class_NodeElementPlus, Class_NodeStylePlus } from './NodePlus'
 import { Class_LinkAttributePlus, Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
@@ -82,6 +82,7 @@ export class Class_SankeyOSP
   > {
 
   protected _link_styles: { [_: string]: Class_LinkStylePlus } = {}
+  protected _node_styles: { [_: string]: Class_NodeStylePlus } = {}
 
   constructor(
     drawing_area: Class_DrawingAreaOSP,
@@ -90,6 +91,7 @@ export class Class_SankeyOSP
   ) {
     super(drawing_area, menu_config, id)
     this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
+    this._node_styles[default_style_id] = this.createNewNodeStyle(default_style_id, default_style_name, false)
   }
 
   protected createNewNode(id: string, name: string): Class_NodeElementOSP {
@@ -107,6 +109,10 @@ export class Class_SankeyOSP
     return style
   }
 
+  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStylePlus {
+    return new Class_NodeStylePlus(id,name,is_deletable)
+  }
+
   public get default_link_style() {
     return this._link_styles[default_style_id]
   }
@@ -117,7 +123,34 @@ export class Class_SankeyOSP
 export class Class_NodeElementOSP
   extends Class_NodeElementPlus<
     Class_DrawingAreaOSP, Class_SankeyOSP, Class_LinkElementOSP
-  > {}
+  > {
+
+    protected _display: {
+      drawing_area: Class_DrawingAreaOSP,
+      sankey: Class_SankeyOSP,
+      position: Type_ElementPosition,
+      style: Class_NodeStylePlus,
+      attributes: Class_NodeAttributePlus
+      position_x_label?: number// Relative x position of label when dragged (optionnal)
+      position_y_label?: number// Relative y position of label when dragged (optionnal)
+    }
+    constructor(id:string,name:string,
+      drawing_area: Class_DrawingAreaOSP,
+      menu_config: Class_MenuConfigPlus
+    ){
+      super(id,name,drawing_area,menu_config)
+      this._display={
+        drawing_area: drawing_area,
+        sankey: this.sankey,
+        position: this.display.position,
+
+        style: drawing_area.sankey.default_node_style,
+        attributes: new Class_NodeAttributePlus()
+
+      }
+    }
+
+  }
 
 // LINK =================================================================================
 

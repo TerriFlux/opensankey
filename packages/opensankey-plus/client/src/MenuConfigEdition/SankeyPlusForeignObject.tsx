@@ -11,11 +11,11 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey imports
-import { OSTooltip } from './deps/OpenSankey/types/Utils'
+import { OSTooltip } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
-import type { FCType_NodeForeignObjectOSP } from './ftypes/SankeyPlusForeignObjectTypes'
-import type { Type_GenericNodeElementOSP } from './types/TypesOSP'
+import type { FCType_NodeForeignObjectOSP } from './types/SankeyPlusForeignObjectTypes'
+import type { Type_GenericNodeElementOSP } from '../types/TypesOSP'
 
 export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP> = ({
   new_data_plus,

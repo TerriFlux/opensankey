@@ -28,7 +28,7 @@ export const resources = {
         'excel': 'Extract data',
         'pub': 'Publish',
         'setResolutionPNG': 'Select the desired export resolution',
-        'sankeyPlusDisabled': 'Parameter disabled because you don\'t have OpenSankey+',
+        'sankeyOSPDisabled': 'Parameter disabled because you don\'t have OpenSankey+',
         'featureLocked': 'Locked',
         'featureBeta': 'Beta-test',
 
@@ -429,7 +429,7 @@ export const resources = {
         'excel': 'Extraire données',
         'pub': 'Publier',
         'setResolutionPNG': 'Choisissez la résolution désirée pour l\'exportation',
-        'sankeyPlusDisabled': 'Paramètre désactivé car vous n\'avez pas OpenSankey+',
+        'sankeyOSPDisabled': 'Paramètre désactivé car vous n\'avez pas OpenSankey+',
         'featureLocked': 'Licence',
         'featureBeta': 'Beta-test',
 
