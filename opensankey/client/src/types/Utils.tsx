@@ -312,15 +312,13 @@ export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
     label={label}
     closeDelay={100}
   >
-    <>
-      {children}
-    </>
+    {children}
   </Tooltip>
 }
 
-export const CustomFaEyeCheckIcon=(props:CheckboxProps)=>{
+export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
   const { isChecked } = props
-  return isChecked?<FaEye/>:<FaEyeSlash/>
+  return isChecked ? <FaEye /> : <FaEyeSlash />
 }
 export const GetRandomInt = (max: number) => {
   return Math.floor(Math.random() * max)

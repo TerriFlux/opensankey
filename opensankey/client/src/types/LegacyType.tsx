@@ -73,6 +73,8 @@ export type SankeyNode = {
     [_: string]: {
       parent_name?: string,
       level?: number,
+      child_tags?:string[],
+      parent_tag?:string
     }
   },  local?: SankeyNodeAttrLocal,  colorParameter: string,
   colorTag: string,
@@ -408,6 +410,8 @@ export interface ConvertSankeyData {
   show_structure: boolean | string
   show_data?: boolean
   view: { id: string, view_data: object, nom: string, details: string }[]
+  filter_link_value:number,
+  filter_label:number
 }
 
 export type ConvertDataLegacyFuncType = (

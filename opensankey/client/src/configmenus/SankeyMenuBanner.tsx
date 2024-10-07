@@ -13,7 +13,6 @@ import {
   PopoverContent,
   PopoverTrigger,
   PopoverCloseButton,
-  Text,
   Box,
   NumberInput,
   NumberInputField,
@@ -51,7 +50,6 @@ import {
 import {
   FCType_AddAllDropDownNode,
   FCType_AddAllDropDownFluxFType,
-  FType_AddSimpleLevelDropDown,
   FCType_DataTagSelector,
   FType_SetDiagram,
   FType_StretchButtons,
@@ -66,37 +64,9 @@ import {
 import {
   Type_MenuSelectionEntry
 } from '../topmenus/SankeyMenuTop'
-import {
-  initalizeSelectorDetailNodes
-} from '../OSModule'
 
 
 // CONSTANTS ============================================================================
-
-const logo_btn_node = <svg xmlns="http://www.w3.org/2000/svg"
-  width="24"
-  height="24"
-  viewBox="0 0 1000 1000"
->
-  <g>
-    <path fill='white'
-      d="M 435.70361,960.79501 C 350.22649,949.82238 261.96589,915.39353 193.9882,866.50597 163.20037,844.36434 110.42254,791.79542 88.305497,761.24143 49.96462,708.2749 20.606804,641.3553 8.7012843,579.78731 1.1564833,540.77059 2.1056594,451.27991 10.483615,411.75451 30.112374,319.14968 74.774594,242.06005 149.02313,172.62714 222.44528,103.96702 301.98959,64.109696 406.48828,43.619095 c 44.96331,-8.816681 140.529,-8.838777 188.04918,-0.04116 99.52543,18.420444 182.06463,59.983275 256.52561,129.174095 98.18988,91.23994 145.35936,197.4015 145.35936,327.15153 0,98.99093 -23.71782,173.08006 -82.53285,257.81431 -26.22705,37.78513 -92.88087,100.73366 -133.44443,126.02608 -55.61062,34.6748 -121.23357,60.33256 -184.48001,72.12931 -35.81933,6.68106 -125.18544,9.42686 -160.26153,4.92423 z M 544.61248,668.63813 c 99.75914,-24.22166 161.76345,-119.49651 136.53287,-209.79385 -26.1424,-93.5601 -128.0682,-151.41024 -225.21172,-127.8236 -34.4769,8.37091 -60.6477,22.50957 -86.81216,46.89947 -74.79093,69.71819 -74.83819,174.84659 -0.10308,243.55666 49.55119,45.56053 112.53023,62.4749 175.60067,47.16132 z"
-    />
-  </g>
-</svg>
-
-const logo_btn_filter_link = <svg xmlns="http://www.w3.org/2000/svg"
-  width="24"
-  height="24"
-  viewBox="0 0 1000 1000"
->
-  <g>
-    <path fill='white'
-      d="m 839.13562,990.34075 c -29.57916,-9.80167 -47.77206,-22.51396 -66.75179,-46.64282 l -7.83282,-9.95778 -292.2135,-1.08702 C 181.46009,931.57107 180.00752,931.52649 154.64689,922.90111 89.784105,900.84066 37.048095,848.14524 14.695818,783.05761 2.0661707,746.28139 2.0661707,686.55501 14.695818,649.77879 36.825233,585.34017 86.869331,534.59283 152.12462,510.41885 l 24.12285,-8.93639 320.02259,-2.04433 320.02255,-2.04437 29.28674,-14.47779 c 35.27426,-17.43768 57.25443,-39.89067 74.32581,-75.92461 11.09419,-23.4174 12.26739,-29.41576 12.26739,-62.72089 0,-33.30513 -1.1732,-39.30349 -12.26739,-62.72088 -17.07235,-36.03604 -39.0514,-58.48713 -74.32829,-75.92461 l -29.28919,-14.47779 -290.29503,-1.08752 -290.29505,-1.08749 -8.01866,10.19406 c -14.95065,19.00667 -28.11301,29.60621 -49.4932,39.8564 C 148.1947,253.40107 107.7417,253.48387 77.39573,239.22887 47.498505,225.18475 34.179573,212.71691 18.997457,184.56235 6.9677052,162.25364 5.8251341,157.27659 5.8251341,127.18419 5.8251341,97.091777 6.9677052,92.114727 18.997457,69.806022 33.666242,42.60338 45.828841,30.856071 75.040965,15.676166 91.925346,6.9022401 99.691061,5.3875989 127.79073,5.3875989 c 28.09968,0 35.86539,1.5146412 52.74977,10.2885671 10.88959,5.6587 25.18002,14.81617 31.75653,20.349929 14.68863,12.359685 34.36245,50.741761 37.81695,73.777935 l 2.56395,17.09767 285.47577,1.11036 285.47576,1.11039 25.66102,9.99582 c 51.30801,19.98615 84.06821,46.1781 112.20134,89.70554 44.37948,68.66358 44.37948,162.22951 0,230.89309 -28.51458,44.11761 -69.75657,75.79552 -120.41793,92.49278 -19.66774,6.4822 -45.96913,7.18439 -339.19715,9.0561 l -317.87619,2.02902 -25.89377,12.26739 c -36.03987,17.07417 -58.487435,39.05116 -75.92461,74.33286 -13.680849,27.68132 -14.477787,31.34314 -14.477787,66.52304 0,35.1799 0.796938,38.84171 14.477787,66.52303 17.437175,35.2817 39.88474,57.25869 75.92461,74.33286 l 25.89377,12.26739 281.56,1.08946 281.55999,1.08943 2.73785,-18.53385 c 3.40449,-23.04719 22.82808,-60.33283 38.14285,-73.21937 6.34477,-5.33877 20.4456,-14.33672 31.33519,-19.99542 16.82437,-8.74272 24.74999,-10.30128 52.74977,-10.37308 30.17439,-0.0775 35.00867,1.02527 57.37816,13.08782 28.15456,15.18212 40.6224,28.50105 54.66652,58.39827 20.81192,44.30469 10.29799,102.23813 -24.95176,137.48793 -29.47651,29.47646 -83.6751,43.81954 -120.0435,31.76808 z"
-    />
-  </g>
-</svg>
-
 
 declare const window: Window &
   typeof globalThis & {
@@ -134,70 +104,7 @@ export const setDiagram: FType_SetDiagram = (
 
 // COMPONENTS ===========================================================================
 
-/**
- * Drop down to select primary level tag
- * @param {*} {
- *   new_data,
- * }
- * @return {*}
- */
-export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropDown> = (
-  {
-    new_data
-  }
-) => {
-  // Data -------------------------------------------------------------------------------
-  const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
-  // Component updater ------------------------------------------------------------------
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
-
-  // JSX Component ----------------------------------------------------------------------
-  if (Object.keys(level_taggs).includes('Primaire')) {
-    const primary_level_tags = level_taggs['Primaire'].tags_list
-
-    if (primary_level_tags.length < 2) {
-      return <></>
-    }
-    else {
-      return (
-        <>
-          {
-            <Select
-              key={level_taggs['Primaire'].id}
-              value={level_taggs['Primaire'].selected_tags_list[0]?.id ?? ''}
-              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                level_taggs['Primaire'].selectTagsFromId(evt.target.value)
-                new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
-                // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
-                // (it isn't done for link not directly displayed after fromJSON)
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-                new_data.drawing_area.checkAndUpdateAreaSize()
-              }}
-            >
-              {
-                level_taggs['Primaire'].tags_list
-                  .map(tag => {
-                    return (
-                      <option
-                        key={tag.id}
-                        value={tag.id}
-                      >
-                        {tag.name}
-                      </option>)
-                  })
-              }
-            </Select>
-          }
-        </>
-      )
-    }
-  }
-  else {
-    return <></>
-  }
-}
 
 /**
  *
@@ -667,7 +574,7 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
 export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   {
     new_data,
-    additional_link_visual_filter_content,
+    additionalMenu,
   }
 ) => {
   // Data -------------------------------------------------------------------------------
@@ -684,158 +591,14 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   new_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
   let btn_mouse_mode_edition = <></>
 
-  const node_filter = Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
-  const flux_filter = Object.entries(sankey.flux_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0
-  const level_filter = Object.entries(sankey.level_taggs_dict).length > 0
   const logo_btn_fs = s_force_update ? faCompress : faExpand
 
-  // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())))
 
   const redrawNodeLinkLegend = () => {
     sankey.draw()
     new_data.drawing_area.legend.draw()
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
-
-  const legend_filter = <Box
-    as='span'
-    layerStyle='popover_sidebar_row_tag_filter'
-  >
-    <Box textStyle='h2'>{t('Menu.group')}</Box>
-    <Box textStyle='h2'>{t('Menu.color')}</Box>
-  </Box>
-
-
-
-  // ===================Create the popover diplayed near the buttons========================
-  // Checkbox that adjust the label position according to the link stroke width
-
-  //Popover element to handle filter on links, it contians :
-  // - filter on link (if value of link is inferior to filter then the link is not displayed)
-  // - filter on link label
-  const popover_link_visual_filter = <Popover
-    variant='toolbar_popover_window'
-    placement='left'
-    id="popover_link_value_filter"
-  >
-    <PopoverTrigger>
-      <Button
-        variant='toolbar_button_3'
-        id='btn_open_popover_link_value_filter'
-      >
-        <FontAwesomeIcon icon={faSliders} />
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent>
-      <PopoverCloseButton />
-      <PopoverHeader >{t('Banner.p_aff')}</PopoverHeader>
-      <PopoverBody >
-        <Box
-          layerStyle='menuconfigpanel_grid'
-          gridTemplateColumns='1fr'
-        >
-          <Text
-            fontSize='h3'
-          >
-            {t('Banner.p_aff_filtre_links')}
-          </Text>
-
-          <Box
-            layerStyle='popover_sidebar_layout_filter'
-          >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Banner.filtre')}
-            </Box>
-            <Slider
-              min={0}
-              max={max_link_value}
-              defaultValue={new_data.drawing_area.filter_link_value}
-              onChange={evt => {
-                new_data.drawing_area.filter_link_value = +evt
-                setCount(a => a + 1)
-                // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-                new_data.drawing_area.sankey.draw()
-              }
-              } >
-              <SliderTrack>
-                <SliderFilledTrack />
-              </SliderTrack>
-              <SliderThumb />
-            </Slider>
-
-            <NumberInput
-              allowMouseWheel
-              min={0}
-              max={max_link_value}
-              value={new_data.drawing_area.filter_link_value}
-              onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
-                }
-                new_data.drawing_area.filter_link_value = tmp
-                setCount(a => a + 1)
-
-              }}
-              onBlur={() => {
-                // new_data.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                // new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-                new_data.drawing_area.sankey.draw()
-
-              }}
-            >
-              <NumberInputField />
-            </NumberInput>
-          </Box>
-
-          <Box
-            layerStyle='popover_sidebar_layout_filter'
-          >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Banner.fl')}
-            </Box>
-            <Slider
-              min={0}
-              max={max_link_value}
-              value={new_data.drawing_area.filter_label}
-              onChange={(evt) => {
-                new_data.drawing_area.filter_label = +evt
-                setCount(a => a + 1)
-                new_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawLabel())
-              }}
-            >
-              <SliderTrack>
-                <SliderFilledTrack />
-              </SliderTrack>
-              <SliderThumb />
-            </Slider>
-
-            <NumberInput
-              allowMouseWheel
-              min={0}
-              max={max_link_value}
-              value={new_data.drawing_area.filter_label}
-              onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
-                }
-                new_data.drawing_area.filter_label = tmp
-                setCount(a => a + 1)
-                new_data.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
-              }}
-            >
-              <NumberInputField />
-            </NumberInput>
-          </Box>
-          {additional_link_visual_filter_content}
-        </Box>
-      </PopoverBody>
-    </PopoverContent>
-  </Popover>
-
 
   const struc_data_reconciled = <Popover
     variant='toolbar_popover_window'
@@ -904,97 +667,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     </PopoverContent>
   </Popover>
 
-  const node_tag_filter_content = <AddAllDropDownNode
-    new_data={new_data}
-    level={false}
-  />
-
-  //Popover element to handle node tags
-  // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
-  const filter_color_node = <Popover
-    variant='toolbar_popover_window'
-    placement='left'
-    id='popover_node_tag_filter'
-  >
-    <PopoverTrigger>
-      <Button
-        variant='toolbar_button_4'
-        id='btn_open_popover_node_tag_filter'
-      >
-        {logo_btn_node}
-      </Button>
-    </PopoverTrigger>
-
-    <PopoverContent>
-      <PopoverCloseButton />
-      <PopoverHeader >{t('Banner.fdn')}</PopoverHeader>
-      <PopoverBody>
-        {legend_filter}
-        <>{(Object.entries(sankey.node_taggs_dict).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-          {node_tag_filter_content}</>
-        ) : (<>
-          <Input placeholder="Pas de filtrage" isDisabled /></>)
-        }</>
-      </PopoverBody>
-    </PopoverContent>
-  </Popover>
-
-  //Popover element to handle the display of data tags
-  const filter_data = <Popover
-    variant='toolbar_popover_window'
-    placement='left'
-    id='popover_data_tag_filter'
-  >
-    <PopoverTrigger>
-      <Button
-        variant='toolbar_button_4'
-        id='btn_open_popover_data_tag_filter'
-      >
-        <FontAwesomeIcon icon={faDatabase} />
-      </Button>
-    </PopoverTrigger>
-
-    <PopoverContent>
-      <PopoverCloseButton />
-      <PopoverHeader >{t('Banner.sdd')}</PopoverHeader>
-      <PopoverBody>
-        {legend_filter}
-        <DataTagSelector
-          new_data={new_data}
-          in_popover={true}
-        />
-      </PopoverBody>
-    </PopoverContent>
-  </Popover>
-
-  //Popover element to handle the display of link tags
-  const filter_color_link = <Popover
-    variant='toolbar_popover_window'
-    placement='left'
-    id='popover_link_tag_filter'
-  >
-    <PopoverTrigger>
-      <Button
-        variant='toolbar_button_4'
-        id='btn_open_popover_link_tag_filter'
-      >
-        {logo_btn_filter_link}
-      </Button>
-    </PopoverTrigger>
-
-    <PopoverContent>
-      <PopoverCloseButton />
-      <PopoverHeader >{t('Banner.fdf')}</PopoverHeader>
-      <PopoverBody>
-        {legend_filter}
-        <AddAllDropDownFlux
-          new_data={new_data}
-        />
-      </PopoverBody>
-    </PopoverContent>
-  </Popover>
-
-
   // ===========Creation Button to show popover========================
 
   const button_fullscreen = <>
@@ -1045,22 +717,8 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     </>
   }
 
-  const btn_aggrega_level = (level_filter) ? <>
-    <OSTooltip
-      placement='left'
-      label={t('Banner.hlp_1_txt_2')}>
-      {
-        initalizeSelectorDetailNodes(new_data)
-      }
-    </OSTooltip>
-  </> :
-    <></>
 
-  const btn_link_display = <><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
-    {popover_link_visual_filter}
-  </OSTooltip>
-  {/* Popover to display the link-filter */}
-  </>
+
 
 
   const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
@@ -1078,22 +736,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
       </Button>
     </OSTooltip>
 
-  const btn_show_node_filter = (node_filter) ? <>
-    <OSTooltip placement='left' label={t('Banner.hlp_node_tag_filter')}>
-      {filter_color_node}
-    </OSTooltip>
-  </> :
-    <></>
-
-  const btn_show_link_filter = (flux_filter) ? <>
-    <OSTooltip placement='left' label={t('Banner.hlp_link_tag_filter')}>
-      {filter_color_link}
-    </OSTooltip></> : <></>
-
-  const btn_show_data_filter = (new_data.drawing_area.sankey.data_taggs_list.length > 0) ? <>
-    <OSTooltip placement='left' label={t('Banner.hlp_data_tag_filter')}>
-      {filter_data}
-    </OSTooltip></> : <></>
 
   const btn_show_help_in_static = new_data.is_static ? <OSTooltip placement='left' label={t('Banner.tooltipHelp')}>
     <Button variant='info' onClick={() => { new_data.menu_configuration.never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) }} >
@@ -1102,28 +744,26 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   </OSTooltip> : <></>
 
 
+
+
+const init_toolbar_elements:{[_:string]:JSX.Element}={
+
+  'mode_souris': btn_mouse_mode_edition,
+  'node_type': btn_show_data_type,
+  'strectch_zdd': stretchButtons(new_data),
+  'help': btn_show_help_in_static,
+  'fullscreen': button_fullscreen,
+  
+  ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
+}
+
+
+
   // ===================Assemble different item for the toolbar========================
-
   return <>
-    {btn_mouse_mode_edition}
-
-    {/* Add the button to choose the aggregation level  */}
-    {btn_aggrega_level}
-
-    {/* Popover to display the link visual filter */}
-    {btn_link_display}
-
-    {/* Button to display node, link & data Tags filter */}
-    {btn_show_node_filter}
-    {btn_show_link_filter}
-    {btn_show_data_filter}
-    {btn_show_data_type}
-
-    {stretchButtons(new_data)}
-
-    {btn_show_help_in_static}
-
-    {button_fullscreen}
+    {additionalMenu.toolbar_order.map((key, id) => {
+     return <React.Fragment key={id}>{init_toolbar_elements[key]}</React.Fragment>
+    })}
   </>
 }
 
@@ -1142,11 +782,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-      <FontAwesomeIcon icon={faArrowsUpDown} />
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip></>
 }
 
 

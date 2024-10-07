@@ -114,25 +114,40 @@ const ExempleItem = (
   )
   if ('Files' in exemple_menu) {
     const files_item = (exemple_menu as subtypeFileList)['Files'].map((item, index) => {
-      // let path = current_path+'/sankey/'+item
-      // if (item.includes('.xlsx')) {
-      const path = current_path + '/' + item
-      //}
+      let path =   current_path + '/' + item
+      if (item.includes('.json')) {
+        path =current_path+'/sankey/'+item
+      }
+
+      // Text of the button in the menu
+      let text_button = ''
+      if (item.includes('xlsx')) {
+        if (item.includes('reconciled')) {
+          text_button = item.split('.x')[0].replace(/_/g, ' ').replace('reconciled', ' excel')
+        } else {
+          text_button = item.split('.x')[0].replace(/_/g, ' ') + ' excel'
+        }
+      } else {
+        if (item.includes('json')) {
+          text_button= item.replace(/_/g, ' ').replace(' layout.json', ' sankey')
+        } else {
+          text_button = item.replace('afmsankey_0.9.0.', '')
+        }
+
+      }
+
+
       return (
         <MenuItem
           key={index}
           onClick={() => {
-            // multi_selected_nodes.current = []
-            // multi_selected_links.current = []
             new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
             }
             UploadExemple(path, new_data)
           }
-          }>{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled', ' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
-            : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json', ' sankey') : item.replace('afmsankey_0.9.0.', '')
-          }</MenuItem>
+          }>{text_button}</MenuItem>
       )
     }
     ) as JSX.Element[]

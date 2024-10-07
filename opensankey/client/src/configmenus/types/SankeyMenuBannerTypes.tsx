@@ -1,13 +1,10 @@
-import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
+import { Type_AdditionalMenus, Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
 export type FType_SetDiagram = (
   the_diagram: string,
   new_data: Type_GenericApplicationDataOS
 ) => void
 
-export type FType_AddSimpleLevelDropDown = {
-  new_data: Type_GenericApplicationDataOS
-}
 
 export type FCType_AddAllDropDownNode = {
   new_data: Type_GenericApplicationDataOS,
@@ -28,7 +25,7 @@ export type FCType_AddAllDropDownFluxFType = {
  */
 export type FCType_ToolbarBuilder = {
   new_data: Type_GenericApplicationDataOS,
-  additional_link_visual_filter_content: JSX.Element[],
+  additionalMenu: Type_AdditionalMenus,
 }
 
 export type FType_StretchButtons = (

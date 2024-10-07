@@ -1,9 +1,9 @@
 import { SankeyData } from '../../types/LegacyType'
-import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
+import { Type_AdditionalMenus, Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
 export type FCType_MenuConfigurationLinksAppearence = {
   new_data: Type_GenericApplicationDataOS,
-  additional_link_appearence_items: JSX.Element[],
+  additionMenus:Type_AdditionalMenus,
   menu_for_style: boolean
 }
 

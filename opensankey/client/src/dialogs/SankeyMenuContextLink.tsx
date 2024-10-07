@@ -22,13 +22,14 @@ import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLink
 /*************************************************************************************************/
 
 const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
-const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
+export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+export const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
 
 // MENU COMPONENT ***********************************************************************
 
 export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
   new_data,
+  additionalMenus
 }) => {
 
   // Datas ------------------------------------------------------------------------------
@@ -68,8 +69,6 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   const selected_links = new_data.drawing_area.visible_and_selected_links_list
 
-  const has_flux_tags = Object.values(new_data.drawing_area.sankey.flux_taggs_dict).length > 0
-
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
@@ -88,66 +87,6 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
   }
 
   // JSX Components ---------------------------------------------------------------------
-
-  // Menu to change some pararmeter concerning the appearence of the node
-  const dropdown_c_l_tag = (
-    (contextualised_link !== undefined) &&
-    (has_flux_tags)
-  ) ?
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
-
-      <MenuList>
-        {
-          new_data.drawing_area.sankey.flux_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_link.hasGivenTag(tag)
-                        return <MenuItem
-                          onClick={() => {
-                            // Assign tag to selected links
-                            if (has_tag) {
-                              selected_links.forEach(l => l.addTag(tag))
-                            }
-                            else {
-                              selected_links.forEach(l => l.removeTag(tag))
-                            }
-                            refreshThisAndToggleSaving()
-                          }}
-                        >
-                          {t.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu> :
-    <></>
-
 
   const button_open_link_appearence = (contextualised_link !== undefined) ?
     <Button
@@ -289,29 +228,6 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     </Button> :
     <></>
 
-  const button_open_link_tooltip = (contextualised_link !== undefined) ?
-    <Button
-      onClick={() => {
-        ref_setter_show_menu_link_tooltip.current(true)
-        new_data.drawing_area.link_contextualised = undefined
-      }}
-      variant='contextmenu_button'
-    >
-      {t('Flux.IS')}
-      {icon_open_modal}
-    </Button> :
-    <></>
-
-  const btn_l_show_tags_menu = <Button
-    onClick={() => {
-      ref_setter_show_menu_link_tags.current(true)
-      new_data.drawing_area.link_contextualised = undefined
-    }}
-    variant='contextmenu_button'
-  >
-    {t('Menu.Etiquettes')}
-    {icon_open_modal}
-  </Button>
 
   // Inverse source & target of the link
   const btn_edit_value = (contextualised_link !== undefined) ?
@@ -341,6 +257,21 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     {t('Flux.if')}
   </Button>
 
+  const content_context_link: { [_: string]: JSX.Element }={
+    'inverse':btn_inverse_io,
+    'sep_1':sep,
+    'style':dropdown_c_l_style,
+    'sep_2':sep,
+    'zIndex':dropdown_c_l_layout,
+    'mask_label':button_mask_link_label,
+    'edit_value':btn_edit_value,
+    'sep_4':sep,
+    'drag_link_data':button_open_link_data,
+    'drag_apparence':button_open_link_appearence,
+
+    ...additionalMenus.additional_context_link_element
+  }
+
   // Box that serve as context menu
   return (contextualised_link !== undefined) ?
     <Box
@@ -350,20 +281,9 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       style={{ maxWidth: '100%', position: 'absolute', inset: style_c_l }}
     >
       <ButtonGroup orientation='vertical' isAttached>
-        {btn_inverse_io}
-        {sep}
-        {dropdown_c_l_style}
-        {sep}
-        {dropdown_c_l_layout}
-        {button_mask_link_label}
-        {btn_edit_value}
-        {has_flux_tags && sep}
-        {dropdown_c_l_tag}
-        {sep}
-        {button_open_link_data}
-        {button_open_link_appearence}
-        {btn_l_show_tags_menu}
-        {button_open_link_tooltip}
+      {additionalMenus.context_link_order.map((key, id) => {
+          return <React.Fragment key={id}>{content_context_link[key]}</React.Fragment>
+        })}
       </ButtonGroup>
     </Box> : <></>
 }

@@ -8,7 +8,7 @@ import { Class_ApplicationData, initial_window_height, initial_window_width } fr
 import { Class_DrawingArea } from './DrawingArea'
 import { Class_Sankey } from './Sankey'
 import { Class_LinkAttribute, Class_LinkElement, Class_LinkStyle } from './Link'
-import { Class_NodeElement } from './Node'
+import { Class_NodeElement, Class_NodeStyle } from './Node'
 import { Class_MenuConfig } from './MenuConfig'
 import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from './Utils'
 import { Class_ZoneSelection } from './Selection_Zone'
@@ -38,13 +38,20 @@ export type Type_AdditionalMenus = {
   advanced_label_content: JSX.Element[],
   advanced_label_value_content: JSX.Element[],
   additional_menu_configuration_nodes: { [_: string]: JSX.Element },
-  additional_context_element_menu: JSX.Element[],
-  additional_context_element_other: JSX.Element[],
+  additional_node_label_layout_content:JSX.Element[],
+  additional_node_apparence_content:JSX.Element[],
 
+  context_node_order:string[],
+  additional_context_node_element:{ [_: string]: JSX.Element },
   // Links
+  additional_menu_configuration_links:{ [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
   additional_link_appearence_items: JSX.Element[],
+  additional_link_appearence_value:JSX.Element[]
   additional_link_visual_filter_content: JSX.Element[],
+
+  context_link_order:string[],
+  additional_context_link_element:{ [_: string]: JSX.Element },
 
   // Preferences
   additional_preferences: JSX.Element[],
@@ -63,8 +70,11 @@ export type Type_AdditionalMenus = {
 
   additional_nav_item: JSX.Element[],
 
-  example_menu: { [k: string]: JSX.Element; }
-  formations_menu: { [k: string]: JSX.Element; },
+  example_menu: object,
+  formations_menu: object,
+
+  toolbar_order:string[],
+  toolbar_elements:{ [k: string]: JSX.Element; }
 
   cards_template: JSX.Element
 }
@@ -133,6 +143,7 @@ export class Class_SankeyOS
   > {
 
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
+  protected _node_styles: { [_: string]: Class_NodeStyle } = {}
 
   constructor(
     drawing_area: Class_DrawingAreaOS,
@@ -156,6 +167,10 @@ export class Class_SankeyOS
   protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
     const style = new Class_LinkStyle(id, name, is_deletable)
     return style
+  }
+
+  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
+    return new Class_NodeStyle(id,name,is_deletable)
   }
 
   public get default_link_style() {

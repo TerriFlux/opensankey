@@ -52,9 +52,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
   {
     new_data,
     menu_configuration_layout,
-    menu_configuration_node_tags,
-    menu_configuration_link_tags,
-    menu_configuration_data_tags,
     menu_configuration_nodes_attributes,
     menu_config_link_data,
     menu_config_link_attr,
@@ -75,11 +72,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
 
   // JSX Component ----------------------------------------------------------------------
 
-  const show_menu_config_tag = (
-    config_object.isGivenAccordionShowed('EN') ||
-    config_object.isGivenAccordionShowed('EF') ||
-    config_object.isGivenAccordionShowed('ED')
-  )
 
   const menu_items = [
     config_object.isGivenAccordionShowed('MEP') ?
@@ -172,6 +164,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
                 new_data={new_data}
                 menu_config_link_data={menu_config_link_data}
                 menu_config_link_attr={menu_config_link_attr}
+                additionalMenus={additional_menus}
               />
             </AccordionPanel>
           </AccordionItem>
@@ -180,115 +173,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
       </AccordionPanel>
     </AccordionItem>,
 
-    show_menu_config_tag ?
-      <AccordionItem>
-        {
-          //MENU ETIQUETTES
-        }
-        <AccordionButton
-          onClick={() => {
-            const scroll_x = window.scrollX
-            const scroll_y = window.scrollY
-            setTimeout(() => {
-              document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-            }, 50)
-          }}
-        >
-          <Box
-            as='span'
-            layerStyle='menuconfig_entry'>
-            {t('Menu.Etiquettes')}
-          </Box>
-          <AccordionIcon />
-        </AccordionButton>
-        <AccordionPanel>
-          <Accordion
-            allowToggle
-            variant="accordion_sublevel_style"
-          >
-            <AccordionItem
-              style={{ 'display': (config_object.isGivenAccordionShowed('EN')) ? 'initial' : 'none' }}
-            >
-              {
-                //MENU ETIQUETTES DE NOEUDS
-              }
-              <AccordionButton
-                onClick={() => {
-                  const scroll_x = window.scrollX
-                  const scroll_y = window.scrollY
-                  setTimeout(() => {
-                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-                  }, 50)
-                }}>
-                <Box
-                  as='span'
-                  layerStyle='submenuconfig_entry'>
-                  {t('Menu.EN')}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                {menu_configuration_node_tags}
-              </AccordionPanel>
-            </AccordionItem>
-
-            <AccordionItem
-              style={{ 'display': (config_object.isGivenAccordionShowed('EF')) ? 'initial' : 'none' }}
-            >
-              {
-                //MENU ETIQUETTES DE FLUX
-              }
-              <AccordionButton
-                onClick={() => {
-                  const scroll_x = window.scrollX
-                  const scroll_y = window.scrollY
-                  setTimeout(() => {
-                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-                  }, 50)
-                }}
-              >
-                <Box
-                  as='span'
-                  layerStyle='submenuconfig_entry'>
-                  {t('Menu.EF')}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                {menu_configuration_link_tags}
-              </AccordionPanel>
-            </AccordionItem>
-
-            <AccordionItem
-              style={{ 'display': (config_object.isGivenAccordionShowed('ED')) ? 'initial' : 'none' }}
-            >
-              {
-                //MENU ETIQUETTES DE DONNÉES
-              }
-              <AccordionButton
-                onClick={() => {
-                  const scroll_x = window.scrollX
-                  const scroll_y = window.scrollY
-                  setTimeout(() => {
-                    document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-                  }, 50)
-                }}
-              >
-                <Box
-                  as='span'
-                  layerStyle='submenuconfig_entry'>
-                  {t('Menu.ED')}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                {menu_configuration_data_tags}
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
-        </AccordionPanel>
-      </AccordionItem> :
-      <></>,
     //Add extra accordionItem (for example views with OpenSankey+ submodule)
     <>{additional_menus.additional_configuration_menus_primary_accordion_elements.map((c: ReactElementLike, i: number) => {
       return <React.Fragment key={i}>{c}</React.Fragment>
@@ -356,7 +240,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState<string | null | undefined>(String(default_value))
+  const [value, setValue] = useState<string | null | undefined>(String(default_value ?? ''))
   ref_to_set_value.current = setValue
 
   // Add stepper addon if specified
@@ -439,7 +323,8 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
   ref_to_set_value,
   function_get_value,
   function_on_blur,
-  menu_for_style = false
+  menu_for_style = false,
+  disabled = false
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
@@ -448,6 +333,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
 
   return <InputGroup>
     <Input
+      isDisabled={disabled}
       ref={ref_input}
       variant='menuconfigpanel_option_input'
       value={value ?? ''}
@@ -487,5 +373,6 @@ export type FCType_ConfigMenuTextInput = {
   ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_get_value: () => string | null | undefined,
   function_on_blur: (_: string | null | undefined) => void,
-  menu_for_style?: boolean
+  menu_for_style?: boolean,
+  disabled?: boolean,
 }

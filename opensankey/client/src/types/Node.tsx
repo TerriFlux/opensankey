@@ -91,7 +91,6 @@ export const default_label_color = false
 export const default_label_uppercase = false
 export const default_label_bold = false
 export const default_label_italic = false
-export const default_label_background = false
 export const default_name_label_visible = true
 export const default_name_label_vert: Type_TextVPos = 'bottom'
 export const default_name_label_vert_shift = 0
@@ -505,9 +504,7 @@ export abstract class Class_NodeElement
     if (this.name_label_horiz_shift !== _.name_label_horiz_shift) {
       return false
     }
-    if (this.name_label_background !== _.name_label_background) {
-      return false
-    }
+
     if (this.value_label_visible !== _.value_label_visible) {
       return false
     }
@@ -1478,19 +1475,6 @@ export abstract class Class_NodeElement
         this.name_label_box_width)
       const box_height = this.name_label_font_size
 
-      // Add name label background
-      if (this.name_label_background) {
-        this.d3_selection?.append('rect')
-          .classed('name_label', true)
-          .classed('name_label_background', true)
-          .attr('id', 'name_label_background_' + this.id)
-          .attr('width', box_width)
-          .attr('height', box_height)
-          .attr('fill', 'white')
-          .attr('fill-opacity', 0.55)
-          .attr('rx', 4)
-          .style('stroke', 'none')
-      }
       // Add name label text
       const wrapper = textwrap()
         .bounds({ height: 100, width: this.name_label_box_width })
@@ -1525,13 +1509,6 @@ export abstract class Class_NodeElement
       }
       else if (label_anchor === 'middle') {
         box_pos_x = box_pos_x - box_width / 2
-      }
-
-      if (this.name_label_background) {
-        // Update label bg with computed label size
-        this.d3_selection?.select('.name_label_background')
-          .attr('x', box_pos_x)
-          .attr('y', box_pos_y)
       }
 
       // Add an input to change the name of the node
@@ -1634,6 +1611,20 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private updateNameLabelPos(): [number, number, string] {
+    
+    const [label_pos_x,label_pos_y,label_anchor,label_align,label_baseline] = this.getNameLabelPos()
+
+    this.d3_selection?.select('.name_label_text')
+      .attr('x', label_pos_x)
+      .attr('y', label_pos_y)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .style('text-align', label_align)
+
+    return [label_pos_x, label_pos_y, label_anchor]
+  }
+
+  protected getNameLabelPos():[number,number,string,string,string]{
     // x position
     let label_anchor = 'start'
     let label_align = 'start'
@@ -1677,15 +1668,7 @@ export abstract class Class_NodeElement
         label_baseline = 'middle'
       }
     }
-
-    this.d3_selection?.select('.name_label_text')
-      .attr('x', label_pos_x)
-      .attr('y', label_pos_y)
-      .attr('dominant-baseline', label_baseline)
-      .attr('text-anchor', label_anchor)
-      .style('text-align', label_align)
-
-    return [label_pos_x, label_pos_y, label_anchor]
+    return [label_pos_x,label_pos_y,label_anchor,label_align,label_baseline]
   }
 
   /**
@@ -3143,27 +3126,8 @@ export abstract class Class_NodeElement
     this.drawNameLabel()
   }
 
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get name_label_background() {
-    if (this._display.attributes.name_label_background !== undefined) {
-      return this._display.attributes.name_label_background
-    } else if (this._display.style.name_label_background !== undefined) {
-      return this._display.style.name_label_background
-    }
-    return default_label_background
-  }
 
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public set name_label_background(_: boolean) {
-    this._display.attributes.name_label_background = _
-    this.drawNameLabel()
-  }
+
 
   /**
    * TODO Description
@@ -3296,18 +3260,7 @@ export abstract class Class_NodeElement
     this.drawValueLabel()
   }
 
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get value_label_background() {
-    if (this._display.attributes.value_label_background !== undefined) {
-      return this._display.attributes.value_label_background
-    } else if (this._display.style.value_label_background !== undefined) {
-      return this._display.style.value_label_background
-    }
-    return default_label_background
-  }
+
 
   /**
    * TODO Description
@@ -3623,7 +3576,6 @@ export class Class_NodeAttribute {
   protected _name_label_vert_shift?: number
   protected _name_label_horiz?: Type_TextHPos
   protected _name_label_horiz_shift?: number
-  protected _name_label_background?: boolean
 
   // Parameter of node value label
   protected _value_label_visible?: boolean
@@ -3693,7 +3645,6 @@ export class Class_NodeAttribute {
     if (this._name_label_horiz !== undefined) json_object['label_horiz'] = this._name_label_horiz
     if (this._name_label_horiz_shift !== undefined) json_object['name_label_horiz_shift'] = this._name_label_horiz_shift
     // if (this._name_label_background !== undefined) json_object['name_label_background'] = this._name_label_background
-    if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
 
     // Parameter of node value label
     // if (this._value_label_visible !== undefined) json_object['value_label_visible'] = this._value_label_visible
@@ -3742,7 +3693,6 @@ export class Class_NodeAttribute {
     if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = getStringFromJSON(json_local_object, 'label_horiz', default_name_label_horiz) as Type_TextHPos
     if (json_local_object['name_label_vert_shift'] !== undefined) this._name_label_vert_shift = getNumberFromJSON(json_local_object, 'name_label_vert_shift', default_name_label_vert_shift) as number
     if (json_local_object['name_label_horiz_shift'] !== undefined) this._name_label_horiz_shift = getNumberFromJSON(json_local_object, 'name_label_horiz_shift', default_name_label_horiz_shift) as number
-    if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
 
     if (json_local_object['show_value'] !== undefined) this._value_label_visible = getBooleanFromJSON(json_local_object, 'show_value', default_value_label_visible)
     if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'value_label_font_family', default_label_font_family)
@@ -3756,7 +3706,7 @@ export class Class_NodeAttribute {
     if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'label_horiz_valeur', default_value_label_horiz) as Type_TextHPos
     if (json_local_object['value_label_vert_shift'] !== undefined) this._value_label_vert_shift = getNumberFromJSON(json_local_object, 'value_label_vert_shift', default_value_label_vert_shift) as number
     if (json_local_object['value_label_horiz_shift'] !== undefined) this._value_label_horiz_shift = getNumberFromJSON(json_local_object, 'value_label_horiz_shift', default_value_label_horiz_shift) as number
-    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', default_label_background)
+    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', false)
   }
 
   public copyFrom(element: Class_NodeAttribute) {
@@ -3781,7 +3731,6 @@ export class Class_NodeAttribute {
     this._name_label_vert_shift = element._name_label_vert_shift
     this._name_label_horiz_shift = element._name_label_horiz_shift
 
-    this._name_label_background = element._name_label_background
     this._value_label_visible = element._value_label_visible
     this._value_label_font_family = element._value_label_font_family
     this._value_label_font_size = element._value_label_font_size
@@ -3826,7 +3775,6 @@ export class Class_NodeAttribute {
   public get name_label_horiz() { return this._name_label_horiz }
   public get name_label_vert_shift() { return this._name_label_vert_shift }
   public get name_label_horiz_shift() { return this._name_label_horiz_shift }
-  public get name_label_background() { return this._name_label_background }
 
   // Parameter of node value label
   public get value_label_visible() { return this._value_label_visible }
@@ -3866,7 +3814,6 @@ export class Class_NodeAttribute {
   public set name_label_horiz(_: Type_TextHPos | undefined) { this._name_label_horiz = _; this.update() }
   public set name_label_vert_shift(_: number | undefined) { this._name_label_vert_shift = _; this.update() }
   public set name_label_horiz_shift(_: number | undefined) { this._name_label_horiz_shift = _; this.update() }
-  public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
 
   // Parameter of node value label
   public set value_label_visible(_: boolean | undefined) { this._value_label_visible = _; this.update() }
@@ -3962,7 +3909,6 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._name_label_horiz = default_name_label_horiz
     this._name_label_vert_shift = default_name_label_vert_shift
     this._name_label_horiz_shift = default_name_label_horiz_shift
-    this._name_label_background = default_label_background
 
     // Parameter of node value label
     this._value_label_visible = default_value_label_visible
@@ -3977,7 +3923,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._value_label_horiz = default_value_label_horiz
     this._value_label_vert_shift = default_value_label_vert_shift
     this._value_label_horiz_shift = default_value_label_horiz_shift
-    this._value_label_background = default_label_background
+    this._value_label_background = false
   }
 
   // CLEANING ===========================================================================

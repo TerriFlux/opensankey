@@ -190,7 +190,6 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   }
   // Assign default value to missing variable
   const defaut_data = DefaultSankeyData()
-  console.log(defaut_data)
   Object.entries(data_to_convert.style_link).forEach(s => {
     s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
     data_to_convert.style_link[s[0]] = s[1]
@@ -233,7 +232,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-
+  // Convert name variable for data version>0.9
+  data_to_convert.filter_link_value=data_to_convert.display_style.filter
+  data_to_convert.filter_label=data_to_convert.display_style.filter_label
   clean_data_local(data_to_convert)
 }
 
@@ -1359,9 +1360,19 @@ const convert_nodes: convert_nodesFuncType = (
 
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
-      const dim_level = nt[1][0]
+      const dim_level = nt[1]
       if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
-        n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level) + 1
+        if(dim_level.length==1){
+          // If node has only 1 tag for this levelTag then save it in level
+          n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
+        }else{
+          // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
+          n.dimensions[nt[0]].child_tags =dim_level
+          let possible_parent='' 
+          possible_parent=Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
+          n.dimensions[nt[0]].parent_tag =possible_parent
+        }
+
       }
       // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
 

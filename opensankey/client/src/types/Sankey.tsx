@@ -129,7 +129,7 @@ export abstract class Class_Sankey
 
   // Existing styles
   protected abstract _link_styles: { [_: string]: Class_LinkStyle }
-  private _node_styles: { [_: string]: Class_NodeStyle } = {}
+  protected abstract _node_styles: { [_: string]: Class_NodeStyle } 
 
   // Tags
   private _node_taggs: { [_: string]: Class_TagGroup } = {}
@@ -153,7 +153,6 @@ export abstract class Class_Sankey
     this.drawing_area = drawing_area
     this._menu_config = menu_config
     this._id = id
-    this._node_styles[default_style_id] = new Class_NodeStyle(default_style_id, default_style_name, false)
   }
 
   public delete() {
@@ -189,6 +188,7 @@ export abstract class Class_Sankey
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
   protected abstract createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle
+  protected abstract createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle
 
   // PUBLIC METHODS =====================================================================
 

@@ -1,12 +1,10 @@
 import { TFunction } from 'i18next'
-import { Type_GenericApplicationDataOS } from '../../types/TypesOS'
+import { Type_AdditionalMenus, Type_GenericApplicationDataOS } from '../../types/TypesOS'
 
 export type FCType_OpenSankeyConfigurationNodesAttributes = {
   new_data: Type_GenericApplicationDataOS,
   menu_for_style: boolean,
-  advanced_appearence_content: JSX.Element[],
-  advanced_label_content: JSX.Element[],
-  advanced_label_value_content: JSX.Element[],
+  additional_menus:Type_AdditionalMenus
 }
 
 export type SankeyMenuConfigurationNodesAttributesFType = (

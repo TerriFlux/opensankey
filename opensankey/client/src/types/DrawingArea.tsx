@@ -340,6 +340,14 @@ export abstract class Class_DrawingArea
     this._sankey = this.createNewSankey()
     this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = this.createNewSelectionZone()
+
+    // reset some attributes
+    delete this._maximum_flux
+    delete this._minimum_flux
+    this._filter_label = 0
+    this._filter_link_value = 0
+    this._show_structure = initial_show_structure
+    
     // Redraw
     this.reset()
   }
@@ -352,13 +360,6 @@ export abstract class Class_DrawingArea
 
     // Clean drawing area
     this.unDraw()
-
-    // reset some attributes
-    delete this._maximum_flux
-    delete this._minimum_flux
-    this._filter_label = 0
-    this._filter_link_value = 0
-    this._show_structure = initial_show_structure
 
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
@@ -913,7 +914,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+      (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1270,7 +1271,7 @@ export abstract class Class_DrawingArea
               // Node is lone node
               node.name_label_horiz = 'middle'
               node.name_label_vert = 'middle'
-              node.name_label_background = true
+              // node.name_label_background = true
             }
             else if (node.input_links_list.length === 0) {
               // Node is a source : no input link
@@ -1286,7 +1287,7 @@ export abstract class Class_DrawingArea
               // Node is in the middle of the sankey
               node.name_label_horiz = 'left'
               node.name_label_vert = 'middle'
-              node.name_label_background = true
+              // node.name_label_background = true
             }
           }
 
@@ -1496,6 +1497,24 @@ export abstract class Class_DrawingArea
     // Transfert Sankey Attributes
     this.sankey.updateFrom(other_drawing_area.sankey, mode)
   }
+
+  /**
+   * Function to delete attr _minimum_flux
+   *
+   * @memberof Class_DrawingArea
+   */
+  public removeMinimumLinkThickness() {
+    delete this._minimum_flux
+  }
+
+  /**
+   * Function to delete attr _maximum_flux
+   *
+   * @memberof Class_DrawingArea
+   */
+    public removeMaximumLinkThickness() {
+      delete this._maximum_flux
+    }
 
 
   // PRIVATE METHODS ==================================================================
@@ -1938,7 +1957,7 @@ export abstract class Class_DrawingArea
     else if (this.isInSelectionMode()) this.setEditionMode()
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
     this._legend.setEventsListeners()
-    this.application_data.menu_configuration.ref_to_toolbar_updater.current()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
   public setToModeEdition(_: boolean) {
