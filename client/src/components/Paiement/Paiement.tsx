@@ -1,12 +1,12 @@
 
 import React, { FunctionComponent, useState, useEffect, useCallback } from 'react'
-import { HashRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js'
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout
-} from '@stripe/react-stripe-js';
+} from '@stripe/react-stripe-js'
 
 import {
   Box,
@@ -19,7 +19,11 @@ import {
 } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { createSubscription, getStripePublishableKey } from './PaiementFunctions'
+import { returnToApp } from '../../SankeyAppSA'
+import {
+  createSubscription,
+  getStripePublishableKey
+} from './PaiementFunctions'
 
 
 export const PaiementCheckout = () => {
@@ -35,12 +39,12 @@ export const PaiementCheckout = () => {
     setPublishableKey(key)
   }
   useEffect(() => {
-    fetchPublishableKey();
-  }, []);
+    fetchPublishableKey()
+  }, [])
 
   const fetchClientSecret = useCallback(createSubscription, [])
 
-  const options = { fetchClientSecret };
+  const options = { fetchClientSecret }
 
   return (
     <div id="checkout">
@@ -59,9 +63,9 @@ export const PaiementCheckout = () => {
 }
 
 export const PaiementReturn = () => {
-  const [status, setStatus] = useState(null);
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [searchParams, ] = useSearchParams();
+  const [status, setStatus] = useState(null)
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [searchParams,] = useSearchParams()
 
 
   useEffect(() => {
@@ -72,8 +76,8 @@ export const PaiementReturn = () => {
       .then((data) => {
         setStatus(data.status)
         setCustomerEmail(data.customer_email)
-      });
-  }, []);
+      })
+  }, [])
 
   if (status === 'open') {
     return (
@@ -87,7 +91,7 @@ export const PaiementReturn = () => {
     )
   }
 
-  return null;
+  return null
 }
 
 export const PaiementPage: FunctionComponent<{
@@ -97,17 +101,16 @@ export const PaiementPage: FunctionComponent<{
 }) => {
     // App data
     const { t, logo } = new_data_app
-    const [searchParams, ] = useSearchParams();
+    const [searchParams,] = useSearchParams()
 
     // Initialise navigation function
     const navigate = useNavigate()
-    const returnToApp = () => { navigate('/') }
     const goToCheckout = () => { navigate('/license/checkout') }
 
     // Init what is displayed
     const status = searchParams.get("p")
     let content, header
-    if (status === 'buy'){
+    if (status === 'buy') {
       header = t('Paiement.win_header_buy')
       content = <>
         <Box>
@@ -156,13 +159,13 @@ export const PaiementPage: FunctionComponent<{
                 height='4rem'
                 src={logo}
                 alt='navigation logo'
-                onClick={() => returnToApp()}
+                onClick={() => returnToApp(new_data_app, navigate)}
               />
             </Box>
             <Box></Box>
             <Button
               variant='btn_lone_navigation'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(new_data_app, navigate)}
             >
               {t('UserPages.to_app')}
             </Button>

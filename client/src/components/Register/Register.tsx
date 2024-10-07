@@ -27,13 +27,13 @@ import {
 
 import { opensankey_theme } from '../../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 
+import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { returnToApp } from '../../SankeyAppSA'
 import TermsOfUse from './TermsOfUse'
 import {
   registerNewLicenseOpenOSP,
   registerNewLicenseSankeySuite
 } from './LicenseFunctions'
-import { Class_ApplicationDataSA } from '../../ApplicationData'
-
 
 // Check Licence and register account if everything is Ok
 async function userSignUp(
@@ -119,12 +119,10 @@ const Register: FunctionComponent<RegisterType> = ({
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    // set_update(!update)
-    navigate('/')
-  }
+
   // Terms of use modal
   const { isOpen, onOpen, onClose } = useDisclosure()
+
   // Ok for account creation
   const [okUserName, setOkUserName] = useState(0)
   const [okPassword, setOkPassword] = useState(0)
@@ -187,13 +185,13 @@ const Register: FunctionComponent<RegisterType> = ({
             height='4rem'
             src={logo}
             alt='navigation logo'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(new_data_app, navigate)}
           />
         </Box>
         <Box></Box>
         <Button
           variant='btn_lone_navigation'
-          onClick={() => { returnToApp() }}>
+          onClick={() => { returnToApp(new_data_app, navigate) }}>
           {t('UserPages.to_app')}
         </Button>
         <Button

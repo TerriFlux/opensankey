@@ -18,8 +18,15 @@ import {
 } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { applyPasswordReset, triggerPasswordReset } from './LoginFunctions'
-import { email_regex_str, pwd_regex_str } from '../Register/Register'
+import { returnToApp } from '../../SankeyAppSA'
+import {
+  email_regex_str,
+  pwd_regex_str
+} from '../Register/Register'
+import {
+  applyPasswordReset,
+  triggerPasswordReset
+} from './LoginFunctions'
 
 
 type FCType_PasswordResetFromToken = {
@@ -44,10 +51,6 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   // Handler
   const handleSubmit = async () => {
@@ -88,13 +91,13 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
               height='4rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(new_data_app, navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(new_data_app, navigate)}
           >
             {t('UserPages.to_app')}
           </Button>
@@ -190,10 +193,6 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   // Handler
   const handleSubmit = async () => {
@@ -231,13 +230,13 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
               height='4rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(new_data_app, navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(new_data_app, navigate)}
           >
             {t('UserPages.to_app')}
           </Button>

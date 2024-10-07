@@ -19,13 +19,23 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 
 import { CardsTemplateBuilder } from './deps/OpenSankey+/deps/OpenSankey/welcome/ModalWelcome'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
+import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 
 import { loginOut } from './components/Login/LoginFunctions'
-import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataSA } from './ApplicationData'
+import { returnToApp } from './SankeyAppSA'
 
+
+/**
+ * Overrides : OS initializeApplicationData
+ * Init data with JSON cache data if present.
+ *
+ * @param {Class_ApplicationDataSA} new_data_app
+ * @param {(Type_JSON | undefined)} initial_data
+ * @return {*}
+ */
 export const initializeApplicationDataSA = (
   new_data_app: Class_ApplicationDataSA,
   initial_data: Type_JSON | undefined
@@ -44,7 +54,7 @@ type FType_InitializeAdditionalMenusSA = (
 
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
- *  we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
+ * we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
  * @param {*} additionalMenus
  * @param {*} new_data_app
  */
@@ -90,14 +100,10 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   // If windowSankey.SankeyToolsStatic is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
   // and if the app is in publication mode we aren't in one
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   const [count, setCount] = useState(0)
   const refreshThis = () => {
-    setCount(count+1)
+    setCount(count + 1)
   }
   new_data_app.menu_configuration.ref_to_additional_menus_updater.current = refreshThis
 
@@ -184,8 +190,8 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     <Button
       variant='menutop_button_logout'
       onClick={() => loginOut(
-        () => {new_data_app.unsetTokens()},
-        returnToApp
+        () => { new_data_app.unsetTokens() },
+        () => returnToApp(new_data_app, navigate)
       )}>
       <FaPowerOff />
     </Button>

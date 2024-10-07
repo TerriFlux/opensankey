@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Button, Card, CardBody, CardHeader, FormControl, Image, Input, InputGroup, InputLeftAddon, InputRightElement } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { returnToApp } from '../../SankeyAppSA'
 import { loginUser } from './LoginFunctions'
 
 export type LoginTypes = {
@@ -28,10 +29,6 @@ const Login: FunctionComponent<LoginTypes> = ({
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   // Handler : Si demande de connection
   const handleSubmit = async () => {
@@ -74,13 +71,13 @@ const Login: FunctionComponent<LoginTypes> = ({
               height='4rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(new_data_app, navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(new_data_app, navigate)}
           >
             {t('UserPages.to_app')}
           </Button>

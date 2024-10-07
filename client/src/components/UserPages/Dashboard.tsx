@@ -12,8 +12,9 @@ import {
   SimpleGrid
 } from '@chakra-ui/react'
 
-import { loginOut } from '../Login/LoginFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { returnToApp } from '../../SankeyAppSA'
+import { loginOut } from '../Login/LoginFunctions'
 
 
 export type SankeyLabelTypes = {
@@ -49,13 +50,10 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
 
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-  }
 
   //If we acces this page without being logged, it is resent to the application
   if (!new_data_app.has_free_account) {
-    returnToApp()
+    returnToApp(new_data_app, navigate)
   }
 
   //If we are log the the following behaviors are defined
@@ -150,7 +148,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
               height='4rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(new_data_app, navigate)}
             />
           </Box>
           <Box
@@ -161,13 +159,13 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
           >
             <Button
               variant='btn_lone_navigation'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(new_data_app, navigate)}
             >
               {t('UserPages.to_app')}
             </Button>
             <Button
               variant='btn_lone_navigation'
-              onClick={() =>  myAccount()}
+              onClick={() => myAccount()}
             >
               {t('UserPages.to_acc')}
             </Button>
@@ -175,8 +173,8 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
               variant='menutop_button_logout'
               onClick={() => {
                 loginOut(
-                  () => {new_data_app.unsetTokens()},
-                  returnToApp
+                  () => { new_data_app.unsetTokens() },
+                  () => { returnToApp(new_data_app, navigate) }
                 )
               }}
             >

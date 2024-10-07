@@ -9,7 +9,7 @@
 // External imports =================================================================================
 
 import React, { FunctionComponent } from 'react'
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
 
 // OpenSankey imports ===============================================================================
@@ -240,5 +240,12 @@ export const SankeyAppSA: FunctionComponent = () => {
         </Routes>
       </HashRouter>
     </ChakraProvider>
+}
 
+export const returnToApp = (
+  new_data_app: Class_ApplicationDataSA,
+  navigate: NavigateFunction
+) => {
+  navigate('/')
+  new_data_app.menu_configuration.updateComponentsRelatedToSA()
 }
