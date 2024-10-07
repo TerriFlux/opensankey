@@ -47,6 +47,7 @@ import i18next from './traduction'
 // import Account from './components/UserPages/Account'
 // import Dashboard from './components/UserPages/Dashboard'
 import { SankeyAppSA } from './SankeyAppSA'
+import { ExempleMenuTypes } from './ModulesSA'
 
 // Global variables ==============================================================================
 
@@ -72,38 +73,43 @@ i18next.changeLanguage(navigator.language.includes('fr') ? 'fr' : 'en')
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)
 
-// let exemple_menu = {} as { [_: string]: JSX.Element }
-// const fetchData = { method: 'POST' }
-// if (!window.SankeyToolsStatic) {
-//   // Menus are not presents in mode publish
-//   const path = window.location.origin
-//   const url = path + '/opensankey/sankey/menu_examples'
-//   // let formations_menu = {} as { [_: string]: JSX.Element }
-//   fetch(url, fetchData).then(response => {
-//     response.text().then(text => {
-//       const json_data = JSON.parse(text)
-//       exemple_menu = json_data.exemples_menu
-//       if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
-//         // formations_menu = Object.fromEntries(
-//         //   Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
-//         // ) as { [_: string]: JSX.Element }
-//         delete json_data.exemples_menu['Formations']['Tutoriels']
-//       }
-//     }).catch(() => {
-//       exemple_menu = {}
-//       // formations_menu = {}
-//     }).then(() => {
-//       renderPage()
-//     })
-//   })
-// }
+
+const fetchData = {
+  method: 'POST'
+}
+
+let exemple_menu = {} as ExempleMenuTypes
+let formations_menu = {} as ExempleMenuTypes
+
+// Create a default sankey
+// const data = DefaultSankeyData()
+const path = window.location.origin
+const url = path + '/opensankey/sankey/menu_examples'
+fetch(url, fetchData).then(response => {
+  response.text().then(text => {
+    const json_data = JSON.parse(text)
+    exemple_menu = json_data.exemples_menu
+    if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
+      formations_menu = Object.fromEntries(
+        Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
+      ) as { [_: string]: ExempleMenuTypes }
+      delete json_data.exemples_menu['Formations']['Tutoriels']
+    }
+  }).catch(() => {
+    exemple_menu = {}
+    formations_menu = {}
+  }).then(() => {
+    renderPage()
+  })
+})
+
 
 const renderPage = () => {
   root.render(
-    <SankeyAppSA/>
+    <SankeyAppSA example_menu={exemple_menu} formations_menu={formations_menu} />
   )
 }
 
 // if (window.SankeyToolsStatic) {
-renderPage()
+// renderPage()
 // }
