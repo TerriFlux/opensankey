@@ -69,7 +69,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   const spinner=(processing || is_computing)? <Spinner thickness='2px' color='openSankey.200' />:<></>
 
   if (!not_started.current && !processing) {
-    const path = window.location.href
+    const path = window.location.origin
     const url = path + applicationContext.url_prefix + 'loads_retrieves_result'
     const form_data = new FormData()
     const fetchData = {
