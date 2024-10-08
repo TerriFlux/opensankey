@@ -116,7 +116,7 @@ const ExempleItem = (
     const files_item = (exemple_menu as subtypeFileList)['Files'].map((item, index) => {
       let path =   current_path + '/' + item
       if (item.includes('.json')) {
-        path =current_path+'/sankey/'+item
+        path =current_path+'/'+item
       }
 
       // Text of the button in the menu
