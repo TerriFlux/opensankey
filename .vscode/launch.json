@@ -57,7 +57,7 @@
             "module": "flask",
             "justMyCode": false,
             "env": {
-                "FLASK_APP": "SankeySuite/app.py"
+                "FLASK_APP": "SankeyApp/app.py"
             },
             "args": [
                 "run",
