@@ -24,6 +24,7 @@ import {
   createSubscription,
   getStripePublishableKey
 } from './PaiementFunctions'
+import { Presentation } from '../Register/Presentation'
 
 
 export const PaiementCheckout = () => {
@@ -116,13 +117,20 @@ export const PaiementPage: FunctionComponent<{
         <Box>
           {t('Paiement.win_content_buy')}
         </Box>
-        <Button
-          variant='btn_lone_navigation_tertiary'
-          type="submit"
-          onClick={goToCheckout}
+        <Presentation
+          new_data_app={new_data_app}
+        />
+        <Box
+          display="inline-grid"
         >
-          {t('Paiement.btn_checkout')}
-        </Button>
+          <Button
+            variant='btn_lone_navigation_tertiary'
+            type="submit"
+            onClick={goToCheckout}
+          >
+            {t('Paiement.btn_checkout')}
+          </Button>
+        </Box>
       </>
     }
     else if (status === 'success') {

@@ -169,6 +169,60 @@ const resources = {
         'to_acc': 'My account',
         'to_dbd': 'Dashboard',
       },
+      register: {
+        presentation: {
+          'title': 'Power-up your Sankeys with OpenSankey+',
+          'text': 'OpenSankey+ is a storytelling tool made for those who need to present flow data in a way that is both didactic and aesthetically pleasing.',
+          'btn_next': 'I want OpenSankey+ !'
+        },
+        account: {
+          'title': 'First create your account',
+          id: {
+            'label': 'E-mail',
+            'placeholder': 'E-mail is needed to create your account',
+            'error': 'Please enter a valid e-mail adress.'
+          },
+          pwd: {
+            'label': 'Password',
+            'placeholder': 'Choose a good password',
+            'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
+            'show': 'show',
+            'hide': 'hide',
+          },
+          'fn': 'First Name',
+          'ln': 'Last Name',
+          msg: {
+            'ok': 'Account created - You will receive a confirmation e-mail to validate your account',
+            'err_captcha': 'Captcha is invalid',
+            'err_email_invalid': 'Email is not valid',
+            'err_email_exists': 'An account already exists with this e-mail',
+            'nok': 'An error has occured, could not create account.'
+          },
+          'btn_terms': 'Please read and accept the terms and conditions',
+          'btn_next': 'Sign up'
+        },
+        validation: {
+          'title': 'Validation du compte',
+          msg: {
+            'ok': 'This account has been successfully validated.',
+            'nok': 'Error, wrong link',
+            'account_already_created': 'This account has already been validated',
+            'redirect': 'You will be redirected to license checkout page.',
+          }
+        }
+      },
+      terms_of_uses: {
+        'title': 'Terms and conditions of use',
+        'accept': 'Accept the terms and conditions of use'
+      },
+      Paiement: {
+        'win_header_buy': 'Create and share Sankey\'s diagrams like a pro.',
+        'win_header_success': 'Thank you for your subscription to OpenSankey+',
+        'win_header_error': 'Oops, somethings goes wrong',
+        'win_content_success': 'OpenSankey+ is now activated for your account.',
+        'win_content_error': 'Something went wrong during the paiement process',
+        'btn_checkout': 'I want OpenSankey+ !'
+      },
       Login: {
         'con': 'Login',
         'forgot_ask': 'Password forgotten ?',
@@ -206,15 +260,6 @@ const resources = {
         'err_get_user_infos': 'Error while trying to access the user\'s infos',
         'err_get_OS+_infos': 'Error while trying to access the OpenSankey+ license server',
         'err_get_SS_infos': 'Error while trying to access the SankeySuite license server'
-      },
-      Paiement: {
-        'win_header_buy': 'Buy OpenSankey+',
-        'win_header_success': 'Thank you for your subscription to OpenSankey+',
-        'win_header_error': 'Oops, somethings goes wrong',
-        'win_content_buy': 'Create and share Sankey\'s diagrams like a pro.',
-        'win_content_success': 'OpenSankey+ is now activated for your account.',
-        'win_content_error': 'Something went wrong during the paiement process',
-        'btn_checkout': 'I want OpenSankey+ !'
       },
       view: {
         'unit': 'Unit.',
@@ -375,42 +420,6 @@ const resources = {
       'elements_sankey+_blocked_long': 'Some Sankey elements are not visible because they come from OpenSankey+ and your account does not have this module',
       'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
     },
-    register: {
-      id: {
-        'label': 'E-mail',
-        'placeholder': 'E-mail is needed to create your account',
-        'error': 'Please enter a valid e-mail adress.'
-      },
-      pwd: {
-        'label': 'Password',
-        'placeholder': 'Choose a good password',
-        'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
-        'show': 'show',
-        'hide': 'hide',
-      },
-      err: {
-        'captcha': 'Error : Captcha invalid',
-        'email in use': 'Error : An account already exists with this e-mail'
-      },
-      msg: {
-        'ok account created': 'Account created - You will be redirected to the login page in a moment'
-      },
-      'fn': 'First Name',
-      'ln': 'Last Name',
-      'reg_win': 'Create an account',
-      'lic': 'Add your license number (Optional)',
-      'OS+_lic': 'OpenSankey+',
-      'OS+_link': 'infos',
-      'SS_lic': 'SankeySuite',
-      'SS_link': 'infos',
-      'reg': 'Sign up'
-    },
-    terms_of_uses: {
-      'title': 'Terms and conditions of use',
-      'text': 'english_terms.html',
-      'open': 'Please read and accept the terms and conditions',
-      'accept': 'Accept the terms and conditions of use'
-    }
   },
   //=======================================================
   //FR
@@ -549,6 +558,65 @@ const resources = {
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
       },
+      register: {
+        presentation: {
+          'title': 'Passez à la vitesse supérieure avec l\'extension OpenSankey+',
+          'text': 'OpenSankey+ est un outil de storytelling, fait pour ceux qui ont besoin de présenter des données de flux d’une façon à la fois didactique et esthétique.',
+          'btn_next': 'Je veux OpenSankey+ !'
+        },
+        account: {
+          'title': 'Créer un compte',
+          id: {
+            'label': 'E-mail',
+            'placeholder': 'Veuillez saisir votre e-mail',
+            'error': 'L\'adresse e-mail n\'est pas valide'
+          },
+          pwd: {
+            'label': 'Mot de passe',
+            'placeholder': 'Choisissez un bon mot de passe',
+            'error': 'Le mot de passe doit comporter plus de huit caractères, dont au moins une lettre, un chiffre et un caractère spécial',
+            'show': 'montrer',
+            'hide': 'cacher',
+          },
+          'fn': 'Prénom',
+          'ln': 'Nom',
+          msg: {
+            'ok': 'Compte créé - Vous allez recevoir un e-mail afin de valider celui-ci.',
+            'nok': 'Une erreur s\'est produite. Le compte n\'a pas pu être créé',
+            'err_captcha': 'Le captcha n\'est pas valide',
+            'err_email_invalid': 'L\'adresse email fournie n\'est pas valide',
+            'err_email_exists': 'Un compte existe déjà avec cette adresse e-mail',
+          },
+          'btn_terms': 'Lire et accepter les conditions d\'utilisation',
+          'btn_next': 'Créer le compte'
+        },
+        validation: {
+          'title': 'Validation du compte',
+          msg: {
+            'ok': 'Ce compte a été validé avec succes.',
+            'nok': 'Erreur, lien corrompu',
+            'account_already_created': 'Ce compte a déjà été validé.',
+            'redirect': 'Vous allez être redirigé vers la page de souscription.',
+          },
+        }
+      },
+      terms_of_uses: {
+        'title': 'Conditions d\'utilisation',
+        'accept': 'Accepter les conditions d\'utilisation'
+      },
+      Paiement: {
+        'win_header_buy' : 'Acheter OpenSankey+',
+        'win_header_success' : 'Merci d\'avoir choisi OpenSankey+',
+        'win_header_error' : 'Oups, le paiement n\'a pas abouti',
+        'win_content_buy' : 'Créez et partagez vos diagrammes de Sankey comme un pro.',
+        'win_content_success' : 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
+        'win_content_error' : 'Quelque chose s\'est mal passé pendant le processus de paiement.',
+        'btn_checkout' : 'Je veux OpenSankey+ !'
+      },
+      osplus_presentation: {
+        'title': 'Licence OpenSankey+',
+        'text': 'osplus_presentation_fr.html'
+      },
       Login: {
         'con': 'Connexion',
         'forgot_ask': 'Mot de passe oublié ?',
@@ -585,15 +653,6 @@ const resources = {
         'err_get_user_infos': 'Erreur lors de l\'accès aux données de l\'utilisateur',
         'err_get_OS+_infos': 'Erreur lors de l\'accès au serveur de licences OpenSankey+',
         'err_get_SS_infos': 'Erreur lors de l\'accès au serveur de licences SankeySuite'
-      },
-      Paiement: {
-        'win_header_buy' : 'Acheter OpenSankey+',
-        'win_header_success' : 'Merci d\'avoir choisi OpenSankey+',
-        'win_header_error' : 'Oups, le paiement n\'a pas abouti',
-        'win_content_buy' : 'Créez et partagez vos diagrammes de Sankey comme un pro.',
-        'win_content_success' : 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
-        'win_content_error' : 'Quelque chose s\'est mal passé pendant le processus de paiement.',
-        'btn_checkout' : 'Je veux OpenSankey+ !'
       },
       view: {
         'unit': 'Unit.',
@@ -752,42 +811,6 @@ const resources = {
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
     },
-    register: {
-      id: {
-        'label': 'E-mail',
-        'placeholder': 'Veuillez saisir votre e-mail',
-        'error': 'L\'adresse e-mail n\'est pas valide'
-      },
-      pwd: {
-        'label': 'Mot de passe',
-        'placeholder': 'Choisissez un bon mot de passe',
-        'error': 'Le mot de passe doit comporter plus de huit caractères, dont au moins une lettre, un chiffre et un caractère spécial',
-        'show': 'montrer',
-        'hide': 'cacher',
-      },
-      err: {
-        'captcha': 'Erreur : Captcha invalide',
-        'email in use': 'Erreur : Un compte existe déjà avec cet e-mail'
-      },
-      msg: {
-        'ok account created': 'Compte créé - Vous allez être redirigé vers la page de connexion'
-      },
-      'fn': 'Prénom',
-      'ln': 'Nom',
-      'reg_win': 'Créer un compte',
-      'lic': 'Ajouter votre licence (Optionel)',
-      'OS+_lic': 'OpenSankey+',
-      'OS+_link': 'infos',
-      'SS_lic': 'SankeySuite',
-      'SS_link': 'infos',
-      'reg': 'S\'enregistrer'
-    },
-    terms_of_uses: {
-      'title': 'Conditions d\'utilisation',
-      'text': 'francais_terms.html',
-      'open': 'Lire et accepter les conditions d\'utilisation',
-      'accept': 'Accepter les conditions d\'utilisation'
-    }
   }
 }
 
@@ -813,7 +836,7 @@ i18next
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({
     resources,
-    ns: ['translation', 'terms_of_uses'],
+    ns: ['translation'],
     defaultNS: 'translation',
     interpolation: {
       escapeValue: false // react already safes from xss

@@ -1,20 +1,112 @@
+
+import * as d3 from 'd3'
 import LZString from 'lz-string'
+import i18next from 'i18next'
+import { NavigateFunction } from 'react-router-dom'
 
 export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'
+
+
+export const resetLogs = () => {
+  d3.select('.LogInfo').selectAll('*').remove()
+  d3.select('.LogError').selectAll('*').remove()
+}
+
+export const logInfo = (info: string) => {
+  d3.select('.LogInfo').append('p').text(info)
+}
+
+export const logError = (err: string) => {
+  d3.select('.LogError').append('p').text(err)
+}
+
+// Check Licence and register account if everything is Ok
+export async function userSignUp(
+  email: string,
+  password: string,
+  firstname: string,
+  lastname: string
+) {
+  resetLogs()
+  fetch(window.location.origin + '/auth/signup/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email,
+      password: password,
+      firstname: firstname,
+      lastname: lastname,
+      lang: i18next.language
+    })
+  })
+    .then((response) => {
+      if (response.ok)
+        return response.json()
+      else
+        logError(i18next.t('register.account.msg.nok'))
+    })
+    .then((response) => {
+      if (response) {
+        if (response['message'] === 'ok')
+          logInfo(i18next.t('register.account.msg.ok'))
+        else
+          logError(i18next.t('register.account.msg.' + response['message']))
+      }
+    })
+}
+
+// Check Licence and register account if everything is Ok
+export async function userValidate(
+  token: string,
+  navigate: NavigateFunction
+) {
+  resetLogs()
+
+  // Enregistrement dans la base de donnée utilisateur
+  fetch(window.location.origin + '/auth/signup/confirm', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token: token
+    })
+  })
+    .then((response) => {
+      if (response.ok)
+        return response.json()
+      else
+        logError(i18next.t('register.validation.msg.nok'))
+    })
+    .then((response) => {
+      if (response){
+        logInfo(i18next.t('register.validation.msg.' + response['message']))
+        logInfo(i18next.t('register.validation.msg.redirect'))
+        setTimeout(
+          () => navigate('/license/checkout'),
+          3000
+        )
+      }
+    })
+
+}
 
 // Check a license status
 async function checkLicense(
   app_name: string,
   license_id: string
-){
+) {
   // Get server api url
   const path = window.location.origin
   const url = path + '/api/edd_license'
   // use server as proxy to fetch informations
   // -> Avoid "Same-Origin" problem with CORS
-  const data =  fetch(url,
-    { method: 'POST',
+  const data = fetch(url,
+    {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -24,8 +116,8 @@ async function checkLicense(
         'license_id': license_id
       })
     })
-    .then( response => response.json() )
-    .then( response_json => {
+    .then(response => response.json())
+    .then(response_json => {
       return response_json
     })
   return data
@@ -33,7 +125,7 @@ async function checkLicense(
 
 export async function checkLicenseOpenOSP(
   license_id: string
-){
+) {
   const data = await checkLicense(
     app_name_opensankeyplus,
     license_id)
@@ -45,7 +137,7 @@ export async function checkLicenseOpenOSP(
 
 export async function checkLicenseSankeySuite(
   license_id: string
-){
+) {
   const data = await checkLicense(
     app_name_sankeysuite,
     license_id)
@@ -65,8 +157,9 @@ async function activateLicense(
   const url = path + '/api/edd_license'
   // use server as proxy to fetch informations
   // -> Avoid "Same-Origin" problem with CORS
-  const data =  fetch(url,
-    { method: 'POST',
+  const data = fetch(url,
+    {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -76,8 +169,8 @@ async function activateLicense(
         'license_id': license_id
       })
     })
-    .then( response => response.json() )
-    .then( response_json => {
+    .then(response => response.json())
+    .then(response_json => {
       return response_json
     })
   return data
@@ -87,7 +180,7 @@ async function activateLicense(
 async function registerNewLicense(
   app_name: string,
   license_id: string
-){
+) {
   return new Promise((resolve, reject) => {
     checkLicense(
       app_name,
@@ -103,15 +196,15 @@ async function registerNewLicense(
                 reject('Failed to activate licence')
               }
             })
-            .catch( error => {
+            .catch(error => {
               // Erreur activate license
               reject('Error in activate licence - ' + error.toString())
             })
         } else {
           reject('Failed to check licence')
         }
-      }).catch( error => {
-      // Erreur fetch license
+      }).catch(error => {
+        // Erreur fetch license
         reject('Error in check licence - ' + error.toString())
       })
   })
@@ -119,7 +212,7 @@ async function registerNewLicense(
 
 export async function registerNewLicenseOpenOSP(
   license_id: string
-){
+) {
   return new Promise((resolve, reject) => {
     registerNewLicense(
       app_name_opensankeyplus,
@@ -127,7 +220,7 @@ export async function registerNewLicenseOpenOSP(
       .then(_ => {
         resolve(_)
       })
-      .catch( error => {
+      .catch(error => {
         reject(error)
       })
   })
@@ -135,7 +228,7 @@ export async function registerNewLicenseOpenOSP(
 
 export async function registerNewLicenseSankeySuite(
   license_id: string
-){
+) {
   return new Promise((resolve, reject) => {
     registerNewLicense(
       app_name_sankeysuite,
@@ -143,7 +236,7 @@ export async function registerNewLicenseSankeySuite(
       .then(_ => {
         resolve(_)
       })
-      .catch( error => {
+      .catch(error => {
         reject(error)
       })
   })
@@ -152,15 +245,14 @@ export async function registerNewLicenseSankeySuite(
 export async function activateLicenseToken(
   app_name: string,
   req_url: string,
-  setLicenseToken:()=>void)
-{
+  setLicenseToken: () => void) {
   // Check AFM license
   fetch(req_url)
     .then(response => {
-      if ( response.ok ) {
+      if (response.ok) {
         return response.json()
       } else {
-        return Promise.reject( response )
+        return Promise.reject(response)
       }
     }).then(data => {
       checkLicense(

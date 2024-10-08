@@ -1,0 +1,8 @@
+Welcome {{ first_name }}
+
+Your OpenSankey+ account is almost created.
+
+To continue, you must validate your e-mail adress with this link : {{confirm_url}}
+
+Regards,
+The TerriFlux team

@@ -139,7 +139,7 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   >
     <Button
       variant='btn_lone_navigation_primary'
-      onClick={() => navigate('/license?buy')}
+      onClick={() => navigate('/register')}
     >
       {t('UserNav.to_buy')}
     </Button>

@@ -22,7 +22,7 @@ import {
   checkLicenseSankeySuite,
   registerNewLicenseOpenOSP,
   // registerNewLicenseSankeySuite
-} from '../Register/LicenseFunctions'
+} from '../Register/RegisterFunctions'
 import {
   activateLicensesTokens,
   loginOut

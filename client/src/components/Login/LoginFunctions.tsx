@@ -5,7 +5,7 @@ import {
   activateLicenseToken,
   app_name_opensankeyplus,
   app_name_sankeysuite
-} from '../Register/LicenseFunctions'
+} from '../Register/RegisterFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 // Activate license Tokens if licenses are valid

@@ -125,7 +125,7 @@ class User(UserMixin, db.Model):
         # Otherwise not valid
         return False
 
-    def get_reset_token(self):
+    def get_pwd_reset_token(self):
         """
         Create a random token for password reset
 
@@ -138,7 +138,7 @@ class User(UserMixin, db.Model):
         return serializer.dumps(self.id)
 
     @staticmethod
-    def verify_reset_token(token):
+    def verify_pwd_reset_token(token):
         """
         Verify the validity of given token
 
@@ -156,7 +156,7 @@ class User(UserMixin, db.Model):
         """
         serializer = Serializer(current_app.config['SECRET_KEY'])
         try:
-            user_id = serializer.loads(token, max_age=1800)  # age in sec
+            user_id = serializer.loads(token, max_age=900)  # age in sec, valid for 15min
         except Exception:
             return None
         return User.query.get(user_id)
@@ -273,7 +273,7 @@ def set_licence(license_name):
     # Get license token
     token = request.json.get('token')
     try:
-        [user_id, license_id, duration] = serializer.loads(token, max_age=1800)
+        [user_id, license_id, duration] = serializer.loads(token, max_age=900) # Valid for 15min
     except Exception:
         return "Invalid token", 400
 
