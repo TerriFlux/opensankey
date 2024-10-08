@@ -8,6 +8,7 @@ export const button_base_style = defineStyle({
   borderRadius: '6px',
   color: 'white',
   fill: 'white',
+  path: 'white',
   borderColor: 'primaire.3',
   bg: 'primaire.3',
   bgColor: 'primaire.3',
@@ -138,6 +139,21 @@ export const menuconfigpanel_del_button = defineStyle({
   },
 })
 
+export const btn_datatag_navbar = defineStyle({
+  height: '2.5rem',
+  bg: 'none',
+  bgColor: 'none',
+  borderColor: 'none',
+  color: '#4A5568',
+  display: 'block',
+  _hover: {
+    borderColor: 'lightgrey',
+    bg: 'lightgrey',
+    bgColor: 'lightgrey',
+  },
+
+})
+
 // Style for delete button in table of tags in config menu
 export const menuconfigpanel_del_button_in_table = defineStyle({
   height: '1.5rem',
@@ -162,8 +178,8 @@ export const menutop_button = defineStyle({
   width: '4rem',
   textStyle: 'h4',
   fontSize: '9px',
-  margin:'0rem 0rem 0rem 0.75rem',
-  border:'0px',
+  margin: '0rem 0rem 0rem 0.75rem',
+  border: '0px',
   borderColor: 'transparent',
   bg: 'transparent',
   bgColor: 'transparent',
@@ -194,15 +210,15 @@ export const menutop_button_with_dropdown = defineStyle({
   borderRadius: '0px',
   textStyle: 'h4',
   fontSize: '9px',
-  padding:'0.2rem',
-  margin:'0rem 0rem 0rem 0.75rem',
-  border:'0px',
+  padding: '0.2rem',
+  margin: '0rem 0rem 0rem 0.75rem',
+  border: '0px',
   color: 'gray.600',
   bg: 'transparent',
   bgColor: 'transparent',
-  svg :{
-    margin:'auto',
-    height:'2rem'
+  svg: {
+    margin: 'auto',
+    height: '2rem'
   },
   _hover: {
     bg: 'transparent',
@@ -212,21 +228,21 @@ export const menutop_button_with_dropdown = defineStyle({
 
 export const submenu_nav_btn_dropdown_item_demo = defineStyle({
   width: 'inherit',
-  textAlign:'left',
+  textAlign: 'left',
   borderRadius: '0px',
-  padding:'0.2rem',
-  border:'0px',
-  color:'primaire.2',
+  padding: '0.2rem',
+  border: '0px',
+  color: 'primaire.2',
   bg: 'inherit',
   bgColor: 'inherit',
-  minWidth:'inherit',
+  minWidth: 'inherit',
   _hover: {
-    textDecoration:'underline',
+    textDecoration: 'underline',
     bg: 'inherit',
     bgColor: 'inherit',
   },
-  _active:{
-    bg:'primaire.2'
+  _active: {
+    bg: 'primaire.2'
   }
 })
 
@@ -295,9 +311,6 @@ export const menuconfigpanel_option_button_tertiary_activated = defineStyle({
 })
 
 export const toolbar_button_1 = defineStyle({
-  path:{
-    fill:'white'
-  },
   bgColor: 'primaire.1',
   borderColor: 'secondaire.1',
   _hover: {
@@ -307,9 +320,6 @@ export const toolbar_button_1 = defineStyle({
 })
 
 export const toolbar_button_2 = defineStyle({
-  path:{
-    fill:'white'
-  },
   bgColor: 'primaire.2',
   borderColor: 'secondaire.2',
   _hover: {
@@ -319,9 +329,6 @@ export const toolbar_button_2 = defineStyle({
 })
 
 export const toolbar_button_3 = defineStyle({
-  path:{
-    fill:'white'
-  },
   bgColor: 'primaire.3',
   borderColor: 'secondaire.3',
   _hover: {
@@ -331,9 +338,6 @@ export const toolbar_button_3 = defineStyle({
 })
 
 export const toolbar_button_4 = defineStyle({
-  path:{
-    fill:'white'
-  },
   bgColor: 'primaire.4',
   borderColor: 'secondaire.4',
   _hover: {
@@ -343,9 +347,6 @@ export const toolbar_button_4 = defineStyle({
 })
 
 export const toolbar_button_5 = defineStyle({
-  path:{
-    fill:'white'
-  },
   bgColor: 'primaire.5',
   borderColor: 'secondaire.5',
   _hover: {
@@ -355,9 +356,6 @@ export const toolbar_button_5 = defineStyle({
 })
 
 export const toolbar_button_6 = defineStyle({
-  path:{
-    fill:'white'
-  },
   bgColor: 'primaire.6',
   borderColor: 'secondaire.6',
   _hover: {
@@ -367,10 +365,7 @@ export const toolbar_button_6 = defineStyle({
 })
 
 export const toolbar_main_button = defineStyle({
-  path:{
-    fill:'white'
-  },
-  height:'6rem',
+  height: '6rem',
   bgColor: 'primaire.1',
   borderColor: 'primaire.1',
   _hover: {
@@ -383,7 +378,7 @@ export const menutop_button_goto_dashboard = defineStyle({
   padding: '0.25rem',
   alignSelf: 'center',
   justifySelf: 'center',
-  height:'3rem',
+  height: '3rem',
   width: '4rem',
   border: 'solid 1px ',
   borderRadius: '6px',
@@ -391,7 +386,7 @@ export const menutop_button_goto_dashboard = defineStyle({
   bg: 'primaire.2',
   bgColor: 'primaire.2',
   color: 'white',
-  fill:'white',
+  fill: 'white',
   _hover: {
     borderColor: 'secondaire.2',
     bg: 'secondaire.2',
@@ -403,15 +398,15 @@ export const menutop_button_logout = defineStyle({
   padding: '0.25rem',
   alignSelf: 'center',
   justifySelf: 'center',
-  height:'3rem',
-  width:'4rem',
+  height: '3rem',
+  width: '4rem',
   border: 'solid 1px ',
   borderRadius: '6px',
   borderColor: 'primaire.1',
   bg: 'primaire.1',
   bgColor: 'primaire.1',
   color: 'white',
-  fill:'white',
+  fill: 'white',
   _hover: {
     borderColor: 'secondaire.1',
     bg: 'secondaire.1',
@@ -423,15 +418,15 @@ export const menutop_button_save_in_cache = defineStyle({
   padding: '0.25rem',
   alignSelf: 'center',
   justifySelf: 'center',
-  height:'3rem',
-  width:'4rem',
+  height: '3rem',
+  width: '4rem',
   border: 'solid 1px ',
   borderRadius: '6px',
   borderColor: 'primaire.3',
   bg: 'primaire.3',
   bgColor: 'primaire.3',
   color: 'white',
-  fill:'white',
+  fill: 'white',
   _hover: {
     borderColor: 'secondaire.3',
     bg: 'secondaire.3',
@@ -443,8 +438,8 @@ export const contextmenu_button = defineStyle({
   width: '100%',
   border: 'none',
   borderRadius: 'none',
-  textAlign:'left',
-  justifyContent:'left',
+  textAlign: 'left',
+  justifyContent: 'left',
   color: 'grey.600',
   bg: 'none',
   bgColor: 'none',
@@ -456,10 +451,10 @@ export const contextmenu_button = defineStyle({
   },
 })
 
-export const token_blocker_activated=defineStyle({
+export const token_blocker_activated = defineStyle({
   width: '2rem',
-  fontSize:'0.75rem',
-  padding:'0px',
+  fontSize: '0.75rem',
+  padding: '0px',
   border: '1px solid #C42021',
   borderRadius: '4px',
   bg: '#C42021',
@@ -473,8 +468,8 @@ export const token_blocker_activated=defineStyle({
 export const token_blocker_deactivated = defineStyle({
   width: '2rem',
   height: '2rem',
-  fontSize:'0.75rem',
-  padding:'0px',
+  fontSize: '0.75rem',
+  padding: '0px',
   marginRight: '0.5rem',
   border: '1px solid #C42021',
   borderRadius: '6px',
@@ -492,9 +487,9 @@ export const btn_navigation = defineStyle({
   border: 'none',
   borderRadius: '4px',
   bg: 'none',
-  height:'2rem',
+  height: '2rem',
   bgColor: 'none',
-  textDecoration:'underline',
+  textDecoration: 'underline',
   _hover: {
     bg: 'primaire.2',
     bgColor: 'primaire.2',
@@ -506,19 +501,66 @@ export const btn_desc_licence = defineStyle({
   borderRadius: '4px',
   bg: 'openSankey.100',
   bgColor: 'openSankey.100',
-  textDecoration:'underline',
-  maxW:'20vw',
+  textDecoration: 'underline',
+  maxW: '20vw',
   _hover: {
     bg: 'primaire.2',
     bgColor: 'primaire.2',
   },
 })
 
-export const btn_lone_navigation = defineStyle({
+const _btn_lone_navigation = defineStyle({
   height: '3rem',
-  maxW:'11rem',
-  marginLeft:'auto',
-  marginRight:'1rem',
+  maxW: '11rem',
+  marginLeft: '1rem',
+  marginRight: '1rem',
   paddingTop: '1rem',
-  paddingBottom: '1rem'
+  paddingBottom: '1rem',
+  alignSelf: 'center',
+  justifySelf: 'center',
+  textAlign: 'center'
+})
+export const btn_lone_navigation = defineStyle(_btn_lone_navigation)
+
+export const btn_lone_navigation_secondary = defineStyle({
+  ..._btn_lone_navigation,
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  borderColor: 'primaire.2',
+  _hover: {
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+    borderColor: 'secondaire.2',
+  },
+})
+
+export const btn_lone_navigation_tertiary = defineStyle({
+  ..._btn_lone_navigation,
+  bg: 'primaire.5',
+  bgColor: 'primaire.5',
+  borderColor: 'tertiaire.5',
+  border: 'solid 2px',
+  _hover: {
+    bg: 'secondaire.5',
+    bgColor: 'secondaire.5',
+    borderColor: 'secondaire.5',
+  },
+})
+
+export const btn_lone_navigation_tertiary_negative = defineStyle({
+  ..._btn_lone_navigation,
+  color: 'primaire.5',
+  fill: 'primaire.5',
+  path: 'primaire.5',
+  bg: 'white',
+  bgColor: 'white',
+  border: 'none',
+  _hover: {
+    color: 'tertiaire.5',
+    fill: 'tertiaire.5',
+    path: 'tertiaire.5',
+    bg: 'white',
+    bgColor: 'white',
+    border: 'none',
+  },
 })
