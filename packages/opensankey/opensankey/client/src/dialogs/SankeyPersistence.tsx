@@ -518,7 +518,7 @@ export const UploadExemple: FType_UploadExemple = (
   // convert_data: ConvertDataFuncType,
   // DefaultSankeyData: DefaultSankeyDataFuncType
 ): void => {
-  let root = window.location.href
+  let root = window.location.origin
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
   }
