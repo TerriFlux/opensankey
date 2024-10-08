@@ -17,7 +17,8 @@ import {
   FindMaxLinkValue,
   AdjustSankeyZone,
   RecursionDataTag,
-  OSTooltip
+  OSTooltip,
+  windowSankey
 } from './SankeyUtils'
 import * as d3 from 'd3'
 import {
@@ -467,7 +468,7 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   updateComponentToolbar.current = () => setForceUpdate(!s_force_update)
   const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(data.show_structure)
   const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (data.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
-  const [mode_selection, sModeSelection] = useState('ln')
+  const [mode_selection, sModeSelection] = useState(window.SankeyToolsStatic ? 's' : 'ln')
   const [forceUpdate, setForceUpdate] = useState(false)
   let btn_mouse_mode_edition = <></>
 

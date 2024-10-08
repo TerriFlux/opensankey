@@ -100,7 +100,7 @@ try {
   // @ts-ignore
   logo = require('./css/opensankey.png')
   /* eslint-enable */
-  const path = window.location.href
+  const path = window.location.origin
   if ( !path.includes('localhost') ) {
     logo = logo.replace('static/', 'static/opensankey/')
   }
@@ -114,7 +114,7 @@ try {
   // @ts-ignore
   logo_terriflux = require('./css/terriflux.png')
   /* eslint-enable */
-  const path = window.location.href
+  const path = window.location.origin
   if ( !path.includes('localhost') ) {
     logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
   }

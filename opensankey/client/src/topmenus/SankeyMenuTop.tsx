@@ -164,8 +164,8 @@ export const menu_config_width = 450
 
 
 const GoToUserDoc = () => {
-  const path = window.location.href
-  const url = path + 'doc'
+  const path = window.location.origin
+  const url = path + '/doc'
   fetch(url, {
     method: 'GET'
   }).then((response) => {
@@ -967,7 +967,7 @@ const clickSavePNG = (
 
   post_process_export_svg()
 
-  const path = window.location.href
+  const path = window.location.origin
   let url = path + '/opensankey/sankey/save_png'
   const fetchData = {
     method: 'POST',
@@ -1599,7 +1599,7 @@ const clickSavePDF = (data: SankeyData) => {
 
   post_process_export_svg()
 
-  const path = window.location.href
+  const path = window.location.origin
   let url = path + '/opensankey/sankey/save_pdf'
   const fetchData = {
     method: 'POST',
