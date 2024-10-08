@@ -16,9 +16,8 @@ import {
   CustomFaEyeCheckIcon,
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
-  getNumberFromJSON,
-  getNumberOrUndefinedFromJSON,
   getStringFromJSON,
+  getStringOrUndefinedFromJSON,
   OSTooltip,
   Type_JSON
 } from './deps/OpenSankey/types/Utils'
@@ -27,6 +26,8 @@ import { faDatabase, faFolderTree, faSliders } from '@fortawesome/free-solid-svg
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
 import { default_container_content } from './types/FreeLabel'
+import { OSPData, ViewType } from './types/LegacyTypes'
+import { GetOldDataFromView } from './SankeyPlusConvert'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -240,7 +241,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()))) + 1
   const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
   {/* Popover to display the link-filter */ }
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
@@ -698,22 +699,65 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
   }
 }
 
-export const convert_data_plus_legacy=(json_object:Type_JSON)=>{
-  const containers=getJSONOrUndefinedFromJSON(json_object,'labels')
-  if(containers){
+export const convert_data_plus_legacy = (json_object: Type_JSON) => {
+  const containers = getJSONOrUndefinedFromJSON(json_object, 'labels')
+  if (containers) {
     // Convert name of variable from legacy Free label to variable name of new Free labels 
-    Object.values(containers).forEach(el=>{
-      const cont =el as Type_JSON
-      const container_content=getStringFromJSON(cont,'name',default_container_content)
-      const container_opacity=getBooleanFromJSON(cont,'transparent',false)
+    Object.values(containers).forEach(el => {
+      const cont = el as Type_JSON
 
-      if(container_opacity){
-        cont['opacity']=0
-      }else{
-        cont['opacity']=100
+      const container_name= getStringOrUndefinedFromJSON(cont, 'name')
+      const container_content= getStringFromJSON(cont, 'content',default_container_content)
+      const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
+
+      if (container_opacity) {
+        cont['opacity'] = 0
+      } else {
+        cont['opacity'] = 100
       }
-      cont['content']=container_content
+      cont['content'] = container_name??container_content
 
     })
   }
+
+
+  const old_views = getOldViewsFromJSON(json_object, 'view') as ViewType[]
+  if (old_views && old_views.length > 0) {
+    json_object.views = {} as Type_JSON
+    // Convert old views 
+    old_views.forEach((v) => {
+      if (v.heredited_attr_from_master === undefined) {
+        v.heredited_attr_from_master = ['']
+      }
+
+      const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
+      if (d_view) {
+        (json_object.views as Type_JSON)[v.id] = d_view as unknown as Type_JSON
+      }
+    })
+  }
+}
+
+export function getArrayFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: Array<ViewType>
+) {
+  if (json_object[key] && typeof json_object[key] === typeof fallback_value) {
+    return json_object[key]
+  }
+  return fallback_value
+}
+
+
+export function getOldViewsFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    const _ = getArrayFromJSON(json_object, key, [])
+    if (Object.keys(_).length > 0)
+      return _
+  }
+  return undefined
 }

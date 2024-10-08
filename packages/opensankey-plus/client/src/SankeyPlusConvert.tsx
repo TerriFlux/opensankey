@@ -11,6 +11,8 @@ import { Box, Button } from '@chakra-ui/react'
 
 import type { FCType_TransformationElementsOSP } from './ftypes/SankeyPlusConvertTypes'
 import { OSTooltip } from './deps/OpenSankey/types/Utils'
+import { DiffType, OSPData, ViewType } from './types/LegacyTypes'
+import { applyChange } from 'deep-diff'
 
 // import { FaCheck } from 'react-icons/fa'
 // import { TFunction } from 'i18next'
@@ -514,3 +516,37 @@ export const TransformationElementsOSP: FunctionComponent<FCType_TransformationE
 //     })
 //   }
 // }
+
+
+
+export const GetOldDataFromView  = (
+  master_data:OSPData|undefined,
+  id_view_to_see:string
+)=>{
+  // Copy master data
+  if (!master_data) {
+    alert('sankey master undefined')
+    return undefined
+  }
+  const copy_master_data= JSON.parse(JSON.stringify(master_data))
+  copy_master_data.view = []
+  const view_of_master= master_data.view as unknown as ViewType[]
+  let data_init=JSON.parse(JSON.stringify(copy_master_data)) as OSPData
+  // Get the difference from the view
+  if (view_of_master.filter(v=>v.id === id_view_to_see).length === 0) {
+    alert('view not found')
+    return data_init
+  }
+  const view_object=view_of_master.filter(v=>v.id === id_view_to_see)[0]
+
+  if((view_object.view_data as DiffType).diff){
+    const diff_view=(view_object.view_data as DiffType).diff
+    if (!diff_view) {
+      return data_init
+    }
+    diff_view.forEach((d) => applyChange(data_init, {}, d))
+  }else{
+    data_init=view_object.view_data as OSPData
+  }
+  return data_init
+}
