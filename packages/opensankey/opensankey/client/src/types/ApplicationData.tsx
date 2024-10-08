@@ -149,7 +149,7 @@ export abstract class Class_ApplicationData
     let logo_opensankey = ''
     try {
       logo_opensankey = require('../css/opensankey.png')
-      const path = window.location.href
+      const path = window.location.origin
       if (!path.includes('localhost')) {
         logo_opensankey = logo_opensankey.replace('static/', this.static_path)
       }
@@ -162,7 +162,7 @@ export abstract class Class_ApplicationData
     let logo_terriflux = ''
     try {
       logo_terriflux = require('../css/terriflux.png')
-      const path = window.location.href
+      const path = window.location.origin
       if (!path.includes('localhost')) {
         logo_terriflux = logo_terriflux.replace('static/', this.static_path)
       }

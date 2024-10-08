@@ -86,7 +86,7 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
   const spinner = (processing || is_computing) ? <Spinner thickness='2px' color='openSankey.200' /> : <></>
 
   if (!not_started.current && !processing) {
-    const path = window.location.href
+    const path = window.location.origin
     const url = path + url_prefix + 'loads_retrieves_result'
     const form_data = new FormData()
     const fetchData = {
@@ -230,7 +230,7 @@ export const Counter: FunctionComponent<FCType_Counter> = ({
 }) => {
   useEffect(() => {
     const interval = setInterval(() => {
-      const root = window.location.href
+      const root = window.location.origin
       const url = root + url_prefix + 'load_process'
       const fetchData = {
         method: 'POST',
@@ -288,7 +288,7 @@ export const ClickSaveExcel: FType_ClickSaveExcel = (
   data_as_JSON,
   file_name = 'sankey'
 ) => {
-  let root = window.location.href
+  let root = window.location.origin
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
   }
@@ -329,7 +329,7 @@ export const uploadExcelImpl: FType_UploadExcelImpl = (
   input_file: Blob,
   the_url_prefix: string
 ): void => {
-  const root = window.location.href
+  const root = window.location.origin
   const url = root + the_url_prefix + 'sankey/upload_excel'
   const form_data = new FormData()
   form_data.append(
@@ -487,7 +487,7 @@ export const DownloadExamples: FType_DownloadExamples = (
   file_name: string,
   filetype: string
 ): void => {
-  const root = window.location.href
+  const root = window.location.origin
   const url = root + '/opensankey/sankey/download_examples'
   const fetchData = {
     method: 'POST',
