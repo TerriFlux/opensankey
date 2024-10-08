@@ -13,6 +13,14 @@ exit_if_error() {
 # Keep current directory path
 SANKEY_DIR=`pwd`
 
+cd $SANKEY_DIR/client/src/deps
+rm OpenSankey+
+ln -s $SANKEY_DIR/submodules/OpenSankey+/client/src OpenSankey+
+
+cd $SANKEY_DIR/client/src/deps/OpenSankey+/deps
+rm OpenSankey
+ln -s $SANKEY_DIR/submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src OpenSankey
+
 # Build scripts for SankeyApp client
 printf "SankeyApp Client --------------------------------------------------\n"
 cd $SANKEY_DIR
