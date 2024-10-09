@@ -106,10 +106,10 @@ export abstract class Class_DrawingAreaPlus
     height: number,
     width: number,
     application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-    id:string=default_main_sankey_id
+    id: string = default_main_sankey_id
   ) {
     // Heritance
-    super(height, width, application_data,id)
+    super(height, width, application_data, id)
     // Overrides
     this.application_data = application_data
   }
@@ -314,6 +314,7 @@ export abstract class Class_DrawingAreaPlus
     // New attributes
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
+    this.name = getStringFromJSON(json_object, 'name', this.id)
 
 
   }
@@ -332,6 +333,7 @@ export abstract class Class_DrawingAreaPlus
 
     json_entry['show_background_image'] = this._show_background_image
     json_entry['background_image'] = this._background_image
+    json_entry['name'] = this.name
     return json_entry
   }
 
@@ -346,7 +348,7 @@ export abstract class Class_DrawingAreaPlus
     mode: string[]
   ): void {
     // Transfert all attributes = Copy everything from other drawing area
-    const all=mode.includes('*')
+    const all = mode.includes('*')
     // Transfer DA attributs
     if (mode.includes('attrDrawingArea') || all) {
       this._show_background_image = other_drawing_area._show_background_image
