@@ -197,7 +197,7 @@ export abstract class Class_NodeElement
   private _handle_output_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
 
   // Node tags
-  private _tags: { [id: string]: Class_Tag } = {}
+  private _tags: Class_Tag[] = []
 
   // Dimensions (level tags)
   private _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
@@ -265,7 +265,7 @@ export abstract class Class_NodeElement
     this._handle_output_links = {}
     // Remove reference of self in related tags
     this.tags_list.forEach(tag => tag.removeReference(this))
-    this._tags = {}
+    this._tags = []
     // Remove reference of self in style
     this.style.removeReference(this)
   }
@@ -561,7 +561,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public hasGivenTag(tag: Class_Tag) {
-    return (this._tags[tag.id] !== undefined)
+    return this._tags.includes(tag)
   }
 
   /**
@@ -571,7 +571,7 @@ export abstract class Class_NodeElement
    */
   public addTag(tag: Class_Tag) {
     if (!this.hasGivenTag(tag)) {
-      this._tags[tag.id] = tag
+      this._tags.push(tag)
       tag.addReference(this)
       this.draw()
     }
@@ -585,7 +585,8 @@ export abstract class Class_NodeElement
    */
   public removeTag(tag: Class_Tag) {
     if (this.hasGivenTag(tag)) {
-      delete this._tags[tag.id]
+      const idx = this._tags.indexOf(tag)
+      this._tags.splice(idx, 1)
       tag.removeReference(this)
       this.draw()
     }
@@ -2378,14 +2379,6 @@ export abstract class Class_NodeElement
 
   // Tags related -----------------------------------------------------------------------
 
-  /**
-   * Dict as [id: tag] of tags related to node
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get tags_dict() {
-    return this._tags
-  }
 
   /**
    * Array of tags related to node
@@ -2393,7 +2386,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public get tags_list() {
-    return Object.values(this._tags)
+    return this._tags
   }
 
   /**
