@@ -321,8 +321,8 @@ export class Class_ContainerElement
   private drawContentText() {
     this.d3_selection?.append('foreignObject')
       .classed('content', true)
-      .style('width', this._label_width)
-      .style('height', this._label_height)
+      .style('width', this._label_width+'px')
+      .style('height', this._label_height+'px')
       .attr('id', this.id + '_text')
       .append('xhtml:div')
       .attr('class', 'ql-editor')
