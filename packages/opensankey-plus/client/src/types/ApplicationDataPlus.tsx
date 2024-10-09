@@ -231,6 +231,13 @@ export abstract class Class_ApplicationDataPlus
     super.activateAllTokens()
   }
 
+  public override reset(){
+    super.reset()
+    // Delete views from application data
+    this._views_order.filter(v=> v !== default_main_sankey_id).forEach(v=> delete this._views[v])
+    this._views_order=[default_main_sankey_id]
+  }
+
   /**
    * Extract application data attribute from JSON then extract info for  views
    *
@@ -239,6 +246,7 @@ export abstract class Class_ApplicationDataPlus
   public override fromJSON(json_object: Type_JSON): void {
     super.fromJSON(json_object)
     const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    this._original_current_view=undefined
     if (views) {
       // Save master in view
       this._views[default_main_sankey_id] = this._drawing_area
@@ -394,7 +402,7 @@ export abstract class Class_ApplicationDataPlus
         this._drawing_area.reset()
 
         // Set original view in temporary var so it can be used when we change view and don't want to save current modification
-        if (id !== default_main_sankey_id && this._original_current_view == undefined) {
+        if (id !== default_main_sankey_id && !(this._original_current_view)) {
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
           const new_DA = this.createNewDrawingArea(this._drawing_area.id)

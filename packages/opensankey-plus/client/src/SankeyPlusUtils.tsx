@@ -573,15 +573,47 @@ export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 
 
 export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
-
+  const [, setCount] = useState(0)
+  new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  
   const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
+  const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primary'
+  const mutli_level = new_data_plus.drawing_area.sankey.level_taggs_list.length > 1
+  let content_popover = <></>
+
+  if (only_primary) { // Only have primary level group tag 
+    content_popover = <AddSimpleLevelDropDown
+      new_data={new_data_plus}
+    />
+  } else if (mutli_level) { // has multi level group tag
+    content_popover=<AddAllDropDownNode
+      new_data={new_data_plus}
+      level={true} />
+  }
+
+
 
   return (level_filter) ? <>
     <OSTooltip
       placement='left'
       label={new_data_plus.t('Banner.hlp_1_txt_2')}>
       {
-        initalizeSelectorDetailNodes(new_data_plus)
+        <Popover placement='left' id='popover_details_level'>
+          <PopoverTrigger>
+            <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
+              <FontAwesomeIcon icon={faFolderTree} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <PopoverArrow />
+            <PopoverCloseButton />
+            <PopoverHeader>{new_data_plus.t('Banner.ndd')}</PopoverHeader>
+            <PopoverBody>
+              {content_popover}
+            </PopoverBody>
+          </PopoverContent>
+
+        </Popover>
       }
     </OSTooltip>
   </> :
@@ -650,8 +682,8 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
   const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
   // Component updater ------------------------------------------------------------------
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  // const [, setCount] = useState(0)
+
 
   // JSX Component ----------------------------------------------------------------------
   if (Object.keys(level_taggs).includes('Primaire')) {
@@ -670,6 +702,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 level_taggs['Primaire'].selectTagsFromId(evt.target.value)
                 new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
+                // setCount(a=>a+1)
                 // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
                 // (it isn't done for link not directly displayed after fromJSON)
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
@@ -706,8 +739,8 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
     Object.values(containers).forEach(el => {
       const cont = el as Type_JSON
 
-      const container_name= getStringOrUndefinedFromJSON(cont, 'name')
-      const container_content= getStringFromJSON(cont, 'content',default_container_content)
+      const container_name = getStringOrUndefinedFromJSON(cont, 'name')
+      const container_content = getStringFromJSON(cont, 'content', default_container_content)
       const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
 
       if (container_opacity) {
@@ -715,7 +748,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       } else {
         cont['opacity'] = 100
       }
-      cont['content'] = container_name??container_content
+      cont['content'] = container_name ?? container_content
 
     })
   }
@@ -736,7 +769,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       }
 
       // Set Name of view 
-      ((json_object.views as Type_JSON)[v.id] as Type_JSON).name=v.nom
+      ((json_object.views as Type_JSON)[v.id] as Type_JSON).name = v.nom
     })
   }
 }
