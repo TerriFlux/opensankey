@@ -759,6 +759,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksTags()
     this.updateComponentRelatedToLinksData()
     this.updateAllComponentsRelatedToToolbar()
+    this.updateAllComponentsRelatedToLevelTags()
   }
 
   public updateAllComponentsRelatedToLevelTags() {
