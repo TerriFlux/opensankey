@@ -468,7 +468,6 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
     this._name = element._name
     this._color = element._color
     this._is_selected = element._is_selected
-    this._ref_sankey = element._ref_sankey
     // Groups are switched from related group class
   }
 
@@ -607,9 +606,9 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
    * @param {Class_DataTag} tag
    * @memberof Class_DataTag
    */
-  public copyFrom(tag: Class_LevelTag) {
+  public copyFrom(other_tag: Class_LevelTag) {
     // Copy herited attributes
-    super.copyFrom(tag)
+    super.copyFrom(other_tag)
     // Get all existing references ------------------------------------------------------
     // Create a dict of all existing node in this related sankey
     const all_existing_nodes = this._ref_sankey.nodes_dict
@@ -631,7 +630,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
       })
     // Synchro dimensions where tag is for children -------------------------------------
     // Add missing but existing dimensions where this is a tag for children
-    tag.dimensions_list_as_tag_for_children
+    other_tag.dimensions_list_as_tag_for_children
       .filter(dim => {
         return (
           (dim.id in all_existing_dim) &&
@@ -642,7 +641,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
         this.addAsChildrenLevel(all_existing_dim[dim.id])
       })
     // Add missing and non-existing dimensions where this is a tag for children
-    tag.dimensions_list_as_tag_for_children
+    other_tag.dimensions_list_as_tag_for_children
       .filter(dim => {
         // Verify if there is at least one child that exist in related sankey
         let at_least_one_match_for_children = false
@@ -676,13 +675,13 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     this.dimensions_list_as_tag_for_children
       .filter(dim => {
         return (
-          !(dim.id in tag._dimensions_as_tag_for_children)
+          !(dim.id in other_tag._dimensions_as_tag_for_children)
         )
       })
       .forEach(dim => this.removeChildrenLevel(dim))
     // Synchro dimensions where tag is for parents --------------------------------------
     // Add missing but existing dimensions where this is a tag for parent
-    tag.dimensions_list_as_tag_for_parent
+    other_tag.dimensions_list_as_tag_for_parent
       .filter(dim => {
         return (
           (dim.id in all_existing_dim) &&
@@ -693,7 +692,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
         this.addAsParentLevel(all_existing_dim[dim.id])
       })
     // Add missing and non-existing dimensions where this is a tag for parent
-    tag.dimensions_list_as_tag_for_parent
+   other_tag.dimensions_list_as_tag_for_parent
       .filter(dim => {
         // Verify if there is at least one child that exist in related sankey
         let ok_for_children_nodes = false
@@ -735,7 +734,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     this.dimensions_list_as_tag_for_parent
       .filter(dim => {
         return (
-          !(dim.id in tag._dimensions_as_tag_for_parent)
+          !(dim.id in other_tag._dimensions_as_tag_for_parent)
         )
       })
       .forEach(dim => this.removeParentLevel(dim))
