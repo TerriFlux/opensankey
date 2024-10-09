@@ -801,7 +801,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
   const columns : {[_:number]:SankeyNode[]} = {}
-  Object.values(display_nodes).filter(n => NodeDisplayed(data, n) && !('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange').forEach(n=>{
+  Object.values(display_nodes).filter(n => NodeDisplayed(data, n) && (!('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange')).forEach(n=>{
     if (columns[n.u]) {
       columns[n.u].push(n)
     } else {
