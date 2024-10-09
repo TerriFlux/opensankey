@@ -95,10 +95,6 @@ export const setDiagram: FType_SetDiagram = (
 
   new_data.fromJSON(new_data_as_json)
 
-  // FIXME when new_data ready for it
-  // convert_data({ data: new_data } as applicationDataType, DefaultSankeyData)
-  // d3.select(' .opensankey #svg').on('.zoom', null)
-  // set_data({ ...new_data })
 }
 
 
@@ -206,6 +202,12 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
             // Opposed to current tag group
             level_tagg.siblings
               .forEach(sibling => level_taggs[sibling].activated = !level_tagg.activated)
+
+
+            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+            // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
           }}
@@ -222,6 +224,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
+
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -254,6 +257,11 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
+
+          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+          // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
+          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -296,6 +304,11 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         onChange={(curr_selected_tags_options: [{ label: string, value: string }]) => {
           // Set tags with given id as selected : other are unselected
           tagg.selectTagsFromIds(curr_selected_tags_options.map(_ => _.value))
+
+          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+          // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
+          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -363,6 +376,11 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             // Set correct tag as selected
             flux_tagg.selectTagsFromId(evt.target.value)
+
+            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+            // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
@@ -399,6 +417,11 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           onChange={(options_selected: [{ label: string, value: string }]) => {
             // Set correct tags as selected
             flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
+
+            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+            // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
@@ -746,23 +769,23 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
 
 
 
-const init_toolbar_elements:{[_:string]:JSX.Element}={
+  const init_toolbar_elements: { [_: string]: JSX.Element } = {
 
-  'mode_souris': btn_mouse_mode_edition,
-  'node_type': btn_show_data_type,
-  'strectch_zdd': stretchButtons(new_data),
-  'help': btn_show_help_in_static,
-  'fullscreen': button_fullscreen,
-  
-  ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
-}
+    'mode_souris': btn_mouse_mode_edition,
+    'node_type': btn_show_data_type,
+    'strectch_zdd': stretchButtons(new_data),
+    'help': btn_show_help_in_static,
+    'fullscreen': button_fullscreen,
+
+    ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
+  }
 
 
 
   // ===================Assemble different item for the toolbar========================
   return <>
     {additionalMenu.toolbar_order.map((key, id) => {
-     return <React.Fragment key={id}>{init_toolbar_elements[key]}</React.Fragment>
+      return <React.Fragment key={id}>{init_toolbar_elements[key]}</React.Fragment>
     })}
   </>
 }
