@@ -186,13 +186,13 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
 ) => {
   const navigate = useNavigate()
   return <Button
-      variant='menutop_button_logout'
-      onClick={() => loginOut(
-        new_data_app,
-        () => returnToApp(new_data_app, navigate)
-      )}>
-      <FaPowerOff />
-    </Button>
+    variant='menutop_button_logout'
+    onClick={() => loginOut(
+      new_data_app,
+      () => returnToApp(new_data_app, navigate)
+    )}>
+    <FaPowerOff />
+  </Button>
 }
 
 

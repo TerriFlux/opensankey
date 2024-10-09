@@ -1,7 +1,7 @@
-import React, { FunctionComponent } from "react"
-import { Navigate } from "react-router-dom"
+import React, { FunctionComponent } from 'react'
+import { Navigate } from 'react-router-dom'
 
-import { Class_ApplicationDataSA } from "../../ApplicationData"
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 type FCType_PrivateRoute = {
     new_data_app: Class_ApplicationDataSA,
@@ -9,11 +9,11 @@ type FCType_PrivateRoute = {
 }
 
 export const PrivateRoute: FunctionComponent<FCType_PrivateRoute> = ({
-   new_data_app,
-   component,
+  new_data_app,
+  component,
 }) => {
-    if (new_data_app.has_account) {
-        return component
-    }
-    return <Navigate to="/" />
+  if (new_data_app.has_account) {
+    return component
+  }
+  return <Navigate to="/" />
 }

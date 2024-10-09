@@ -2,7 +2,6 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaPowerOff } from 'react-icons/fa'
 import {
   Box,
   Button,
@@ -25,7 +24,6 @@ import {
 } from '../Register/RegisterFunctions'
 import {
   activateLicensesTokens,
-  loginOut
 } from '../Login/LoginFunctions'
 import { LoginOutButton } from '../Login/Login'
 

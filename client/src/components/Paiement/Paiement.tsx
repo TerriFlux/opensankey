@@ -70,7 +70,7 @@ export const PaiementReturn = () => {
 
 
   useEffect(() => {
-    const sessionId = searchParams.get("session_id")
+    const sessionId = searchParams.get('session_id')
 
     fetch(`/stripe/session-status?session_id=${sessionId}`)
       .then((res) => res.json())
@@ -100,99 +100,99 @@ export const PaiementPage: FunctionComponent<{
 }> = ({
   new_data_app
 }) => {
-    // App data
-    const { t, logo } = new_data_app
-    const [searchParams,] = useSearchParams()
+  // App data
+  const { t, logo } = new_data_app
+  const [searchParams,] = useSearchParams()
 
-    // Initialise navigation function
-    const navigate = useNavigate()
-    const goToCheckout = () => { navigate('/license/checkout') }
+  // Initialise navigation function
+  const navigate = useNavigate()
+  const goToCheckout = () => { navigate('/license/checkout') }
 
-    // Init what is displayed
-    const status = searchParams.get("p")
-    let content, header
-    if (status === 'buy') {
-      header = t('Paiement.win_header_buy')
-      content = <>
-        <Box>
-          {t('Paiement.win_content_buy')}
-        </Box>
-        <Presentation
-          new_data_app={new_data_app}
-        />
-        <Box
-          display="inline-grid"
+  // Init what is displayed
+  const status = searchParams.get('p')
+  let content, header
+  if (status === 'buy') {
+    header = t('Paiement.win_header_buy')
+    content = <>
+      <Box>
+        {t('Paiement.win_content_buy')}
+      </Box>
+      <Presentation
+        new_data_app={new_data_app}
+      />
+      <Box
+        display="inline-grid"
+      >
+        <Button
+          variant='btn_lone_navigation_tertiary'
+          type="submit"
+          onClick={goToCheckout}
         >
-          <Button
-            variant='btn_lone_navigation_tertiary'
-            type="submit"
-            onClick={goToCheckout}
-          >
-            {t('Paiement.btn_checkout')}
-          </Button>
-        </Box>
-      </>
-    }
-    else if (status === 'success') {
-      header = t('Paiement.win_header_success')
-      content = <Box>
-        {t('Paiement.win_content_success')}
+          {t('Paiement.btn_checkout')}
+        </Button>
       </Box>
-    }
-    else {
-      header = t('Paiement.win_header_error')
-      content = <Box>
-        {t('Paiement.win_content_error')}
-      </Box>
-    }
-    return (
-      <div>
+    </>
+  }
+  else if (status === 'success') {
+    header = t('Paiement.win_header_success')
+    content = <Box>
+      {t('Paiement.win_content_success')}
+    </Box>
+  }
+  else {
+    header = t('Paiement.win_header_error')
+    content = <Box>
+      {t('Paiement.win_content_error')}
+    </Box>
+  }
+  return (
+    <div>
+      <Box
+        zIndex="1"
+        position="fixed"
+        top="0"
+        width="100%"
+      >
         <Box
-          zIndex="1"
-          position="fixed"
-          top="0"
-          width="100%"
+          layerStyle='menutop_layout_style'
+          gridTemplateColumns='minmax(7vw, 150px) auto 11rem'
         >
           <Box
-            layerStyle='menutop_layout_style'
-            gridTemplateColumns='minmax(7vw, 150px) auto 11rem'
+            margin='0.25rem'
+            alignSelf='center'
+            justifySelf='center'
           >
-            <Box
-              margin='0.25rem'
-              alignSelf='center'
-              justifySelf='center'
-            >
-              <Image
-                height='5rem'
-                src={logo}
-                alt='navigation logo'
-                onClick={() => returnToApp(new_data_app, navigate)}
-              />
-            </Box>
-            <Box></Box>
-            <Button
-              variant='btn_lone_navigation'
+            <Image
+              height='5rem'
+              src={logo}
+              alt='navigation logo'
               onClick={() => returnToApp(new_data_app, navigate)}
-            >
-              {t('UserNav.to_app')}
-            </Button>
+            />
           </Box>
+          <Box></Box>
+          <Button
+            variant='btn_lone_navigation'
+            onClick={() => returnToApp(new_data_app, navigate)}
+          >
+            {t('UserNav.to_app')}
+          </Button>
         </Box>
+      </Box>
 
-        <div className="login-wrapper">
-          <Card variant='card_register' width='33vw'>
-            <CardHeader
-              style={{ 'textAlign': 'center' }}
-            >
-              {header}
-            </CardHeader>
-            <CardBody>
-              <div style={{ 'textAlign': 'center' }}>
-                {content}
-              </div>
-            </CardBody>
-          </Card>
-        </div>
+      <div className="login-wrapper">
+        <Card variant='card_register' width='33vw'>
+          <CardHeader
+            style={{ 'textAlign': 'center' }}
+          >
+            {header}
+          </CardHeader>
+          <CardBody>
+            <div style={{ 'textAlign': 'center' }}>
+              {content}
+            </div>
+          </CardBody>
+        </Card>
       </div>
-    )
-  }
+    </div>
+  )
+}

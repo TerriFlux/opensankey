@@ -30,7 +30,7 @@ export async function createSubscription(){
   const url = path + '/stripe/create-checkout-session'
   // use server as proxy to fetch informations
   // -> Avoid "Same-Origin" problem with CORS
-  return fetch(url, { method: "POST" })
+  return fetch(url, { method: 'POST' })
     .then(response => {
       if (response.ok)
         return response.json()

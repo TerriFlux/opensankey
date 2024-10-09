@@ -52,9 +52,8 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
       // Cannot check for given time
       this._ok_to_check_account = false
       setTimeout(
-        (_) => { _ = true },
+        () => { this._ok_to_check_account = true },
         180,
-        this._ok_to_check_account
       )
     }
   }

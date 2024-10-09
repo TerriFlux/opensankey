@@ -47,7 +47,7 @@ export async function userSignUp(
         return response.json()
       else
         logError(i18next.t('Register.account.msg.nok'))
-        return Promise.reject(response)
+      return Promise.reject(response)
     })
     .then((response) => {
       if (response) {
@@ -81,7 +81,7 @@ export async function userValidate(
         return response.json()
       else
         logError(i18next.t('Register.validation.msg.nok'))
-        return Promise.reject(response)
+      return Promise.reject(response)
     })
     .then((response) => {
       if (response){
