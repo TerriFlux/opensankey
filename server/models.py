@@ -156,7 +156,7 @@ class User(UserMixin, db.Model):
         """
         serializer = Serializer(current_app.config['SECRET_KEY'])
         try:
-            user_id = serializer.loads(token, max_age=900)  # age in sec, valid for 15min
+            user_id = serializer.loads(token, max_age=900)  # valid for 15min
         except Exception:
             return None
         return User.query.get(user_id)
@@ -234,7 +234,9 @@ def login_required(f):
 
 def licence_required(license_name=''):
     """
-    Decorator that alow given function f to run if current user has given license
+    Decorator that alow given function f to run if current user has given
+    license.
+
     see: https://flask.palletsprojects.com/en/2.1.x/patterns/viewdecorators/
 
     Parameters
@@ -273,7 +275,9 @@ def set_licence(license_name):
     # Get license token
     token = request.json.get('token')
     try:
-        [user_id, license_id, duration] = serializer.loads(token, max_age=900) # Valid for 15min
+        serializer = Serializer(current_app.config['SECRET_KEY'])
+        [user_id, license_id, duration] = \
+            serializer.loads(token, max_age=900)  # Valid for 15min
     except Exception:
         return "Invalid token", 400
 
@@ -307,6 +311,7 @@ def set_licence(license_name):
     db.session.commit()
     return 'OK', 200
 
+
 @connected_user.route('/user/infos')
 @login_required
 def user_infos():
@@ -335,7 +340,7 @@ def user_infos():
 @connected_user.route('/user/infos/license_expiry/<license_name>')
 @login_required
 def get_license_expiry(license_name):
-    return current_user.get_license_expiry(license_name)
+    expiry = current_user.get_license_expiry(license_name)
     if expiry is None:
         return 'No license', 401
     return expiry, 200

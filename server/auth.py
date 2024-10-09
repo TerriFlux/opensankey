@@ -146,8 +146,8 @@ def signup_confirm():
     try:
         token = request.json.get('token')
         serializer = Serializer(current_app.config['SECRET_KEY'])
-        user_infos = serializer.loads(token, max_age=900)  # age in sec, valid for 15min
-    except Exception as e:
+        user_infos = serializer.loads(token, max_age=900)  # valid for 15min
+    except Exception:
         response['message'] = 'token_invalid'
         return 'token_invalid', 400
 
@@ -165,7 +165,9 @@ def signup_confirm():
     # version isn't saved.
     new_user = User(
         email=user_infos['email'],
-        password=generate_password_hash(user_infos['password'], method='sha256'),
+        password=generate_password_hash(
+            user_infos['password'],
+            method='sha256'),
         firstname=user_infos['firstname'],
         name=user_infos['lastname'])
 

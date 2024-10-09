@@ -12,11 +12,9 @@ import requests
 from flask import Blueprint
 from flask import render_template
 from flask import request
-from flask import Response
 
 # ---------------------------------------------------------------
 # Local imports
-from .mailing import send_welcome_mail
 
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
