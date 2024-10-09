@@ -4040,7 +4040,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * @type {{ [_: string]: Class_Tag }}
    * @memberof Class_LinkElement
    */
-  private _flux_tags: { [_: string]: Class_Tag } = {}
+  private _flux_tags: Class_Tag[] = []
 
   private _is_currently_deleted = false
 
@@ -4066,7 +4066,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
         this.parent.removeChild(this)
       // Remove reference of self in related tags
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
-      this._flux_tags = {}
+      this._flux_tags = []
     }
   }
 
@@ -4106,7 +4106,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * @memberof Class_LinkElement
    */
   public hasGivenTag(tag: Class_Tag) {
-    return (this._flux_tags[tag.id] !== undefined)
+    return this._flux_tags.includes(tag)
   }
 
   /**
@@ -4116,7 +4116,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    */
   public addTag(tag: Class_Tag) {
     if (!this.hasGivenTag(tag)) {
-      this._flux_tags[tag.id] = tag
+      this._flux_tags.push(tag)
       tag.addReference(this)
       this.draw()
     }
@@ -4129,7 +4129,8 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    */
   public removeTag(tag: Class_Tag) {
     if (this.hasGivenTag(tag)) {
-      delete this._flux_tags[tag.id]
+      const idx=this._flux_tags.indexOf(tag)
+      this._flux_tags.splice(idx,1)
       tag.removeReference(this)
       this.draw()
     }
