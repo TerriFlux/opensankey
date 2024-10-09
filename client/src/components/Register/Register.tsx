@@ -120,6 +120,7 @@ const Register: FunctionComponent<{
     setRegisterStep(2)
     userValidate(
       token,
+      new_data_app,
       navigate
     )
   }

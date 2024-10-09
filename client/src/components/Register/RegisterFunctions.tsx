@@ -3,6 +3,7 @@ import * as d3 from 'd3'
 import LZString from 'lz-string'
 import i18next from 'i18next'
 import { NavigateFunction } from 'react-router-dom'
+import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'
@@ -62,6 +63,7 @@ export async function userSignUp(
 // Check Licence and register account if everything is Ok
 export async function userValidate(
   token: string,
+  new_data_app: Class_ApplicationDataSA,
   navigate: NavigateFunction
 ) {
   resetLogs()
@@ -79,19 +81,29 @@ export async function userValidate(
     .then((response) => {
       if (response.ok)
         return response.json()
-      else
+      else {
         logError(i18next.t('Register.validation.msg.nok'))
-      return Promise.reject(response)
+        return Promise.reject(response)
+      }
     })
     .then((response) => {
-      if (response){
-        logInfo(i18next.t('Register.validation.msg.' + response['message']))
+      logInfo(i18next.t('Register.validation.msg.' + response['message']))
+    })
+    .then(() => {
+      return new_data_app.checkTokens()
+    })
+    .then(() => {
+      let next_page
+      if (new_data_app.has_account){
         logInfo(i18next.t('Register.validation.msg.redirect'))
-        setTimeout(
-          () => navigate('/license/checkout'),
-          3000
-        )
+        next_page = '/license/checkout'
+      } else {
+        next_page = '/login'
       }
+      setTimeout(
+        () => navigate(next_page),
+        3000
+      )
     })
 
 }
