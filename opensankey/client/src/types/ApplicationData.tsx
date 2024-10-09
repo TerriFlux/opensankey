@@ -234,7 +234,6 @@ export abstract class Class_ApplicationData
   public fromJSON(json_object: Type_JSON) {
     // Reset everything
     this.reset()
-    // TODO read application data attributes
     // Update drawing area
     this.drawing_area.fromJSON(json_object)
     this.menu_configuration.updateAllMenuComponents()
