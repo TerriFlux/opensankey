@@ -66,6 +66,8 @@ cd $SANKEY_DIR/client/src/deps/OpenSankey+/deps
 rm OpenSankey
 ln -s $SANKEY_DIR/submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src OpenSankey
 
+cd $SANKEY_DIR
+
 # Install global dependencies
 printf "Global dependencies -------------------------------------------------\n"
 if ! command -v pnpm &> /dev/null
