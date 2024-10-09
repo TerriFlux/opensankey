@@ -119,6 +119,7 @@ def signup_post():
     # Send confirm mail
     try:
         print(domain_url + 'register?t={}'.format(token))
+        # TODO decomenté quand OK
         # send_account_confirm_mail(
         #     user_infos,
         #     domain_url + 'register?t={}'.format(token))
@@ -127,6 +128,13 @@ def signup_post():
 
     # Return response
     return jsonify(response), 200
+
+
+@auth_blueprint.route('/auth/signup/check_captcha', methods=['POST'])
+def check_captcha():
+    token = request.json.get('token')
+    res = requests.post('https://www.google.com/recaptcha/api/siteverify?secret=6Les5JwmAAAAAK2qIlZsNkiEKsvHLmPoK1JiQcOD&response='+token)  # noqa
+    return res.json(), res.status_code
 
 
 @auth_blueprint.route('/auth/signup/confirm', methods=['POST'])
@@ -200,24 +208,20 @@ def login_post():
     user = User.query.filter_by(email=email).first()
 
     # Prepare response
-    response = {
-        'is_connected': False,
-        'message': ' '
-        # if the user doesn't exist or password is wrong, reload the page
-    }
+    response = {'message': 'ok'}
 
     # Check if the user actually exists
     # Take the user-supplied password, hash it, and compare it to
     # the hashed password in the database
     if not user or not check_password_hash(user.password, password):
-        response['message'] = 'Please check your login details and try again.'
+        response['message'] = 'err_login'
         return jsonify(response), 200
 
     # if the above check passes,
     # then we know the user has the right credentials
     login_user(user, remember=remember)
-    response['is_connected'] = True
     return jsonify(response), 200
+
 
 @auth_blueprint.route('/auth/logout')
 @login_required
@@ -231,11 +235,10 @@ def logout():
     return 'ok', 200
 
 
-@auth_blueprint.route('/auth/check_captcha', methods=['POST'])
-def check_captcha():
-    token = request.json.get('token')
-    res = requests.post('https://www.google.com/recaptcha/api/siteverify?secret=6Les5JwmAAAAAK2qIlZsNkiEKsvHLmPoK1JiQcOD&response='+token)  # noqa
-    return res.json(), res.status_code
+@auth_blueprint.route('/auth/connected')
+@login_required
+def is_connected():
+    return 'ok', 200
 
 
 @auth_blueprint.route('/auth/forgot_pw', methods=['POST'])

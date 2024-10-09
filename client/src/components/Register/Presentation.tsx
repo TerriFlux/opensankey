@@ -24,7 +24,7 @@ export const Presentation: FunctionComponent<{
         />
       </Box>
       <Box layerStyle='licence_desc'>
-        {t('register.presentation.text')}
+        {t('Register.presentation.text')}
       </Box>
     </Box>
 }

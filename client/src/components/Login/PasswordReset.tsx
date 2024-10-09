@@ -111,19 +111,19 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
 
       <div className="login-wrapper">
         <Card variant='card_register' width='33vw'>
-          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot_win')}</CardHeader>
+          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot.title')}</CardHeader>
           <CardBody>
 
             {/* User password*/}
             <FormControl isInvalid={okPassword === 1}>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('pwd.label', { ns: 'register' })}
+                  {t('Register.account.pwd.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={t('pwd.placeholder', { ns: 'register' })}
+                  placeholder={t('Register.account.pwd.placeholder')}
                   onChange={e => {
                     if (e.target.value.match(pwd_regex_str) != null) {
                       setPassword(e.target.value)
@@ -143,13 +143,13 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
                     bg='gray.50'
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? t('pwd.hide', { ns: 'register' }) : t('pwd.show', { ns: 'register' })}
+                    {showPassword ? t('Register.account.pwd.hide') : t('Register.account.pwd.show')}
                   </Button>
                 </InputRightElement>
               </InputGroup>
               {(okPassword === 1) ? (
                 <FormErrorMessage>
-                  {t('pwd.error', { ns: 'register' })}
+                  {t('Register.account.pwd.error')}
                 </FormErrorMessage>
               ) : (
                 <></>
@@ -164,7 +164,7 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
                 onClick={() => {
                   handleSubmit()
                 }}>
-                {t('Login.forgot_sub')}
+                {t('Login.forgot.sub')}
               </Button>
             </div>
           </CardBody>
@@ -249,18 +249,18 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
 
       <div className="login-wrapper">
         <Card variant='card_register' width='33vw'>
-          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot_win')}</CardHeader>
+          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot.title')}</CardHeader>
           <CardBody>
             {/* User e-mail*/}
             <FormControl isInvalid={okEmail === 1}>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('id.label', { ns: 'register' })}
+                  {t('Login.id.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
                   type='email'
-                  placeholder={t('id.placeholder', { ns: 'register' })}
+                  placeholder={t('Login.id.placeholder')}
                   onChange={e => {
                     // Control e-amil format
                     if (e.target.value.match(email_regex_str) != null) {
@@ -275,7 +275,7 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
                 />
               </InputGroup>
               {(okEmail === 1) ? (
-                <FormErrorMessage>{t('id.error', { ns: 'register' })}</FormErrorMessage>
+                <FormErrorMessage>{t('Login.id.error')}</FormErrorMessage>
               ) : (
                 <></>
               )}
@@ -289,7 +289,7 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
                 onClick={() => {
                   handleSubmit()
                 }}>
-                {t('Login.forgot_sub')}
+                {t('Login.forgot.sub')}
               </Button>
             </div>
           </CardBody>

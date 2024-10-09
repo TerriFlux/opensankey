@@ -8,7 +8,7 @@
 
 // External imports =================================================================================
 
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useEffect } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
 
@@ -35,21 +35,23 @@ import { ExempleMenuTypes, initializeAdditionalMenusSA, initializeApplicationDat
 import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
-import Login from './components/Login/Login'
+import { Login } from './components/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
 import { PrivateRoute } from './components/Routes/PrivateRoutes'
 import { PublicRoute } from './components/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
 
 // SankeyApp for OpenSankey+ ========================================================================
-type SankeyAppSAType={
+type SankeyAppSAType = {
   example_menu: ExempleMenuTypes,
   formations_menu: ExempleMenuTypes
 }
-export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,formations_menu}) => {
+export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
+  { example_menu, formations_menu }
+) => {
 
   const new_data_app = new Class_ApplicationDataSA(false)
-  const reinit =initializeReinitializationOSP(new_data_app)
+  const reinit = initializeReinitializationOSP(new_data_app)
   const sankeyApp =
     <SankeyApp
       initializeReinitialization={initializeReinitializationOSP}
@@ -78,6 +80,7 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,fo
         (new_data_app) => { ClickSaveDiagram(new_data_app) }
       }
     />
+
 
   const exemple_menu = {} as { [_: string]: JSX.Element }
 
@@ -251,5 +254,5 @@ export const returnToApp = (
   navigate: NavigateFunction
 ) => {
   navigate('/')
-  new_data_app.menu_configuration.updateComponentsRelatedToSA()
+  // new_data_app.menu_configuration.updateComponentsRelatedToSA()
 }

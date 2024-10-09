@@ -12,7 +12,7 @@ export const PublicRoute: FunctionComponent<FCType_PublicRoute> = ({
    new_data_app,
    component,
 }) => {
-    if (!new_data_app.has_free_account) {
+    if (!new_data_app.has_account) {
         return component
     }
     return <Navigate to="/" />

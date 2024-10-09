@@ -109,7 +109,7 @@ const Register: FunctionComponent<{
           )
         }
         else {
-          logError(t('register.account.msg.err_captcha'))
+          logError(t('Register.account.msg.err_captcha'))
         }
       }
     }
@@ -143,7 +143,7 @@ const Register: FunctionComponent<{
           width='fit-content'
           type='submit'
           onClick={handleSubmit}>
-          {t('register.presentation.btn_next')}
+          {t('Register.presentation.btn_next')}
         </Button>
       </Box>
     ]
@@ -155,12 +155,12 @@ const Register: FunctionComponent<{
           variant='register_input'
         >
           <InputLeftAddon>
-            {t('register.account.id.label')}
+            {t('Register.account.id.label')}
           </InputLeftAddon>
           <Input
             isRequired
             type='email'
-            placeholder={t('register.account.id.placeholder')}
+            placeholder={t('Register.account.id.placeholder')}
             onChange={e => {
               // Control e-amil format
               if (e.target.value.match(email_regex_str) != null) {
@@ -175,7 +175,7 @@ const Register: FunctionComponent<{
           />
         </InputGroup>
         {(okUserName === 1) ? (
-          <FormErrorMessage>{t('register.account.id.error')}</FormErrorMessage>
+          <FormErrorMessage>{t('Register.account.id.error')}</FormErrorMessage>
         ) : (
           <></>
         )}
@@ -187,12 +187,12 @@ const Register: FunctionComponent<{
           variant='register_input'
         >
           <InputLeftAddon>
-            {t('register.account.pwd.label')}
+            {t('Register.account.pwd.label')}
           </InputLeftAddon>
           <Input
             isRequired
             type={showPassword ? 'text' : 'password'}
-            placeholder={t('register.account.pwd.placeholder')}
+            placeholder={t('Register.account.pwd.placeholder')}
             onChange={e => {
               if (e.target.value.match(pwd_regex_str) != null) {
                 setPassword(e.target.value)
@@ -212,13 +212,13 @@ const Register: FunctionComponent<{
               bg='gray.50'
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? t('register.account.pwd.hide') : t('register.account.pwd.show')}
+              {showPassword ? t('Register.account.pwd.hide') : t('Register.account.pwd.show')}
             </Button>
           </InputRightElement>
         </InputGroup>
         {(okPassword === 1) ? (
           <FormErrorMessage>
-            {t('register.account.pwd.error')}
+            {t('Register.account.pwd.error')}
           </FormErrorMessage>
         ) : (
           <></>
@@ -231,7 +231,7 @@ const Register: FunctionComponent<{
           variant='register_input'
         >
           <InputLeftAddon>
-            {t('register.account.fn')}
+            {t('Register.account.fn')}
           </InputLeftAddon>
           <Input
             isRequired
@@ -257,7 +257,7 @@ const Register: FunctionComponent<{
           variant='register_input'
         >
           <InputLeftAddon>
-            {t('register.account.ln')}
+            {t('Register.account.ln')}
           </InputLeftAddon>
           <Input
             isRequired
@@ -281,7 +281,7 @@ const Register: FunctionComponent<{
       <Button
         onClick={onOpen}
         leftIcon={(okTermsOfUses === true) ? <FaCheck /> : <LuBadgeAlert />}>
-        {t('register.account.btn_terms')}
+        {t('Register.account.btn_terms')}
       </Button>,
 
       // {/* Captcha */}
@@ -303,7 +303,7 @@ const Register: FunctionComponent<{
             }
 
             const path = window.location.origin
-            const url = path + '/auth/check_captcha'
+            const url = path + '/auth/signup/check_captcha'
             fetch(url, fetchData).then(
               r => r.json().then(t => {
                 setOkCaptcha(t['success'])
@@ -325,7 +325,7 @@ const Register: FunctionComponent<{
           variant='btn_lone_navigation_tertiary'
           type='submit'
           onClick={handleSubmit}>
-          {t('register.account.btn_next')}
+          {t('Register.account.btn_next')}
         </Button>
       </Box>,
     ]
@@ -334,15 +334,15 @@ const Register: FunctionComponent<{
     let header = '404 not found'
     let content = [<></>]
     if (registerStep === 0) {
-      header = t('register.presentation.title')
+      header = t('Register.presentation.title')
       content = osplus_presentation
     }
     else if (registerStep === 1) {
-      header = t('register.account.title')
+      header = t('Register.account.title')
       content = register_form
     }
     else if (registerStep === 2) {
-      header = t('register.validation.title')
+      header = t('Register.validation.title')
       content = [log]
     }
 

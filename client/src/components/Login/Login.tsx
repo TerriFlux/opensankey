@@ -1,17 +1,30 @@
 import React, { FunctionComponent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Card, CardBody, CardHeader, FormControl, Image, Input, InputGroup, InputLeftAddon, InputRightElement } from '@chakra-ui/react'
+import { FaPowerOff } from 'react-icons/fa'
+import {
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  FormControl,
+  Image,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightElement
+} from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { returnToApp } from '../../SankeyAppSA'
-import { loginUser } from './LoginFunctions'
+import { loginOut, loginUser } from './LoginFunctions'
 
 export type LoginTypes = {
   new_data_app: Class_ApplicationDataSA
 }
 
-// Login, Register or Buy License
-const Login: FunctionComponent<LoginTypes> = ({
+// Login
+export const Login: FunctionComponent<LoginTypes> = ({
   new_data_app,
 }) => {
 
@@ -40,7 +53,7 @@ const Login: FunctionComponent<LoginTypes> = ({
           password,
           remember
         },
-        navigate
+        () => returnToApp(new_data_app, navigate)
       )
     }
     if (state.button === 'forgot') {
@@ -84,25 +97,25 @@ const Login: FunctionComponent<LoginTypes> = ({
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/register')}
           >
-            {t('UserPages.to_reg')}
+            {t('UserNav.to_reg')}
           </Button>
         </Box>
       </Box>
 
       <div className="login-wrapper">
         <Card variant='card_register' width='33vw'>
-          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.con_win')}</CardHeader>
+          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.title')}</CardHeader>
           <CardBody>
             {/* User id */}
             <FormControl>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('id.label', { ns: 'register' })}
+                  {t('Login.id.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
                   type='text'
-                  placeholder={t('id.placeholder', { ns: 'register' })}
+                  placeholder={t('Login.id.placeholder')}
                   onChange={e => setUserName(e.target.value)}
                 />
               </InputGroup>
@@ -112,12 +125,12 @@ const Login: FunctionComponent<LoginTypes> = ({
             <FormControl>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('pwd.label', { ns: 'register' })}
+                  {t('Login.pwd.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={t('pwd.placeholder', { ns: 'register' })}
+                  placeholder={t('Login.pwd.placeholder')}
                   onChange={e => setPassword(e.target.value)}
                 />
                 <InputRightElement width='4.5rem' marginRight='0.25em'>
@@ -128,13 +141,14 @@ const Login: FunctionComponent<LoginTypes> = ({
                     bg='gray.50'
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? t('pwd.hide', { ns: 'register' }) : t('pwd.show', { ns: 'register' })}
+                    {showPassword ? t('Login.pwd.hide') : t('Login.pwd.show')}
                   </Button>
                 </InputRightElement>
               </InputGroup>
             </FormControl>
 
             <div className='LogError' style={{ 'color': 'red' }}></div>
+            <div className='LogInfo' style={{ 'color': 'green' }}></div>
 
             <Box
               display='grid'
@@ -157,7 +171,7 @@ const Login: FunctionComponent<LoginTypes> = ({
                   (state.button = 'forgot')
                   handleSubmit()
                 }}>
-                {t('Login.forgot_ask')}
+                {t('Login.forgot.ask')}
               </Button>
             </Box>
           </CardBody>
@@ -167,7 +181,20 @@ const Login: FunctionComponent<LoginTypes> = ({
   )
 }
 
-export default Login
+export const LoginOutButton: FunctionComponent<LoginTypes> = (
+  { new_data_app }
+) => {
+  const navigate = useNavigate()
+  return <Button
+      variant='menutop_button_logout'
+      onClick={() => loginOut(
+        new_data_app,
+        () => returnToApp(new_data_app, navigate)
+      )}>
+      <FaPowerOff />
+    </Button>
+}
+
 
 
 

@@ -164,12 +164,13 @@ const resources = {
       },
       UserNav: {
         'to_con': 'Sign in',
+        'to_reg': 'Sign up',
         'to_buy': 'Try OpenSankey+',
         'to_app': 'Back to the application',
         'to_acc': 'My account',
         'to_dbd': 'Dashboard',
       },
-      register: {
+      Register: {
         presentation: {
           'title': 'Power-up your Sankeys with OpenSankey+',
           'text': 'OpenSankey+ is a storytelling tool made for those who need to present flow data in a way that is both didactic and aesthetically pleasing.',
@@ -224,22 +225,39 @@ const resources = {
         'btn_checkout': 'I want OpenSankey+ !'
       },
       Login: {
+        'title': 'Connect to the application',
         'con': 'Login',
-        'forgot_ask': 'Password forgotten ?',
-        'forgot_sub': 'Reset',
-        'dec': 'Log off',
-        'con_win': 'Connect to the application',
-        'forgot_win': 'Reset password',
-        'forgot_sent': 'A password reset e-mail has been sent to you.',
-        'forgot_ok': 'The password has been successfully replaced.',
-        'err_server': 'An error occurred when calling the server',
-        'err_login': 'Error, your email or password is incorrect, please check your login information and try again',
-        'err_user_already_connected': 'Error, you\'re already logged in.',
-        'err_user_inexistant': 'Error, given account does not exists',
-        'err_token_expire': 'Error, the request has expired.'
+        id: {
+          'label': 'E-mail',
+          'placeholder': '',
+          'error': 'Please enter a valid e-mail adress.'
+        },
+        pwd: {
+          'label': 'Password',
+          'placeholder': '',
+          'show': 'show',
+          'hide': 'hide',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'An error occurred when calling the server',
+          'err_login': 'Error, your email or password is incorrect, please check your login information and try again',
+        },
+        forgot: {
+          'title': 'Reset password',
+          'ask': 'Password forgotten ?',
+          'sub': 'Reset',
+          msg: {
+            'ok': 'The password has been successfully replaced.',
+            'mail_sent': 'A password reset e-mail has been sent to you.',
+            'err_server': 'An error occurred when calling the server',
+            'err_user_already_connected': 'Error, you\'re already logged in.',
+            'err_user_inexistant': 'Error, given account does not exists',
+            'err_token_expire': 'Error, the request has expired.'
+          }
+        }
       },
       UserPages: {
-        'to_reg': 'Sign up',
         'id': 'E-mail',
         'mdp': 'Password',
         'pnom': 'Firstname',
@@ -553,12 +571,13 @@ const resources = {
       },
       UserNav: {
         'to_con': 'Se connecter',
+        'to_reg': 'Créer un compte',
         'to_buy': 'Essayer OpenSankey+',
         'to_app': 'Retour à l\'application',
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
       },
-      register: {
+      Register: {
         presentation: {
           'title': 'Passez à la vitesse supérieure avec l\'extension OpenSankey+',
           'text': 'OpenSankey+ est un outil de storytelling, fait pour ceux qui ont besoin de présenter des données de flux d’une façon à la fois didactique et esthétique.',
@@ -618,19 +637,37 @@ const resources = {
         'text': 'osplus_presentation_fr.html'
       },
       Login: {
+        'title': 'Se connecter à l\'application',
         'con': 'Connexion',
-        'forgot_ask': 'Mot de passe oublié ?',
-        'forgot_sub': 'Réinitialiser',
-        'dec': 'Deconnexion',
-        'con_win': 'Se connecter à l\'application',
-        'forgot_win': 'Reinitialiser le mot de passe',
-        'forgot_sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
-        'forgot_ok': 'Le mot de passe a été remplacé avec succès.',
-        'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
-        'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer',
-        'err_user_already_connected': 'Erreur, vous êtes déjà connecté.',
-        'err_user_inexistant': 'Erreur, ce compte n\'existe pas.',
-        'err_token_expire': 'Erreur, la demande a expiré.'
+        id: {
+          'label': 'E-mail',
+          'placeholder': '',
+          'error': 'L\'adresse e-mail n\'est pas valide'
+        },
+        pwd: {
+          'label': 'Mot de passe',
+          'placeholder': '',
+          'show': 'montrer',
+          'hide': 'cacher',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
+          'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer',
+        },
+        forgot: {
+          'title': 'Reinitialiser le mot de passe',
+          'ask': 'Mot de passe oublié ?',
+          'sub': 'Réinitialiser',
+          msg: {
+            'ok': 'Le mot de passe a été remplacé avec succès.',
+            'sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
+            'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
+            'err_user_already_connected': 'Erreur, vous êtes déjà connecté.',
+            'err_user_inexistant': 'Erreur, ce compte n\'existe pas.',
+            'err_token_expire': 'Erreur, la demande a expiré.'
+          }
+        }
       },
       UserPages: {
         'id': 'E-mail',

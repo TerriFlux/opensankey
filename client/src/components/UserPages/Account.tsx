@@ -27,6 +27,7 @@ import {
   activateLicensesTokens,
   loginOut
 } from '../Login/LoginFunctions'
+import { LoginOutButton } from '../Login/Login'
 
 // UserData interface
 interface UserData {
@@ -63,7 +64,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   const navigate = useNavigate()
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data_app.has_free_account) {
+  if (!new_data_app.has_account) {
     returnToApp(new_data_app, navigate)
   }
 
@@ -377,17 +378,9 @@ const Account: FunctionComponent<AccountTypes> = ({
             >
               {t('UserNav.to_acc')}
             </Button>
-            <Button
-              variant='menutop_button_logout'
-              onClick={() => {
-                loginOut(
-                  () => { new_data_app.unsetTokens() },
-                  () => { returnToApp(new_data_app, navigate) }
-                )
-              }}
-            >
-              <FaPowerOff />
-            </Button>
+            <LoginOutButton
+              new_data_app={new_data_app}
+            />
           </Box>
         </Box>
       </Box>

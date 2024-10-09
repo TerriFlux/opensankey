@@ -1,12 +1,23 @@
 import * as d3 from 'd3'
-import LZString from 'lz-string'
 
 import {
   activateLicenseToken,
   app_name_opensankeyplus,
-  app_name_sankeysuite
 } from '../Register/RegisterFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
+
+const resetLogs = () => {
+  d3.select('.LogInfo').selectAll('*').remove()
+  d3.select('.LogError').selectAll('*').remove()
+}
+
+export const logInfo = (info: string) => {
+  d3.select('.LogInfo').append('p').text(info)
+}
+
+export const logError = (err: string) => {
+  d3.select('.LogError').append('p').text(err)
+}
 
 // Activate license Tokens if licenses are valid
 export function activateLicensesTokens(
@@ -26,7 +37,7 @@ export function activateLicensesTokens(
   activateLicenseToken(
     app_name_opensankeyplus,
     '/user/infos/license_opensankeyplus',
-    () => {new_data_app.activateSankeyPlus()}
+    () => { new_data_app.checkTokens() }
   )
   // // Check if has dev acc
   // fetch('/user/infos/is_developer',)
@@ -52,15 +63,15 @@ export async function loginUser(
     password: string;
     remember: boolean;
   },
-  navigate: (route: string) => void
+  returnToApp: () => void
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
-  d3.select('.LogError').selectAll('*').remove()
+  resetLogs()
   // Fetch Login
   const path = window.location.origin
   const url = path + '/auth/login'
-  return fetch(url, {
+  await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -70,67 +81,49 @@ export async function loginUser(
     .then(response => {
       if (response.ok) {
         return response.json()
-      } else {
-        d3.select('.LogError').append('p').text(t('Login.err_server'))
+      }
+      else {
+        logError(t('Login.err_server'))
         return Promise.reject(response)
       }
     })
-    .then(data => {
-      if (data['is_connected']) {
-        // Activate free account
-        new_data_app.activateFreeAccount()
-        sessionStorage.setItem('token', LZString.compress(JSON.stringify(true)))
-        // Activate licence
-        activateLicensesTokens(new_data_app)
-
-        const path = window.location.origin
-        const url = path + '/user/infos'
-        fetch(url)
-          .then(response => {
-            if (response.ok) {
-              return response.json()
-            } else {
-              return Promise.reject(response)
-            }
-          }).then(data => {
-            // User data
-            if (data.firstname) {
-              sessionStorage.setItem('username', LZString.compress(data.firstname))
-              //set_update(!update)
-            }
-          })
-
-        navigate('/')
-      } else {
-        d3.select('.LogError').append('p').text(t('Login.err_login'))
+    .then(response => {
+      if (response['message'] === 'ok') {
+        logInfo(t('Login.msg.ok'))
+        return
       }
+      else {
+        logError(t('Login.msg.' + response['message']))
+        return Promise.reject(response)
+      }
+    })
+    .then(() => {
+      return new_data_app.checkTokens()
+    })
+    .then(() => {
+      returnToApp()
     })
 }
 
-// Properly logOut user
-async function logOutUser(
-  unsetTokens: () => void
+//Logout
+export function loginOut(
+  new_data_app: Class_ApplicationDataSA,
+  returnToApp: () => void
 ) {
-  // Set all tokens to false
-  unsetTokens()
   // LogOut on server
   const path = window.location.origin
   const url = path + '/auth/logout'
   return fetch(url)
-}
-
-//Logout
-export const loginOut = (
-  unsetTokens: () => void,
-  returnToApp: () => void
-) => {
-  sessionStorage.removeItem('token')
-  sessionStorage.removeItem('username')
-  sessionStorage.removeItem(app_name_opensankeyplus)
-  sessionStorage.removeItem(app_name_sankeysuite)
-  sessionStorage.removeItem('SankeyDev')
-  logOutUser(unsetTokens)
-  returnToApp()
+    .then(() => {
+      // Check that we are effectivly disconnected
+      new_data_app.checkTokens(true)
+      // sessionStorage.removeItem('token')
+      // sessionStorage.removeItem('username')
+      // sessionStorage.removeItem(app_name_opensankeyplus)
+      // sessionStorage.removeItem(app_name_sankeysuite)
+      // sessionStorage.removeItem('SankeyDev')
+      returnToApp()
+    })
 }
 
 /**
@@ -154,8 +147,7 @@ export async function triggerPasswordReset(
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
-  d3.select('.LogError').selectAll('*').remove()
-  d3.select('.LogInfo').selectAll('*').remove()
+  resetLogs()
   // Fetch Login
   const path = window.location.origin
   const url = path + '/auth/forgot_pw'
@@ -170,22 +162,22 @@ export async function triggerPasswordReset(
       if (response.ok) {
         return response.json()
       } else {
-        d3.select('.LogError').append('p').text(t('Login.err_server'))
+        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_server'))
         return Promise.reject(response)
       }
     })
     .then(data => {
       if (data['user_is_authenticated'] === true) {
-        d3.select('.LogError').append('p').text(t('Login.err_user_already_connected'))
+        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_user_already_connected'))
         navigate('/')
         return
       }
       if (data['user_exists'] === false) {
-        d3.select('.LogError').append('p').text(t('Login.err_user_inexistant'))
+        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_user_inexistant'))
         navigate('/register')
         return
       }
-      d3.select('.LogInfo').append('p').text(t('Login.forgot_sent'))
+      d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.mail_sent'))
     })
 }
 
@@ -229,20 +221,20 @@ export async function applyPasswordReset(
       if (response.ok) {
         return response.json()
       } else {
-        d3.select('.LogError').append('p').text(t('Login.err_server'))
+        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_server'))
         return Promise.reject(response)
       }
     })
     .then(data => {
       if (data['user_is_authenticated'] === true) {
-        d3.select('.LogError').append('p').text(t('Login.err_user_already_connected'))
+        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_user_already_connected'))
         return
       }
       if (data['passwd_is_updated'] === true) {
-        d3.select('.LogInfo').append('p').text(t('Login.forgot_ok'))
+        d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.ok'))
         navigate('/login')
         return
       }
-      d3.select('.LogError').append('p').text(t('Login.err_token_expire'))
+      d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_token_expire'))
     })
 }

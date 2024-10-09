@@ -8,7 +8,7 @@ export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'
 
 
-export const resetLogs = () => {
+const resetLogs = () => {
   d3.select('.LogInfo').selectAll('*').remove()
   d3.select('.LogError').selectAll('*').remove()
 }
@@ -46,14 +46,15 @@ export async function userSignUp(
       if (response.ok)
         return response.json()
       else
-        logError(i18next.t('register.account.msg.nok'))
+        logError(i18next.t('Register.account.msg.nok'))
+        return Promise.reject(response)
     })
     .then((response) => {
       if (response) {
         if (response['message'] === 'ok')
-          logInfo(i18next.t('register.account.msg.ok'))
+          logInfo(i18next.t('Register.account.msg.ok'))
         else
-          logError(i18next.t('register.account.msg.' + response['message']))
+          logError(i18next.t('Register.account.msg.' + response['message']))
       }
     })
 }
@@ -79,12 +80,13 @@ export async function userValidate(
       if (response.ok)
         return response.json()
       else
-        logError(i18next.t('register.validation.msg.nok'))
+        logError(i18next.t('Register.validation.msg.nok'))
+        return Promise.reject(response)
     })
     .then((response) => {
       if (response){
-        logInfo(i18next.t('register.validation.msg.' + response['message']))
-        logInfo(i18next.t('register.validation.msg.redirect'))
+        logInfo(i18next.t('Register.validation.msg.' + response['message']))
+        logInfo(i18next.t('Register.validation.msg.redirect'))
         setTimeout(
           () => navigate('/license/checkout'),
           3000

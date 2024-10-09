@@ -3,30 +3,23 @@ import React, { FunctionComponent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
-  FaPowerOff,
   FaUser
 } from 'react-icons/fa'
 
 import {
   Box,
   Button,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList
 } from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
 
 import { CardsTemplateBuilder } from './deps/OpenSankey+/deps/OpenSankey/welcome/ModalWelcome'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
 import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import ExempleItem from './deps/OpenSankey+/deps/OpenSankey/welcome/MenuExamples'
 
 import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 
-import { loginOut } from './components/Login/LoginFunctions'
 import { Class_ApplicationDataSA } from './ApplicationData'
-import ExempleItem from './deps/OpenSankey+/deps/OpenSankey/welcome/MenuExamples'
-import { returnToApp } from './SankeyAppSA'
+import { LoginOutButton } from './components/Login/Login'
 
 
 /**
@@ -56,7 +49,7 @@ type FType_InitializeAdditionalMenusSA = (
   new_data: Class_ApplicationDataSA,
   example_menu: ExempleMenuTypes,
   formations_menu: ExempleMenuTypes,
-  reinitialization:()=>void
+  reinitialization: () => void
 ) => void
 
 /**
@@ -86,6 +79,10 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     new_data_app
   )
 
+  // Check if user is connected ----------------------------------------------------------
+
+  new_data_app.checkTokens()
+
   // New modules -------------------------------------------------------------------------
 
   additionalMenus.additional_nav_item.push(
@@ -94,7 +91,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     />
   )
 
-  additionalMenus.formations_menu=formations_menu
+  additionalMenus.formations_menu = formations_menu
 
   additionalMenus.externale_navbar_item['demo'] = <ExempleItem
     new_data={new_data_app}
@@ -198,7 +195,7 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   //     <MenuItem
   //       onClick={() => navigate('/register')}
   //     >
-  //       {t('UserPages.to_reg')}
+  //       {t('UserNav.to_reg')}
   //     </MenuItem>
   //   </MenuList>
   // </Menu>
@@ -228,16 +225,11 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
       }}>
       <FaUser />
     </Button>
-    <Button
-      variant='menutop_button_logout'
-      onClick={() => loginOut(
-        () => { new_data_app.unsetTokens() },
-        () => returnToApp(new_data_app, navigate)
-      )}>
-      <FaPowerOff />
-    </Button>
+    <LoginOutButton
+      new_data_app={new_data_app}
+    />
   </Box>
 
 
-  return (!new_data_app.has_free_account ? user_navigation_bar_free : user_navigation_bar_connected)
+  return (!new_data_app.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
 }

@@ -1,6 +1,5 @@
 import React, { FunctionComponent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaPowerOff } from 'react-icons/fa'
 
 import {
   Box,
@@ -14,7 +13,7 @@ import {
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { returnToApp } from '../../SankeyAppSA'
-import { loginOut } from '../Login/LoginFunctions'
+import { LoginOutButton } from '../Login/Login'
 
 
 export type SankeyLabelTypes = {
@@ -52,7 +51,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   const navigate = useNavigate()
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data_app.has_free_account) {
+  if (!new_data_app.has_account) {
     returnToApp(new_data_app, navigate)
   }
 
@@ -168,17 +167,9 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
             >
               {t('UserNav.to_acc')}
             </Button>
-            <Button
-              variant='menutop_button_logout'
-              onClick={() => {
-                loginOut(
-                  () => { new_data_app.unsetTokens() },
-                  () => { returnToApp(new_data_app, navigate) }
-                )
-              }}
-            >
-              <FaPowerOff />
-            </Button>
+            <LoginOutButton
+              new_data_app={new_data_app}
+            />
           </Box>
         </Box>
       </Box>
