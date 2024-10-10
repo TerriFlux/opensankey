@@ -9,6 +9,7 @@ client/coverage
 # production
 client/build
 client/dist
+client/src/deps/OpenSankey+
 
 # server
 __pycache__
