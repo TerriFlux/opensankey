@@ -210,7 +210,7 @@ class License(db.Model):
     # primary keys are required by SQLAlchemy
     id = db.Column(db.Integer(), primary_key=True)
     # Db entries
-    name = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(64), unique=True)
     stripe_id =  db.Column(db.String(1024), unique=True)
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
@@ -325,15 +325,18 @@ def set_licence_checkout_completed(
     :return: _description_
     :rtype: _type_
     """
+    import pdb; pdb.set_trace()
     # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=license_stripe_id).first()
+    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
     if (user_license is None):
         return "Invalid subscription id", False
 
     # Get user
-    user = User.query.filter(id=user_id, email=user_email).first()
+    user = User.query.get(user_id)
     if user is None:
-        return "Invalid user", False
+        return "Invalid user id", False
+    if (user.email != user_email):
+        return "Invalid user email", False
 
     # Update infos
     user.stripe_id = user_stripe_id
@@ -350,7 +353,7 @@ def set_or_update_licence_subscription(
     user_license_expiry
 ):
     # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=license_stripe_id).first()
+    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
     if (user_license is None):
         return "Invalid subscription id", False
 

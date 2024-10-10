@@ -23,7 +23,9 @@ from flask_login import current_user
 # ---------------------------------------------------------------
 # Local imports
 from .models import login_required
-from .models import set_licence
+from .models import set_licence_subscription
+from .models import set_licence_checkout_completed
+from .models import set_or_update_licence_subscription
 
 
 # ---------------------------------------------------------------
@@ -124,21 +126,21 @@ def stripe_webhook():
         try:
             msg, ok = handle_subscription_creation_session(session)
         except Exception as e:
-            return 'Error subscription creation', 400
-    # Handle checkout
+            return 'Error subscription creation : {}'.format(e), 400
+    # Handle checkout completed
     elif (event['type'] == 'checkout.session.completed'):
         session = event['data']['object']
         try:
             msg, ok = handle_checkout_session(session)
         except Exception as e:
-            return 'Error checkout handler', 400
+            return 'Error checkout handler : {}'.format(e), 400
     # Handle subscription
     elif (event['type'] == 'customer.subscription.updated'):
         session = event['data']['object']
         try:
             msg, ok = handle_subscription_update_session(session)
         except Exception as e:
-            return 'Error subscription handler', 400
+            return 'Error subscription handler : {}'.format(e), 400
 
     if (ok):
         return msg, 200
