@@ -577,15 +577,15 @@ export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({
   new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
   
   const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
-  const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primary'
-  const mutli_level = new_data_plus.drawing_area.sankey.level_taggs_list.length > 1
+  const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primaire'
+  const mutli_level = new_data_plus.drawing_area.sankey.level_taggs_list.length > 0
   let content_popover = <></>
 
   if (only_primary) { // Only have primary level group tag 
     content_popover = <AddSimpleLevelDropDown
       new_data={new_data_plus}
     />
-  } else if (mutli_level) { // has multi level group tag
+  } else if (mutli_level) { // has other level group tag than 'Primaire'
     content_popover=<AddAllDropDownNode
       new_data={new_data_plus}
       level={true} />
