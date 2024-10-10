@@ -16,9 +16,8 @@ import {
   CustomFaEyeCheckIcon,
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
-  getNumberFromJSON,
-  getNumberOrUndefinedFromJSON,
   getStringFromJSON,
+  getStringOrUndefinedFromJSON,
   OSTooltip,
   Type_JSON
 } from './deps/OpenSankey/types/Utils'
@@ -27,6 +26,8 @@ import { faDatabase, faFolderTree, faSliders } from '@fortawesome/free-solid-svg
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
 import { default_container_content } from './types/FreeLabel'
+import { OSPData, ViewType } from './types/LegacyTypes'
+import { GetOldDataFromView } from './SankeyPlusConvert'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -240,7 +241,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()))) + 1
   const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
   {/* Popover to display the link-filter */ }
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
@@ -572,15 +573,47 @@ export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 
 
 export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
-
+  const [, setCount] = useState(0)
+  new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  
   const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
+  const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primaire'
+  const mutli_level = new_data_plus.drawing_area.sankey.level_taggs_list.length > 0
+  let content_popover = <></>
+
+  if (only_primary) { // Only have primary level group tag 
+    content_popover = <AddSimpleLevelDropDown
+      new_data={new_data_plus}
+    />
+  } else if (mutli_level) { // has other level group tag than 'Primaire'
+    content_popover=<AddAllDropDownNode
+      new_data={new_data_plus}
+      level={true} />
+  }
+
+
 
   return (level_filter) ? <>
     <OSTooltip
       placement='left'
       label={new_data_plus.t('Banner.hlp_1_txt_2')}>
       {
-        initalizeSelectorDetailNodes(new_data_plus)
+        <Popover placement='left' id='popover_details_level'>
+          <PopoverTrigger>
+            <Button variant='toolbar_button_2' id='btn_open_popover_details_level'>
+              <FontAwesomeIcon icon={faFolderTree} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <PopoverArrow />
+            <PopoverCloseButton />
+            <PopoverHeader>{new_data_plus.t('Banner.ndd')}</PopoverHeader>
+            <PopoverBody>
+              {content_popover}
+            </PopoverBody>
+          </PopoverContent>
+
+        </Popover>
       }
     </OSTooltip>
   </> :
@@ -649,8 +682,8 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
   const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
   // Component updater ------------------------------------------------------------------
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  // const [, setCount] = useState(0)
+
 
   // JSX Component ----------------------------------------------------------------------
   if (Object.keys(level_taggs).includes('Primaire')) {
@@ -669,6 +702,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 level_taggs['Primaire'].selectTagsFromId(evt.target.value)
                 new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
+                // setCount(a=>a+1)
                 // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
                 // (it isn't done for link not directly displayed after fromJSON)
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
@@ -698,22 +732,68 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
   }
 }
 
-export const convert_data_plus_legacy=(json_object:Type_JSON)=>{
-  const containers=getJSONOrUndefinedFromJSON(json_object,'labels')
-  if(containers){
+export const convert_data_plus_legacy = (json_object: Type_JSON) => {
+  const containers = getJSONOrUndefinedFromJSON(json_object, 'labels')
+  if (containers) {
     // Convert name of variable from legacy Free label to variable name of new Free labels 
-    Object.values(containers).forEach(el=>{
-      const cont =el as Type_JSON
-      const container_content=getStringFromJSON(cont,'name',default_container_content)
-      const container_opacity=getBooleanFromJSON(cont,'transparent',false)
+    Object.values(containers).forEach(el => {
+      const cont = el as Type_JSON
 
-      if(container_opacity){
-        cont['opacity']=0
-      }else{
-        cont['opacity']=100
+      const container_name = getStringOrUndefinedFromJSON(cont, 'name')
+      const container_content = getStringFromJSON(cont, 'content', default_container_content)
+      const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
+
+      if (container_opacity) {
+        cont['opacity'] = 0
+      } else {
+        cont['opacity'] = 100
       }
-      cont['content']=container_content
+      cont['content'] = container_name ?? container_content
 
     })
   }
+
+
+  const old_views = getOldViewsFromJSON(json_object, 'view') as ViewType[]
+  if (old_views && old_views.length > 0) {
+    json_object.views = {} as Type_JSON
+    // Convert old views 
+    old_views.forEach((v) => {
+      if (v.heredited_attr_from_master === undefined) {
+        v.heredited_attr_from_master = ['']
+      }
+      // Convert old views that are diff to json
+      const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
+      if (d_view) {
+        (json_object.views as Type_JSON)[v.id] = d_view as unknown as Type_JSON
+      }
+
+      // Set Name of view 
+      ((json_object.views as Type_JSON)[v.id] as Type_JSON).name = v.nom
+    })
+  }
+}
+
+export function getArrayFromJSON(
+  json_object: Type_JSON,
+  key: string,
+  fallback_value: Array<ViewType>
+) {
+  if (json_object[key] && typeof json_object[key] === typeof fallback_value) {
+    return json_object[key]
+  }
+  return fallback_value
+}
+
+
+export function getOldViewsFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key]) {
+    const _ = getArrayFromJSON(json_object, key, [])
+    if (Object.keys(_).length > 0)
+      return _
+  }
+  return undefined
 }
