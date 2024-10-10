@@ -16,7 +16,7 @@ server/__pycache__
 
 # database
 db.sqlite
-instance/db.sqlite
+instance/db.sqlite*
 server/db.sqlite
 
 # misc
