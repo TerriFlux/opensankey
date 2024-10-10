@@ -1099,7 +1099,7 @@ export abstract class Class_LinkElement
 
     this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
     this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
-    this.d3_selection?.select('.link_label_textpath').attr('dy', label_ortho_position)
+    this.d3_selection?.select('.link_label_text').attr('dy', label_ortho_position)
     this.d3_selection?.select('.link_label_textpath').attr('dominant-baseline', label_dominant_baseline)
   }
 
