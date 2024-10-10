@@ -32,6 +32,9 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 connected_user = Blueprint('connected_user', __name__)
 db = SQLAlchemy()
 
+# ---------------------------------------------------------------
+# Specific constants
+TEMP_SUBSCRIPTION = 'temp_entry_subscription'
 
 # ---------------------------------------------------------------
 # Define specific functions
@@ -67,16 +70,20 @@ class User(UserMixin, db.Model):
         - license_opensankeyplus (String)
         - license_sankeysuite (String)
     """
-    # primary keys are required by SQLAlchemy
+    # Primary keys are required by SQLAlchemy
     id = db.Column(db.Integer, primary_key=True)
-    # Db entries
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    firstname = db.Column(db.String(1000))
-    name = db.Column(db.String(1000))
-    license_opensankeyplus = db.Column(db.String(2000))
-    license_sankeysuite = db.Column(db.String(2000))
+    # User infos entries
+    email = db.Column(db.String(128), unique=True)
+    password = db.Column(db.String(256))
+    firstname = db.Column(db.String(64))
+    name = db.Column(db.String(64))
+    # Old Licenses infos - TODO remove
+    license_opensankeyplus = db.Column(db.String(1024))
+    license_sankeysuite = db.Column(db.String(1024))
     is_developer = db.Column(db.Boolean)
+    # Customer infos
+    creation = db.Column(db.String(128))
+    stripe_id =  db.Column(db.String(1024), unique=True)
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship(
@@ -106,7 +113,7 @@ class User(UserMixin, db.Model):
             user=self).first()
         # Check if this relation exists and return its validty
         if this_license is not None:
-            return this_license.license_expiry
+            return this_license.expiry
         # Otherwise return None
         return None
 
@@ -184,7 +191,10 @@ class UserLicences(db.Model):
         db.Integer(), db.ForeignKey('license.id', ondelete='CASCADE'))
     license = db.relationship('License', back_populates='user_licenses')
     # Db extra entries
-    license_expiry = db.Column(db.String(50), unique=True)
+    creation = db.Column(db.String(128))
+    expiry = db.Column(db.String(128))
+    activated = db.Column(db.Boolean)
+    stripe_id =  db.Column(db.String(1024), unique=True)
 
 
 class License(db.Model):
@@ -201,6 +211,7 @@ class License(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     # Db entries
     name = db.Column(db.String(50), unique=True)
+    stripe_id =  db.Column(db.String(1024), unique=True)
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship(
@@ -262,54 +273,93 @@ def licence_required(license_name=''):
 
 
 # ---------------------------------------------------------------
-@connected_user.route(
-    '/user/update/license/<license_name>',
-    methods=['POST'])
-@login_required
-def set_licence(license_name):
-    # Get license id or create it
-    license = License.query.filter_by(name='test').first()
+def set_licence_subscription(
+    license_stripe_id,
+    user_license_stripe_id,
+    user_license_creation_date
+):
+    # Get license
+    license = License.query.filter_by(stripe_id=license_stripe_id).first()
     if license is None:
-        return "Invalid license name", 400
+        return "Invalid license id", False
 
-    # Get license token
-    token = request.json.get('token')
-    try:
-        serializer = Serializer(current_app.config['SECRET_KEY'])
-        [user_id, license_id, duration] = \
-            serializer.loads(token, max_age=900)  # Valid for 15min
-    except Exception:
-        return "Invalid token", 400
-
-    # Verify infos
-    if (
-        (current_user.id != user_id) or
-        (license.id != license_id)
-    ):
-        return "User - License does not match", 400
-
-    # Expiration date
-    expiry = (
-        datetime.now() +
-        datetime.timedelta(days=duration)
-    ).isoformat()
-
-    # Get association or create it
-    user_license = UserLicences.query.filter_by(
-        user=current_user,
-        license=license
-    ).first()
-    if (user_license is None):
-        user_license = UserLicences(
-            user=current_user,
-            license=license,
-            license_expiry=expiry)
-    else:
-        user_license.license_expiry = expiry
+    # Create user license
+    user_license = UserLicences(
+        license=license,
+        stripe_id=user_license_stripe_id,
+        creation=user_license_creation_date,
+        activated=False)
 
     # Apply modification to database
     db.session.commit()
-    return 'OK', 200
+    return 'OK', True
+
+
+def set_licence_checkout_completed(
+    user_id,
+    user_email,
+    user_stripe_id,
+    user_license_stripe_id
+):
+    """
+    Create a license at checkout for given user
+
+    Parameters
+    ----------
+    :param user_id: _description_
+    :type user_id: _type_
+
+    :param user_email: _description_
+    :type user_email: _type_
+
+    :param user_stripe_id: _description_
+    :type user_stripe_id: _type_
+
+    :param user_license_stripe_id: _description_
+    :type user_license_stripe_id: _type_
+
+    Optional parameters
+    -------------------
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
+    # Get subcription license
+    user_license = UserLicences.query.filter_by(stripe_id=license_stripe_id).first()
+    if (user_license is None):
+        return "Invalid subscription id", False
+
+    # Get user
+    user = User.query.filter(id=user_id, email=user_email).first()
+    if user is None:
+        return "Invalid user", False
+
+    # Update infos
+    user.stripe_id = user_stripe_id
+    user_license.user = user
+    user_license.activated = True
+
+    # Apply modification to database
+    db.session.commit()
+    return 'OK', True
+
+
+def set_or_update_licence_subscription(
+    user_license_stripe_id,
+    user_license_expiry
+):
+    # Get subcription license
+    user_license = UserLicences.query.filter_by(stripe_id=license_stripe_id).first()
+    if (user_license is None):
+        return "Invalid subscription id", False
+
+    # Update infos
+    user_license.expiry = user_license_expiry
+
+    # Apply modification to database
+    db.session.commit()
+    return 'OK', True
 
 
 @connected_user.route('/user/infos')

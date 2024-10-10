@@ -17,6 +17,7 @@ from flask import render_template
 mail = Mail()
 sending_mail = 'contact@terriflux.fr'
 
+dbg_mode = True
 
 # ---------------------------------------------------------------
 def is_email_valid(mail_to_check):
@@ -60,6 +61,13 @@ def init_mailing(app):
     app.config['MAIL_USE_TLS'] = False
     app.config['MAIL_USE_SSL'] = True
     mail.init_app(app)
+
+
+def send(msg):
+    if (not dbg_mode):
+        mail.send(msg)
+    else:
+        print(msg)
 
 
 def send_account_confirm_mail(
@@ -120,7 +128,7 @@ def send_account_confirm_mail(
         'inline',
         headers={'Content-ID': '<logo_TerriFlux>'})
     # Send mail
-    mail.send(msg)
+    send(msg)
 
 
 def send_welcome_mail(
@@ -181,7 +189,7 @@ def send_welcome_mail(
         'inline',
         headers={'Content-ID': '<logo_TerriFlux>'})
     # Send mail
-    mail.send(msg)
+    send(msg)
 
 
 def send_pw_reset_email(
@@ -246,4 +254,4 @@ def send_pw_reset_email(
         'inline',
         headers={'Content-ID': '<logo_TerriFlux>'})
     # Send mail
-    mail.send(msg)
+    send(msg)
