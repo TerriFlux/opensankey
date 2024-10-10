@@ -1127,6 +1127,10 @@ export abstract class Class_NodeElement
                     const level = getNumberOrUndefinedFromJSON(dimension_as_json, 'level')
                     if (level && level > 1) {
                       // Careful here : levels start from 1
+                      if (tagg.tags_list.length < level-1)
+                        tagg.addTag(String(level-1)) // Create parent tag
+                      if (tagg.tags_list.length < level)
+                        tagg.addTag(String(level)) // Create child tag
                       child_tags = [tagg.tags_list[level - 1]]
                       parent_tag = tagg.tags_list[level - 2]
                     }
