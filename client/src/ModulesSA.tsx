@@ -7,6 +7,8 @@ import {
   FaUser
 } from 'react-icons/fa'
 
+import LZString from 'lz-string'
+
 import {
   Box,
   Button,
@@ -26,6 +28,7 @@ import { loginOut } from './components/Login/LoginFunctions'
 import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataSA } from './ApplicationData'
 import ExempleItem from './deps/OpenSankey+/deps/OpenSankey/welcome/MenuExamples'
+import { app_name_opensankeyplus } from './components/Register/LicenseFunctions'
 
 export const initializeApplicationDataSA = (
   new_data_app: Class_ApplicationDataSA,
@@ -36,6 +39,27 @@ export const initializeApplicationDataSA = (
   if (initial_data !== undefined) {
     new_data_app.fromJSON(initial_data)
   }
+
+  // Search if we have token of connexion into session storage
+  const storage_token = LZString.decompress(sessionStorage.getItem('token') as string) as string
+  const storage_token_osp = LZString.decompress(sessionStorage.getItem(app_name_opensankeyplus) as string) as string
+
+  if (storage_token !== null && storage_token !== '') {
+    const d_t = JSON.parse(storage_token)
+    // If we have free token then activate free acount functionalities
+    if (d_t === true) {
+      new_data_app.activateFreeAccount()
+    }
+  }
+
+  if (storage_token_osp !== null && storage_token_osp !== '') {
+    const d_t = JSON.parse(storage_token_osp)
+    // If we have osp token then activate Sankey plus functionalities
+    if (d_t === true) {
+      new_data_app.activateSankeyPlus()
+    }
+  }
+
   return new_data_app
 }
 
@@ -46,7 +70,7 @@ type FType_InitializeAdditionalMenusSA = (
   new_data: Class_ApplicationDataSA,
   example_menu: ExempleMenuTypes,
   formations_menu: ExempleMenuTypes,
-  reinitialization:()=>void
+  reinitialization: () => void
 ) => void
 
 /**
@@ -84,8 +108,8 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     />
   )
 
-  additionalMenus.formations_menu=formations_menu
-  
+  additionalMenus.formations_menu = formations_menu
+
   additionalMenus.externale_navbar_item['demo'] = <ExempleItem
     new_data={new_data_app}
     exemple_menu={example_menu}
@@ -118,7 +142,7 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
 
   const [count, setCount] = useState(0)
   const refreshThis = () => {
-    setCount(count+1)
+    setCount(count + 1)
   }
   new_data_app.menu_configuration.ref_to_additional_menus_updater.current = refreshThis
 
@@ -205,7 +229,7 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     <Button
       variant='menutop_button_logout'
       onClick={() => loginOut(
-        () => {new_data_app.unsetTokens()},
+        () => { new_data_app.unsetTokens() },
         returnToApp
       )}>
       <FaPowerOff />
