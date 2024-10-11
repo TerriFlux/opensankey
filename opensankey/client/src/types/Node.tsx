@@ -601,7 +601,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public hasGivenLevelTag(tag: Class_LevelTag) {
-    return (this.level_tags_dict[tag.id] !== undefined)
+    return (this.level_tags_list.includes(tag))
   }
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
@@ -1127,8 +1127,8 @@ export abstract class Class_NodeElement
                     const level = getNumberOrUndefinedFromJSON(dimension_as_json, 'level')
                     if (level && level > 1) {
                       // Careful here : levels start from 1
-                      if (tagg.tags_list.length < level-1)
-                        tagg.addTag(String(level-1)) // Create parent tag
+                      if (tagg.tags_list.length < level - 1)
+                        tagg.addTag(String(level - 1)) // Create parent tag
                       if (tagg.tags_list.length < level)
                         tagg.addTag(String(level)) // Create child tag
                       child_tags = [tagg.tags_list[level - 1]]
@@ -1616,8 +1616,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private updateNameLabelPos(): [number, number, string] {
-    
-    const [label_pos_x,label_pos_y,label_anchor,label_align,label_baseline] = this.getNameLabelPos()
+    const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
 
     this.d3_selection?.select('.name_label_text')
       .attr('x', label_pos_x)
@@ -1629,7 +1628,7 @@ export abstract class Class_NodeElement
     return [label_pos_x, label_pos_y, label_anchor]
   }
 
-  protected getNameLabelPos():[number,number,string,string,string]{
+  protected getNameLabelPos(): [number, number, string, string, string] {
     // x position
     let label_anchor = 'start'
     let label_align = 'start'
@@ -1673,7 +1672,7 @@ export abstract class Class_NodeElement
         label_baseline = 'middle'
       }
     }
-    return [label_pos_x,label_pos_y,label_anchor,label_align,label_baseline]
+    return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
   }
 
   /**
@@ -1838,29 +1837,29 @@ export abstract class Class_NodeElement
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            break
-          case 'top':
-            node_face_size = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size = sumLinkTop
-            break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size2 = sumLinkRight
-            break
-          case 'top':
-            node_face_size2 = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size2 = sumLinkTop
-            break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2420,33 +2419,24 @@ export abstract class Class_NodeElement
   // Level related ----------------------------------------------------------------------
 
   /**
-   * Dict of level tags related to node
-   * @readonly
-   * @memberof Class_NodeElement
-   */
-  public get level_tags_dict() {
-    const level_tags_dict: { [id: string]: Class_LevelTag } = {}
-    Object.values(this._dimensions_as_parent)
-      .forEach(dimension => {
-        level_tags_dict[dimension.parent_level_tag.id] = dimension.parent_level_tag as Class_LevelTag
-      })
-    Object.values(this._dimensions_as_child)
-      .forEach(dimension => {
-        dimension.children_level_tags
-          .forEach(children_level_tag => {
-            level_tags_dict[children_level_tag.id] = children_level_tag as Class_LevelTag
-          })
-      })
-    return level_tags_dict
-  }
-
-  /**
    * List of level tags related to node
    * @readonly
    * @memberof Class_NodeElement
    */
   public get level_tags_list() {
-    return Object.values(this.level_tags_dict)
+    const level_tags_list: Class_LevelTag[] = []
+    Object.values(this._dimensions_as_parent)
+      .forEach(dimension => {
+        level_tags_list.push(dimension.parent_level_tag as Class_LevelTag)
+      })
+    Object.values(this._dimensions_as_child)
+      .forEach(dimension => {
+        dimension.children_level_tags
+          .forEach(children_level_tag => {
+            level_tags_list.push(children_level_tag as Class_LevelTag)
+          })
+      })
+    return [...new Set(level_tags_list)]
   }
 
   /**
@@ -3414,11 +3404,28 @@ export abstract class Class_NodeElement
     let ok_dimension: boolean = false
     // Check dimensions where node is tagged as a child
     Object.values(this._dimensions_as_child)
-      .forEach(dim => ok_dimension = (ok_dimension || dim.show_children))
+      .forEach(dim => ok_dimension = (ok_dimension || (dim.children_level_tagg.activated && dim.show_children)))
     // Check dimensions where node is tagged as a parent
     if (!ok_dimension) {
       Object.values(this._dimensions_as_parent)
-        .forEach(dim => ok_dimension = ok_dimension || dim.show_parent)
+        .forEach(dim => ok_dimension = ok_dimension || (dim.parent_level_tag.group.activated && dim.show_parent))
+    }
+    // Specific cas : No dimension activated 
+    if (!ok_dimension){
+      Object.values(this._dimensions_as_parent)
+        .forEach(dim => {
+          if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
+            const siblings_activated = dim.parent_level_tag.group.sibling_activated()
+            if (siblings_activated.length > 0) {
+              const taggs = this.level_taggs_list
+              const siblings_activated_with_this = siblings_activated
+                .filter(sib => taggs.includes(sib as Class_LevelTagGroup) )
+              if (siblings_activated_with_this.length == 0) {
+                ok_dimension = true
+              }
+            }
+          }
+        })
     }
     return ok_dimension
   }
