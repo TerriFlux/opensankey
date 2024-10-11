@@ -27,14 +27,11 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 
 
 # ---------------------------------------------------------------
-# Create user blue print
+# Shared variables
 
 connected_user = Blueprint('connected_user', __name__)
 db = SQLAlchemy()
 
-# ---------------------------------------------------------------
-# Specific constants
-TEMP_SUBSCRIPTION = 'temp_entry_subscription'
 
 # ---------------------------------------------------------------
 # Define specific functions
@@ -83,7 +80,7 @@ class User(UserMixin, db.Model):
     is_developer = db.Column(db.Boolean)
     # Customer infos
     creation = db.Column(db.String(128))
-    stripe_id =  db.Column(db.String(1024), unique=True)
+    stripe_id = db.Column(db.String(1024), unique=True)
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship(
@@ -194,7 +191,7 @@ class UserLicences(db.Model):
     creation = db.Column(db.String(128))
     expiry = db.Column(db.String(128))
     activated = db.Column(db.Boolean)
-    stripe_id =  db.Column(db.String(1024), unique=True)
+    stripe_id = db.Column(db.String(1024), unique=True)
 
 
 class License(db.Model):
@@ -211,7 +208,7 @@ class License(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     # Db entries
     name = db.Column(db.String(64), unique=True)
-    stripe_id =  db.Column(db.String(1024), unique=True)
+    stripe_id = db.Column(db.String(1024), unique=True)
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship(
@@ -284,7 +281,7 @@ def set_licence_subscription(
         return "Invalid license id", False
 
     # Create user license
-    user_license = UserLicences(
+    UserLicences(
         license=license,
         stripe_id=user_license_stripe_id,
         creation=user_license_creation_date,
@@ -325,9 +322,10 @@ def set_licence_checkout_completed(
     :return: _description_
     :rtype: _type_
     """
-    import pdb; pdb.set_trace()
     # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
+    user_license = UserLicences\
+        .query.filter_by(stripe_id=user_license_stripe_id)\
+        .first()
     if (user_license is None):
         return "Invalid subscription id", False
 
@@ -353,7 +351,9 @@ def set_or_update_licence_subscription(
     user_license_expiry
 ):
     # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
+    user_license = UserLicences\
+        .query.filter_by(stripe_id=user_license_stripe_id)\
+        .first()
     if (user_license is None):
         return "Invalid subscription id", False
 

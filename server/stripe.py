@@ -30,26 +30,18 @@ from .models import set_or_update_licence_subscription
 
 # ---------------------------------------------------------------
 # Constants
+STRIPE_KEYS = {
+    'secret_key': os.environ['STRIPE_SECRET_KEY'],
+    'publishable_key': os.environ['STRIPE_PUBLISHABLE_KEY'],
+    'price_id_osplusmensuel': os.environ['STRIPE_PRICE_ID_OSPLUSMENSUEL'],
+    'endpoint_secret': os.environ['STRIPE_ENDPOINT_SECRET']}
+CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
 
-stripe_keys = {
-    'secret_key': 'sk_test_51Q5ryr4D4FENxv0JCvVWWGNcfpFfxLH0gvKG6K6yNqfsyNEsfxOs0M9Qcs0Oc74MsGfQ5yLkhwxZeSq8k1hMPBV400qizlpXZC',  # os.environ['STRIPE_SECRET_KEY'],
-    'publishable_key': 'pk_test_51Q5ryr4D4FENxv0JIoQGH543mTSaoIlI0xwkz1upHvNMJpeiHC8Ng2EmMTuB8Hvz0jy7eZTGgzDZdlVnuvr2Vokh00M0WXHCFg',  # os.environ['STRIPE_PUBLISHABLE_KEY'],
-    'price_id_osplusmensuel': 'price_1Q5sHz4D4FENxv0JX8D4cF0S',  # os.environ['STRIPE_PRICE_ID'],
-    'endpoint_secret': os.environ['STRIPE_ENDPOINT_SECRET']
-}
-
-# Strut as [product_id_stripe] = product_name
-products_ids = {
-    'sub_1Q81L74D4FENxv0JNRDkG3ql': 'opensankeyplus'
-}
-
-domain_url = 'http://localhost:3000/#/'
 
 # ---------------------------------------------------------------
 # Create stripe blue print
-
 stripe_blueprint = Blueprint('stripe_blueprint', __name__)
-stripe.api_key = stripe_keys['secret_key']
+stripe.api_key = STRIPE_KEYS['secret_key']
 
 
 # ---------------------------------------------------------------
@@ -65,25 +57,27 @@ def get_publishable_key():
     :return: Jsonified publicKey
     :rtype: json
     '''
-    stripe_config = {'publicKey': stripe_keys['publishable_key']}
+    stripe_config = {'publicKey': STRIPE_KEYS['publishable_key']}
     return jsonify(stripe_config)
 
 
 @stripe_blueprint.route('/stripe/create-checkout-session', methods=['POST'])
 def create_checkout_session():
-    stripe.api_key = stripe_keys['secret_key']
+    stripe.api_key = STRIPE_KEYS['secret_key']
     try:
         checkout_session = stripe.checkout.Session.create(
             ui_mode='embedded',
             client_reference_id=current_user.id,
             customer_email=current_user.email,
             billing_address_collection='required',
-            return_url=(domain_url + 'license/return?session_id={CHECKOUT_SESSION_ID}'),
+            return_url=(
+                CLIENT_ROOT_URL +
+                'license/return?session_id={CHECKOUT_SESSION_ID}'),
             payment_method_types=['card'],
             mode='subscription',
             line_items=[
                 {
-                    'price': stripe_keys['price_id_osplusmensuel'],
+                    'price': STRIPE_KEYS['price_id_osplusmensuel'],
                     'quantity': 1,
                 }
             ]
@@ -93,9 +87,18 @@ def create_checkout_session():
     except Exception as e:
         return jsonify(error=str(e)), 500
 
+
 @stripe_blueprint.route('/stripe/session-status', methods=['GET'])
 @login_required
 def session_status():
+    """
+    Verify status of current checkout - called from server
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
     checkout_session = stripe.checkout.Session.retrieve(
         request.args.get('session_id'))
     return jsonify(
@@ -110,12 +113,11 @@ def stripe_webhook():
 
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, stripe_keys['endpoint_secret']
-        )
-    except ValueError as e:
+            payload, sig_header, STRIPE_KEYS['endpoint_secret'])
+    except ValueError:
         # Invalid payload
         return 'Invalid payload', 400
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.error.SignatureVerificationError:
         # Invalid signature
         return 'Invalid signature', 400
 

@@ -14,10 +14,23 @@ from flask import render_template
 
 
 # ---------------------------------------------------------------
-mail = Mail()
-sending_mail = 'contact@terriflux.fr'
+# CONSTANTS FROM ENV
 
-dbg_mode = True
+MAIL_SENDING_ADRESS = os.environ['MAIL_SENDING_ADRESS']
+MAIL_SENDING_PWD = os.environ['MAIL_SENDING_PWD']
+MAIL_SERVER = os.environ['MAIL_SERVER']
+MAIL_PORT = os.environ['MAIL_PORT']
+MAIL_USE_TLS = (os.environ['MAIL_USE_TLS'] == 'True')
+MAIL_USE_SSL = (os.environ['MAIL_USE_SSL'] == 'True')
+
+DBG_MODE = (os.environ['MAIL_DBG_MODE'] == 'Activate')
+
+
+# ---------------------------------------------------------------
+# Shared variables
+
+mail = Mail()
+
 
 # ---------------------------------------------------------------
 def is_email_valid(mail_to_check):
@@ -54,20 +67,24 @@ def init_mailing(app):
     -------------------
     """
     # Config for mailing
-    app.config['MAIL_SERVER'] = 'ssl0.ovh.net'
-    app.config['MAIL_PORT'] = 465
-    app.config['MAIL_USERNAME'] = sending_mail
-    app.config['MAIL_PASSWORD'] = '8GzJneYkaaWhiaW7FF9e'
-    app.config['MAIL_USE_TLS'] = False
-    app.config['MAIL_USE_SSL'] = True
+    app.config['MAIL_SERVER'] = MAIL_SERVER
+    app.config['MAIL_PORT'] = MAIL_PORT
+    app.config['MAIL_USERNAME'] = MAIL_SENDING_ADRESS
+    app.config['MAIL_PASSWORD'] = MAIL_SENDING_PWD
+    app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
+    app.config['MAIL_USE_SSL'] = MAIL_USE_SSL
     mail.init_app(app)
 
 
 def send(msg):
-    if (not dbg_mode):
+    if (not DBG_MODE):
         mail.send(msg)
     else:
-        print(msg)
+        print('To : {0}\nSubject: {1}\nBody: \n{2}'.format(
+            msg.recipients,
+            msg.subject,
+            msg.body
+        ))
 
 
 def send_account_confirm_mail(
@@ -97,7 +114,7 @@ def send_account_confirm_mail(
     # Instanciate msg
     msg = Message(
         subject=subject[user_infos['lang']],
-        sender=("Contact TerriFlux", sending_mail),
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
         recipients=[user_infos['email']])
     # Add body to msg
     file = 'register_mail/account_confirm_{}'.format(user_infos['lang'])
@@ -160,7 +177,7 @@ def send_welcome_mail(
     # Instanciate msg
     msg = Message(
         subject=subject[language],
-        sender=("Contact TerriFlux", sending_mail),
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
         recipients=[user.email])
     # Add body to msg
     file = 'register_mail/welcome_mail_{}'.format(language)
@@ -222,7 +239,7 @@ def send_pw_reset_email(
     # Instanciate msg
     msg = Message(
         subject=subject[language],
-        sender=("Contact TerriFlux", sending_mail),
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
         recipients=[user.email])
     # Add body to msg
     file = 'password_reset_mail/password_reset_mail_{}'.format(language)

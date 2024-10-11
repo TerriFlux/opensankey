@@ -118,11 +118,9 @@ def signup_post():
 
     # Send confirm mail
     try:
-        print(domain_url + 'register?t={}'.format(token))
-        # TODO decomenté quand OK
-        # send_account_confirm_mail(
-        #     user_infos,
-        #     domain_url + 'register?t={}'.format(token))
+        send_account_confirm_mail(
+            user_infos,
+            domain_url + 'register?t={}'.format(token))
     except Exception as e:
         return 'Error on send confirm mail : ' + e, 500
 
