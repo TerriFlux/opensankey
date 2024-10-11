@@ -173,5 +173,7 @@ stripe login
 Lancement
 
 ```sh
-stripe listen --forward-to localhost:5000/webhook
+stripe listen --forward-to localhost:5000/stripe/webhook
 ```
+
+Ne pas oublier d'exporter la variables secret, exemple : `export STRIPE_ENDPOINT_SECRET=whsec_bd224d5114f66d5f29d5997b******'
