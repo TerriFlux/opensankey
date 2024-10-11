@@ -113,11 +113,14 @@ export abstract class Class_AbstractTagGroup {
 }
 
 export abstract class Class_AbstractLevelTagGroup {
+  public abstract sibling_activated():Class_AbstractLevelTagGroup[]
+
   public abstract get id(): string
   public abstract get name(): string
   public abstract get tags_dict(): { [id: string]: Class_AbstractLevelTag }
   public abstract get tags_list(): Class_AbstractLevelTag[]
   public abstract get selected_tags_list(): Class_AbstractLevelTag[]
+  public abstract get activated(): boolean
 }
 
 export abstract class Class_AbstractTag {
