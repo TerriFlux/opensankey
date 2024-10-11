@@ -10,6 +10,7 @@ client/coverage
 client/build
 client/dist
 client/src/deps/OpenSankey+
+env.sh
 
 # server
 __pycache__
