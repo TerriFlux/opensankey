@@ -675,8 +675,8 @@ export abstract class Class_NodeElement
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
-      link.target = this
       this.addMovingHandleForGivenLink(link, 'input')
+      link.target = this
       this.updateInputValue()
       this.drawLinks()
       this.drawValueLabel()
@@ -692,8 +692,8 @@ export abstract class Class_NodeElement
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
-      link.source = this
       this.addMovingHandleForGivenLink(link, 'output')
+      link.source = this
       this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
