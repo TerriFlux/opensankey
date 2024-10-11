@@ -241,6 +241,7 @@ def logout():
 def is_connected():
     return 'ok', 200
 
+
 @auth_blueprint.route('/auth/license/<name>')
 @licence_required(license_name='<name>')
 def has_license(name):

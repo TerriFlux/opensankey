@@ -65,7 +65,6 @@ export const PaiementCheckout = () => {
 
 export const PaiementReturn = () => {
   const [status, setStatus] = useState(null)
-  const [customerEmail, setCustomerEmail] = useState('')
   const [searchParams,] = useSearchParams()
 
 
@@ -76,7 +75,6 @@ export const PaiementReturn = () => {
       .then((res) => res.json())
       .then((data) => {
         setStatus(data.status)
-        setCustomerEmail(data.customer_email)
       })
   }, [])
 
