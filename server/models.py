@@ -104,6 +104,8 @@ class User(UserMixin, db.Model):
             return 'never'
         # Get related license to given name
         license = License.query.filter_by(name=license_name).first()
+        if license is None:
+            return None
         # Get relation between license and user
         this_license = UserLicences.query.filter_by(
             license=license,
@@ -114,10 +116,28 @@ class User(UserMixin, db.Model):
         # Otherwise return None
         return None
 
+    def get_license_activation(self, license_name):
+        # If from Terriflux - skip all process
+        if self.is_from_terriflux():
+            return True
+        # Get related license to given name
+        license = License.query.filter_by(name=license_name).first()
+        if license is None:
+            return False
+        # Get relation between license and user
+        this_license = UserLicences.query.filter_by(
+            license=license,
+            user=self).first()
+        # Check if this relation exists and return its validty
+        if this_license is not None:
+            return this_license.activated
+        return False
+
     def is_license_valid(self, license_name):
         # Check if this relation exsits and its validity
         expiry = self.get_license_expiry(license_name)
-        if expiry is not None:
+        activated = self.get_license_activation(license_name)
+        if (expiry is not None) and (activated):
             if expiry == 'never':
                 return True
             cur_time = datetime.now()

@@ -44,11 +44,25 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
           return has_account
         })
         .then((has_account) => {
-          // reload menu
+          // Update account token
           this._has_account = has_account
+          // Check licenses
+          return fetch(window.location.origin + '/auth/license/opensankeyplus')
+            .then((response) => {
+              let has_license = false
+              if (response.ok)
+                has_license = true
+              return has_license
+            })
+            .then((has_license) => {
+              this._has_sankey_plus = has_license
+            })
+        })
+        .then(() => {
           this.menu_configuration.updateComponentsRelatedToSA()
           this.menu_configuration.updateAllMenuComponents()
         })
+        .then()
       // Cannot check for given time
       this._ok_to_check_account = false
       setTimeout(
