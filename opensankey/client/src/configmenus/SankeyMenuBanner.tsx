@@ -206,7 +206,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
 
             // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
             // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+            new_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
 
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()

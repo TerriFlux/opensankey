@@ -274,11 +274,11 @@ export class Class_Tag extends Class_ProtoTag {
   public copyFrom(tag: Class_Tag) {
     super.copyFrom(tag)
     // Synchronize references
-    let all_possible_reference: {[x: string]:  Type_TagReference} = {... this._ref_sankey.nodes_dict}
+    let all_possible_reference: { [x: string]: Type_TagReference } = { ... this._ref_sankey.nodes_dict }
     this._ref_sankey.links_list
       .map(link => all_possible_reference = {
-        ... all_possible_reference,
-        ... Object.fromEntries(Object.entries(link.getAllValues()).map(([id, list]) => [id, list[0]]))
+        ...all_possible_reference,
+        ...Object.fromEntries(Object.entries(link.getAllValues()).map(([id, list]) => [id, list[0]]))
       })
     Object.keys(tag._references) // Add missing refs
       .filter(ref_id => ref_id in all_possible_reference)
@@ -613,7 +613,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     // Create a dict of all existing node in this related sankey
     const all_existing_nodes = this._ref_sankey.nodes_dict
     // Create a dict of all existing dimensions in this related sankey
-    const all_existing_dim: {[_: string]: Class_NodeDimension} = {}
+    const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
     this._ref_sankey.level_taggs_list
       .forEach(tagg => {
         (tagg as Class_LevelTagGroup).tags_list
@@ -692,7 +692,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
         this.addAsParentLevel(all_existing_dim[dim.id])
       })
     // Add missing and non-existing dimensions where this is a tag for parent
-   other_tag.dimensions_list_as_tag_for_parent
+    other_tag.dimensions_list_as_tag_for_parent
       .filter(dim => {
         // Verify if there is at least one child that exist in related sankey
         let ok_for_children_nodes = false
@@ -705,7 +705,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
         dim.children_level_tags
           .forEach(tag => ok_children_level_tags = (
             (ok_children_level_tags) ||
-              (tag.id in this.group.tags_dict)
+            (tag.id in this.group.tags_dict)
           ))
         // And verify that parent also exists in related sankey
         return (
@@ -815,7 +815,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
         dimension_found.addNodeAsChild(child)
       }
       // If no dimension has been found, create a new one
-      else  {
+      else {
         dimension_found = new Class_NodeDimension(
           parent,
           [child],
@@ -1036,7 +1036,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
    */
   public fromJSON(
     json_object: Type_JSON,
-    matching_tags_id: {[_: string]: string} = {}
+    matching_tags_id: { [_: string]: string } = {}
   ) {
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
@@ -1056,7 +1056,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
 
   public copyFrom(
     element: Class_ProtoTagGroup,
-    tags_synchro=true
+    tags_synchro = true
   ) {
     // Common attributes
     this._name = element._name
@@ -1064,7 +1064,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
     this._tag_count = element._tag_count
 
     // Synchronize tags
-    if(tags_synchro) {
+    if (tags_synchro) {
 
       // Delete tags not present in new layout but present in curr
       this.tags_list
@@ -1226,7 +1226,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
    */
   public fromJSON(
     json_object: Type_JSON,
-    matching_tags_id: {[_: string]: string} = {}
+    matching_tags_id: { [_: string]: string } = {}
   ) {
     super.fromJSON(json_object, matching_tags_id)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
@@ -1359,7 +1359,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    */
   public fromJSON(
     json_object: Type_JSON,
-    matching_tags_id: {[_: string]: string} = {}
+    matching_tags_id: { [_: string]: string } = {}
   ) {
     super.fromJSON(json_object, matching_tags_id)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
@@ -1500,16 +1500,14 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
   public addTag(
     name: string,
     id: string | undefined = undefined
-  ): Class_ProtoLevelTag
-  {
+  ): Class_ProtoLevelTag {
     const tag = this.createTag(name, id)
     this._tags[tag.id] = tag
     this._tag_count = this._tag_count + 1
     return tag
   }
 
-  public addDefaultTag(): Class_ProtoLevelTag
-  {
+  public addDefaultTag(): Class_ProtoLevelTag {
     const n = String(this._tag_count)
     const name = 'Etiquette ' + n
     return this.addTag(name)
@@ -1580,7 +1578,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
    */
   public fromJSON(
     json_object: Type_JSON,
-    matching_tags_id: {[id: string]: string} = {}
+    matching_tags_id: { [id: string]: string } = {}
   ) {
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
@@ -1600,7 +1598,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
 
   public copyFrom(
     element: Class_ProtoLevelTagGroup,
-    tags_synchro=true
+    tags_synchro = true
   ) {
     // Common attributes
     this._name = element._name
@@ -1608,7 +1606,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
     this._tag_count = element._tag_count
 
     // Synchronize tags
-    if(tags_synchro) {
+    if (tags_synchro) {
 
       // Delete tags not present in new layout but present in curr
       this.tags_list
@@ -1740,17 +1738,22 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   public toJSON() {
     const json_object = super.toJSON()
     json_object['activated'] = this._activated
-    json_object['sibling'] = this._siblings
+    json_object['siblings'] = this._siblings
     return json_object
   }
 
+  public sibling_activated() {
+    return this._siblings.filter(tagg => {
+      return this._ref_sankey.level_taggs_dict[tagg].activated
+    }).map(tagg=>this._ref_sankey.level_taggs_dict[tagg])
+  }
   public fromJSON(
     json_object: Type_JSON,
-    matching_tags_id: {[_: string]: string} = {}
+    matching_tags_id: { [_: string]: string } = {}
   ) {
     super.fromJSON(json_object, matching_tags_id)
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
-    this._siblings = getStringListFromJSON(json_object, 'sibling', this._siblings)
+    this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
   }
 
   public copyFrom(element: Class_LevelTagGroup) {
@@ -1764,8 +1767,7 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   protected createTag(
     name: string,
     id: string | undefined = undefined
-  ): Class_LevelTag
-  {
+  ): Class_LevelTag {
     const tag = new Class_LevelTag(name, this, this._ref_sankey, id)
     tag.setUnSelected()
     return tag
