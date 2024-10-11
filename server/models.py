@@ -275,17 +275,43 @@ def set_licence_subscription(
     user_license_stripe_id,
     user_license_creation_date
 ):
+    """
+    Set what type of license and creation date for a
+    user_license corresponding db entry
+
+    Parameters
+    ----------
+    :param license_stripe_id: Stripe subscription id
+    :type license_stripe_id: str
+
+    :param user_license_stripe_id: Stripe checkout id
+    :type user_license_stripe_id: str
+
+    :param user_license_creation_date: Creation date in isoformat
+    :type user_license_creation_date: str
+
+    Returns
+    -------
+    :return: (response message, ok)
+    :rtype: (str, boolean)
+    """
     # Get license
     license = License.query.filter_by(stripe_id=license_stripe_id).first()
     if license is None:
         return "Invalid license id", False
 
-    # Create user license
-    UserLicences(
-        license=license,
-        stripe_id=user_license_stripe_id,
-        creation=user_license_creation_date,
-        activated=False)
+    # Get or create user license
+    user_license = UserLicences\
+        .query.filter_by(stripe_id=user_license_stripe_id)\
+        .first()
+    if user_license is None:
+        user_license = UserLicences(
+            stripe_id=user_license_stripe_id,
+            activated=False)
+
+    # Update infos
+    user_license.creation = user_license_creation_date
+    user_license.license = license
 
     # Apply modification to database
     db.session.commit()
@@ -327,7 +353,8 @@ def set_licence_checkout_completed(
         .query.filter_by(stripe_id=user_license_stripe_id)\
         .first()
     if (user_license is None):
-        return "Invalid subscription id", False
+        user_license = UserLicences(
+            stripe_id=user_license_stripe_id)
 
     # Get user
     user = User.query.get(user_id)
