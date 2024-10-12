@@ -14,6 +14,7 @@ import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 # Local modules ---------------------------------------------------------------
 from SankeyExcelParser.sankey import Sankey
 from SankeyExcelParser.sankey import Data as SankeyData
+from SankeyExcelParser.sankey_utils.tag_group import ANTI_TAGS_NAME
 
 # Constants -------------------------------------------------------------------
 JSON_TO_IO_XL__TAGG_TYPES = {
@@ -1195,6 +1196,9 @@ class JsonToSankey(object):
                         if tag_id in self._nodetags_corresp[tagg_id].keys():
                             tag = self._nodetags_corresp[tagg_id][tag_id]
                             node.add_tag(tag)
+                        if tag_id == ANTI_TAGS_NAME:
+                            level_tagg = self.sankey.get_or_create_tagg(tagg_id, CONST_IO_XL.TAG_TYPE_LEVEL)
+                            node.add_tag(level_tagg.get_tag_from_name(tag_id))
             # Apply level tags
             # But, save parenthood relations for latter
             # We need to create all nodes and knowing all ids
