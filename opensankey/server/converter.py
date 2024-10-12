@@ -1206,6 +1206,9 @@ class JsonToSankey(object):
             for (level_tagg_id, level_attr) in node_json['dimensions'].items():
                 # Get corresponding tagg group
                 if level_tagg_id in DEFAULT_LEVEL_TAGGS:
+                    # If there are other hierarchy than Primaire we skip Primaire
+                    if len(node_json['dimensions']) > 1:
+                        continue
                     level_tagg = level_tagg_id
                 else:
                     level_tagg = self._leveltaggs_corresp[level_tagg_id]
