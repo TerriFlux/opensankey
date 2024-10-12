@@ -305,8 +305,7 @@ def upload_excel_thread(
         layout_table_present = False
         try:
             # If it has been read before, we will never have any issue here
-            excel_book = pd.read_excel(excel_input_filename, None)
-            layout_table = excel_book['layout']
+            layout_table = pd.read_excel(excel_input_filename, 'layout')
             layout_table_present = True
             trace.logger.info('{:-<{w}}'.format('Extract diagram layout ', w=max_line_length))
             layout_json_str = \
