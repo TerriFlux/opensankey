@@ -1187,7 +1187,7 @@ class JsonToSankey(object):
                 color=_get_value_if_in_dict(node_json, 'color'),
                 definition=_get_value_if_in_dict(node_json, 'tooltip_text'))
             # Keep node id in mind
-            #self._nodes_id_corresp[node_json['id']] = node
+            # self._nodes_id_corresp[node_json['id']] = node
             self._nodes_id_corresp[node_id] = node
             # Apply node tags
             for tagg_id in node_json['tags'].keys():
