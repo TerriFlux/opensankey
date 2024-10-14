@@ -456,7 +456,7 @@ export abstract class Class_LinkElement
     // Heritance
     super.draw()
     // Update class attributes
-    this.d3_selection?.attr('class', 'gg_links')
+    this.d3_selection?.attr('class', 'gg_links').datum(this)
     // Setup order
     //this.drawing_area.orderElements()
     // Draw elements
