@@ -1016,7 +1016,7 @@ export abstract class Class_LinkElement
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
+    if (this.drawing_area.show_structure!=='structure'  && this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -2206,6 +2206,9 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public get data_value() {
+    if(this.drawing_area.show_structure==='structure')
+      return null
+
     const value = this.value
     // Cast as number
     if (value !== null) return value.data_value
