@@ -2021,8 +2021,7 @@ export abstract class Class_LinkElement
     return (
       super.is_visible &&
       this.are_source_and_target_displayed &&
-      this.are_related_tags_selected &&
-      this.is_value_above_threshold
+      this.are_related_tags_selected
     )
   }
 
@@ -3046,7 +3045,7 @@ export abstract class Class_LinkElement
  * @private
  * @memberof Class_LinkElement
  */
-  private get is_value_above_threshold() {
+  protected get is_value_above_threshold() {
     if (this.drawing_area.filter_link_value == 0) {
       return true
     } else {
