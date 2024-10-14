@@ -118,6 +118,15 @@ export abstract class Class_LinkElementPlus
     // this.draw()
   }
 
+  public override draw(){
+    // Don't put this condition in is_visible because we need node to take into account link value of links visualy filtered for node size
+    if(this.is_value_above_threshold){ 
+      super.draw()
+    }else{
+      this.unDraw()
+    }
+  }
+
   public getPathColorToUse() {
     const l_grad = this.shape_is_gradient
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()

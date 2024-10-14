@@ -289,9 +289,10 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
               onChange={evt => {
                 new_data_plus.drawing_area.filter_link_value = +evt
                 setCount(a => a + 1)
-                // new_data_plus.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                // new_data_plus.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-                new_data_plus.drawing_area.sankey.draw()
+                new_data_plus.drawing_area.sankey.visible_links_list.forEach(link=>{
+                  link.draw()
+                  link.target.drawLinksArrow()
+                })
               }
               } >
               <SliderTrack>
