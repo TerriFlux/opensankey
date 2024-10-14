@@ -872,8 +872,7 @@ export abstract class Class_LinkElement
     else if (drawing_area.isInSelectionMode()) {
       // SHIFT
       if (event.shiftKey) {
-        // Add link to selection
-        drawing_area.addLinkToSelection(this)
+        this.addOrRemoveLinkFromSelection()
         // Open related menu
         this.menu_config.openConfigMenuElementsLinks()
         // Update components related to link edition
@@ -881,8 +880,7 @@ export abstract class Class_LinkElement
       }
       // CTRL
       else if (event.ctrlKey) {
-        // Add link to selection
-        drawing_area.addLinkToSelection(this)
+        this.addOrRemoveLinkFromSelection()
         // Update components related to link edition
         this.menu_config.updateAllComponentsRelatedToLinks()
       }
@@ -912,6 +910,16 @@ export abstract class Class_LinkElement
       this.menu_config.updateAllComponentsRelatedToLinks()
       this.drawing_area.link_contextualised = this
       this.menu_config.ref_to_menu_context_links_updater.current()
+    }
+  }
+
+  protected addOrRemoveLinkFromSelection(){
+    if (this.drawing_area.selected_links_list.includes(this)) {
+      // Remove link from selection
+      this.drawing_area.removeLinkFromSelection(this)
+    } else {
+      // Add link to selection
+      this.drawing_area.addLinkToSelection(this)
     }
   }
 
