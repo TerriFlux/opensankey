@@ -39,7 +39,7 @@ import {
   ContextZDTOSP,
   MenuPreferenceLabelsOSP
 } from './MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
-import { ButtonNodeContextMaskValue, ButtonNodeContextShowTagMenu, ButtonNodeContextShowTooltipMenu, NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './MenuConfigEdition/SankeyPlusNodes'
+import { ButtonNodeContextMaskValue, ButtonNodeContextShowTagMenu, ButtonNodeContextShowTooltipMenu, ButtonNodeContextStartAnimation, NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './MenuConfigEdition/SankeyPlusNodes'
 import {
   ImportImageAsSvgBg,
   MenuConfEditionTag,
@@ -212,9 +212,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.additional_context_node_element['drag_tag'] = <ButtonNodeContextShowTagMenu new_data={new_data_plus} />
   additionalMenus.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
   additionalMenus.additional_context_node_element['mask_value'] = <ButtonNodeContextMaskValue new_data={new_data_plus} />
+  additionalMenus.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
   const idx_sep_3 = additionalMenus.context_node_order.indexOf('sep_3')
-  additionalMenus.context_node_order.splice(idx_sep_3, 0, 'mask_value')
+  additionalMenus.context_node_order.splice(idx_sep_3, 0, 'mask_value','animate')
 
   //Links
   additionalMenus.additional_menu_configuration_links['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags

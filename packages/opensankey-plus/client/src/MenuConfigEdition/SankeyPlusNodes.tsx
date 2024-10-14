@@ -805,105 +805,6 @@ export const NodeValue: FunctionComponent<FCType_NodeValueOSP> = ({ new_data, me
     }
   </Box>
 }
-// const branchAnimate = (
-//   data: SankeyData,
-//   nodeData: SankeyNode,
-//   nodeDisplay: string[],
-//   node_visible: string[],
-//   GetLinkValue: GetLinkValueFuncType
-// ) => {
-//   const data_plus = data as OSPData
-
-//   // Permet la progation de l'animation sur l'ensemble du Sankey
-//   const nodeStart = nodeData.idNode
-
-//   // on pourrait aussi evnetuellement faire un clone des noeuds
-//   d3.select(' .opensankey #shape_' + nodeData.idNode).style('fill', d3.select(' .opensankey #shape_' + nodeData.idNode).attr('fill'))
-//   d3.select(' .opensankey #text_' + nodeData.idNode).style('fill', d3.select(' .opensankey #shape_' + nodeData.idNode).attr('fill'))
-
-//   const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, OSPLink, HTMLElement, OSPLink>)
-//     .filter(function (d) {
-//       return d.idSource === nodeStart
-//     })
-//   // On fait une copie du link pour son animation, le flux originel reste en claire et la copie 'remplie' le path
-//   const tmpLinks = glinks.clone(true).raise()
-//   tmpLinks.selectAll('.link')
-//     .each(function () {
-//       const totalLength = (this as SVGGeometryElement).getTotalLength()
-
-//       d3.select(this)
-//         .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-//         .attr('stroke-dashoffset', totalLength)
-//         .style('stroke', function (this) {
-//           // on recupere les paramêtres initiaux du stroke
-//           return d3.select(this).attr('stroke')
-//         })
-
-//     })
-//     .transition()
-//     .duration(2000)
-//     .attr('stroke-dashoffset', 0)
-//     .on('end', function (this) {
-//       const idLink = d3.select(this).attr('id').replace('path_', '')
-//       const idTarget = data.links[idLink].idTarget
-//       // Modification des arrows après l'animation
-//       const arrow = d3.selectAll(' .opensankey #path_' + idLink + '_arrow')
-//       if (arrow !== undefined && arrow != null) {
-//         const colorTarget = (ReturnValueNode(data, data.nodes[idTarget], 'shape_visible')) ? NodeColor(data.nodes[idTarget], data) : ((data_plus.nodes[idTarget].iconVisible) ? data_plus.nodes[idTarget].iconColor : 'grey')
-//         // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-//         const l_grad = OSPReturnValueLink(data_plus, data_plus.links[idLink], 'gradient')
-//         const t = (l_grad) ? colorTarget : LinkStrokeOSTyped(data.links[idLink], data, GetLinkValue)
-//         if (t) {
-//           arrow.attr('fill', t)
-//           arrow.attr('opacity', 0.85)
-//         }
-//       }
-
-//       // reaffichage des link value après l'animation
-//       d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-//         .style('display', 'inline')
-//       //Propagration de l'animation sur les flux sortant du target_node
-//       // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-//       if (!nodeDisplay.includes(idTarget)) {
-//         nodeDisplay.push(idTarget)
-//         let max = 0
-//         const tmp = direct_son_as_distant_sibling(data, nodeData, data_plus.nodes[idTarget], 0, [idLink], node_visible)
-
-//         max = (tmp > max) ? tmp : max
-//         setTimeout(() => {
-//           branchAnimate(data, data_plus.nodes[idTarget], nodeDisplay, node_visible, GetLinkValue)
-//         }, max * 2000)
-//       }
-//     })
-// }
-
-// const direct_son_as_distant_sibling = (
-//   data: SankeyData,
-//   n: SankeyNode,
-//   target: SankeyNode,
-//   deep: number,
-//   link_to_avoid: string[],
-//   display_nodes_id: string[],
-// ) => {
-//   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud
-//   //exemple : n0 -> n1  et n0 -> n2 -> n1
-//   //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-//   const next_link = n.outputLinksId.filter(f => (!ReturnValueLink(data, data.links[f], 'recycling') && !Object.values(link_to_avoid).includes(f) && display_nodes_id.includes(data.links[f].idTarget)))
-//   let max = 0
-//   const data_plus = data as OSPData
-
-//   if (n.idNode === target.idNode) {
-//     return deep - 1
-//   } else if (next_link.length > 0) {
-//     next_link.map(id => {
-//       const next_node = data_plus.nodes[data.links[id].idTarget]
-//       //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
-//       const to_avoid = link_to_avoid.concat([id])
-//       const tmp = direct_son_as_distant_sibling(data, next_node, target, deep + 1, to_avoid, display_nodes_id)
-//       max = (tmp > max) ? tmp : max
-//     })
-//   }
-//   return max
 
 export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data
@@ -952,7 +853,7 @@ export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNo
 
 export const ButtonNodeContextMaskValue: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data
-  const [,setCount]=useState(0)
+  const [, setCount] = useState(0)
   const contextualised_node = new_data.drawing_area.node_contextualised
   const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_visible : false
 
@@ -962,7 +863,7 @@ export const ButtonNodeContextMaskValue: FunctionComponent<FCType_ButtonNodeCont
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
-    setCount(a=>a+1)
+    setCount(a => a + 1)
   }
 
   return <Button
@@ -978,4 +879,26 @@ export const ButtonNodeContextMaskValue: FunctionComponent<FCType_ButtonNodeCont
         t('Noeud.apparence.display_value')
     }
   </Button>
-} 
+}
+
+export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area.node_contextualised = undefined
+    // Refresh this menu
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+  }
+
+  return <Button
+    onClick={() => {
+      new_data.drawing_area.purgeSelection()
+      new_data.drawing_area.node_contextualised?.launchAnimation() //launch sankey animation form contextualised node
+      closeContextMenu()
+    }}
+    variant='contextmenu_button'
+  >
+    {t('Noeud.animate')}
+  </Button>
+}
