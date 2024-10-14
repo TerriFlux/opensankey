@@ -65,6 +65,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract set pointer_pos(_: [number, number])
   public abstract get filter_label(): number
   public abstract set filter_label(_: number)
+  public abstract get show_structure():string
 }
 
 export abstract class Class_AbstractSankey {
