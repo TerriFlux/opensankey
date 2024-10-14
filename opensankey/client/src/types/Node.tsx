@@ -1226,8 +1226,7 @@ export abstract class Class_NodeElement
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
       // SHIFT
       if (event.shiftKey) {
-        // Add node to selection
-        drawing_area.addNodeToSelection(this)
+        this.addOrRemoveNodeFromSelection()
         // Open related menu
         this.menu_config.openConfigMenuElementsNodes()
         // Update components related to node edition
@@ -1235,8 +1234,7 @@ export abstract class Class_NodeElement
       }
       // CTRL
       else if (event.ctrlKey) {
-        // Add node to selection
-        drawing_area.addNodeToSelection(this)
+        this.addOrRemoveNodeFromSelection()
         // Update components related to node edition
         this.menu_config.updateAllComponentsRelatedToNodes()
       }
@@ -1248,6 +1246,16 @@ export abstract class Class_NodeElement
         // Add node to selection
         drawing_area.addNodeToSelection(this)
       }
+    }
+  }
+
+  protected addOrRemoveNodeFromSelection(){
+    if(this.drawing_area.selected_nodes_list.includes(this)){
+      // Remove node from selection
+      this.drawing_area.removeNodeFromSelection(this)
+    }else{
+      // Add node to selection
+      this.drawing_area.addNodeToSelection(this)
     }
   }
 
