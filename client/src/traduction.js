@@ -258,10 +258,39 @@ const resources = {
         }
       },
       UserPages: {
-        'id': 'E-mail',
-        'mdp': 'Password',
-        'pnom': 'Firstname',
-        'nom': 'Name',
+        login_modify: {
+          'title': 'Your login details',
+          confirm_modal: {
+            'title': 'Confirm with your password',
+            'btn': 'Send modification'
+          },
+          btns: {
+            'set_email': 'Change E-mail',
+            'mod_pwd': 'Change password'
+          },
+          msgs: {
+            'ok_email': 'Email has successfully been changed',
+            'prs_email': 'Processing email change',
+            'err_email': 'Email is not valid',
+            'prs_pwd': 'A password reset e-mail has been sent to you.',
+          },
+        },
+        infos_modify: {
+          'title': 'Your personal informations',
+          btns: {
+            'set_fn': 'Apply modification',
+            'set_ln': 'Apply modification',
+          },
+          msgs: {
+            'ok_firstname': 'First name has been successfully modified',
+            'err_firstname': 'The first name modification could not be applied',
+            'ok_lastname': 'The last name has been successfully modified',
+            'err_lastname': 'The last name modification could not be applied',
+          },
+        },
+        license: {
+          'title': 'OpenSankey+ license informations',
+        },
         'OS+_lic': 'OpenSankey+ license',
         'SS_lic': 'SankeySuite license',
         'update_lic': 'Register new license number',
@@ -624,13 +653,13 @@ const resources = {
         'accept': 'Accepter les conditions d\'utilisation'
       },
       Paiement: {
-        'win_header_buy' : 'Acheter OpenSankey+',
-        'win_header_success' : 'Merci d\'avoir choisi OpenSankey+',
-        'win_header_error' : 'Oups, le paiement n\'a pas abouti',
-        'win_content_buy' : 'Créez et partagez vos diagrammes de Sankey comme un pro.',
-        'win_content_success' : 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
-        'win_content_error' : 'Quelque chose s\'est mal passé pendant le processus de paiement.',
-        'btn_checkout' : 'Je veux OpenSankey+ !'
+        'win_header_buy': 'Acheter OpenSankey+',
+        'win_header_success': 'Merci d\'avoir choisi OpenSankey+',
+        'win_header_error': 'Oups, le paiement n\'a pas abouti',
+        'win_content_buy': 'Créez et partagez vos diagrammes de Sankey comme un pro.',
+        'win_content_success': 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
+        'win_content_error': 'Quelque chose s\'est mal passé pendant le processus de paiement.',
+        'btn_checkout': 'Je veux OpenSankey+ !'
       },
       osplus_presentation: {
         'title': 'Licence OpenSankey+',
@@ -670,14 +699,43 @@ const resources = {
         }
       },
       UserPages: {
-        'id': 'E-mail',
-        'mdp': 'Mot de passe',
-        'pnom': 'Prénom',
-        'nom': 'Nom',
+        login_modify: {
+          'title': 'Vos identifiants de connexion',
+          confirm_modal: {
+            'title': 'Confirmer avec votre mot de passe',
+            'btn': 'Envoyer la modification'
+          },
+          btns: {
+            'set_email': 'Modifier l\'e-mail',
+            'mod_pwd': 'Modifier le mot de passe'
+          },
+          msgs: {
+            'ok_email': 'L\'e-mail a été modifié avec succès',
+            'prs_email': 'Traitement du changement d\'email',
+            'err_email': 'L\'email n\'est pas valide',
+            'prs_pwd': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
+          },
+        },
+        infos_modify: {
+          'title': 'Vos informations personnelles',
+          btns: {
+            'set_fn': 'Appliquer modification',
+            'set_ln': 'Appliquer modification',
+          },
+          msgs: {
+            'ok_firstname': 'Le prénom a été modifié avec succes',
+            'err_firstname': 'Le prénom choisi ne peut pas être appliqué',
+            'ok_lastname': 'Le nom a été modifié avec succes',
+            'err_lastname': 'Le nom choisi ne peut pas être appliqué',
+          },
+        },
+        license: {
+          'title': 'Votre licence OpenSankey+',
+        },
         'OS+_lic': 'Licence OpenSankey+',
         'SS_lic': 'Licence SankeySuite',
         'update_lic': 'Enregistrer',
-        'win_acc_infos': 'Mes informations',
+        'win_acc_infos': 'Informations du compte',
         'win_db_template': 'Modèles proposés',
         'db_desc_template': 'Description du modèle',
         'usr_no_lic': 'Pas de licence enregistrée',

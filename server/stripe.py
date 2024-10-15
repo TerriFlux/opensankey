@@ -63,6 +63,14 @@ def get_publishable_key():
 
 @stripe_blueprint.route('/stripe/create-checkout-session', methods=['POST'])
 def create_checkout_session():
+    """
+    Create and return a checkout object for stripe client.
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
     stripe.api_key = STRIPE_KEYS['secret_key']
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -108,6 +116,16 @@ def session_status():
 
 @stripe_blueprint.route('/stripe/webhook', methods=['POST'])
 def stripe_webhook():
+    """
+    Handle all webhooks sent by stripe.
+    Allows to follow all evant related to subscription and customers paiements
+    via stripe.
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
     payload = request.get_data(as_text=True)
     sig_header = request.headers.get('Stripe-Signature')
 

@@ -76,7 +76,7 @@ const Register: FunctionComponent<{
   const [okUserFirstName, setOkUserFirstName] = useState(0)
   const [okUserLastName, setOkUserLastName] = useState(0)
   const [okTermsOfUses, setOkTermsOfUses] = useState(false)
-  const [okCaptcha, setOkCaptcha] = useState(true) // useState(false)
+  const [okCaptcha, setOkCaptcha] = useState(false)
   const okAccountInfos =
       (okUserName > 1) &&
       (okPassword > 1) &&

@@ -8,41 +8,84 @@ import {
   Card,
   CardBody,
   CardHeader,
+  FormControl,
+  FormErrorMessage,
+  FormHelperText,
+  FormLabel,
   Image,
   Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightElement,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
   Spinner,
-  Text
+  Text,
+  useDisclosure
 } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { returnToApp } from '../../SankeyAppSA'
 import {
   checkLicenseOpenOSP,
-  checkLicenseSankeySuite,
   registerNewLicenseOpenOSP,
   // registerNewLicenseSankeySuite
 } from '../Register/RegisterFunctions'
 import {
   activateLicensesTokens,
+  triggerPasswordReset,
 } from '../Login/LoginFunctions'
 import { LoginOutButton } from '../Login/Login'
+import { email_regex_str, name_regex_str } from '../Register/Register'
+import i18next from 'i18next'
 
-// UserData interface
-interface UserData {
-  count: number
-  loading: boolean
-  firstname: string
-  name: string,
-  id: string
-  loading_opensankeyplus: boolean
-  license_opensankeyplus_id: string
-  license_opensankeyplus_active: string
-  license_opensankeyplus_validity: string
-  loading_sankeysuite: boolean
-  license_sankeysuite_id: string
-  license_sankeysuite_active: string
-  license_sankeysuite_validity: string
+// Interfaces ---------------------------------------------------------------------------
+
+interface IType_Log {
+  info: string,
+  err: string
 }
+
+interface IType_UserData {
+  count: number,
+  loading: boolean,
+  email: string,
+  firstname: string,
+  name: string,
+  // Legacy license
+  loading_legacy_opensankeyplus: boolean,
+  license_legacy_opensankeyplus_id: string,
+  license_legacy_opensankeyplus_active: string,
+  license_legacy_opensankeyplus_validity: string,
+  // New license
+  license_opensankeyplus_active: boolean,
+  license_opensankeyplus_expiry: string,
+}
+
+// Constants ---------------------------------------------------------------------------
+
+const log_default: IType_Log =  {
+  info: '',
+  err: ''
+}
+
+const user_data_default: IType_UserData = {
+  count: 0,
+  loading: true,
+  email: '-',
+  firstname: '-',
+  name: '-',
+  loading_legacy_opensankeyplus: true,
+  license_legacy_opensankeyplus_id: '',
+  license_legacy_opensankeyplus_active: '',
+  license_legacy_opensankeyplus_validity: '',
+  license_opensankeyplus_active: false,
+  license_opensankeyplus_expiry: '',
+}
+
 
 // Account
 export type AccountTypes = {
@@ -72,6 +115,21 @@ const Account: FunctionComponent<AccountTypes> = ({
     navigate('/dashboard')
   }
 
+  // Password modal checker
+  const {isOpen, onOpen, onClose} = useDisclosure()
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+
+  // User informations
+  const [user_data, setUserData] = useState(user_data_default)
+  const [user_new_email, setUserNewEmail] = useState('')
+  const [user_new_firstname, setUserNewFirstName] = useState('')
+  const [user_new_lastname, setUserNewLastName] = useState('')
+
+  // Messages
+  const [msgs_login_modification, setMsgsLoginModification] = useState(log_default)
+  const [msgs_userdata_modification, setMsgsUserdataModification] = useState(log_default)
+
   // Activate and save a new license OpenSankey+
   const signupNewLicenseOpenOSP = () => {
     // Check licence and activate from EDD
@@ -97,11 +155,11 @@ const Account: FunctionComponent<AccountTypes> = ({
             }
           }).then(() => {
             // console.log('POST /user/infos/license_opensankeyplus : SUCCESS - ', data.message)
-            const userData_ = userData
-            userData_.loading_opensankeyplus = true
-            userData_.license_opensankeyplus_id = newLicenseOpenOSP
-            userData_.license_opensankeyplus_active = ''
-            userData_.license_opensankeyplus_validity = ''
+            const userData_ = user_data
+            userData_.loading_legacy_opensankeyplus = true
+            userData_.license_legacy_opensankeyplus_id = newLicenseOpenOSP
+            userData_.license_legacy_opensankeyplus_active = ''
+            userData_.license_legacy_opensankeyplus_validity = ''
             setUserData(userData_)
             setReqCount(1)
             activateLicensesTokens(new_data_app) //Update tokens
@@ -116,66 +174,185 @@ const Account: FunctionComponent<AccountTypes> = ({
     }
   }
 
-  // // Activate and save a new license SankeySuite
-  // const signupNewLicenseSankeySuite = () => {
-  //   // Check licence and activate from EDD
-  //   registerNewLicenseSankeySuite(newLicenseSankeySuite)
-  //     .then(() => {
-  //       // Save in db
-  //       const path = window.location.origin
-  //       const url = path + '/user/infos/license_sankeysuite'
-  //       fetch(url, {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         body: JSON.stringify({
-  //           license_id: newLicenseSankeySuite,
-  //         })
-  //       }).then(response => {
-  //         if (response.ok) {
-  //           return response.json()
-  //         } else {
-  //           return Promise.reject(response)
-  //         }
-  //       }).then(() => {
-  //         // console.log('POST /user/infos/license_sankeysuite : SUCCESS - ', data_resp.message)
-  //         const userData_ = userData
-  //         userData_.loading_sankeysuite = true
-  //         userData_.license_sankeysuite_id = newLicenseSankeySuite
-  //         userData_.license_sankeysuite_active = ''
-  //         userData_.license_sankeysuite_validity = ''
-  //         setUserData(userData_)
-  //         setReqCount(1)
-  //         activateLicensesTokens(update,set_update) //Update tokens
-  //         // set_update(!update)
-  //       }).catch(error =>
-  //         console.log('POST /user/infos/license_sankeysuite : ERROR - ', error)
-  //       )
-  //     })
-  //     .catch(error => {
-  //       console.log('signupNewLicenseSankeySuite : ERROR - ', error)
-  //     })
-  // }
+  // Credentials modifications ----------------------------------------------------------
 
-  const userDataDefault: UserData = {
-    count: 0,
-    loading: true,
-    firstname: '-',
-    name: '-',
-    id: '-',
-    loading_opensankeyplus: true,
-    license_opensankeyplus_id: '',
-    license_opensankeyplus_active: '',
-    license_opensankeyplus_validity: '',
-    loading_sankeysuite: true,
-    license_sankeysuite_id: '',
-    license_sankeysuite_active: '',
-    license_sankeysuite_validity: ''
+  /**
+   * Add info message on login credential modification
+   * @param {string} s
+   */
+  const setInfoMsgForLoginModification = (s: string) => {
+    msgs_login_modification.info = s
+    msgs_login_modification.err = ''
+    setMsgsLoginModification(msgs_login_modification)
+  }
+
+  /**
+   * Add err message on login credential modification
+   * @param {string} s
+   */
+  const setErrMsgForLoginModification = (s: string) => {
+    msgs_login_modification.info = ''
+    msgs_login_modification.err = s
+    setMsgsLoginModification(msgs_login_modification)
+  }
+
+  /**
+   * Clear all messages on login credential modification
+   * @param {string} s
+   */
+  const clearMsgsForLoginModification = () => {
+    msgs_login_modification.info = ''
+    msgs_login_modification.err = ''
+    setMsgsLoginModification(msgs_login_modification)
+  }
+
+  /**
+   * Trigger current user email modification
+   */
+  const verifyEmail = () => {
+    if (user_new_email.match(email_regex_str) != null) {
+      onOpen()
+      clearMsgsForLoginModification()
+    }
+    else {
+      setErrMsgForLoginModification(t('UserPages.msgs.msgs_login_modification.err'))
+    }
+  }
+
+  /**
+   * Submit Email modification
+   */
+  const submitEmail = () => {
+    if (user_new_email.match(email_regex_str) != null) {
+      fetch(window.location.origin + '/user/infos/modify/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user_data.email,
+          new_email: user_new_email,
+          password: password
+        })
+      })
+        .then(response => {
+          if (response.ok) {
+            setInfoMsgForLoginModification(t('UserPages.msgs.ok_email'))
+          }
+          else {
+            setErrMsgForLoginModification(t('UserPages.msgs.msgs_login_modification.err'))
+          }
+        })
+      setInfoMsgForLoginModification(t('UserPages.msgs.prs_email'))
+    }
+    else {
+      setErrMsgForLoginModification(t('UserPages.msgs.msgs_login_modification.err'))
+    }
+    onClose()
+  }
+
+  /**
+   * Submit Password change - Use token page
+   */
+  const submitPasswordChange = () => {
+    const lang = i18next.language
+    const email = user_data.email
+    triggerPasswordReset(
+      new_data_app,
+      {
+        email,
+        lang
+      },
+      navigate
+    )
+    setInfoMsgForLoginModification(t('UserPages.msgs.prs_pwd'))
+  }
+
+  // User data modifications ----------------------------------------------------------
+
+  /**
+   * Add info message on user data modification
+   * @param {string} s
+   */
+  const setInfoMsgForUserDataModification = (s: string) => {
+    msgs_userdata_modification.info = s
+    msgs_userdata_modification.err = ''
+    setMsgsUserdataModification(msgs_userdata_modification)
+  }
+
+  /**
+   * Add err message on user data modification
+   * @param {string} s
+   */
+  const setErrMsgForUserDataModification = (s: string) => {
+    msgs_userdata_modification.info = ''
+    msgs_userdata_modification.err = s
+    setMsgsUserdataModification(msgs_userdata_modification)
+  }
+
+  /**
+   * Clear all messages on user data modification
+   * @param {string} s
+   */
+  const clearMsgsForUserDataModification = () => {
+    msgs_userdata_modification.info = ''
+    msgs_userdata_modification.err = ''
+    setMsgsUserdataModification(msgs_login_modification)
+  }
+
+  const submitFirstnameChange = () => {
+    clearMsgsForUserDataModification()
+    if (user_new_firstname.match(name_regex_str) != null) {
+      fetch(window.location.origin + '/user/infos/modify/firstname', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstname: user_new_firstname
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          setInfoMsgForUserDataModification(t('UserPages.infos_modify.msgs.ok_firstname'))
+        }
+        else {
+          setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_firstname'))
+        }
+      })
+    }
+    else {
+      setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_firstname'))
+    }
+  }
+
+  const submitLastnameChange = () => {
+    clearMsgsForUserDataModification()
+    if (user_new_lastname.match(name_regex_str) != null) {
+      fetch(window.location.origin + '/user/infos/modify/lastname', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lastname: user_new_lastname
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          setInfoMsgForLoginModification(t('UserPages.infos_modify.msgs.ok_lastname'))
+        }
+        else {
+          setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_lastname'))
+        }
+      })
+    }
+    else {
+      setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_lastname'))
+    }
   }
 
   // Hooks
-  const [userData, setUserData] = useState(userDataDefault)
   const [reqCount, setReqCount] = useState(1)
   const [newLicenseOpenOSP, setNewLicenseOpenOSP] = useState('')
   const [newLicenseOpenOSPToCheck, setNewLicenseOpenOSPToCheck] = useState(false)
@@ -188,7 +365,7 @@ const Account: FunctionComponent<AccountTypes> = ({
     d3.select('.LogError').selectAll('*').remove()
 
     // Get user data if we dont have
-    if (userData.loading === true && reqCount < 20) {
+    if (user_data.loading === true && reqCount < 20) {
       let reqCount_ = reqCount
       // Get user's infos
       const path = window.location.origin
@@ -200,33 +377,40 @@ const Account: FunctionComponent<AccountTypes> = ({
           } else {
             return Promise.reject(response)
           }
-        }).then(data => {
-          // User data
-          const userData_ = userData
+        })
+        .then(data => {
+          const userData_ = user_data
+          // User login data
+          userData_.email = data.email
+          // User info data
           userData_.name = data.name
           userData_.firstname = data.firstname
-          userData_.id = data.email
-          if (data.license_opensankeyplus !== '' &&
-            data.license_opensankeyplus !== '0000' &&
-            typeof (data.license_opensankeyplus) !== 'undefined')
-            userData_.license_opensankeyplus_id = data.license_opensankeyplus
+          // User legacy license data
+          if (
+            data.license_legacy_opensankeyplus !== '' &&
+            data.license_legacy_opensankeyplus !== '0000' &&
+            typeof (data.license_legacy_opensankeyplus) !== 'undefined'
+          )
+            userData_.license_legacy_opensankeyplus_id = data.license_legacy_opensankeyplus
           else
-            userData_.license_opensankeyplus_id = '-'
-          if (data.license_sankeysuite !== '' &&
-            data.license_sankeysuite !== '0000' &&
-            typeof (data.license_sankeysuite) !== 'undefined')
-            userData_.license_sankeysuite_id = data.license_sankeysuite
-          else
-            userData_.license_sankeysuite_id = '-'
+            userData_.license_legacy_opensankeyplus_id = '-'
+          // User OpenSankey+ license
+          userData_.license_opensankeyplus_active = data.license_opensankeyplus_validity
+          userData_.license_opensankeyplus_expiry = data.license_opensankeyplus_expiry
+          // Loding indicator - for spinner
           userData_.loading = false
           setUserData(userData_)
-          // Increase number of requests
+          // Increase number of requests - Limit license check spaming
           reqCount_ = reqCount_ + 1
           setReqCount(reqCount_)
-        }).catch(error => {
+        })
+        .catch(error => {
           // Erreur fetch user data
           console.log('user_info : ERROR', error)
-          d3.select('.LogError').append('p').style('color', 'red').text(t('User.Pages.err_get_user_infos'))
+          d3.select('.LogError')
+            .append('p')
+            .style('color', 'red')
+            .text(t('User.Pages.err_get_user_infos'))
           // Increase number of requests
           reqCount_ = reqCount_ + 1
           setReqCount(reqCount_)
@@ -234,38 +418,39 @@ const Account: FunctionComponent<AccountTypes> = ({
     }
 
     // User's OpenSankey+ licence data
-    if (userData.license_opensankeyplus_id === '-') {
-      const userData_ = userData
-      userData_.loading_opensankeyplus = false
-      userData_.license_opensankeyplus_active = t('UserPages.usr_no_lic')
+    if (user_data.license_legacy_opensankeyplus_id === '-') {
+      const userData_ = user_data
+      userData_.loading_legacy_opensankeyplus = false
+      userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_no_lic')
       setUserData(userData_)
-    } else {
-      if (userData.license_opensankeyplus_id !== '' &&
-        userData.loading_opensankeyplus === true &&
+    }
+    else {
+      if (user_data.license_legacy_opensankeyplus_id !== '' &&
+        user_data.loading_legacy_opensankeyplus === true &&
         reqCount < 10) {
         let reqCount_ = reqCount
         // Get license informations
-        checkLicenseOpenOSP(userData.license_opensankeyplus_id)
+        checkLicenseOpenOSP(user_data.license_legacy_opensankeyplus_id)
           .then(data_edd => {
             // Verify opensankeyplus license validity
-            const userData_ = userData
+            const userData_ = user_data
             if (data_edd.success) {
-              userData_.license_opensankeyplus_validity = t('UserPages.usr_lic_validdate') + data_edd.expires.substring(0, 10)
-              userData_.license_opensankeyplus_active = t('UserPages.usr_lic_valid') // active, inactive, expired, disabled
+              userData_.license_legacy_opensankeyplus_validity = t('UserPages.usr_lic_validdate') + data_edd.expires.substring(0, 10)
+              userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_valid') // active, inactive, expired, disabled
             }
             else {
               if (data_edd.license === 'invalid') {
-                userData_.license_opensankeyplus_active = t('UserPages.usr_lic_invalid')
+                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_invalid')
               } else if (data_edd.license === 'expired') {
-                userData_.license_opensankeyplus_active = t('UserPages.usr_lic_expdate')
-                userData_.license_opensankeyplus_validity = data_edd.expires.substring(0, 10)
+                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_expdate')
+                userData_.license_legacy_opensankeyplus_validity = data_edd.expires.substring(0, 10)
               } else if (data_edd.license === 'disabled') {
-                userData_.license_opensankeyplus_active = t('UserPages.usr_lic_deactivated')
+                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_deactivated')
               } else {
-                userData_.license_opensankeyplus_active = t('UserPages.usr_lic_err')
+                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_err')
               }
             }
-            userData_.loading_opensankeyplus = false
+            userData_.loading_legacy_opensankeyplus = false
             setUserData(userData_)
             // Increase number of requests
             reqCount_ = reqCount_ + 1
@@ -280,56 +465,7 @@ const Account: FunctionComponent<AccountTypes> = ({
           })
       }
     }
-
-    // User's SankeySuite licence data
-    if (userData.license_sankeysuite_id === '-') {
-      const userData_ = userData
-      userData_.loading_sankeysuite = false
-      userData_.license_sankeysuite_active = t('UserPages.usr_no_lic')
-      setUserData(userData_)
-    }
-    else {
-      if (userData.license_sankeysuite_id !== '' &&
-        userData.loading_sankeysuite === true &&
-        reqCount < 10) {
-        let reqCount_ = reqCount
-        // Get license informations
-        checkLicenseSankeySuite(userData.license_sankeysuite_id)
-          .then(data_edd => {
-            // Verify MFA license validity
-            const userData_ = userData
-            if (data_edd.success) {
-              userData_.license_sankeysuite_validity = t('UserPages.usr_lic_validdate') + data_edd.expires.substring(0, 10)
-              userData_.license_sankeysuite_active = t('UserPages.usr_lic_valid') // active, inactive, expired, disabled
-            }
-            else {
-              if (data_edd.license === 'invalid') {
-                userData_.license_sankeysuite_active = t('UserPages.usr_lic_invalid')
-              } else if (data_edd.license === 'expired') {
-                userData_.license_sankeysuite_active = t('UserPages.usr_lic_expdate')
-                userData_.license_sankeysuite_validity = data_edd.expires.substring(0, 10)
-              } else if (data_edd.license === 'disabled') {
-                userData_.license_sankeysuite_active = t('UserPages.usr_lic_deactivated')
-              } else {
-                userData_.license_sankeysuite_active = t('UserPages.usr_lic_err')
-              }
-            }
-            userData_.loading_sankeysuite = false
-            setUserData(userData_)
-            // Increase number of requests
-            reqCount_ = reqCount_ + 1
-            setReqCount(reqCount_)
-          }).catch(error => {
-            // Erreur fetch license
-            d3.select('.LogError').append('p').style('color', 'red').text(t('UserPages.err_get_SS_infos'))
-            console.log('check_license SankeySuite : ERROR', error)
-            // Increase number of requests
-            reqCount_ = reqCount_ + 1
-            setReqCount(reqCount_)
-          })
-      }
-    }
-  }, [reqCount, userData, t])
+  }, [reqCount, user_data, t])
 
   const has_blockers = Object.keys(blocker_suite_sankey).length > 0
 
@@ -385,91 +521,230 @@ const Account: FunctionComponent<AccountTypes> = ({
 
       <div>
         <Card variant='card_account' >
-          <CardHeader style={{ 'textAlign': 'left' }}>{t('UserPages.win_acc_infos')}</CardHeader>
+          <CardHeader
+            style={{ 'textAlign': 'left' }}
+          >
+            {t('UserPages.win_acc_infos')}
+          </CardHeader>
           <CardBody>
-            {userData.loading ? (
+            {user_data.loading ? (
               <Spinner />
             ) : (
-              <Box layerStyle='menuconfigpanel_grid'>
+              <Box
+                layerStyle='menuconfigpanel_grid'
+              >
+
+                {/* Id modification ---------------------------------------------------------------- */}
+
+                <FormControl
+                  isInvalid={(msgs_login_modification.err.length > 0)}
+                  border='1px solid'
+                  borderRadius='6px'
+                  padding='3px'
+                >
+                  <FormLabel>
+                    <Text textStyle='h2'>{t('UserPages.login_modify.title')}</Text>
+                  </FormLabel>
+                  <InputGroup
+                    variant='register_input'
+                  >
+                    <InputLeftAddon
+                      width='25%'
+                    >
+                      {t('Login.id.label')}
+                    </InputLeftAddon>
+                    <Input
+                      isRequired
+                      type='email'
+                      placeholder={user_data.email}
+                      onChange={e => setUserNewEmail(e.target.value)}
+                    />
+                    <InputRightElement
+                      width='25%'
+                    >
+                      <Button
+                        onClick={verifyEmail}
+                      >
+                        {t('UserPages.login_modify.btns.set_email')}
+                      </Button>
+                    </InputRightElement>
+                  </InputGroup>
+                  <Button
+                    onClick={submitPasswordChange}
+                  >
+                    {t('UserPages.login_modify.btns.mod_pwd')}
+                  </Button>
+                  <FormErrorMessage>{msgs_login_modification.err}</FormErrorMessage>
+                  <FormHelperText>{msgs_login_modification.info}</FormHelperText>
+                </FormControl>
+
+                <Modal isOpen={isOpen} onClose={onClose}>
+                  <ModalContent>
+                    <ModalHeader>{t('UserPages.login_modify.confirm_modal.title')}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                      <FormControl>
+                        <InputGroup variant='register_input'>
+                          <InputLeftAddon>
+                            {t('Login.pwd.label')}
+                          </InputLeftAddon>
+                          <Input
+                            isRequired
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder={t('Login.pwd.placeholder')}
+                            onChange={e => setPassword(e.target.value)}
+                          />
+                          <InputRightElement width='4.5rem' marginRight='0.25em'>
+                            <Button
+                              h='1.75rem'
+                              size='sm'
+                              border='0px'
+                              bg='gray.50'
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                            </Button>
+                          </InputRightElement>
+                        </InputGroup>
+                      </FormControl>
+                      <Box
+                        display='grid'
+                        gridAutoFlow='row'
+                        gridRowGap='0,25rem'
+                      >
+                        <Button
+                          variant='btn_lone_navigation_tertiary'
+                          type="submit"
+                          onClick={submitEmail}
+                        >
+                          {t('UserPages.confirm_modal.btn')}
+                        </Button>
+                      </Box>
+                    </ModalBody>
+                  </ModalContent>
+                </Modal>
+
                 {/* Infos utilisateur  --------------------------------------------------------- */}
-                <Box layerStyle='account_row'>
-                  <Text>{t('UserPages.pnom')}</Text>
-                  <Text>{userData.firstname}</Text>
-                </Box>
-                <Box layerStyle='account_row'>
-                  <Text>{t('UserPages.nom')}</Text>
-                  <Text>{userData.name}</Text>
-                </Box>
-                <Box layerStyle='account_row' >
-                  <Text>{t('UserPages.id')}</Text>
-                  <Text>{userData.id}</Text>
-                </Box>
 
-                {/* Infos licence OpenSankey+  --------------------------------------------------------- */}
-                <Box layerStyle='account_row'>
-                  <Box>
-                    {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
-                    {t('UserPages.OS+_lic')}
-                  </Box>
-                  <Input
-                    onChange={(e) => {
-                      setNewLicenseOpenOSP(e.target.value)
-                      setNewLicenseOpenOSPToCheck(true)
-                    }
-                    }
-                    placeholder={userData.license_opensankeyplus_id} />
-                  <Button
-                    variant='menuconfigpanel_option_button'
-                    onClick={() => signupNewLicenseOpenOSP()}
-                    isDisabled={newLicenseOpenOSPToCheck === false}>
-                    {t('UserPages.update_lic')}
-                  </Button>
-                  {userData.loading_opensankeyplus ? (
-                    <>
-                      <Spinner animation="border" />
-                      <Spinner animation="border" />
-                    </>
-                  ) : (
-                    <>
-                      <Text>{userData.license_opensankeyplus_active}</Text>
-                      <Text>{userData.license_opensankeyplus_validity}</Text>
-                    </>
-                  )}
-                </Box>
+                <FormControl
+                  isInvalid={(msgs_userdata_modification.err.length > 0)}
+                  border='1px solid'
+                  borderRadius='6px'
+                  padding='3px'
+                >
+                  <FormLabel>
+                    <Text textStyle='h2'>{t('UserPages.infos_modify.title')}</Text>
+                  </FormLabel>
 
-                {/* Infos licence SankeySuite  --------------------------------------------------------- */}
-                {/* <Box layerStyle='account_row'>
-                  <Box>
-                    {has_blockers ? <>
-                      {blocker_suite_sankey['block_ssm']}</>
-                      : <></>}
-                    {t('UserPages.SS_lic')}
-                  </Box>
-                  <Input
-                    onChange={(e) => {
-                      setNewLicenseSankeySuite(e.target.value)
-                      setNewLicenseSankeySuiteToCheck(true)
-                    }
-                    }
-                    placeholder={userData.license_sankeysuite_id} />
-                  <Button
-                    variant='menuconfigpanel_option_button'
-                    onClick={() => signupNewLicenseSankeySuite()}
-                    isDisabled={newLicenseSankeySuiteToCheck === false}>
-                    {t('UserPages.update_lic')}
-                  </Button>
-                  {userData.loading_sankeysuite ? (
-                    <>
-                      <Spinner animation="border" />
-                      <Spinner animation="border" />
-                    </>
-                  ) : (
-                    <>
-                      <Text>{userData.license_sankeysuite_active}</Text>
-                      <Text>{userData.license_sankeysuite_validity}</Text>
-                    </>
-                  )}
-                </Box> */}
+                  {/* First name  */}
+                  <InputGroup
+                    variant='register_input'
+                  >
+                    <InputLeftAddon
+                      width='25%'
+                    >
+                      {t('Register.account.fn')}
+                    </InputLeftAddon>
+                    <Input
+                      type='text'
+                      onChange={e => setUserNewFirstName(e.target.value)}
+                    />
+                    <InputRightElement
+                      width='25%'
+                    >
+                      <Button
+                        onClick={submitFirstnameChange}
+                      >
+                        {t('UserPages.infos_modify.btns.set_fn')}
+                      </Button>
+                    </InputRightElement>
+                  </InputGroup>
+
+                  {/* Last name */}
+                  <InputGroup
+                    variant='register_input'
+                  >
+                    <InputLeftAddon
+                      width='25%'
+                    >
+                      {t('Register.account.ln')}
+                    </InputLeftAddon>
+                    <Input
+                      type='text'
+                      onChange={e => setUserNewLastName(e.target.value)}
+                    />
+                    <InputRightElement
+                      width='25%'
+                    >
+                      <Button
+                        onClick={submitLastnameChange}
+                      >
+                        {t('UserPages.infos_modify.btns.set_ln')}
+                      </Button>
+                    </InputRightElement>
+                  </InputGroup>
+                  <FormErrorMessage>{msgs_userdata_modification.err}</FormErrorMessage>
+                  <FormHelperText>{msgs_userdata_modification.info}</FormHelperText>
+                </FormControl>
+
+                {/* Infos licenses --------------------------------------------------------------------  */}
+                <Box
+                  border='1px solid'
+                  borderRadius='6px'
+                  padding='3px'
+                >
+                  <Text textStyle='h2'>{t('UserPages.license.title')}</Text>
+
+                  {
+                    user_data.license_legacy_opensankeyplus_validity ?
+                    <Box layerStyle='account_row'>
+                      <Box>
+                        {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
+                        {t('UserPages.OS+_lic')}
+                      </Box>
+                      <Input
+                        onChange={(e) => {
+                          setNewLicenseOpenOSP(e.target.value)
+                          setNewLicenseOpenOSPToCheck(true)
+                        }
+                        }
+                        placeholder={user_data.license_legacy_opensankeyplus_id} />
+                      <Button
+                        variant='menuconfigpanel_option_button'
+                        onClick={() => signupNewLicenseOpenOSP()}
+                        isDisabled={newLicenseOpenOSPToCheck === false}>
+                        {t('UserPages.update_lic')}
+                      </Button>
+                      {user_data.loading_legacy_opensankeyplus ? (
+                        <>
+                          <Spinner animation="border" />
+                          <Spinner animation="border" />
+                        </>
+                      ) : (
+                        <>
+                          <Text>{user_data.license_legacy_opensankeyplus_active}</Text>
+                          <Text>{user_data.license_legacy_opensankeyplus_validity}</Text>
+                        </>
+                      )}
+                    </Box>:
+                    <></>
+}
+                    <Box layerStyle='account_row'>
+                      <Box>
+                        {t('UserPages.OS+_lic')}
+                      </Box>
+                      <>
+                        <Text>{user_data.license_opensankeyplus_active ? 'Active' : 'Non-Active' }</Text>
+                        {
+                          user_data.license_opensankeyplus_active ?
+                            <Text>{user_data.license_opensankeyplus_expiry}</Text>:
+                            <></>
+                        }
+                      </>
+                      </Box>
+
+
+                </Box>
               </Box>
             )}
             <div className='LogError' style={{ 'color': 'red' }}></div>

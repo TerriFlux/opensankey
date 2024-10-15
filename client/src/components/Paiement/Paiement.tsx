@@ -26,7 +26,10 @@ import {
 } from './PaiementFunctions'
 import { Presentation } from '../Register/Presentation'
 
-
+/**
+ * Component that embed stripe paiement page.
+ * @return {*}
+ */
 export const PaiementCheckout = () => {
   // States
   const [publishableKey, setPublishableKey] = useState('')
@@ -63,6 +66,12 @@ export const PaiementCheckout = () => {
   )
 }
 
+/**
+ * Create the right redirection after paiement.
+ * Ie. if paiement succeeded or not.
+ *
+ * @return {*}
+ */
 export const PaiementReturn = () => {
   const [status, setStatus] = useState(null)
   const [searchParams,] = useSearchParams()
@@ -93,6 +102,15 @@ export const PaiementReturn = () => {
   return null
 }
 
+/**
+ * Component that displayed paiement pages :
+ * Trigger buy, succes paiement or error on paiement
+ *
+ * @param {*} {
+ *   new_data_app
+ * }
+ * @return {*}
+ */
 export const PaiementPage: FunctionComponent<{
   new_data_app: Class_ApplicationDataSA
 }> = ({
@@ -143,6 +161,8 @@ export const PaiementPage: FunctionComponent<{
       {t('Paiement.win_content_error')}
     </Box>
   }
+
+  // Page
   return (
     <div>
       <Box

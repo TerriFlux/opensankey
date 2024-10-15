@@ -22,6 +22,9 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 
+# Werkzeug
+from werkzeug.security import check_password_hash
+
 # Itsdangerous - serialize URLs for secured API transactions
 from itsdangerous import URLSafeTimedSerializer as Serializer
 
@@ -397,6 +400,24 @@ def set_or_update_licence_subscription(
     user_license_stripe_id,
     user_license_expiry
 ):
+    """
+    Triggered for subscription update event
+
+    Parameters
+    ----------
+    :param user_license_stripe_id: _description_
+    :type user_license_stripe_id: _type_
+
+    :param user_license_expiry: _description_
+    :type user_license_expiry: _type_
+
+    Optional parameters
+    -------------------
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
     # Get subcription license
     user_license = UserLicences\
         .query.filter_by(stripe_id=user_license_stripe_id)\
@@ -422,16 +443,20 @@ def user_infos():
     - 'email' (String) : User's email
     - 'firstname' (String) : User's firstname
     - 'name' (String) : User's name
-    - 'license_opensankeyplus' (String) : License number for OpenSankey+
-    - 'license_sankeysuite' (String) : License number for SankeySuite
+    - 'license_legacy_opensankeyplus' (String) : License number for OpenSankey+
+    - 'license_legacy_sankeysuite' (String) : License number for SankeySuite
+    - 'license_opensankeyplus_validity' (boolean): Is license valid ?
+    - 'license_opensankeyplus_expiry' (String): Expiration date for license
     '''
     # Prepare response
     response = {
         'email': current_user.email,
         'name': current_user.name,
         'firstname': current_user.firstname,
-        'license_opensankeyplus': current_user.license_opensankeyplus,
-        'license_sankeysuite': current_user.license_sankeysuite
+        'license_legacy_opensankeyplus': current_user.license_opensankeyplus,
+        'license_legacy_sankeysuite': current_user.license_sankeysuite,
+        'license_opensankeyplus_validity': current_user.is_license_valid('opensankeyplus'),
+        'license_opensankeyplus_expiry': current_user.get_license_expiry('opensankeyplus')
     }
     # Send back response
     return jsonify(response)
@@ -450,6 +475,70 @@ def get_license_expiry(license_name):
 @licence_required(license_name='<license_name>')
 def get_license_validity(license_name):
     return "OK", 200
+
+
+@connected_user.route('/user/infos/modify/email', methods=['POST'])
+@login_required
+def modify_email():
+    '''
+    HTTP Post request to change email of current user
+
+    Input JSON Request
+    - 'email' (String) : User's current email
+    - 'new_email' (String) : User's new email
+    - 'password' (String) : User's password for confirmation
+    '''
+    # Read request
+    email = request.json.get('email')
+    new_email = request.json.get('new_email')
+    password = request.json.get('password')
+
+    # Check if other user already have this email
+    other_user = User.query.filter_by(email=new_email).first()
+    if other_user is not None:
+        return 'email_in_use', 400
+
+    # Check if email is coherent
+    if (
+        (current_user.email == email) and
+        (check_password_hash(current_user.password, password))
+    ):
+        current_user.email = new_email
+        db.session.commit()
+        return 'ok', 200
+
+    # Send back response
+    return 'request_error', 400
+
+
+@connected_user.route('/user/infos/modify/firstname', methods=['POST'])
+@login_required
+def modify_firstname():
+    '''
+    HTTP Post request to change firstname of current user
+
+    Input JSON Request
+    - 'firstname' (String) : User's new firstname
+    '''
+    # Apply modif
+    current_user.firstname =  request.json.get('firstname')
+    db.session.commit()
+    return 'ok', 200
+
+
+@connected_user.route('/user/infos/modify/lastname', methods=['POST'])
+@login_required
+def modify_lastname():
+    '''
+    HTTP Post request to change lastname of current user
+
+    Input JSON Request
+    - 'lastname' (String) : User's new lastname
+    '''
+    # Apply modif
+    current_user.name =  request.json.get('lastname')
+    db.session.commit()
+    return 'ok', 200
 
 
 @connected_user.route('/user/infos/license_opensankeyplus')
