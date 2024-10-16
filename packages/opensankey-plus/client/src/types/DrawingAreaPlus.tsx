@@ -25,6 +25,7 @@ import {
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 import { convert_data_plus_legacy } from '../SankeyPlusUtils'
+import { get_sync_lists } from '../deps/OpenSankey/types/Sankey'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -345,6 +346,33 @@ export abstract class Class_DrawingAreaPlus
     if (mode.includes('attrDrawingArea') || all) {
       this._show_background_image = other_drawing_area._show_background_image
       this._background_image = other_drawing_area._background_image
+      this.name=other_drawing_area.name
+    }
+
+    if (all) {// Update Contaiers
+    // TODO add container create/update/delete options in mode
+      const [to_remove, to_add, to_update] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
+      // Add containers that are in other sankey but not in this sankey
+      if (all) {
+        to_add
+          .map(id => {
+            const n = other_drawing_area._sankey.containers_dict[id]
+            this._sankey.addNewFreeLabel(n.id)
+            this._sankey.containers_dict[id].copyFrom(n)
+
+            this._sankey.containers_dict[id].display.position = structuredClone(n.display.position)
+
+            return id
+          })
+      }
+
+      // Delete containers that are in other sankey but not in this sankey
+      if (all) {
+        to_remove
+          .forEach(id => {
+            this.deleteContainer(this._sankey.containers_dict[id])
+          })
+      }
     }
     // Transfert other inherited DA attributes + Sankey attributes
     super.updateFrom(other_drawing_area, mode)

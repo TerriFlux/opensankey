@@ -109,6 +109,7 @@ export const resources = {
         'open_HL': 'Open',
         'illustration': 'Illustration',
         'illustration_type': 'Illustration Type',
+        animate:'Launch animation',
         tabs: {
           'icon': 'Icon',
           'fo': 'Illustration',
@@ -486,6 +487,7 @@ export const resources = {
         'open_HL': 'Ouvrir',
         'illustration': 'Illustration',
         'illustration_type': 'Type d\'illustration',
+        animate:'Lancer animation',
         tabs: {
           'icon': 'Icône',
           'fo': 'Illustration',
