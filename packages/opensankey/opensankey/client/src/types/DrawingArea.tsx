@@ -208,7 +208,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   private _scaleValueToPx = d3.scaleLinear()
-    .domain([0, default_scale])
+    .domain([0, this._scale])
     .range([0, 100])
 
   // Positionning
@@ -1054,7 +1054,7 @@ export abstract class Class_DrawingArea
 
     // // Get scale from max value
     if (launched_from_process) {
-      this._scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue) : linksMaxValue
+      this.scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue) : linksMaxValue
     }
     // this.sankey.node_styles_dict['default'].position_type = 'parametric'
     // if ('NodeSectorStyle' in this.sankey.node_styles_dict) {
@@ -1414,7 +1414,7 @@ export abstract class Class_DrawingArea
     this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
     this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
-    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
+    this.scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
     this._scaleValueToPx.domain([0, this._scale])
     this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')

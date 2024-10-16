@@ -47,7 +47,7 @@ import { default_save_only_visible_elements, default_save_with_values } from './
 
 // LOCAL FUNCTIONS **********************************************************************
 
-function get_sync_lists(
+export function get_sync_lists(
   to_sync: { [id: string]: unknown },
   as_ref: { [id: string]: unknown }
 ) {
@@ -1128,6 +1128,11 @@ export abstract class Class_Sankey
       // Update nodes ref to node_taggs
       if (sync_nodes_tags || all) {
         to_update
+          .forEach(id => {
+            this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
+          })
+
+          to_add
           .forEach(id => {
             this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
           })
