@@ -24,7 +24,8 @@ import {
 } from '../deps/OpenSankey/types/Utils'
 import { Class_NodeAttribute, Class_NodeStyle } from '../deps/OpenSankey/types/Node'
 import { default_label_background } from '../MenuConfigEdition/SankeyPlusNodes'
-import { Type_GenericNodeElementOSP } from './TypesOSP'
+import { Class_NodeElementOSP, Type_GenericApplicationDataOSP, Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './TypesOSP'
+import * as d3 from 'd3'
 
 export function isAttributeOverloaded(
   nodes: Type_GenericNodeElementOSP[],
@@ -295,6 +296,113 @@ export abstract class Class_NodeElementPlus
       .html(this._FO_content)
   }
 
+  /**
+   * Function to animate links path outgoing 'this' node, 
+   * it propagate the animation to node target of these link until we reach a node without output links
+   *
+   * @param {Type_GenericApplicationDataOSP} new_data
+   * @param {Type_GenericNodeElementOSP[]} nodeDisplay
+   * @param {Type_GenericNodeElementOSP[]} node_visible
+   * @memberof Class_NodeElementPlus
+   */
+  protected branchAnimate(
+    new_data: Type_GenericApplicationDataOSP,
+    nodeDisplay: Type_GenericNodeElementOSP[],
+    node_visible: Type_GenericNodeElementOSP[],
+  ) {
+    const curr_node = this //Stock this var because we use a function that change the scope of this
+
+    // Get d3 selection of all visible link who have for source curr_node
+    const glinks = new_data.drawing_area.d3_selection_links?.selectAll('.gg_links')
+      .filter(d => {
+        const link = d as Type_GenericLinkElementOSP
+        return link.source.id === curr_node.id
+      })
+
+    // Refill opacity of links we are about to animate
+    glinks?.select('.link_path').attr('stroke-opacity', l => (l as Type_GenericLinkElementOSP).shape_opacity)
+
+    // Launch animation of link exiting curr_node
+    glinks?.selectAll('.link_path').each(function () {
+      const totalLength = (this as SVGGeometryElement).getTotalLength()
+
+      const link_Class = new_data.drawing_area.sankey.links_dict[d3.select(this).attr('id')]
+      d3.select(this)
+        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+        .attr('stroke-dashoffset', totalLength)
+        .style('stroke', link_Class.getPathColorToUse())
+    })
+      .transition()
+      .duration(2000)
+      .attr('stroke-dashoffset', 0)
+      .on('end', function (this) {
+
+        const idLink = d3.select(this).attr('id').replace('path_', '')
+        const link_animated = new_data.drawing_area.sankey.links_dict[idLink]
+        const Target = link_animated.target
+
+        // Put initial arrow color after link_animated animation
+        const arrow = link_animated.d3_selection?.selectAll('.link_arrow')
+        Target.d3_selection?.select('.node_shape').attr('fill', Target.getShapeColorToUse())
+        if (arrow !== undefined && arrow != null) {
+          // Get color of target (can be used if link_animated was a gradient)
+          const colorTarget = Target.shape_visible ? Target.getShapeColorToUse() : (Target.iconVisible ? Target.iconColor : 'grey')
+
+          const l_grad = link_animated.shape_is_gradient
+          const t = (l_grad) ? colorTarget : link_animated.getPathColorToUse()
+          if (t) {
+            arrow.attr('fill', t)
+            arrow.attr('opacity', link_animated.shape_opacity)
+          }
+        }
+
+        // reaffichage des link value après l'animation
+        link_animated.d3_selection?.selectAll('.link_label').attr('display', '')
+
+
+        //Propagration de l'animation sur les flux sortant du target_node
+        // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+        if (!nodeDisplay.includes(Target)) {
+          nodeDisplay.push(Target)
+          let max = 0
+          const tmp = Target.direct_son_as_distant_sibling(new_data, curr_node as unknown as Class_NodeElementOSP, 0, [link_animated], node_visible)
+
+          max = (tmp > max) ? tmp : max
+          setTimeout(() => {
+            Target.branchAnimate(new_data, nodeDisplay, node_visible)
+          }, max * 2000)
+        }
+      })
+  }
+
+  public direct_son_as_distant_sibling(
+    new_data: Type_GenericApplicationDataOSP,
+    nodeData: Type_GenericNodeElementOSP,
+    deep: number,
+    link_to_avoid: Type_GenericLinkElementOSP[],
+    display_nodes_id: Type_GenericNodeElementOSP[],
+  ) {
+    //Cherche à savoir si un noeud qui recoit directement le flux de nodeData ai aussi un path inderectement vers ce meme noeud
+    //exemple : n0 -> n1  et n0 -> n2 -> n1
+    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
+    const next_link = nodeData.output_links_list.filter(f => f.shape_is_recycling && !Object.values(link_to_avoid).includes(f) && display_nodes_id.includes(f.target))
+    let max = 0
+    const data_plus = new_data
+
+    if (nodeData.id === this.id) {
+      return deep - 1
+    } else if (next_link.length > 0) {
+      next_link.map(link => {
+        const next_node = link.target
+        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+        const to_avoid = link_to_avoid.concat([link])
+        const tmp = this.direct_son_as_distant_sibling(data_plus, next_node, deep + 1, to_avoid, display_nodes_id)
+        max = (tmp > max) ? tmp : max
+      })
+    }
+    return max
+  }
+
   // PROTECTED METHODS ====================================================================
 
   protected eventSimpleLMBCLick(
@@ -382,6 +490,48 @@ export abstract class Class_NodeElementPlus
         .attr('y', box_pos_y)
 
     }
+  }
+
+  /**
+   * Make some preparation before launching the animation,
+   * then launch animation from clicked node
+   *
+   * @memberof Class_NodeElementPlus
+   */
+  public launchAnimation() {
+
+    // Fill all node shape with light grey color (the original color will re-fill when an animated input link will end)
+    this.drawing_area.sankey.visible_nodes_list.filter(n => n !== this).forEach(node => {
+      node.d3_selection_g_shape?.selectAll('.node_shape').attr('fill', '#dddddd')
+    })
+
+    // 'Hide' link & related elements before animation, it will be re-displayed when said links end their animation 
+    this.drawing_area.sankey.visible_links_list.forEach(link => {
+      link.d3_selection?.selectAll('.link_path').attr('stroke-opacity', 0)
+      link.d3_selection?.selectAll('.link_arrow').attr('opacity', 0)
+      link.d3_selection?.selectAll('.link_label').attr('display', 'none')
+    })
+
+    // Launch animation of output links from clicked node, the rest is done recursively from there
+    this.branchAnimate(this.drawing_area.application_data as Type_GenericApplicationDataOSP, [], this.drawing_area.sankey.visible_nodes_list as unknown as Type_GenericNodeElementOSP[])
+
+    // Compute longest possible path from clicked node (number of link before we get to a node without output link)
+    // so we can determinate a timeout before reseting the sankey
+    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
+    this.drawing_area.computeHorizontalIndex(this, 0, [], [], horizontal_indexes_per_nodes_ids)
+
+    // Compute time to animate the whole sankey from clicked node
+    let time_to_animate = 500
+    let nb_animation = Object.values(horizontal_indexes_per_nodes_ids).reduce((a, b) => Math.max(a, b), -Infinity)
+    nb_animation = (nb_animation !== undefined) ? nb_animation : 0
+    time_to_animate += nb_animation * 2000
+
+    const curr_node = this
+    // Launch a timeout that will activate at the end of the animation to reset drawing_area
+    setTimeout(function () {
+      curr_node.drawing_area.reset()
+    }, time_to_animate)
+
   }
 
   // GETTERS / SETTERS ==================================================================
