@@ -4,7 +4,7 @@ import React, {
 } from 'react'
 import i18next from 'i18next'
 import LZString from 'lz-string'
-import { ChakraProvider, useToast } from '@chakra-ui/react'
+import { useToast } from '@chakra-ui/react'
 import * as d3 from 'd3'
 /*************************************************************************************************/
 
@@ -232,8 +232,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   })
 
   /*************************************************************************************************/
-  return <ChakraProvider theme={opensankey_theme}>
-    <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
+  return <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
         {
           moduleDialogs(
@@ -332,7 +331,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
       />
     </div>
 
-  </ChakraProvider>
 }
 
 export default SankeyApp

@@ -337,14 +337,6 @@ export const toolbar_button_3 = defineStyle({
   },
 })
 
-export const toolbar_button_4 = defineStyle({
-  bgColor: 'primaire.4',
-  borderColor: 'secondaire.4',
-  _hover: {
-    bgColor: 'tertiaire.4',
-    borderColor: 'secondaire.4',
-  },
-})
 
 export const toolbar_button_5 = defineStyle({
   bgColor: 'primaire.5',

@@ -361,14 +361,14 @@ export abstract class Class_NodeElement
           const tagg = this.sankey.level_taggs_dict[dim.children_level_tagg.id]
           const parent_tag = tagg?.tags_dict[dim.parent_level_tag.id] ?? undefined
           const children_tags = dim.children_level_tags
-          .map(tag => {
-            return tagg?.tags_dict[tag.id] ?? undefined
-          })
+            .map(tag => {
+              return tagg?.tags_dict[tag.id] ?? undefined
+            })
             .filter(tag => tag !== undefined)
 
           if (
-            (parent !== undefined) && 
-            (parent_tag !== undefined) && 
+            (parent !== undefined) &&
+            (parent_tag !== undefined) &&
             (children_tags.length > 0)
           ) {
             const new_dim = new Class_NodeDimension(parent, [this], parent_tag, children_tags, dim.id)
@@ -390,7 +390,7 @@ export abstract class Class_NodeElement
           !(dim.id in this._dimensions_as_parent)
         ) {
           this.addNewDimensionAsParent(all_existing_dim[dim.id])
-        } 
+        }
         else if (
           !(dim.id in all_existing_dim)
         ) {
@@ -403,10 +403,10 @@ export abstract class Class_NodeElement
             .filter(tag => tag !== undefined)
 
           if (
-            children.length > 0 &&
-             parent_tag !== undefined &&
-              children_tags.length > 0
-            ) {
+            (children.length > 0) &&
+            (parent_tag !== undefined) &&
+            (children_tags.length > 0)
+          ) {
             const new_dim = new Class_NodeDimension(this, children, parent_tag, children_tags, dim.id)
             all_existing_dim[dim.id] = new_dim
           }
