@@ -16,7 +16,7 @@ import type {
 import type {
   Type_Side
 } from './Link'
-import type {
+import {
   Class_NodeDimension
 } from './NodeDimension'
 import type {
@@ -348,14 +348,33 @@ export abstract class Class_NodeElement
       })
     // Add existing and missing child dimensions
     Object.values(node_to_copy._dimensions_as_child)
-      .filter(dim => {
-        return (
+      .forEach(dim => {
+        if (
           (dim.id in all_existing_dim) &&
           !(dim.id in this._dimensions_as_child)
-        )
-      })
-      .forEach(dim => {
-        this.addNewDimensionAsChild(all_existing_dim[dim.id])
+        ) {
+          this.addNewDimensionAsChild(all_existing_dim[dim.id])
+        } else if (
+          !(dim.id in all_existing_dim)
+        ) {
+          const parent = this.sankey.nodes_dict[dim.parent.id]
+          const tagg = this.sankey.level_taggs_dict[dim.children_level_tagg.id]
+          const parent_tag = tagg?.tags_dict[dim.parent_level_tag.id] ?? undefined
+          const children_tags = dim.children_level_tags
+          .map(tag => {
+            return tagg?.tags_dict[tag.id] ?? undefined
+          })
+            .filter(tag => tag !== undefined)
+
+          if (
+            (parent !== undefined) && 
+            (parent_tag !== undefined) && 
+            (children_tags.length > 0)
+          ) {
+            const new_dim = new Class_NodeDimension(parent, [this], parent_tag, children_tags, dim.id)
+            all_existing_dim[dim.id] = new_dim
+          }
+        }
       })
     // Add existing and missing parent dimensions
     Object.values(node_to_copy._dimensions_as_parent)
@@ -366,7 +385,32 @@ export abstract class Class_NodeElement
         )
       })
       .forEach(dim => {
-        this.addNewDimensionAsParent(all_existing_dim[dim.id])
+        if (
+          (dim.id in all_existing_dim) &&
+          !(dim.id in this._dimensions_as_parent)
+        ) {
+          this.addNewDimensionAsParent(all_existing_dim[dim.id])
+        } 
+        else if (
+          !(dim.id in all_existing_dim)
+        ) {
+          const children = dim.children.map(child => this.sankey.nodes_dict[child.id]).filter(child => child !== undefined)
+          const tagg = this.sankey.level_taggs_dict[dim.parent_level_tag.group.id]
+          const parent_tag = tagg?.tags_dict[dim.parent_level_tag.id] ?? undefined
+          const children_tags = dim.children_level_tags.map(tag => {
+            return tagg?.tags_dict[tag.id] ?? undefined
+          })
+            .filter(tag => tag !== undefined)
+
+          if (
+            children.length > 0 &&
+             parent_tag !== undefined &&
+              children_tags.length > 0
+            ) {
+            const new_dim = new Class_NodeDimension(this, children, parent_tag, children_tags, dim.id)
+            all_existing_dim[dim.id] = new_dim
+          }
+        }
       })
     // TODO Create non-existing and missing child & parent dimensions
     // Delete unnecessary child dimensions
@@ -968,7 +1012,7 @@ export abstract class Class_NodeElement
           {
             'parent_name': dimension.parent.id,
             'parent_tag': dimension.parent_level_tag.id,
-            'child_tags': dimension.children_level_tags.map(_ => _.id),
+            'children_tags': dimension.children_level_tags.map(_ => _.id),
             'level': dimension.getLevel()
           }
         ])
@@ -1109,13 +1153,13 @@ export abstract class Class_NodeElement
                 if (parent) {
                   // Read infos from dimension json struct
                   // Get child & parent tags
-                  let child_tags: Class_LevelTag[] | undefined
+                  let children_tags: Class_LevelTag[] | undefined
                   let parent_tag: Class_LevelTag | undefined
                   // Use tags id in priority if existing
-                  const child_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'child_tags')
+                  const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-                  if (child_tags_ids && parent_tag_id) {
-                    child_tags = child_tags_ids
+                  if (children_tags_ids && parent_tag_id) {
+                    children_tags = children_tags_ids
                       .map(_ => {
                         const child_tag_id = matching_tags_id[tagg_id][_] ?? _
                         return tagg.tags_dict[child_tag_id]
@@ -1131,14 +1175,14 @@ export abstract class Class_NodeElement
                         tagg.addTag(String(level - 1)) // Create parent tag
                       if (tagg.tags_list.length < level)
                         tagg.addTag(String(level)) // Create child tag
-                      child_tags = [tagg.tags_list[level - 1]]
+                      children_tags = [tagg.tags_list[level - 1]]
                       parent_tag = tagg.tags_list[level - 2]
                     }
                   }
                   // If tags has been found,
                   // create a new dimension OR add parent & child relation to an existing dimension
-                  if (child_tags && parent_tag) {
-                    parent_tag.getOrCreateLowerDimension(parent, this, child_tags)
+                  if (children_tags && parent_tag) {
+                    parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
                   }
                 }
               }
