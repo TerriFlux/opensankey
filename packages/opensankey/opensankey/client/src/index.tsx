@@ -33,6 +33,8 @@ import {
 import {
   ModalWelcomeBuilder
 } from './welcome/ModalWelcome'
+import { ChakraProvider } from '@chakra-ui/react'
+import { opensankey_theme } from './chakra/Theme'
 
 // CONSTANTS =========================================================================================
 
@@ -45,6 +47,7 @@ const root=createRoot(container)
 
 // RENDERING ==========================================================================================
 root.render(
+  <ChakraProvider theme={opensankey_theme}>
   <SankeyApp
     initializeReinitialization={initializeReinitialization}
 
@@ -72,5 +75,6 @@ root.render(
     // BackEnd
     ClickSaveDiagram={ClickSaveDiagram}
   />
+  </ChakraProvider>
 )
 
