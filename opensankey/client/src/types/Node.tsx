@@ -322,7 +322,7 @@ export abstract class Class_NodeElement
     // Add missing tags
     node_to_copy.tags_list
       .filter(tag => tag.group.id in this.sankey.node_taggs_dict)
-      .filter(tag => tag.id in this.sankey.node_taggs_dict[tag.group.id])
+      .filter(tag => tag.id in this.sankey.node_taggs_dict[tag.group.id].tags_dict)
       .forEach(tag => {
         this.addTag(this.sankey.node_taggs_dict[tag.group.id].tags_dict[tag.id] as Class_Tag)
       })
@@ -1249,11 +1249,11 @@ export abstract class Class_NodeElement
     }
   }
 
-  protected addOrRemoveNodeFromSelection(){
-    if(this.drawing_area.selected_nodes_list.includes(this)){
+  protected addOrRemoveNodeFromSelection() {
+    if (this.drawing_area.selected_nodes_list.includes(this)) {
       // Remove node from selection
       this.drawing_area.removeNodeFromSelection(this)
-    }else{
+    } else {
       // Add node to selection
       this.drawing_area.addNodeToSelection(this)
     }
@@ -1310,6 +1310,8 @@ export abstract class Class_NodeElement
       })
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
+      this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
     } else if (nodes_selected.includes(this)) {
       // Only trigger the drag if we drag a selected node
       // redraw node on target of output links
@@ -1323,6 +1325,8 @@ export abstract class Class_NodeElement
 
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
+      this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
 
     }
   }
@@ -3419,7 +3423,7 @@ export abstract class Class_NodeElement
         .forEach(dim => ok_dimension = ok_dimension || (dim.parent_level_tag.group.activated && dim.show_parent))
     }
     // Specific cas : No dimension activated 
-    if (!ok_dimension){
+    if (!ok_dimension) {
       Object.values(this._dimensions_as_parent)
         .forEach(dim => {
           if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
@@ -3427,7 +3431,7 @@ export abstract class Class_NodeElement
             if (siblings_activated.length > 0) {
               const taggs = this.level_taggs_list
               const siblings_activated_with_this = siblings_activated
-                .filter(sib => taggs.includes(sib as Class_LevelTagGroup) )
+                .filter(sib => taggs.includes(sib as Class_LevelTagGroup))
               if (siblings_activated_with_this.length == 0) {
                 ok_dimension = true
               }
