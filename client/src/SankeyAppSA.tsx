@@ -15,7 +15,6 @@ import { ChakraProvider } from '@chakra-ui/react'
 // OpenSankey imports ===============================================================================
 
 import SankeyApp from './deps/OpenSankey+/deps/OpenSankey/SankeyApp'
-import { opensankey_theme } from './deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
 import { initializeMenuConfiguration } from './deps/OpenSankey+/deps/OpenSankey/OSModule'
 
@@ -37,7 +36,7 @@ import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
 import Login from './components/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
-
+import {Theme_SankeyApplication}  from './chakra/Theme'
 // SankeyApp for OpenSankey+ ========================================================================
 type SankeyAppSAType={
   example_menu: ExempleMenuTypes,
@@ -47,8 +46,7 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,fo
 
   const new_data_app = new Class_ApplicationDataSA(false)
   const reinit =initializeReinitializationOSP(new_data_app)
-  const sankeyApp =
-    <SankeyApp
+  const sankeyApp =<SankeyApp
       initializeReinitialization={initializeReinitializationOSP}
       initializeApplicationData={
         (initial_data) => {
@@ -108,8 +106,7 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,fo
     return sankeyApp
   else
     return <ChakraProvider
-      resetCSS={false}
-      theme={opensankey_theme}
+      theme={Theme_SankeyApplication}
     >
       <HashRouter>
         <Routes>

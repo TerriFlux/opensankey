@@ -32,10 +32,6 @@ import i18next from './traduction'
 
 // import { ChakraProvider } from '@chakra-ui/react'
 
-// OpenSankey imports =============================================================================
-
-// import { opensankey_theme } from './deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
-
 // OpenSankey+ imports ===========================================================================
 
 // import { Class_ApplicationDataSA } from './deps/OpenSankey+/types/TypesOSP'
