@@ -50,7 +50,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   let is_top = true
   let pos_x = 0
   let pos_y = 0
-
+  
+  const size_Button=40
+  const size_context_menu=(additionalMenu.context_node_order.filter(key=>!key.includes('sep_')).length)*size_Button // Get approx. height of context menu
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (contextualised_node) {
@@ -60,8 +62,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     pos_x = new_data.drawing_area.pointer_pos[0]
     pos_y = new_data.drawing_area.pointer_pos[1]
 
-    if (new_data.drawing_area.pointer_pos[1] + 490 > window.innerHeight) {
-      pos_y = new_data.drawing_area.pointer_pos[1] - 470
+    if (new_data.drawing_area.pointer_pos[1] + size_context_menu > window.innerHeight) {
+      pos_y = ((new_data.drawing_area.pointer_pos[1]-(new_data.drawing_area.pointer_pos[1] + size_context_menu-window.innerHeight))) 
       is_top = false
     }
     style_c_n = pos_y + 'px auto auto ' + pos_x + 'px'
@@ -474,6 +476,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       variant='contextmenu_button'
       onClick={() => {
         contextualised_node.drawParent()
+        new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())//Redraw all node visible because some link position where not computed before aggregation
         new_data.drawing_area.purgeSelection()
         new_data.drawing_area.node_contextualised = undefined
         refreshThisAndToggleSaving()
@@ -493,6 +496,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       variant='contextmenu_button'
       onClick={() => {
         contextualised_node.drawChildren()
+        new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())//Redraw all node visible because some link position where not computed before disaggregation
         new_data.drawing_area.purgeSelection()
         new_data.drawing_area.node_contextualised = undefined
         refreshThisAndToggleSaving()

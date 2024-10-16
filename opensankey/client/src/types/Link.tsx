@@ -456,7 +456,7 @@ export abstract class Class_LinkElement
     // Heritance
     super.draw()
     // Update class attributes
-    this.d3_selection?.attr('class', 'gg_links')
+    this.d3_selection?.attr('class', 'gg_links').datum(this)
     // Setup order
     //this.drawing_area.orderElements()
     // Draw elements
@@ -872,8 +872,7 @@ export abstract class Class_LinkElement
     else if (drawing_area.isInSelectionMode()) {
       // SHIFT
       if (event.shiftKey) {
-        // Add link to selection
-        drawing_area.addLinkToSelection(this)
+        this.addOrRemoveLinkFromSelection()
         // Open related menu
         this.menu_config.openConfigMenuElementsLinks()
         // Update components related to link edition
@@ -881,8 +880,7 @@ export abstract class Class_LinkElement
       }
       // CTRL
       else if (event.ctrlKey) {
-        // Add link to selection
-        drawing_area.addLinkToSelection(this)
+        this.addOrRemoveLinkFromSelection()
         // Update components related to link edition
         this.menu_config.updateAllComponentsRelatedToLinks()
       }
@@ -912,6 +910,16 @@ export abstract class Class_LinkElement
       this.menu_config.updateAllComponentsRelatedToLinks()
       this.drawing_area.link_contextualised = this
       this.menu_config.ref_to_menu_context_links_updater.current()
+    }
+  }
+
+  protected addOrRemoveLinkFromSelection(){
+    if (this.drawing_area.selected_links_list.includes(this)) {
+      // Remove link from selection
+      this.drawing_area.removeLinkFromSelection(this)
+    } else {
+      // Add link to selection
+      this.drawing_area.addLinkToSelection(this)
     }
   }
 
@@ -1008,7 +1016,7 @@ export abstract class Class_LinkElement
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
+    if (this.drawing_area.show_structure!=='structure'  && this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -2021,8 +2029,7 @@ export abstract class Class_LinkElement
     return (
       super.is_visible &&
       this.are_source_and_target_displayed &&
-      this.are_related_tags_selected &&
-      this.is_value_above_threshold
+      this.are_related_tags_selected
     )
   }
 
@@ -2199,6 +2206,9 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public get data_value() {
+    if(this.drawing_area.show_structure==='structure')
+      return null
+
     const value = this.value
     // Cast as number
     if (value !== null) return value.data_value
@@ -3046,7 +3056,7 @@ export abstract class Class_LinkElement
  * @private
  * @memberof Class_LinkElement
  */
-  private get is_value_above_threshold() {
+  protected get is_value_above_threshold() {
     if (this.drawing_area.filter_link_value == 0) {
       return true
     } else {
@@ -4214,9 +4224,12 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     // for that flux tag group
     const flux_taggs_dict = ((this.link?.drawing_area as Class_AbstractDrawingArea).sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
-      .filter(([id, list]) => {
-        const tagg_id = matching_taggs_id[id] ?? id
-        const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
+      .filter(([_id_tagg, list]) => {
+        if(matching_tags_id[_id_tagg]===undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view) 
+          return false
+
+        const tagg_id = matching_taggs_id[_id_tagg] ?? _id_tagg
+        const tag_ids = (list as string[]).map(_ =>  (matching_tags_id[_id_tagg][_] ?? _))
         return (
           (tagg_id in flux_taggs_dict) &&
           (tag_ids.length > 0))

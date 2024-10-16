@@ -39,7 +39,9 @@ export abstract class Class_AbstractDrawingArea {
   public abstract deleteNode(_: Type_AbstractNodeElement): void
   public abstract deleteLink(_: Type_AbstractLinkElement): void
   public abstract addNodeToSelection(_: Type_AbstractNodeElement): void
+  public abstract removeNodeFromSelection(_: Type_AbstractNodeElement): void
   public abstract addLinkToSelection(_: Type_AbstractLinkElement): void
+  public abstract removeLinkFromSelection(_: Type_AbstractLinkElement): void
   public abstract purgeSelection(): void
   public abstract closeAllMenus(): void
   public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
@@ -63,6 +65,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract set pointer_pos(_: [number, number])
   public abstract get filter_label(): number
   public abstract set filter_label(_: number)
+  public abstract get show_structure():string
 }
 
 export abstract class Class_AbstractSankey {
