@@ -108,7 +108,7 @@ export async function loginUser(
 //Logout
 export function loginOut(
   new_data_app: Class_ApplicationDataSA,
-  returnToApp: () => void
+  returnToApp = () => {}
 ) {
   // LogOut on server
   const path = window.location.origin
@@ -162,22 +162,22 @@ export async function triggerPasswordReset(
       if (response.ok) {
         return response.json()
       } else {
-        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_server'))
+        logError(t('Login.forgot.msg.err_server'))
         return Promise.reject(response)
       }
     })
     .then(data => {
       if (data['user_is_authenticated'] === true) {
-        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_user_already_connected'))
+        logError(t('Login.forgot.msg.err_user_already_connected'))
         navigate('/')
         return
       }
       if (data['user_exists'] === false) {
-        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_user_inexistant'))
+        logError(t('Login.forgot.msg.err_user_inexistant'))
         navigate('/register')
         return
       }
-      d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.mail_sent'))
+     logInfo(t('Login.forgot.msg.mail_sent'))
     })
 }
 
@@ -232,7 +232,10 @@ export async function applyPasswordReset(
       }
       if (data['passwd_is_updated'] === true) {
         d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.ok'))
-        navigate('/login')
+        setTimeout(
+          () => {navigate('/login')},
+          3000
+        )
         return
       }
       d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_token_expire'))

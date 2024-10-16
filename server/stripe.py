@@ -240,3 +240,39 @@ def handle_subscription_update_session(session):
             session['id'],
             datetime.fromtimestamp(session['current_period_end']).isoformat())
     return 'Nothing done', False
+
+
+def cancel_subscription(
+    id,
+    comment,
+    feedback
+):
+    """
+    Cancel a subscription using its stripe id.
+
+    Returns
+    -------
+    :return: True if cancelation is ok
+    :rtype: boolean
+    """
+    # Create cancel details
+    cancel_details = {
+        'comment': comment
+    }
+    possible_feedback = [
+        'customer_service',
+        'low_quality',
+        'missing_features',
+        'other',
+        'switched_service',
+        'too_complex',
+        'too_expensive',
+        'unused']
+    if feedback in possible_feedback:
+        cancel_details['feedback'] = feedback
+    # Cancel subscription
+    stripe.api_key = STRIPE_KEYS['secret_key']
+    resp = stripe.Subscription.cancel(
+        id,
+        cancellation_details=cancel_details)
+    return (resp['status'] == 'canceled')

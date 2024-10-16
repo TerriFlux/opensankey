@@ -25,6 +25,8 @@ MAIL_USE_SSL = (os.environ['MAIL_USE_SSL'] == 'True')
 
 DBG_MODE = (os.environ['MAIL_DBG_MODE'] == 'Activate')
 
+CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
+
 
 # ---------------------------------------------------------------
 # Shared variables
@@ -243,7 +245,7 @@ def send_pw_reset_email(
         recipients=[user.email])
     # Add body to msg
     file = 'password_reset_mail/password_reset_mail_{}'.format(language)
-    url = 'https://open-sankey.fr/#/login/reset/' + token
+    url = '{0}login/reset/{1}'.format(CLIENT_ROOT_URL, token)
     msg.body = render_template(
         file + '.txt',
         first_name=user.firstname,
@@ -254,6 +256,68 @@ def send_pw_reset_email(
         logo_TerriFlux='cid:logo_TerriFlux',
         first_name=user.firstname,
         reset_url=url)
+    # Get abs path
+    path = os.path.dirname(os.path.abspath(__file__))
+    # Add openSankey logo
+    msg.attach(
+        'logo_OS.jpg',
+        'image/jpg',
+        open(path + "/templates/logo_OS.jpg", 'rb').read(),
+        'inline',
+        headers={'Content-ID': '<logo_OS>'})
+    # Add TerriFlux logo
+    msg.attach(
+        'logo_TerriFlux.jpg',
+        'image/jpg',
+        open(path + "/templates/logo_TerriFlux.jpg", 'rb').read(),
+        'inline',
+        headers={'Content-ID': '<logo_TerriFlux>'})
+    # Send mail
+    send(msg)
+
+
+def send_pw_modification_email(
+    user,
+    language='fr'
+):
+    """
+    Create custom mail for password reseting
+
+    Parameters
+    ----------
+    :param user: _description_
+    :type user: _type_
+
+    Optional parameters
+    -------------------
+    """
+    # Protection
+    if not is_email_valid(user.email):
+        return
+    if language not in ['en', 'fr']:
+        language = 'en'
+    # Mail object
+    subject = {}
+    subject['en'] = "[OpenSankey] Your password modification request"
+    subject['fr'] = \
+        "[OpenSankey] Votre demande de modication du mot de passe"
+    # Instanciate msg
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
+        recipients=[user.email])
+    # Add body to msg
+    file = 'password_modification_mail/password_modification_mail_{}'.format(language)
+    msg.body = render_template(
+        file + '.txt',
+        first_name=user.firstname,
+        token=user.secret_token)
+    msg.html = render_template(
+        file + '.html',
+        logo_OS='cid:logo_OS',
+        logo_TerriFlux='cid:logo_TerriFlux',
+        first_name=user.firstname,
+        token=user.secret_token)
     # Get abs path
     path = os.path.dirname(os.path.abspath(__file__))
     # Add openSankey logo

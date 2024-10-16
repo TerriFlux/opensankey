@@ -6,6 +6,7 @@
 # ---------------------------------------------------------------
 # System imports
 import requests
+from datetime import datetime
 
 # Flask imports
 from flask import Blueprint
@@ -221,6 +222,20 @@ def login_post():
     # if the above check passes,
     # then we know the user has the right credentials
     login_user(user, remember=remember)
+
+    # Clear secret token if needed
+    if (
+        (user.secret_token is not None) and
+        (user.secret_expiry is not None)
+    ):
+        date_expiry = datetime.fromisoformat(user.secret_expiry)
+        date_now = datetime.now()
+        if (date_expiry < date_now):
+            user.secret_token = None
+            user.secret_expiry = None
+            db.session.commit()
+
+    # Return
     return jsonify(response), 200
 
 

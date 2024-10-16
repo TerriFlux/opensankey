@@ -271,7 +271,7 @@ const resources = {
           msgs: {
             'ok_email': 'Email has successfully been changed',
             'prs_email': 'Processing email change',
-            'err_email': 'Email is not valid',
+            'err_email_regex': 'Email is not valid',
             'prs_pwd': 'A password reset e-mail has been sent to you.',
           },
         },
@@ -290,6 +290,7 @@ const resources = {
         },
         license: {
           'title': 'OpenSankey+ license informations',
+          'exp_until': 'Renewal : '
         },
         'OS+_lic': 'OpenSankey+ license',
         'SS_lic': 'SankeySuite license',
@@ -690,7 +691,7 @@ const resources = {
           'sub': 'Réinitialiser',
           msg: {
             'ok': 'Le mot de passe a été remplacé avec succès.',
-            'sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
+            'mail_sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
             'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
             'err_user_already_connected': 'Erreur, vous êtes déjà connecté.',
             'err_user_inexistant': 'Erreur, ce compte n\'existe pas.',
@@ -712,7 +713,8 @@ const resources = {
           msgs: {
             'ok_email': 'L\'e-mail a été modifié avec succès',
             'prs_email': 'Traitement du changement d\'email',
-            'err_email': 'L\'email n\'est pas valide',
+            'err_email_regex': 'L\'email n\'est pas valide',
+            'err_email_failed': 'L\'email n\'a pas pu être modifié',
             'prs_pwd': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
           },
         },
@@ -731,6 +733,32 @@ const resources = {
         },
         license: {
           'title': 'Votre licence OpenSankey+',
+          'exp_until': 'Prochain renouvellement : ',
+          btns: {
+            'stop_sub': 'Arreter l\'abonnement',
+          },
+          confirm_modal: {
+            'title': 'Souhaitez-vous vraiment arreter votre licence OpenSankey+ ?',
+            'fdback': 'Pourquoi souhaitez vous arreter votre abonnement ? (optionel)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Customer service was less than expected',
+            'fdback_low_quality': 'Quality was less than expected',
+            'fdback_missing_features': 'Some features are missing',
+            'fdback_switched_service': 'I’m switching to a different service',
+            'fdback_too_complex': 'Ease of use was less than expected',
+            'fdback_too_expensive': 'It’s too expensive',
+            'fdback_unused': 'I don’t use the service enough',
+            'fdback_other': 'Other reason',
+            'comment': 'Comment pourrions-nous améliorer OpenSankey+ ? (optionnel)',
+            'pwd_confirm': 'Saissisez votre mot de passe pour confirmer',
+            'btn_confirm': 'Arreter l\'abonnement',
+            'btn_cancel': 'Je souhaite garder OpenSankey+',
+            msgs: {
+              'ok': 'La souscription a été annulée',
+              'err': 'Erreur lors de l\'annulation de la souscription',
+              'prs': 'En cours',
+            }
+          },
         },
         'OS+_lic': 'Licence OpenSankey+',
         'SS_lic': 'Licence SankeySuite',
