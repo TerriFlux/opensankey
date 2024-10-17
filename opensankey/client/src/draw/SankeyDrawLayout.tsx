@@ -969,34 +969,30 @@ export const apply_v = (
   return new_current_v+1
 }
 
-// const apply_v_agregate = (
-//   data:SankeyData,
-//   node:SankeyNode,
-//   current_v:number 
-// ) => {
-//   const all_nodes = data.nodes //Object.assign({},data.nodes,data.additional_nodes)
-//   //node.position = 'parametric'
-//   node.v = current_v
-//   // node.dy = 0
-//   //node.y == undefined
-//   const dim_agregate_nodes = Object.values(all_nodes).filter( 
-//     nn => {
-//       let is_parent = false
-//       Object.values(data.levelTags).forEach( tagGroup=> {
-//         if (node.dimensions[tagGroup.group_name] && node.dimensions[tagGroup.group_name].parent_name === nn.idNode) {
-//           is_parent = true
-//         }
-//       })
-//       return is_parent
-//     }
-//   )
-//   dim_agregate_nodes.forEach((nn,i)=>{
-//     nn.x = node.x
-//     nn.u = node.u
-//     current_v = apply_v_agregate(data,nn,current_v+i)
-//   })
-//   return current_v
-// }
+const apply_v_agregate = (
+  data:SankeyData,
+  node:SankeyNode 
+) => {
+  const all_nodes = Object.values(data.nodes).filter(n=>n.v==undefined) 
+  const dim_agregate_nodes = all_nodes.filter( 
+    nn => {
+      let is_parent = false
+      Object.values(data.levelTags).forEach( tagGroup=> {
+        if (node.dimensions[tagGroup.group_name] && node.dimensions[tagGroup.group_name].parent_name === nn.idNode) {
+          is_parent = true
+        }
+      })
+      return is_parent
+    }
+  )
+  dim_agregate_nodes.filter(n=>n.v==undefined).forEach((nn,i)=>{
+    nn.x = node.x
+    nn.y = node.y
+    nn.u = node.u
+    nn.v = node.v
+    apply_v_agregate(data,nn)
+  })
+}
 
 /**
  * Reorganize vertically all input / output position
@@ -2103,6 +2099,8 @@ const  getDesagregationNodes = (
 export const ComputeParametricV = (applicationData: applicationDataType) => {
   const { data } = applicationData
 
+  Object.values(applicationData.data.nodes).forEach(n=>delete (n as unknown as {v?:string}).v )
+
   const columns : {[_:number]:SankeyNode[]} = {}
   Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && ReturnValueNode(data,n,'position') !== 'relative' ).forEach(n=>{
     if (columns[n.u]) {
@@ -2135,6 +2133,9 @@ export const ComputeParametricV = (applicationData: applicationDataType) => {
     Object.values(data.levelTags).forEach(tagGroup => {
       column.forEach(n => current_v = apply_v(applicationData, n, current_v, tagGroup))
     })
+  })
+  Object.values(columns).forEach(column => {
+    column.forEach(n => apply_v_agregate(applicationData.data, n))
   })
 }
 
