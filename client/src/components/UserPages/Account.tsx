@@ -128,7 +128,7 @@ const Account: FunctionComponent<AccountTypes> = ({
     navigate('/dashboard')
   }
 
-  // Password modal checker
+  // Email modal : checks password for e-mail modification
   const {
     isOpen: isEmailChangeModalOpen,
     onOpen: onEmailChangeModalOpen,
@@ -136,6 +136,13 @@ const Account: FunctionComponent<AccountTypes> = ({
   } = useDisclosure()
   const [password, setPassword] = useState('')
   const [show_password, setShowPassword] = useState(false)
+
+  const {
+    isOpen: isPwdChangeModalOpen,
+    onOpen: onPwdChangeModalOpen,
+    onClose: onPwdChangeModalClose
+  } = useDisclosure()
+  const [secret, setSecret] = useState('')
 
   // Subcription stop modal questions
   const {
@@ -153,9 +160,9 @@ const Account: FunctionComponent<AccountTypes> = ({
   const [user_new_lastname, setUserNewLastName] = useState('')
 
   // Messages
-  const [msgs_login_modification, setMsgsLoginModification] = useState(log_default)
-  const [msgs_userdata_modification, setMsgsUserdataModification] = useState(log_default)
-  const [msgs_license_modification, setMsgsLicenseModification] = useState(log_default)
+  const [msgs_login_modification, setMsgsLoginModification] = useState(structuredClone(log_default))
+  const [msgs_userdata_modification, setMsgsUserdataModification] = useState(structuredClone(log_default))
+  const [msgs_license_modification, setMsgsLicenseModification] = useState(structuredClone(log_default))
 
   // Activate and save a new license OpenSankey+
   const signupNewLicenseOpenOSP = () => {
@@ -286,10 +293,10 @@ const Account: FunctionComponent<AccountTypes> = ({
   }
 
   /**
-   * Submit Password change - Use token page
+   * Trigger Password change - send email with token
    */
-  const submitPasswordChange = () => {
-    setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.prs_pwd'))
+  const triggerPasswordChange = () => {
+    clearMsgsForLoginModification()
     const lang = i18next.language
     const email = user_data.email
     const path = window.location.origin
@@ -309,12 +316,48 @@ const Account: FunctionComponent<AccountTypes> = ({
           return response
         }
         else {
-          setErrMsgForLoginModification(t('Login.forgot.msg.err_server'))
+          setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_pwd_failed'))
           return Promise.reject(response)
         }
       })
       .then(() => {
-        setInfoMsgForLoginModification(t('Login.forgot.msg.mail_sent'))
+        setPassword('')
+        setSecret('')
+        setTimeout(
+          onPwdChangeModalOpen,
+          2000)
+        setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.prs_pwd'))
+      })
+  }
+
+  const submitPassword = () => {
+    clearMsgsForLoginModification()
+    const path = window.location.origin
+    const url = path + '/user/infos/modify/pwd'
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        new_password: password,
+        token: secret
+      })
+    })
+      .then(response => {
+        if (response.ok) {
+          return response
+        }
+        else {
+          setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_pwd_failed'))
+          return Promise.reject(response)
+        }
+      })
+      .then(() => {
+        setPassword('')
+        setSecret('')
+        onPwdChangeModalClose()
+        setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_pwd'))
       })
   }
 
@@ -390,7 +433,7 @@ const Account: FunctionComponent<AccountTypes> = ({
       })
         .then(response => {
           if (response.ok) {
-            setInfoMsgForLoginModification(t('UserPages.infos_modify.msgs.ok_lastname'))
+            setInfoMsgForUserDataModification(t('UserPages.infos_modify.msgs.ok_lastname'))
           }
           else {
             setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_lastname'))
@@ -449,7 +492,7 @@ const Account: FunctionComponent<AccountTypes> = ({
     })
       .then(response => {
         if (response.ok) {
-          setInfoMsgForLicenseModification(t('UserPages.license.confirm_modal.msg.ok'))
+          setInfoMsgForLicenseModification(t('UserPages.license.confirm_modal.msgs.ok'))
           // Reset password on modal
           setPassword('')
           setShowPassword(false)
@@ -459,10 +502,10 @@ const Account: FunctionComponent<AccountTypes> = ({
             2000)
         }
         else {
-          setErrMsgForLicenseModification(t('UserPages.license.confirm_modal.msg.err'))
+          setErrMsgForLicenseModification(t('UserPages.license.confirm_modal.msgs.err'))
         }
       })
-      setInfoMsgForLicenseModification(t('UserPages.license.confirm_modal.msg.prs'))
+    setInfoMsgForLicenseModification(t('UserPages.license.confirm_modal.msgs.prs'))
   }
 
   // Hooks
@@ -683,20 +726,21 @@ const Account: FunctionComponent<AccountTypes> = ({
                     </InputRightElement>
                   </InputGroup>
                   <Button
-                    onClick={submitPasswordChange}
+                    onClick={triggerPasswordChange}
                   >
-                    {t('UserPages.login_modify.btns.mod_pwd')}
+                    {t('UserPages.login_modify.btns.set_pwd')}
                   </Button>
                   <FormErrorMessage>{msgs_login_modification.err}</FormErrorMessage>
                   <FormHelperText>{msgs_login_modification.info}</FormHelperText>
                 </FormControl>
 
+                {/* Modal de confirmation de modification E-Mail */}
                 <Modal
                   isOpen={isEmailChangeModalOpen}
                   onClose={onEmailChangeModalClose}
                 >
                   <ModalContent>
-                    <ModalHeader>{t('UserPages.login_modify.confirm_modal.title')}</ModalHeader>
+                    <ModalHeader>{t('UserPages.login_modify.email_modal.title')}</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
                       <FormControl>
@@ -733,7 +777,66 @@ const Account: FunctionComponent<AccountTypes> = ({
                           type="submit"
                           onClick={submitEmail}
                         >
-                          {t('UserPages.login_modify.confirm_modal.btn')}
+                          {t('UserPages.login_modify.email_modal.btn')}
+                        </Button>
+                      </Box>
+                    </ModalBody>
+                  </ModalContent>
+                </Modal>
+
+                {/* Modal de confirmation de modification mot de passe */}
+                <Modal
+                  isOpen={isPwdChangeModalOpen}
+                  onClose={onPwdChangeModalClose}
+                >
+                  <ModalContent>
+                    <ModalHeader>{t('UserPages.login_modify.pwd_modal.title')}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                      <FormControl>
+                        <InputGroup variant='register_input'>
+                          <InputLeftAddon>
+                            {t('UserPages.login_modify.pwd_modal.input_pwd')}
+                          </InputLeftAddon>
+                          <Input
+                            isRequired
+                            type={show_password ? 'text' : 'password'}
+                            onChange={e => setPassword(e.target.value)}
+                          />
+                          <InputRightElement width='4.5rem' marginRight='0.25em'>
+                            <Button
+                              h='1.75rem'
+                              size='sm'
+                              border='0px'
+                              bg='gray.50'
+                              onClick={() => setShowPassword(!show_password)}
+                            >
+                              {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                            </Button>
+                          </InputRightElement>
+                        </InputGroup>
+                        <InputGroup variant='register_input'>
+                          <InputLeftAddon>
+                            {t('UserPages.login_modify.pwd_modal.input_token')}
+                          </InputLeftAddon>
+                          <Input
+                            isRequired
+                            type={'text'}
+                            onChange={e => setSecret(e.target.value)}
+                          />
+                        </InputGroup>
+                      </FormControl>
+                      <Box
+                        display='grid'
+                        gridAutoFlow='row'
+                        gridRowGap='0,25rem'
+                      >
+                        <Button
+                          variant='btn_lone_navigation_tertiary'
+                          type="submit"
+                          onClick={submitPassword}
+                        >
+                          {t('UserPages.login_modify.pwd_modal.btn')}
                         </Button>
                       </Box>
                     </ModalBody>
@@ -763,6 +866,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                     </InputLeftAddon>
                     <Input
                       type='text'
+                      placeholder={user_data.firstname}
                       onChange={e => setUserNewFirstName(e.target.value)}
                     />
                     <InputRightElement
@@ -787,6 +891,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                     </InputLeftAddon>
                     <Input
                       type='text'
+                      placeholder={user_data.name}
                       onChange={e => setUserNewLastName(e.target.value)}
                     />
                     <InputRightElement
@@ -886,31 +991,40 @@ const Account: FunctionComponent<AccountTypes> = ({
                         isInvalid={(msgs_license_modification.err.length > 0)}
                       >
 
-                      <FormLabel>{t('UserPages.license.confirm_modal.fdback')}</FormLabel>
-                      <Select
-                        placeholder={t('UserPages.license.confirm_modal.fdback_default')}
-                        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          setFeedback(evt.target.value)
-                        }}
-                      >
-                        {
-                          possible_feedback.map((s: string) => {
-                            return <option value={s}>
-                              {t('UserPages.license.confirm_modal.fdback_'+s)}
-                            </option>
-                          })
-                        }
-                      </Select>
-
-                      <FormLabel>{t('UserPages.license.confirm_modal.comment')}</FormLabel>
-                      <Editable >
-                        <EditablePreview />
-                        <EditableInput
-                          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-                            setComment(evt.target.value)
+                        <FormLabel>{t('UserPages.license.confirm_modal.fdback')}</FormLabel>
+                        <Select
+                          placeholder={t('UserPages.license.confirm_modal.fdback_default')}
+                          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            setFeedback(evt.target.value)
                           }}
-                        />
-                      </Editable>
+                        >
+                          {
+                            possible_feedback.map((s: string) => {
+                              return <option value={s}>
+                                {t('UserPages.license.confirm_modal.fdback_' + s)}
+                              </option>
+                            })
+                          }
+                        </Select>
+
+                        <FormLabel>{t('UserPages.license.confirm_modal.comment')}</FormLabel>
+                        <Editable
+                          border='1px solid'
+                          borderRadius='3px'
+                          height='5rem'
+                          textAlign='start'
+                          defaultValue='No Comment'
+                          onChange={(nextValue) => {
+                            setComment(nextValue)
+                          }}
+                        >
+                          <EditablePreview
+                            height='100%'
+                          />
+                          <EditableInput
+                            height='100%'
+                            />
+                        </Editable>
 
                         <FormLabel>{t('UserPages.license.confirm_modal.pwd_confirm')}</FormLabel>
                         <InputGroup variant='register_input'>

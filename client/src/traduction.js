@@ -241,7 +241,7 @@ const resources = {
         msg: {
           'ok': '',
           'err_server': 'An error occurred when calling the server',
-          'err_login': 'Error, your email or password is incorrect, please check your login information and try again',
+          'err_login': 'Error, your e-mail or password is incorrect, please check your login information and try again',
         },
         forgot: {
           'title': 'Reset password',
@@ -260,18 +260,22 @@ const resources = {
       UserPages: {
         login_modify: {
           'title': 'Your login details',
-          confirm_modal: {
-            'title': 'Confirm with your password',
-            'btn': 'Send modification'
+          email_modal: {
+            'title': 'Confirm e-mail modification with your password',
+            'btn': 'Apply modification'
+          },
+          pwd_modal: {
+            'title': 'Confirm password modification with the code received by e-mail',
+            'btn': 'Apply password modification'
           },
           btns: {
             'set_email': 'Change E-mail',
-            'mod_pwd': 'Change password'
+            'set_pwd': 'Change password'
           },
           msgs: {
-            'ok_email': 'Email has successfully been changed',
-            'prs_email': 'Processing email change',
-            'err_email_regex': 'Email is not valid',
+            'ok_email': 'E-mail has successfully been changed',
+            'prs_email': 'Processing e-mail change',
+            'err_email_regex': 'E-mail is not valid',
             'prs_pwd': 'A password reset e-mail has been sent to you.',
           },
         },
@@ -633,7 +637,7 @@ const resources = {
             'ok': 'Compte créé - Vous allez recevoir un e-mail afin de valider celui-ci.',
             'nok': 'Une erreur s\'est produite. Le compte n\'a pas pu être créé',
             'err_captcha': 'Le captcha n\'est pas valide',
-            'err_email_invalid': 'L\'adresse email fournie n\'est pas valide',
+            'err_email_invalid': 'L\'adresse e-mail fournie n\'est pas valide',
             'err_email_exists': 'Un compte existe déjà avec cette adresse e-mail',
           },
           'btn_terms': 'Lire et accepter les conditions d\'utilisation',
@@ -702,20 +706,28 @@ const resources = {
       UserPages: {
         login_modify: {
           'title': 'Vos identifiants de connexion',
-          confirm_modal: {
-            'title': 'Confirmer avec votre mot de passe',
-            'btn': 'Envoyer la modification'
+          email_modal: {
+            'title': 'Confirmer la modification de l\'e-mail avec votre mot de passe',
+            'btn': 'Appliquer la modification'
+          },
+          pwd_modal: {
+            'title': 'Confirmer la modification du mot de passe avec le code reçu par e-mail',
+            'input_pwd': 'Nouveau mot de passe',
+            'input_token': 'Code reçu',
+            'btn': 'Appliquer la modification'
           },
           btns: {
             'set_email': 'Modifier l\'e-mail',
-            'mod_pwd': 'Modifier le mot de passe'
+            'set_pwd': 'Modifier le mot de passe'
           },
           msgs: {
             'ok_email': 'L\'e-mail a été modifié avec succès',
-            'prs_email': 'Traitement du changement d\'email',
-            'err_email_regex': 'L\'email n\'est pas valide',
-            'err_email_failed': 'L\'email n\'a pas pu être modifié',
-            'prs_pwd': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
+            'prs_email': 'Traitement du changement d\'e-mail',
+            'err_email_regex': 'L\'e-mail n\'est pas valide',
+            'err_email_failed': 'L\'e-mail n\'a pas pu être modifié',
+            'ok_pwd': 'Le mot de passe a été modifié avec succes.',
+            'prs_pwd': 'Un e-mail avec un code pour la modification du mot de passe vous a été envoyé.',
+            'err_pwd_failed': 'Erreur sur la demande de modification de mot de passe.',
           },
         },
         infos_modify: {

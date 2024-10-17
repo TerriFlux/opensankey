@@ -307,7 +307,8 @@ def send_pw_modification_email(
         sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
         recipients=[user.email])
     # Add body to msg
-    file = 'password_modification_mail/password_modification_mail_{}'.format(language)
+    file = 'password_modification_mail/password_modification_mail_{}'\
+        .format(language)
     msg.body = render_template(
         file + '.txt',
         first_name=user.firstname,

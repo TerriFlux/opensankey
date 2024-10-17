@@ -257,10 +257,10 @@ def is_connected():
     return 'ok', 200
 
 
-@auth_blueprint.route('/auth/license/<name>')
-@licence_required(license_name='<name>')
-def has_license(name):
-    return 'ok : {}'.format(name), 200
+@auth_blueprint.route('/auth/license/<license_name>')
+@licence_required
+def has_license(license_name):
+    return 'ok : {}'.format(license_name), 200
 
 
 @auth_blueprint.route('/auth/forgot_pw', methods=['POST'])

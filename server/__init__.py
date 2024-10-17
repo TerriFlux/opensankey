@@ -40,7 +40,7 @@ def create_app():
     app.register_blueprint(auth_blueprint)
 
     # BluePrint for User registering / connection part of app
-    from .models import connected_user as connected_user_blueprint
+    from .user import connected_user as connected_user_blueprint
     app.register_blueprint(connected_user_blueprint)
 
     # Blueprint for paiement part

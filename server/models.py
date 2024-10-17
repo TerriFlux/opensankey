@@ -4,18 +4,15 @@
 # Date de création : 25/01/2023
 
 # ---------------------------------------------------------------
+# External imports
 
-import secrets
-import string
-
+# System
 from datetime import datetime
 from functools import wraps
 
 # Flask imports
 from flask import Blueprint
 from flask import current_app
-from flask import jsonify
-from flask import request
 
 # Flask_login imports
 from flask_login import current_user
@@ -25,16 +22,11 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 
-# Werkzeug
-from werkzeug.security import check_password_hash
-from werkzeug.security import generate_password_hash
-
 # Itsdangerous - serialize URLs for secured API transactions
 from itsdangerous import URLSafeTimedSerializer as Serializer
 
 # ---------------------------------------------------------------
 # Local imports
-from .mailing import send_pw_modification_email
 
 # ---------------------------------------------------------------
 # Shared variables
@@ -203,7 +195,7 @@ class User(UserMixin, db.Model):
         :return: True is license is valid
         :rtype: boolean
         """
-        # Check if this relation exsits and its validity
+        # Check if this relation exists and its validity
         expiry = self.get_license_expiry(license_name)
         activated = self.get_license_activation(license_name)
         if (expiry is not None) and (activated):
@@ -329,7 +321,7 @@ def login_required(f):
     return decorated_function
 
 
-def licence_required(license_name=''):
+def licence_required(f):
     """
     Decorator that alow given function f to run if current user has given
     license.
@@ -346,16 +338,16 @@ def licence_required(license_name=''):
     :return: HTTP response (text, status)
     :rtype: string, int
     """
-    def wrapper(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return "Not connected", 401
-            if (not current_user.is_license_valid(license_name)):
-                return "No valid license", 401
-            return f(*args, **kwargs)
-        return decorated_function
-    return wrapper
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return "Not connected", 401
+        if ('license_name' not in kwargs):
+            return "License name is missing", 500
+        if (not current_user.is_license_valid(kwargs['license_name'])):
+            return "No valid license", 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # ---------------------------------------------------------------
@@ -497,323 +489,3 @@ def set_or_update_licence_subscription(
     # Apply modification to database
     db.session.commit()
     return 'OK', True
-
-
-@connected_user.route('/user/infos')
-@login_required
-def user_infos():
-    """
-    HTTP GET request to get user's infos
-
-    Output JSON response
-    - 'email' (String) : User's email
-    - 'firstname' (String) : User's firstname
-    - 'name' (String) : User's name
-    - 'license_legacy_opensankeyplus' (String) : License number for OpenSankey+
-    - 'license_legacy_sankeysuite' (String) : License number for SankeySuite
-    - 'license_opensankeyplus_validity' (boolean): Is license valid ?
-    - 'license_opensankeyplus_expiry' (String): Expiration date for license
-    """
-    # Parse expiration date
-    license_exp = current_user.get_license_expiry('opensankeyplus')
-    try:
-        license_exp = datetime.fromisoformat(licence_exp).strftime('%a %d %b %Y')
-    except Exception:
-        pass
-    # Prepare response
-    response = {
-        'email': current_user.email,
-        'name': current_user.name,
-        'firstname': current_user.firstname,
-        'license_legacy_opensankeyplus': current_user.license_opensankeyplus,
-        'license_legacy_sankeysuite': current_user.license_sankeysuite,
-        'license_opensankeyplus_validity': \
-            current_user.is_license_valid('opensankeyplus'),
-        'license_opensankeyplus_expiry': license_exp
-    }
-    # Send back response
-    return jsonify(response)
-
-
-@connected_user.route('/user/infos/license_expiry/<license_name>')
-@login_required
-def get_license_expiry(license_name):
-    expiry = current_user.get_license_expiry(license_name)
-    if expiry is None:
-        return 'No license', 401
-    return expiry, 200
-
-
-@connected_user.route('/user/infos/license_validity/<license_name>')
-@licence_required(license_name='<license_name>')
-def get_license_validity(license_name):
-    return "OK", 200
-
-
-@connected_user.route('/user/infos/modify/email', methods=['POST'])
-@login_required
-def modify_email():
-    """
-    HTTP Post request to change email of current user
-
-    Input JSON Request
-    - 'email' (String) : User's current email
-    - 'new_email' (String) : User's new email
-    - 'password' (String) : User's password for confirmation
-    """
-    # Read request
-    email = request.json.get('email')
-    new_email = request.json.get('new_email')
-    password = request.json.get('password')
-
-    # Check if other user already have this email
-    other_user = User.query.filter_by(email=new_email).first()
-    if other_user is not None:
-        return 'email_in_use', 400
-
-    # Check if email is coherent
-    if (
-        (current_user.email == email) and
-        (check_password_hash(current_user.password, password))
-    ):
-        current_user.email = new_email
-        db.session.commit()
-        return 'ok', 200
-
-    # Send back response
-    return 'request_error', 400
-
-
-@connected_user.route('/user/infos/modify/pwd/trigger', methods=['POST'])
-@login_required
-def trigger_modify_pwd():
-    """
-    Trigger password reseting
-
-    Input JSON request
-    - 'email' (String) : user's email
-    - 'lang' (String) : Selected language for mail
-
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
-    """
-    # Verify email - if OK create reseting url
-    try:
-        if current_user.email == request.json.get('email'):
-            current_user.secret_token = ''.join(secrets.choice(string.digits) for i in range(6))
-            current_user.secret_expiry = datetime.now().isoformat()
-            send_pw_modification_email(current_user, request.json.get("lang"))
-            db.session.commit()
-    except Exception as e:
-        return 'err:' + str(e), 500
-    # Return
-    return 'ok', 200
-
-
-@connected_user.route('/user/infos/modify/pwd', methods=['POST'])
-@login_required
-def modify_pwd():
-    """
-    Apply password reseting
-
-    Input JSON request
-    - 'new_password' (String) : user's email
-    - 'token' (String): token to validate
-
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
-    """
-    # Verify token
-    if (current_user.secret_token != request.json.get('token')):
-        return 'token_invalid', 400
-
-    # Verify token expiry
-    if (datetime.now() > datetime.fromisoformat(current_user.token_expiry)):
-        return 'token_expired', 400
-
-    # Ok token, apply new password
-    current_user.password = generate_password_hash(
-        request.json.get['password'],
-        method='sha256')
-
-    # Clear token
-    current_user.secret_token = None
-    current_user.secret_expiry = None
-    db.session.commit()
-
-    # Return
-    return 'ok', 200
-
-
-@connected_user.route('/user/infos/modify/firstname', methods=['POST'])
-@login_required
-def modify_firstname():
-    """
-    HTTP Post request to change firstname of current user
-
-    Input JSON Request
-    - 'firstname' (String) : User's new firstname
-    """
-    # Apply modif
-    current_user.firstname =  request.json.get('firstname')
-    db.session.commit()
-    return 'ok', 200
-
-
-@connected_user.route('/user/infos/modify/lastname', methods=['POST'])
-@login_required
-def modify_lastname():
-    """
-    HTTP Post request to change lastname of current user
-
-    Input JSON Request
-    - 'lastname' (String) : User's new lastname
-    """
-    # Apply modif
-    current_user.name =  request.json.get('lastname')
-    db.session.commit()
-    return 'ok', 200
-
-
-@connected_user.route('/user/delete/license/<name>', methods=['POST'])
-@licence_required(license_name='<name>')
-def delete_license(name):
-    """
-    Delete susbcription if present
-
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
-    """
-    # Get related license
-    user_license = current_user.get_license(name)
-    if user_license is None:
-        return 'license_inexistant', 400
-    # Cancel subscription
-    ok_cancel = cancel_subscription(
-        user_license.strip_id,
-        request.json.get('comment'),
-        request.json.get('feedback'))
-    if not ok_cancel:
-        return 'failed_to_cancel', 500
-    # Set subscription as deactivated
-    user_license.active = false
-    db.session.commit()
-    # Return
-    return 'ok', 200
-
-
-@connected_user.route('/user/delete/account')
-@login_required
-def delete_account():
-    """
-    Delete account and susbcription if present
-
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
-    """
-    return 'ok', 200
-
-
-@connected_user.route('/user/infos/license_opensankeyplus')
-@login_required
-def user_infos_license_opensankeyplus():
-    """
-    HTTP GET request to get user's OpenSankey+ license
-
-    Output JSON response
-    - 'license_id' (String) : License number for OpenSankey+
-    """
-    # Prepare response
-    response = {
-        'license_id': current_user.license_opensankeyplus
-    }
-    # Send back response
-    return jsonify(response)
-
-
-@connected_user.route('/user/infos/license_opensankeyplus', methods=['POST'])
-@login_required
-def user_set_license_opensankeyplus():
-    """
-    HTTP POST request to set user's OpenSankey+ license
-
-    Input JSON request
-    - 'license_id' (String) : License number for OpenSankey+
-
-    Output JSON response
-    - 'message' (String) : Error / Success message if needed
-    """
-    # Read request
-    current_user.license_opensankeyplus = request.json.get('license_id')
-    db.session.commit()
-    # Prepare response
-    response = {
-        'message': 'OK'
-    }
-    # Send back response
-    return jsonify(response)
-
-
-@connected_user.route('/user/infos/license_sankeysuite')
-@login_required
-def user_infos_license_mfasankey():
-    """
-    HTTP GET request to get user's infos
-
-    Output JSON response
-    - 'license_id' (String) : License number for SankeySuite
-    """
-    # Prepare response
-    response = {
-        'license_id': current_user.license_sankeysuite
-    }
-    # Send back response
-    return jsonify(response)
-
-
-@connected_user.route('/user/infos/license_sankeysuite', methods=['POST'])
-@login_required
-def user_set_license_mfasankey():
-    """
-    HTTP POST request to set user's SankeySuite license
-
-    Input JSON request
-    - 'license_id' (String) : License number for SankeySuite
-
-    Output JSON response
-    - 'message' (String) : Error / Success message if needed
-    """
-    # Read request
-    current_user.license_sankeysuite = request.json.get('license_id')
-    db.session.commit()
-    # Prepare response
-    response = {
-        'message': 'OK'
-    }
-    # Send back response
-    return jsonify(response)
-
-
-@connected_user.route('/user/infos/is_developer')
-@login_required
-def user_infos_is_developer():
-    """
-    HTTP GET request to check if current user has developer acces
-
-    Output JSON response
-    - 'is_dev' (Bool) : True if user is developer
-    """
-    # Prepare response
-    response = {
-        'is_dev': current_user.is_developer
-    }
-    # Send back response
-    return jsonify(response)
