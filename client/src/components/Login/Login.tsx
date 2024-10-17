@@ -1,6 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
+
 import {
   Box,
   Button,
@@ -12,7 +13,8 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
-  InputRightElement
+  InputRightElement,
+  Spinner
 } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
@@ -32,9 +34,10 @@ export const Login: FunctionComponent<LoginTypes> = ({
   const { t, logo } = new_data_app
 
   // States
+  const [on_wait, setOnWait] = useState(false)
   const [email, setUserName] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [show_password, setShowPassword] = useState(false)
   const [remember] = useState(false)
   const state = {
     button: ''
@@ -46,6 +49,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
   // Handler : Si demande de connection
   const handleSubmit = async () => {
     if (state.button === 'login') {
+      setOnWait(true)
       await loginUser(
         new_data_app,
         {
@@ -53,7 +57,10 @@ export const Login: FunctionComponent<LoginTypes> = ({
           password,
           remember
         },
-        () => returnToApp(new_data_app, navigate)
+        () => {
+          setOnWait(false)
+          returnToApp(new_data_app, navigate)
+        }
       )
     }
     if (state.button === 'forgot') {
@@ -129,7 +136,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
                 </InputLeftAddon>
                 <Input
                   isRequired
-                  type={showPassword ? 'text' : 'password'}
+                  type={show_password ? 'text' : 'password'}
                   placeholder={t('Login.pwd.placeholder')}
                   onChange={e => setPassword(e.target.value)}
                 />
@@ -139,16 +146,13 @@ export const Login: FunctionComponent<LoginTypes> = ({
                     size='sm'
                     border='0px'
                     bg='gray.50'
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword(!show_password)}
                   >
-                    {showPassword ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                    {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
                   </Button>
                 </InputRightElement>
               </InputGroup>
             </FormControl>
-
-            <div className='LogError' style={{ 'color': 'red' }}></div>
-            <div className='LogInfo' style={{ 'color': 'green' }}></div>
 
             <Box
               display='grid'
@@ -174,6 +178,16 @@ export const Login: FunctionComponent<LoginTypes> = ({
                 {t('Login.forgot.ask')}
               </Button>
             </Box>
+
+
+                  <div className='LogError' style={{ 'color': 'red', 'justifySelf': 'center' }}></div>
+                  <div className='LogInfo' style={{ 'color': 'green', 'justifySelf': 'center' }}></div>
+
+            {
+              on_wait ?
+                <Spinner /> :
+                <></>
+            }
           </CardBody>
         </Card>
       </div>
