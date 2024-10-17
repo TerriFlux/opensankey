@@ -361,6 +361,39 @@ const Account: FunctionComponent<AccountTypes> = ({
       })
   }
 
+  /**
+   * Trigger Password change - send email with token
+   */
+  const triggerDeleteAccount = () => {
+    clearMsgsForLoginModification()
+    const path = window.location.origin
+    const url = path + '/user/delete/account'
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+      .then(response => {
+        if (response.ok) {
+          return response
+        }
+        else {
+          setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_pwd_failed'))
+          return Promise.reject(response)
+        }
+      })
+      .then(() => {
+        setTimeout(
+          () => {
+            navigate('/')
+          },
+          2000)
+        setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_del'))
+      })
+  }
+
   // User data modifications ----------------------------------------------------------
 
   /**
@@ -729,6 +762,11 @@ const Account: FunctionComponent<AccountTypes> = ({
                     onClick={triggerPasswordChange}
                   >
                     {t('UserPages.login_modify.btns.set_pwd')}
+                  </Button>
+                  <Button
+                    onClick={triggerDeleteAccount}
+                  >
+                    {t('UserPages.login_modify.btns.del_account')}
                   </Button>
                   <FormErrorMessage>{msgs_login_modification.err}</FormErrorMessage>
                   <FormHelperText>{msgs_login_modification.info}</FormHelperText>

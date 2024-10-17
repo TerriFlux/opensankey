@@ -718,7 +718,8 @@ const resources = {
           },
           btns: {
             'set_email': 'Modifier l\'e-mail',
-            'set_pwd': 'Modifier le mot de passe'
+            'set_pwd': 'Modifier le mot de passe',
+            'del_account': 'Supprimer le compte'
           },
           msgs: {
             'ok_email': 'L\'e-mail a été modifié avec succès',
@@ -728,6 +729,7 @@ const resources = {
             'ok_pwd': 'Le mot de passe a été modifié avec succes.',
             'prs_pwd': 'Un e-mail avec un code pour la modification du mot de passe vous a été envoyé.',
             'err_pwd_failed': 'Erreur sur la demande de modification de mot de passe.',
+            'ok_del': 'Le compte a été supprimé. Retour à la page principale.'
           },
         },
         infos_modify: {

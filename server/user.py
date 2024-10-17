@@ -18,6 +18,7 @@ from flask import request
 
 # Flask_login imports
 from flask_login import current_user
+from flask_login import logout_user
 
 # SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
@@ -31,6 +32,7 @@ from werkzeug.security import generate_password_hash
 # Local imports
 
 from .models import User
+from .models import UserLicences
 from .models import login_required
 from .models import licence_required
 from .mailing import send_pw_modification_email
@@ -246,10 +248,13 @@ def delete_license(license_name):
     if user_license is None:
         return 'license_inexistant', 400
     # Cancel subscription
-    ok_cancel = cancel_subscription(
-        user_license.stripe_id,
-        request.json.get('comment'),
-        request.json.get('feedback'))
+    try:
+        ok_cancel = cancel_subscription(
+            user_license.stripe_id,
+            request.json.get('comment'),
+            request.json.get('feedback'))
+    except Exception as e:
+        return 'err_in_cancel : {}'.format(e), 500
     if not ok_cancel:
         return 'failed_to_cancel', 500
     # Set subscription as deactivated
@@ -259,7 +264,7 @@ def delete_license(license_name):
     return 'ok', 200
 
 
-@connected_user.route('/user/delete/account')
+@connected_user.route('/user/delete/account', methods=['POST'])
 @login_required
 def delete_account():
     """
@@ -270,6 +275,17 @@ def delete_account():
     :return: _description_
     :rtype: _type_
     """
+    try:
+        # Unsubscribe to licenses
+        for license in current_user.licenses:
+            if license.name != 'terriflux':
+                delete_license(license_name=license.name)
+        # Delete account
+        current_user.delete()
+        db.session.commit()
+        logout_user()
+    except Exception as e:
+        return 'err : {}'.format(e), 500
     return 'ok', 200
 
 

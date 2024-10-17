@@ -94,6 +94,20 @@ class User(UserMixin, db.Model):
         cascade="all, delete")
     licenses = association_proxy('user_licenses', 'license')
 
+    def delete(self):
+        """
+        Delete self for db
+
+        Returns
+        -------
+        :return: _description_
+        :rtype: _type_
+        """
+        for user_license in self.user_licenses:
+            user_license.delete()
+        db.session.delete(self)
+        db.session.commit()
+
     def get_license(self, license_name):
         """
         Get user license object by its name
@@ -273,6 +287,18 @@ class UserLicences(db.Model):
     expiry = db.Column(db.String(128))
     activated = db.Column(db.Boolean)
     stripe_id = db.Column(db.String(1024), unique=True)
+
+    def delete(self):
+        """
+        Delete self for db
+
+        Returns
+        -------
+        :return: _description_
+        :rtype: _type_
+        """
+        db.session.delete(self)
+        db.session.commit()
 
 
 class License(db.Model):
