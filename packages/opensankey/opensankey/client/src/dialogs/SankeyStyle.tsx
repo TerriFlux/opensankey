@@ -36,9 +36,11 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
   // Component's state
   const [, setForceUpdate] = useBoolean()
   const [selected_node_style_id, setSelectedNodeStyleId] = useState(default_style_id)
+  new_data.menu_configuration.ref_to_menu_config_nodes_styles_editor_updater.current=setForceUpdate.toggle
 
   // Dict of nodes styles
   const node_styles_dict = new_data.drawing_area.sankey.node_styles_dict
+  console.log(new_data.drawing_area.sankey.node_styles_dict   )
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
     <Box
@@ -178,6 +180,8 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
   // Component's state
   const [selected_link_style_id, setSelectedLinkStyleId] = useState(default_style_id)
   const [, setForceUpdate] = useBoolean()
+
+  new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current=setForceUpdate.toggle
 
   // Shared refs for external components
   ref_selected_style_link.current = selected_link_style_id
