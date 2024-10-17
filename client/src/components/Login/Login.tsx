@@ -59,7 +59,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
         },
         () => {
           setOnWait(false)
-          returnToApp(new_data_app, navigate)
+          returnToApp(navigate)
         }
       )
     }
@@ -90,13 +90,13 @@ export const Login: FunctionComponent<LoginTypes> = ({
               height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp(new_data_app, navigate)}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp(new_data_app, navigate)}
+            onClick={() => returnToApp(navigate)}
           >
             {t('UserNav.to_app')}
           </Button>
@@ -180,8 +180,23 @@ export const Login: FunctionComponent<LoginTypes> = ({
             </Box>
 
 
-                  <div className='LogError' style={{ 'color': 'red', 'justifySelf': 'center' }}></div>
-                  <div className='LogInfo' style={{ 'color': 'green', 'justifySelf': 'center' }}></div>
+            <div
+              className='LogError'
+              style={{
+                'color': 'red',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+
+            </div>
+            <div
+              className='LogInfo'
+              style={{
+                'color': 'green',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+            </div>
 
             {
               on_wait ?
@@ -199,13 +214,27 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
   { new_data_app }
 ) => {
   const navigate = useNavigate()
+
+  const [on_wait, setOnWait] = useState(false)
+
   return <Button
     variant='menutop_button_logout'
-    onClick={() => loginOut(
-      new_data_app,
-      () => returnToApp(new_data_app, navigate)
-    )}>
-    <FaPowerOff />
+    disabled={on_wait}
+    onClick={() => {
+      setOnWait(true)
+      loginOut(
+        new_data_app,
+        () => {
+          setOnWait(false)
+          returnToApp(navigate)
+        })
+    }}
+  >
+    {
+      on_wait ?
+        <Spinner /> :
+        <FaPowerOff />
+    }
   </Button>
 }
 

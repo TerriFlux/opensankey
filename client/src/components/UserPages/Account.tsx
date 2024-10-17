@@ -119,7 +119,7 @@ const Account: FunctionComponent<AccountTypes> = ({
 
   //If we acces this page without being logged, it is resent to the application
   if (!new_data_app.has_account) {
-    returnToApp(new_data_app, navigate)
+    returnToApp(navigate)
   }
 
   //If we are logged the the following behaviors are defined
@@ -680,7 +680,7 @@ const Account: FunctionComponent<AccountTypes> = ({
               height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp(new_data_app, navigate)}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box
@@ -691,7 +691,7 @@ const Account: FunctionComponent<AccountTypes> = ({
           >
             <Button
               variant='btn_lone_navigation'
-              onClick={() => returnToApp(new_data_app, navigate)}
+              onClick={() => returnToApp(navigate)}
             >
               {t('UserNav.to_app')}
             </Button>

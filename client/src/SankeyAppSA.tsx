@@ -248,9 +248,7 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
 }
 
 export const returnToApp = (
-  new_data_app: Class_ApplicationDataSA,
   navigate: NavigateFunction
 ) => {
   navigate('/')
-  // new_data_app.menu_configuration.updateComponentsRelatedToSA()
 }

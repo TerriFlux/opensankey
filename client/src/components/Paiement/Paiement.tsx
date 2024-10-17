@@ -184,13 +184,13 @@ export const PaiementPage: FunctionComponent<{
               height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp(new_data_app, navigate)}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp(new_data_app, navigate)}
+            onClick={() => returnToApp(navigate)}
           >
             {t('UserNav.to_app')}
           </Button>

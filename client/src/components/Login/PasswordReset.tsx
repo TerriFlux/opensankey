@@ -14,7 +14,8 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
-  InputRightElement
+  InputRightElement,
+  Spinner
 } from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
@@ -45,9 +46,10 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
   const { token } = useParams()
 
   // States
+  const [on_wait, setOnWait] = useState(false)
   const [password, setPassword] = useState('')
-  const [okPassword, setOkPassword] = useState(0)
-  const [showPassword, setShowPassword] = useState(false)
+  const [ok_password, setOkPassword] = useState(0)
+  const [show_password, setShowPassword] = useState(false)
 
   // Initialise navigation function
   const navigate = useNavigate()
@@ -55,6 +57,7 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
   // Handler
   const handleSubmit = async () => {
     if (token !== undefined){
+      setOnWait(true)
       const lang = i18next.language
       await applyPasswordReset(
         new_data_app,
@@ -63,7 +66,10 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
           password,
           lang
         },
-        navigate
+        () => {
+          setOnWait(false)
+          navigate('/login')
+        }
       )
     }
   }
@@ -90,13 +96,13 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
               height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp(new_data_app, navigate)}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp(new_data_app, navigate)}
+            onClick={() => returnToApp(navigate)}
           >
             {t('UserNav.to_app')}
           </Button>
@@ -115,14 +121,14 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
           <CardBody>
 
             {/* User password*/}
-            <FormControl isInvalid={okPassword === 1}>
+            <FormControl isInvalid={ok_password === 1}>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
                   {t('Register.account.pwd.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
-                  type={showPassword ? 'text' : 'password'}
+                  type={show_password ? 'text' : 'password'}
                   placeholder={t('Register.account.pwd.placeholder')}
                   onChange={e => {
                     if (e.target.value.match(pwd_regex_str) != null) {
@@ -141,13 +147,13 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
                     size='sm'
                     border='0px'
                     bg='gray.50'
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword(!show_password)}
                   >
-                    {showPassword ? t('Register.account.pwd.hide') : t('Register.account.pwd.show')}
+                    {show_password ? t('Register.account.pwd.hide') : t('Register.account.pwd.show')}
                   </Button>
                 </InputRightElement>
               </InputGroup>
-              {(okPassword === 1) ? (
+              {(ok_password === 1) ? (
                 <FormErrorMessage>
                   {t('Register.account.pwd.error')}
                 </FormErrorMessage>
@@ -155,18 +161,39 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
                 <></>
               )}
             </FormControl>
-            <div className='LogError' style={{ 'color': 'red', 'textAlign': 'center' }}></div>
-            <div className='LogInfo' style={{ 'color': 'green', 'textAlign': 'center' }}></div>
-            <div style={{ 'textAlign': 'center' }}>
-              <Button
-                variant='btn_lone_navigation_tertiary'
-                type="submit"
-                onClick={() => {
-                  handleSubmit()
-                }}>
-                {t('Login.forgot.sub')}
-              </Button>
+
+            <Button
+              variant='btn_lone_navigation_tertiary'
+              type="submit"
+              onClick={() => {
+                handleSubmit()
+              }}>
+              {t('Login.forgot.sub')}
+            </Button>
+
+            <div
+              className='LogError'
+              style={{
+                'color': 'red',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+
             </div>
+            <div
+              className='LogInfo'
+              style={{
+                'color': 'green',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+            </div>
+
+            {
+              on_wait ?
+                <Spinner /> :
+                <></>
+            }
           </CardBody>
         </Card>
       </div>
@@ -187,8 +214,9 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
   const { t, logo } = new_data_app
 
   // States
+  const [on_wait, setOnWait] = useState(false)
   const [email, setEmail] = useState('')
-  const [okEmail, setOkEmail] = useState(0)
+  const [ok_email, setOkEmail] = useState(0)
 
   // Initialise navigation function
   const navigate = useNavigate()
@@ -202,7 +230,12 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
         email,
         lang
       },
-      navigate
+      () => {
+        setOnWait(false)
+        setTimeout(
+          () => navigate('/login'),
+          3000)
+      }
     )
   }
 
@@ -228,13 +261,13 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
               height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp(new_data_app, navigate)}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp(new_data_app, navigate)}
+            onClick={() => returnToApp(navigate)}
           >
             {t('UserNav.to_app')}
           </Button>
@@ -252,7 +285,7 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
           <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot.title')}</CardHeader>
           <CardBody>
             {/* User e-mail*/}
-            <FormControl isInvalid={okEmail === 1}>
+            <FormControl isInvalid={ok_email === 1}>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
                   {t('Login.id.label')}
@@ -274,24 +307,45 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
                   }}
                 />
               </InputGroup>
-              {(okEmail === 1) ? (
+              {(ok_email === 1) ? (
                 <FormErrorMessage>{t('Login.id.error')}</FormErrorMessage>
               ) : (
                 <></>
               )}
             </FormControl>
-            <div className='LogError' style={{ 'color': 'red', 'textAlign': 'center' }}></div>
-            <div className='LogInfo' style={{ 'color': 'green','textAlign': 'center' }}></div>
-            <div style={{ 'textAlign': 'center' }}>
-              <Button
-                variant='btn_lone_navigation_tertiary'
-                type="submit"
-                onClick={() => {
-                  handleSubmit()
-                }}>
-                {t('Login.forgot.sub')}
-              </Button>
+
+            <Button
+              variant='btn_lone_navigation_tertiary'
+              type="submit"
+              onClick={() => {
+                handleSubmit()
+              }}>
+              {t('Login.forgot.sub')}
+            </Button>
+
+            <div
+              className='LogError'
+              style={{
+                'color': 'red',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+
             </div>
+            <div
+              className='LogInfo'
+              style={{
+                'color': 'green',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+            </div>
+
+            {
+              on_wait ?
+                <Spinner /> :
+                <></>
+            }
           </CardBody>
         </Card>
       </div>

@@ -27,7 +27,8 @@ export async function userSignUp(
   email: string,
   password: string,
   firstname: string,
-  lastname: string
+  lastname: string,
+  callback: (ok: boolean) => void
 ) {
   resetLogs()
   fetch(window.location.origin + '/auth/signup/create', {
@@ -52,10 +53,14 @@ export async function userSignUp(
     })
     .then((response) => {
       if (response) {
-        if (response['message'] === 'ok')
+        if (response['message'] === 'ok'){
           logInfo(i18next.t('Register.account.msg.ok'))
-        else
+          callback(true)
+        }
+        else{
           logError(i18next.t('Register.account.msg.' + response['message']))
+          callback(false)
+        }
       }
     })
 }

@@ -108,7 +108,7 @@ export async function loginUser(
 //Logout
 export function loginOut(
   new_data_app: Class_ApplicationDataSA,
-  returnToApp = () => {}
+  callback = () => { }
 ) {
   // LogOut on server
   const path = window.location.origin
@@ -116,14 +116,9 @@ export function loginOut(
   return fetch(url)
     .then(() => {
       // Check that we are effectivly disconnected
-      new_data_app.checkTokens(true)
-      // sessionStorage.removeItem('token')
-      // sessionStorage.removeItem('username')
-      // sessionStorage.removeItem(app_name_opensankeyplus)
-      // sessionStorage.removeItem(app_name_sankeysuite)
-      // sessionStorage.removeItem('SankeyDev')
-      returnToApp()
+      return new_data_app.checkTokens(true)
     })
+    .then(callback)
 }
 
 /**
@@ -134,7 +129,7 @@ export function loginOut(
  *     email: string,
  *     lang: string,
  *   }} infos
- * @param {(route: string) => void} navigate
+ * @param {() => void} callback
  * @return {*}
  */
 export async function triggerPasswordReset(
@@ -143,7 +138,7 @@ export async function triggerPasswordReset(
     email: string,
     lang: string,
   },
-  navigate: (route: string) => void
+  callback: () => void
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
@@ -169,15 +164,17 @@ export async function triggerPasswordReset(
     .then(data => {
       if (data['user_is_authenticated'] === true) {
         logError(t('Login.forgot.msg.err_user_already_connected'))
-        navigate('/')
-        return
       }
-      if (data['user_exists'] === false) {
+      else if (data['user_exists'] === false) {
         logError(t('Login.forgot.msg.err_user_inexistant'))
-        navigate('/register')
-        return
       }
-     logInfo(t('Login.forgot.msg.mail_sent'))
+      else {
+        logInfo(t('Login.forgot.msg.mail_sent'))
+      }
+      setTimeout(
+        callback,
+        3000
+      )
     })
 }
 
@@ -192,7 +189,7 @@ export async function triggerPasswordReset(
  *     password: string,
  *     lang: string,
  *   }} infos
- * @param {(route: string) => void} navigate
+ * @param {() => void} callback
  * @return {*}
  */
 export async function applyPasswordReset(
@@ -202,7 +199,7 @@ export async function applyPasswordReset(
     password: string,
     lang: string,
   },
-  navigate: (route: string) => void
+  callback: () => void
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
@@ -233,7 +230,7 @@ export async function applyPasswordReset(
       if (data['passwd_is_updated'] === true) {
         d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.ok'))
         setTimeout(
-          () => {navigate('/login')},
+          callback,
           3000
         )
         return
