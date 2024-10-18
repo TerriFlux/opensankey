@@ -1,10 +1,31 @@
 import { extendTheme } from '@chakra-ui/react'
 import { Theme_SankeyPlus } from '../deps/OpenSankey+/chakra/Theme'
+import {
+    btn_lone_navigation,
+    btn_lone_navigation_primary,
+    btn_lone_navigation_secondary,
+    btn_lone_navigation_tertiary,
+    btn_lone_navigation_tertiary_negative,
+    menutop_button_goto_dashboard,
+    menutop_button_logout
+} from './ButtonStyles'
 
 
 
 export const Theme_SA = extendTheme({
-
+    components:{
+        Button:{
+            variants:{
+                btn_lone_navigation,
+                btn_lone_navigation_primary,
+                btn_lone_navigation_secondary,
+                btn_lone_navigation_tertiary,
+                btn_lone_navigation_tertiary_negative,
+                menutop_button_logout,
+                menutop_button_goto_dashboard
+            }
+        }
+    }
 })
 
 const Theme = {}
