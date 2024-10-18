@@ -706,13 +706,14 @@ const resources = {
       UserPages: {
         login_modify: {
           'title': 'Vos identifiants de connexion',
+          'pwd': 'Changer mot de passe',
+          'del': 'Supprimer le compte',
           email_modal: {
             'title': 'Confirmer la modification de l\'e-mail avec votre mot de passe',
             'btn': 'Appliquer la modification'
           },
           pwd_modal: {
             'title': 'Confirmer la modification du mot de passe avec le code reçu par e-mail',
-            'input_pwd': 'Nouveau mot de passe',
             'input_token': 'Code reçu',
             'btn': 'Appliquer la modification'
           },

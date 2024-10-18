@@ -1,4 +1,4 @@
-import { defineStyle } from '@chakra-ui/react'
+import { background, defineStyle } from '@chakra-ui/react'
 
 
 export const menutop_button_goto_dashboard = defineStyle({
@@ -41,7 +41,7 @@ export const menutop_button_logout = defineStyle({
   },
 })
 
-const _btn_lone_navigation = defineStyle({
+const _btn_lone_navigation = {
   height: '3rem',
   maxW: '11rem',
   marginLeft: '1rem',
@@ -51,7 +51,7 @@ const _btn_lone_navigation = defineStyle({
   alignSelf: 'center',
   justifySelf: 'center',
   textAlign: 'center'
-})
+}
 
 export const btn_lone_navigation = defineStyle(_btn_lone_navigation)
 
@@ -107,4 +107,37 @@ export const btn_lone_navigation_tertiary_negative = defineStyle({
     bgColor: 'white',
     border: 'none',
   },
+})
+
+const _btn_accountpage = {
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  borderColor: 'primaire.2',
+  _hover: {
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+    borderColor: 'secondaire.2',
+  }
+}
+
+export const btn_accountpage = defineStyle({
+  ..._btn_accountpage
+})
+
+export const btn_accountpage_embedded = defineStyle({
+  ..._btn_accountpage,
+  height: '90%',
+  width: '90%'
+})
+
+export const btn_accountpage_danger = defineStyle({
+  ..._btn_accountpage,
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
+  borderColor: 'primaire.1',
+  _hover: {
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+    borderColor: 'secondaire.1',
+  }
 })

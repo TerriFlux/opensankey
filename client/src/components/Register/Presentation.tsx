@@ -15,7 +15,7 @@ export const Presentation: FunctionComponent<{
 
   const { t, logo_sankey_plus} = new_data_app
 
-  return <Box layerStyle='licence_row' background='gray.50'>
+  return <Box layerStyle='welcome_license_row' background='gray.50'>
     <Box>
       <img
         src={logo_sankey_plus}
@@ -23,7 +23,7 @@ export const Presentation: FunctionComponent<{
         style={{ 'objectFit': 'contain', 'width': '225px' }}
       />
     </Box>
-    <Box layerStyle='licence_desc'>
+    <Box layerStyle='welcome_license_desc'>
       {t('Register.presentation.text')}
     </Box>
   </Box>
