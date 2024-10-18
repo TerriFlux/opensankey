@@ -85,7 +85,7 @@ const LicenceOSP = (
       </Box>
       <Box layerStyle='licence_desc'>
         {t('Menu.presentation_OSP')}
-        <Button variant='btn_desc_licence' onClick={() => {
+        <Button variant='welcome_button_license_description' onClick={() => {
           window.open('https://terriflux.com/downloads/open-sankey-plus/')
         }}>
           {t('desire_to_know_more')}
