@@ -437,7 +437,7 @@ export abstract class Class_NodeElementPlus
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', this.iconColor)
+      .style('fill', this.shape_visible?this.iconColor:this.getShapeColorToUse())
       .attr('d', this.sankey.getIconFromCatalog(this.iconName))
   }
 
