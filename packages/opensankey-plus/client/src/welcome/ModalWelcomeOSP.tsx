@@ -75,7 +75,7 @@ const LicenceOSP = (
   page_content['licence'] = <React.Fragment>
     {page_content['licence'] ?? <></>}
     {/* OpenSankey+ */}
-    <Box layerStyle='licence_row' background='gray.50'>
+    <Box layerStyle='welcome_license_row' background='gray.50'>
       <Box>
         <img
           src={logo_sankey_plus}
@@ -83,7 +83,7 @@ const LicenceOSP = (
           style={{ 'objectFit': 'contain', 'width': '225px' }}
         />
       </Box>
-      <Box layerStyle='licence_desc'>
+      <Box layerStyle='welcome_license_desc'>
         {t('Menu.presentation_OSP')}
         <Button variant='welcome_button_license_description' onClick={() => {
           window.open('https://terriflux.com/downloads/open-sankey-plus/')
