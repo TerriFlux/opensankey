@@ -47,32 +47,32 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,fo
   const new_data_app = new Class_ApplicationDataSA(false)
   const reinit =initializeReinitializationOSP(new_data_app)
   const sankeyApp =<SankeyApp
-      initializeReinitialization={initializeReinitializationOSP}
-      initializeApplicationData={
-        (initial_data) => {
-          return initializeApplicationDataSA(
-            new_data_app,
-            initial_data
-          )
-        }
+    initializeReinitialization={initializeReinitializationOSP}
+    initializeApplicationData={
+      (initial_data) => {
+        return initializeApplicationDataSA(
+          new_data_app,
+          initial_data
+        )
       }
-      initializeMenuConfiguration={initializeMenuConfiguration}
-      initializeAdditionalMenus={(additionalMenus, new_data) => {
-        initializeAdditionalMenusSA(
-          additionalMenus,
+    }
+    initializeMenuConfiguration={initializeMenuConfiguration}
+    initializeAdditionalMenus={(additionalMenus, new_data) => {
+      initializeAdditionalMenusSA(
+        additionalMenus,
           new_data as Class_ApplicationDataSA,
           example_menu,
           formations_menu,
           reinit
-        )
-      }}
-      initializeDiagrammSelector={initializeDiagrammSelectorOSP}
-      moduleDialogs={moduleDialogsOSP}
-      ModalWelcome={ModalWelcomeBuilderOSP}
-      ClickSaveDiagram={
-        (new_data_app) => { ClickSaveDiagram(new_data_app) }
-      }
-    />
+      )
+    }}
+    initializeDiagrammSelector={initializeDiagrammSelectorOSP}
+    moduleDialogs={moduleDialogsOSP}
+    ModalWelcome={ModalWelcomeBuilderOSP}
+    ClickSaveDiagram={
+      (new_data_app) => { ClickSaveDiagram(new_data_app) }
+    }
+  />
 
   const exemple_menu = {} as { [_: string]: JSX.Element }
 
@@ -103,7 +103,10 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = ({example_menu,fo
   const blockers = {}
 
   if (new_data_app.is_static)
-    return sankeyApp
+    return <ChakraProvider
+      theme={Theme_SankeyApplication}>
+      {sankeyApp}
+    </ChakraProvider>
   else
     return <ChakraProvider
       theme={Theme_SankeyApplication}
