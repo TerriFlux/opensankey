@@ -1098,6 +1098,7 @@ export abstract class Class_NodeElement
     // Input links
     const input_link_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
     input_link_ids
+      .filter(l_id => l_id != 'ghost_link')
       .forEach(_ => {
         const link_id = matching_links_id[_] ?? _
         this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
@@ -1105,7 +1106,8 @@ export abstract class Class_NodeElement
     // Output links
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
     output_link_ids
-      .forEach(_ => {
+      .filter(l_id => l_id != 'ghost_link')
+      .forEach(_ => { 
         const link_id = matching_links_id[_] ?? _
         this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
       })
