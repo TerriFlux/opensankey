@@ -19,6 +19,11 @@ import { DeleteGNodes } from '../draw/SankeyDrawNodes'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
 const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -57,7 +62,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
       pos_x = pointer_pos.current[0] - 400
     }
 
-    if (pointer_pos.current[1] + 490 > window.innerHeight) {
+    if (!window.SankeyToolsStatic && pointer_pos.current[1] + 490 > window.innerHeight) {
       pos_y = pointer_pos.current[1] - 470
       is_top = false
     }
@@ -378,7 +383,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   }}>{t('Noeud.context_agregate')}</Button> : <></>
 
   const btn_desagregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasDesaggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
-    Desaggregate(contextualised_node, applicationData, agregation)
+    Desaggregate(contextualised_node, applicationData,link_function, agregation)
     multi_selected_nodes.current = []
     node_function.recomputeDisplayedElement()
     set_data({ ...data })
@@ -436,6 +441,17 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
     contextMenu.ref_contextualised_node.current = undefined
   }} variant='contextmenu_button'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
 
+  if (window.SankeyToolsStatic) {
+    return contextualised_node !== undefined ? <Box layerStyle='context_menu' id="context_node_pop_over"
+      className={'context_popover ' + (is_top ? '' : 'at_bot')}
+      zIndex='3'
+      style={{ maxWidth: '100%', position: 'fixed', inset: style_c_n }}>
+      <ButtonGroup orientation='vertical' isAttached>
+        {btn_aggregate}
+        {btn_desagregate}
+      </ButtonGroup>
+    </Box> : <></>
+  }
   // Pop over that serve as context menu
   return contextualised_node !== undefined ? <Box layerStyle='context_menu' id="context_node_pop_over"
     className={'context_popover ' + (is_top ? '' : 'at_bot')}

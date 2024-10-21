@@ -1,5 +1,5 @@
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, agregationType, applicationDataType } from '../../types/Types'
+import { LinkFunctionTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationDataType } from '../../types/Types'
 
 export type ArrangeTradeType = (
   applicationData : applicationDataType,
@@ -156,6 +156,7 @@ export type reorganize_all_input_outputLinksIdFType = (
  */
 export type desagregationFType = (
   applicationData:applicationDataType,
+  link_function: LinkFunctionTypes,
   idNode: string,
   cur_dimension: string
 ) => void
@@ -191,6 +192,7 @@ export type AggregateFuncType = (
 export type DesaggregateFuncType = (
     n: SankeyNode,
     applicationData:applicationDataType,
+    link_function:LinkFunctionTypes,
     agregation: agregationType
 ) => void
 

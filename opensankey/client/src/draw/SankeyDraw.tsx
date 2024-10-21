@@ -22,6 +22,7 @@ typeof globalThis & {
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
   applicationData,
+  link_function,
   animation,
   applicationState,
   agregation,
@@ -167,6 +168,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       <AgregationModal
         agregationRef={agregation}
         applicationData={applicationData}
+        link_function={link_function}
       />
     </>
   )

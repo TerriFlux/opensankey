@@ -8,6 +8,7 @@ import {
 } from 'deep-diff'
 
 import {
+  LinkFunctionTypes,
   SankeyData,
   SankeyLink,
   SankeyLinkValue,
@@ -1024,22 +1025,37 @@ export const reorganize_all_input_outputLinksId : reorganize_all_input_outputLin
  */
 export const desagregation : desagregationFType = (
   applicationData,
+  link_function,
   idNode: string,
   cur_dimension: string
 ) => {
-  const {data}=applicationData
+  const {data,display_links}=applicationData
   const node = data.nodes[idNode]
+
+  let nodes_to_recalculate = new Set()
+  node.inputLinksId.filter(lid => lid in display_links).forEach(lid => nodes_to_recalculate.add(data.links[lid].idSource))
+  node.outputLinksId.filter(lid => lid in display_links).forEach(lid => nodes_to_recalculate.add(data.links[lid].idTarget))
+  nodes_to_recalculate.forEach(nid => reorganize_inputLinksId(data, data.nodes[nid as string], true, true, data.nodes, data.links))
+
   const dim_desagregate_nodes = getDesagregationNodes(cur_dimension, data, node)
   if (dim_desagregate_nodes.length == 0) {
     return
   }
   let nodes_heights = 0
   dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,applicationData,GetLinkValue))
+
+  let node_above = node
+  let new_y = node.y
   dim_desagregate_nodes.forEach(n => {
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
     }
     setLocalAgregation(n, data, true)
+    n.y = new_y
+    node_above = n
+    new_y= node_above.y + 
+    nodeHeight(node_above, applicationData, link_function.GetLinkValue) + 
+    + +ReturnValueNode(data,n,'dy')
     // if (to_compute_auto_sankey) {
     //   if (n.outputLinksId.length === 0) {
     //     AssignNodeLocalAttribute(n,'label_horiz', 'right')
@@ -1054,6 +1070,8 @@ export const desagregation : desagregationFType = (
     //   }
     // }
   })
+  
+  nodes_to_recalculate.forEach(nid=>reorganize_inputLinksId(data,data.nodes[nid as string], true, true, data.nodes, data.links))
   const clicked_node=data.nodes[idNode]
   if(clicked_node.local==undefined || clicked_node.local==null) {
     clicked_node.local = {} as SankeyNodeAttrLocal
@@ -1149,11 +1167,12 @@ export const agregation : agregationFType = (
 
 export type AgregationModalTypes = {
   applicationData: applicationDataType
+  link_function: LinkFunctionTypes,
   agregationRef : agregationType
 }
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {applicationData, agregationRef}
+  {applicationData, link_function, agregationRef}
 ) => {
   const {data,set_data}=applicationData
   const [show_agregation,set_show_agregation] = useState(false)
@@ -1290,7 +1309,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
             <Button
               variant="menuconfigpanel_option_button_secondary"
               onClick={()=> {
-                desagregation(applicationData,n.idNode,dim_name)
+                desagregation(applicationData,link_function,n.idNode,dim_name)
                 set_data({...data})
                 set_show_agregation(false)
                 set_dim_name('')
@@ -2021,6 +2040,7 @@ export const Aggregate: AggregateFuncType = (
 export const Desaggregate: DesaggregateFuncType = (
   n: SankeyNode,
   applicationData,
+  link_function,
   agregationRef
 ) => {
   const {data}=applicationData
@@ -2050,7 +2070,7 @@ export const Desaggregate: DesaggregateFuncType = (
     agregationRef.isAgregationRef.current = false
     agregationRef.showAgregationRef.current![0][1](true)
   } else {
-    desagregation(applicationData, n.idNode, dim_names[0])
+    desagregation(applicationData, link_function,n.idNode, dim_names[0])
   }
 }
 

@@ -632,6 +632,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <SankeyDraw
         contextMenu={contextMenu}
         applicationData={applicationData}
+        link_function={link_function}
         animation={useRef(false)}
         applicationState={applicationState}
         agregation={agregation}
