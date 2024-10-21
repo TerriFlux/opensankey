@@ -696,6 +696,7 @@ export const open_resources = {
         rc: 'Keyboard Shortcuts',
         licence: 'Licences',
         breadcrumbs: {
+          read_me:'Read me',
           intro: 'Overview',
           interface:'Interface',
           rc: 'Shortcuts',
@@ -1435,6 +1436,7 @@ export const open_resources = {
         rc: 'Pour plus de rapidité, des raccourcis clavier sont disponibles',
         licence: 'Optez pour la licence adaptée à votre usage',
         breadcrumbs: {
+          read_me: 'Lisez moi',
           intro: 'Fonctionnalités',
           interface: 'Boutons et Menus',
           rc: 'Raccourcis',
