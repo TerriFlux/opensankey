@@ -1,5 +1,6 @@
 import { extendTheme } from '@chakra-ui/react'
 import { Theme_SankeyPlus } from '../deps/OpenSankey+/chakra/Theme'
+
 import {
     btn_accountpage,
     btn_accountpage_danger,
@@ -16,6 +17,9 @@ import {
     form_account_page,
     form_base_style
 } from './FormControl'
+import {
+    modal_account
+} from './ModalStyle'
 
 const _text_style_log = {
     fontFamily: 'Open Sans,sans-serif',
@@ -44,6 +48,11 @@ export const Theme_SA = extendTheme({
             variants: {
                 form_account_page
             }
+        },
+        Modal: {
+            variants: {
+                modal_account
+            }
         }
     },
     layerStyles: {
@@ -56,11 +65,15 @@ export const Theme_SA = extendTheme({
             margin: '0'
           }
         },
-        account_grid: {
+        account_grid_col: {
             display: 'grid',
-            gridRowGap: '12px',
             gridTemplateColumns: '1fr 1fr',
             gridColumnGap: '12px'
+        },
+        account_grid_row: {
+            display: 'grid',
+            gridRowGap: '12px',
+            gridAutoFlow: 'row'
         },
         account_card_title: {
             backgroundColor: 'tertiaire.2',

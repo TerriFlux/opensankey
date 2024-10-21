@@ -162,11 +162,19 @@ export const Login: FunctionComponent<LoginTypes> = ({
               <Button
                 variant='btn_lone_navigation_tertiary'
                 type="submit"
+                isDisabled={(
+                  on_wait ||
+                  ( password.length === 0) ||
+                  (email.length === 0))}
                 onClick={() => {
                   (state.button = 'login')
                   handleSubmit()
                 }}>
-                {t('Login.con')}
+                {
+                  on_wait ?
+                    <Spinner /> :
+                    t('Login.con')
+                }
               </Button>
               <Button
                 variant='btn_lone_navigation_tertiary_negative'
@@ -197,12 +205,6 @@ export const Login: FunctionComponent<LoginTypes> = ({
                 'textAlign': 'center'
               }}>
             </div>
-
-            {
-              on_wait ?
-                <Spinner /> :
-                <></>
-            }
           </CardBody>
         </Card>
       </div>

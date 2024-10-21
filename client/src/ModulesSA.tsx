@@ -210,18 +210,12 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     <Button
       variant={'menutop_button_goto_dashboard'}
       onClick={() => {
-        // applicationData.function_on_wait.current = () => {
-        //   localStorage.setItem('data', LZString.compress(JSON.stringify((applicationData as suiteApplicationDataType).master_data)))
-        //   localStorage.setItem('last_save', 'true')
-        //   new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-        //   navigate('/dashboard')
+        navigate('/account')
+        // new_data_app.menu_configuration.function_on_wait.current = () => {
+        //   indicateSankeyToSaveInCache()
+        //   navigate('/account')
         // }
-        // dict_hook_ref_setter_show_dialog_components.ref_lauchToast.current()
-        new_data_app.menu_configuration.function_on_wait.current = () => {
-          indicateSankeyToSaveInCache()
-          navigate('/dashboard')
-        }
-        new_data_app.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
+        // new_data_app.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
       }}>
       <FaUser />
     </Button>

@@ -13,6 +13,9 @@ export const form_base_style = definePartsStyle({
 
 export const form_account_page = definePartsStyle({
   container: {
+    minHeight: 'inherit',
+    maxHeight: 'inherit',
+    height: 'fit-content',
     display: 'grid',
     border: '2px solid',
     borderRadius: '6px',

@@ -688,7 +688,7 @@ const Account: FunctionComponent<AccountTypes> = ({
       >
         <Box
           layerStyle='menutop_layout_style'
-          gridTemplateColumns='minmax(7vw, 150px) auto'
+          gridTemplateColumns='minmax(7vw, 150px) auto 11rem 6rem'
         >
           <Box
             margin='0.25rem'
@@ -702,35 +702,32 @@ const Account: FunctionComponent<AccountTypes> = ({
               onClick={() => returnToApp(navigate)}
             />
           </Box>
-          <Box
-            display='grid'
-            gridTemplateColumns='3fr 3fr 1fr'
-            alignSelf='center'
-            justifySelf='right'
+          <Box></Box>
+          <Button
+            variant='btn_lone_navigation'
+            onClick={() => returnToApp(navigate)}
           >
-            <Button
-              variant='btn_lone_navigation'
-              onClick={() => returnToApp(navigate)}
-            >
-              {t('UserNav.to_app')}
-            </Button>
-            <Button
-              variant='btn_lone_navigation'
-              onClick={() => returnToDashboard()}
-            >
-              {t('UserNav.to_acc')}
-            </Button>
-            <LoginOutButton
-              new_data_app={new_data_app}
-            />
-          </Box>
-        </Box>
+            {t('UserNav.to_app')}
+          </Button>
+          {/* <Button
+            variant='btn_lone_navigation'
+            onClick={() => returnToDashboard()}
+          >
+            {t('UserNav.to_acc')}
+          </Button> */}
+          <LoginOutButton
+            new_data_app={new_data_app}
+          />
+      </Box>
       </Box>
 
       <div>
         <Card variant='card_account' >
           <CardHeader
-            style={{ 'textAlign': 'left' }}
+            textAlign='left'
+            textStyle='h1'
+            background='secondaire.2'
+            color='white'
           >
             {t('UserPages.win_acc_infos')}
           </CardHeader>
@@ -739,116 +736,341 @@ const Account: FunctionComponent<AccountTypes> = ({
               <Spinner />
             ) : (
               <Box
-                layerStyle='account_grid'
+                layerStyle='account_grid_col'
               >
-
-                {/* Id modification ---------------------------------------------------------------- */}
-
-                <FormControl
-                  isInvalid={err_email || err_password}
-                  variant='form_account_page'
+                {/* Premiere colonne */}
+                <Box
+                  layerStyle='account_grid_row'
                 >
-                  <FormLabel
-                    layerStyle='account_card_title'
+
+                  {/* Infos utilisateur  --------------------------------------------------------- */}
+
+                  <FormControl
+                    isInvalid={(msgs_userdata_modification.err.length > 0)}
+                    variant='form_account_page'
                   >
-                    <Text textStyle='h2'>{t('UserPages.login_modify.title')}</Text>
-                  </FormLabel>
-                  <Box
-                    layerStyle='account_card_content'
-                  >
-                    <Box
-                      layerStyle='account_card_subcontent'
-                      gridAutoFlow='row'
+                    <FormLabel
+                      layerStyle='account_card_title'
                     >
-                      <Text
-                        textStyle='h3'
-                        margin='0px 0px 0px 3px'
-                      >
-                        {t('Login.id.label')}
-                      </Text>
-                      <Input
-                        type='email'
-                        isInvalid={err_email}
-                        placeholder={user_data.email}
-                        onChange={e => setUserNewEmail(e.target.value)}
-                        onBlur={verifyEmail}
-                      />
-                    </Box>
+                      <Text textStyle='h2'>{t('UserPages.infos_modify.title')}</Text>
+                    </FormLabel>
                     <Box
-                      layerStyle='account_card_subcontent'
-                      gridAutoFlow='row'
+                      layerStyle='account_card_content'
                     >
-                      <Text
-                        textStyle='h3'
-                        margin='0px 0px 0px 3px'
+                      {/* First name  */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
                       >
-                        {t('UserPages.login_modify.pwd')}
-                      </Text>
-                      <InputGroup
-                        // variant='register_input'
-                      >
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('Register.account.fn')}
+                        </Text>
                         <Input
-                          type={show_new_password ? 'text' : 'password'}
-                          isInvalid={err_password}
-                          onChange={e => setNewPassword(e.target.value)}
-                          onBlur={triggerPasswordChange}
+                          type='text'
+                          placeholder={user_data.firstname}
+                          onChange={e => setUserNewFirstName(e.target.value)}
+                          onBlur={submitFirstnameChange}
                         />
-                        <InputRightElement width='4.5rem' marginRight='0.25em'>
-                          <Button
-                            h='1.75rem'
-                            size='sm'
-                            border='0px'
-                            bg='gray.50'
-                            onClick={() => setShowNewPassword(!show_new_password)}
-                          >
-                            {show_new_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
-                          </Button>
-                        </InputRightElement>
-                      </InputGroup>
-                    </Box>
-                    <Box
-                      layerStyle='account_card_subcontent'
-                      gridAutoFlow='row'
-                    >
-                      <Text
-                        textStyle='h3'
-                        margin='0px 0px 0px 3px'
-                      >
-                        {t('UserPages.login_modify.del')}
-                      </Text>
-                      <Button
-                        variant='btn_accountpage_danger'
-                        onClick={triggerDeleteAccount}
-                      >
-                        {t('UserPages.login_modify.btns.del_account')}
-                      </Button>
-                    </Box>
-                  </Box>
-                  <FormErrorMessage textStyle='account_log_error'>{msgs_login_modification.err}</FormErrorMessage>
-                  <FormHelperText textStyle='account_log_info'>{msgs_login_modification.info}</FormHelperText>
-                </FormControl>
+                      </Box>
 
-                {/* Modal de confirmation de modification E-Mail */}
-                <Modal
-                  isOpen={isEmailChangeModalOpen}
-                  onClose={onEmailChangeModalClose}
-                >
-                  <ModalContent>
-                    <ModalHeader>{t('UserPages.login_modify.email_modal.title')}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                      <FormControl
-                        variant='form_account_page'
+                      {/* Last name */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
                       >
-                        <InputGroup variant='register_input'>
-                          <InputLeftAddon>
-                            {t('Login.pwd.label')}
-                          </InputLeftAddon>
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('Register.account.ln')}
+                        </Text>
+                        <Input
+                          type='text'
+                          placeholder={user_data.name}
+                          onChange={e => setUserNewLastName(e.target.value)}
+                          onBlur={submitLastnameChange}
+                        />
+                      </Box>
+                    </Box>
+                    <FormErrorMessage>{msgs_userdata_modification.err}</FormErrorMessage>
+                    <FormHelperText>{msgs_userdata_modification.info}</FormHelperText>
+                  </FormControl>
+
+                  {/* Infos licenses --------------------------------------------------------------------  */}
+
+                  <FormControl
+                    variant='form_account_page'
+                  >
+                    <FormLabel
+                      layerStyle='account_card_title'
+                    >
+                      <Text textStyle='h2'>{t('UserPages.license.title')}</Text>
+                    </FormLabel>
+
+                    {
+                      user_data.license_legacy_opensankeyplus_validity ?
+                        <Box layerStyle='account_row'>
+                          <Box>
+                            {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
+                            {t('UserPages.OS+_lic')}
+                          </Box>
                           <Input
-                            isRequired
-                            type={show_password ? 'text' : 'password'}
-                            placeholder={t('Login.pwd.placeholder')}
-                            onChange={e => setPassword(e.target.value)}
+                            onChange={(e) => {
+                              setNewLicenseOpenOSP(e.target.value)
+                              setNewLicenseOpenOSPToCheck(true)
+                            }
+                            }
+                            placeholder={user_data.license_legacy_opensankeyplus_id} />
+                          <Button
+                            variant='menuconfigpanel_option_button'
+                            onClick={() => signupNewLicenseOpenOSP()}
+                            isDisabled={newLicenseOpenOSPToCheck === false}>
+                            {t('UserPages.update_lic')}
+                          </Button>
+                          {user_data.loading_legacy_opensankeyplus ? (
+                            <>
+                              <Spinner animation="border" />
+                              <Spinner animation="border" />
+                            </>
+                          ) : (
+                            <>
+                              <Text>{user_data.license_legacy_opensankeyplus_active}</Text>
+                              <Text>{user_data.license_legacy_opensankeyplus_validity}</Text>
+                            </>
+                          )}
+                        </Box> :
+                        <></>
+                    }
+
+                    <Box layerStyle='account_row'>
+                      <Box>
+                        {t('UserPages.OS+_lic')}
+                      </Box>
+                      <>
+                        <Text>{user_data.license_opensankeyplus_active ? 'Active' : 'Non-Active'}</Text>
+                        {
+                          user_data.license_opensankeyplus_active ?
+                            <Box as='span'>
+                              <Text>
+                                {t('UserPages.license.exp_until') + user_data.license_opensankeyplus_expiry}
+                              </Text>
+                              <Button
+                                variant='menuconfigpanel_option_button'
+                                onClick={onStopSubscriptionModalOpen}
+                                isDisabled={!user_data.license_opensankeyplus_active}
+                              >
+                                {t('UserPages.license.btns.stop_sub')}
+                              </Button>
+                            </Box>
+                            :
+                            <></>
+                        }
+                      </>
+                    </Box>
+                  </FormControl>
+
+                  {/* Modal confirmation license */}
+                  <Modal
+                    isOpen={isStopSubscriptionModalOpen}
+                    onClose={onStopSubscriptionModalClose}
+                    variant='modal_account'
+                  >
+                    <ModalContent>
+                      <ModalHeader>{t('UserPages.license.confirm_modal.title')}</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody>
+                        <FormControl
+                          isInvalid={(msgs_license_modification.err.length > 0)}
+                          variant='form_account_page'
+                        >
+
+                          <Box
+                            layerStyle='account_card_content'
+                          >
+                            {/* Feedback */}
+                            <Box
+                              layerStyle='account_card_subcontent'
+                              gridAutoFlow='row'
+                            >
+                              <Text
+                                textStyle='h3'
+                                margin='0px 0px 0px 3px'
+                              >
+                                {t('UserPages.license.confirm_modal.fdback')}
+                              </Text>
+                              <Select
+                                placeholder={t('UserPages.license.confirm_modal.fdback_default')}
+                                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                                  setFeedback(evt.target.value)
+                                }}
+                              >
+                                {
+                                  possible_feedback.map((s: string) => {
+                                    return <option value={s}>
+                                      {t('UserPages.license.confirm_modal.fdback_' + s)}
+                                    </option>
+                                  })
+                                }
+                              </Select>
+                            </Box>
+
+                            {/* Comment */}
+                            <Box
+                              layerStyle='account_card_subcontent'
+                              gridAutoFlow='row'
+                            >
+
+                              <Text
+                                textStyle='h3'
+                                margin='0px 0px 0px 3px'
+                              >
+                                {t('UserPages.license.confirm_modal.comment')}
+                              </Text>
+                              <Editable
+                                border='1px solid'
+                                borderRadius='3px'
+                                height='5rem'
+                                textAlign='start'
+                                defaultValue='No Comment'
+                                onChange={(nextValue) => {
+                                  setComment(nextValue)
+                                }}
+                              >
+                                <EditablePreview
+                                  height='100%'
+                                />
+                                <EditableInput
+                                  height='100%'
+                                />
+                              </Editable>
+                            </Box>
+
+                            {/* Password confirmation */}
+                            <Box
+                              layerStyle='account_card_subcontent'
+                              gridAutoFlow='row'
+                            >
+                              <Text
+                                textStyle='h3'
+                                margin='0px 0px 0px 3px'
+                              >
+                                {t('UserPages.license.confirm_modal.pwd_confirm')}
+                              </Text>
+                              <InputGroup variant='register_input'>
+                                <Input
+                                  isRequired
+                                  type={show_password ? 'text' : 'password'}
+                                  placeholder={t('Login.pwd.placeholder')}
+                                  onChange={e => setPassword(e.target.value)}
+                                />
+                                <InputRightElement width='4.5rem' marginRight='0.25em'>
+                                  <Button
+                                    h='1.75rem'
+                                    size='sm'
+                                    border='0px'
+                                    bg='gray.50'
+                                    onClick={() => setShowPassword(!show_password)}
+                                  >
+                                    {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                                  </Button>
+                                </InputRightElement>
+                              </InputGroup>
+                            </Box>
+                            <FormErrorMessage>{msgs_license_modification.err}</FormErrorMessage>
+                            <FormHelperText>{msgs_license_modification.info}</FormHelperText>
+                          </Box>
+                        </FormControl>
+                        <Box
+                          layerStyle='account_card_subcontent'
+                          gridAutoFlow='column'
+                        >
+                          <Button
+                            variant='btn_lone_navigation_primary'
+                            type="submit"
+                            isDisabled={password.length === 0}
+                            maxWidth='inherit'
+                            width='fit-content'
+                            onClick={() => summitStopSubscription()}
+                          >
+                            {t('UserPages.license.confirm_modal.btn_confirm')}
+                          </Button>
+                          <Button
+                            variant='btn_lone_navigation_tertiary'
+                            type="submit"
+                            maxWidth='inherit'
+                            width='fit-content'
+                            onClick={onStopSubscriptionModalClose}
+                          >
+                            {t('UserPages.license.confirm_modal.btn_cancel')}
+                          </Button>
+                        </Box>
+                      </ModalBody>
+                    </ModalContent>
+                  </Modal>
+
+                </Box>
+
+                {/* Seconde colonne */}
+
+                <Box
+                  layerStyle='account_grid_row'
+                >
+
+                  {/* Id modification ---------------------------------------------------------------- */}
+
+                  <FormControl
+                    isInvalid={err_email || err_password}
+                    variant='form_account_page'
+                  >
+                    <FormLabel
+                      layerStyle='account_card_title'
+                    >
+                      <Text textStyle='h2'>{t('UserPages.login_modify.title')}</Text>
+                    </FormLabel>
+                    <Box
+                      layerStyle='account_card_content'
+                    >
+                      {/* Email modification */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
+                      >
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('Login.id.label')}
+                        </Text>
+                        <Input
+                          type='email'
+                          isInvalid={err_email}
+                          placeholder={user_data.email}
+                          onChange={e => setUserNewEmail(e.target.value)}
+                          onBlur={verifyEmail}
+                        />
+                      </Box>
+
+                      {/* Password modification */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
+                      >
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('UserPages.login_modify.pwd')}
+                        </Text>
+                        <InputGroup
+                        >
+                          <Input
+                            type={show_new_password ? 'text' : 'password'}
+                            isInvalid={err_password}
+                            onChange={e => setNewPassword(e.target.value)}
+                            onBlur={triggerPasswordChange}
                           />
                           <InputRightElement width='4.5rem' marginRight='0.25em'>
                             <Button
@@ -856,309 +1078,124 @@ const Account: FunctionComponent<AccountTypes> = ({
                               size='sm'
                               border='0px'
                               bg='gray.50'
-                              onClick={() => setShowPassword(!show_password)}
+                              onClick={() => setShowNewPassword(!show_new_password)}
                             >
-                              {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                              {show_new_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
                             </Button>
                           </InputRightElement>
                         </InputGroup>
-                      </FormControl>
+                      </Box>
+
+                      {/* Account deletion */}
                       <Box
-                        display='grid'
+                        layerStyle='account_card_subcontent'
                         gridAutoFlow='row'
-                        gridRowGap='0,25rem'
                       >
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('UserPages.login_modify.del')}
+                        </Text>
+                        <Button
+                          variant='btn_accountpage_danger'
+                          onClick={triggerDeleteAccount}
+                        >
+                          {t('UserPages.login_modify.btns.del_account')}
+                        </Button>
+                      </Box>
+                    </Box>
+                    <FormErrorMessage textStyle='account_log_error'>{msgs_login_modification.err}</FormErrorMessage>
+                    <FormHelperText textStyle='account_log_info'>{msgs_login_modification.info}</FormHelperText>
+                  </FormControl>
+
+                  {/* Modal de confirmation de modification E-Mail */}
+                  <Modal
+                    isOpen={isEmailChangeModalOpen}
+                    onClose={onEmailChangeModalClose}
+                    variant='modal_account'
+                  >
+                    <ModalContent>
+                      <ModalHeader>{t('UserPages.login_modify.email_modal.title')}</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody>
+                        <FormControl
+                          variant='form_account_page'
+                        >
+                          <InputGroup variant='register_input'>
+                            <InputLeftAddon>
+                              {t('Login.pwd.label')}
+                            </InputLeftAddon>
+                            <Input
+                              isRequired
+                              type={show_password ? 'text' : 'password'}
+                              placeholder={t('Login.pwd.placeholder')}
+                              onChange={e => setPassword(e.target.value)}
+                            />
+                            <InputRightElement width='4.5rem' marginRight='0.25em'>
+                              <Button
+                                h='1.75rem'
+                                size='sm'
+                                border='0px'
+                                bg='gray.50'
+                                onClick={() => setShowPassword(!show_password)}
+                              >
+                                {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                              </Button>
+                            </InputRightElement>
+                          </InputGroup>
+                        </FormControl>
                         <Button
                           variant='btn_lone_navigation_tertiary'
                           type="submit"
                           onClick={submitEmail}
+                          maxWidth='inherit'
+                          width='fit-content'
                         >
                           {t('UserPages.login_modify.email_modal.btn')}
                         </Button>
-                      </Box>
-                    </ModalBody>
-                  </ModalContent>
-                </Modal>
+                      </ModalBody>
+                    </ModalContent>
+                  </Modal>
 
-                {/* Modal de confirmation de modification mot de passe */}
-                <Modal
-                  isOpen={isPwdChangeModalOpen}
-                  onClose={onPwdChangeModalClose}
-                >
-                  <ModalContent>
-                    <ModalHeader>{t('UserPages.login_modify.pwd_modal.title')}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                      <FormControl
-                        variant='form_account_page'>
+                  {/* Modal de confirmation de modification mot de passe */}
+                  <Modal
+                    isOpen={isPwdChangeModalOpen}
+                    onClose={onPwdChangeModalClose}
+                    variant='modal_account'
+                  >
+                    <ModalContent>
+                      <ModalHeader>{t('UserPages.login_modify.pwd_modal.title')}</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody>
+                        <FormControl
+                          variant='form_account_page'>
 
-                        <InputGroup variant='register_input'>
-                          <InputLeftAddon>
-                            {t('UserPages.login_modify.pwd_modal.input_token')}
-                          </InputLeftAddon>
-                          <Input
-                            isRequired
-                            type={'text'}
-                            onChange={e => setSecret(e.target.value)}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <Box
-                        display='grid'
-                        gridAutoFlow='row'
-                        gridRowGap='0,25rem'
-                      >
+                          <InputGroup variant='register_input'>
+                            <InputLeftAddon>
+                              {t('UserPages.login_modify.pwd_modal.input_token')}
+                            </InputLeftAddon>
+                            <Input
+                              isRequired
+                              type={'text'}
+                              onChange={e => setSecret(e.target.value)}
+                            />
+                          </InputGroup>
+                        </FormControl>
                         <Button
                           variant='btn_lone_navigation_tertiary'
                           type="submit"
                           onClick={submitPassword}
+                          maxWidth='inherit'
+                          width='fit-content'
                         >
                           {t('UserPages.login_modify.pwd_modal.btn')}
                         </Button>
-                      </Box>
-                    </ModalBody>
-                  </ModalContent>
-                </Modal>
+                      </ModalBody>
+                    </ModalContent>
+                  </Modal>
 
-                {/* Infos utilisateur  --------------------------------------------------------- */}
-
-                <FormControl
-                  isInvalid={(msgs_userdata_modification.err.length > 0)}
-                  variant='form_account_page'
-                >
-                  <FormLabel
-                    layerStyle='account_card_title'
-                  >
-                    <Text textStyle='h2'>{t('UserPages.infos_modify.title')}</Text>
-                  </FormLabel>
-
-                  {/* First name  */}
-                  <InputGroup
-                    variant='register_input'
-                  >
-                    <InputLeftAddon
-                      width='25%'
-                    >
-                      {t('Register.account.fn')}
-                    </InputLeftAddon>
-                    <Input
-                      type='text'
-                      placeholder={user_data.firstname}
-                      onChange={e => setUserNewFirstName(e.target.value)}
-                    />
-                    <InputRightElement
-                      width='25%'
-                    >
-                      <Button
-                        onClick={submitFirstnameChange}
-                      >
-                        {t('UserPages.infos_modify.btns.set_fn')}
-                      </Button>
-                    </InputRightElement>
-                  </InputGroup>
-
-                  {/* Last name */}
-                  <InputGroup
-                    variant='register_input'
-                  >
-                    <InputLeftAddon
-                      width='25%'
-                    >
-                      {t('Register.account.ln')}
-                    </InputLeftAddon>
-                    <Input
-                      type='text'
-                      placeholder={user_data.name}
-                      onChange={e => setUserNewLastName(e.target.value)}
-                    />
-                    <InputRightElement
-                      width='25%'
-                    >
-                      <Button
-                        onClick={submitLastnameChange}
-                      >
-                        {t('UserPages.infos_modify.btns.set_ln')}
-                      </Button>
-                    </InputRightElement>
-                  </InputGroup>
-                  <FormErrorMessage>{msgs_userdata_modification.err}</FormErrorMessage>
-                  <FormHelperText>{msgs_userdata_modification.info}</FormHelperText>
-                </FormControl>
-
-                {/* Infos licenses --------------------------------------------------------------------  */}
-
-                <Box
-                  border='1px solid'
-                  borderRadius='6px'
-                  padding='3px'
-                >
-                  <Text textStyle='h2'>{t('UserPages.license.title')}</Text>
-
-                  {
-                    user_data.license_legacy_opensankeyplus_validity ?
-                      <Box layerStyle='account_row'>
-                        <Box>
-                          {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
-                          {t('UserPages.OS+_lic')}
-                        </Box>
-                        <Input
-                          onChange={(e) => {
-                            setNewLicenseOpenOSP(e.target.value)
-                            setNewLicenseOpenOSPToCheck(true)
-                          }
-                          }
-                          placeholder={user_data.license_legacy_opensankeyplus_id} />
-                        <Button
-                          variant='menuconfigpanel_option_button'
-                          onClick={() => signupNewLicenseOpenOSP()}
-                          isDisabled={newLicenseOpenOSPToCheck === false}>
-                          {t('UserPages.update_lic')}
-                        </Button>
-                        {user_data.loading_legacy_opensankeyplus ? (
-                          <>
-                            <Spinner animation="border" />
-                            <Spinner animation="border" />
-                          </>
-                        ) : (
-                          <>
-                            <Text>{user_data.license_legacy_opensankeyplus_active}</Text>
-                            <Text>{user_data.license_legacy_opensankeyplus_validity}</Text>
-                          </>
-                        )}
-                      </Box> :
-                      <></>
-                  }
-
-                  <Box layerStyle='account_row'>
-                    <Box>
-                      {t('UserPages.OS+_lic')}
-                    </Box>
-                    <>
-                      <Text>{user_data.license_opensankeyplus_active ? 'Active' : 'Non-Active'}</Text>
-                      {
-                        user_data.license_opensankeyplus_active ?
-                          <Box as='span'>
-                            <Text>
-                              {t('UserPages.license.exp_until') + user_data.license_opensankeyplus_expiry}
-                            </Text>
-                            <Button
-                              variant='menuconfigpanel_option_button'
-                              onClick={onStopSubscriptionModalOpen}
-                              isDisabled={!user_data.license_opensankeyplus_active}
-                            >
-                              {t('UserPages.license.btns.stop_sub')}
-                            </Button>
-                          </Box>
-                          :
-                          <></>
-                      }
-                    </>
-                  </Box>
                 </Box>
-
-                <Modal
-                  isOpen={isStopSubscriptionModalOpen}
-                  onClose={onStopSubscriptionModalClose}
-                >
-                  <ModalContent>
-                    <ModalHeader>{t('UserPages.license.confirm_modal.title')}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                      <FormControl
-                        isInvalid={(msgs_license_modification.err.length > 0)}
-                        variant='form_account_page'
-                      >
-
-                        <FormLabel>
-                          {t('UserPages.license.confirm_modal.fdback')}
-                        </FormLabel>
-                        <Select
-                          placeholder={t('UserPages.license.confirm_modal.fdback_default')}
-                          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            setFeedback(evt.target.value)
-                          }}
-                        >
-                          {
-                            possible_feedback.map((s: string) => {
-                              return <option value={s}>
-                                {t('UserPages.license.confirm_modal.fdback_' + s)}
-                              </option>
-                            })
-                          }
-                        </Select>
-
-                        <FormLabel>
-                          {t('UserPages.license.confirm_modal.comment')}
-                        </FormLabel>
-                        <Editable
-                          border='1px solid'
-                          borderRadius='3px'
-                          height='5rem'
-                          textAlign='start'
-                          defaultValue='No Comment'
-                          onChange={(nextValue) => {
-                            setComment(nextValue)
-                          }}
-                        >
-                          <EditablePreview
-                            height='100%'
-                          />
-                          <EditableInput
-                            height='100%'
-                          />
-                        </Editable>
-
-                        <FormLabel>{t('UserPages.license.confirm_modal.pwd_confirm')}</FormLabel>
-                        <InputGroup variant='register_input'>
-                          <InputLeftAddon>
-                            {t('Login.pwd.label')}
-                          </InputLeftAddon>
-                          <Input
-                            isRequired
-                            type={show_password ? 'text' : 'password'}
-                            placeholder={t('Login.pwd.placeholder')}
-                            onChange={e => setPassword(e.target.value)}
-                          />
-                          <InputRightElement width='4.5rem' marginRight='0.25em'>
-                            <Button
-                              h='1.75rem'
-                              size='sm'
-                              border='0px'
-                              bg='gray.50'
-                              onClick={() => setShowPassword(!show_password)}
-                            >
-                              {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
-                            </Button>
-                          </InputRightElement>
-                        </InputGroup>
-                        <FormErrorMessage>{msgs_license_modification.err}</FormErrorMessage>
-                        <FormHelperText>{msgs_license_modification.info}</FormHelperText>
-                      </FormControl>
-                      <Box
-                        display='grid'
-                        gridAutoFlow='row'
-                        gridRowGap='0,25rem'
-                      >
-                        <Button
-                          variant='btn_lone_navigation_tertiary'
-                          type="submit"
-                          disabled={password.length === 0}
-                          onClick={() => summitStopSubscription()}
-                        >
-                          {t('UserPages.license.confirm_modal.btn_confirm')}
-                        </Button>
-                        <Button
-                          variant='btn_lone_navigation_tertiary'
-                          type="submit"
-                          onClick={onStopSubscriptionModalClose}
-                        >
-                          {t('UserPages.license.confirm_modal.btn_cancel')}
-                        </Button>
-                      </Box>
-                    </ModalBody>
-                  </ModalContent>
-                </Modal>
-
               </Box>
             )}
             <div className='LogError' style={{ 'color': 'red' }}></div>
