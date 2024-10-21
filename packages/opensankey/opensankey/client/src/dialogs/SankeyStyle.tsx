@@ -40,7 +40,6 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
 
   // Dict of nodes styles
   const node_styles_dict = new_data.drawing_area.sankey.node_styles_dict
-  console.log(new_data.drawing_area.sankey.node_styles_dict   )
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
     <Box

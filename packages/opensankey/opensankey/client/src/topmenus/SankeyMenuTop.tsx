@@ -909,7 +909,7 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
       disabled={!valid_input}
       onClick={() => {
         new_data.menu_configuration.function_on_wait.current = () => {
-          clickSavePNG(h, v)
+          clickSavePNG(h, v, new_data)
         }
         new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
       }}
@@ -929,14 +929,13 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
 const clickSavePNG = (
   h: number | undefined,
   v: number | undefined,
+  new_data: Type_GenericApplicationDataOS
 ) => {
-  const svg = pre_process_export_svg()
-  const html = ((svg.attr('title', 'test2')
-    .attr('version', 1.1)
-    .attr('xmlns', 'http://www.w3.org/2000/svg')
-    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
 
-  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const svg = pre_process_export_svg(new_data)
+
+
+  const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
   let size_to_send = ''
@@ -1565,13 +1564,9 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
 }
 
 const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
-  const svg = pre_process_export_svg()
-  const html = ((svg.attr('title', 'test2')
-    .attr('version', 1.1)
-    .attr('xmlns', 'http://www.w3.org/2000/svg')
-    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+  const svg = pre_process_export_svg(new_data)
 
-  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
   form_data.append('width', new_data.drawing_area.width.toString())
@@ -1604,46 +1599,16 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
     .then(showFile).then(cleanFile)
 }
 
-export const pre_process_export_svg = () => {
-  // Resize the svg scale to be the scale by default
-  const svg = d3.select(' .opensankey#svg-container svg')
-  // svg.attr('transform','scale(1)')
-  // svg.select('#g_legend').attr('transform','scale(1)')
-
-  // Get size of g elements that contain visual content
-  // const g_nodes=document.getElementById('g_nodes')
-  // const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
-
-  // const g_links=document.getElementById('g_links')
-  // const size_links = (g_links) ? [(g_links.getBoundingClientRect().width+g_links.getBoundingClientRect().x),(g_links.getBoundingClientRect().height+g_links.getBoundingClientRect().y)] : [0,0]
-
-  // const g_label=document.getElementById('g_label')
-  // const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
-
-  // Search the element that go to the most bottom right of the sankey
-  // const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
-  // Resize the svg width and height with the minimum value it require to display the elements
-  // svg.style('width',export_dim_unscaled[0]+'px')
-  // svg.style('height',export_dim_unscaled[1]+'px')
-
-  // Hidde non-essential visual elements
-  svg.selectAll('.sankey-tooltip').remove()
-  svg.selectAll('text[visibility=hidden]').remove()
-  svg.style('border', '0px')
-  svg.select('#grid').style('opacity', '0')
-  svg.selectAll('.box_width_threshold').remove()
-  d3.selectAll('.gg_nodes .node_shape').style('stroke-width', null)
-  d3.selectAll('.gg_nodes .node_shape').style('stroke', null)
-  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('display', 'none')
-  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('display', 'none').attr('fill-opacity', '0')
-  d3.selectAll('.opensankey .gg_label rect').attr('stroke-width', '1')
-  d3.selectAll('.opensankey .fo_input_label').remove()
-
-  // To hide handles from OpenSankey+ zdt
-  d3.selectAll(' .opensankey .g_label_handles .zdt_handles').attr('stroke-opacity', '0').attr('fill-opacity', '0')
-
-  return svg
+export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) => {
+  new_data.drawing_area.purgeSelection()
+  const svg = new_data.drawing_area.d3_selection
+  const svg_with_header = "<svg version=\"1.1\" " +
+    " height=" + new_data.drawing_area.height.toString() +
+    " width=" + new_data.drawing_area.width.toString() +
+    " xmlns=\"http://www.w3.org/2000/svg\">" +
+    (svg?.html() ?? '') +
+    "</svg>"
+  return svg_with_header
 }
 
 export const post_process_export_svg = () => {
