@@ -563,8 +563,12 @@ export const TestLinkValue:TestLinkValueFuncType = (
   }
   if (data.show_structure == 'data' ) {
     const link_value = GetLinkValue(data, d.idLink)
-    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
-      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
+    const data_value = (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
+    if (data_value) {
+      if ( data.maximum_flux && scale(+data_value) > data.maximum_flux) {
+        return inv_scale(data.maximum_flux)
+      }
+      return data_value
     } else {
       const inv_scale = d3.scaleLinear()
         .domain([0, 100])
