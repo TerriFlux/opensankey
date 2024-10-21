@@ -390,7 +390,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
           d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
         }
       }
-      if (!window.SankeyToolsStatic && !event.shiftKey) {
+      if (!event.shiftKey) {
         return
       }
       const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
@@ -405,7 +405,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       }
     })
     .on('mousemove', (event) => {
-      if (!window.SankeyToolsStatic && !event.shiftKey) {
+      if (!event.shiftKey) {
         return
       }
       const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
