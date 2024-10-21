@@ -40,6 +40,7 @@ export abstract class Class_AbstractNodeElement
   public abstract get taggs_list(): Class_TagGroup[]
   // Mandatory methods
   public abstract addTag(_: Class_AbstractTag): void
+  public abstract hasGivenTag(_: Class_AbstractTag): boolean
   public abstract removeTag(_: Class_AbstractTag): void
   public abstract getShapeWidthToUse(): number
   public abstract getShapeHeightToUse(): number

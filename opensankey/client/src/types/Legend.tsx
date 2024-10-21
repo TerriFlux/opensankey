@@ -31,6 +31,7 @@ import {
   getStringFromJSON,
   Type_JSON,
 } from './Utils'
+import { Type_GenericLinkElementOS, Type_GenericNodeElementOS } from './TypesOS'
 
 
 // CLASS LEGEND *************************************************************************
@@ -43,15 +44,15 @@ import {
  * @extends {Class_Element}
  */
 export class Class_Legend
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey
->
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey
+  >
   extends Class_Element
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
-> {
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -268,6 +269,9 @@ export class Class_Legend
     const node_taggs = this.drawing_area.sankey.node_taggs_list
     const flux_taggs = this.drawing_area.sankey.flux_taggs_list
     const data_taggs = this.drawing_area.sankey.data_taggs_list
+    const flux_list = this.drawing_area.sankey.visible_links_list
+    const node_list = this.drawing_area.sankey.visible_nodes_list
+
     // Get all grp tag insind one variable
     const all_tags = [...node_taggs, ...flux_taggs, ...data_taggs]
     all_tags
@@ -290,115 +294,55 @@ export class Class_Legend
         this._dy += document.getElementById('GrpTag_title_' + tag_group.id)?.getBoundingClientRect().height ?? 0
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
-        tag_group.selected_tags_list.map(t => t) // TODO netoyer code pour enlever ça
-          // .filter(tag => {
-          //     // Filter tag that have elements associated to them displayed (nodes,links)
-          //     if ( Object.keys(flux_taggs).includes(linksColorMap) && Object.keys(flux_taggs).includes(tag_group[0]) ) {
-          //         const t = Object.values(links_dict).filter(l => {
-          //             const tmp = GetLinkValue(data, l.idLink)
-          //             return (
-          //                 LinkVisible(l, data, display_nodes) &&
-          //                 tmp.tags[linksColorMap] &&
-          //                 tmp.tags[linksColorMap].includes(tag[1])
-          //             )
-          //         }).length
-          //         return t > 0
-          //     }
-          //     if ( Object.keys(node_taggs).includes(nodesColorMap) && Object.keys(node_taggs).includes(tag_group[0]) ) {
-          //         const node_visible = NodeVisibleOnsSvg()
-          //         const t2 = Object.values(nodes_dict).filter(n => {
-          //             return (
-          //                 n.tags[nodesColorMap] &&
-          //                 n.tags[nodesColorMap].includes(tag[1]) &&
-          //                 node_visible.includes(n.idNode) &&
-          //                 (n.position !== 'relative')
-          //             )
-          //         }).length
-          //         return t2 > 0
-          //     }
-          //     if (linksColorMap && linksColorMap.includes('dataTags_')) {
-          //         return true
-          //     }
-          //     return false
-          // })
+        tag_group.selected_tags_list.filter(tag => {
+          // Filter tag that doens't have element visible on the drawing_area
+          return node_list.filter(n => n.hasGivenTag(tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag)).length !== 0
+        })
           .forEach((tag) => {
             const tagElement = legendElements2?.append('g')
               .attr('id', 'tag_' + tag.name.replaceAll(' ', '__')
               )
-              .attr('transform', () => {
-                return 'translate(' + this._dx + ',' + (this._dy) + ')'
+              .attr('transform', () => 'translate(' + this._dx + ',' + (this._dy) + ')')
+              .on('mouseover', () => {
+                //Add event on hovering tag in legend that allow to highlight elemnt of the sankey that have the tag we are hovering 
+
+                const nodes_tied_to_link_with_tag_hovered = ([] as Type_GenericNodeElementOS[])
+                //Get nodes tied to links who have the tag we hovering & get the list of links that have the tag hovered
+                const flux_with_tag_overed = flux_list
+                  .filter(l => l.hasGivenTag(tag))
+                  .map(link => {
+                    nodes_tied_to_link_with_tag_hovered.push(link.source as Type_GenericNodeElementOS)
+                    nodes_tied_to_link_with_tag_hovered.push(link.target as Type_GenericNodeElementOS)
+                    return link
+                  })
+
+                let link_tied_to_node_with_tag_hovered = ([] as Type_GenericLinkElementOS[])
+                //Get IO links from node who have the tag we hovering & get the list of node that have the tag hovered
+                const node_with_tag_overed = node_list
+                  .filter(n => n.hasGivenTag(tag))
+                  .map(el => {
+                    link_tied_to_node_with_tag_hovered = link_tied_to_node_with_tag_hovered.concat(el.output_links_list as Type_GenericLinkElementOS[])
+                    link_tied_to_node_with_tag_hovered = link_tied_to_node_with_tag_hovered.concat(el.input_links_list as Type_GenericLinkElementOS[])
+                    return el
+                  })
+
+                //Reduce opacity of all link that doesn't have the tag hovered or aren't tied to a node that have the tag hovered 
+                flux_list
+                  .filter(link => !flux_with_tag_overed.includes(link) && !link_tied_to_node_with_tag_hovered.includes(link as Type_GenericLinkElementOS))
+                  .forEach(el => el.d3_selection?.attr('opacity', 0.1))
+
+                //Reduce opacity of all node that doesn't have the tag hovered or aren't tied to a link that have the tag hovered 
+                node_list
+                  .filter(n => !node_with_tag_overed.includes(n) && !nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElementOS))
+                  .forEach(el => el.d3_selection?.attr('opacity', 0.1))
+
               })
-            //=========== TODO re implements event on tag displayed elements ========================
-            // .on('mouseover', () => {
-            //     //Recherche les noeuds liés à des flux dont on survole la légende d'étiquette
-            //     const nodes_tied_to_link_hovered = ([] as string[])
-            //     Object.values(links_dict).filter(l => {
-            //         const tmp = GetLinkValue(data, l.idLink)
-            //         return tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(tag[1])
-            //     }).forEach(el => {
-            //         nodes_tied_to_link_hovered.push(el.idSource)
-            //         nodes_tied_to_link_hovered.push(el.idTarget)
-            //     })
-            //     //Reduit l'opacité de tous les flux qui n'ont pas l'étiquette survolé
-            //     Object.values(links_dict).filter(l => {
-            //         const tmp = GetLinkValue(data, l.idLink)
-            //         return !(tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(tag[1]))
-            //     }).forEach(el => {
-            //         d3.selectAll(' .opensankey #path_' + el.idLink).attr('stroke-opacity', 0.1)
-            //         d3.selectAll(' .opensankey #gg_' + el.idLink + ' text').style('opacity', 0.1)
-            //         d3.selectAll(' .opensankey #path_' + el.idLink + '_arrow').attr('stroke-opacity', 0.1)
-            //         d3.selectAll(' .opensankey #path_' + el.idLink + '_arrow').attr('opacity', 0.1)
-            //     })
-            //     //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
-            //     const tmp = Object.entries(node_taggs).filter(n => {
-            //         return n[1].show_legend
-            //     })
-            //     let link_tied_to_node_hovered = ([] as string[])
-            //     const tmp2 = (tmp.length > 0) ? tmp[0][0] : ''
-            //     if (tmp.length > 0) {
-            //         //Récupère les flux entrant/sortant  des noeuds dont on survole l'étiquette
-            //         Object.values(nodes_dict).filter(n => {
-            //             return (n.tags[tmp2] && n.tags[tmp2].includes(tag[1]))
-            //         }).forEach(el => {
-            //             link_tied_to_node_hovered = link_tied_to_node_hovered.concat(el.outputLinksId)
-            //             link_tied_to_node_hovered = link_tied_to_node_hovered.concat(el.inputLinksId)
-            //         })
-            //         //Reduit l'opacité de tous les flux qui ne sont pas rattaché à un noeuds survolé par l'étiquette
-            //         Object.values(links_dict).filter(l => {
-            //             return link_tied_to_node_hovered.includes(l.idLink)
-            //         }).forEach(el => {
-            //             d3.selectAll(' .opensankey #path_' + el.idLink).attr('stroke-opacity', 0.85)
-            //             d3.selectAll(' .opensankey #path_' + el.idLink + '_arrow').attr('stroke-opacity', 0.85)
-            //             d3.selectAll(' .opensankey #path_' + el.idLink + '_arrow').attr('opacity', 0.85)
-            //             d3.selectAll(' .opensankey #gg_' + el.idLink + ' text').style('opacity', 1)
-            //         })
-            //         //Reduit l'opacité de tous les noeuds qui n'ont pas l'étiquette
-            //         Object.values(nodes_dict).filter(n => {
-            //             return ((n.tags[tmp2] && !n.tags[tmp2].includes(tag[1]) && !nodes_tied_to_link_hovered.includes(n.idNode)) || (!n.tags[tmp2]))
-            //         }).forEach(el => {
-            //             d3.selectAll(' .opensankey #ggg_' + el.idNode).attr('opacity', 0.1)
-            //         })
-            //     } else {
-            //         Object.values(nodes_dict)
-            //             .filter(n => !nodes_tied_to_link_hovered.includes(n.idNode))
-            //             .forEach(el => {
-            //                 d3.selectAll(' .opensankey #ggg_' + el.idNode).attr('opacity', 0.1)
-            //             })
-            //     }
-            // })
-            // .on('mouseout', () => {
-            //     d3.selectAll(' .opensankey .link').attr('stroke-opacity', 0.85)
-            //     d3.selectAll(' .opensankey .arrow').attr('stroke-opacity', 0.85)
-            //     d3.selectAll(' .opensankey .arrow').attr('opacity', 0.85)
-            //     d3.selectAll(' .opensankey .gg_links text').style('opacity', 1)
-            //     d3.selectAll(' .opensankey .ggg_nodes').attr('opacity', 1)
-            // }).on('contextmenu', (evt) => {
-            //     if (!this.drawing_area.application_data.is_static) {
-            //         evt.preventDefault()
-            //         pointer_pos.current = [evt.pageX, evt.pageY]
-            //         tagContext.current![0][1](tag[0])
-            //     }
-            // })
+              .on('mouseout', () => {
+                // Reset opacity of visible element
+                node_list.forEach(node => node.d3_selection?.attr('opacity', ''))
+                flux_list.forEach(flux => flux.d3_selection?.attr('opacity', ''))
+
+              })
 
             // Ajout du shape
             tagElement?.append('rect')
@@ -593,7 +537,7 @@ export class Class_Legend
   public get width(): number { return this._width }
   public set width(value: number) { this._width = value; this.draw() }
 
-  public get info_link_value_void(): boolean {return this._info_link_value_void}
-  public set info_link_value_void(value: boolean) {this._info_link_value_void = value; this.draw()}
+  public get info_link_value_void(): boolean { return this._info_link_value_void }
+  public set info_link_value_void(value: boolean) { this._info_link_value_void = value; this.draw() }
 
 }
