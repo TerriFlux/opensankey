@@ -35,7 +35,7 @@ from .mailing import send_pw_reset_email
 from .mailing import is_email_valid
 from .models import User
 from .models import login_required
-from .models import licence_required
+from .models import license_required
 from .models import db
 
 # ---------------------------------------------------------------
@@ -258,7 +258,7 @@ def is_connected():
 
 
 @auth_blueprint.route('/auth/license/<license_name>')
-@licence_required
+@license_required
 def has_license(license_name):
     return 'ok : {}'.format(license_name), 200
 

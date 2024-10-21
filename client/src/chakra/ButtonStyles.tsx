@@ -113,6 +113,8 @@ const _btn_accountpage = {
   bg: 'primaire.2',
   bgColor: 'primaire.2',
   borderColor: 'primaire.2',
+  justifySelf: 'center',
+  alignSelf: 'center',
   _hover: {
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',

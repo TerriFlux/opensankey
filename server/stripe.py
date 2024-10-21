@@ -96,6 +96,21 @@ def create_checkout_session():
         return jsonify(error=str(e)), 500
 
 
+@stripe_blueprint.route('/stripe/create-customer-portal', methods=['GET'])
+@login_required
+def create_customer_portal():
+    if current_user.stripe_id is not None:
+        billing_session =  stripe.billing_portal.Session.create(
+            customer=current_user.stripe_id,
+            return_url=(
+                CLIENT_ROOT_URL +
+                'account'),
+        )
+        return jsonify(url=billing_session.url), 200
+    else:
+        return 'not_a_client', 400
+
+
 @stripe_blueprint.route('/stripe/session-status', methods=['GET'])
 @login_required
 def session_status():

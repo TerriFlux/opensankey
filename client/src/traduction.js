@@ -717,6 +717,24 @@ const resources = {
             'input_token': 'Code reçu',
             'btn': 'Appliquer la modification'
           },
+          del_modal: {
+            'title': 'Souhaitez-vous vraiment supprimer votre compte ?',
+            'desc': 'Attention : Cette action supprimera votre compte, vos données et stoppera votre abonnement à OpenSankey+ si présent.',
+            'fdback': 'Pourquoi souhaitez vous supprimer votre compte ? (optionel)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Customer service was less than expected',
+            'fdback_low_quality': 'Quality was less than expected',
+            'fdback_missing_features': 'Some features are missing',
+            'fdback_switched_service': 'I’m switching to a different service',
+            'fdback_too_complex': 'Ease of use was less than expected',
+            'fdback_too_expensive': 'It’s too expensive',
+            'fdback_unused': 'I don’t use the service enough',
+            'fdback_other': 'Other reason',
+            'comment': 'Comment pourrions-nous nous améliorer ? (optionnel)',
+            'pwd_confirm': 'Saissisez votre mot de passe pour confirmer',
+            'btn_confirm': 'Supprimer le compte et toutes les données',
+            'btn_cancel': 'Je souhaite garder mon compte',
+          },
           btns: {
             'set_email': 'Modifier l\'e-mail',
             'set_pwd': 'Modifier le mot de passe',
@@ -730,7 +748,8 @@ const resources = {
             'ok_pwd': 'Le mot de passe a été modifié avec succes.',
             'prs_pwd': 'Un e-mail avec un code pour la modification du mot de passe vous a été envoyé.',
             'err_pwd_failed': 'Erreur sur la demande de modification de mot de passe.',
-            'ok_del': 'Le compte a été supprimé. Retour à la page principale.'
+            'ok_del': 'Le compte a été supprimé. Retour à la page principale.',
+            'err_del': 'Erreur sur la demande de suppression de compte. Veuillez verifier votre mot passe.',
           },
         },
         infos_modify: {
@@ -750,29 +769,7 @@ const resources = {
           'title': 'Votre licence OpenSankey+',
           'exp_until': 'Prochain renouvellement : ',
           btns: {
-            'stop_sub': 'Arreter l\'abonnement',
-          },
-          confirm_modal: {
-            'title': 'Souhaitez-vous vraiment arreter votre licence OpenSankey+ ?',
-            'fdback': 'Pourquoi souhaitez vous arreter votre abonnement ? (optionel)',
-            'fdback_default': '-',
-            'fdback_customer_service': 'Customer service was less than expected',
-            'fdback_low_quality': 'Quality was less than expected',
-            'fdback_missing_features': 'Some features are missing',
-            'fdback_switched_service': 'I’m switching to a different service',
-            'fdback_too_complex': 'Ease of use was less than expected',
-            'fdback_too_expensive': 'It’s too expensive',
-            'fdback_unused': 'I don’t use the service enough',
-            'fdback_other': 'Other reason',
-            'comment': 'Comment pourrions-nous améliorer OpenSankey+ ? (optionnel)',
-            'pwd_confirm': 'Saissisez votre mot de passe pour confirmer',
-            'btn_confirm': 'Arreter l\'abonnement',
-            'btn_cancel': 'Je souhaite garder OpenSankey+',
-            msgs: {
-              'ok': 'La souscription a été annulée',
-              'err': 'Erreur lors de l\'annulation de la souscription',
-              'prs': 'En cours',
-            }
+            'mng_sub': 'Gerer l\'abonnement'
           },
         },
         'OS+_lic': 'Licence OpenSankey+',

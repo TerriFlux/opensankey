@@ -347,7 +347,7 @@ def login_required(f):
     return decorated_function
 
 
-def licence_required(f):
+def license_required(f):
     """
     Decorator that alow given function f to run if current user has given
     license.

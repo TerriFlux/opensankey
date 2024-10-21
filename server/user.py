@@ -34,7 +34,7 @@ from werkzeug.security import generate_password_hash
 from .models import User
 from .models import UserLicences
 from .models import login_required
-from .models import licence_required
+from .models import license_required
 from .mailing import send_pw_modification_email
 from .stripe import cancel_subscription
 
@@ -96,7 +96,7 @@ def get_license_expiry(license_name):
 
 
 @connected_user.route('/user/infos/license_validity/<license_name>')
-@licence_required
+@license_required
 def get_license_validity(license_name):
     'ok : {}'.format(license_name), 200
 
@@ -233,7 +233,7 @@ def modify_lastname():
 
 
 @connected_user.route('/user/delete/license/<license_name>', methods=['POST'])
-@licence_required
+@license_required
 def delete_license(license_name):
     """
     Delete susbcription if present
@@ -276,13 +276,30 @@ def delete_account():
     :rtype: _type_
     """
     try:
+        # Check password
+        if (
+            not check_password_hash(
+                current_user.password,
+                request.json.get('password'))
+        ):
+            return 'request_error', 400
+
         # Unsubscribe to licenses
-        for license in current_user.licenses:
-            if license.name != 'terriflux':
-                delete_license(license_name=license.name)
+        for user_license in current_user.user_licenses:
+            if user_license.license.name != 'terriflux':
+                ok_cancel = cancel_subscription(
+                    user_license.stripe_id,
+                    request.json.get('comment'),
+                    request.json.get('feedback'))
+                if not ok_cancel:
+                    return 'failed_to_cancel:  {}'.format(user_license.license.name), 500
+                user_license.activate = False
+
         # Delete account
         current_user.delete()
         db.session.commit()
+
+        # force Logout user
         logout_user()
     except Exception as e:
         return 'err : {}'.format(e), 500

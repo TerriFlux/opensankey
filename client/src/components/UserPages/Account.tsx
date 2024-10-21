@@ -122,12 +122,6 @@ const Account: FunctionComponent<AccountTypes> = ({
     returnToApp(navigate)
   }
 
-  //If we are logged the the following behaviors are defined
-  //Return to Dashboard
-  const returnToDashboard = () => {
-    navigate('/dashboard')
-  }
-
   // Email modal : checks password for e-mail modification
   const {
     isOpen: isEmailChangeModalOpen,
@@ -138,6 +132,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   const [password, setPassword] = useState('')
   const [show_password, setShowPassword] = useState(false)
 
+  // Password change modal : check a secret to change
   const {
     isOpen: isPwdChangeModalOpen,
     onOpen: onPwdChangeModalOpen,
@@ -148,12 +143,13 @@ const Account: FunctionComponent<AccountTypes> = ({
   const [show_new_password, setShowNewPassword] = useState(false)
   const [secret, setSecret] = useState('')
 
-  // Subcription stop modal questions
+  // Account deletion modal questions
   const {
-    isOpen: isStopSubscriptionModalOpen,
-    onOpen: onStopSubscriptionModalOpen,
-    onClose: onStopSubscriptionModalClose
+    isOpen: isDeleteAccountModalOpen,
+    onOpen: onDeleteAccountModalOpen,
+    onClose: onDeleteAccountModalClose
   } = useDisclosure()
+  const [err_delete, setErrDelete] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [comment, setComment] = useState('')
 
@@ -166,7 +162,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   // Messages
   const [msgs_login_modification, setMsgsLoginModification] = useState(structuredClone(log_default))
   const [msgs_userdata_modification, setMsgsUserdataModification] = useState(structuredClone(log_default))
-  const [msgs_license_modification, setMsgsLicenseModification] = useState(structuredClone(log_default))
+  const [msgs_modal_del_account, setMsgsLicenseModification] = useState(structuredClone(log_default))
 
   // Activate and save a new license OpenSankey+
   const signupNewLicenseOpenOSP = () => {
@@ -246,6 +242,39 @@ const Account: FunctionComponent<AccountTypes> = ({
     setMsgsLoginModification(msgs_login_modification)
     setErrPassword(false)
     setErrEmail(false)
+  }
+
+
+  /**
+   * Add info message on license modification
+   * @param {string} s
+   */
+  const setInfoMsgForAccountDeletion = (s: string) => {
+    msgs_modal_del_account.info = s
+    msgs_modal_del_account.err = ''
+    setMsgsLicenseModification(msgs_modal_del_account)
+  }
+
+  /**
+   * Add err message on license modification
+   * @param {string} s
+   */
+  const setErrMsgForAccountDeletion = (s: string) => {
+    msgs_modal_del_account.info = ''
+    msgs_modal_del_account.err = s
+    setMsgsLicenseModification(msgs_modal_del_account)
+    setErrDelete(true)
+  }
+
+  /**
+   * Clear all messages on license modification
+   * @param {string} s
+   */
+  const clearMsgsForAccountDeletion = () => {
+    msgs_modal_del_account.info = ''
+    msgs_modal_del_account.err = ''
+    setMsgsLicenseModification(msgs_login_modification)
+    setErrDelete(false)
   }
 
   /**
@@ -341,6 +370,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             2000)
           setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.prs_pwd'))
         })
+        .catch(() => { })
     }
     else {
       setErrPassword(true)
@@ -378,13 +408,14 @@ const Account: FunctionComponent<AccountTypes> = ({
         onPwdChangeModalClose()
         setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_pwd'))
       })
+      .catch(() => { })
   }
 
   /**
    * Trigger Password change - send email with token
    */
   const triggerDeleteAccount = () => {
-    clearMsgsForLoginModification()
+    clearMsgsForAccountDeletion()
     const path = window.location.origin
     const url = path + '/user/delete/account'
     return fetch(url, {
@@ -392,25 +423,35 @@ const Account: FunctionComponent<AccountTypes> = ({
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({
+        comment: comment,
+        feedback: feedback,
+        password: password
+      })
     })
       .then(response => {
         if (response.ok) {
           return response
         }
         else {
-          setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_pwd_failed'))
+          setErrMsgForAccountDeletion(t('UserPages.login_modify.msgs.err_del'))
           return Promise.reject(response)
         }
       })
       .then(() => {
+        // Reset password on modal
+        setPassword('')
+        setShowPassword(false)
+        setInfoMsgForAccountDeletion(t('UserPages.login_modify.msgs.ok_del'))
+        // Close modal and return to app
         setTimeout(
           () => {
+            onDeleteAccountModalClose
             navigate('/')
           },
           2000)
-        setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_del'))
       })
+      .catch(() => { })
   }
 
   // User data modifications ----------------------------------------------------------
@@ -499,65 +540,18 @@ const Account: FunctionComponent<AccountTypes> = ({
 
   // Licenses modifications ----------------------------------------------------------------
 
-  /**
-   * Add info message on license modification
-   * @param {string} s
-   */
-  const setInfoMsgForLicenseModification = (s: string) => {
-    msgs_license_modification.info = s
-    msgs_license_modification.err = ''
-    setMsgsLicenseModification(msgs_license_modification)
-  }
-
-  /**
-   * Add err message on license modification
-   * @param {string} s
-   */
-  const setErrMsgForLicenseModification = (s: string) => {
-    msgs_license_modification.info = ''
-    msgs_license_modification.err = s
-    setMsgsLicenseModification(msgs_license_modification)
-  }
-
-  /**
-   * Clear all messages on license modification
-   * @param {string} s
-   */
-  const clearMsgsForLicenseModification = () => {
-    msgs_license_modification.info = ''
-    msgs_license_modification.err = ''
-    setMsgsLicenseModification(msgs_login_modification)
-  }
-
-  const summitStopSubscription = () => {
-    clearMsgsForLicenseModification()
-    fetch(window.location.origin + '/user/delete/license/opensankeyplus', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        comment: comment,
-        feedback: feedback,
-        password: password
-      })
-    })
+  const openCustomerPage = () => {
+    fetch(window.location.origin + '/stripe/create-customer-portal')
       .then(response => {
-        if (response.ok) {
-          setInfoMsgForLicenseModification(t('UserPages.license.confirm_modal.msgs.ok'))
-          // Reset password on modal
-          setPassword('')
-          setShowPassword(false)
-          // Close modal and update
-          setTimeout(
-            onStopSubscriptionModalClose,
-            2000)
-        }
-        else {
-          setErrMsgForLicenseModification(t('UserPages.license.confirm_modal.msgs.err'))
-        }
+        if (response.ok)
+          return response.json()
+        else
+          return Promise.reject(response)
       })
-    setInfoMsgForLicenseModification(t('UserPages.license.confirm_modal.msgs.prs'))
+      .then(response => {
+        window.location.href = response.url;
+      })
+      .catch(() => { })
   }
 
   // Hooks
@@ -718,7 +712,7 @@ const Account: FunctionComponent<AccountTypes> = ({
           <LoginOutButton
             new_data_app={new_data_app}
           />
-      </Box>
+        </Box>
       </Box>
 
       <div>
@@ -810,207 +804,62 @@ const Account: FunctionComponent<AccountTypes> = ({
                       <Text textStyle='h2'>{t('UserPages.license.title')}</Text>
                     </FormLabel>
 
-                    {
-                      user_data.license_legacy_opensankeyplus_validity ?
-                        <Box layerStyle='account_row'>
-                          <Box>
-                            {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
-                            {t('UserPages.OS+_lic')}
-                          </Box>
-                          <Input
-                            onChange={(e) => {
-                              setNewLicenseOpenOSP(e.target.value)
-                              setNewLicenseOpenOSPToCheck(true)
-                            }
-                            }
-                            placeholder={user_data.license_legacy_opensankeyplus_id} />
-                          <Button
-                            variant='menuconfigpanel_option_button'
-                            onClick={() => signupNewLicenseOpenOSP()}
-                            isDisabled={newLicenseOpenOSPToCheck === false}>
-                            {t('UserPages.update_lic')}
-                          </Button>
-                          {user_data.loading_legacy_opensankeyplus ? (
-                            <>
-                              <Spinner animation="border" />
-                              <Spinner animation="border" />
-                            </>
-                          ) : (
-                            <>
-                              <Text>{user_data.license_legacy_opensankeyplus_active}</Text>
-                              <Text>{user_data.license_legacy_opensankeyplus_validity}</Text>
-                            </>
-                          )}
-                        </Box> :
-                        <></>
-                    }
-
-                    <Box layerStyle='account_row'>
-                      <Box>
+                    <Box
+                      layerStyle='account_card_subcontent'
+                      gridAutoFlow='row'
+                    >
+                      <Text
+                        textStyle='h3'
+                        margin='0px 0px 0px 3px'
+                      >
                         {t('UserPages.OS+_lic')}
-                      </Box>
-                      <>
-                        <Text>{user_data.license_opensankeyplus_active ? 'Active' : 'Non-Active'}</Text>
+                      </Text>
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='column'
+                        justifyItems='center'
+                        alignItems='center'
+                      >
+                        <Text
+                          justifySelf='left'
+                          margin='0'
+                        >
+                          {user_data.license_opensankeyplus_active ? 'Active' : 'Non-Active'}
+                        </Text>
                         {
                           user_data.license_opensankeyplus_active ?
-                            <Box as='span'>
-                              <Text>
+                            <>
+                              <Text
+                                margin='0'
+                              >
                                 {t('UserPages.license.exp_until') + user_data.license_opensankeyplus_expiry}
                               </Text>
                               <Button
-                                variant='menuconfigpanel_option_button'
-                                onClick={onStopSubscriptionModalOpen}
+                                variant='btn_accountpage'
+                                onClick={openCustomerPage}
+                                maxWidth='inherit'
+                                width='fit-content'
+                                justifySelf='right'
+                              >
+                                {t('UserPages.license.btns.mng_sub')}
+                              </Button>
+                              {/* <Button
+                                variant='btn_accountpage_danger'
+                                onClick={onDeleteAccountModalOpen}
                                 isDisabled={!user_data.license_opensankeyplus_active}
+                                maxWidth='inherit'
+                                width='fit-content'
+                                justifySelf='right'
                               >
                                 {t('UserPages.license.btns.stop_sub')}
-                              </Button>
-                            </Box>
+                              </Button> */}
+                            </>
                             :
                             <></>
                         }
-                      </>
+                      </Box>
                     </Box>
                   </FormControl>
-
-                  {/* Modal confirmation license */}
-                  <Modal
-                    isOpen={isStopSubscriptionModalOpen}
-                    onClose={onStopSubscriptionModalClose}
-                    variant='modal_account'
-                  >
-                    <ModalContent>
-                      <ModalHeader>{t('UserPages.license.confirm_modal.title')}</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        <FormControl
-                          isInvalid={(msgs_license_modification.err.length > 0)}
-                          variant='form_account_page'
-                        >
-
-                          <Box
-                            layerStyle='account_card_content'
-                          >
-                            {/* Feedback */}
-                            <Box
-                              layerStyle='account_card_subcontent'
-                              gridAutoFlow='row'
-                            >
-                              <Text
-                                textStyle='h3'
-                                margin='0px 0px 0px 3px'
-                              >
-                                {t('UserPages.license.confirm_modal.fdback')}
-                              </Text>
-                              <Select
-                                placeholder={t('UserPages.license.confirm_modal.fdback_default')}
-                                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                                  setFeedback(evt.target.value)
-                                }}
-                              >
-                                {
-                                  possible_feedback.map((s: string) => {
-                                    return <option value={s}>
-                                      {t('UserPages.license.confirm_modal.fdback_' + s)}
-                                    </option>
-                                  })
-                                }
-                              </Select>
-                            </Box>
-
-                            {/* Comment */}
-                            <Box
-                              layerStyle='account_card_subcontent'
-                              gridAutoFlow='row'
-                            >
-
-                              <Text
-                                textStyle='h3'
-                                margin='0px 0px 0px 3px'
-                              >
-                                {t('UserPages.license.confirm_modal.comment')}
-                              </Text>
-                              <Editable
-                                border='1px solid'
-                                borderRadius='3px'
-                                height='5rem'
-                                textAlign='start'
-                                defaultValue='No Comment'
-                                onChange={(nextValue) => {
-                                  setComment(nextValue)
-                                }}
-                              >
-                                <EditablePreview
-                                  height='100%'
-                                />
-                                <EditableInput
-                                  height='100%'
-                                />
-                              </Editable>
-                            </Box>
-
-                            {/* Password confirmation */}
-                            <Box
-                              layerStyle='account_card_subcontent'
-                              gridAutoFlow='row'
-                            >
-                              <Text
-                                textStyle='h3'
-                                margin='0px 0px 0px 3px'
-                              >
-                                {t('UserPages.license.confirm_modal.pwd_confirm')}
-                              </Text>
-                              <InputGroup variant='register_input'>
-                                <Input
-                                  isRequired
-                                  type={show_password ? 'text' : 'password'}
-                                  placeholder={t('Login.pwd.placeholder')}
-                                  onChange={e => setPassword(e.target.value)}
-                                />
-                                <InputRightElement width='4.5rem' marginRight='0.25em'>
-                                  <Button
-                                    h='1.75rem'
-                                    size='sm'
-                                    border='0px'
-                                    bg='gray.50'
-                                    onClick={() => setShowPassword(!show_password)}
-                                  >
-                                    {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
-                                  </Button>
-                                </InputRightElement>
-                              </InputGroup>
-                            </Box>
-                            <FormErrorMessage>{msgs_license_modification.err}</FormErrorMessage>
-                            <FormHelperText>{msgs_license_modification.info}</FormHelperText>
-                          </Box>
-                        </FormControl>
-                        <Box
-                          layerStyle='account_card_subcontent'
-                          gridAutoFlow='column'
-                        >
-                          <Button
-                            variant='btn_lone_navigation_primary'
-                            type="submit"
-                            isDisabled={password.length === 0}
-                            maxWidth='inherit'
-                            width='fit-content'
-                            onClick={() => summitStopSubscription()}
-                          >
-                            {t('UserPages.license.confirm_modal.btn_confirm')}
-                          </Button>
-                          <Button
-                            variant='btn_lone_navigation_tertiary'
-                            type="submit"
-                            maxWidth='inherit'
-                            width='fit-content'
-                            onClick={onStopSubscriptionModalClose}
-                          >
-                            {t('UserPages.license.confirm_modal.btn_cancel')}
-                          </Button>
-                        </Box>
-                      </ModalBody>
-                    </ModalContent>
-                  </Modal>
-
                 </Box>
 
                 {/* Seconde colonne */}
@@ -1099,7 +948,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Button
                           variant='btn_accountpage_danger'
-                          onClick={triggerDeleteAccount}
+                          onClick={onDeleteAccountModalOpen}
                         >
                           {t('UserPages.login_modify.btns.del_account')}
                         </Button>
@@ -1109,98 +958,297 @@ const Account: FunctionComponent<AccountTypes> = ({
                     <FormHelperText textStyle='account_log_info'>{msgs_login_modification.info}</FormHelperText>
                   </FormControl>
 
-                  {/* Modal de confirmation de modification E-Mail */}
-                  <Modal
-                    isOpen={isEmailChangeModalOpen}
-                    onClose={onEmailChangeModalClose}
-                    variant='modal_account'
-                  >
-                    <ModalContent>
-                      <ModalHeader>{t('UserPages.login_modify.email_modal.title')}</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        <FormControl
-                          variant='form_account_page'
-                        >
-                          <InputGroup variant='register_input'>
-                            <InputLeftAddon>
-                              {t('Login.pwd.label')}
-                            </InputLeftAddon>
-                            <Input
-                              isRequired
-                              type={show_password ? 'text' : 'password'}
-                              placeholder={t('Login.pwd.placeholder')}
-                              onChange={e => setPassword(e.target.value)}
-                            />
-                            <InputRightElement width='4.5rem' marginRight='0.25em'>
-                              <Button
-                                h='1.75rem'
-                                size='sm'
-                                border='0px'
-                                bg='gray.50'
-                                onClick={() => setShowPassword(!show_password)}
-                              >
-                                {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
-                              </Button>
-                            </InputRightElement>
-                          </InputGroup>
-                        </FormControl>
-                        <Button
-                          variant='btn_lone_navigation_tertiary'
-                          type="submit"
-                          onClick={submitEmail}
-                          maxWidth='inherit'
-                          width='fit-content'
-                        >
-                          {t('UserPages.login_modify.email_modal.btn')}
-                        </Button>
-                      </ModalBody>
-                    </ModalContent>
-                  </Modal>
+                  {/* Infos licenses legacy --------------------------------------------------------------------  */}
 
-                  {/* Modal de confirmation de modification mot de passe */}
-                  <Modal
-                    isOpen={isPwdChangeModalOpen}
-                    onClose={onPwdChangeModalClose}
-                    variant='modal_account'
-                  >
-                    <ModalContent>
-                      <ModalHeader>{t('UserPages.login_modify.pwd_modal.title')}</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        <FormControl
-                          variant='form_account_page'>
-
-                          <InputGroup variant='register_input'>
-                            <InputLeftAddon>
-                              {t('UserPages.login_modify.pwd_modal.input_token')}
-                            </InputLeftAddon>
-                            <Input
-                              isRequired
-                              type={'text'}
-                              onChange={e => setSecret(e.target.value)}
-                            />
-                          </InputGroup>
-                        </FormControl>
-                        <Button
-                          variant='btn_lone_navigation_tertiary'
-                          type="submit"
-                          onClick={submitPassword}
-                          maxWidth='inherit'
-                          width='fit-content'
+                  {
+                    user_data.license_legacy_opensankeyplus_validity ?
+                      <FormControl
+                        variant='form_account_page'
+                      >
+                        <FormLabel
+                          layerStyle='account_card_title'
                         >
-                          {t('UserPages.login_modify.pwd_modal.btn')}
-                        </Button>
-                      </ModalBody>
-                    </ModalContent>
-                  </Modal>
+                          <Text textStyle='h2'>{t('UserPages.license.title') + ' (Legacy)'}</Text>
+                        </FormLabel>
+
+                        <Box layerStyle='account_row'>
+                          <Box>
+                            {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
+                            {t('UserPages.OS+_lic')}
+                          </Box>
+                          <Input
+                            onChange={(e) => {
+                              setNewLicenseOpenOSP(e.target.value)
+                              setNewLicenseOpenOSPToCheck(true)
+                            }}
+                            placeholder={user_data.license_legacy_opensankeyplus_id} />
+                          <Button
+                            variant='menuconfigpanel_option_button'
+                            onClick={() => signupNewLicenseOpenOSP()}
+                            isDisabled={newLicenseOpenOSPToCheck === false}>
+                            {t('UserPages.update_lic')}
+                          </Button>
+                          {user_data.loading_legacy_opensankeyplus ? (
+                            <>
+                              <Spinner animation="border" />
+                              <Spinner animation="border" />
+                            </>
+                          ) : (
+                            <>
+                              <Text>{user_data.license_legacy_opensankeyplus_active}</Text>
+                              <Text>{user_data.license_legacy_opensankeyplus_validity}</Text>
+                            </>
+                          )}
+                        </Box>
+                        <div className='LogError' style={{ 'color': 'red' }}></div>
+                      </FormControl> :
+                      <></>
+                  }
 
                 </Box>
               </Box>
             )}
-            <div className='LogError' style={{ 'color': 'red' }}></div>
+
+
+            {/* Modal de confirmation de modification E-Mail */}
+            <Modal
+              isOpen={isEmailChangeModalOpen}
+              onClose={onEmailChangeModalClose}
+              variant='modal_account'
+            >
+              <ModalContent>
+                <ModalHeader>{t('UserPages.login_modify.email_modal.title')}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                  <FormControl
+                    variant='form_account_page'
+                  >
+                    <InputGroup variant='register_input'>
+                      <InputLeftAddon>
+                        {t('Login.pwd.label')}
+                      </InputLeftAddon>
+                      <Input
+                        isRequired
+                        type={show_password ? 'text' : 'password'}
+                        placeholder={t('Login.pwd.placeholder')}
+                        onChange={e => setPassword(e.target.value)}
+                      />
+                      <InputRightElement width='4.5rem' marginRight='0.25em'>
+                        <Button
+                          h='1.75rem'
+                          size='sm'
+                          border='0px'
+                          bg='gray.50'
+                          onClick={() => setShowPassword(!show_password)}
+                        >
+                          {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                        </Button>
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+                  <Button
+                    variant='btn_accountpage'
+                    type="submit"
+                    onClick={submitEmail}
+                    maxWidth='inherit'
+                    width='fit-content'
+                  >
+                    {t('UserPages.login_modify.email_modal.btn')}
+                  </Button>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+
+            {/* Modal de confirmation de modification mot de passe */}
+            <Modal
+              isOpen={isPwdChangeModalOpen}
+              onClose={onPwdChangeModalClose}
+              variant='modal_account'
+            >
+              <ModalContent>
+                <ModalHeader>{t('UserPages.login_modify.pwd_modal.title')}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                  <FormControl
+                    variant='form_account_page'>
+
+                    <InputGroup variant='register_input'>
+                      <InputLeftAddon>
+                        {t('UserPages.login_modify.pwd_modal.input_token')}
+                      </InputLeftAddon>
+                      <Input
+                        isRequired
+                        type={'text'}
+                        onChange={e => setSecret(e.target.value)}
+                      />
+                    </InputGroup>
+                  </FormControl>
+                  <Button
+                    variant='btn_accountpage'
+                    type="submit"
+                    onClick={submitPassword}
+                    maxWidth='inherit'
+                    width='fit-content'
+                  >
+                    {t('UserPages.login_modify.pwd_modal.btn')}
+                  </Button>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+
+
+            {/* Modal confirmation license */}
+            <Modal
+              isOpen={isDeleteAccountModalOpen}
+              onClose={onDeleteAccountModalClose}
+              variant='modal_account'
+            >
+              <ModalContent>
+                <ModalHeader>{t('UserPages.login_modify.del_modal.title')}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                  <FormControl
+                    isInvalid={err_delete}
+                    variant='form_account_page'
+                  >
+
+                    <Box
+                      layerStyle='account_card_content'
+                    >
+
+                      <Text
+                        textStyle='h2'
+                        // margin='0px 0px 0px 3px'
+                        color='primaire.1'
+                      >
+                        {t('UserPages.login_modify.del_modal.desc')}
+                      </Text>
+
+                      {/* Feedback */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
+                      >
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('UserPages.login_modify.del_modal.fdback')}
+                        </Text>
+                        <Select
+                          placeholder={t('UserPages.login_modify.del_modal.fdback_default')}
+                          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            setFeedback(evt.target.value)
+                          }}
+                        >
+                          {
+                            possible_feedback.map((s: string) => {
+                              return <option value={s}>
+                                {t('UserPages.login_modify.del_modal.fdback_' + s)}
+                              </option>
+                            })
+                          }
+                        </Select>
+                      </Box>
+
+                      {/* Comment */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
+                      >
+
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('UserPages.login_modify.del_modal.comment')}
+                        </Text>
+                        <Editable
+                          border='1px solid'
+                          borderRadius='3px'
+                          height='5rem'
+                          textAlign='start'
+                          defaultValue='No Comment'
+                          onChange={(nextValue) => {
+                            setComment(nextValue)
+                          }}
+                        >
+                          <EditablePreview
+                            height='100%'
+                          />
+                          <EditableInput
+                            height='100%'
+                          />
+                        </Editable>
+                      </Box>
+
+                      {/* Password confirmation */}
+                      <Box
+                        layerStyle='account_card_subcontent'
+                        gridAutoFlow='row'
+                      >
+                        <Text
+                          textStyle='h3'
+                          margin='0px 0px 0px 3px'
+                        >
+                          {t('UserPages.login_modify.del_modal.pwd_confirm')}
+                        </Text>
+                        <InputGroup variant='register_input'>
+                          <Input
+                            isRequired
+                            isInvalid={err_delete}
+                            type={show_password ? 'text' : 'password'}
+                            placeholder={t('Login.pwd.placeholder')}
+                            onChange={e => setPassword(e.target.value)}
+                          />
+                          <InputRightElement width='4.5rem' marginRight='0.25em'>
+                            <Button
+                              h='1.75rem'
+                              size='sm'
+                              border='0px'
+                              bg='gray.50'
+                              onClick={() => setShowPassword(!show_password)}
+                            >
+                              {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
+                            </Button>
+                          </InputRightElement>
+                        </InputGroup>
+                      </Box>
+                      <FormErrorMessage>{msgs_modal_del_account.err}</FormErrorMessage>
+                      <FormHelperText>{msgs_modal_del_account.info}</FormHelperText>
+                    </Box>
+                  </FormControl>
+                  <Box
+                    layerStyle='account_card_subcontent'
+                    gridAutoFlow='column'
+                  >
+                    <Button
+                      variant='btn_accountpage'
+                      type="submit"
+                      isDisabled={password.length === 0}
+                      maxWidth='inherit'
+                      width='fit-content'
+                      onClick={() => triggerDeleteAccount()}
+                    >
+                      {t('UserPages.login_modify.del_modal.btn_confirm')}
+                    </Button>
+                    <Button
+                      variant='btn_accountpage_danger'
+                      type="submit"
+                      maxWidth='inherit'
+                      width='fit-content'
+                      onClick={onDeleteAccountModalClose}
+                    >
+                      {t('UserPages.login_modify.del_modal.btn_cancel')}
+                    </Button>
+                  </Box>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+
           </CardBody>
         </Card>
+
       </div>
     </div>
   )

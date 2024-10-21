@@ -103,6 +103,10 @@ export async function loginUser(
     .then(() => {
       returnToApp()
     })
+    .catch(e => {
+      console.log(e);
+    })
+
 }
 
 //Logout
