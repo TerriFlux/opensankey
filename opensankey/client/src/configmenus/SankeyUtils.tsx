@@ -695,6 +695,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_opacity:0,
     legend_show_dataTags:true,
     node_label_separator:' - ',
+    node_label_separator_first:true
 
     //parametric_mode : false
   }

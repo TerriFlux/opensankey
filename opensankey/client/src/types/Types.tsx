@@ -335,7 +335,7 @@ export type SankeyData = {
 
   legend_width:number,
   node_label_separator:string
-
+  node_label_separator_first:boolean
   //parametric_mode: boolean
 }
 

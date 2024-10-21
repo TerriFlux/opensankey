@@ -1617,7 +1617,11 @@ export const NodeLabeLText : NodeLabeLTextFType = (
   d:SankeyNode
 )=>{
   if (data.node_label_separator && data.node_label_separator!=='') {
-    return d.name.split(data.node_label_separator)[0]
+    const tmp = d.name.split(data.node_label_separator)
+    if (data.node_label_separator_first) {
+      return tmp[0]
+    }
+    return tmp.pop() as string
   }
   return d.name
 }
