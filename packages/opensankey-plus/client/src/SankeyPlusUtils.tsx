@@ -16,6 +16,7 @@ import {
   CustomFaEyeCheckIcon,
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
+  getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringOrUndefinedFromJSON,
   OSTooltip,
@@ -743,8 +744,10 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       const container_name = getStringOrUndefinedFromJSON(cont, 'name')
       const container_content = getStringFromJSON(cont, 'content', default_container_content)
       const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
-
-      if (container_opacity) {
+      const container_opacity_int = getNumberOrUndefinedFromJSON(cont, 'opacity')
+      if(container_opacity_int!==undefined){
+        cont['opacity'] = container_opacity_int
+      }else if (container_opacity) {
         cont['opacity'] = 0
       } else {
         cont['opacity'] = 100
