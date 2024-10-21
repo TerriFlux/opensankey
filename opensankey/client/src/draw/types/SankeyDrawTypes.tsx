@@ -28,6 +28,7 @@ export type keyHandlerFType = (
 export type SankeyDrawTypes = {
     contextMenu:contextMenuType,
     applicationData : applicationDataType,
+    link_function: LinkFunctionTypes,
     animation: MutableRefObject<boolean>,
     applicationState:applicationStateType,
     agregation:agregationType, 
