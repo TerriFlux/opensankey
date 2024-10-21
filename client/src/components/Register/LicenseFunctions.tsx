@@ -111,7 +111,7 @@ async function registerNewLicense(
           reject('Failed to check licence')
         }
       }).catch( error => {
-      // Erreur fetch license
+        // Erreur fetch license
         reject('Error in check licence - ' + error.toString())
       })
   })
