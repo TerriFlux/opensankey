@@ -460,6 +460,9 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
                     if (evt.target.checked) {
                       flux_tagg.show_legend = true
                     }
+                    // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+                    // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
+                    new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.drawLinksArrow())
                     // Update related components (includes this)
                     new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
                   }}

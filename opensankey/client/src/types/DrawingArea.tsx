@@ -280,7 +280,7 @@ export abstract class Class_DrawingArea
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
-    .on('zoom', (event) => { this.eventZoom(event) })
+    .on('zoom', (event) => this.eventZoom(event))
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
@@ -1512,9 +1512,9 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-    public removeMaximumLinkThickness() {
-      delete this._maximum_flux
-    }
+  public removeMaximumLinkThickness() {
+    delete this._maximum_flux
+  }
 
 
   // PRIVATE METHODS ==================================================================
@@ -1620,21 +1620,8 @@ export abstract class Class_DrawingArea
         .on('dblclick.zoom', null) // deactivate dbl click zoom
         .on('wheel.zoom', (event: WheelEvent) => {
           event.preventDefault()
-          if (!event.ctrlKey && this.d3_selection_zoom_area) {
-            const currentZoom = this.d3_selection_zoom_area.property('__zoom').k || 1
-            // Use trackpad with 2 fingers to pan.
-            this.zoomListener.translateBy(
-              this.d3_selection_zoom_area,
-              -(event.deltaX / currentZoom),
-              -(event.deltaY / currentZoom)
-            )
-          }
+          this.eventMouseScroll(event)
         })
-      // Mouse cursor move
-      this.d3_selection_zoom_area?.on(
-        'wheel',
-        (event: WheelEvent) =>
-          this.eventMouseScroll(event))
     }
   }
 
@@ -1900,8 +1887,7 @@ export abstract class Class_DrawingArea
     event: WheelEvent
   ) {
     if (
-      this.d3_selection_zoom_area &&
-      (Math.abs(event.deltaY) > 0)
+      this.d3_selection_zoom_area
     ) {
       // Zoom in / out
       if (event.ctrlKey) {

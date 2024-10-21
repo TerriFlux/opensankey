@@ -11,9 +11,11 @@ import {
   Class_AbstractSankey,
   Class_AbstractTag
 } from './Abstract'
+import { Class_AbstractNodeElement } from './AbstractNode';
 import { Class_ProtoElement } from './Element'
 
 
+type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 export abstract class Class_AbstractLinkElement
   <
     Type_GenericDrawingArea extends Class_AbstractDrawingArea,
@@ -30,6 +32,11 @@ export abstract class Class_AbstractLinkElement
   public abstract addDataTag(_: Class_AbstractTag): void;
   public abstract removeDataTag(_: Class_AbstractTag): void;
   public abstract getAllValues(): { [_: string]: [Class_AbstractLinkValue, Class_AbstractTag[] | undefined]; };
+  public abstract hasGivenTag(tag: Class_AbstractTag):boolean
+  
+  public abstract get source():Type_AbstractNodeElement;
+  public abstract get target():Type_AbstractNodeElement;
+
 }
 
 

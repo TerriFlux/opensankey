@@ -240,7 +240,6 @@ export abstract class Class_ProtoElement
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleRMBCLick(event))
-      // Drag events TODO
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       if (this.drawing_area.isInSelectionMode()) {
         this.d3_selection?.call(
@@ -255,6 +254,9 @@ export abstract class Class_ProtoElement
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDragEnd(event))
         )
+      }else if(this.drawing_area.isInEditionMode()){
+        // In edition mode we don't use drag event on elements
+        this.d3_selection?.on('mousedown.drag',null) // Remove dag event 
       }
     }
   }
