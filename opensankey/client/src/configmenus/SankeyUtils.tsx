@@ -1340,6 +1340,7 @@ export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
     d3.select(' .opensankey #svg')
       .style('border', Math.round(2 ) + 'px solid #d3d3d3')
       .style('width', data.width + 'px')
+      .style('height', data.height + 'px')
   }
   const zoom = d3.zoom()
     .on('zoom', zoomed)
