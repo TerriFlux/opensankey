@@ -126,7 +126,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </Checkbox>,
     ],
     'node_label_sep':<OSTooltip label={t('Menu.tooltips.node_label_sep')}>
-      <Box layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_row_3cols' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
         <Input
           variant='menuconfigpanel_option_input' value={data.node_label_separator}
@@ -138,6 +138,16 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           }}
           onBlur={()=>node_function.RedrawNodes(Object.values(display_nodes))}
         />
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.node_label_separator_first}
+        onChange={evt => {
+          data.node_label_separator_first = evt.target.checked
+          updateMenus[1](!updateMenus[0])
+          node_function.RedrawNodes(Object.values(display_nodes))
+        }}>
+        {t('Menu.node_label_sep_first')}
+      </Checkbox>
       </Box></OSTooltip>,
 
 
