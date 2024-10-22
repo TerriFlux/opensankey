@@ -1,4 +1,4 @@
-import { background, defineStyle } from '@chakra-ui/react'
+import { defineStyle } from '@chakra-ui/react'
 
 
 export const menutop_button_goto_dashboard = defineStyle({

@@ -104,7 +104,7 @@ export async function loginUser(
       callbackSuccess()
     })
     .catch(e => {
-      console.log(e);
+      console.log(e)
     })
 
 }
@@ -182,7 +182,7 @@ export async function triggerPasswordReset(
       }
     })
     .catch(e => {
-      console.log(e);
+      console.log(e)
     })
 }
 
@@ -246,6 +246,6 @@ export async function applyPasswordReset(
       d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_token_expire'))
     })
     .catch(e => {
-      console.log(e);
+      console.log(e)
     })
 }

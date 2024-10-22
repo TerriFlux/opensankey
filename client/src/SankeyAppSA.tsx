@@ -10,7 +10,7 @@
 
 import React, { FunctionComponent, useEffect, useState } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
-import { Card, Center, ChakraProvider, Spinner } from '@chakra-ui/react'
+import { Center, ChakraProvider, Spinner } from '@chakra-ui/react'
 
 // OpenSankey imports ===============================================================================
 
@@ -130,34 +130,18 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
   useEffect(() => {
     new_data_app.checkTokens()
       .then(() => setApp(
-      <ChakraProvider
-        theme={Theme_SankeyApplication}
-      >
-        <HashRouter>
-          <Routes>
-            <Route
-              path='/register'
-              element={
-                <PublicRoute
-                  new_data_app={new_data_app}
-                  component={
-                    <Register
-                      new_data_app={new_data_app}
-                    />
-                  }
-                />
-              }
-            />
-            <Route
-              path='/login'
-            >
+        <ChakraProvider
+          theme={Theme_SankeyApplication}
+        >
+          <HashRouter>
+            <Routes>
               <Route
-                index
+                path='/register'
                 element={
                   <PublicRoute
                     new_data_app={new_data_app}
                     component={
-                      <Login
+                      <Register
                         new_data_app={new_data_app}
                       />
                     }
@@ -165,106 +149,122 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
                 }
               />
               <Route
-                path='forgot'
-                element={
-                  <PublicRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <PasswordResetFromMail
-                        new_data_app={new_data_app}
-                      />
-                    }
-                  />
-                }
-              />
-              <Route
-                path='reset/:token'
-                element={
-                  <PublicRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <PasswordResetFromToken
-                        new_data_app={new_data_app}
-                      />
-                    }
-                  />
-                }
-              />
-            </Route>
-            <Route
-              path='/dashboard'
-              element={
-                <PrivateRoute
-                  new_data_app={new_data_app}
-                  component={
-                    <Dashboard
+                path='/login'
+              >
+                <Route
+                  index
+                  element={
+                    <PublicRoute
                       new_data_app={new_data_app}
-                      exemple_menu={exemple_menu}
+                      component={
+                        <Login
+                          new_data_app={new_data_app}
+                        />
+                      }
                     />
                   }
                 />
-              }
-            />
-            <Route
-              path='/license'
-            >
+                <Route
+                  path='forgot'
+                  element={
+                    <PublicRoute
+                      new_data_app={new_data_app}
+                      component={
+                        <PasswordResetFromMail
+                          new_data_app={new_data_app}
+                        />
+                      }
+                    />
+                  }
+                />
+                <Route
+                  path='reset/:token'
+                  element={
+                    <PublicRoute
+                      new_data_app={new_data_app}
+                      component={
+                        <PasswordResetFromToken
+                          new_data_app={new_data_app}
+                        />
+                      }
+                    />
+                  }
+                />
+              </Route>
               <Route
-                index
+                path='/dashboard'
                 element={
                   <PrivateRoute
                     new_data_app={new_data_app}
                     component={
-                      <PaiementPage
+                      <Dashboard
                         new_data_app={new_data_app}
+                        exemple_menu={exemple_menu}
                       />
                     }
                   />
                 }
               />
               <Route
-                path='checkout'
-                element={
-                  <PrivateRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <PaiementCheckout />
-                    }
-                  />
-                }
-              />
-              <Route
-                path='return'
-                element={
-                  <PrivateRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <PaiementReturn />
-                    }
-                  />
-                }
-              />
-            </Route>
-            <Route
-              path='/account'
-              element={
-                <PrivateRoute
-                  new_data_app={new_data_app}
-                  component={
-                    <Account
+                path='/license'
+              >
+                <Route
+                  index
+                  element={
+                    <PrivateRoute
                       new_data_app={new_data_app}
-                      blocker_suite_sankey={blockers}
+                      component={
+                        <PaiementPage
+                          new_data_app={new_data_app}
+                        />
+                      }
                     />
                   }
                 />
-              }
-            />
-            <Route path='/' element={sankeyApp} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </HashRouter>
-      </ChakraProvider>))
-      }, []
-    )
+                <Route
+                  path='checkout'
+                  element={
+                    <PrivateRoute
+                      new_data_app={new_data_app}
+                      component={
+                        <PaiementCheckout />
+                      }
+                    />
+                  }
+                />
+                <Route
+                  path='return'
+                  element={
+                    <PrivateRoute
+                      new_data_app={new_data_app}
+                      component={
+                        <PaiementReturn />
+                      }
+                    />
+                  }
+                />
+              </Route>
+              <Route
+                path='/account'
+                element={
+                  <PrivateRoute
+                    new_data_app={new_data_app}
+                    component={
+                      <Account
+                        new_data_app={new_data_app}
+                        blocker_suite_sankey={blockers}
+                      />
+                    }
+                  />
+                }
+              />
+              <Route path='/' element={sankeyApp} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </HashRouter>
+        </ChakraProvider>))
+  }, []
+  )
 
   return app
 }

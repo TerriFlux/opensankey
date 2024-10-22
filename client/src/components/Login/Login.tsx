@@ -1,4 +1,4 @@
-import React, { createRef, FunctionComponent, useRef, useState } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
 
@@ -64,7 +64,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
           returnToApp(navigate)
         }
       )
-      .then(() => setOnWait(false))
+        .then(() => setOnWait(false))
     }
     if (state.button === 'forgot') {
       navigate('/login/forgot')

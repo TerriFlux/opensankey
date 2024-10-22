@@ -8,7 +8,7 @@ const { definePartsStyle } =
 
 // Define the base component styles
 export const form_base_style = definePartsStyle({
- container: {}
+  container: {}
 })
 
 export const form_account_page = definePartsStyle({

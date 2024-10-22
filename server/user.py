@@ -32,7 +32,6 @@ from werkzeug.security import generate_password_hash
 # Local imports
 
 from .models import User
-from .models import UserLicences
 from .models import login_required
 from .models import license_required
 from .mailing import send_pw_modification_email
@@ -292,7 +291,8 @@ def delete_account():
                     request.json.get('comment'),
                     request.json.get('feedback'))
                 if not ok_cancel:
-                    return 'failed_to_cancel:  {}'.format(user_license.license.name), 500
+                    return 'failed_to_cancel:  {}'.format(
+                        user_license.license.name), 500
                 user_license.activate = False
 
         # Delete account

@@ -125,7 +125,7 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   }
   new_data_app.menu_configuration.ref_to_additional_menus_updater.current = refreshThis
 
-  const indicateSankeyToSaveInCache = () => new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  // const indicateSankeyToSaveInCache = () => new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to

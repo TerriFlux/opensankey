@@ -100,7 +100,7 @@ def create_checkout_session():
 @login_required
 def create_customer_portal():
     if current_user.stripe_id is not None:
-        billing_session =  stripe.billing_portal.Session.create(
+        billing_session = stripe.billing_portal.Session.create(
             customer=current_user.stripe_id,
             return_url=(
                 CLIENT_ROOT_URL +

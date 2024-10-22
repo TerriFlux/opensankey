@@ -549,7 +549,7 @@ const Account: FunctionComponent<AccountTypes> = ({
           return Promise.reject(response)
       })
       .then(response => {
-        window.location.href = response.url;
+        window.location.href = response.url
       })
       .catch(() => { })
   }

@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import i18next from 'i18next'
 

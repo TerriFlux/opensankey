@@ -752,7 +752,7 @@ const resources = {
             'desc': 'Attention : Cette action supprimera votre compte, vos données et stoppera votre abonnement à OpenSankey+ si présent.',
             'fdback': 'Pourquoi souhaitez vous supprimer votre compte ? (optionel)',
             'fdback_default': '-',
-            'fdback_customer_service': 'Le service client n\est pas satisfaisant',
+            'fdback_customer_service': 'Le service client n\'est pas satisfaisant',
             'fdback_low_quality': 'La qualité du logiciel n\'est pas satifaisante',
             'fdback_missing_features': 'Il manque certaines fonctionnalités',
             'fdback_switched_service': 'Je préfère une autre solution',
