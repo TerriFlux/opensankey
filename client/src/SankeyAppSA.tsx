@@ -75,15 +75,15 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
           example_menu,
           formations_menu,
           reinit
-      )
-    }}
-    initializeDiagrammSelector={initializeDiagrammSelectorOSP}
-    moduleDialogs={moduleDialogsOSP}
-    ModalWelcome={ModalWelcomeBuilderOSP}
-    ClickSaveDiagram={
-      (new_data_app) => { ClickSaveDiagram(new_data_app) }
-    }
-  />
+        )
+      }}
+      initializeDiagrammSelector={initializeDiagrammSelectorOSP}
+      moduleDialogs={moduleDialogsOSP}
+      ModalWelcome={ModalWelcomeBuilderOSP}
+      ClickSaveDiagram={
+        (new_data_app) => { ClickSaveDiagram(new_data_app) }
+      }
+    />
 
   if (new_data_app.is_static)
     return sankeyApp
