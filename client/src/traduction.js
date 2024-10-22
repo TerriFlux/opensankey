@@ -260,23 +260,50 @@ const resources = {
       UserPages: {
         login_modify: {
           'title': 'Your login details',
+          'pwd': 'Changer mot de passe',
+          'del': 'Supprimer le compte',
           email_modal: {
             'title': 'Confirm e-mail modification with your password',
             'btn': 'Apply modification'
           },
           pwd_modal: {
             'title': 'Confirm password modification with the code received by e-mail',
+            'input_token': 'Received code',
             'btn': 'Apply password modification'
+          },
+          del_modal: {
+            'title': 'Do you really want to delete your account?',
+            'desc': 'Warning: This action will delete your account, your data and stop your OpenSankey+ subscription if present.',
+            'fdback': 'Why do you want to delete your account? (optional)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Customer service was less than expected',
+            'fdback_low_quality': 'Quality was less than expected',
+            'fdback_missing_features': 'Some features are missing',
+            'fdback_switched_service': 'I’m switching to a different service',
+            'fdback_too_complex': 'Ease of use was less than expected',
+            'fdback_too_expensive': 'It’s too expensive',
+            'fdback_unused': 'I don’t use the service enough',
+            'fdback_other': 'Other reason',
+            'comment': 'How can we improve? (optional)',
+            'pwd_confirm': 'Enter your password to confirm',
+            'btn_confirm': 'Delete account and all data',
+            'btn_cancel': 'I want to keep my account',
           },
           btns: {
             'set_email': 'Change E-mail',
-            'set_pwd': 'Change password'
+            'set_pwd': 'Change password',
+            'del_account': 'Delete account'
           },
           msgs: {
             'ok_email': 'E-mail has successfully been changed',
             'prs_email': 'Processing e-mail change',
             'err_email_regex': 'E-mail is not valid',
+            'err_email_failed': 'The e-mail could not be modified',
+            'ok_pwd': 'The password has been successfully changed',
             'prs_pwd': 'A password reset e-mail has been sent to you.',
+            'err_pwd_failed': 'Password change request error',
+            'ok_del': 'Account has been deleted. Going back to main page.',
+            'err_del': 'Account deletion request error. Please check your password.',
           },
         },
         infos_modify: {
@@ -294,7 +321,10 @@ const resources = {
         },
         license: {
           'title': 'OpenSankey+ license informations',
-          'exp_until': 'Renewal : '
+          'exp_until': 'Next renewal : ',
+          btns: {
+            'mng_sub': 'Manage subscription'
+          },
         },
         'OS+_lic': 'OpenSankey+ license',
         'SS_lic': 'SankeySuite license',
@@ -722,14 +752,14 @@ const resources = {
             'desc': 'Attention : Cette action supprimera votre compte, vos données et stoppera votre abonnement à OpenSankey+ si présent.',
             'fdback': 'Pourquoi souhaitez vous supprimer votre compte ? (optionel)',
             'fdback_default': '-',
-            'fdback_customer_service': 'Customer service was less than expected',
-            'fdback_low_quality': 'Quality was less than expected',
-            'fdback_missing_features': 'Some features are missing',
-            'fdback_switched_service': 'I’m switching to a different service',
-            'fdback_too_complex': 'Ease of use was less than expected',
-            'fdback_too_expensive': 'It’s too expensive',
-            'fdback_unused': 'I don’t use the service enough',
-            'fdback_other': 'Other reason',
+            'fdback_customer_service': 'Le service client n\est pas satisfaisant',
+            'fdback_low_quality': 'La qualité du logiciel n\'est pas satifaisante',
+            'fdback_missing_features': 'Il manque certaines fonctionnalités',
+            'fdback_switched_service': 'Je préfère une autre solution',
+            'fdback_too_complex': 'Le logiciel est trop compliqué à utiliser',
+            'fdback_too_expensive' : 'Le logiciel est trop cher',
+            'fdback_unused': 'Je ne l\'utilise pas',
+            'fdback_other': 'Autre raison',
             'comment': 'Comment pourrions-nous nous améliorer ? (optionnel)',
             'pwd_confirm': 'Saissisez votre mot de passe pour confirmer',
             'btn_confirm': 'Supprimer le compte et toutes les données',

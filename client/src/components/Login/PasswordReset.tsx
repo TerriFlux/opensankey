@@ -56,7 +56,7 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
 
   // Handler
   const handleSubmit = async () => {
-    if (token !== undefined){
+    if (token !== undefined) {
       setOnWait(true)
       const lang = i18next.language
       await applyPasswordReset(
@@ -66,11 +66,9 @@ export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromT
           password,
           lang
         },
-        () => {
-          setOnWait(false)
-          navigate('/login')
-        }
+        () => { navigate('/login') }
       )
+        .then(() => setOnWait(false))
     }
   }
 
@@ -230,13 +228,9 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
         email,
         lang
       },
-      () => {
-        setOnWait(false)
-        setTimeout(
-          () => navigate('/login'),
-          3000)
-      }
+      () => { navigate('/login') }
     )
+      .then(() => setOnWait(false))
   }
 
   // React output

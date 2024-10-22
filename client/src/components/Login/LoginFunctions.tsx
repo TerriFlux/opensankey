@@ -63,7 +63,7 @@ export async function loginUser(
     password: string;
     remember: boolean;
   },
-  returnToApp: () => void
+  callbackSuccess: () => void
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
@@ -101,7 +101,7 @@ export async function loginUser(
       return new_data_app.checkTokens()
     })
     .then(() => {
-      returnToApp()
+      callbackSuccess()
     })
     .catch(e => {
       console.log(e);
@@ -133,7 +133,7 @@ export function loginOut(
  *     email: string,
  *     lang: string,
  *   }} infos
- * @param {() => void} callback
+ * @param {() => void} callbackSuccess
  * @return {*}
  */
 export async function triggerPasswordReset(
@@ -142,7 +142,7 @@ export async function triggerPasswordReset(
     email: string,
     lang: string,
   },
-  callback: () => void
+  callbackSuccess: () => void
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
@@ -160,7 +160,8 @@ export async function triggerPasswordReset(
     .then(response => {
       if (response.ok) {
         return response.json()
-      } else {
+      }
+      else {
         logError(t('Login.forgot.msg.err_server'))
         return Promise.reject(response)
       }
@@ -174,11 +175,14 @@ export async function triggerPasswordReset(
       }
       else {
         logInfo(t('Login.forgot.msg.mail_sent'))
+        setTimeout(
+          callbackSuccess,
+          3000
+        )
       }
-      setTimeout(
-        callback,
-        3000
-      )
+    })
+    .catch(e => {
+      console.log(e);
     })
 }
 
@@ -193,7 +197,7 @@ export async function triggerPasswordReset(
  *     password: string,
  *     lang: string,
  *   }} infos
- * @param {() => void} callback
+ * @param {() => void} callbackSuccess
  * @return {*}
  */
 export async function applyPasswordReset(
@@ -203,7 +207,7 @@ export async function applyPasswordReset(
     password: string,
     lang: string,
   },
-  callback: () => void
+  callbackSuccess: () => void
 ) {
   const { t } = new_data_app
   // Remove all errors from screen
@@ -234,11 +238,14 @@ export async function applyPasswordReset(
       if (data['passwd_is_updated'] === true) {
         d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.ok'))
         setTimeout(
-          callback,
+          callbackSuccess,
           3000
         )
         return
       }
       d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_token_expire'))
+    })
+    .catch(e => {
+      console.log(e);
     })
 }

@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { createRef, FunctionComponent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
 
@@ -43,6 +43,9 @@ export const Login: FunctionComponent<LoginTypes> = ({
     button: ''
   }
 
+  // Login button ref
+  const ref_login_btn = useRef<HTMLButtonElement>(null)
+
   // Initialise navigation function
   const navigate = useNavigate()
 
@@ -58,10 +61,10 @@ export const Login: FunctionComponent<LoginTypes> = ({
           remember
         },
         () => {
-          setOnWait(false)
           returnToApp(navigate)
         }
       )
+      .then(() => setOnWait(false))
     }
     if (state.button === 'forgot') {
       navigate('/login/forgot')
@@ -139,6 +142,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
                   type={show_password ? 'text' : 'password'}
                   placeholder={t('Login.pwd.placeholder')}
                   onChange={e => setPassword(e.target.value)}
+                  onBlur={() => {ref_login_btn.current?.click()}}
                 />
                 <InputRightElement width='4.5rem' marginRight='0.25em'>
                   <Button
@@ -160,11 +164,12 @@ export const Login: FunctionComponent<LoginTypes> = ({
               gridRowGap='0,25rem'
             >
               <Button
+                ref={ref_login_btn}
                 variant='btn_lone_navigation_tertiary'
                 type="submit"
                 isDisabled={(
                   on_wait ||
-                  ( password.length === 0) ||
+                  (password.length === 0) ||
                   (email.length === 0))}
                 onClick={() => {
                   (state.button = 'login')

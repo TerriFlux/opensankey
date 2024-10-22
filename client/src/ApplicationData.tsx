@@ -8,6 +8,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   protected _menu_configuration: Class_MenuConfigSA
   protected _has_account: boolean = false // token when user is connected with an account
   protected _ok_to_check_account = true
+  protected _ok_to_check_account_timeout: NodeJS.Timeout | null = null
 
   // CONSTRUCTOR ========================================================================
 
@@ -65,9 +66,11 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
         })
       // Cannot check for given time
       this._ok_to_check_account = false
-      setTimeout(
+      if (this._ok_to_check_account_timeout)
+        clearTimeout(this._ok_to_check_account_timeout)
+      this._ok_to_check_account_timeout = setTimeout(
         () => { this._ok_to_check_account = true },
-        180,
+        1800,
       )
     }
   }
