@@ -1,5 +1,6 @@
 import { extendTheme } from '@chakra-ui/react'
 import { Theme_SankeyPlus } from '../deps/OpenSankey+/chakra/Theme'
+import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 import {
   btn_accountpage,
@@ -111,12 +112,13 @@ export const Theme_SA = extendTheme({
 
 const Theme = {}
 
-// eslint-disable-next-line  @typescript-eslint/no-explicit-any
-const deep_assign = (s: Record<string, any>, t: Record<string, any>) => {
+const deep_assign = (s: Type_JSON, t: Type_JSON) => {
   Object.entries(s).forEach(k => {
     if (k[1] !== null && typeof (k[1]) == 'object') {
       if (Object.keys(t).includes(k[0])) {
-        deep_assign(s[k[0]], t[k[0]])
+        const next_source = s[k[0]] as Type_JSON
+        const next_target = t[k[0]] as Type_JSON
+        deep_assign(next_source, next_target)
       } else {
         t[k[0]] = s[k[0]]
       }
@@ -128,5 +130,4 @@ const deep_assign = (s: Record<string, any>, t: Record<string, any>) => {
 
 deep_assign(Theme_SankeyPlus, Theme)
 deep_assign(Theme_SA, Theme)
-
-export const Theme_SankeyApplication = Theme
+export const Theme_SankeyApplication = extendTheme({...Theme})
