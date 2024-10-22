@@ -385,7 +385,6 @@ export abstract class Class_ApplicationDataPlus
         // SHow new sankey
         this._drawing_area = this._views[id]
         this._drawing_area.sankey.setVisible()
-        this._drawing_area.reset()
 
         // Set original view in temporary var so it can be used when we change view and don't want to save current modification
         if (id !== default_main_sankey_id && !(this._original_current_view)) {
@@ -397,6 +396,7 @@ export abstract class Class_ApplicationDataPlus
 
           this._original_current_view = new_DA
         }
+        this._drawing_area.reset()
 
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()

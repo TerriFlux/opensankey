@@ -4,7 +4,7 @@ import { opensankey_theme } from '../deps/OpenSankey/chakra/Theme'
 
 
 
-export const Theme_OSP=extendTheme({
+export const Theme_OSP={
     components:{
         Button:{
             variants:{
@@ -12,7 +12,7 @@ export const Theme_OSP=extendTheme({
             }
         }
     }
-})
+}
 
 const Theme={}
 
@@ -33,5 +33,5 @@ const deep_assign = (s:Record<string, any>, t:Record<string, any>) => {
   deep_assign(opensankey_theme,Theme)
   deep_assign(Theme_OSP,Theme)
 
-  export const Theme_SankeyPlus = Theme
+  export const Theme_SankeyPlus = extendTheme({...Theme})
   

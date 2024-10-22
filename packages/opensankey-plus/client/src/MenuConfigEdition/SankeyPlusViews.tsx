@@ -618,14 +618,7 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
 
   // Components updaters ----------------------------------------------------------------
 
-  const [s_select_or_edit, sSelectOrEdit] = useState('select')
-
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Toogle saving indicator
-    new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Update views components
-    new_data_plus.menu_configuration.updateComponentRelatedToViews()
-  }
+  const [s_select_or_edit, sSelectOrEdit] = useState<'edit'|'select'>('select')
 
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
@@ -687,7 +680,9 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
         cur_view.name = _
       }
       // Update this menu
-      refreshThisAndUpdateRelatedComponents()
+      sSelectOrEdit('select')
+      // Update views components
+      new_data_plus.menu_configuration.updateComponentRelatedToViews()      
     }}
   />
 
