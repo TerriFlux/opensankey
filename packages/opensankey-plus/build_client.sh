@@ -62,12 +62,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Recreate links with submodules
+printf "Linking dependencies ------------------------------------------------\n"
 PWD_DIR=`pwd`
+
 cd $PWD_DIR/client/src/deps
 if [ -f "OpenSankey" ]; then
   rm OpenSankey
 fi
 ln -s "$PWD_DIR/submodules/OpenSankey/client/src" OpenSankey
+
+cd $PWD_DIR
 
 # Install global dependencies
 if [ "$skip_gdeps" = false ] ; then
