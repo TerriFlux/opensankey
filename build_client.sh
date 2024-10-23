@@ -57,16 +57,23 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-SANKEY_DIR=`pwd`
-cd $SANKEY_DIR/client/src/deps
-rm OpenSankey+
-ln -s $SANKEY_DIR/submodules/OpenSankey+/client/src OpenSankey+
+# Get script dir
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-cd $SANKEY_DIR/client/src/deps/OpenSankey+/deps
-rm OpenSankey
-ln -s $SANKEY_DIR/submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src OpenSankey
+# Recreate links with submodules
+printf "Linking dependencies ------------------------------------------------\n"
 
-cd $SANKEY_DIR
+cd $SCRIPT_DIR/client/src/deps
+if [ -h "OpenSankey+" ]; then
+  rm OpenSankey+
+fi
+ln -s "$SCRIPT_DIR/submodules/OpenSankey+/client/src" OpenSankey+
+cd $SCRIPT_DIR/client/src/deps/OpenSankey+/deps
+if [ -h "OpenSankey" ]; then
+  rm OpenSankey
+fi
+ln -s "$SCRIPT_DIR/submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src" OpenSankey
+cd $SCRIPT_DIR
 
 # Install global dependencies
 printf "Global dependencies -------------------------------------------------\n"
@@ -80,7 +87,6 @@ printf "OK ------------------------------------------------------------------\n"
 
 # Clean deps first
 printf "\nClean deps ----------------------------------------------------------\n"
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 bash $SCRIPT_DIR/submodules/OpenSankey+/build_client.sh &> /dev/null || exit_if_error $?
 for dir in node_modules dist build; do
   if [ -d "$SCRIPT_DIR/submodules/OpenSankey+/client/$dir" ] ; then

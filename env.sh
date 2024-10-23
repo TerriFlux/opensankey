@@ -25,7 +25,11 @@ if [ "$ci" = false ] ; then
 fi
 
 # Mail
-export MAIL_DBG_MODE='Activate'
+if [ "$ci" = false ] ; then
+    export MAIL_DBG_MODE='Activate'
+else
+    export MAIL_DBG_MODE='Deactivate'
+fi
 export MAIL_SENDING_ADRESS='contact@terriflux.fr'
 export MAIL_SENDING_PWD=''
 export MAIL_SERVER='ssl0.ovh.net'
