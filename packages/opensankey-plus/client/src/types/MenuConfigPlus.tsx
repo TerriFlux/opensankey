@@ -240,19 +240,19 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this.ref_to_toolbar_data_tag_updater.current()
   }
 
-    /**
+  /**
    * Update component with timeOut to avoid multiple refreshs
    * @memberof Class_MenuConfig
    */
-    public updateComponentRelatedToLinksData() {
-      this._add_waiting_process(
-        'updateComponentRelatedToLinksData',
-        (_this: Class_MenuConfigPlus) => {
-          _this.ref_to_menu_config_links_data_updater.current()
-          _this._ref_to_menu_config_link_data_text_updater.current()
-        }
-      )
-    }
+  public updateComponentRelatedToLinksData() {
+    this._add_waiting_process(
+      'updateComponentRelatedToLinksData',
+      (_this: Class_MenuConfigPlus) => {
+        _this.ref_to_menu_config_links_data_updater.current()
+        _this._ref_to_menu_config_link_data_text_updater.current()
+      }
+    )
+  }
 
 
   // PROTECTED METHODS ==================================================================

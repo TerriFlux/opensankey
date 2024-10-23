@@ -356,7 +356,7 @@ export abstract class Class_DrawingAreaPlus
 
     if (all) {// Update Contaiers
     // TODO add container create/update/delete options in mode
-      const [to_remove, to_add, to_update] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
+      const [to_remove, to_add, ] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
       // Add containers that are in other sankey but not in this sankey
       if (all) {
         to_add

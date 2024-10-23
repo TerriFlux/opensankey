@@ -122,7 +122,7 @@ export class Class_NodeElementOSP
     Class_DrawingAreaOSP, Class_SankeyOSP, Class_LinkElementOSP
   > {
 
-    protected _display: {
+  protected _display: {
       drawing_area: Class_DrawingAreaOSP,
       sankey: Class_SankeyOSP,
       position: Type_ElementPosition,
@@ -131,23 +131,23 @@ export class Class_NodeElementOSP
       position_x_label?: number// Relative x position of label when dragged (optionnal)
       position_y_label?: number// Relative y position of label when dragged (optionnal)
     }
-    constructor(id:string,name:string,
-      drawing_area: Class_DrawingAreaOSP,
-      menu_config: Class_MenuConfigPlus
-    ){
-      super(id,name,drawing_area,menu_config)
-      this._display={
-        drawing_area: drawing_area,
-        sankey: this.sankey,
-        position: this.display.position,
+  constructor(id:string,name:string,
+    drawing_area: Class_DrawingAreaOSP,
+    menu_config: Class_MenuConfigPlus
+  ){
+    super(id,name,drawing_area,menu_config)
+    this._display={
+      drawing_area: drawing_area,
+      sankey: this.sankey,
+      position: this.display.position,
 
-        style: drawing_area.sankey.default_node_style,
-        attributes: new Class_NodeAttributePlus()
+      style: drawing_area.sankey.default_node_style,
+      attributes: new Class_NodeAttributePlus()
 
-      }
     }
-
   }
+
+}
 
 // LINK =================================================================================
 

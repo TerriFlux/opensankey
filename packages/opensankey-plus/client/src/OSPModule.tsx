@@ -181,10 +181,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data={new_data}
     menu_for_modal={false}
   />,
-    additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
-      new_data_plus={new_data_plus}
-      menu_for_modal={false}
-    />
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
+    new_data_plus={new_data_plus}
+    menu_for_modal={false}
+  />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <NodeForeignObjectOSP
     new_data_plus={new_data_plus}
     is_activated={new_data_plus.has_sankey_plus}

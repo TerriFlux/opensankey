@@ -132,7 +132,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
           if (!menu_for_style) {
             list_node_to_redraw_arrow.push((element as Type_GenericLinkElementOSP).target)
           }
-        });
+        })
 
         new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -374,58 +374,58 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-    {sep}
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
+      {sep}
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {t('Menu.Transformation.tagFlux_assign')}
+        </MenuButton>
 
-      <MenuList>
-        {
-          new_data.drawing_area.sankey.flux_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_link.hasGivenTag(tag)
-                        return <MenuItem
-                          onClick={() => {
+        <MenuList>
+          {
+            new_data.drawing_area.sankey.flux_taggs_list
+              .filter(tagg => tagg.has_tags)
+              .map((tagg, i) => {
+                return <Menu key={i} placement='end'>
+                  <MenuButton
+                    variant='contextmenu_button'
+                    as={Button}
+                    rightIcon={<ChevronRightIcon />}
+                    className="dropdown-basic"
+                  >
+                    {tagg.name}
+                  </MenuButton>
+                  <MenuList>
+                    {
+                      tagg.tags_list
+                        .map(tag => {
+                          const has_tag = contextualised_link.hasGivenTag(tag)
+                          return <MenuItem
+                            onClick={() => {
                             // Assign tag to selected links
-                            if (has_tag) {
-                              selected_links.forEach(l => l.addTag(tag))
-                            }
-                            else {
-                              selected_links.forEach(l => l.removeTag(tag))
-                            }
-                            refreshThisAndToggleSaving()
-                          }}
-                        >
-                          {t.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+                              if (has_tag) {
+                                selected_links.forEach(l => l.addTag(tag))
+                              }
+                              else {
+                                selected_links.forEach(l => l.removeTag(tag))
+                              }
+                              refreshThisAndToggleSaving()
+                            }}
+                          >
+                            {t.name}
+                            {checked(has_tag)}
+                          </MenuItem>
+                        })
+                    }
+                  </MenuList>
+                </Menu>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }

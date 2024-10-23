@@ -721,49 +721,49 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
   return <AccordionItem
-      style={{ 'display': (new_data_plus.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
+    style={{ 'display': (new_data_plus.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
+  >
+    <AccordionButton onClick={() => {
+      const scroll_x = window.scrollX
+      const scroll_y = window.scrollY
+      setTimeout(() => {
+        document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+      }, 50)
+    }}
     >
-      <AccordionButton onClick={() => {
-        const scroll_x = window.scrollX
-        const scroll_y = window.scrollY
-        setTimeout(() => {
-          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-        }, 50)
-      }}
-      >
-        <Box as='span' layerStyle='menuconfig_entry'>
-          {t('view.storytelling')}
-        </Box>
-        <Tag colorScheme='teel' >Beta</Tag>
-        <AccordionIcon />
-      </AccordionButton>
-      <AccordionPanel>
-        <Box layerStyle='menuconfigpanel_grid'>
+      <Box as='span' layerStyle='menuconfig_entry'>
+        {t('view.storytelling')}
+      </Box>
+      <Tag colorScheme='teel' >Beta</Tag>
+      <AccordionIcon />
+    </AccordionButton>
+    <AccordionPanel>
+      <Box layerStyle='menuconfigpanel_grid'>
 
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('view.select')}
-            </Box>
-            <InputGroup
-              variant='menuconfigpanel_option_input'>
-              <SelecteurView new_data_plus={new_data_plus} />
-            </InputGroup>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('view.select')}
           </Box>
-          <Table size='sm'>
-            <Thead>
-              <Tr>
-                <Th>{t('view.name')}</Th>
-                <Th>Position</Th>
-                <Th>{t('view.delete')}</Th>
-                {/* <Th>{t('view.copy')}</Th>
+          <InputGroup
+            variant='menuconfigpanel_option_input'>
+            <SelecteurView new_data_plus={new_data_plus} />
+          </InputGroup>
+        </Box>
+        <Table size='sm'>
+          <Thead>
+            <Tr>
+              <Th>{t('view.name')}</Th>
+              <Th>Position</Th>
+              <Th>{t('view.delete')}</Th>
+              {/* <Th>{t('view.copy')}</Th>
                 <Th>{t('view.import')}</Th>
                 <Th>{t('view.export')}</Th> */}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {list_view.map((d,idx) => {
-                return (
-                  <React.Fragment key={idx}>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {list_view.map((d,idx) => {
+              return (
+                <React.Fragment key={idx}>
                   <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
                     <Td>
                       <Input
@@ -799,15 +799,15 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
                       }
                     ><FaMinus /></Button></Td>
                   </Tr>
-                  </React.Fragment>
-                )
-              })}
-            </Tbody>
-          </Table>
-        </Box>
+                </React.Fragment>
+              )
+            })}
+          </Tbody>
+        </Table>
+      </Box>
 
-      </AccordionPanel>
-    </AccordionItem>
+    </AccordionPanel>
+  </AccordionItem>
 }
 
 // TODO Voir si toujours utile
