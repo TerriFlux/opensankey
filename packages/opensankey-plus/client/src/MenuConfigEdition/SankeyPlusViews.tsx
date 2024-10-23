@@ -945,21 +945,20 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
 
   const { t } = new_data_plus
 
-  const [state, setState] = useState({
-    show_modal: false,
-    update_modes: [] as string[]
-  })
-  const show_modal = state.show_modal
-  const update_modes = state.update_modes
+  const [state, setState] = useState(false)
+  const [,setUpdater]=useState(0)
+  const show_modal = state
+  // const update_modes = state.update_modes
 
   const switchThis = (_: boolean) => {
-    setState({
-      show_modal: _,
-      update_modes: []
-    })
+    setState(_)
   }
 
   new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current = switchThis
+
+  const updateComponent=()=>{
+    setUpdater(a=>a+1)
+  }
 
   const has_sankey_plus = new_data_plus.has_sankey_plus
   const has_master_sankey = new_data_plus.has_master_sankey
@@ -987,67 +986,55 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
             <Box layerStyle='options_4cols'>
               <Button
                 variant={
-                  update_modes.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                  new_data_plus.drawing_area.heredited_attr.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('addNode')) {
-                    update_modes.push('addNode')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('addNode')) {
+                    new_data_plus.drawing_area.heredited_attr.push('addNode')
                   } else {
-                    update_modes.splice(update_modes.indexOf('addNode'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('addNode'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.addNode')}
               </Button>
 
               <Button
-                variant={update_modes.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('removeNode')) {
-                    update_modes.push('removeNode')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('removeNode')) {
+                    new_data_plus.drawing_area.heredited_attr.push('removeNode')
                   } else {
-                    update_modes.splice(update_modes.indexOf('removeNode'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('removeNode'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.removeNode')}
               </Button>
 
               <Button
-                variant={update_modes.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('addFlux')) {
-                    update_modes.push('addFlux')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('addFlux')) {
+                    new_data_plus.drawing_area.heredited_attr.push('addFlux')
                   } else {
-                    update_modes.splice(update_modes.indexOf('addFlux'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('addFlux'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.addFlux')}
               </Button>
               <Button
-                variant={update_modes.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('removeFlux')) {
-                    update_modes.push('removeFlux')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('removeFlux')) {
+                    new_data_plus.drawing_area.heredited_attr.push('removeFlux')
                   } else {
-                    update_modes.splice(update_modes.indexOf('removeFlux'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('removeFlux'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.removeFlux')}
@@ -1061,32 +1048,26 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
             </Box>
             <Box layerStyle='options_4cols'>
               <Button
-                variant={update_modes.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('posNode')) {
-                    update_modes.push('posNode')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('posNode')) {
+                    new_data_plus.drawing_area.heredited_attr.push('posNode')
                   } else {
-                    update_modes.splice(update_modes.indexOf('posNode'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('posNode'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}>
                 {t('Menu.Transformation.PosNoeud')}
               </Button>
               <Button
-                variant={update_modes.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('posFlux')) {
-                    update_modes.push('posFlux')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('posFlux')) {
+                    new_data_plus.drawing_area.heredited_attr.push('posFlux')
                   } else {
-                    update_modes.splice(update_modes.indexOf('posFlux'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('posFlux'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.posFlux')}
@@ -1098,20 +1079,17 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
 
             <Box as='span' layerStyle='options_4cols'>
               <Button
-                variant={update_modes.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('Values')) {
-                    update_modes.push('Values')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('Values')) {
+                    new_data_plus.drawing_area.heredited_attr.push('Values')
                   } else {
-                    update_modes.splice(update_modes.indexOf('Values'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('Values'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
-                {update_modes.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+                {new_data_plus.drawing_area.heredited_attr.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
               </Button>
             </Box>
 
@@ -1120,34 +1098,28 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
             <Box as='span' layerStyle='options_4cols'>
               <Button
-                variant={update_modes.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('attrNode')) {
-                    update_modes.push('attrNode')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('attrNode')) {
+                    new_data_plus.drawing_area.heredited_attr.push('attrNode')
                   } else {
-                    update_modes.splice(update_modes.indexOf('attrNode'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('attrNode'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.attrNode')}
               </Button>
 
               <Button
-                variant={update_modes.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('attrFlux')) {
-                    update_modes.push('attrFlux')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('attrFlux')) {
+                    new_data_plus.drawing_area.heredited_attr.push('attrFlux')
                   } else {
-                    update_modes.splice(update_modes.indexOf('attrFlux'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('attrFlux'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.attrFlux')}
@@ -1159,49 +1131,40 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
             <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
             <Box layerStyle='options_4cols'>
               <Button
-                variant={update_modes.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('tagNode')) {
-                    update_modes.push('tagNode')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('tagNode')) {
+                    new_data_plus.drawing_area.heredited_attr.push('tagNode')
                   } else {
-                    update_modes.splice(update_modes.indexOf('tagNode'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('tagNode'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.tagNode')}
               </Button>
               <Button
-                variant={update_modes.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('tagFlux')) {
-                    update_modes.push('tagFlux')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('tagFlux')) {
+                    new_data_plus.drawing_area.heredited_attr.push('tagFlux')
                   } else {
-                    update_modes.splice(update_modes.indexOf('tagFlux'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('tagFlux'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.tagFlux')}
               </Button>
               <Button
-                variant={update_modes.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('tagData')) {
-                    update_modes.push('tagData')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('tagData')) {
+                    new_data_plus.drawing_area.heredited_attr.push('tagData')
                   } else {
-                    update_modes.splice(update_modes.indexOf('tagData'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('tagData'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
                 {t('Menu.Transformation.tagData')}
@@ -1213,20 +1176,17 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
 
             <Box as='span' layerStyle='options_4cols'>
               <Button
-                variant={update_modes.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('tagLevel')) {
-                    update_modes.push('tagLevel')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('tagLevel')) {
+                    new_data_plus.drawing_area.heredited_attr.push('tagLevel')
                   } else {
-                    update_modes.splice(update_modes.indexOf('tagLevel'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('tagLevel'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
-                {update_modes.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+                {new_data_plus.drawing_area.heredited_attr.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
               </Button>
             </Box>
           </Box>
@@ -1235,20 +1195,17 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
 
             <Box as='span' layerStyle='options_4cols'>
               <Button
-                variant={update_modes.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={new_data_plus.drawing_area.heredited_attr.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                 onClick={() => {
-                  if (!update_modes.includes('attrGeneral')) {
-                    update_modes.push('attrGeneral')
+                  if (!new_data_plus.drawing_area.heredited_attr.includes('attrGeneral')) {
+                    new_data_plus.drawing_area.heredited_attr.push('attrGeneral')
                   } else {
-                    update_modes.splice(update_modes.indexOf('attrGeneral'), 1)
+                    new_data_plus.drawing_area.heredited_attr.splice(new_data_plus.drawing_area.heredited_attr.indexOf('attrGeneral'), 1)
                   }
-                  setState({
-                    show_modal: show_modal,
-                    update_modes: update_modes
-                  })
+                  updateComponent()
                 }}
               >
-                {update_modes.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+                {new_data_plus.drawing_area.heredited_attr.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
               </Button>
             </Box>
           </Box>
@@ -1259,7 +1216,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
             onClick={() => {
               const master_view = new_data_plus.master_view
               if (master_view) {
-                new_data_plus.drawing_area.updateFrom(master_view, update_modes)
+                new_data_plus.drawing_area.updateFrom(master_view, new_data_plus.drawing_area.heredited_attr)
                 new_data_plus.drawing_area.reset()
               }
             }}

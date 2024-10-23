@@ -180,21 +180,20 @@ export class Class_ContainerElement
 
   // PUBLIC METHODS =====================================================================
 
-  public draw() {
-    super.draw()
+  protected _draw() {
+    super._draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_labels')
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
-    this.drawShape()
-    this.drawContent()
+    this._drawShape()
+    this._drawContent()
   }
-
   /**
    * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
    *
    * @memberof Class_ContainerElement
    */
-  public drawShape() {
+  public _drawShape() {
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.zdt_shape').remove()
 
@@ -219,7 +218,7 @@ export class Class_ContainerElement
    *
    * @memberof Class_ContainerElement
    */
-  public drawContent() {
+  public _drawContent() {
     // Clean svg group before (re)drawing zdt content
     this.d3_selection?.selectAll('.content').remove()
 
