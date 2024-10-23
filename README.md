@@ -142,3 +142,38 @@ alembic revision --autogenerate -m "message changement apporté à base de donn�
 alembic check         # Permet de vérifier si la base de données actuelle est à jour
 alembic upgrade head  # Permet de migrer la base de donnée vers le dernier format défini
 ```
+
+## Systeme de paiement STRIPE
+
+### Documentation utile
+
+Point de départ : https://docs.stripe.com/checkout/embedded/quickstart?lang=python&client=react
+
+Cartes de test : https://docs.stripe.com/checkout/embedded/quickstart?lang=python&client=react#testing
+
+
+### Server stripe CLI
+
+Installation : https://docs.stripe.com/stripe-cli#install
+
+```sh
+curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | gpg --dearmor | sudo tee /usr/share/keyrings/stripe.gpg
+echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | sudo tee -a /etc/apt/sources.list.d/stripe.list
+sudo apt update
+sudo apt install stripe
+
+```
+
+Initialisation
+
+```sh
+stripe login
+```
+
+Lancement
+
+```sh
+stripe listen --forward-to localhost:5000/stripe/webhook
+```
+
+Ne pas oublier d'exporter la variables secret, exemple : `export STRIPE_ENDPOINT_SECRET=whsec_bd224d5114f66d5f29d5997b******'

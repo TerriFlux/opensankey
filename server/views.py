@@ -12,11 +12,9 @@ import requests
 from flask import Blueprint
 from flask import render_template
 from flask import request
-from flask import Response
 
 # ---------------------------------------------------------------
 # Local imports
-from .mailing import send_welcome_mail
 
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
@@ -93,31 +91,3 @@ def check_license():
     res = requests.post('https://terriflux.com/edd-sl/', req_dict)
     # Return EDD response as JSON
     return res.json()
-
-
-@sankeyapp.route('/mail/send_welcome', methods=['POST'])
-def mail_send_welcome():
-    """
-    Send welcome message
-
-    Input JSON request
-    - 'email' (String) : user's email
-    - 'firstname' (String) : user's firstname
-    - 'lang' (String) : Selected language for mail
-
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
-    """
-    try:
-        send_welcome_mail(
-            request.json.get("email"),
-            request.json.get("firstname"),
-            request.json.get("lang"))
-    except Exception as excpt:
-        response = Response(
-            response='mail_send_welcome : ' + str(excpt),
-            status=500)
-        return response
-    return Response(status=200)

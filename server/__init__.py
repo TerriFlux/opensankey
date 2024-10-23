@@ -36,12 +36,16 @@ def create_app():
     init_mailing(app)
 
     # BluePrint for auth part of app
-    from .auth import auth as auth_blueprint
+    from .auth import auth_blueprint
     app.register_blueprint(auth_blueprint)
 
     # BluePrint for User registering / connection part of app
-    from .models import connected_user as connected_user_blueprint
+    from .user import connected_user as connected_user_blueprint
     app.register_blueprint(connected_user_blueprint)
+
+    # Blueprint for paiement part
+    from .stripe import stripe_blueprint
+    app.register_blueprint(stripe_blueprint)
 
     # Blueprint for User interaction part of app
     from .views import sankeyapp as main_blueprint

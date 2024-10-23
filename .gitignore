@@ -9,6 +9,8 @@ client/coverage
 # production
 client/build
 client/dist
+client/src/deps/OpenSankey+
+env.sh
 
 # server
 __pycache__
@@ -16,7 +18,7 @@ server/__pycache__
 
 # database
 db.sqlite
-instance/db.sqlite
+instance/db.sqlite*
 server/db.sqlite
 
 # misc

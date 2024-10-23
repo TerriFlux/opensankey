@@ -66,12 +66,18 @@ dev_opensankey:
     FOLDER: /home/ubuntu/dev_opensankey/sankeyapplication
     ENV: dev
     APP_NAME: dev_sankeyapp
+    CLIENT_ROOT_URL: https://dev.open-sankey.fr/#/
+    INTERNAL_HTTP_PORT: 56564
+  only:
+    - main
   tags:
-    - prod
+    - dev
   environment:
     name: dev
   script:
+    # DBG
     - echo $FOLDER
+    # Clean and pull repo
     - git config --global --add safe.directory $FOLDER
     - cd $FOLDER
     - git reset --hard
@@ -85,10 +91,17 @@ dev_opensankey:
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx #-e server/db.sqlite -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git submodule update --recursive
+    # Build client & server
     - source /home/ubuntu/dev_opensankey/dev_opensankey/bin/activate
     - bash deploy_SankeyApp.sh
+    # Update db
     - alembic upgrade head
-    - bash restart_site.sh dev
+    # Start app
+    - echo 'http = 0.0.0.0:${INTERNAL_HTTP_PORT}' >> sankeyapp.ini
+    - source env.sh --ci
+    - bash restart_site.sh $ENV
+    - sudo docker stop stripe_dev
+    - sudo docker run --name stripe_dev --rm -d stripe/stripe-cli --api-key $STRIPE_SECRET_KEY listen --forward-to 0.0.0.0:${INTERNAL_HTTP_PORT}/stripe/webhook
 
 # test_sankeysuite:
 #   stage: deploy

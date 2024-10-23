@@ -1,10 +1,8 @@
 
-import * as d3 from 'd3'
 import React, { FunctionComponent, useState, useRef } from 'react'
-import i18next from 'i18next'
 
 import ReCAPTCHA from 'react-google-recaptcha'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FaCheck } from 'react-icons/fa'
 import { LuBadgeAlert } from 'react-icons/lu'
 
@@ -22,464 +20,418 @@ import {
   InputGroup,
   InputLeftAddon,
   InputRightElement,
+  Spinner,
   useDisclosure,
 } from '@chakra-ui/react'
 
 import { opensankey_theme } from '../../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 
-import TermsOfUse from './TermsOfUse'
-import {
-  registerNewLicenseOpenOSP,
-  registerNewLicenseSankeySuite
-} from './LicenseFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { returnToApp } from '../../SankeyAppSA'
+import { logError, userSignUp, userValidate } from './RegisterFunctions'
+import TermsOfUse from './TermsOfUse'
+import { Presentation } from './Presentation'
 
-
-// Check Licence and register account if everything is Ok
-async function userSignUp(
-  email: string,
-  password: string,
-  firstname: string,
-  lastname: string,
-  license_opensankeyplus: string,
-  license_sankeysuite: string,
-  navigate: (route: string) => void
-) {
-
-  d3.select('.LogError').selectAll('*').remove()
-  // Enregistrement dans la base de donnée utilisateur
-  fetch(window.location.origin + '/auth/signup', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-      password: password,
-      firstname: firstname,
-      lastname: lastname,
-      license_opensankeyplus: license_opensankeyplus,
-      license_sankeysuite: license_sankeysuite,
-      lang: i18next.language
-    })
-  })
-    .then((response) => response.json())
-    .then((response) => {
-      if (response['is_registered'] === true) {
-        // Enregistrement licence OpenSankey+
-        if (license_opensankeyplus !== '') {
-          registerNewLicenseOpenOSP(license_opensankeyplus)
-        }
-        // Enregistrement licence SankeySuite
-        if (license_sankeysuite !== '') {
-          registerNewLicenseSankeySuite(license_sankeysuite)
-        }
-        // On retourne vers la page de login
-        d3.select('.LogError')
-          .html('<p style="color:green">' + i18next.t('msg.ok account created', { ns: 'register' }) + '</p>')
-        setTimeout(() => {
-          navigate('/login')
-        }, 8000)
-      }
-      else {
-        d3.select('.LogError')
-          .html('<p style="color:red">' + i18next.t('err.' + response['message'], { ns: 'register' }) + '</p>')
-      }
-    })
-    .catch(error =>
-      console.log('POST signup : ERROR', error)
-    )
-}
-
-// UI : License checkin
-export type RegisterType = {
-  new_data_app: Class_ApplicationDataSA
-}
 
 export const email_regex_str = '(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]{2,4}$)'
 export const pwd_regex_str = '^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9\n\r\t]).{8,}$'
 export const name_regex_str = '^[a-zéèêïA-Z ,.\'-]+$'
 export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
 
-const Register: FunctionComponent<RegisterType> = ({
-  new_data_app,
+/**
+ * Registering page
+ * @param {*} {
+ *   new_data_app
+ * }
+ * @return {*}
+ */
+const Register: FunctionComponent<{
+  new_data_app: Class_ApplicationDataSA
+}> = ({
+  new_data_app
 }) => {
 
   // App data
   const { t, logo } = new_data_app
 
+  // Step to register
+  const [on_wait, setOnWait] = useState(false)
+  const [registerStep, setRegisterStep] = useState(0)
+
   // License registrering informations
-  const [userName, setUserName] = useState('')
+  const [user_name, setUserName] = useState('')
   const [password, setPassword] = useState('')
   const [firstname, setUserFirstName] = useState('')
   const [lastname, setUserLastName] = useState('')
-  const [license_opensankeyplus, setUserLicenseOpenOSP] = useState('')
-  // const [license_sankeysuite, setUserLicenseSankeySuite] = useState('')
   const captchaRef = useRef<ReCAPTCHA>(null)
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    // set_update(!update)
-    navigate('/')
-  }
+
   // Terms of use modal
   const { isOpen, onOpen, onClose } = useDisclosure()
+
   // Ok for account creation
-  const [okUserName, setOkUserName] = useState(0)
-  const [okPassword, setOkPassword] = useState(0)
-  const [showPassword, setShowPassword] = useState(false)
-  const [okUserFirstName, setOkUserFirstName] = useState(0)
-  const [okUserLastName, setOkUserLastName] = useState(0)
-  const [okTermsOfUses, setOkTermsOfUses] = useState(false)
-  const [okCaptcha, setOkCaptcha] = useState(false)
+  const [ok_email, setOkEmail] = useState(0)
+  const [ok_password, setOkPassword] = useState(0)
+  const [show_password, setShowPassword] = useState(false)
+  const [ok_firstname, setOkFirstName] = useState(0)
+  const [ok_lastname, setOkLastName] = useState(0)
+  const [ok_terms_of_uses, setOkTermsOfUses] = useState(false)
+  const [ok_captcha, setOkCaptcha] = useState(false)
+  const [ok_account_created, setOkAccountCreated] = useState(false)
   const okAccountInfos =
-    (okUserName > 1) &&
-    (okPassword > 1) &&
-    (okUserFirstName > 1) &&
-    (okUserLastName > 1) &&
-    okTermsOfUses &&
-    okCaptcha
+      (ok_email > 1) &&
+      (ok_password > 1) &&
+      (ok_firstname > 1) &&
+      (ok_lastname > 1) &&
+      ok_terms_of_uses &&
+      ok_captcha &&
+      (!ok_account_created)
 
   // Handler : License registrering
   const handleSubmit = async () => {
-    if (okAccountInfos) {
-      await userSignUp(
-        userName,
-        password,
-        firstname,
-        lastname,
-        license_opensankeyplus,
-        '',
-        navigate
-      )
-      // Enregistre les nom et prenom de l'utilisateurs dans un cookie
-      const cook = 'info_log={"' + userName + '":{"lastname":"' + lastname + '","firstname":"' + firstname + '"}}'
-      const expiration = 1000 * 60 * 60 * 24 * -3 //le temps pour que le cookie expire en ms (ms*secondes*minutes*heures*jours)
-      const tmp = cook + ';path=/;+expires=' + new Date(Date.now() + expiration).toUTCString()
-      document.cookie = tmp
-      // suiteApplicationContext.has_free_account = false
-      // setSuiteApplicationContext({ ...suiteApplicationContext })
+    // step 0 : License presentation
+    if (registerStep === 0) {
+      setRegisterStep(1)
     }
-    else {
-      d3.select('.LogError').html('<p style="color:red">' + t('err.captcha', { ns: 'register' }) + '</p>')
+    // step 1 : Get user infos
+    else if (registerStep === 1) {
+      if (okAccountInfos) {
+        // backend SignUp
+        setOnWait(true)
+        await userSignUp(
+          user_name,
+          password,
+          firstname,
+          lastname,
+          (ok: boolean) => {
+            setOnWait(false)
+            setOkAccountCreated(ok)
+          }
+        )
+      }
+      else {
+        logError(t('Register.account.msg.err_captcha'))
+      }
     }
   }
 
-  return (<ChakraProvider resetCSS={false} theme={opensankey_theme}>
-    <Box
-      zIndex="1"
-      position="fixed"
-      top="0"
-      width="100%"
-    >
-      <Box
-        className='MenuNavigation'
-        layerStyle='menutop_layout_style'
-        gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
-      >
-        <Box
-          margin='0.25rem'
-          alignSelf='center'
-          justifySelf='left'
-        >
-          <Image
-            height='4rem'
-            src={logo}
-            alt='navigation logo'
-            onClick={() => returnToApp()}
-          />
-        </Box>
-        <Box></Box>
-        <Button
-          variant='btn_lone_navigation'
-          onClick={() => { returnToApp() }}>
-          {t('UserPages.to_app')}
-        </Button>
-        <Button
-          variant='btn_lone_navigation_secondary'
-          onClick={() => navigate('/login')}>
-          {t('UserPages.to_con')}
-        </Button>
-      </Box>
-    </Box>
+  // Token validation
+  const [searchParams,] = useSearchParams()
+  const token = searchParams.get('t')
+  if (token && registerStep !== 2) {
+    setRegisterStep(2)
+    userValidate(
+      token,
+      new_data_app,
+      navigate
+    )
+  }
 
-    {/* Register form */}
-    <div className="register-form-wrapper">
-      <Card variant='card_register'>
-        <CardHeader >
-          {t('reg_win', { ns: 'register' })}
-        </CardHeader>
-        <CardBody>
+  // Loging message
+  const log = <>
+    <div
+      className='LogError'
+      style={{
+        'color': 'red',
+        'justifySelf': 'center',
+        'textAlign': 'center'
+      }}>
 
-          {/* User e-mail*/}
-          <FormControl isInvalid={okUserName === 1}>
-            <InputGroup
-              variant='register_input'
-            >
-              <InputLeftAddon>
-                {t('id.label', { ns: 'register' })}
-              </InputLeftAddon>
-              <Input
-                isRequired
-                type='email'
-                placeholder={t('id.placeholder', { ns: 'register' })}
-                onChange={e => {
-                  // Control e-amil format
-                  if (e.target.value.match(email_regex_str) != null) {
-                    setUserName(e.target.value)
-                    setOkUserName(2)
-                  }
-                  else {
-                    setUserName('')
-                    setOkUserName(1)
-                  }
-                }}
-              />
-            </InputGroup>
-            {(okUserName === 1) ? (
-              <FormErrorMessage>{t('id.error', { ns: 'register' })}</FormErrorMessage>
-            ) : (
-              <></>
-            )}
-          </FormControl>
-
-          {/* User password*/}
-          <FormControl isInvalid={okPassword === 1}>
-            <InputGroup
-              variant='register_input'
-            >
-              <InputLeftAddon>
-                {t('pwd.label', { ns: 'register' })}
-              </InputLeftAddon>
-              <Input
-                isRequired
-                type={showPassword ? 'text' : 'password'}
-                placeholder={t('pwd.placeholder', { ns: 'register' })}
-                onChange={e => {
-                  if (e.target.value.match(pwd_regex_str) != null) {
-                    setPassword(e.target.value)
-                    setOkPassword(2)
-                  }
-                  else {
-                    setPassword('')
-                    setOkPassword(1)
-                  }
-                }}
-              />
-              <InputRightElement width='4.5rem' marginRight='0.25em'>
-                <Button
-                  h='1.75rem'
-                  size='sm'
-                  border='0px'
-                  bg='gray.50'
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? t('pwd.hide', { ns: 'register' }) : t('pwd.show', { ns: 'register' })}
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-            {(okPassword === 1) ? (
-              <FormErrorMessage>
-                {t('pwd.error', { ns: 'register' })}
-              </FormErrorMessage>
-            ) : (
-              <></>
-            )}
-          </FormControl>
-
-          {/* User first name  */}
-          <FormControl isInvalid={okUserFirstName === 1}>
-            <InputGroup
-              variant='register_input'
-            >
-              <InputLeftAddon>
-                {t('fn', { ns: 'register' })}
-              </InputLeftAddon>
-              <Input
-                isRequired
-                type='text'
-                onChange={e => {
-                  // Control format
-                  if (e.target.value.match(name_regex_str) != null) {
-                    setUserFirstName(e.target.value)
-                    setOkUserFirstName(2)
-                  }
-                  else {
-                    setUserFirstName('')
-                    setOkUserFirstName(1)
-                  }
-                }}
-              />
-            </InputGroup>
-          </FormControl>
-
-          {/* User last name  */}
-          <FormControl isInvalid={okUserLastName === 1}>
-            <InputGroup
-              variant='register_input'
-            >
-              <InputLeftAddon>
-                {t('ln', { ns: 'register' })}
-              </InputLeftAddon>
-              <Input
-                isRequired
-                type='text'
-                onChange={e => {
-                  // Control format
-                  if (e.target.value.match(name_regex_str) != null) {
-                    setUserLastName(e.target.value)
-                    setOkUserLastName(2)
-                  }
-                  else {
-                    setUserLastName('')
-                    setOkUserLastName(1)
-                  }
-                }}
-              />
-            </InputGroup>
-          </FormControl>
-
-          <Box as='span' textAlign='center' textStyle='h2'>
-            {t('lic', { ns: 'register' })}
-          </Box>
-
-          {/* OpenSankey+ licence number  */}
-          <FormControl>
-            <InputGroup
-              variant='register_input'
-            >
-              <InputLeftAddon>
-                {t('OS+_lic', { ns: 'register' })}
-              </InputLeftAddon>
-              <Input
-                type='text'
-                onChange={e => {
-                  // Control format
-                  if (e.target.value.match(lic_regex_str) != null) {
-                    setUserLicenseOpenOSP(e.target.value)
-                  }
-                  else {
-                    setUserLicenseOpenOSP('')
-                  }
-                }}
-              />
-              <InputRightElement width='4.5rem' marginRight='0.25em'>
-                <Button
-                  as='a'
-                  h='1.75rem'
-                  size='sm'
-                  border='0px'
-                  bg='gray.50'
-                  href="https://terriflux.com/downloads/open-sankey-plus/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('OS+_link', { ns: 'register' })}
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-          </FormControl>
-
-          {/* Sankey suite Licence number  */}
-          {/* <FormControl>
-
-            <InputGroup
-              variant='register_input'
-            >
-                <InputLeftAddon>
-                  {t('SS_lic', { ns: 'register' })}
-                </InputLeftAddon>
-                <Input
-                  type='text'
-                  onChange={e => {
-                    // Control format
-                    if (e.target.value.match(lic_regex_str) != null) {
-                      setUserLicenseSankeySuite(e.target.value)
-                    }
-                    else {
-                      setUserLicenseSankeySuite('')
-                    }
-                  }}
-                />
-                <InputRightElement width='4.5rem' marginRight='0.25em'>
-                  <Button
-                    as='a'
-                    h='1.75rem'
-                    size='sm'
-                    border='0px'
-                    bg='gray.50'
-                    href="https://terriflux.com/downloads/sankey-suite/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t('SS_link', { ns: 'register' })}
-                  </Button>
-                </InputRightElement>
-              </InputGroup>
-            </FormControl> */}
-
-          {/* Acceptance of terms of uses */}
-          <Button
-            onClick={onOpen}
-            leftIcon={(okTermsOfUses === true) ? <FaCheck /> : <LuBadgeAlert />}>
-            {t('open', { ns: 'terms_of_uses' })}
-          </Button>
-
-          {/* Captcha */}
-          <div
-            className='form_group_recaptcha'>
-            <ReCAPTCHA
-              sitekey="6Les5JwmAAAAAOi3F8DLW4Z1aoqVMDBC9WpN1KFe"
-              ref={captchaRef}
-              onChange={() => {
-                const token_captcha = captchaRef.current?.getValue()
-                const fetchData = {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    'token': token_captcha
-                  })
-                }
-
-                const path = window.location.origin
-                const url = path + '/auth/check_captcha'
-                fetch(url, fetchData).then(
-                  r => r.json().then(t => {
-                    setOkCaptcha(t['success'])
-                  })
-                ).catch(() => setOkCaptcha(false))
-              }}
-            />
-          </div>
-
-          <div className='LogError' style={{ 'color': 'red', 'textAlign': 'center' }}></div>
-
-          <Box
-            display="inline-grid"
-          >
-            <Button
-              isDisabled={!okAccountInfos}
-              variant='btn_lone_navigation_tertiary'
-              type='submit'
-              onClick={handleSubmit}>
-              {t('UserPages.to_reg')}
-            </Button>
-          </Box>
-
-        </CardBody>
-      </Card>
+    </div>
+    <div
+      className='LogInfo'
+      style={{
+        'color': 'green',
+        'justifySelf': 'center',
+        'textAlign': 'center'
+      }}>
     </div>
 
-    {/* Pop up modal for terms of use  */}
-    <TermsOfUse
-      isOpen={isOpen}
-      onClose={onClose}
-      setOk={setOkTermsOfUses}
-    />
-  </ChakraProvider>
+    {
+      on_wait ?
+        <Spinner /> :
+        <></>
+    }
+  </>
+
+  const osplus_presentation = [
+    <Presentation
+      new_data_app={new_data_app}
+    />,
+    <Box
+      display="inline-grid"
+    >
+      <Button
+        variant='btn_lone_navigation_tertiary'
+        maxWidth='inherit'
+        width='fit-content'
+        type='submit'
+        onClick={handleSubmit}>
+        {t('Register.presentation.btn_next')}
+      </Button>
+    </Box>
+  ]
+
+  const register_form = [
+    // {/* User e-mail*/}
+    <FormControl isInvalid={ok_email === 1}>
+      <InputGroup
+        variant='register_input'
+      >
+        <InputLeftAddon>
+          {t('Register.account.id.label')}
+        </InputLeftAddon>
+        <Input
+          isRequired
+          type='email'
+          placeholder={t('Register.account.id.placeholder')}
+          onChange={e => {
+            // Control e-amil format
+            if (e.target.value.match(email_regex_str) != null) {
+              setUserName(e.target.value)
+              setOkEmail(2)
+            }
+            else {
+              setUserName('')
+              setOkEmail(1)
+            }
+          }}
+        />
+      </InputGroup>
+      {(ok_email === 1) ? (
+        <FormErrorMessage>{t('Register.account.id.error')}</FormErrorMessage>
+      ) : (
+        <></>
+      )}
+    </FormControl>,
+
+    // {/* User password*/}
+    <FormControl isInvalid={ok_password === 1}>
+      <InputGroup
+        variant='register_input'
+      >
+        <InputLeftAddon>
+          {t('Register.account.pwd.label')}
+        </InputLeftAddon>
+        <Input
+          isRequired
+          type={show_password ? 'text' : 'password'}
+          placeholder={t('Register.account.pwd.placeholder')}
+          onChange={e => {
+            if (e.target.value.match(pwd_regex_str) != null) {
+              setPassword(e.target.value)
+              setOkPassword(2)
+            }
+            else {
+              setPassword('')
+              setOkPassword(1)
+            }
+          }}
+        />
+        <InputRightElement width='4.5rem' marginRight='0.25em'>
+          <Button
+            h='1.75rem'
+            size='sm'
+            border='0px'
+            bg='gray.50'
+            onClick={() => setShowPassword(!show_password)}
+          >
+            {show_password ? t('Register.account.pwd.hide') : t('Register.account.pwd.show')}
+          </Button>
+        </InputRightElement>
+      </InputGroup>
+      {(ok_password === 1) ? (
+        <FormErrorMessage>
+          {t('Register.account.pwd.error')}
+        </FormErrorMessage>
+      ) : (
+        <></>
+      )}
+    </FormControl>,
+
+    // {/* User first name  */}
+    <FormControl isInvalid={ok_firstname === 1}>
+      <InputGroup
+        variant='register_input'
+      >
+        <InputLeftAddon>
+          {t('Register.account.fn')}
+        </InputLeftAddon>
+        <Input
+          isRequired
+          type='text'
+          onChange={e => {
+            // Control format
+            if (e.target.value.match(name_regex_str) != null) {
+              setUserFirstName(e.target.value)
+              setOkFirstName(2)
+            }
+            else {
+              setUserFirstName('')
+              setOkFirstName(1)
+            }
+          }}
+        />
+      </InputGroup>
+    </FormControl>,
+
+    // {/* User last name  */}
+    <FormControl isInvalid={ok_lastname === 1}>
+      <InputGroup
+        variant='register_input'
+      >
+        <InputLeftAddon>
+          {t('Register.account.ln')}
+        </InputLeftAddon>
+        <Input
+          isRequired
+          type='text'
+          onChange={e => {
+            // Control format
+            if (e.target.value.match(name_regex_str) != null) {
+              setUserLastName(e.target.value)
+              setOkLastName(2)
+            }
+            else {
+              setUserLastName('')
+              setOkLastName(1)
+            }
+          }}
+        />
+      </InputGroup>
+    </FormControl>,
+
+    // {/* Acceptance of terms of uses */}
+    <Button
+      onClick={onOpen}
+      leftIcon={(ok_terms_of_uses === true) ? <FaCheck /> : <LuBadgeAlert />}>
+      {t('Register.account.btn_terms')}
+    </Button>,
+
+    // {/* Captcha */}
+    <div
+      className='form_group_recaptcha'>
+      <ReCAPTCHA
+        sitekey="6Les5JwmAAAAAOi3F8DLW4Z1aoqVMDBC9WpN1KFe"
+        ref={captchaRef}
+        onChange={() => {
+          const token_captcha = captchaRef.current?.getValue()
+          const fetchData = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              'token': token_captcha
+            })
+          }
+
+          const path = window.location.origin
+          const url = path + '/auth/signup/check_captcha'
+          fetch(url, fetchData).then(
+            r => r.json().then(t => {
+              setOkCaptcha(t['success'])
+            })
+          ).catch(() => setOkCaptcha(false))
+        }}
+      />
+    </div>,
+
+    // Info / Error logs
+    log,
+
+    // Validation button
+    <Box
+      display="inline-grid"
+    >
+      <Button
+        isDisabled={!okAccountInfos}
+        variant='btn_lone_navigation_tertiary'
+        type='submit'
+        onClick={handleSubmit}>
+        {t('Register.account.btn_next')}
+      </Button>
+    </Box>,
+  ]
+
+
+  let header = '404 not found'
+  let content = [<></>]
+  if (registerStep === 0) {
+    header = t('Register.presentation.title')
+    content = osplus_presentation
+  }
+  else if (registerStep === 1) {
+    header = t('Register.account.title')
+    content = register_form
+  }
+  else if (registerStep === 2) {
+    header = t('Register.validation.title')
+    content = [log]
+  }
+
+  return (
+    <ChakraProvider resetCSS={false} theme={opensankey_theme}>
+      {/* Navbar */}
+      <Box
+        zIndex="1"
+        position="fixed"
+        top="0"
+        width="100%"
+      >
+        <Box
+          layerStyle='menutop_layout_style'
+          gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
+        >
+          <Box
+            margin='0.25rem'
+            alignSelf='center'
+            justifySelf='left'
+          >
+            <Image
+              height='5rem'
+              src={logo}
+              alt='navigation logo'
+              onClick={() => returnToApp(navigate)}
+            />
+          </Box>
+          <Box></Box>
+          <Button
+            variant='btn_lone_navigation'
+            onClick={() => { returnToApp(navigate) }}>
+            {t('UserNav.to_app')}
+          </Button>
+          <Button
+            variant='btn_lone_navigation_secondary'
+            onClick={() => navigate('/login')}>
+            {t('UserNav.to_con')}
+          </Button>
+        </Box>
+      </Box>
+
+
+      <div className="login-wrapper">
+        <Card variant='card_register' width='33vw'>
+          <CardHeader
+            style={{ 'textAlign': 'center' }}
+          >
+            {header}
+          </CardHeader>
+          <CardBody>
+            {content.map((e, i) => { return <React.Fragment key={i}>{e}</React.Fragment> })}
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* Pop up modal for terms of use  */}
+      <TermsOfUse
+        isOpen={isOpen}
+        onClose={onClose}
+        setOk={setOkTermsOfUses}
+      />
+    </ChakraProvider>
   )
 }
 

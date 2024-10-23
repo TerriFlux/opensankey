@@ -1,6 +1,5 @@
 import React, { FunctionComponent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaPowerOff } from 'react-icons/fa'
 
 import {
   Box,
@@ -12,8 +11,9 @@ import {
   SimpleGrid
 } from '@chakra-ui/react'
 
-import { loginOut } from '../Login/LoginFunctions'
 import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { returnToApp } from '../../SankeyAppSA'
+import { LoginOutButton } from '../Login/Login'
 
 
 export type SankeyLabelTypes = {
@@ -49,13 +49,10 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
 
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-  }
 
   //If we acces this page without being logged, it is resent to the application
-  if (!new_data_app.has_free_account) {
-    returnToApp()
+  if (!new_data_app.has_account) {
+    returnToApp(navigate)
   }
 
   //If we are log the the following behaviors are defined
@@ -137,7 +134,6 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
         width="100%"
       >
         <Box
-          className='MenuNavigation'
           layerStyle='menutop_layout_style'
           gridTemplateColumns='minmax(7vw, 150px) auto'
         >
@@ -147,10 +143,10 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
             justifySelf='left'
           >
             <Image
-              height='4rem'
+              height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box
@@ -161,27 +157,19 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
           >
             <Button
               variant='btn_lone_navigation'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(navigate)}
             >
-              {t('UserPages.to_app')}
+              {t('UserNav.to_app')}
             </Button>
             <Button
               variant='btn_lone_navigation'
-              onClick={() =>  myAccount()}
+              onClick={() => myAccount()}
             >
-              {t('UserPages.to_acc')}
+              {t('UserNav.to_acc')}
             </Button>
-            <Button
-              variant='menutop_button_logout'
-              onClick={() => {
-                loginOut(
-                  () => {new_data_app.unsetTokens()},
-                  returnToApp
-                )
-              }}
-            >
-              <FaPowerOff />
-            </Button>
+            <LoginOutButton
+              new_data_app={new_data_app}
+            />
           </Box>
         </Box>
       </Box>

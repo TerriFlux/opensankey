@@ -2,19 +2,40 @@ import React, { FunctionComponent, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import i18next from 'i18next'
 
-import { Box, Button, Card, CardBody, CardHeader, FormControl, FormErrorMessage, Image, Input, InputGroup, InputLeftAddon, InputRightElement } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  FormControl,
+  FormErrorMessage,
+  Image,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightElement,
+  Spinner
+} from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { applyPasswordReset, triggerPasswordReset } from './LoginFunctions'
-import { email_regex_str, pwd_regex_str } from '../Register/Register'
+import { returnToApp } from '../../SankeyAppSA'
+import {
+  email_regex_str,
+  pwd_regex_str
+} from '../Register/Register'
+import {
+  applyPasswordReset,
+  triggerPasswordReset
+} from './LoginFunctions'
 
 
-type PasswordResetFromToken = {
+type FCType_PasswordResetFromToken = {
   new_data_app: Class_ApplicationDataSA
 }
 
 // Password resetin page
-export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> = ({
+export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromToken> = ({
   new_data_app
 }) => {
 
@@ -25,20 +46,18 @@ export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> =
   const { token } = useParams()
 
   // States
+  const [on_wait, setOnWait] = useState(false)
   const [password, setPassword] = useState('')
-  const [okPassword, setOkPassword] = useState(0)
-  const [showPassword, setShowPassword] = useState(false)
+  const [ok_password, setOkPassword] = useState(0)
+  const [show_password, setShowPassword] = useState(false)
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   // Handler
   const handleSubmit = async () => {
-    if (token !== undefined){
+    if (token !== undefined) {
+      setOnWait(true)
       const lang = i18next.language
       await applyPasswordReset(
         new_data_app,
@@ -47,8 +66,9 @@ export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> =
           password,
           lang
         },
-        navigate
+        () => { navigate('/login') }
       )
+        .then(() => setOnWait(false))
     }
   }
 
@@ -62,7 +82,6 @@ export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> =
         width="100%"
       >
         <Box
-          className='MenuNavigation'
           layerStyle='menutop_layout_style'
           gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
         >
@@ -72,43 +91,43 @@ export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> =
             justifySelf='center'
           >
             <Image
-              height='4rem'
+              height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(navigate)}
           >
-            {t('UserPages.to_app')}
+            {t('UserNav.to_app')}
           </Button>
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/login')}
           >
-            {t('UserPages.to_con')}
+            {t('UserNav.to_con')}
           </Button>
         </Box>
       </Box>
 
       <div className="login-wrapper">
         <Card variant='card_register' width='33vw'>
-          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot_win')}</CardHeader>
+          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot.title')}</CardHeader>
           <CardBody>
 
             {/* User password*/}
-            <FormControl isInvalid={okPassword === 1}>
+            <FormControl isInvalid={ok_password === 1}>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('pwd.label', { ns: 'register' })}
+                  {t('Register.account.pwd.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={t('pwd.placeholder', { ns: 'register' })}
+                  type={show_password ? 'text' : 'password'}
+                  placeholder={t('Register.account.pwd.placeholder')}
                   onChange={e => {
                     if (e.target.value.match(pwd_regex_str) != null) {
                       setPassword(e.target.value)
@@ -126,32 +145,53 @@ export const PasswordResetFromToken: FunctionComponent<PasswordResetFromToken> =
                     size='sm'
                     border='0px'
                     bg='gray.50'
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword(!show_password)}
                   >
-                    {showPassword ? t('pwd.hide', { ns: 'register' }) : t('pwd.show', { ns: 'register' })}
+                    {show_password ? t('Register.account.pwd.hide') : t('Register.account.pwd.show')}
                   </Button>
                 </InputRightElement>
               </InputGroup>
-              {(okPassword === 1) ? (
+              {(ok_password === 1) ? (
                 <FormErrorMessage>
-                  {t('pwd.error', { ns: 'register' })}
+                  {t('Register.account.pwd.error')}
                 </FormErrorMessage>
               ) : (
                 <></>
               )}
             </FormControl>
-            <div className='LogError' style={{ 'color': 'red', 'textAlign': 'center' }}></div>
-            <div className='LogInfo' style={{ 'color': 'green', 'textAlign': 'center' }}></div>
-            <div style={{ 'textAlign': 'center' }}>
-              <Button
-                variant='btn_lone_navigation_tertiary'
-                type="submit"
-                onClick={() => {
-                  handleSubmit()
-                }}>
-                {t('Login.forgot_sub')}
-              </Button>
+
+            <Button
+              variant='btn_lone_navigation_tertiary'
+              type="submit"
+              onClick={() => {
+                handleSubmit()
+              }}>
+              {t('Login.forgot.sub')}
+            </Button>
+
+            <div
+              className='LogError'
+              style={{
+                'color': 'red',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+
             </div>
+            <div
+              className='LogInfo'
+              style={{
+                'color': 'green',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+            </div>
+
+            {
+              on_wait ?
+                <Spinner /> :
+                <></>
+            }
           </CardBody>
         </Card>
       </div>
@@ -172,15 +212,12 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
   const { t, logo } = new_data_app
 
   // States
+  const [on_wait, setOnWait] = useState(false)
   const [email, setEmail] = useState('')
-  const [okEmail, setOkEmail] = useState(0)
+  const [ok_email, setOkEmail] = useState(0)
 
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   // Handler
   const handleSubmit = async () => {
@@ -191,8 +228,9 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
         email,
         lang
       },
-      navigate
+      () => { navigate('/login') }
     )
+      .then(() => setOnWait(false))
   }
 
   // React output
@@ -205,7 +243,6 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
         width="100%"
       >
         <Box
-          className='MenuNavigation'
           layerStyle='menutop_layout_style'
           gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
         >
@@ -215,42 +252,42 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
             justifySelf='center'
           >
             <Image
-              height='4rem'
+              height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(navigate)}
           >
-            {t('UserPages.to_app')}
+            {t('UserNav.to_app')}
           </Button>
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/login')}
           >
-            {t('UserPages.to_con')}
+            {t('UserNav.to_con')}
           </Button>
         </Box>
       </Box>
 
       <div className="login-wrapper">
         <Card variant='card_register' width='33vw'>
-          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot_win')}</CardHeader>
+          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.forgot.title')}</CardHeader>
           <CardBody>
             {/* User e-mail*/}
-            <FormControl isInvalid={okEmail === 1}>
+            <FormControl isInvalid={ok_email === 1}>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('id.label', { ns: 'register' })}
+                  {t('Login.id.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
                   type='email'
-                  placeholder={t('id.placeholder', { ns: 'register' })}
+                  placeholder={t('Login.id.placeholder')}
                   onChange={e => {
                     // Control e-amil format
                     if (e.target.value.match(email_regex_str) != null) {
@@ -264,24 +301,45 @@ export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = (
                   }}
                 />
               </InputGroup>
-              {(okEmail === 1) ? (
-                <FormErrorMessage>{t('id.error', { ns: 'register' })}</FormErrorMessage>
+              {(ok_email === 1) ? (
+                <FormErrorMessage>{t('Login.id.error')}</FormErrorMessage>
               ) : (
                 <></>
               )}
             </FormControl>
-            <div className='LogError' style={{ 'color': 'red', 'textAlign': 'center' }}></div>
-            <div className='LogInfo' style={{ 'color': 'green','textAlign': 'center' }}></div>
-            <div style={{ 'textAlign': 'center' }}>
-              <Button
-                variant='btn_lone_navigation_tertiary'
-                type="submit"
-                onClick={() => {
-                  handleSubmit()
-                }}>
-                {t('Login.forgot_sub')}
-              </Button>
+
+            <Button
+              variant='btn_lone_navigation_tertiary'
+              type="submit"
+              onClick={() => {
+                handleSubmit()
+              }}>
+              {t('Login.forgot.sub')}
+            </Button>
+
+            <div
+              className='LogError'
+              style={{
+                'color': 'red',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+
             </div>
+            <div
+              className='LogInfo'
+              style={{
+                'color': 'green',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+            </div>
+
+            {
+              on_wait ?
+                <Spinner /> :
+                <></>
+            }
           </CardBody>
         </Card>
       </div>

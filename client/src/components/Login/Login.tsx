@@ -1,16 +1,32 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Card, CardBody, CardHeader, FormControl, Image, Input, InputGroup, InputLeftAddon, InputRightElement } from '@chakra-ui/react'
+import { FaPowerOff } from 'react-icons/fa'
+
+import {
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  FormControl,
+  Image,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightElement,
+  Spinner
+} from '@chakra-ui/react'
 
 import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { loginUser } from './LoginFunctions'
+import { returnToApp } from '../../SankeyAppSA'
+import { loginOut, loginUser } from './LoginFunctions'
 
 export type LoginTypes = {
   new_data_app: Class_ApplicationDataSA
 }
 
-// Login, Register or Buy License
-const Login: FunctionComponent<LoginTypes> = ({
+// Login
+export const Login: FunctionComponent<LoginTypes> = ({
   new_data_app,
 }) => {
 
@@ -18,24 +34,25 @@ const Login: FunctionComponent<LoginTypes> = ({
   const { t, logo } = new_data_app
 
   // States
+  const [on_wait, setOnWait] = useState(false)
   const [email, setUserName] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [show_password, setShowPassword] = useState(false)
   const [remember] = useState(false)
   const state = {
     button: ''
   }
 
+  // Login button ref
+  const ref_login_btn = useRef<HTMLButtonElement>(null)
+
   // Initialise navigation function
   const navigate = useNavigate()
-  const returnToApp = () => {
-    navigate('/')
-    new_data_app.menu_configuration.updateComponentsRelatedToSA()
-  }
 
   // Handler : Si demande de connection
   const handleSubmit = async () => {
     if (state.button === 'login') {
+      setOnWait(true)
       await loginUser(
         new_data_app,
         {
@@ -43,8 +60,11 @@ const Login: FunctionComponent<LoginTypes> = ({
           password,
           remember
         },
-        navigate
+        () => {
+          returnToApp(navigate)
+        }
       )
+        .then(() => setOnWait(false))
     }
     if (state.button === 'forgot') {
       navigate('/login/forgot')
@@ -61,7 +81,6 @@ const Login: FunctionComponent<LoginTypes> = ({
         width="100%"
       >
         <Box
-          className='MenuNavigation'
           layerStyle='menutop_layout_style'
           gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
         >
@@ -71,42 +90,42 @@ const Login: FunctionComponent<LoginTypes> = ({
             justifySelf='center'
           >
             <Image
-              height='4rem'
+              height='5rem'
               src={logo}
               alt='navigation logo'
-              onClick={() => returnToApp()}
+              onClick={() => returnToApp(navigate)}
             />
           </Box>
           <Box></Box>
           <Button
             variant='btn_lone_navigation'
-            onClick={() => returnToApp()}
+            onClick={() => returnToApp(navigate)}
           >
-            {t('UserPages.to_app')}
+            {t('UserNav.to_app')}
           </Button>
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/register')}
           >
-            {t('UserPages.to_reg')}
+            {t('UserNav.to_reg')}
           </Button>
         </Box>
       </Box>
 
       <div className="login-wrapper">
         <Card variant='card_register' width='33vw'>
-          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.con_win')}</CardHeader>
+          <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.title')}</CardHeader>
           <CardBody>
             {/* User id */}
             <FormControl>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('id.label', { ns: 'register' })}
+                  {t('Login.id.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
                   type='text'
-                  placeholder={t('id.placeholder', { ns: 'register' })}
+                  placeholder={t('Login.id.placeholder')}
                   onChange={e => setUserName(e.target.value)}
                 />
               </InputGroup>
@@ -116,13 +135,14 @@ const Login: FunctionComponent<LoginTypes> = ({
             <FormControl>
               <InputGroup variant='register_input'>
                 <InputLeftAddon>
-                  {t('pwd.label', { ns: 'register' })}
+                  {t('Login.pwd.label')}
                 </InputLeftAddon>
                 <Input
                   isRequired
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={t('pwd.placeholder', { ns: 'register' })}
+                  type={show_password ? 'text' : 'password'}
+                  placeholder={t('Login.pwd.placeholder')}
                   onChange={e => setPassword(e.target.value)}
+                  onBlur={() => {ref_login_btn.current?.click()}}
                 />
                 <InputRightElement width='4.5rem' marginRight='0.25em'>
                   <Button
@@ -130,15 +150,13 @@ const Login: FunctionComponent<LoginTypes> = ({
                     size='sm'
                     border='0px'
                     bg='gray.50'
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword(!show_password)}
                   >
-                    {showPassword ? t('pwd.hide', { ns: 'register' }) : t('pwd.show', { ns: 'register' })}
+                    {show_password ? t('Login.pwd.hide') : t('Login.pwd.show')}
                   </Button>
                 </InputRightElement>
               </InputGroup>
             </FormControl>
-
-            <div className='LogError' style={{ 'color': 'red' }}></div>
 
             <Box
               display='grid'
@@ -146,13 +164,22 @@ const Login: FunctionComponent<LoginTypes> = ({
               gridRowGap='0,25rem'
             >
               <Button
+                ref={ref_login_btn}
                 variant='btn_lone_navigation_tertiary'
                 type="submit"
+                isDisabled={(
+                  on_wait ||
+                  (password.length === 0) ||
+                  (email.length === 0))}
                 onClick={() => {
                   (state.button = 'login')
                   handleSubmit()
                 }}>
-                {t('Login.con')}
+                {
+                  on_wait ?
+                    <Spinner /> :
+                    t('Login.con')
+                }
               </Button>
               <Button
                 variant='btn_lone_navigation_tertiary_negative'
@@ -161,9 +188,28 @@ const Login: FunctionComponent<LoginTypes> = ({
                   (state.button = 'forgot')
                   handleSubmit()
                 }}>
-                {t('Login.forgot_ask')}
+                {t('Login.forgot.ask')}
               </Button>
             </Box>
+
+
+            <div
+              className='LogError'
+              style={{
+                'color': 'red',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+
+            </div>
+            <div
+              className='LogInfo'
+              style={{
+                'color': 'green',
+                'justifySelf': 'center',
+                'textAlign': 'center'
+              }}>
+            </div>
           </CardBody>
         </Card>
       </div>
@@ -171,7 +217,34 @@ const Login: FunctionComponent<LoginTypes> = ({
   )
 }
 
-export default Login
+export const LoginOutButton: FunctionComponent<LoginTypes> = (
+  { new_data_app }
+) => {
+  const navigate = useNavigate()
+
+  const [on_wait, setOnWait] = useState(false)
+
+  return <Button
+    variant='menutop_button_logout'
+    disabled={on_wait}
+    onClick={() => {
+      setOnWait(true)
+      loginOut(
+        new_data_app,
+        () => {
+          setOnWait(false)
+          returnToApp(navigate)
+        })
+    }}
+  >
+    {
+      on_wait ?
+        <Spinner /> :
+        <FaPowerOff />
+    }
+  </Button>
+}
+
 
 
 

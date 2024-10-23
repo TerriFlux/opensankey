@@ -162,31 +162,170 @@ const resources = {
         'labels': 'Labels',
         'title': 'Title'
       },
-      Login: {
-        'con': 'Login',
-        'forgot_ask': 'Password forgotten ?',
-        'forgot_sub': 'Reset',
-        'dec': 'Log off',
-        'con_win': 'Connect to the application',
-        'forgot_win': 'Reset password',
-        'forgot_sent': 'A password reset e-mail has been sent to you.',
-        'forgot_ok': 'The password has been successfully replaced.',
-        'err_server': 'An error occurred when calling the server',
-        'err_login': 'Error, your email or password is incorrect, please check your login information and try again',
-        'err_user_already_connected': 'Error, you\'re already logged in.',
-        'err_user_inexistant': 'Error, given account does not exists',
-        'err_token_expire': 'Error, the request has expired.'
-      },
-      UserPages: {
-        'to_app': 'Back to the application',
+      UserNav: {
         'to_con': 'Sign in',
         'to_reg': 'Sign up',
+        'to_buy': 'Try OpenSankey+',
+        'to_app': 'Back to the application',
         'to_acc': 'My account',
         'to_dbd': 'Dashboard',
-        'id': 'E-mail',
-        'mdp': 'Password',
-        'pnom': 'Firstname',
-        'nom': 'Name',
+      },
+      Register: {
+        presentation: {
+          'title': 'Power-up your Sankeys with OpenSankey+',
+          'text': 'OpenSankey+ is a storytelling tool made for those who need to present flow data in a way that is both didactic and aesthetically pleasing.',
+          'btn_next': 'I want OpenSankey+ !'
+        },
+        account: {
+          'title': 'First create your account',
+          id: {
+            'label': 'E-mail',
+            'placeholder': 'E-mail is needed to create your account',
+            'error': 'Please enter a valid e-mail adress.'
+          },
+          pwd: {
+            'label': 'Password',
+            'placeholder': 'Choose a good password',
+            'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
+            'show': 'show',
+            'hide': 'hide',
+          },
+          'fn': 'First Name',
+          'ln': 'Last Name',
+          msg: {
+            'ok': 'Account created - You will receive a confirmation e-mail to validate your account',
+            'err_captcha': 'Captcha is invalid',
+            'err_email_invalid': 'Email is not valid',
+            'err_email_exists': 'An account already exists with this e-mail',
+            'nok': 'An error has occured, could not create account.'
+          },
+          'btn_terms': 'Please read and accept the terms and conditions',
+          'btn_next': 'Sign up'
+        },
+        validation: {
+          'title': 'Validation du compte',
+          msg: {
+            'ok': 'This account has been successfully validated.',
+            'nok': 'Error, wrong link',
+            'account_already_created': 'This account has already been validated',
+            'redirect': 'You will be redirected to license checkout page.',
+          }
+        }
+      },
+      terms_of_uses: {
+        'title': 'Terms and conditions of use',
+        'accept': 'Accept the terms and conditions of use'
+      },
+      Paiement: {
+        'win_header_buy': 'Create and share Sankey\'s diagrams like a pro.',
+        'win_header_success': 'Thank you for your subscription to OpenSankey+',
+        'win_header_error': 'Oops, somethings goes wrong',
+        'win_content_success': 'OpenSankey+ is now activated for your account.',
+        'win_content_error': 'Something went wrong during the paiement process',
+        'btn_checkout': 'I want OpenSankey+ !'
+      },
+      Login: {
+        'title': 'Connect to the application',
+        'con': 'Login',
+        id: {
+          'label': 'E-mail',
+          'placeholder': '',
+          'error': 'Please enter a valid e-mail adress.'
+        },
+        pwd: {
+          'label': 'Password',
+          'placeholder': '',
+          'show': 'show',
+          'hide': 'hide',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'An error occurred when calling the server',
+          'err_login': 'Error, your e-mail or password is incorrect, please check your login information and try again',
+        },
+        forgot: {
+          'title': 'Reset password',
+          'ask': 'Password forgotten ?',
+          'sub': 'Reset',
+          msg: {
+            'ok': 'The password has been successfully replaced.',
+            'mail_sent': 'A password reset e-mail has been sent to you.',
+            'err_server': 'An error occurred when calling the server',
+            'err_user_already_connected': 'Error, you\'re already logged in.',
+            'err_user_inexistant': 'Error, given account does not exists',
+            'err_token_expire': 'Error, the request has expired.'
+          }
+        }
+      },
+      UserPages: {
+        login_modify: {
+          'title': 'Your login details',
+          'pwd': 'Changer mot de passe',
+          'del': 'Supprimer le compte',
+          email_modal: {
+            'title': 'Confirm e-mail modification with your password',
+            'btn': 'Apply modification'
+          },
+          pwd_modal: {
+            'title': 'Confirm password modification with the code received by e-mail',
+            'input_token': 'Received code',
+            'btn': 'Apply password modification'
+          },
+          del_modal: {
+            'title': 'Do you really want to delete your account?',
+            'desc': 'Warning: This action will delete your account, your data and stop your OpenSankey+ subscription if present.',
+            'fdback': 'Why do you want to delete your account? (optional)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Customer service was less than expected',
+            'fdback_low_quality': 'Quality was less than expected',
+            'fdback_missing_features': 'Some features are missing',
+            'fdback_switched_service': 'I’m switching to a different service',
+            'fdback_too_complex': 'Ease of use was less than expected',
+            'fdback_too_expensive': 'It’s too expensive',
+            'fdback_unused': 'I don’t use the service enough',
+            'fdback_other': 'Other reason',
+            'comment': 'How can we improve? (optional)',
+            'pwd_confirm': 'Enter your password to confirm',
+            'btn_confirm': 'Delete account and all data',
+            'btn_cancel': 'I want to keep my account',
+          },
+          btns: {
+            'set_email': 'Change E-mail',
+            'set_pwd': 'Change password',
+            'del_account': 'Delete account'
+          },
+          msgs: {
+            'ok_email': 'E-mail has successfully been changed',
+            'prs_email': 'Processing e-mail change',
+            'err_email_regex': 'E-mail is not valid',
+            'err_email_failed': 'The e-mail could not be modified',
+            'ok_pwd': 'The password has been successfully changed',
+            'prs_pwd': 'A password reset e-mail has been sent to you.',
+            'err_pwd_failed': 'Password change request error',
+            'ok_del': 'Account has been deleted. Going back to main page.',
+            'err_del': 'Account deletion request error. Please check your password.',
+          },
+        },
+        infos_modify: {
+          'title': 'Your personal informations',
+          btns: {
+            'set_fn': 'Apply modification',
+            'set_ln': 'Apply modification',
+          },
+          msgs: {
+            'ok_firstname': 'First name has been successfully modified',
+            'err_firstname': 'The first name modification could not be applied',
+            'ok_lastname': 'The last name has been successfully modified',
+            'err_lastname': 'The last name modification could not be applied',
+          },
+        },
+        license: {
+          'title': 'OpenSankey+ license informations',
+          'exp_until': 'Next renewal : ',
+          btns: {
+            'mng_sub': 'Manage subscription'
+          },
+        },
         'OS+_lic': 'OpenSankey+ license',
         'SS_lic': 'SankeySuite license',
         'update_lic': 'Register new license number',
@@ -363,42 +502,6 @@ const resources = {
       'elements_sankey+_blocked_long': 'Some Sankey elements are not visible because they come from OpenSankey+ and your account does not have this module',
       'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
     },
-    register: {
-      id: {
-        'label': 'E-mail',
-        'placeholder': 'E-mail is needed to create your account',
-        'error': 'Please enter a valid e-mail adress.'
-      },
-      pwd: {
-        'label': 'Password',
-        'placeholder': 'Choose a good password',
-        'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
-        'show': 'show',
-        'hide': 'hide',
-      },
-      err: {
-        'captcha': 'Error : Captcha invalid',
-        'email in use': 'Error : An account already exists with this e-mail'
-      },
-      msg: {
-        'ok account created': 'Account created - You will be redirected to the login page in a moment'
-      },
-      'fn': 'First Name',
-      'ln': 'Last Name',
-      'reg_win': 'Create an account',
-      'lic': 'Add your license number (Optional)',
-      'OS+_lic': 'OpenSankey+',
-      'OS+_link': 'infos',
-      'SS_lic': 'SankeySuite',
-      'SS_link': 'infos',
-      'reg': 'Sign up'
-    },
-    terms_of_uses: {
-      'title': 'Terms and conditions of use',
-      'text': 'english_terms.html',
-      'open': 'Please read and accept the terms and conditions',
-      'accept': 'Accept the terms and conditions of use'
-    }
   },
   //=======================================================
   //FR
@@ -530,35 +633,179 @@ const resources = {
 
         'title': 'Titre'
       },
-      Login: {
-        'con': 'Connexion',
-        'forgot_ask': 'Mot de passe oublié ?',
-        'forgot_sub': 'Réinitialiser',
-        'dec': 'Deconnexion',
-        'con_win': 'Se connecter à l\'application',
-        'forgot_win': 'Reinitialiser le mot de passe',
-        'forgot_sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
-        'forgot_ok': 'Le mot de passe a été remplacé avec succès.',
-        'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
-        'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer',
-        'err_user_already_connected': 'Erreur, vous êtes déjà connecté.',
-        'err_user_inexistant': 'Erreur, ce compte n\'existe pas.',
-        'err_token_expire': 'Erreur, la demande a expiré.'
-      },
-      UserPages: {
-        'to_app': 'Retour à l\'application',
+      UserNav: {
         'to_con': 'Se connecter',
         'to_reg': 'Créer un compte',
+        'to_buy': 'Essayer OpenSankey+',
+        'to_app': 'Retour à l\'application',
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
-        'id': 'E-mail',
-        'mdp': 'Mot de passe',
-        'pnom': 'Prénom',
-        'nom': 'Nom',
+      },
+      Register: {
+        presentation: {
+          'title': 'Passez à la vitesse supérieure avec l\'extension OpenSankey+',
+          'text': 'OpenSankey+ est un outil de storytelling, fait pour ceux qui ont besoin de présenter des données de flux d’une façon à la fois didactique et esthétique.',
+          'btn_next': 'Je veux OpenSankey+ !'
+        },
+        account: {
+          'title': 'Créer un compte',
+          id: {
+            'label': 'E-mail',
+            'placeholder': 'Veuillez saisir votre e-mail',
+            'error': 'L\'adresse e-mail n\'est pas valide'
+          },
+          pwd: {
+            'label': 'Mot de passe',
+            'placeholder': 'Choisissez un bon mot de passe',
+            'error': 'Le mot de passe doit comporter plus de huit caractères, dont au moins une lettre, un chiffre et un caractère spécial',
+            'show': 'montrer',
+            'hide': 'cacher',
+          },
+          'fn': 'Prénom',
+          'ln': 'Nom',
+          msg: {
+            'ok': 'Compte créé - Vous allez recevoir un e-mail afin de valider celui-ci.',
+            'nok': 'Une erreur s\'est produite. Le compte n\'a pas pu être créé',
+            'err_captcha': 'Le captcha n\'est pas valide',
+            'err_email_invalid': 'L\'adresse e-mail fournie n\'est pas valide',
+            'err_email_exists': 'Un compte existe déjà avec cette adresse e-mail',
+          },
+          'btn_terms': 'Lire et accepter les conditions d\'utilisation',
+          'btn_next': 'Créer le compte'
+        },
+        validation: {
+          'title': 'Validation du compte',
+          msg: {
+            'ok': 'Ce compte a été validé avec succes.',
+            'nok': 'Erreur, lien corrompu',
+            'account_already_created': 'Ce compte a déjà été validé.',
+            'redirect': 'Vous allez être redirigé vers la page de souscription.',
+          },
+        }
+      },
+      terms_of_uses: {
+        'title': 'Conditions d\'utilisation',
+        'accept': 'Accepter les conditions d\'utilisation'
+      },
+      Paiement: {
+        'win_header_buy': 'Acheter OpenSankey+',
+        'win_header_success': 'Merci d\'avoir choisi OpenSankey+',
+        'win_header_error': 'Oups, le paiement n\'a pas abouti',
+        'win_content_buy': 'Créez et partagez vos diagrammes de Sankey comme un pro.',
+        'win_content_success': 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
+        'win_content_error': 'Quelque chose s\'est mal passé pendant le processus de paiement.',
+        'btn_checkout': 'Je veux OpenSankey+ !'
+      },
+      osplus_presentation: {
+        'title': 'Licence OpenSankey+',
+        'text': 'osplus_presentation_fr.html'
+      },
+      Login: {
+        'title': 'Se connecter à l\'application',
+        'con': 'Connexion',
+        id: {
+          'label': 'E-mail',
+          'placeholder': '',
+          'error': 'L\'adresse e-mail n\'est pas valide'
+        },
+        pwd: {
+          'label': 'Mot de passe',
+          'placeholder': '',
+          'show': 'montrer',
+          'hide': 'cacher',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
+          'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer',
+        },
+        forgot: {
+          'title': 'Reinitialiser le mot de passe',
+          'ask': 'Mot de passe oublié ?',
+          'sub': 'Réinitialiser',
+          msg: {
+            'ok': 'Le mot de passe a été remplacé avec succès.',
+            'mail_sent': 'Un e-mail de réinitialisation du mot de passe vous a été envoyé.',
+            'err_server': 'Une erreur est survenue lors de l\'appel au serveur',
+            'err_user_already_connected': 'Erreur, vous êtes déjà connecté.',
+            'err_user_inexistant': 'Erreur, ce compte n\'existe pas.',
+            'err_token_expire': 'Erreur, la demande a expiré.'
+          }
+        }
+      },
+      UserPages: {
+        login_modify: {
+          'title': 'Vos identifiants de connexion',
+          'pwd': 'Changer mot de passe',
+          'del': 'Supprimer le compte',
+          email_modal: {
+            'title': 'Confirmer la modification de l\'e-mail avec votre mot de passe',
+            'btn': 'Appliquer la modification'
+          },
+          pwd_modal: {
+            'title': 'Confirmer la modification du mot de passe avec le code reçu par e-mail',
+            'input_token': 'Code reçu',
+            'btn': 'Appliquer la modification'
+          },
+          del_modal: {
+            'title': 'Souhaitez-vous vraiment supprimer votre compte ?',
+            'desc': 'Attention : Cette action supprimera votre compte, vos données et stoppera votre abonnement à OpenSankey+ si présent.',
+            'fdback': 'Pourquoi souhaitez vous supprimer votre compte ? (optionel)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Le service client n\'est pas satisfaisant',
+            'fdback_low_quality': 'La qualité du logiciel n\'est pas satifaisante',
+            'fdback_missing_features': 'Il manque certaines fonctionnalités',
+            'fdback_switched_service': 'Je préfère une autre solution',
+            'fdback_too_complex': 'Le logiciel est trop compliqué à utiliser',
+            'fdback_too_expensive' : 'Le logiciel est trop cher',
+            'fdback_unused': 'Je ne l\'utilise pas',
+            'fdback_other': 'Autre raison',
+            'comment': 'Comment pourrions-nous nous améliorer ? (optionnel)',
+            'pwd_confirm': 'Saissisez votre mot de passe pour confirmer',
+            'btn_confirm': 'Supprimer le compte et toutes les données',
+            'btn_cancel': 'Je souhaite garder mon compte',
+          },
+          btns: {
+            'set_email': 'Modifier l\'e-mail',
+            'set_pwd': 'Modifier le mot de passe',
+            'del_account': 'Supprimer le compte'
+          },
+          msgs: {
+            'ok_email': 'L\'e-mail a été modifié avec succès',
+            'prs_email': 'Traitement du changement d\'e-mail',
+            'err_email_regex': 'L\'e-mail n\'est pas valide',
+            'err_email_failed': 'L\'e-mail n\'a pas pu être modifié',
+            'ok_pwd': 'Le mot de passe a été modifié avec succes.',
+            'prs_pwd': 'Un e-mail avec un code pour la modification du mot de passe vous a été envoyé.',
+            'err_pwd_failed': 'Erreur sur la demande de modification de mot de passe.',
+            'ok_del': 'Le compte a été supprimé. Retour à la page principale.',
+            'err_del': 'Erreur sur la demande de suppression de compte. Veuillez verifier votre mot passe.',
+          },
+        },
+        infos_modify: {
+          'title': 'Vos informations personnelles',
+          btns: {
+            'set_fn': 'Appliquer modification',
+            'set_ln': 'Appliquer modification',
+          },
+          msgs: {
+            'ok_firstname': 'Le prénom a été modifié avec succes',
+            'err_firstname': 'Le prénom choisi ne peut pas être appliqué',
+            'ok_lastname': 'Le nom a été modifié avec succes',
+            'err_lastname': 'Le nom choisi ne peut pas être appliqué',
+          },
+        },
+        license: {
+          'title': 'Votre licence OpenSankey+',
+          'exp_until': 'Prochain renouvellement : ',
+          btns: {
+            'mng_sub': 'Gerer l\'abonnement'
+          },
+        },
         'OS+_lic': 'Licence OpenSankey+',
         'SS_lic': 'Licence SankeySuite',
         'update_lic': 'Enregistrer',
-        'win_acc_infos': 'Mes informations',
+        'win_acc_infos': 'Informations du compte',
         'win_db_template': 'Modèles proposés',
         'db_desc_template': 'Description du modèle',
         'usr_no_lic': 'Pas de licence enregistrée',
@@ -729,42 +976,6 @@ const resources = {
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
     },
-    register: {
-      id: {
-        'label': 'E-mail',
-        'placeholder': 'Veuillez saisir votre e-mail',
-        'error': 'L\'adresse e-mail n\'est pas valide'
-      },
-      pwd: {
-        'label': 'Mot de passe',
-        'placeholder': 'Choisissez un bon mot de passe',
-        'error': 'Le mot de passe doit comporter plus de huit caractères, dont au moins une lettre, un chiffre et un caractère spécial',
-        'show': 'montrer',
-        'hide': 'cacher',
-      },
-      err: {
-        'captcha': 'Erreur : Captcha invalide',
-        'email in use': 'Erreur : Un compte existe déjà avec cet e-mail'
-      },
-      msg: {
-        'ok account created': 'Compte créé - Vous allez être redirigé vers la page de connexion'
-      },
-      'fn': 'Prénom',
-      'ln': 'Nom',
-      'reg_win': 'Créer un compte',
-      'lic': 'Ajouter votre licence (Optionel)',
-      'OS+_lic': 'OpenSankey+',
-      'OS+_link': 'infos',
-      'SS_lic': 'SankeySuite',
-      'SS_link': 'infos',
-      'reg': 'S\'enregistrer'
-    },
-    terms_of_uses: {
-      'title': 'Conditions d\'utilisation',
-      'text': 'francais_terms.html',
-      'open': 'Lire et accepter les conditions d\'utilisation',
-      'accept': 'Accepter les conditions d\'utilisation'
-    }
   }
 }
 
@@ -790,7 +1001,7 @@ i18next
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({
     resources,
-    ns: ['translation', 'terms_of_uses'],
+    ns: ['translation'],
     defaultNS: 'translation',
     interpolation: {
       escapeValue: false // react already safes from xss

@@ -1,0 +1,7 @@
+Bienvenue {{ first_name }}
+
+Votre compte OpenSankey+ est presque créé.
+
+Pour continuer, validez votre compte en suivant ce lien : {{confirm_url}}
+
+L’équipe TerriFlux

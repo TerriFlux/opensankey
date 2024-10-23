@@ -1,4 +1,5 @@
-import React,{ FunctionComponent, useEffect, useRef } from 'react'
+import React, { FunctionComponent, useEffect, useState } from 'react'
+import i18next from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -11,31 +12,39 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Heading,
 } from '@chakra-ui/react'
 
-// Register : Modal for terms of use
-export type TermsOfUseType = {
+/**
+ * Register : Modal for terms of use
+ *
+ * @param {*} {
+ *   isOpen,
+ *   onClose,
+ *   setOk
+ * }
+ * @return {*}
+ */
+const TermsOfUse: FunctionComponent<{
   isOpen: boolean,
   onClose: () => void,
   setOk: (value: boolean) => void
-}
-
-const TermsOfUse:FunctionComponent<TermsOfUseType>=({
+}> = ({
   isOpen,
   onClose,
   setOk
-})=>{
+}) => {
 
   // Initialise traduction function
-  const {t} = useTranslation()
+  const { t } = useTranslation()
 
-  const htmlContent = useRef('')
+  const [htmlContent, setHtmlContent] = useState('')
 
   useEffect(() => {
     // Fetch the HTML content from the public directory
-    const path = window.location.origin+'/'+t('text', {ns: 'terms_of_uses'})
+    const path = window.location.origin + '/terms_of_uses_' + i18next.language + '.html'
     fetch(path, {
-      method:'GET'
+      method: 'GET'
     }).then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -44,44 +53,49 @@ const TermsOfUse:FunctionComponent<TermsOfUseType>=({
       return text
     })
       .then((html) => {
-        htmlContent.current = html
+        setHtmlContent(html)
       })
       .catch((error) => {
         console.error('Error fetching HTML content:', error)
       })
   }, [])
 
-  return(
+  return (
     <div>
       <Modal
+        variant='modal_welcome'
         isOpen={isOpen}
         onClose={onClose}
       >
-        <ModalOverlay/>
+        <ModalOverlay />
         <ModalContent
           maxWidth='80vw'
           bg='white'
         >
-          <ModalHeader>
-            {t('title', {ns: 'terms_of_uses'})}
+          <ModalHeader >
+            <Heading variant='heading_welcome_style' >
+              {t('terms_of_uses.title')}
+            </Heading>
           </ModalHeader>
-          <ModalCloseButton/>
+          <ModalCloseButton />
 
           <ModalBody>
-            <Box>
-              <div dangerouslySetInnerHTML={{__html: htmlContent.current}}/>
+            <Box
+              padding='1rem'
+            >
+              <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
             </Box>
           </ModalBody>
 
           <ModalFooter>
             <Button
               variant='menuconfigpanel_option_button'
-              onClick={ () => {
+              onClick={() => {
                 setOk(true)
                 onClose()
               }}
             >
-              {t('accept', {ns: 'terms_of_uses'})}
+              {t('terms_of_uses.accept')}
             </Button>
           </ModalFooter>
         </ModalContent>
