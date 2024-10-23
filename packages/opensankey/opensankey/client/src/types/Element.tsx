@@ -34,11 +34,10 @@ import {
  * @class Class_ProtoElement
  */
 export abstract class Class_ProtoElement
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey
->
-{
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey
+  > {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -131,6 +130,18 @@ export abstract class Class_ProtoElement
    */
   private _is_currently_deleted = false
 
+  protected _timeouts_draw: { [_: string]: NodeJS.Timeout } = {}
+
+  /**
+   * Timeout before executing function in _add_waiting_process
+   *
+   * @private
+   * @type {number}
+   * @memberof Class_DrawingArea
+   */
+  private _draw_timeout: number = 3
+  public has_timeout: boolean = true
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -150,6 +161,10 @@ export abstract class Class_ProtoElement
     this._menu_config = menu_config
   }
 
+
+
+  // PUBLIC METHODS ====================================================================
+
   /**
    * Define deletion behavior
    * @memberof Class_Element
@@ -165,35 +180,13 @@ export abstract class Class_ProtoElement
     }
   }
 
-  protected cleanForDeletion() {
-    // Does nothing here
-  }
-
-  // PUBLIC METHODS ====================================================================
-
   /**
    * Set up element on d3 svg area
    * @protected
    * @memberof Class_Element
    */
   public draw() {
-    if (!this._is_currently_deleted) {
-      const d3_drawing_area = this.drawing_area.d3_selection
-      if (d3_drawing_area !== null) {
-        // Undraw all
-        this.unDraw()
-        // Draw only if visible
-        if (this.is_visible) {
-          // Set d3 selection
-          this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-            // .datum(this)
-            .append('g')
-            .attr('id', 'gg_' + this._id)
-          // Add events listeners
-          this.setEventsListeners()
-        }
-      }
-    }
+    this._add_waiting_process('draw', () => { this._draw() })
   }
 
   /**
@@ -254,9 +247,9 @@ export abstract class Class_ProtoElement
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDragEnd(event))
         )
-      }else if(this.drawing_area.isInEditionMode()){
+      } else if (this.drawing_area.isInEditionMode()) {
         // In edition mode we don't use drag event on elements
-        this.d3_selection?.on('mousedown.drag',null) // Remove dag event 
+        this.d3_selection?.on('mousedown.drag', null) // Remove dag event 
       }
     }
   }
@@ -289,6 +282,70 @@ export abstract class Class_ProtoElement
   }
 
   // PROTECTED METHODES =================================================================
+
+  /**
+* Cancel a timed out process - It wont happen
+* @protected
+* @param {string} process_id
+* @memberof Class_ProtoElement
+*/
+  protected _cancel_waiting_process(process_id: string) {
+    if (this._timeouts_draw[process_id] !== undefined)
+      clearTimeout(this._timeouts_draw[process_id])
+  }
+
+  /**
+ * Create a timed out process - Used to avoid multiple reloading of components
+ *
+ * The process_func is meant to be use by setTimeout(),
+ * and inside setTimeOut 'this' keyword has another meaning,
+ * so the current object must be passed directly as an argument.
+ * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
+ *
+ * @protected
+ * @param {string} process_id
+ * @param {(_: Class_ProtoElement) => void} process_func
+ * @memberof Class_ProtoElement
+ */
+  protected _add_waiting_process(
+    process_id: string,
+    process_func: () => void
+  ) {
+    if(this._display.drawing_area.bypass_timeout)
+      return
+    this._cancel_waiting_process(process_id)
+    if (this.has_timeout)
+      this._timeouts_draw[process_id] = setTimeout(
+        process_func,
+        this._draw_timeout
+      )
+    else
+      process_func()
+  }
+
+  protected _draw() {
+    if (!this._is_currently_deleted) {
+      const d3_drawing_area = this.drawing_area.d3_selection
+      if (d3_drawing_area !== null) {
+        // Undraw all
+        this.unDraw()
+        // Draw only if visible
+        if (this.is_visible) {
+          // Set d3 selection
+          this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+            // .datum(this)
+            .append('g')
+            .attr('id', 'gg_' + this._id)
+          // Add events listeners
+          this.setEventsListeners()
+        }
+      }
+    }
+  }
+
+  protected cleanForDeletion() {
+    // Does nothing here
+  }
 
   /**
    * Unset element from d3 svg area
@@ -533,11 +590,11 @@ export abstract class Class_Element
    * @protected
    * @memberof Class_Element
    */
-  public draw() {
+  protected _draw() {
     // Draw element on D3
-    super.draw()
+    super._draw()
     // Add apply position
-    this.applyPosition()
+    this._applyPosition()
   }
 
   // Positioning
@@ -567,13 +624,24 @@ export abstract class Class_Element
    * @return {*}
    * @memberof Class_Node
    */
-  protected applyPosition() {
+  protected _applyPosition() {
     if (this.d3_selection !== null) {
       this.d3_selection.attr(
         'transform',
         'translate(' + this.position_x + ', ' + this.position_y + ')')
     }
   }
+  /**
+ * Apply node position to it shape in d3
+ * @protected
+ * @return {*}
+ * @memberof Class_Node
+ */
+  protected applyPosition() {
+    this._add_waiting_process('applyPos', () => { this._applyPosition() })
+  }
+
+
 
   // GETTERS / SETTERS ==================================================================
 
@@ -594,5 +662,5 @@ export abstract class Class_Element
   public set position_dy(_) { this._display.position.dy = _; this.applyPosition() }
   public get position_relative_dy() { return this._display.position.relative_dy }
   public set position_relative_dy(_) { this._display.position.relative_dy = _; this.applyPosition() }
-  public get display() { return this._display}
+  public get display() { return this._display }
 }

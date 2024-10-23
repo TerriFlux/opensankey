@@ -73,7 +73,7 @@ export type SankeyNode = {
     [_: string]: {
       parent_name?: string,
       level?: number,
-      child_tags?:string[],
+      children_tags?:string[],
       parent_tag?:string
     }
   },  local?: SankeyNodeAttrLocal,  colorParameter: string,

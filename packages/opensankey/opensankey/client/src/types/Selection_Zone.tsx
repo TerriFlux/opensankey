@@ -31,15 +31,15 @@ import { default_element_position } from './Utils'
  * @extends {Class_Element}
  */
 export abstract class Class_ZoneSelection
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey
->
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey
+  >
   extends Class_Element
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
-> {
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -81,24 +81,9 @@ export abstract class Class_ZoneSelection
 
   // PUBLIC METHODS =====================================================================
 
-  /**
-   * Draw the element if visible
-   * @memberof Class_ZoneSelection
-   */
-  public draw() {
-    // Heritance
-    super.draw()
-    // Draw shape
-    this.d3_selection?.append('rect')
-      .attr('class', 'zone_selection')
-      .attr('width', this._width)
-      .attr('height', this._height)
-      .attr('fill', 'none')
-      .attr('stroke', 'black')
-      .attr('stroke-width', '2px')
-      .attr('stroke-dasharray', '5,5')
+  public override draw() {
+    this._draw()
   }
-
   /**
    * Set the width & height of the selection zone
    *
@@ -152,7 +137,33 @@ export abstract class Class_ZoneSelection
     this.starting_x_point = 0
     this.starting_y_point = 0
     this._is_visible = false
-    this.draw()
+    this._draw()
+  }
+
+
+
+  // PROTECTED METHOD ==================================================================
+
+  protected override applyPosition(): void {
+    this._applyPosition()
+  }
+
+  /**
+   * Draw the element if visible
+   * @memberof Class_ZoneSelection
+   */
+  protected _draw() {
+    // Heritance
+    super._draw()
+    // Draw shape
+    this.d3_selection?.append('rect')
+      .attr('class', 'zone_selection')
+      .attr('width', this._width)
+      .attr('height', this._height)
+      .attr('fill', 'none')
+      .attr('stroke', 'black')
+      .attr('stroke-width', '2px')
+      .attr('stroke-dasharray', '5,5')
   }
 
   // GETTERS / SETTERS ==================================================================
