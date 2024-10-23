@@ -139,21 +139,6 @@ export const menuconfigpanel_del_button = defineStyle({
   },
 })
 
-export const btn_datatag_navbar = defineStyle({
-  height: '2.5rem',
-  bg: 'none',
-  bgColor: 'none',
-  borderColor: 'none',
-  color: '#4A5568',
-  display: 'block',
-  _hover: {
-    borderColor: 'lightgrey',
-    bg: 'lightgrey',
-    bgColor: 'lightgrey',
-  },
-
-})
-
 // Style for delete button in table of tags in config menu
 export const menuconfigpanel_del_button_in_table = defineStyle({
   height: '1.5rem',
@@ -170,80 +155,6 @@ export const menuconfigpanel_del_button_in_table = defineStyle({
     bg: 'secondaire.1',
     bgColor: 'secondaire.1',
   },
-})
-
-// Style of button in the subnav (sub elements of file/Formatting/view/help ...)
-export const menutop_button = defineStyle({
-  height: '3rem',
-  width: '4rem',
-  textStyle: 'h4',
-  fontSize: '9px',
-  margin: '0rem 0rem 0rem 0.75rem',
-  border: '0px',
-  borderColor: 'transparent',
-  bg: 'transparent',
-  bgColor: 'transparent',
-  _hover: {
-    color: 'gray.600',
-    borderColor: 'transparent',
-    bg: 'transparent',
-    bgColor: 'transparent',
-  },
-  _disabled: {
-    opacity: '0.6',
-    color: 'gray.600',
-    borderColor: 'transparent',
-    bg: 'transparent',
-    bgColor: 'transparent',
-  }
-})
-
-// Style for menu list in the subnav
-export const menutop_button_with_dropdown = defineStyle({
-  display: 'grid',
-  gridTemplateColumns: '2fr 1fr',
-  gridTemplateRows: '2fr 1fr',
-  gridColumnGap: '0',
-  gridRowGap: '0',
-  height: '3rem',
-  width: '3rem',
-  borderRadius: '0px',
-  textStyle: 'h4',
-  fontSize: '9px',
-  padding: '0.2rem',
-  margin: '0rem 0rem 0rem 0.75rem',
-  border: '0px',
-  color: 'gray.600',
-  bg: 'transparent',
-  bgColor: 'transparent',
-  svg: {
-    margin: 'auto',
-    height: '2rem'
-  },
-  _hover: {
-    bg: 'transparent',
-    bgColor: 'transparent',
-  }
-})
-
-export const submenu_nav_btn_dropdown_item_demo = defineStyle({
-  width: 'inherit',
-  textAlign: 'left',
-  borderRadius: '0px',
-  padding: '0.2rem',
-  border: '0px',
-  color: 'primaire.2',
-  bg: 'inherit',
-  bgColor: 'inherit',
-  minWidth: 'inherit',
-  _hover: {
-    textDecoration: 'underline',
-    bg: 'inherit',
-    bgColor: 'inherit',
-  },
-  _active: {
-    bg: 'primaire.2'
-  }
 })
 
 export const menuconfigpanel_option_button_secondary = defineStyle({
@@ -337,7 +248,6 @@ export const toolbar_button_3 = defineStyle({
   },
 })
 
-
 export const toolbar_button_5 = defineStyle({
   bgColor: 'primaire.5',
   borderColor: 'secondaire.5',
@@ -366,44 +276,73 @@ export const toolbar_main_button = defineStyle({
   },
 })
 
-export const menutop_button_goto_dashboard = defineStyle({
-  padding: '0.25rem',
-  alignSelf: 'center',
-  justifySelf: 'center',
+// Style of button in the subnav (sub elements of file/Formatting/view/help ...)
+export const menutop_button = defineStyle({
   height: '3rem',
   width: '4rem',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'primaire.2',
-  bg: 'primaire.2',
-  bgColor: 'primaire.2',
-  color: 'white',
-  fill: 'white',
+  textStyle: 'h4',
+  fontSize: '9px',
+  margin: '0rem 0rem 0rem 0.75rem',
+  border: '0px',
+  borderColor: 'transparent',
+  bg: 'transparent',
+  bgColor: 'transparent',
   _hover: {
-    borderColor: 'secondaire.2',
-    bg: 'secondaire.2',
-    bgColor: 'secondaire.2',
+    color: 'gray.600',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    bgColor: 'transparent',
   },
+  _disabled: {
+    opacity: '0.6',
+    color: 'gray.600',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    bgColor: 'transparent',
+  }
 })
 
-export const menutop_button_logout = defineStyle({
-  padding: '0.25rem',
-  alignSelf: 'center',
-  justifySelf: 'center',
-  height: '3rem',
-  width: '4rem',
-  border: 'solid 1px ',
-  borderRadius: '6px',
-  borderColor: 'primaire.1',
-  bg: 'primaire.1',
-  bgColor: 'primaire.1',
-  color: 'white',
-  fill: 'white',
+export const menutop_button_datatags = defineStyle({
+  height: '2.5rem',
+  bg: 'none',
+  bgColor: 'none',
+  borderColor: 'none',
+  color: '#4A5568',
+  display: 'block',
   _hover: {
-    borderColor: 'secondaire.1',
-    bg: 'secondaire.1',
-    bgColor: 'secondaire.1',
+    borderColor: 'lightgrey',
+    bg: 'lightgrey',
+    bgColor: 'lightgrey',
   },
+
+})
+
+// Style for menu list in the subnav
+export const menutop_button_with_dropdown = defineStyle({
+  display: 'grid',
+  gridTemplateColumns: '2fr 1fr',
+  gridTemplateRows: '2fr 1fr',
+  gridColumnGap: '0',
+  gridRowGap: '0',
+  height: '3rem',
+  width: '3rem',
+  borderRadius: '0px',
+  textStyle: 'h4',
+  fontSize: '9px',
+  padding: '0.2rem',
+  margin: '0rem 0rem 0rem 0.75rem',
+  border: '0px',
+  color: 'gray.600',
+  bg: 'transparent',
+  bgColor: 'transparent',
+  svg: {
+    margin: 'auto',
+    height: '2rem'
+  },
+  _hover: {
+    bg: 'transparent',
+    bgColor: 'transparent',
+  }
 })
 
 export const menutop_button_save_in_cache = defineStyle({
@@ -426,6 +365,26 @@ export const menutop_button_save_in_cache = defineStyle({
   },
 })
 
+export const submenu_nav_btn_dropdown_item_demo = defineStyle({
+  width: 'inherit',
+  textAlign: 'left',
+  borderRadius: '0px',
+  padding: '0.2rem',
+  border: '0px',
+  color: 'primaire.2',
+  bg: 'inherit',
+  bgColor: 'inherit',
+  minWidth: 'inherit',
+  _hover: {
+    textDecoration: 'underline',
+    bg: 'inherit',
+    bgColor: 'inherit',
+  },
+  _active: {
+    bg: 'primaire.2'
+  }
+})
+
 export const contextmenu_button = defineStyle({
   width: '100%',
   border: 'none',
@@ -443,52 +402,7 @@ export const contextmenu_button = defineStyle({
   },
 })
 
-export const token_blocker_activated = defineStyle({
-  width: '2rem',
-  fontSize: '0.75rem',
-  padding: '0px',
-  border: '1px solid #C42021',
-  borderRadius: '4px',
-  bg: '#C42021',
-  bgColor: '#C42021',
-  _hover: {
-    bg: '#C42021',
-    bgColor: '#C42021',
-  },
-})
-
-export const token_blocker_deactivated = defineStyle({
-  width: '2rem',
-  height: '2rem',
-  fontSize: '0.75rem',
-  padding: '0px',
-  marginRight: '0.5rem',
-  border: '1px solid #C42021',
-  borderRadius: '6px',
-  color: 'white',
-  bg: 'primaire.1',
-  bgColor: 'primaire.1',
-  _hover: {
-    bg: 'secondaire.1',
-    bgColor: 'secondaire.1',
-    color: 'white',
-  },
-})
-
-export const btn_navigation = defineStyle({
-  border: 'none',
-  borderRadius: '4px',
-  bg: 'none',
-  height: '2rem',
-  bgColor: 'none',
-  textDecoration: 'underline',
-  _hover: {
-    bg: 'primaire.2',
-    bgColor: 'primaire.2',
-  },
-})
-
-export const btn_desc_licence = defineStyle({
+export const welcome_button_license_description = defineStyle({
   border: 'none',
   borderRadius: '4px',
   bg: 'openSankey.100',
@@ -498,61 +412,5 @@ export const btn_desc_licence = defineStyle({
   _hover: {
     bg: 'primaire.2',
     bgColor: 'primaire.2',
-  },
-})
-
-const _btn_lone_navigation = defineStyle({
-  height: '3rem',
-  maxW: '11rem',
-  marginLeft: '1rem',
-  marginRight: '1rem',
-  paddingTop: '1rem',
-  paddingBottom: '1rem',
-  alignSelf: 'center',
-  justifySelf: 'center',
-  textAlign: 'center'
-})
-export const btn_lone_navigation = defineStyle(_btn_lone_navigation)
-
-export const btn_lone_navigation_secondary = defineStyle({
-  ..._btn_lone_navigation,
-  bg: 'primaire.2',
-  bgColor: 'primaire.2',
-  borderColor: 'primaire.2',
-  _hover: {
-    bg: 'secondaire.2',
-    bgColor: 'secondaire.2',
-    borderColor: 'secondaire.2',
-  },
-})
-
-export const btn_lone_navigation_tertiary = defineStyle({
-  ..._btn_lone_navigation,
-  bg: 'primaire.5',
-  bgColor: 'primaire.5',
-  borderColor: 'tertiaire.5',
-  border: 'solid 2px',
-  _hover: {
-    bg: 'secondaire.5',
-    bgColor: 'secondaire.5',
-    borderColor: 'secondaire.5',
-  },
-})
-
-export const btn_lone_navigation_tertiary_negative = defineStyle({
-  ..._btn_lone_navigation,
-  color: 'primaire.5',
-  fill: 'primaire.5',
-  path: 'primaire.5',
-  bg: 'white',
-  bgColor: 'white',
-  border: 'none',
-  _hover: {
-    color: 'tertiaire.5',
-    fill: 'tertiaire.5',
-    path: 'tertiaire.5',
-    bg: 'white',
-    bgColor: 'white',
-    border: 'none',
   },
 })

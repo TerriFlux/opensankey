@@ -8,12 +8,6 @@ import {
   badge_base_style
 } from './BadgeStyle'
 import {
-  btn_datatag_navbar,
-  btn_desc_licence,
-  btn_lone_navigation_secondary,
-  btn_lone_navigation_tertiary,
-  btn_lone_navigation,
-  btn_navigation,
   button_base_style,
   contextmenu_button,
   menuconfigpanel_add_button,
@@ -32,21 +26,18 @@ import {
   menuconfigpanel_option_button_tertiary_activated,
   menuconfigpanel_option_button_tertiary,
   menuconfigpanel_option_button,
-  menutop_button_goto_dashboard,
-  menutop_button_logout,
+  menutop_button_datatags,
   menutop_button_save_in_cache,
   menutop_button_with_dropdown,
   menutop_button,
   submenu_nav_btn_dropdown_item_demo,
-  token_blocker_activated,
-  token_blocker_deactivated,
   toolbar_button_1,
   toolbar_button_2,
   toolbar_button_3,
   toolbar_button_5,
   toolbar_button_6,
   toolbar_main_button,
-  btn_lone_navigation_tertiary_negative,
+  welcome_button_license_description,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -141,6 +132,9 @@ import {
   modal_select_unit_from_excel,
   modal_welcome
 } from './ModalStyle'
+import {
+  spinner_base_style
+} from './Spinner'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -154,12 +148,6 @@ export const opensankey_theme = extendTheme({
     Button: {
       baseStyle: button_base_style,
       variants: {
-        btn_desc_licence,
-        btn_lone_navigation,
-        btn_lone_navigation_secondary,
-        btn_lone_navigation_tertiary,
-        btn_lone_navigation_tertiary_negative,
-        btn_navigation,
         contextmenu_button,
         menuconfigpanel_add_button,
         menuconfigpanel_del_button_in_table,
@@ -177,38 +165,35 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_button_tertiary_activated,
         menuconfigpanel_option_button_tertiary,
         menuconfigpanel_option_button,
-        menutop_button_goto_dashboard,
-        menutop_button_logout,
+        menutop_button_datatags,
         menutop_button_save_in_cache,
         menutop_button_with_dropdown,
         menutop_button,
         submenu_nav_btn_dropdown_item_demo,
-        token_blocker_activated,
-        token_blocker_deactivated,
         toolbar_button_1,
         toolbar_button_2,
         toolbar_button_3,
         toolbar_button_5,
         toolbar_button_6,
         toolbar_main_button,
-        btn_datatag_navbar,
+        welcome_button_license_description,
       }
     },
-    ButtonGroup:{
-      baseStyle:buttongroup_base_style,
-      variants:{
+    ButtonGroup: {
+      baseStyle: buttongroup_base_style,
+      variants: {
         buttongroup_sideBar,
       }
     },
-    Breadcrumb:{
-      baseStyle:breadcrumb_base_style,
-      variants:{
+    Breadcrumb: {
+      baseStyle: breadcrumb_base_style,
+      variants: {
         pagination_welcome
       }
     },
-    Card:{
-      baseStyle:card_base_style,
-      variants:{
+    Card: {
+      baseStyle: card_base_style,
+      variants: {
         card_icon_selected,
         card_icon_not_selected,
         card_import_icon,
@@ -239,17 +224,17 @@ export const opensankey_theme = extendTheme({
         register_input
       }
     },
-    Modal:{
-      baseStyle:modal_base_style,
-      variants:{
+    Modal: {
+      baseStyle: modal_base_style,
+      variants: {
         modal_welcome,
         modal_select_unit_from_data,
         modal_select_unit_from_excel
       }
     },
-    Menu:{
-      baseStyle:menu_button_base_style,
-      variants:{
+    Menu: {
+      baseStyle: menu_button_base_style,
+      variants: {
         menu_button_subnav_style,
         menu_button_subnav_account_style,
         menu_subnav_item_demo,
@@ -262,9 +247,9 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_numberinput_with_right_addon
       }
     },
-    Popover:{
-      baseStyle:popover_base_style,
-      variants:{
+    Popover: {
+      baseStyle: popover_base_style,
+      variants: {
         toolbar_popover_window
       }
     },
@@ -281,50 +266,54 @@ export const opensankey_theme = extendTheme({
     },
     Tabs: {
       baseStyle: tabs_base_style,
-      variants:{
+      variants: {
         tabs_variant_lib_cion,
         tabs_navbar
       }
     },
-    Table:{
-      baseStyle:table_base_style,
-      variants:{table_edit_tag_node,
+    Table: {
+      baseStyle: table_base_style,
+      variants: {
+        table_edit_tag_node,
         table_edit_tag_link,
         table_edit_tag_data,
         table_edit_grp_tag_node_link
       }
     },
-    Tag:{
-      baseStyle:tag_base_style,
-      variants:{tag_dev_navbar}
+    Tag: {
+      baseStyle: tag_base_style,
+      variants: { tag_dev_navbar }
     },
     TextArea: {
       baseStyle: textarea_base_style
     },
-    Drawer:{
-      baseStyle:drawer_base_style,
-      variants:{
+    Drawer: {
+      baseStyle: drawer_base_style,
+      variants: {
         drawer_menu_config
       }
     },
-    Heading:{
-      baseStyle:heading_base_style,
-      variants:{
+    Heading: {
+      baseStyle: heading_base_style,
+      variants: {
         heading_welcome_style,
         heading_template_dashboard,
       }
+    },
+    Spinner: {
+      baseStyle: spinner_base_style
     }
   },
   layerStyles: {
-    box_footer_welcome:{
-      display:'grid'
+    box_footer_welcome: {
+      display: 'grid'
     },
-    context_menu:{
-      display:'grid',
-      rowGap:'0.1rem',
-      background:'white',
-      border:'1px solid gray',
-      borderRadius:'4px'
+    context_menu: {
+      display: 'grid',
+      rowGap: '0.1rem',
+      background: 'white',
+      border: '1px solid gray',
+      borderRadius: '4px'
     },
     menuconfig_entry: {
       textStyle: 'h1',
@@ -441,13 +430,13 @@ export const opensankey_theme = extendTheme({
       gridRowGap: '0',
       height: '3rem'
     },
-    menutop_layout_style:{
+    menutop_layout_style: {
       display: 'grid',
       gridColumnGap: '0.25rem',
       height: '6rem',
       width: 'auto',
-      marginLeft: '0.5rem',
-      marginRight: '0.5rem',
+      padding: '0',
+      margin: '0',
       alignItems: 'center',
       background: 'gray.50',
       color: 'gray.600'
@@ -492,29 +481,6 @@ export const opensankey_theme = extendTheme({
       alignSelf: 'center',
       justifySelf: 'center'
     },
-    menutop_userpages_layout_style:{
-      display: 'grid',
-      gridTemplateColumns: '1fr auto 1fr',
-      gridColumnGap: '0',
-      width:'100%',
-      height: '6rem',
-      alignItems:'center',
-      background:'gray.50',
-      color: 'gray.600',
-      img:{
-        height:'6rem',
-        padding:'0.25rem'
-      }
-    },
-    account_row:{
-      display: 'grid',
-      gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr',
-      gridColumnGap: '0.25rem',
-      alignItems: 'center',
-      p:{
-        margin:'0'
-      }
-    },
     option_with_activation: {
       display: 'grid',
       gridTemplateColumns: '2fr 1fr',
@@ -546,18 +512,18 @@ export const opensankey_theme = extendTheme({
       gridTemplateRows: 'repeat(auto, 1fr)',
       gridRowGap: '0.25rem'
     },
-    licence_row:{
+    welcome_license_row: {
       display: 'grid',
       gridTemplateColumns: '1fr 3fr',
       gridColumnGap: '0.25rem',
     },
-    licence_row_inverse:{
+    welcome_license_row_inverse: {
       display: 'grid',
       gridTemplateColumns: '3fr 1fr',
       gridColumnGap: '0.25rem',
     },
-    licence_desc:{
-      whiteSpace:'pre-line'
+    welcome_license_desc: {
+      whiteSpace: 'pre-line'
     },
     menustylepanel_row_droplist: {
       display: 'grid',
@@ -598,9 +564,9 @@ export const opensankey_theme = extendTheme({
       gridTemplateColumns: '9fr 1fr',
       gridColumnGap: '0.25rem',
       margin: '0.25rem',
-      borderBottom:' 1px solid',
+      borderBottom: ' 1px solid',
       borderBottomColor: 'primaire.2',
-      height:'2rem',
+      height: '2rem',
       alignItems: 'center',
       alignContent: 'center'
     },
@@ -617,40 +583,40 @@ export const opensankey_theme = extendTheme({
     }
   },
   textStyles: {
-    xs: {
+    xl: {
       fontSize: '16px',
     },
-    sm: {
+    lg: {
       fontSize: '14px',
     },
-    md:{
+    md: {
       fontSize: '12px',
     },
-    lg: {
+    sm: {
       fontSize: '10px',
     },
-    xl: {
+    xs: {
       fontSize: '8px',
     },
     h1: {
       fontFamily: 'Open Sans,sans-serif',
       fontSize: '16px',
-      fontWeight:'bold',
+      fontWeight: 'bold',
     },
     h2: {
       fontFamily: 'Open Sans,sans-serif',
-      fontSize:'14px',
-      fontWeight:'bold',
+      fontSize: '14px',
+      fontWeight: 'bold',
     },
     h3: {
       fontFamily: 'Open Sans,sans-serif',
       fontSize: '12px',
-      fontWeight:'bold',
+      fontWeight: 'bold',
     },
     h4: {
       fontFamily: 'Open Sans,sans-serif',
       fontSize: '12px',
-      fontWeight:'normal',
+      fontWeight: 'normal',
     }
   },
   colors: {

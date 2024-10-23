@@ -159,7 +159,7 @@ const GoToUserDoc = () => {
 
 // Logo for sub-nav 'aide'
 const logo_home = <svg
-  xmlns="http://www.w3.org/2000/svg"
+  xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 1000 1000'
   height='1.8rem'
   width='1.8rem'
@@ -170,7 +170,7 @@ const logo_home = <svg
 </svg>
 
 const logo_tuto = <svg
-  xmlns="http://www.w3.org/2000/svg"
+  xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 1000 1000'
   height='1.8rem'
   width='1.8rem'
@@ -181,7 +181,7 @@ const logo_tuto = <svg
 </svg>
 
 const logo_doc = <svg
-  xmlns="http://www.w3.org/2000/svg"
+  xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 1000 1000'
   height='1.8rem'
   width='1.8rem'
@@ -192,7 +192,7 @@ const logo_doc = <svg
 </svg>
 
 const logo_contact = <svg
-  xmlns="http://www.w3.org/2000/svg"
+  xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 1000 1000'
   height='1.8rem'
   width='1.8rem'
@@ -234,15 +234,15 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
   } = new_data.menu_configuration.dict_setter_show_dialog
 
   const logo_tempalte = <svg
-    xmlns="http://www.w3.org/2000/svg"
+    xmlns='http://www.w3.org/2000/svg'
     aria-hidden='false'
     data-prefix='fas'
     className='svg-inline--fa'
-    viewBox="0 0 1000 1000"
+    viewBox='0 0 1000 1000'
     height='1.8rem'
     width='1.8rem'
   >
-    <path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z" />
+    <path fill='currentColor' d='M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z' />
   </svg>
 
   const sous_filieres = window.sankey && window.sankey.sous_filieres ? window.sankey.sous_filieres : undefined
@@ -349,8 +349,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           <MenuButton>
             <Box
               gridColumn='1'
-              gridColumnEnd="span 2"
-              gridRow="1"
+              gridColumnEnd='span 2'
+              gridRow='1'
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '2rem' }}
@@ -358,16 +358,16 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
               />
             </Box>
             <Box
-              gridColumn="1"
-              gridRow="2"
+              gridColumn='1'
+              gridRow='2'
             >
               {t('Menu.new')}
             </Box>
             <Box
-              gridColumn="2"
-              gridRow="2"
-              height="1rem"
-              width="1rem"
+              gridColumn='2'
+              gridRow='2'
+              height='1rem'
+              width='1rem'
             >
               <ChevronDownIcon
                 style={{ 'height': '1rem', 'width': '1rem' }}
@@ -405,8 +405,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             <MenuButton>
               <Box
                 gridColumn='1'
-                gridColumnEnd="span 2"
-                gridRow="1"
+                gridColumnEnd='span 2'
+                gridRow='1'
               >
                 <FontAwesomeIcon
                   style={{ 'height': '2rem', 'width': '2rem' }}
@@ -414,16 +414,16 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                 />
               </Box>
               <Box
-                gridColumn="1"
-                gridRow="2"
+                gridColumn='1'
+                gridRow='2'
               >
                 {t('Menu.ouvrir')}
               </Box>
               <Box
-                gridColumn="2"
-                gridRow="2"
-                height="1rem"
-                width="1rem"
+                gridColumn='2'
+                gridRow='2'
+                height='1rem'
+                width='1rem'
               >
                 <ChevronDownIcon
                   style={{ 'height': '1rem', 'width': '1rem' }}
@@ -447,7 +447,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             </MenuItem>
             <Input
               accept='.json'
-              type="file"
+              type='file'
               ref={_load_json}
               style={{ display: 'none' }}
               onChange={(evt: ChangeEvent) => {
@@ -487,8 +487,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           <MenuButton>
             <Box
               gridColumn='1'
-              gridColumnEnd="span 2"
-              gridRow="1"
+              gridColumnEnd='span 2'
+              gridRow='1'
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '2rem' }}
@@ -496,16 +496,16 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
               />
             </Box>
             <Box
-              gridColumn="1"
-              gridRow="2"
+              gridColumn='1'
+              gridRow='2'
             >
               {t('Menu.enregistrer')}
             </Box>
             <Box
-              gridColumn="2"
-              gridRow="2"
-              height="1rem"
-              width="1rem"
+              gridColumn='2'
+              gridRow='2'
+              height='1rem'
+              width='1rem'
             >
               <ChevronDownIcon
                 style={{ 'height': '1rem', 'width': '1rem' }}
@@ -545,8 +545,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           <MenuButton>
             <Box
               gridColumn='1'
-              gridColumnEnd="span 2"
-              gridRow="1"
+              gridColumnEnd='span 2'
+              gridRow='1'
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '2rem' }}
@@ -554,16 +554,16 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
               />
             </Box>
             <Box
-              gridColumn="1"
-              gridRow="2"
+              gridColumn='1'
+              gridRow='2'
             >
               {t('Menu.exporter')}
             </Box>
             <Box
-              gridColumn="2"
-              gridRow="2"
-              height="1rem"
-              width="1rem"
+              gridColumn='2'
+              gridRow='2'
+              height='1rem'
+              width='1rem'
             >
               <ChevronDownIcon
                 style={{ 'height': '1rem', 'width': '1rem' }}
@@ -611,8 +611,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
               layerStyle='menutop_button_style'
             >
               <Box
-                gridRow="1"
-                padding="0.1rem 0 0.1rem 0"
+                gridRow='1'
+                padding='0.1rem 0 0.1rem 0'
               >
                 <FontAwesomeIcon
                   style={{ 'height': '2rem', 'width': '3rem' }}
@@ -620,7 +620,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                 />
               </Box>
               <Box
-                gridRow="2"
+                gridRow='2'
               >
                 {t('Menu.preference')}
               </Box>
@@ -643,8 +643,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             layerStyle='menutop_button_style'
           >
             <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
+              gridRow='1'
+              padding='0.1rem 0 0.1rem 0'
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '3rem' }}
@@ -652,7 +652,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
               />
             </Box>
             <Box
-              gridRow="2"
+              gridRow='2'
             >
               {t('Menu.Transformation.amp_short')}
             </Box>
@@ -672,8 +672,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           <MenuButton>
             <Box
               gridColumn='1'
-              gridColumnEnd="span 2"
-              gridRow="1"
+              gridColumnEnd='span 2'
+              gridRow='1'
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '2rem' }}
@@ -681,16 +681,16 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
               />
             </Box>
             <Box
-              gridColumn="1"
-              gridRow="2"
+              gridColumn='1'
+              gridRow='2'
             >
               {t('Menu.style')}
             </Box>
             <Box
-              gridColumn="2"
-              gridRow="2"
-              height="1rem"
-              width="1rem"
+              gridColumn='2'
+              gridRow='2'
+              height='1rem'
+              width='1rem'
             >
               <ChevronDownIcon
                 style={{ 'height': '1rem', 'width': '1rem' }}
@@ -736,13 +736,13 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             layerStyle='menutop_button_style'
           >
             <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
+              gridRow='1'
+              padding='0.1rem 0 0.1rem 0'
             >
               {logo_home}
             </Box>
             <Box
-              gridRow="2"
+              gridRow='2'
             >
               {t('DisplayWelcome')}
             </Box>
@@ -762,13 +762,13 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             layerStyle='menutop_button_style'
           >
             <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
+              gridRow='1'
+              padding='0.1rem 0 0.1rem 0'
             >
               {logo_tuto}
             </Box>
             <Box
-              gridRow="2"
+              gridRow='2'
             >
               {t('Menu.formation')}
             </Box>
@@ -788,13 +788,13 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             layerStyle='menutop_button_style'
           >
             <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
+              gridRow='1'
+              padding='0.1rem 0 0.1rem 0'
             >
               {logo_doc}
             </Box>
             <Box
-              gridRow="2"
+              gridRow='2'
             >
               {t('Menu.doc')}
             </Box>
@@ -814,13 +814,13 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             layerStyle='menutop_button_style'
           >
             <Box
-              gridRow="1"
-              padding="0.1rem 0 0.1rem 0"
+              gridRow='1'
+              padding='0.1rem 0 0.1rem 0'
             >
               {logo_contact}
             </Box>
             <Box
-              gridRow="2"
+              gridRow='2'
             >
               {t('Menu.support')}
             </Box>
@@ -931,10 +931,7 @@ const clickSavePNG = (
   v: number | undefined,
   new_data: Type_GenericApplicationDataOS
 ) => {
-
   const svg = pre_process_export_svg(new_data)
-
-
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
@@ -1077,7 +1074,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             position='relative'
             key={'menutop_' + i}
           >
-            <Box layerStyle="menutop_tab_style">
+            <Box layerStyle='menutop_tab_style'>
               {
                 ['demo', 'unit'].includes(m) ?
                   <Box
@@ -1135,7 +1132,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = 'minmax(7vw, 150px) minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
+  let menutop_grid_template = 'minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
   if (new_data.is_static) {
     menutop_grid_template = '100px 30fr auto ' + data_rem + ' ' + unit_rem
   }
@@ -1154,7 +1151,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       >
         <PopoverTrigger>
           <Button
-            variant='btn_datatag_navbar'
+            variant='menutop_button_datatags'
             id='btn_open_popover_data_tag_filter_navabar'
           >
             {new_data.t('Banner.data') + ' '}
@@ -1187,13 +1184,13 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
       <Box
-        zIndex="1"
-        position="fixed"
-        top="0"
-        width="100%"
+        zIndex='1'
+        position='fixed'
+        top='0'
+        width='100%'
       >
         <Box
-          className='MenuNavigation'
+          className='TopMenu'
           layerStyle='menutop_layout_style'
           gridTemplateColumns={menutop_grid_template}
           onClick={() => {
@@ -1209,31 +1206,27 @@ export const Menu: FunctionComponent<FCType_Menu> = (
           }} >
 
           {
-            !new_data.is_static ?
-              <Box
-                margin='0.25rem'
-                alignSelf='center'
-                justifySelf='center'
-              >
-                <Image
-                  src={logo_terriflux}
-                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-                />
-              </Box> :
-              <></>
-          }
-          {
-            logo != '' ?
-              <Box
-                margin='0.25rem'
-                alignSelf='center'
-                justifySelf='center'
-              >
-                <Image
-                  src={logo}
-                />
-              </Box> :
-              <></>
+            <Box
+              alignSelf='center'
+              justifySelf='center'
+              display='block'
+              height='100%'
+            >
+              {
+                !new_data.is_static ?
+                  <Image
+                    height='80%'
+                    margin='5% 0'
+                    src={logo}
+                  /> :
+                  <Image
+                    height='5rem'
+                    margin='5% 0'
+                    src={logo_terriflux}
+                    onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                  />
+              }
+            </Box>
           }
           {
             new_data.is_static && window.sankey.header ?
@@ -1298,34 +1291,39 @@ export const Menu: FunctionComponent<FCType_Menu> = (
           (window.sankey.footer)
         ) ?
           <Box
-            zIndex="1"
-            position="fixed"
-            bottom="0"
-            layerStyle="menubottom_layout_style"
+            className='BottomMenu'
+            zIndex='1'
+            position='fixed'
+            bottom='0'
+            layerStyle='menubottom_layout_style'
           >
             <Box
-              display="grid"
-              gridTemplateColumns="1fr 1fr 1fr 1fr 30rem"
+              display='grid'
+              gridTemplateColumns='1fr 1fr 1fr 1fr 30rem'
             >
               <Box
-                layerStyle="menubottom_item_style"
+                layerStyle='menubottom_item_style'
                 justifySelf='start'
               >
-                ©<a href="https://terriflux.com/" >
-                  <img width={75} src={logo_terriflux} />
-                </a> - {t('tdr')}
+                ©
+                <img
+                  width={75}
+                  src={logo_terriflux}
+                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                />
+                - {t('tdr')}
               </Box>
-              <Box layerStyle="menubottom_item_style">
+              <Box layerStyle='menubottom_item_style'>
                 {app_name}
               </Box>
-              <Box layerStyle="menubottom_item_style">
+              <Box layerStyle='menubottom_item_style'>
                 <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
               </Box>
-              <Box layerStyle="menubottom_item_style">
+              <Box layerStyle='menubottom_item_style'>
                 <a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a>
               </Box>
               <Box
-                layerStyle="menubottom_item_style"
+                layerStyle='menubottom_item_style'
                 justifySelf='end'
                 paddingRight='1.5rem'
               >
@@ -1353,7 +1351,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
               className='drawer_menu_config'
               style={{
                 width: menu_config_width,
-                marginTop: document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y + document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+                marginTop: document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
 
               }}
             >
@@ -1380,11 +1378,11 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         {!(new_data.is_static ? new_data.is_static : false) ? (
           <Button
             ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
-            id="toggle-check"
+            id='toggle-check'
             className='openMenu'
-            variant="toolbar_main_button"
+            variant='toolbar_main_button'
             onClick={toggleShow}
-            value="menuConfigButton">{menuButton()}
+            value='menuConfigButton'>{menuButton()}
           </Button>
         ) : (<></>)}
       </ButtonGroup>
@@ -1392,8 +1390,8 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       {
         processFunctions.ref_processing.current ? (
           <Toast >
-            <Button className="btn btn-sm btn-warning col-md-12">
-              <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
+            <Button className='btn btn-sm btn-warning col-md-12'>
+              <span className='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span> Processing...
             </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
@@ -1565,7 +1563,6 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
 
 const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
   const svg = pre_process_export_svg(new_data)
-
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
@@ -1585,6 +1582,7 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
     const newBlob = new Blob([blob], { type: 'application/pdf' })
     FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -1596,7 +1594,8 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
   fetch(url, fetchData).then(
     r => r.blob()
   )
-    .then(showFile).then(cleanFile)
+    .then(showFile)
+    .then(cleanFile)
 }
 
 export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) => {

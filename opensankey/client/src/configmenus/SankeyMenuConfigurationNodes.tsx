@@ -107,7 +107,7 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
     ...additionalMenus.additional_menu_configuration_nodes
   }
 
-  
+
 
   ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
     new_data={new_data}
@@ -250,18 +250,6 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
-      {
-        (!new_data.has_free_account && new_data.drawing_area.sankey.nodes_list.length > 15) ?
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_warn_msg'
-          >
-            {t('Menu.warningLimitNode')}
-          </Box>
-          :
-          <></>
-      }
-
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_droplist'
@@ -270,7 +258,6 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={!new_data.has_free_account && nodes.length > 15}
             onClick={() => {
               // Create default node
               const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
