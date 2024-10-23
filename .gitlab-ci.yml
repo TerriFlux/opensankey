@@ -68,8 +68,10 @@ dev_opensankey:
     APP_NAME: dev_sankeyapp
     CLIENT_ROOT_URL: https://dev.open-sankey.fr/#/
     INTERNAL_HTTP_PORT: 56564
+  only:
+    - main
   tags:
-    - prod
+    - dev
   environment:
     name: dev
   script:
