@@ -783,7 +783,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     // First check if tags are from the same group
     let same_group = true
     child_tags
-      .forEach(_ => same_group = (same_group && this.group === _.group))
+      .forEach(_ => {
+        same_group = (same_group && this.group === _.group)})
     if (same_group) {
       // Try to find matching dimension with :
       // - this as parent tag

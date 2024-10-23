@@ -156,6 +156,8 @@ export abstract class Class_DrawingArea
    */
   public static: boolean = false
 
+  public bypass_timeout: boolean=false
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Attributes that describe drawing area ----------------------------------------------
@@ -200,6 +202,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   private _scale: number = default_scale
+
 
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
@@ -347,7 +350,7 @@ export abstract class Class_DrawingArea
     this._filter_label = 0
     this._filter_link_value = 0
     this._show_structure = initial_show_structure
-    
+
     // Redraw
     this.reset()
   }
@@ -1399,6 +1402,7 @@ export abstract class Class_DrawingArea
     redraw: boolean = true,
     match_and_update: boolean = true,
   ) {
+    // this._draw_timeout=1000
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     // Only legacy convert old sankey
     if (
@@ -1425,10 +1429,12 @@ export abstract class Class_DrawingArea
     this._legend.fromJSON(json_object)
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
+    
     if (redraw) {
       // Draw
       this.reset()
     }
+    // this._draw_timeout = 50
   }
 
   /**
@@ -1496,6 +1502,10 @@ export abstract class Class_DrawingArea
     }
     // Transfert Sankey Attributes
     this.sankey.updateFrom(other_drawing_area.sankey, mode)
+  }
+
+  public copyFrom(_:Class_DrawingArea<Type_GenericSankey,Type_GenericNodeElement,Type_GenericLinkElement>){
+    this.fromJSON(_.toJSON(), false)
   }
 
   /**
@@ -1708,6 +1718,8 @@ export abstract class Class_DrawingArea
         target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
         // Make target a 'ghost' node
         target.setInvisible()
+        source.has_timeout = false
+        target.has_timeout = false
         // Ref newly created link this var to be used in other mouse event
         this._ghost_link = new Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
           'ghost_link',
@@ -1773,6 +1785,9 @@ export abstract class Class_DrawingArea
         else {
           // Make ghost target visible
           this._ghost_link.target.setVisible()
+          this._ghost_link.target.has_timeout=true
+          this._ghost_link.source.has_timeout=true
+          
 
           // Create new link
           this.sankey.addNewLink(
@@ -1925,6 +1940,7 @@ export abstract class Class_DrawingArea
     event: d3.D3ZoomEvent<SVGSVGElement, unknown>
   ) {
     if (this.d3_selection) {
+      this._legend.scale = (1 / event.transform.k)
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())

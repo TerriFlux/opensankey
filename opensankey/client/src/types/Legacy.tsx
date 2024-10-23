@@ -1367,7 +1367,7 @@ const convert_nodes: convert_nodesFuncType = (
           n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
         }else{
           // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
-          n.dimensions[nt[0]].child_tags =dim_level
+          n.dimensions[nt[0]].children_tags =dim_level
           let possible_parent='' 
           possible_parent=Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
           n.dimensions[nt[0]].parent_tag =possible_parent
@@ -1385,7 +1385,9 @@ const convert_nodes: convert_nodesFuncType = (
       // }
 
       delete n.tags[nt[0]]
-    })
+    });
+    // Add links_order to node by combining input/outputs id (for version>=0.9) 
+    (n as Type_JSON).links_order=n.inputLinksId.concat(n.outputLinksId)
   }
 
   )
@@ -1722,6 +1724,15 @@ const convert_links: convert_linksFuncType = (
         delete l[(k as keyof SankeyLink)]
       }
     })
+
+    if(l.local && l.local.recycling){
+      l.local.left_horiz_shift=0.05
+      l.local.right_horiz_shift=0.95;
+      // Add variable in legacy JSOn
+      (l.local as Type_JSON).starting_tangeant=0.05; // special assignement for attr not present in legacy but usefull in current Class_link
+      (l.local as Type_JSON).ending_tangeant=0.05 // special assignement for attr not present in legacy but usefull in current Class_link    
+      
+    }
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
       delete l.local.color
     }

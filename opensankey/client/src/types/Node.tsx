@@ -188,9 +188,6 @@ export abstract class Class_NodeElement
   // Ordering for related IO Links
   private _links_order: Type_GenericLinkElement[] = []
 
-  // Value of node
-  private _input_data_value: number = 0
-  private _output_data_value: number = 0
 
   // Handles used to move related IO links relativly to eachother
   private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
@@ -239,36 +236,6 @@ export abstract class Class_NodeElement
     this._display.style.addReference(this)
   }
 
-  // CLEANING ===========================================================================
-
-  /**
-   * Define deletion behavior
-   * @memberof Class_Node
-   */
-  protected cleanForDeletion() {
-    // Delete all related links
-    this._links_order = []
-    Object.values(this._input_links)
-      .forEach(link => {
-        this.removeInputLink(link)
-        link.delete()
-      })
-    Object.values(this._output_links)
-      .forEach(link => {
-        this.removeOutputLink(link)
-        link.delete()
-      })
-    this._input_links = {}
-    this._output_links = {}
-    this._links_order = []
-    this._handle_input_links = {}
-    this._handle_output_links = {}
-    // Remove reference of self in related tags
-    this.tags_list.forEach(tag => tag.removeReference(this))
-    this._tags = []
-    // Remove reference of self in style
-    this.style.removeReference(this)
-  }
 
   // ABSTRACT METHODS ===================================================================
 
@@ -445,9 +412,9 @@ export abstract class Class_NodeElement
    * @protected
    * @memberof Class_NodeElement
    */
-  public draw() {
+  protected _draw() {
     // Heritance of draw function
-    super.draw()
+    super._draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
@@ -456,11 +423,11 @@ export abstract class Class_NodeElement
     // Init <g> containing shape elements
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
     // Draw shape
-    this.drawShape()
+    this._drawShape()
     // Draw label
-    this.drawNameLabel()
-    this.drawValueLabel()
-    this.drawLinks()
+    this._drawNameLabel()
+    this._drawValueLabel()
+    this._drawLinks()
   }
 
   public drawAsSelected() {
@@ -721,7 +688,6 @@ export abstract class Class_NodeElement
       this._links_order.push(link)
       this.addMovingHandleForGivenLink(link, 'input')
       link.target = this
-      this.updateInputValue()
       this.drawLinks()
       this.drawValueLabel()
     }
@@ -738,7 +704,6 @@ export abstract class Class_NodeElement
       this._links_order.push(link)
       this.addMovingHandleForGivenLink(link, 'output')
       link.source = this
-      this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
     }
@@ -783,7 +748,6 @@ export abstract class Class_NodeElement
     if (this._input_links[link.id] !== undefined) {
       this.removeInputLink(link)
       node.addInputLink(link)
-      this.updateInputValue()
       this.drawLinks()
       this.drawValueLabel()
     }
@@ -799,7 +763,6 @@ export abstract class Class_NodeElement
     if (this._output_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       node.addOutputLink(link)
-      this.updateOutputValue()
       this.drawLinks()
       this.drawValueLabel()
     }
@@ -914,33 +877,6 @@ export abstract class Class_NodeElement
 
   // Values related methods -------------------------------------------------------------
 
-  /**
-   * Recompute the sum of all input links' value
-   * @memberof Class_NodeElement
-   */
-  public updateInputValue() {
-    this._input_data_value = 0
-    this.input_links_list.forEach(link => {
-      const data_value = link.data_value
-      if (data_value !== null)
-        this._input_data_value = this._input_data_value + data_value
-    })
-    this.draw()
-  }
-
-  /**
-   * Recompute the sum of all output links' value
-   * @memberof Class_NodeElement
-   */
-  public updateOutputValue() {
-    this._output_data_value = 0
-    this.output_links_list.forEach(link => {
-      const data_value = link.data_value
-      if (data_value !== null)
-        this._output_data_value = this._output_data_value + data_value
-    })
-    this.draw()
-  }
 
   /**
    * Hide the name label of the node & set visible the input to modify it
@@ -1107,7 +1043,7 @@ export abstract class Class_NodeElement
     const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
     output_link_ids
       .filter(l_id => l_id != 'ghost_link')
-      .forEach(_ => { 
+      .forEach(_ => {
         const link_id = matching_links_id[_] ?? _
         this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
       })
@@ -1160,10 +1096,12 @@ export abstract class Class_NodeElement
                   // Use tags id in priority if existing
                   const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-                  if (children_tags_ids && parent_tag_id) {
+                  if (children_tags_ids && parent_tag_id ) {
                     children_tags = children_tags_ids
                       .map(_ => {
                         const child_tag_id = matching_tags_id[tagg_id][_] ?? _
+                        if (tagg.tags_dict[child_tag_id] === undefined)
+                          tagg.addTag(child_tag_id, child_tag_id)
                         return tagg.tags_dict[child_tag_id]
                       })
                     parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id)]
@@ -1193,6 +1131,14 @@ export abstract class Class_NodeElement
           }
         })
     }
+  }
+
+  public drawLinks() {
+    this._add_waiting_process('drawLinks', () => this._drawLinks())
+  }
+
+  public drawLinksArrow() {
+    this._add_waiting_process('drawLinksArrow', () => this._drawLinksArrow())
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1471,6 +1417,138 @@ export abstract class Class_NodeElement
     this.d3_selection?.classed('tooltip_shown', false)
   }
 
+  protected getNameLabelPos(): [number, number, string, string, string] {
+    // x position
+    let label_anchor = 'start'
+    let label_align = 'start'
+    let label_pos_x = 0
+    if (this._display.position_x_label !== undefined) {
+      label_pos_x = (this._display.position_x_label !== undefined) ? this._display.position_x_label : 0
+      label_anchor = 'middle'
+      label_align = 'center'
+    } else {
+      const shape_width = this.getShapeWidthToUse()
+      const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
+      label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
+      if (this.name_label_horiz === 'left') {
+        label_pos_x = -label_pos_dx + this.name_label_horiz_shift
+        label_anchor = 'end'
+        label_align = 'end'
+      }
+      else if (this.name_label_horiz === 'middle') {
+        label_pos_x = shape_width / 2 + this.name_label_horiz_shift
+        label_anchor = 'middle'
+        label_align = 'center'
+      }
+    }
+
+    // y position
+    const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+    const shape_height = this.getShapeHeightToUse()
+
+    let label_pos_y = label_pos_dy + shape_height + this.name_label_vert_shift
+    let label_baseline = 'text-before-edge'
+    if (this._display.position_y_label! != undefined) {
+      label_pos_y = (this._display.position_y_label !== undefined) ? this._display.position_y_label : 0
+      label_baseline = 'middle'
+    } else {
+      if (this.name_label_vert === 'top') {
+        label_pos_y = -label_pos_dy + this.name_label_vert_shift
+        label_baseline = 'text-after-edge'
+      }
+      else if (this.name_label_vert === 'middle') {
+        label_pos_y = shape_height / 2 + this.name_label_vert_shift
+        label_baseline = 'middle'
+      }
+    }
+    return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
+  }
+
+  /**
+   * Select the right color to use for this node (attribute / style / tags / ...)
+   * @public
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public getShapeColorToUse() {
+    // Default color
+    let shape_color = this.shape_color
+    // Is the color defined by tags
+    const taggs_activated = this.taggs_list
+      .filter(tagg => tagg.show_legend)
+    if (
+      (!this.shape_color_sustainable) &&
+      (taggs_activated.length > 0)
+    ) {
+      const tagg_for_colormap = taggs_activated[0]
+      const tags_for_colormap = this.tags_list
+        .filter(tag => (tag.group === tagg_for_colormap))
+        .filter(tag => tag.is_selected)
+      if (tags_for_colormap.length > 0)
+        shape_color = tags_for_colormap[0].color
+    }
+    return shape_color
+  }
+
+  /**
+   * Remove link reference from all related attributes it this node.
+   * /!\ Keep as private method. This can create dangling ref for links
+   *
+   * @param {Type_GenericLinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public removeInputLink(link: Type_GenericLinkElement) {
+    this._handle_input_links[link.id]?.delete()
+    delete this._handle_input_links[link.id]
+    delete this._input_links[link.id]
+    this.removeLinkFromOrderingLinksList(link)
+  }
+
+  /**
+   * Remove link reference from all related attributes it this node.
+   * /!\ Keep as private method. This can create dangling ref for links
+   * @param {Type_GenericLinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public removeOutputLink(link: Type_GenericLinkElement) {
+    this._handle_output_links[link.id]?.delete()
+    delete this._handle_output_links[link.id]
+    delete this._output_links[link.id]
+    this.removeLinkFromOrderingLinksList(link)
+  }
+
+  // CLEANING ---------------------------------------------------------
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Node
+   */
+  protected cleanForDeletion() {
+    // Delete all related links
+    this._links_order = []
+    Object.values(this._input_links)
+      .forEach(link => {
+        this.removeInputLink(link)
+        link.delete()
+      })
+    Object.values(this._output_links)
+      .forEach(link => {
+        this.removeOutputLink(link)
+        link.delete()
+      })
+    this._input_links = {}
+    this._output_links = {}
+    this._links_order = []
+    this._handle_input_links = {}
+    this._handle_output_links = {}
+    // Remove reference of self in related tags
+    this.tags_list.forEach(tag => tag.removeReference(this))
+    this._tags = []
+    // Remove reference of self in style
+    this.style.removeReference(this)
+  }
+
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -1478,7 +1556,7 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
-  private drawShape() {
+  private _drawShape() {
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
@@ -1519,13 +1597,17 @@ export abstract class Class_NodeElement
         .style('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
     }
   }
+  private drawShape() {
+    this._add_waiting_process('drawShape', () => this._drawShape())
+
+  }
 
   /**
    * Draw node label on D3 svg
    * @private
    * @memberof Class_NodeElement
    */
-  private drawNameLabel() {
+  private _drawNameLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
@@ -1608,6 +1690,11 @@ export abstract class Class_NodeElement
     }
   }
 
+  private drawNameLabel() {
+    this._add_waiting_process('drawNameLabel', () => this._drawNameLabel())
+
+  }
+
   /**
    * Function triggered when we start dragging node name label, it initialise relative position if undefined
    *
@@ -1686,59 +1773,12 @@ export abstract class Class_NodeElement
     return [label_pos_x, label_pos_y, label_anchor]
   }
 
-  protected getNameLabelPos(): [number, number, string, string, string] {
-    // x position
-    let label_anchor = 'start'
-    let label_align = 'start'
-    let label_pos_x = 0
-    if (this._display.position_x_label !== undefined) {
-      label_pos_x = (this._display.position_x_label !== undefined) ? this._display.position_x_label : 0
-      label_anchor = 'middle'
-      label_align = 'center'
-    } else {
-      const shape_width = this.getShapeWidthToUse()
-      const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
-      label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
-      if (this.name_label_horiz === 'left') {
-        label_pos_x = -label_pos_dx + this.name_label_horiz_shift
-        label_anchor = 'end'
-        label_align = 'end'
-      }
-      else if (this.name_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2 + this.name_label_horiz_shift
-        label_anchor = 'middle'
-        label_align = 'center'
-      }
-    }
-
-    // y position
-    const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
-    const shape_height = this.getShapeHeightToUse()
-
-    let label_pos_y = label_pos_dy + shape_height + this.name_label_vert_shift
-    let label_baseline = 'text-before-edge'
-    if (this._display.position_y_label! != undefined) {
-      label_pos_y = (this._display.position_y_label !== undefined) ? this._display.position_y_label : 0
-      label_baseline = 'middle'
-    } else {
-      if (this.name_label_vert === 'top') {
-        label_pos_y = -label_pos_dy + this.name_label_vert_shift
-        label_baseline = 'text-after-edge'
-      }
-      else if (this.name_label_vert === 'middle') {
-        label_pos_y = shape_height / 2 + this.name_label_vert_shift
-        label_baseline = 'middle'
-      }
-    }
-    return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
-  }
-
   /**
    * Draw node label on D3 svg
    * @private
    * @memberof Class_NodeElement
    */
-  private drawValueLabel() {
+  private _drawValueLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.value_label').remove()
     // Add name label
@@ -1817,13 +1857,16 @@ export abstract class Class_NodeElement
     }
   }
 
+  private drawValueLabel() {
+    this._add_waiting_process('drawValueLabel', () => this._drawValueLabel())
+  }
 
   /**
    * Call what is necessary each time a link is modified
    * @private
    * @memberof Class_NodeElement
    */
-  private drawLinks() {
+  private _drawLinks() {
     Object.values(this._input_links).forEach(link => {
       link.draw()
       this._handle_input_links[link.id].draw()
@@ -1836,13 +1879,14 @@ export abstract class Class_NodeElement
     this.applyPositionOnLinks()  // Links positions can be modified by link's changes
   }
 
+
   /**
    * Function that draw all the arrow of link visible linked to this node (if the link have shape_is_arrow at true)
    *
    * @private
    * @memberof Class_NodeElement
    */
-  public drawLinksArrow() {
+  private _drawLinksArrow() {
 
     const list_link_to_add_arrow = this.input_links_list.map(link => {
       link.d3_selection?.select('.link_arrow').remove()
@@ -1996,6 +2040,7 @@ export abstract class Class_NodeElement
     })
 
   }
+
 
   private getArrowPath() {
     // Compute height & width
@@ -2162,32 +2207,6 @@ export abstract class Class_NodeElement
   }
 
   /**
-   * Select the right color to use for this node (attribute / style / tags / ...)
-   * @public
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public getShapeColorToUse() {
-    // Default color
-    let shape_color = this.shape_color
-    // Is the color defined by tags
-    const taggs_activated = this.taggs_list
-      .filter(tagg => tagg.show_legend)
-    if (
-      (!this.shape_color_sustainable) &&
-      (taggs_activated.length > 0)
-    ) {
-      const tagg_for_colormap = taggs_activated[0]
-      const tags_for_colormap = this.tags_list
-        .filter(tag => (tag.group === tagg_for_colormap))
-        .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length > 0)
-        shape_color = tags_for_colormap[0].color
-    }
-    return shape_color
-  }
-
-  /**
    * For a given side, compute sum of all links thickness.
    * Helps to compute min height & width for node
    * @private
@@ -2220,33 +2239,6 @@ export abstract class Class_NodeElement
     else {
       return Math.max(0, (this.getShapeWidthToUse() - this.getSumOfLinksThickness(side)) / 2)
     }
-  }
-
-  /**
-   * Remove link reference from all related attributes it this node.
-   * /!\ Keep as private method. This can create dangling ref for links
-   *
-   * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
-   */
-  public removeInputLink(link: Type_GenericLinkElement) {
-    this._handle_input_links[link.id]?.delete()
-    delete this._handle_input_links[link.id]
-    delete this._input_links[link.id]
-    this.removeLinkFromOrderingLinksList(link)
-  }
-
-  /**
-   * Remove link reference from all related attributes it this node.
-   * /!\ Keep as private method. This can create dangling ref for links
-   * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
-   */
-  public removeOutputLink(link: Type_GenericLinkElement) {
-    this._handle_output_links[link.id]?.delete()
-    delete this._handle_output_links[link.id]
-    delete this._output_links[link.id]
-    this.removeLinkFromOrderingLinksList(link)
   }
 
   /**
@@ -2544,7 +2536,11 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public get value_label() {
-    return String(Math.max(this._input_data_value, this._output_data_value))
+    let input_val = 0
+    let output_val = 0
+    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.data_value ?? 0)
+    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.data_value ?? 0)
+    return String(Math.max(input_val, output_val))
   }
 
   /**
@@ -3489,6 +3485,10 @@ export abstract class Class_NodeElement
   }
 
   private get tooltip_html() {
+    let input_val = 0
+    let output_val = 0
+    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.data_value ?? 0)
+    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.data_value ?? 0)
     // Title
     let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
       this.name.split('\\n').join(' ') +
@@ -3521,8 +3521,8 @@ export abstract class Class_NodeElement
           tooltip_html += '      <td style="white-space: nowrap;">' + link.source.name + '</td>'
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
-          if (this._input_data_value > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / this._input_data_value) * 100).toPrecision(3) + '%</td>'
+          if (input_val > 0)  // avoid div / 0
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -3540,7 +3540,7 @@ export abstract class Class_NodeElement
         })
       tooltip_html += '    <tr>'
       tooltip_html += '       <th>' + 'Total' + '</th>'
-      tooltip_html += '       <td>' + this._input_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
+      tooltip_html += '       <td>' + input_val.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
       tooltip_html += '    </tr>'
       tooltip_html += '  </tbody>'
       tooltip_html += '</table>'
@@ -3568,8 +3568,8 @@ export abstract class Class_NodeElement
           tooltip_html += '      <td style="white-space: nowrap;">' + link.target.name + '</td>'
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
-          if (this._output_data_value > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / this._output_data_value) * 100).toPrecision(3) + '%</td>'
+          if (output_val > 0)  // avoid div / 0
+            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -3587,7 +3587,7 @@ export abstract class Class_NodeElement
         })
       tooltip_html += '    <tr>'
       tooltip_html += '      <th>' + 'Total' + '</th>'
-      tooltip_html += '      <td>' + this._output_data_value.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
+      tooltip_html += '      <td>' + output_val.toPrecision() + '</td>' // TODO manque traduction virgule + nombre de chiffre signification cohérent avec valuer flux
       tooltip_html += '    </tr>'
       tooltip_html += '  </tbody>'
       tooltip_html += '</table>'

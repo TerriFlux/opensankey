@@ -852,7 +852,7 @@ export class Class_MenuConfig {
    * @param {(_: Class_MenuConfig) => void} process_func
    * @memberof Class_MenuConfig
    */
-  protected _add_waiting_process(
+  public _add_waiting_process(
     process_id: string,
     process_func: (_: Class_MenuConfig) => void
   ) {

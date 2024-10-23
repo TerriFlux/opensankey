@@ -103,6 +103,8 @@ export abstract class Class_ApplicationData
    */
   protected _logo: string // path to logo
 
+  protected _drawtimeout: NodeJS.Timeout | null = null 
+
   // PRIVATE ATTRIBUTES =================================================================
 
   // General attributes for the application
@@ -235,8 +237,14 @@ export abstract class Class_ApplicationData
     // Reset everything
     this.reset()
     // Update drawing area
+    this.drawing_area.bypass_timeout = true
     this.drawing_area.fromJSON(json_object)
     this.menu_configuration.updateAllMenuComponents()
+    this.drawing_area.bypass_timeout = false
+    this._drawtimeout = setTimeout(
+      () => {this._drawing_area.drawElements()},
+      10
+    )
   }
 
   public toJSON() {
