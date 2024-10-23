@@ -70,7 +70,7 @@ cd $PWD_DIR/client/src/deps
 if [ -f "OpenSankey" ]; then
   rm OpenSankey
 fi
-ln -s "$PWD_DIR/submodules/OpenSankey/client/src" OpenSankey
+ln -s "$PWD_DIR/submodules/OpenSankey/opensankey/client/src" OpenSankey
 
 cd $PWD_DIR
 
