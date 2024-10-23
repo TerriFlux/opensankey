@@ -24,10 +24,9 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 
-import { opensankey_theme } from '../../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
-
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 import { returnToApp } from '../../SankeyAppSA'
+import { Theme_SankeyApplication } from '../../chakra/Theme'
 import { logError, userSignUp, userValidate } from './RegisterFunctions'
 import TermsOfUse from './TermsOfUse'
 import { Presentation } from './Presentation'
@@ -373,7 +372,9 @@ const Register: FunctionComponent<{
   }
 
   return (
-    <ChakraProvider resetCSS={false} theme={opensankey_theme}>
+    <ChakraProvider
+      theme={Theme_SankeyApplication}
+    >
       {/* Navbar */}
       <Box
         zIndex="1"

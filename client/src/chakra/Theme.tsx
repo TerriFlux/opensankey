@@ -28,7 +28,7 @@ const _text_style_log = {
   fontWeight: 'normal'
 }
 
-export const Theme_SA = extendTheme({
+export const Theme_SA = {
   components:{
     Button:{
       variants:{
@@ -108,7 +108,7 @@ export const Theme_SA = extendTheme({
       color: 'primaire.2'
     }
   }
-})
+}
 
 const Theme = {}
 

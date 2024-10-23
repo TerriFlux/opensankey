@@ -61,7 +61,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
     navigate('/account')
   }
 
-  /* eslint-disable */
+   
   // // @ts-ignore
   // const list_template = require.context('../../css/easy_template', true)
   // // @ts-ignore
@@ -79,7 +79,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   //   }
   //   return img
   // })
-  /* eslint-enable */
+   
 
   // List of example of sankey
   // Displayed in card

@@ -446,7 +446,7 @@ const Account: FunctionComponent<AccountTypes> = ({
         // Close modal and return to app
         setTimeout(
           () => {
-            onDeleteAccountModalClose
+            onDeleteAccountModalClose()
             navigate('/')
           },
           2000)
