@@ -50,8 +50,6 @@ export abstract class Class_AbstractNodeElement
   public abstract deleteOutputLink(_: Type_AbstractLinkElement): void
   public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
   public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
-  public abstract updateInputValue(): void
-  public abstract updateOutputValue(): void
   public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
