@@ -522,7 +522,7 @@ export const ModalWelcomeContent = (
     page_links['licence'] = <BreadcrumbLink onClick={() => { set_active_page('licence') }}>
       {t('welcome.breadcrumbs.licence')}
     </BreadcrumbLink>
-    page_content['licence'] = <Box layerStyle='licence_row'>
+    page_content['licence'] = <Box layerStyle='welcome_license_row'>
       <Box>
         <img
           src={new_data.logo_opensankey}
@@ -530,10 +530,10 @@ export const ModalWelcomeContent = (
           style={{ 'objectFit': 'contain', 'width': '225px' }}
         />
       </Box>
-      <Box layerStyle='licence_desc'>
+      <Box layerStyle='welcome_license_desc'>
         <span>{t('Menu.presentation_OS')}</span>
         <span style={{ fontWeight: 'bold' }}>{t('Menu.presentation_OS_limit_node')}</span>
-        <Button variant='btn_desc_licence'
+        <Button variant='welcome_button_license_description'
           onClick={() => {
             window.open('https://terriflux.com/downloads/open-sankey/')
           }}>

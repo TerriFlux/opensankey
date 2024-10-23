@@ -204,7 +204,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
               .forEach(sibling => level_taggs[sibling].activated = !level_tagg.activated)
 
 
-            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
             // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
             new_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
 
@@ -258,7 +258,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
 
-          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
           // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
           new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
 
@@ -305,7 +305,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           // Set tags with given id as selected : other are unselected
           tagg.selectTagsFromIds(curr_selected_tags_options.map(_ => _.value))
 
-          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
           // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
           new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
 
@@ -377,7 +377,7 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
             // Set correct tag as selected
             flux_tagg.selectTagsFromId(evt.target.value)
 
-            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
             // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
             new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
 
@@ -418,7 +418,7 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
             // Set correct tags as selected
             flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
 
-            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
             // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
             new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
 
@@ -774,14 +774,14 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
 
   const init_toolbar_elements: { [_: string]: JSX.Element } = {
 
-    'mode_souris': btn_mouse_mode_edition,
-    'node_type': btn_show_data_type,
-    'strectch_zdd': stretchButtons(new_data),
-    'help': btn_show_help_in_static,
-    'fullscreen': button_fullscreen,
+  'mode_souris': btn_mouse_mode_edition,
+  'node_type': btn_show_data_type,
+  'strectch_zdd': stretchButtons(new_data),
+  'help': btn_show_help_in_static,
+  'fullscreen': button_fullscreen,
 
-    ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
-  }
+  ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
+}
 
 
 
