@@ -7,12 +7,6 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-// OpenSankey imports
-import {
-  initial_window_width,
-  initial_window_height,
-} from '../deps/OpenSankey/types/ApplicationData'
-
 // Local imports
 import {
   type Class_AbstractApplicationDataPlus,
@@ -108,13 +102,11 @@ export abstract class Class_DrawingAreaPlus
    * @memberof Class_DrawingAreaPlus
    */
   constructor(
-    height: number,
-    width: number,
     application_data: Class_AbstractApplicationDataPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
     id: string = default_main_sankey_id
   ) {
     // Heritance
-    super(height, width, application_data, id)
+    super(application_data,id)
     // Overrides
     this.application_data = application_data
   }
@@ -222,7 +214,7 @@ export abstract class Class_DrawingAreaPlus
     // If righest free_label is too close to right drawing area border then enlarege DA
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
-    if ((max_x > this._width - this.grid_size) || ((max_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
+    if ((max_x > this._width - this.grid_size) || ((max_x + this._grid_size <= this._width) && (this._width > this.window_fitting_width))) {
       this.width = (max_x + this._grid_size)
       this.drawGrid()
     }
@@ -230,7 +222,7 @@ export abstract class Class_DrawingAreaPlus
     // If bottomiest free_label is too close to the bottom of drawing area border then enlarege DA
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
-    if (max_y > this._height - this.grid_size || ((max_y + this._grid_size <= this._height) && (max_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
+    if (max_y > this._height - this.grid_size || ((max_y + this._grid_size <= this._height) && (max_y + this._grid_size <= this._height) && (this._height > this.window_fitting_height))) {
       this.height = (max_y + this._grid_size)
       this.drawGrid()
     }
@@ -364,7 +356,7 @@ export abstract class Class_DrawingAreaPlus
 
     if (all) {// Update Contaiers
     // TODO add container create/update/delete options in mode
-      const [to_remove, to_add, to_update] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
+      const [to_remove, to_add, ] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
       // Add containers that are in other sankey but not in this sankey
       if (all) {
         to_add

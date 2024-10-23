@@ -83,8 +83,6 @@ export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = 
 ) => {
   // Init application data
   const new_data_plus = new Class_ApplicationDataOSP(window.SankeyToolsStatic)
-  // Activate sankey plus token
-  new_data_plus.activateAllTokens()
   // Read data from cache if it exist
   if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
@@ -183,10 +181,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data={new_data}
     menu_for_modal={false}
   />,
-    additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
-      new_data_plus={new_data_plus}
-      menu_for_modal={false}
-    />
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
+    new_data_plus={new_data_plus}
+    menu_for_modal={false}
+  />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <NodeForeignObjectOSP
     new_data_plus={new_data_plus}
     is_activated={new_data_plus.has_sankey_plus}
@@ -285,7 +283,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     />
   )
 
-  // Add new button for the toolbar 
+  // Add new button for the toolbar
   additionalMenus.toolbar_elements['link_visual_filter'] = <ToolBarLinkVisualFilter new_data_plus={new_data_plus} />
   additionalMenus.toolbar_elements['node_tag_filter'] = <ToolBarNodeTagFilter new_data_plus={new_data_plus} />
   additionalMenus.toolbar_elements['link_tag_filter'] = <ToolBarLinkTagFilter new_data_plus={new_data_plus} />

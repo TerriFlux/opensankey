@@ -5,7 +5,6 @@
 // ==================================================================================================
 
 // Import OpenSankey
-import { initial_window_height, initial_window_width } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
@@ -45,8 +44,6 @@ export class Class_ApplicationDataOSP
 
   public createNewDrawingArea(id?: string): Class_DrawingAreaOSP {
     const drawing_area = new Class_DrawingAreaOSP(
-      initial_window_height,
-      initial_window_width,
       this,
       id
     )
@@ -125,7 +122,7 @@ export class Class_NodeElementOSP
     Class_DrawingAreaOSP, Class_SankeyOSP, Class_LinkElementOSP
   > {
 
-    protected _display: {
+  protected _display: {
       drawing_area: Class_DrawingAreaOSP,
       sankey: Class_SankeyOSP,
       position: Type_ElementPosition,
@@ -134,23 +131,23 @@ export class Class_NodeElementOSP
       position_x_label?: number// Relative x position of label when dragged (optionnal)
       position_y_label?: number// Relative y position of label when dragged (optionnal)
     }
-    constructor(id:string,name:string,
-      drawing_area: Class_DrawingAreaOSP,
-      menu_config: Class_MenuConfigPlus
-    ){
-      super(id,name,drawing_area,menu_config)
-      this._display={
-        drawing_area: drawing_area,
-        sankey: this.sankey,
-        position: this.display.position,
+  constructor(id:string,name:string,
+    drawing_area: Class_DrawingAreaOSP,
+    menu_config: Class_MenuConfigPlus
+  ){
+    super(id,name,drawing_area,menu_config)
+    this._display={
+      drawing_area: drawing_area,
+      sankey: this.sankey,
+      position: this.display.position,
 
-        style: drawing_area.sankey.default_node_style,
-        attributes: new Class_NodeAttributePlus()
+      style: drawing_area.sankey.default_node_style,
+      attributes: new Class_NodeAttributePlus()
 
-      }
     }
-
   }
+
+}
 
 // LINK =================================================================================
 

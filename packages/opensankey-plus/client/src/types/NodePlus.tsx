@@ -309,7 +309,7 @@ export abstract class Class_NodeElementPlus
   }
 
   /**
-   * Function to animate links path outgoing 'this' node, 
+   * Function to animate links path outgoing 'this' node,
    * it propagate the animation to node target of these link until we reach a node without output links
    *
    * @param {Type_GenericApplicationDataOSP} new_data
@@ -322,19 +322,18 @@ export abstract class Class_NodeElementPlus
     nodeDisplay: Type_GenericNodeElementOSP[],
     node_visible: Type_GenericNodeElementOSP[],
   ) {
-    const curr_node = this //Stock this var because we use a function that change the scope of this
 
-    // Get d3 selection of all visible link who have for source curr_node
+    // Get d3 selection of all visible link who have for source this
     const glinks = new_data.drawing_area.d3_selection_links?.selectAll('.gg_links')
       .filter(d => {
         const link = d as Type_GenericLinkElementOSP
-        return link.source.id === curr_node.id
+        return link.source.id === this.id
       })
 
     // Refill opacity of links we are about to animate
     glinks?.select('.link_path').attr('stroke-opacity', l => (l as Type_GenericLinkElementOSP).shape_opacity)
 
-    // Launch animation of link exiting curr_node
+    // Launch animation of link exiting this
     glinks?.selectAll('.link_path').each(function () {
       const totalLength = (this as SVGGeometryElement).getTotalLength()
 
@@ -377,7 +376,7 @@ export abstract class Class_NodeElementPlus
         if (!nodeDisplay.includes(Target)) {
           nodeDisplay.push(Target)
           let max = 0
-          const tmp = Target.direct_son_as_distant_sibling(new_data, curr_node as unknown as Class_NodeElementOSP, 0, [link_animated], node_visible)
+          const tmp = Target.direct_son_as_distant_sibling(new_data, this as unknown as Class_NodeElementOSP, 0, [link_animated], node_visible)
 
           max = (tmp > max) ? tmp : max
           setTimeout(() => {
@@ -555,7 +554,7 @@ export abstract class Class_NodeElementPlus
       node.d3_selection_g_shape?.selectAll('.node_shape').attr('fill', '#dddddd')
     })
 
-    // 'Hide' link & related elements before animation, it will be re-displayed when said links end their animation 
+    // 'Hide' link & related elements before animation, it will be re-displayed when said links end their animation
     this.drawing_area.sankey.visible_links_list.forEach(link => {
       link.d3_selection?.selectAll('.link_path').attr('stroke-opacity', 0)
       link.d3_selection?.selectAll('.link_arrow').attr('opacity', 0)
@@ -576,11 +575,10 @@ export abstract class Class_NodeElementPlus
     nb_animation = (nb_animation !== undefined) ? nb_animation : 0
     time_to_animate += nb_animation * 2000
 
-    const curr_node = this
     // Launch a timeout that will activate at the end of the animation to reset drawing_area
-    setTimeout(function () {
-      curr_node.drawing_area.reset()
-    }, time_to_animate)
+    setTimeout(
+      () => {this.drawing_area.reset()},
+      time_to_animate)
 
   }
 
@@ -641,7 +639,7 @@ export abstract class Class_NodeElementPlus
   }
 
   /**
- * Set name_label_background value to node display attribute 
+ * Set name_label_background value to node display attribute
  * @memberof Class_NodeElement
  */
   public set name_label_background(_: boolean) {

@@ -28,3 +28,4 @@ tests/output_references/.gitkeep.json
 opensankey/client/coverage/*
 opensankey/client/.vscode/launch.json
 client/pnpm-lock.yaml
+client/src/deps/OpenSankey

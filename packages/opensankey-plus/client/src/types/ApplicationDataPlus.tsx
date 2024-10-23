@@ -55,6 +55,8 @@ export abstract class Class_ApplicationDataPlus
   // Static path
   public override static_path: string = 'static/sankeyanimation'
 
+  // PROTECTED ATTRIBUTES ===============================================================
+
   /**
    * Configuration Menu
    *
@@ -64,18 +66,17 @@ export abstract class Class_ApplicationDataPlus
    */
   protected _menu_configuration: Class_MenuConfigPlus
 
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  protected _has_sankey_plus: boolean = false // token for sankeyplus (if user is connected with an account)
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  private _logo_sankey_plus: string = ''
+  protected _has_sankey_plus: boolean = true // token for sankeyplus (if user is connected with an account)
 
   protected _views: { [id: string]: Type_GenericDrawingArea } = {}
   protected _views_order: string[] = []
 
   protected _original_current_view: Type_GenericDrawingArea | undefined
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _logo_sankey_plus: string = ''
+
   private _waiting_to_set_view: string | undefined
 
   // CONSTRUCTOR ========================================================================
@@ -215,21 +216,6 @@ export abstract class Class_ApplicationDataPlus
   }
 
   // PUBLIC METHODS =====================================================================
-
-  public override unsetTokens() {
-    this._has_sankey_plus = false
-    super.unsetTokens()
-  }
-
-  public activateSankeyPlus() {
-    this._has_sankey_plus = true
-    this.menu_configuration.updateAllMenuComponents()
-  }
-
-  public activateAllTokens() {
-    this.activateSankeyPlus()
-    super.activateAllTokens()
-  }
 
   public override reset(){
     super.reset()
