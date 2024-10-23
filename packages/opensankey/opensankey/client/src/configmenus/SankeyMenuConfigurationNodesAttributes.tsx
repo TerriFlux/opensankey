@@ -184,7 +184,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         inchangee = (node.style.id === style.id) ? inchangee : false
       })
       return (inchangee) ?
-        CutName(style.id, 20) :
+        CutName(style.name, 20) :
         t('Noeud.multi_style')
     }
     else {

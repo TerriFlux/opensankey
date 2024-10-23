@@ -452,15 +452,15 @@ export abstract class Class_LinkElement
    * @private
    * @memberof Class_LinkElement
    */
-  public draw() {
+  public _draw() {
     // Heritance
-    super.draw()
+    super._draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links').datum(this)
     // Setup order
     //this.drawing_area.orderElements()
     // Draw elements
-    this.drawElements()
+    this._drawElements()
   }
 
   public drawWithNodes() {
@@ -473,9 +473,13 @@ export abstract class Class_LinkElement
     this.drawControlPoint()
   }
 
-  public drawElements() {
-    this.drawPath()
-    this.drawLabel()
+  public _drawElements() {
+    this._drawPath()
+    this._drawLabel()
+  }
+  public drawElements(){
+    this._add_waiting_process('drawElements', ()=>this._drawElements())
+
   }
 
   /**
@@ -845,6 +849,12 @@ export abstract class Class_LinkElement
   public getAllValues() {
     return this._values.getAllValues()
   }
+  public drawPath(){
+    this._add_waiting_process('drawPath', ()=>this._drawPath())
+  }
+  public drawLabel(){
+    this._add_waiting_process('drawLabel', ()=>this._drawLabel())
+  }
 
   // PROTECTED METHODS ==================================================================
 
@@ -991,7 +1001,7 @@ export abstract class Class_LinkElement
    * @private
    * @memberof Class_LinkElement
    */
-  private drawPath() {
+  private _drawPath() {
     // Clean previous shape
     this.d3_selection?.selectAll('.link_path').remove()
     // Failsafe
@@ -1012,7 +1022,7 @@ export abstract class Class_LinkElement
     }
   }
 
-  public drawLabel() {
+  private _drawLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
@@ -1163,6 +1173,8 @@ export abstract class Class_LinkElement
     return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
   }
 
+
+  
   /**
    * Function triggered when we start dragging node name label when it follow the link path, it initialise relative position if undefined
    *
@@ -2225,9 +2237,6 @@ export abstract class Class_LinkElement
     // Cast as number
     if (value !== null) {
       value.data_value = _
-      // Need to update and redraw from source and target also
-      this.source.updateOutputValue()
-      this.target.updateInputValue()
 
       if (this.source.position_type == 'parametric') {
         // if the positioning mode of source is parametric we need to reposition all nodes below
@@ -2399,7 +2408,7 @@ export abstract class Class_LinkElement
       return this.drawing_area.maximum_flux
     }
 
-    return linkValueInPx
+    return Math.max(2, linkValueInPx)
   }
 
   public get position_x_start() {
@@ -3184,6 +3193,8 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     // Geometry link
     if (this._shape_orientation !== undefined) json_object['orientation'] = this._shape_orientation
     if (this._shape_starting_curve !== undefined) json_object['left_horiz_shift'] = this._shape_starting_curve
+    if (this._shape_starting_tangeant !== undefined) json_object['starting_tangeant'] = this._shape_starting_tangeant
+    if (this._shape_ending_tangeant !== undefined) json_object['ending_tangeant'] = this._shape_ending_tangeant
     if (this._shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this._shape_ending_curve
     if (this._shape_curvature !== undefined) json_object['curvature'] = this._shape_curvature
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
@@ -3221,6 +3232,8 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     // Geometry link
     if (json_local_object['orientation'] !== undefined) this._shape_orientation = getStringFromJSON(json_local_object, 'orientation', default_shape_orientation) as Type_Orientation
     if (json_local_object['left_horiz_shift'] !== undefined) this._shape_starting_curve = getNumberFromJSON(json_local_object, 'left_horiz_shift', default_shape_starting_curve)
+    if (json_local_object['starting_tangeant'] !== undefined) this._shape_starting_tangeant = getNumberFromJSON(json_local_object, 'starting_tangeant', default_shape_starting_tangeant)
+      if (json_local_object['ending_tangeant'] !== undefined) this._shape_ending_tangeant = getNumberFromJSON(json_local_object, 'ending_tangeant', default_shape_ending_tangeant)
     if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
@@ -4395,7 +4408,10 @@ export class Class_GhostLinkElement
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
     this.computeControlPoints()
+    this.has_timeout=false
   }
+
+
 
   // GETTER / SETTER ====================================================================
   public get is_visible() { return (this._is_visible && this.sankey.is_visible) }
