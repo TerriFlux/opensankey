@@ -30,6 +30,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract application_data: Class_AbstractApplicationData
   public abstract d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract static: boolean
+  public abstract bypass_timeout:boolean
   // Mandatory methods
   public abstract isInSelectionMode(): boolean
   public abstract isInEditionMode(): boolean
