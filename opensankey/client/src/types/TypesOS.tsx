@@ -4,7 +4,7 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
-import { Class_ApplicationData, initial_window_height, initial_window_width } from './ApplicationData'
+import { Class_ApplicationData } from './ApplicationData'
 import { Class_DrawingArea } from './DrawingArea'
 import { Class_Sankey } from './Sankey'
 import { Class_LinkAttribute, Class_LinkElement, Class_LinkStyle } from './Link'
@@ -94,8 +94,6 @@ export class Class_ApplicationDataOS
   }
   public createNewDrawingArea(id?:string): Class_DrawingAreaOS {
     const drawing_area = new Class_DrawingAreaOS(
-      initial_window_height,
-      initial_window_width,
       this,
       id
     )
@@ -110,12 +108,11 @@ export class Class_DrawingAreaOS
     Class_SankeyOS, Class_NodeElementOS, Class_LinkElementOS
   > {
 
-  constructor(_height: number,
-    _width: number,
+  constructor(
     application_data: Class_ApplicationDataOS,
     id?:string
   ) {
-    super(_height, _width, application_data,id)
+    super(application_data,id)
   }
 
   protected createNewSankey(id: string = default_main_sankey_id) {
