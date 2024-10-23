@@ -16,7 +16,7 @@ export const Theme_OSP={
 
 const Theme={}
 
-// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+// eslint-disable-next-line
 const deep_assign = (s:Record<string, any>, t:Record<string, any>) => {
   Object.entries(s).forEach(k => {
     if (k[1]!==null && typeof (k[1]) == 'object') {
