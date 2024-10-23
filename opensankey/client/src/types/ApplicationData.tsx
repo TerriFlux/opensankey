@@ -26,8 +26,6 @@ import { FType_ProcessFunctions } from './FunctionTypes'
 
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
-export const initial_window_width = window.innerWidth - 50 //TODO : replace 50 by width of toolbar
-export const initial_window_height = window.innerHeight - 50 //TODO : replace 50 by height of top navbar & footer
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
 
 // SPECIFIC FUNCTIONS ******************************************************************/
@@ -115,8 +113,6 @@ export abstract class Class_ApplicationData
   private _app_name: string = 'SankeySuite'
   private _url_prefix: string = '/opensankey/' // path for server call
   private _node_label_separator = '-'
-
-  private _has_free_account: boolean = false // token for opensankey (if user is connected with an account)
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -210,20 +206,6 @@ export abstract class Class_ApplicationData
     this.drawing_area.reset()
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
-  }
-
-  public unsetTokens() {
-    this._has_free_account = false
-    this.menu_configuration.updateAllMenuComponents()
-  }
-
-  public activateFreeAccount() {
-    this._has_free_account = true
-    this.menu_configuration.updateAllMenuComponents()
-  }
-
-  public activateAllTokens() {
-    this.activateFreeAccount()
   }
 
   /**
@@ -420,8 +402,6 @@ export abstract class Class_ApplicationData
 
   public get menu_configuration(): Class_MenuConfig { return this._menu_configuration }
   protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
-
-  public get has_free_account(): boolean { return this._has_free_account }
 
   public get url_prefix(): string { return this._url_prefix }
 

@@ -35,10 +35,6 @@ import {
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from './Link'
-import {
-  initial_window_height,
-  initial_window_width
-} from './ApplicationData'
 import { Class_Legend } from './Legend'
 import { Class_ZoneSelection } from './Selection_Zone'
 import { convert_data_legacy } from './Legacy'
@@ -100,6 +96,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
   /**
  * d3 selection of svg group that contains drawing area background
  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
@@ -202,6 +199,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   private _scale: number = default_scale
+  private _fit_margin: number = 10
 
 
   /**
@@ -291,22 +289,18 @@ export abstract class Class_DrawingArea
 
   /**
    * Creates an instance of Class_DrawingArea.
-   * @param {number} _height
-   * @param {number} _width
    * @param {Class_AbstractApplicationData} application_data
    * @memberof Class_DrawingArea
    */
   constructor(
-    _height: number,
-    _width: number,
     application_data: Class_AbstractApplicationData,
     id: string = default_main_sankey_id
   ) {
     super()
     this.application_data = application_data
     // Init attributes
-    this._height = _height
-    this._width = _width
+    this._height = this.window_fitting_height
+    this._width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
     this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = this.createNewSelectionZone()
@@ -376,10 +370,15 @@ export abstract class Class_DrawingArea
     this.d3_selection = this.d3_selection_zoom_area
       .append('g')
       .attr('id', 'g_drawing')
-      .attr('transform', 'translate(0,' + this.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
 
     // Add specific groups for nodes, link and others
-    this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
+    const x = this._fit_margin / 2
+    const y = this._fit_margin / 2 + this.getNavBarHeight()
+    this.d3_selection_bg_group = this.d3_selection
+      .append('g')
+      .attr('id', 'g_background')
+      .attr('transform', 'translate(' + x + ',' + y + ')') // init drawing area zone with a margin for taking into account the navbar
+
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
@@ -789,7 +788,7 @@ export abstract class Class_DrawingArea
     // If righest node is too close to right drawing area border then enlarege DA
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
-    if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > initial_window_width))) {
+    if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > this.window_fitting_width))) {
       this.width = (max_node_pos_x + this._grid_size)
       this.drawGrid()
     }
@@ -797,7 +796,7 @@ export abstract class Class_DrawingArea
     // If bottomiest node is too close to the bottom of drawing area border then enlarege DA
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
-    if (max_node_pos_y > this._height - this.grid_size || ((max_node_pos_y + this._grid_size <= this._height) && (this._height > initial_window_height))) {
+    if (max_node_pos_y > this._height - this.grid_size || ((max_node_pos_y + this._grid_size <= this._height) && (this._height > this.window_fitting_height))) {
       this.height = (max_node_pos_y + this._grid_size)
       this.drawGrid()
     }
@@ -814,10 +813,13 @@ export abstract class Class_DrawingArea
    */
   public areaFitHorizontally() {
     if (this.d3_selection_zoom_area) {
-      const navbar_height = this.getNavBarHeight()
-      // window.innerWidth-50 correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerWidth - 50) / this.width)
-      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [0, navbar_height])
+      // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
+      this.zoomListener.scaleTo(
+        this.d3_selection_zoom_area,
+        this.window_fitting_width / this.width)
+      this.zoomListener.translateTo(
+        this.d3_selection_zoom_area, 0, 0,
+        [0, 0])
     }
   }
 
@@ -830,10 +832,11 @@ export abstract class Class_DrawingArea
    */
   public areaFitVertically() {
     if (this.d3_selection_zoom_area) {
-      const navbar_height = this.getNavBarHeight()
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, (window.innerHeight - 50 - navbar_height) / this.height)
-      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [0, navbar_height])
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, this.window_fitting_height / this.height)
+      this.zoomListener.translateTo(
+        this.d3_selection_zoom_area, 0, 0,
+        [0, 0])
     }
   }
 
@@ -1371,8 +1374,8 @@ export abstract class Class_DrawingArea
     const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
     const possible_height = (v_margin * 2 + max_height_cumul)
 
-    this.width = (initial_window_width < possible_witdh) ? possible_witdh : initial_window_width
-    this.height = (initial_window_height < possible_height) ? possible_height : initial_window_height
+    this.width = (this.window_fitting_width < possible_witdh) ? possible_witdh : this.window_fitting_width
+    this.height = (this.window_fitting_height < possible_height) ? possible_height : this.window_fitting_height
 
     this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
   }
@@ -2043,6 +2046,8 @@ export abstract class Class_DrawingArea
   public set width(_: number) { this._width = _; this.drawBackground(); this.drawGrid() }
   public get height() { return this._height }
   public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
+  public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
+  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this.getSideBarWidth() }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }
@@ -2054,7 +2059,27 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
-    return (document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height) ?? 0
+    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 0
+  }
+
+  /**
+   * Return height of the top nav bar
+   *
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public getBottomBarHeight() {
+    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 0
+  }
+
+  /**
+   * Return height of the top nav bar
+   *
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public getSideBarWidth() {
+    return (document.getElementsByClassName('openMenu')[0]?.getBoundingClientRect().width) ?? 0
   }
 
   // Color
@@ -2136,4 +2161,5 @@ export abstract class Class_DrawingArea
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
+
 }
