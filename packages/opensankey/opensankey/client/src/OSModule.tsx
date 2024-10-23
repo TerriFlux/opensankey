@@ -46,7 +46,6 @@ export const initializeApplicationData: FType_InitializeApplicationData = (
 ) => {
   // Set openSankey
   const application_data = new Class_ApplicationDataOS(window.SankeyToolsStatic)
-  application_data.activateAllTokens()
 
   if (initial_data !== undefined) {
     application_data.fromJSON(initial_data)
