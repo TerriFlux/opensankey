@@ -118,12 +118,11 @@ export class Class_Handler
 
   // PUBLIC METHODS =====================================================================
 
-  public draw() {
-    super.draw()
-    this.drawElements()
+  public drawElements() {
+    this._add_waiting_process('drawElement', () => { this._drawElement() })
   }
 
-  public drawElements() {
+  protected _drawElement() {
     this.d3_selection?.attr('class', 'gg_handler')
     if (this._custom_class !== undefined) {
       this.d3_selection?.attr('class', this._custom_class)
@@ -145,6 +144,13 @@ export class Class_Handler
     this._filled = element._filled
     this._custom_class = element._custom_class
     this.setPosXY(element.position_x, element.position_y)
+  }
+
+  // PROTECTED METHODS =====================================================================
+
+  protected _draw() {
+    super._draw()
+    this._drawElement()
   }
 
   // GETTERS / SETTERS ==================================================================

@@ -88,6 +88,17 @@ export class Class_Legend
   private _dy: number = 0
 
   /**
+   * Attribute used for the scale of the legend 
+   * so the legend can still be visible when we de-zoom DA.
+   * The attr is automaticaly updated when we zoom/de-zooom on the DA (see setter)
+   *
+   * @private
+   * @type {number}
+   * @memberof Class_Legend
+   */
+  private _scale: number = 1
+
+  /**
    * Text wrapper function
    * @private
    * @memberof Class_Legend
@@ -133,38 +144,6 @@ export class Class_Legend
 
   // PUBLIC METHODS =====================================================================
 
-  public draw() {
-    // Heritance of draw function
-    super.draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_legend')
-    // Apply styles
-    // this.d3_selection?.style('display', this._masked ? 'none' : '')
-    // Draw Background
-    this.drawLegendBg()
-    // Reset content positionning
-    this._dx = 0
-    this._dy = 0
-    // Rebounds text wrapper with width of legend when drawed at this moment
-    this._wrapper.bounds({ height: 100, width: this._width })
-    // Draw tag color pallette applied to sankey
-    this.drawTagDisplayed()
-    // Draw explication for data type
-    const sankey_has_interval_value = d3.selectAll('.link_value').nodes().filter(lv => d3.select(lv).html().includes('*')).length > 0
-    if (sankey_has_interval_value) {
-      this.drawInfoDataType()
-    }
-    // Draw explication for dashed links
-    const sankey_has_dashed_links = d3.selectAll('.gg_links').nodes().filter(lv => d3.select(lv).attr('stroke-dasharray') !== null).length > 0
-    if (sankey_has_dashed_links && this._info_link_value_void) {
-      this.drawInfoDashedLink()
-    }
-    if (this._display_legend_scale) {
-      this.drawSankeyScale()
-    }
-    this.updateLegendHeight()
-  }
-
   public toJSON() {
     const json_object = super.toJSON()
     json_object['mask_legend'] = this._masked
@@ -203,6 +182,7 @@ export class Class_Legend
   }
 
   // PROTECTED METHODS ==================================================================
+
   protected eventMouseOver(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
     this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
     this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
@@ -233,6 +213,52 @@ export class Class_Legend
     this.draw()
   }
 
+  protected _draw() {
+    // Heritance of draw function
+    super._draw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_legend')
+    // Apply styles
+    // this.d3_selection?.style('display', this._masked ? 'none' : '')
+    // Draw Background
+    this._drawLegendBg()
+    // Reset content positionning
+    this._dx = 0
+    this._dy = 0
+    // Rebounds text wrapper with width of legend when drawed at this moment
+    this._wrapper.bounds({ height: 100, width: this._width })
+    // Draw tag color pallette applied to sankey
+    this._drawTagDisplayed()
+    // Draw explication for data type
+    const sankey_has_interval_value = d3.selectAll('.link_value').nodes().filter(lv => d3.select(lv).html().includes('*')).length > 0
+    if (sankey_has_interval_value) {
+      this._drawInfoDataType()
+    }
+    // Draw explication for dashed links
+    const sankey_has_dashed_links = d3.selectAll('.gg_links').nodes().filter(lv => d3.select(lv).attr('stroke-dasharray') !== null).length > 0
+    if (sankey_has_dashed_links && this._info_link_value_void) {
+      this._drawInfoDashedLink()
+    }
+    if (this._display_legend_scale) {
+      this._drawSankeyScale()
+    }
+    this._updateLegendHeight()
+  }
+
+  /**
+ * Override applyPosition for legend so it take into accound scale transformation
+ * @protected
+ * @return {*}  
+ * @memberof Class_Node
+ */
+  protected override _applyPosition() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.attr(
+        'transform',
+        'translate(' + this.position_x + ', ' + this.position_y + ')' + ' scale(' + this._scale + ')')
+    }
+  }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -241,7 +267,7 @@ export class Class_Legend
    * @private
    * @memberof Class_Legend
    */
-  private drawLegendBg() {
+  private _drawLegendBg() {
     this.d3_selection?.select('.g_drag_zone_leg').remove()
     this.d3_selection?.append('g')
       .attr('class', 'g_drag_zone_leg')
@@ -260,12 +286,22 @@ export class Class_Legend
   }
 
   /**
+   * _drawLegendBg with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  public drawLegendBg() {
+    this._add_waiting_process('drawLegendBg', () => { this._drawLegendBg() })
+  }
+
+  /**
    * Function to draw tags in legend that are used in the sankey
    * (when they're activated in the toolbar)
    * @private
    * @memberof Class_Legend
    */
-  private drawTagDisplayed() {
+  private _drawTagDisplayed() {
     const node_taggs = this.drawing_area.sankey.node_taggs_list
     const flux_taggs = this.drawing_area.sankey.flux_taggs_list
     const data_taggs = this.drawing_area.sankey.data_taggs_list
@@ -291,7 +327,8 @@ export class Class_Legend
           document.getElementById('GrpTag_title_' + tag_group.id)?.setAttribute('y', '5')
         }
 
-        this._dy += document.getElementById('GrpTag_title_' + tag_group.id)?.getBoundingClientRect().height ?? 0
+        this._dy += ((this.d3_selection?.select('#GrpTag_title_' + tag_group.id).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 4
+
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
         tag_group.selected_tags_list.filter(tag => {
@@ -357,13 +394,14 @@ export class Class_Legend
 
             // Ajout du label
             tagElement?.append('text')
+              .attr('class', 'name_tag')
               .attr('x', 35)
               .attr('y', 0)
               .attr('font-size', this._legend_police + 'px')
               .text(tag.name)
               .call(this._wrapper)
 
-            this._dy += document.getElementById('tag_' + tag.name.replaceAll(' ', '__'))?.getBoundingClientRect().height ?? 0
+            this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
           })
       })
     const show_data = Object.values(data_taggs).filter(d => d.show_legend).length == 0
@@ -379,9 +417,19 @@ export class Class_Legend
           .text((tag_group[1].name + ' : ' + tag_group[1].selected_tags_list.map(t => t.name).join(', ')))
           .attr('style', ('font-size:' + this._legend_police + 'px;'))
           .call(this._wrapper)
-        this._dy += document.getElementById('leg_dataTag_' + tag_group[0])?.getBoundingClientRect().height ?? 0
+        this._dy += ((this.d3_selection?.select('#leg_dataTag_' + tag_group[0]).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
       })
     }
+  }
+
+  /**
+   * _drawTagDisplayed with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawTagDisplayed() {
+    this._add_waiting_process('drawTagDisplayed', () => { this._drawTagDisplayed() })
   }
 
   /**
@@ -389,7 +437,7 @@ export class Class_Legend
    * @private
    * @memberof Class_Legend
    */
-  private drawInfoDataType() {
+  private _drawInfoDataType() {
     // Write information in the legend depending to the diagram representation:
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
@@ -415,13 +463,23 @@ export class Class_Legend
   }
 
   /**
+   * _drawInfoDataType with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawInfoDataType() {
+    this._add_waiting_process('drawInfoDataType', () => { this._drawInfoDataType() })
+  }
+
+  /**
    * Add text to describe why some link are dashed
    * (because their value are undefined, only appear when data_type
    * is set to anything but structur)
    * @private
    * @memberof Class_Legend
    */
-  private drawInfoDashedLink() {
+  private _drawInfoDashedLink() {
     this._dy += this._legend_police
 
     // Create info zone
@@ -448,11 +506,21 @@ export class Class_Legend
   }
 
   /**
+   * _drawInfoDashedLink with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawInfoDashedLink() {
+    this._add_waiting_process('drawInfoDashedLink', () => { this._drawInfoDashedLink() })
+  }
+
+  /**
    * Add info zone in legend for "Sankey scale"
    * @private
    * @memberof Class_Legend
    */
-  private drawSankeyScale() {
+  private _drawSankeyScale() {
     // Update vertical offset
     this._dy += this._legend_police + 50 //(50 is the height of the draggable scale)
     // Remove previous info zone for scale
@@ -490,15 +558,28 @@ export class Class_Legend
       }))
   }
 
+  /**
+   * _drawSankeyScale with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawSankeyScale() {
+    this._add_waiting_process('drawSankeyScale', () => { this._drawSankeyScale() })
+  }
+
+  private _updateLegendHeight() {
+    d3.select('.zone_for_dragging').attr('height', this._dy)
+  }
+
+  /**
+   * _updateLegendHeight with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
   private updateLegendHeight() {
-    let h = document.getElementById('grp_legend')?.getBoundingClientRect().height
-    h = h ? (h + this._legend_police) : 0
-    d3.select('.zone_for_dragging').attr('height', h)
-    const w = document.getElementById('grp_legend')?.getBoundingClientRect().width
-    if (w && w > this._width * 1.1) {
-      d3.select('#grp_legend .zone_for_dragging').attr('width', w)
-      this._width = w
-    }
+    this._add_waiting_process('updateLegendHeight', () => { this.updateLegendHeight() })
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -539,5 +620,11 @@ export class Class_Legend
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(value: boolean) { this._info_link_value_void = value; this.draw() }
+
+  public get scale(): number { return this._scale }
+  public set scale(value: number) {
+    this._scale = value >= 1 ? value : 1 //only change legend scale if we de-zoom DA
+    this.applyPosition()
+  }
 
 }

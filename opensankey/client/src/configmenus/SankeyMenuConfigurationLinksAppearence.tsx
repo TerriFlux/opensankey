@@ -215,7 +215,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         inchangee = (link.style.id === style.id) ? inchangee : false
       })
       return (inchangee) ?
-        CutName(style.id, 25) :
+        CutName(style.name, 25) :
         t('Noeud.multi_style')
     }
     else {
