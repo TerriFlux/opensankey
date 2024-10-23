@@ -24,7 +24,7 @@ import {
   getStringOrUndefinedFromJSON,
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
-import { convert_data_plus_legacy } from '../SankeyPlusUtils'
+import { convert_data_plus_legacy, getArrayFromJSON } from '../SankeyPlusUtils'
 import { get_sync_lists } from '../deps/OpenSankey/types/Sankey'
 
 // CLASS DRAWING AREA PLUS **************************************************************
@@ -79,6 +79,10 @@ export abstract class Class_DrawingAreaPlus
   // Attribute for background image
   private _show_background_image: boolean = false
   private _background_image: string = ''
+
+  // Attr for views
+  private _heredited_attr: string[] = []
+
 
   // Objects containeds in drawing area -------------------------------------------------
 
@@ -308,7 +312,7 @@ export abstract class Class_DrawingAreaPlus
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
     this.name = getStringFromJSON(json_object, 'name', this.id)
-
+    this._heredited_attr=getArrayFromJSON(json_object,'heredited_attr',[]) as string[]
 
   }
 
@@ -327,6 +331,7 @@ export abstract class Class_DrawingAreaPlus
     json_entry['show_background_image'] = this._show_background_image
     json_entry['background_image'] = this._background_image
     json_entry['name'] = this.name
+    json_entry['heredited_attr'] = this._heredited_attr
     return json_entry
   }
 
@@ -431,4 +436,6 @@ export abstract class Class_DrawingAreaPlus
 
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
+
+  public get heredited_attr(): string[] {return this._heredited_attr}
 }

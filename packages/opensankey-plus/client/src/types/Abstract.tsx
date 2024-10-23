@@ -50,6 +50,7 @@ export abstract class Class_AbstractDrawingAreaPlus
   public abstract d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract addContainerToSelection(_: Class_AbstractContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>): void
   public abstract get selected_containers_list(): Class_ContainerElement<Class_AbstractDrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
+  public abstract get heredited_attr():string[]
 }
 
 export abstract class Class_AbstractSankeyPlus

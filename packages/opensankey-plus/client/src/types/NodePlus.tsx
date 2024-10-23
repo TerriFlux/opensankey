@@ -136,11 +136,11 @@ export abstract class Class_NodeElementPlus
 
   // Overrides --------------------------------------------------------------------------
 
-  public override draw() {
-    super.draw()
-    this.drawNodeLabelBg()
-    this.drawIllustration()
-    this.drawFO()
+  public override _draw() {
+    super._draw()
+    this._drawNodeLabelBg()
+    this._drawIllustration()
+    this._drawFO()
   }
 
   /**
@@ -273,17 +273,19 @@ export abstract class Class_NodeElementPlus
 
   // New --------------------------------------------------------------------------------
 
+
+  /**
+   * _drawIllustration wwith timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
   public drawIllustration() {
-    this.d3_selection?.selectAll('.illustration').remove()
-    if (this._is_image) {
-      this.drawIllustrationImage()
-    }
-    if (this._iconVisible) {
-      this.drawIllustrationIcon()
-    }
+    this._add_waiting_process('drawIllustration', () => { this._drawIllustration() })
   }
 
-  public drawFO() {
+
+  private _drawFO() {
     this.d3_selection?.select('.node_fo').remove()
 
     this.d3_selection?.append('foreignObject')
@@ -294,6 +296,16 @@ export abstract class Class_NodeElementPlus
       .append('xhtml:div')
       .attr('class', 'ql-editor')
       .html(this._FO_content)
+  }
+
+  /**
+   * _drawFO wwith timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawFO() {
+    this._add_waiting_process('drawFO', () => { this._drawFO() })
   }
 
   /**
@@ -418,7 +430,17 @@ export abstract class Class_NodeElementPlus
   }
   // PRIVATE METHODS ====================================================================
 
-  private drawIllustrationImage() {
+  private _drawIllustration() {
+    this.d3_selection?.selectAll('.illustration').remove()
+    if (this._is_image) {
+      this._drawIllustrationImage()
+    }
+    if (this._iconVisible) {
+      this._drawIllustrationIcon()
+    }
+  }
+
+  private _drawIllustrationImage() {
     this.d3_selection?.append('image')
       .attr('id', 'image_node_' + this.id)
       .attr('class', 'illustration image')
@@ -426,8 +448,17 @@ export abstract class Class_NodeElementPlus
       .attr('height', this.getShapeHeightToUse())
       .attr('width', this.getShapeWidthToUse())
   }
+  /**
+   * _drawNodeLabelBg with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawIllustrationImage() {
+    this._add_waiting_process('drawIllustrationImage', () => { this.drawIllustrationImage() })
+  }
 
-  private drawIllustrationIcon() {
+  private _drawIllustrationIcon() {
     this.d3_selection?.append('svg')
       .attr('id', 'icon_node_' + this.id)
       .attr('class', 'illustration icon_node')
@@ -437,8 +468,17 @@ export abstract class Class_NodeElementPlus
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', this.shape_visible?this.iconColor:this.getShapeColorToUse())
+      .style('fill', this.shape_visible ? this.iconColor : this.getShapeColorToUse())
       .attr('d', this.sankey.getIconFromCatalog(this.iconName))
+  }
+  /**
+ * _drawIllustrationIcon with timeout
+ *
+ * @private
+ * @memberof Class_Legend
+ */
+  private drawIllustrationIcon() {
+    this._add_waiting_process('drawIllustrationIcon', () => { this._drawIllustrationIcon() })
   }
 
   /**
@@ -447,7 +487,7 @@ export abstract class Class_NodeElementPlus
    * @private
    * @memberof Class_NodeElementPlus
    */
-  private drawNodeLabelBg() {
+  private _drawNodeLabelBg() {
     // Preventively delete previous label bg
     this.d3_selection?.select('.node_label_bg').remove()
 
@@ -490,6 +530,16 @@ export abstract class Class_NodeElementPlus
         .attr('y', box_pos_y)
 
     }
+  }
+
+  /**
+   * _drawNodeLabelBg with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  private drawNodeLabelBg() {
+    this._add_waiting_process('drawNodeLabelBg', () => { this._drawNodeLabelBg() })
   }
 
   /**

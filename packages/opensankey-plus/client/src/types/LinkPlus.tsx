@@ -118,10 +118,10 @@ export abstract class Class_LinkElementPlus
     // this.draw()
   }
 
-  public override draw(){
+  public override _draw(){
     // Don't put this condition in is_visible because we need node to take into account link value of links visualy filtered for node size
     if(this.is_value_above_threshold){ 
-      super.draw()
+      super._draw()
     }else{
       this.unDraw()
     }

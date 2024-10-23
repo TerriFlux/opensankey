@@ -231,6 +231,8 @@ export abstract class Class_ApplicationDataPlus
    */
   public override fromJSON(json_object: Type_JSON): void {
     super.fromJSON(json_object)
+    this._drawing_area.bypass_timeout=true
+    if (this._drawtimeout !== null) clearTimeout(this._drawtimeout)
     const views = getJSONOrUndefinedFromJSON(json_object, 'views')
     this._original_current_view=undefined
     if (views) {
@@ -239,9 +241,11 @@ export abstract class Class_ApplicationDataPlus
       this.pushViewIdInViewOrder(default_main_sankey_id)
 
       // Create other views
-      Object.entries(views).forEach(ent_view => {
+      Object.entries(views).forEach(ent_view => {    
         const tmp = this.createNewDrawingArea(ent_view[0])
+        tmp.bypass_timeout=true
         tmp.fromJSON(ent_view[1] as Type_JSON, false)
+        tmp.bypass_timeout=false
         // Add new sankey to views
         this._views[ent_view[0]] = tmp
         this.pushViewIdInViewOrder(ent_view[0])
@@ -250,10 +254,13 @@ export abstract class Class_ApplicationDataPlus
       // Set view to the one active when saved
       const active_view = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
       if (active_view != default_main_sankey_id && active_view in this._views) {
+        this._drawing_area.bypass_timeout=false
         const idx = this._views_order.indexOf(active_view)
         this.setCurrentView(this._views_order[idx])
       }
     }
+    this._drawing_area.bypass_timeout=false    
+    this._drawing_area.drawElements()
   }
 
   /**
@@ -387,14 +394,16 @@ export abstract class Class_ApplicationDataPlus
         this._drawing_area.sankey.setVisible()
 
         // Set original view in temporary var so it can be used when we change view and don't want to save current modification
-        if (id !== default_main_sankey_id && !(this._original_current_view)) {
+        if (id !== default_main_sankey_id) {
+          // Update view with attr heredited from master
+          this._drawing_area.updateFrom(this._views[default_main_sankey_id],this._drawing_area.heredited_attr)
+
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
-          const new_DA = this.createNewDrawingArea(this._drawing_area.id)
-          // Copy current sankey
-          new_DA.updateFrom(this._drawing_area, ['*'])
-
-          this._original_current_view = new_DA
+          const clone_drawing_area = this.createNewDrawingArea(this._drawing_area.id)
+          clone_drawing_area.bypass_timeout = true
+          clone_drawing_area.copyFrom(this._drawing_area)
+          this._original_current_view = clone_drawing_area
         }
         this._drawing_area.reset()
 

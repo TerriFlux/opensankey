@@ -764,7 +764,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
     // Convert old views 
     old_views.forEach((v) => {
       if (v.heredited_attr_from_master === undefined) {
-        v.heredited_attr_from_master = ['']
+        v.heredited_attr_from_master = []
       }
       // Convert old views that are diff to json
       const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
@@ -773,7 +773,9 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       }
 
       // Set Name of view 
-      ((json_object.views as Type_JSON)[v.id] as Type_JSON).name = v.nom
+      ((json_object.views as Type_JSON)[v.id] as Type_JSON).name = v.nom;
+      // Set heredited from master attr
+      ((json_object.views as Type_JSON)[v.id] as Type_JSON).heredited_attr = v.heredited_attr_from_master
     })
   }
 }
