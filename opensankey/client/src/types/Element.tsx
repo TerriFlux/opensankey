@@ -26,6 +26,7 @@ import {
   Type_ElementPosition
 } from './Utils'
 
+
 // CLASS PROTO ELEMENT ******************************************************************
 
 /**
@@ -249,7 +250,7 @@ export abstract class Class_ProtoElement
         )
       } else if (this.drawing_area.isInEditionMode()) {
         // In edition mode we don't use drag event on elements
-        this.d3_selection?.on('mousedown.drag', null) // Remove dag event 
+        this.d3_selection?.on('mousedown.drag', null) // Remove dag event
       }
     }
   }
