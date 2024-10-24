@@ -9,7 +9,7 @@ fi
 
 cd $SCRIPT_DIR
 
-source ./env
+export $(cat ./env)
 
 sudo docker stop stripe_dev
 sudo docker run --name stripe_dev --rm -d stripe/stripe-cli --api-key $STRIPE_SECRET_KEY listen --forward-to 0.0.0.0:${INTERNAL_HTTP_PORT}/stripe/webhook
