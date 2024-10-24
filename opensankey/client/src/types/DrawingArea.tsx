@@ -153,7 +153,7 @@ export abstract class Class_DrawingArea
    */
   public static: boolean = false
 
-  public bypass_timeout: boolean=false
+  public bypass_timeout: boolean = false
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -1432,7 +1432,7 @@ export abstract class Class_DrawingArea
     this._legend.fromJSON(json_object)
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
-    
+
     if (redraw) {
       // Draw
       this.reset()
@@ -1507,8 +1507,10 @@ export abstract class Class_DrawingArea
     this.sankey.updateFrom(other_drawing_area.sankey, mode)
   }
 
-  public copyFrom(_:Class_DrawingArea<Type_GenericSankey,Type_GenericNodeElement,Type_GenericLinkElement>){
-    this.fromJSON(_.toJSON(), false)
+  public copyFrom(_: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+    const json = _.toJSON()
+    delete json.id
+    this.fromJSON(json, false)
   }
 
   /**
@@ -1788,9 +1790,9 @@ export abstract class Class_DrawingArea
         else {
           // Make ghost target visible
           this._ghost_link.target.setVisible()
-          this._ghost_link.target.has_timeout=true
-          this._ghost_link.source.has_timeout=true
-          
+          this._ghost_link.target.has_timeout = true
+          this._ghost_link.source.has_timeout = true
+
 
           // Create new link
           this.sankey.addNewLink(
