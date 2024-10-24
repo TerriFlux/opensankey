@@ -81,23 +81,29 @@ let formations_menu = {} as ExempleMenuTypes
 // const data = DefaultSankeyData()
 const path = window.location.origin
 const url = path + '/opensankey/sankey/menu_examples'
-fetch(url, fetchData).then(response => {
-  response.text().then(text => {
-    const json_data = JSON.parse(text)
-    exemple_menu = json_data.exemples_menu
-    if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
-      formations_menu = Object.fromEntries(
-        Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
-      ) as { [_: string]: ExempleMenuTypes }
-      delete json_data.exemples_menu['Formations']['Tutoriels']
-    }
-  }).catch(() => {
-    exemple_menu = {}
-    formations_menu = {}
-  }).then(() => {
-    renderPage()
+fetch(url, fetchData)
+  .then(response => {
+    response
+      .text()
+      .then(text => {
+        const json_data = JSON.parse(text)
+        exemple_menu = json_data.exemples_menu
+        if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
+          formations_menu = Object.fromEntries(
+            Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
+          ) as { [_: string]: ExempleMenuTypes }
+          delete json_data.exemples_menu['Formations']['Tutoriels']
+        }
+      })
+      .then(() => {
+        renderPage()
+      })
+      .catch((error) => {
+        console.error('Error in fetchExamples - ' + error.toString())
+        exemple_menu = {}
+        formations_menu = {}
+      })
   })
-})
 
 
 const renderPage = () => {

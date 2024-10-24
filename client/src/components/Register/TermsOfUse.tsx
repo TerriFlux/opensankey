@@ -55,8 +55,8 @@ const TermsOfUse: FunctionComponent<{
       .then((html) => {
         setHtmlContent(html)
       })
-      .catch((error) => {
-        console.error('Error fetching HTML content:', error)
+      .catch(error => {
+        console.error('Error in TermsOfUse - ' + error.toString())
       })
   }, [])
 

@@ -53,16 +53,20 @@ export async function userSignUp(
     })
     .then((response) => {
       if (response) {
-        if (response['message'] === 'ok'){
+        if (response['message'] === 'ok') {
           logInfo(i18next.t('Register.account.msg.ok'))
           callback(true)
         }
-        else{
+        else {
           logError(i18next.t('Register.account.msg.' + response['message']))
           callback(false)
         }
       }
     })
+    .catch(error => {
+      console.error('Error in userSignUp - ' + error.toString())
+    })
+
 }
 
 // Check Licence and register account if everything is Ok
@@ -99,7 +103,7 @@ export async function userValidate(
     })
     .then(() => {
       let next_page
-      if (new_data_app.has_account){
+      if (new_data_app.has_account) {
         logInfo(i18next.t('Register.validation.msg.redirect'))
         next_page = '/license/checkout'
       } else {
@@ -109,6 +113,9 @@ export async function userValidate(
         () => navigate(next_page),
         3000
       )
+    })
+    .catch(error => {
+      console.error('Error in userValidate - ' + error.toString())
     })
 
 }
@@ -222,7 +229,8 @@ async function registerNewLicense(
         } else {
           reject('Failed to check licence')
         }
-      }).catch(error => {
+      })
+      .catch(error => {
         // Erreur fetch license
         reject('Error in check licence - ' + error.toString())
       })

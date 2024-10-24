@@ -181,29 +181,32 @@ const Account: FunctionComponent<AccountTypes> = ({
             body: JSON.stringify({
               license_id: newLicenseOpenOSP,
             })
-          }).then(response => {
-            if (response.ok) {
-              return response.json()
-            } else {
-              return Promise.reject(response)
-            }
-          }).then(() => {
-            // console.log('POST /user/infos/license_opensankeyplus : SUCCESS - ', data.message)
-            const userData_ = user_data
-            userData_.loading_legacy_opensankeyplus = true
-            userData_.license_legacy_opensankeyplus_id = newLicenseOpenOSP
-            userData_.license_legacy_opensankeyplus_active = ''
-            userData_.license_legacy_opensankeyplus_validity = ''
-            setUserData(userData_)
-            setReqCount(1)
-            activateLicensesTokens(new_data_app) //Update tokens
-            // setSuiteApplicationContext({...suiteApplicationContext})
-          }).catch(error =>
-            console.log('POST /user/infos/license_opensankeyplus : ERROR - ', error)
-          )
+          })
+            .then(response => {
+              if (response.ok) {
+                return response.json()
+              } else {
+                return Promise.reject(response)
+              }
+            })
+            .then(() => {
+              // console.log('POST /user/infos/license_opensankeyplus : SUCCESS - ', data.message)
+              const userData_ = user_data
+              userData_.loading_legacy_opensankeyplus = true
+              userData_.license_legacy_opensankeyplus_id = newLicenseOpenOSP
+              userData_.license_legacy_opensankeyplus_active = ''
+              userData_.license_legacy_opensankeyplus_validity = ''
+              setUserData(userData_)
+              setReqCount(1)
+              activateLicensesTokens(new_data_app) //Update tokens
+              // setSuiteApplicationContext({...suiteApplicationContext})
+            })
+            .catch(error => {
+              console.error('Error in registerNewLicenseOpenOSP - ' + error.toString())
+            })
         })
         .catch(error => {
-          console.log('signupNewLicenseOpenOSP : ERROR - ', error)
+          console.error('Error in signupNewLicenseOpenOSP - ' + error.toString())
         })
     }
   }
@@ -370,7 +373,9 @@ const Account: FunctionComponent<AccountTypes> = ({
             2000)
           setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.prs_pwd'))
         })
-        .catch(() => { })
+        .catch(error => {
+          console.error('Error in triggerPasswordChange - ' + error.toString())
+        })
     }
     else {
       setErrPassword(true)
@@ -408,7 +413,9 @@ const Account: FunctionComponent<AccountTypes> = ({
         onPwdChangeModalClose()
         setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_pwd'))
       })
-      .catch(() => { })
+      .catch(error => {
+        console.error('Error in submitPassword - ' + error.toString())
+      })
   }
 
   /**
@@ -451,7 +458,9 @@ const Account: FunctionComponent<AccountTypes> = ({
           },
           2000)
       })
-      .catch(() => { })
+      .catch(error => {
+        console.error('Error in triggerDeleteAccount - ' + error.toString())
+      })
   }
 
   // User data modifications ----------------------------------------------------------
@@ -551,7 +560,9 @@ const Account: FunctionComponent<AccountTypes> = ({
       .then(response => {
         window.location.href = response.url
       })
-      .catch(() => { })
+      .catch(error => {
+        console.error('Error in openCustomerPage - ' + error.toString())
+      })
   }
 
   // Hooks
@@ -607,8 +618,8 @@ const Account: FunctionComponent<AccountTypes> = ({
           setReqCount(reqCount_)
         })
         .catch(error => {
+          console.error('Error in userInfos - ' + error.toString())
           // Erreur fetch user data
-          console.log('user_info : ERROR', error)
           d3.select('.LogError')
             .append('p')
             .style('color', 'red')
@@ -657,7 +668,8 @@ const Account: FunctionComponent<AccountTypes> = ({
             // Increase number of requests
             reqCount_ = reqCount_ + 1
             setReqCount(reqCount_)
-          }).catch(error => {
+          })
+          .catch(error => {
             // Erreur fetch license
             d3.select('.LogError').append('p').style('color', 'red').text(t('UserPages.err_get_OS+_infos'))
             console.log('check_license OpenSankey+ : ERROR', error)
