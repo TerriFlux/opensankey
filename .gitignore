@@ -10,7 +10,6 @@ client/coverage
 client/build
 client/dist
 client/src/deps/OpenSankey+
-env.sh
 
 # server
 __pycache__
@@ -27,3 +26,4 @@ client/package-lock.json
 
 #local server
 .vscode
+env
