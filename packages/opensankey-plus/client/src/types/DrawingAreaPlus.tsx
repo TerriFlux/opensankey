@@ -106,9 +106,16 @@ export abstract class Class_DrawingAreaPlus
     id: string = default_main_sankey_id
   ) {
     // Heritance
-    super(application_data,id)
+    super(application_data, id)
     // Overrides
     this.application_data = application_data
+  }
+
+
+  public delete() {
+    super.delete()
+    // Override also relations with views
+    this.application_data.deleteView(this.id)
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -290,6 +297,13 @@ export abstract class Class_DrawingAreaPlus
     this.deleteSelectedContainers()
   }
 
+  public copyFrom(_: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+    const json = _.toJSON()
+    delete json.id
+    delete json.name
+    this.fromJSON(json, false)
+  }
+
   /**
    * Extract Drawing area attributes from JSON
    *
@@ -312,8 +326,7 @@ export abstract class Class_DrawingAreaPlus
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
     this.name = getStringFromJSON(json_object, 'name', this.id)
-    this._heredited_attr=getArrayFromJSON(json_object,'heredited_attr',[]) as string[]
-
+    this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]
   }
 
   /**
@@ -351,12 +364,12 @@ export abstract class Class_DrawingAreaPlus
     if (mode.includes('attrDrawingArea') || all) {
       this._show_background_image = other_drawing_area._show_background_image
       this._background_image = other_drawing_area._background_image
-      this.name=other_drawing_area.name
+      this.name = other_drawing_area.name
     }
 
     if (all) {// Update Contaiers
-    // TODO add container create/update/delete options in mode
-      const [to_remove, to_add, ] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
+      // TODO add container create/update/delete options in mode
+      const [to_remove, to_add,] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict)
       // Add containers that are in other sankey but not in this sankey
       if (all) {
         to_add
@@ -437,5 +450,5 @@ export abstract class Class_DrawingAreaPlus
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
 
-  public get heredited_attr(): string[] {return this._heredited_attr}
+  public get heredited_attr(): string[] { return this._heredited_attr }
 }

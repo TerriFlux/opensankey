@@ -217,13 +217,6 @@ export abstract class Class_ApplicationDataPlus
 
   // PUBLIC METHODS =====================================================================
 
-  public override reset(){
-    super.reset()
-    // Delete views from application data
-    this._views_order.filter(v=> v !== default_main_sankey_id).forEach(v=> delete this._views[v])
-    this._views_order=[default_main_sankey_id]
-  }
-
   /**
    * Extract application data attribute from JSON then extract info for  views
    *
@@ -231,21 +224,21 @@ export abstract class Class_ApplicationDataPlus
    */
   public override fromJSON(json_object: Type_JSON): void {
     super.fromJSON(json_object)
-    this._drawing_area.bypass_timeout=true
+    this._drawing_area.bypass_timeout = true
     if (this._drawtimeout !== null) clearTimeout(this._drawtimeout)
     const views = getJSONOrUndefinedFromJSON(json_object, 'views')
-    this._original_current_view=undefined
+    this._original_current_view = undefined
     if (views) {
       // Save master in view
       this._views[default_main_sankey_id] = this._drawing_area
       this.pushViewIdInViewOrder(default_main_sankey_id)
 
       // Create other views
-      Object.entries(views).forEach(ent_view => {    
+      Object.entries(views).forEach(ent_view => {
         const tmp = this.createNewDrawingArea(ent_view[0])
-        tmp.bypass_timeout=true
+        tmp.bypass_timeout = true
         tmp.fromJSON(ent_view[1] as Type_JSON, false)
-        tmp.bypass_timeout=false
+        tmp.bypass_timeout = false
         // Add new sankey to views
         this._views[ent_view[0]] = tmp
         this.pushViewIdInViewOrder(ent_view[0])
@@ -254,12 +247,12 @@ export abstract class Class_ApplicationDataPlus
       // Set view to the one active when saved
       const active_view = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
       if (active_view != default_main_sankey_id && active_view in this._views) {
-        this._drawing_area.bypass_timeout=false
+        this._drawing_area.bypass_timeout = false
         const idx = this._views_order.indexOf(active_view)
         this.setCurrentView(this._views_order[idx])
       }
     }
-    this._drawing_area.bypass_timeout=false    
+    this._drawing_area.bypass_timeout = false
     this._drawing_area.drawElements()
   }
 
@@ -350,27 +343,27 @@ export abstract class Class_ApplicationDataPlus
    * @memberof Class_DrawingAreaPlus
    */
   public createNewView(
-    base_DA: Type_GenericDrawingArea | undefined = undefined
+    base_drawing_area: Type_GenericDrawingArea | undefined = undefined
   ) {
     // If no base sankey is given, we take the currently active sankey
-    if (base_DA === undefined)
-      base_DA = this._drawing_area
+    if (base_drawing_area === undefined)
+      base_drawing_area = this._drawing_area
     // If no view existed previously, we add the active sankey as master sankey
     if (this.views.length === 0) {
       this._views[default_main_sankey_id] = this._drawing_area
       this.pushViewIdInViewOrder(default_main_sankey_id)
     }
     // Create the new sankey
-    const new_DA = this.createNewDrawingArea(makeId('view'))
+    const new_drawing_area = this.createNewDrawingArea(makeId('view'))
     // Copy current sankey
-    new_DA.updateFrom(base_DA, ['*'])
+    new_drawing_area.copyFrom(base_drawing_area)
     // Add new sankey to views
-    this._views[new_DA.id] = new_DA
-    this.pushViewIdInViewOrder(new_DA.id)
+    this._views[new_drawing_area.id] = new_drawing_area
+    this.pushViewIdInViewOrder(new_drawing_area.id)
     // In case we add a new view with an existing key it automatically change in the dict but we need to delete all duplicate in _views_order
 
     // Shown sankey = new sanke
-    this.setCurrentView(new_DA.id)
+    this.setCurrentView(new_drawing_area.id)
   }
 
   public setCurrentView(id: string) {
@@ -396,7 +389,7 @@ export abstract class Class_ApplicationDataPlus
         // Set original view in temporary var so it can be used when we change view and don't want to save current modification
         if (id !== default_main_sankey_id) {
           // Update view with attr heredited from master
-          this._drawing_area.updateFrom(this._views[default_main_sankey_id],this._drawing_area.heredited_attr)
+          this._drawing_area.updateFrom(this._views[default_main_sankey_id], this._drawing_area.heredited_attr)
 
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
@@ -438,7 +431,6 @@ export abstract class Class_ApplicationDataPlus
     }
   }
 
-
   /**
    * Delete current view
    *
@@ -456,15 +448,16 @@ export abstract class Class_ApplicationDataPlus
    */
   public deleteView(id: string) {
     // Check if we are not trying to delete master
-    if (this.has_views && id != default_main_sankey_id && id in this._views) {
+    if (id in this._views) {
+      // Clean
+      delete this._views[id] // Remove for view dict
+      this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
       // Got to master
       if (!this.is_view_master) {
         this._original_current_view = undefined // delete copy
         this._drawing_area.delete() // Delete view
         this.setCurrentViewToMaster()
       }
-      delete this._views[id] // Remove for view dict
-      this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
     }
   }
 

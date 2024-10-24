@@ -33,6 +33,8 @@ export abstract class Class_AbstractApplicationDataPlus
     Type_GenericLinkElement
   > {
   public abstract get menu_configuration(): Class_MenuConfigPlus
+  // Mandatory methods
+  public abstract deleteView(id: string): void
 }
 
 export abstract class Class_AbstractDrawingAreaPlus
