@@ -41,8 +41,6 @@ from .models import db
 # ---------------------------------------------------------------
 # Create auth blue print
 
-domain_url = 'http://localhost:3000/#/'  # TODO use OS.environ
-
 auth_blueprint = Blueprint('auth_blueprint', __name__)
 login_manager = LoginManager()
 
@@ -122,9 +120,9 @@ def signup_post():
     try:
         send_account_confirm_mail(
             user_infos,
-            domain_url + 'register?t={}'.format(token))
+            'register?t={}'.format(token))
     except Exception as e:
-        return 'Error on send confirm mail : ' + e, 500
+        return 'Error on send confirm mail : {}'.format(e), 500
 
     # Return response
     return jsonify(response), 200

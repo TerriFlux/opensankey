@@ -2,7 +2,7 @@ Bienvenue {{ first_name }}
 
 Votre compte OpenSankey est désormais créé.
 
-Pour vous connecter, allez directement à la page de connexion d'OpenSankey https://open-sankey.fr/#/login ou accédez-y via le menu de connexion situé en haut à droite de l'application.
+Pour vous connecter, allez directement à la page de connexion d'OpenSankey {{login_url}} ou accédez-y via le menu de connexion situé en haut à droite de l'application.
 
 Une documentation et des tutoriels sont disponible depuis le menu d’aide de l’application.
 

@@ -91,7 +91,7 @@ def send(msg):
 
 def send_account_confirm_mail(
     user_infos,
-    confirm_url
+    confirm_sub_url
 ):
     """
     Send welcome mail for newly created user
@@ -101,8 +101,8 @@ def send_account_confirm_mail(
     :param user_infos: _description_
     :type user_infos: _type_
 
-    :param confirm_url: _description_
-    :type confirm_url: _type_
+    :param confirm_sub_url: _description_
+    :type confirm_sub_url: _type_
     """
     # Protections
     if not is_email_valid(user_infos['email']):
@@ -120,6 +120,7 @@ def send_account_confirm_mail(
         recipients=[user_infos['email']])
     # Add body to msg
     file = 'register_mail/account_confirm_{}'.format(user_infos['lang'])
+    confirm_url = '{0}{1}'.format(CLIENT_ROOT_URL, confirm_sub_url)
     msg.body = render_template(
         file + '.txt',
         first_name=user_infos['firstname'],
@@ -183,14 +184,17 @@ def send_welcome_mail(
         recipients=[user.email])
     # Add body to msg
     file = 'register_mail/welcome_mail_{}'.format(language)
+    login_url = '{0}login'.format(CLIENT_ROOT_URL)
     msg.body = render_template(
         file + '.txt',
-        first_name=user.firstname)
+        first_name=user.firstname,
+        login_url=login_url)
     msg.html = render_template(
         file + '.html',
         logo_OS='cid:logo_OS',
         logo_TerriFlux='cid:logo_TerriFlux',
-        first_name=user.firstname)
+        first_name=user.firstname,
+        login_url=login_url)
     # Get abs path
     path = os.path.dirname(os.path.abspath(__file__))
     # Add openSankey logo
