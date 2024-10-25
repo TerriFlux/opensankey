@@ -1474,12 +1474,22 @@ export const NodeStrokeWidth : NodeStrokeWidthFType =(
 }
 
 export const TextNodeValue : TextNodeValueFType =(
-  d:SankeyNode,data:SankeyData,
-  display_links:{[link_id:string]:SankeyLink},
-  display_nodes:{[nodes_id:string]:SankeyNode},
-  GetLinkValue:GetLinkValueFuncType,
+  d,
+  data,
+  display_links,
+  display_nodes,
+  GetLinkValue,
+  LinkText,
   t
 )=>{
+  if (d.tags && d.tags['Type de noeud'] && d.tags['Type de noeud'][0].includes('echange')) {
+    if (d.outputLinksId.length > 0) {
+      return LinkText(data,data.links[d.outputLinksId[0]],GetLinkValue,t)
+    } else if (d.inputLinksId.length > 0) {
+      return LinkText(data,data.links[d.inputLinksId[0]],GetLinkValue,t)
+    }
+  }
+
   let total = 0
   const node_visible=NodeVisibleOnsSvg()
   if (ReturnValueNode(data,d,'show_value')) {

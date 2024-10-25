@@ -119,6 +119,7 @@ export type TextNodeValueFType = (
   display_links:{[link_id:string]:SankeyLink},
   display_nodes:{[nodes_id:string]:SankeyNode},
   GetLinkValue:GetLinkValueFuncType,
+  LinkText:LinkTextFuncType,
   t:TFunction
 )=> string
 

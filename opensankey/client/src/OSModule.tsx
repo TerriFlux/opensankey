@@ -368,11 +368,11 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
   } as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)
-    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
+    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,link_function.LinkText,applicationContext.t,_)
     return null
   }
   _.RedrawNodesLabels=(nodes_to_update:SankeyNode[])=>{
-    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
+    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,link_function.LinkText,applicationContext.t,_)
   }
   _.CreateNodesOnSVG=(nodes_to_update:SankeyNode[])=>{
     drawAddNodes(

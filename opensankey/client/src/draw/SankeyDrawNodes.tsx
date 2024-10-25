@@ -51,7 +51,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
     resizeCanvas
   )
   updateDrawNodeShape(applicationData,link_function,multi_selected_nodes,Object.values(display_nodes))
-  RedrawNodesLabel(applicationData,Object.values(display_nodes),GetLinkValue,t,node_function)
+  RedrawNodesLabel(applicationData,Object.values(display_nodes),GetLinkValue,link_function.LinkText,t,node_function)
 
 
 }
@@ -427,6 +427,7 @@ export const drawAddNodes : drawNodeShapeFType = (
     applicationData,
     Object.values(display_nodes),
     link_function.GetLinkValue,
+    link_function.LinkText,
     t,
     node_function
   )

@@ -13,16 +13,19 @@ import { dragNodeTextEventWidthBoxEvent } from './SankeyDragNodes'
 export const updateDrawAllNodesLabel : DrawAllNodesLabelFType = (
   applicationData,
   GetLinkValue,
+  LinkText,
   t,
   node_function
 ) => {
-  RedrawNodesLabel(applicationData,[],GetLinkValue,t,node_function)
+  RedrawNodesLabel(applicationData,[],GetLinkValue,LinkText,t,node_function)
 }
 
 export const RedrawNodesLabel : DrawAddNodesFtype = (
   applicationData,
   nodes_to_redraw,
-  GetLinkValue,t,
+  GetLinkValue,
+  LinkText,
+  t,
   node_function
 ) => {
   const { data, display_nodes, display_links } = applicationData
@@ -184,7 +187,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('text-anchor', (n) => (ReturnValueNode(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
     .style('font-family', n => ReturnValueNode(data,n,'font_family'))
     .style('font-size', n => ReturnValueNode(data,n,'value_font_size') + 'px')
-    .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue,t))
+    .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue,LinkText,t))
 
 
   // Drag zone for changing label box width
