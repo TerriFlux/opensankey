@@ -37,6 +37,7 @@ import {
   default_shape_is_arrow,
   default_shape_is_curved,
   default_shape_is_recycling,
+  default_shape_local_scale,
   default_shape_opacity,
   default_shape_orientation,
   default_shape_starting_curve,
@@ -51,8 +52,8 @@ import {
   default_value_label_orthogonal_position,
   default_value_label_pos_auto,
   default_value_label_position,
-  default_value_label_scientific_precision,
   default_value_label_unit,
+  default_value_label_unit_factor,
   default_value_label_unit_visible,
   isAttributeOverloaded,
 } from '../types/Link'
@@ -75,7 +76,7 @@ import {
   OSTooltip,
   CutName
 } from '../types/Utils'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
 
@@ -171,6 +172,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
 
   // Elements attributes ----------------------------------------------------------------
 
+
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
@@ -203,8 +205,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   const value_label_font_family = (elements[0]?.value_label_font_family ?? default_value_label_font_family)
   const value_label_unit_visible = (elements[0]?.value_label_unit_visible ?? default_value_label_unit_visible)
   const value_label_unit = (elements[0]?.value_label_unit ?? default_value_label_unit)
+  const value_label_unit_factor = (elements[0]?.value_label_unit_factor ?? default_value_label_unit_factor)
   const value_label_custom_digit = (elements[0]?.value_label_custom_digit ?? default_value_label_custom_digit)
   const value_label_nb_digit = (elements[0]?.value_label_nb_digit ?? default_value_label_nb_digit)
+  const shape_local_scale = (elements[0]?.local_link_scale ?? default_shape_local_scale)
 
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
@@ -237,7 +241,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   }
 
   // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 8
+  const number_of_input = 9
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
@@ -251,7 +255,10 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   ref_set_number_inputs[5].current(String(shape_opacity))
   ref_set_number_inputs[6].current(String(value_label_nb_digit))
   ref_set_number_inputs[7].current(String(value_label_font_size))
+  ref_set_number_inputs[8].current(String(value_label_unit_factor))
 
+  const ref_set_link_scale_inputs = useRef((_: number | null | undefined) => null)
+  ref_set_link_scale_inputs.current(shape_local_scale)
   /**
    * Function used to reset menu UI
    */
@@ -268,7 +275,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToLinksApparence()
   }
-
 
   // JSX menu components ---------------------------------------------------------------
 
@@ -627,8 +633,42 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       </InputGroup>
     </Box>
 
+    {/* Value of link local scale to override scale from DA, can be undefined */}
+    <Box layerStyle='menuconfigpanel_grid' ><OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+      <>
+        <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+          {t('Flux.local_scale')}
+        </Box>
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {t('Flux.apparence.data_off_scale')}
+          </Box>
+          <ConfigMenuNumberOrUndefinedInput
+            ref_to_set_value={ref_set_link_scale_inputs}
+            default_value={selected_links[0]?.local_link_scale ?? undefined}
+            function_on_blur={(_) => {
+              elements.forEach(link => {
+                link.local_link_scale = ((_ !== undefined && _ <= 0) ? undefined : _)
+              })
+              // Update this menu
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            minimum_value={0}
+            stepper={true}
+            step={1}
 
-    {additionMenus.additional_link_appearence_items.map((el,i)=><React.Fragment key={'additional_config_link_'+i}>{el}</React.Fragment>)}
+          />
+        </Box>
+      </>
+    </OSTooltip></Box>
+
+
+    {additionMenus.additional_link_appearence_items.map((el, i) => <React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>)}
 
   </Box>
 
@@ -642,7 +682,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
 
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminate}
         isChecked={value_label_is_visible}
         onChange={(evt) => {
@@ -711,7 +751,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       {/* Ajout une unité au label de flux */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         isChecked={value_label_unit_visible}
         onChange={(evt) => {
           elements.forEach(element => element.value_label_unit_visible = evt.target.checked)
@@ -753,11 +793,41 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                 />
               </OSTooltip>
             </Box>
+            {/* Change unit factor*/}
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.label.unit_factor')}
+                {
+                  (
+                    (!menu_for_style) &&
+                    isAttributeOverloaded(selected_links, 'value_label_unit_factor')
+                  ) ?
+                    <>{TooltipValueSurcharge('link_var_', t)}</> :
+                    <></>
+                }
+              </Box>
+              <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
+                <ConfigMenuNumberInput
+                  ref_to_set_value={ref_set_number_inputs[8]}
+                  default_value={value_label_unit_factor}
+                  function_on_blur={(value) => {
+                    elements.forEach(element =>
+                      element.value_label_unit_factor = (value ? value : undefined))
+                    refreshThisAndUpdateRelatedComponents()
+                  }}
+                  menu_for_style={menu_for_style}
+                  minimum_value={1}
+                  maximum_value={value_label_unit_factor}
+                  step={1}
+                  stepper={true}
+                />
+              </OSTooltip>
+            </Box>
           </> :
           <></>
       }
 
-      {additionMenus.additional_link_appearence_value.map((el,i)=><React.Fragment key={'additional_config_link__value_'+i}>{el}</React.Fragment>)}
+      {additionMenus.additional_link_appearence_value.map((el, i) => <React.Fragment key={'additional_config_link__value_' + i}>{el}</React.Fragment>)}
 
       <Box
         layerStyle='menuconfigpanel_grid'
@@ -1258,12 +1328,12 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     />
   </Box> : <></>
 
+
   const content = <Box
     layerStyle='menuconfigpanel_grid'
   >
     {content_style}
     {content_zIndex_and_direction}
-
     {content_appearence}
     <hr style={{
       borderStyle: 'none',

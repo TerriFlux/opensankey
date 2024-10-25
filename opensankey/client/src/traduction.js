@@ -543,6 +543,7 @@ export const open_resources = {
         IS: 'Additional info.',
         ajust_label: 'Adjust labels position',
         FS: 'Link',
+        local_scale:'Local link scale',
         tooltips: {
           src: 'Choice of the departure node for the selected link(s)',
           trgt: 'Choice of the arrival node for the selected link(s)',
@@ -585,6 +586,7 @@ export const open_resources = {
           arrow_size: 'Size of arrow',
           display_link_lab: 'Display value',
           hide_link_lab: 'Hide value',
+          data_off_scale:'Scale',
           tooltips: {
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -600,7 +602,8 @@ export const open_resources = {
             ending_curve: 'Allows to refine the position of the ending point of curvature for the selected link(s). This value is a ratio (%) of the link\'s lenght relative to the starting point of the link.',
             starting_tangeant: 'Setting the radius of the starting curvature in case the selected link(s) are represented as Bezier curve(s)',
             ending_tangeant: 'Setting the radius of the ending curvature in case the selected link(s) are represented as Bezier curve(s)',
-            arrow_size: 'Change the size of the arrow (from the end of the link to the node)'
+            arrow_size: 'Change the size of the arrow (from the end of the link to the node)',
+            data_off_scale:'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value '
           }
         },
         label: {
@@ -623,6 +626,7 @@ export const open_resources = {
           NbDigit: 'Number of decimals',
           l_u_v: 'Unit',
           l_u: 'Unit\'s name',
+          unit_factor:'Unit factor',
           tooltips: {
             label: 'Display or not the label (data / text) associated to the selected link(s)',
             len: 'Display the label in black, for the selected stream(s)',
@@ -642,6 +646,7 @@ export const open_resources = {
             NbDigit: 'Choose the number of decimals figures of the value',
             l_u_v: 'Display the unit of the links',
             l_u: 'Choose the name of the unit',
+            unit_factor:'Factor of conversion for link unity'
           }
         },
         layout: 'Disposition',
@@ -1311,6 +1316,7 @@ export const open_resources = {
         IB: 'Info-bulle',
         IS: 'Info sup.',
         ajust_label: 'Position vertical ajusté',
+        local_scale:'Échelle propre au flux',
         FS: 'Flux',
         tooltips: {
           src: 'Choix du noeud de départ pour le/les flux sélectionné(s)',
@@ -1354,6 +1360,7 @@ export const open_resources = {
           arrow_size: 'Taille de la flèche',
           display_link_lab: 'Afficher la valeur',
           hide_link_lab: 'Masquer la valeur',
+          data_off_scale:'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
@@ -1369,7 +1376,9 @@ export const open_resources = {
             ending_curve: 'Permet d\'affiner la position de fin des courbures du/des flux sélectionné(s). Cette valeur est un ratio (%) relatif à la longueur du flux à partir du point de départ.',
             starting_tangeant: 'Paramétrage de la courbure de départ dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
             ending_tangeant: 'Paramétrage de la courbure de fin dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
-            arrow_size: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud'
+            arrow_size: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud',
+            data_off_scale:'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur '
+
           }
         },
         label: {
@@ -1392,7 +1401,7 @@ export const open_resources = {
           NbDigit: 'Nombre de décimale',
           l_u_v: 'Unité',
           l_u: 'Nom de l\'unité',
-
+          unit_factor:'Facteur d\'unité',
           tooltips: {
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
             len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
@@ -1413,6 +1422,7 @@ export const open_resources = {
 
             l_u_v: 'Permet d\'afficher ou non l\'unité du flux',
             l_u: 'Permet de choisir le nom de l\'unité',
+            unit_factor:'Facteur de conversions de l\'unité du flux',
           }
         },
         layout: 'Organiser',
