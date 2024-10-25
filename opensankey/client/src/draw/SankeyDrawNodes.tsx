@@ -145,13 +145,14 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   }
   // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
   ggg_nodes.on('contextmenu', (ev, n) => {
-    if(!window.SankeyToolsStatic){
+    //if(!window.SankeyToolsStatic){
       // if the right mouse button is clicked we switch to selection mode
       // applicationState.ref_setter_mode_selection.current('s')
       // applicationState.ref_getter_mode_selection.current = 's'
       // d3.select(' .opensankey #svg').attr('class','mode_selection')
-      return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
-    }}
+    return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
+    //}
+    }
   )
   // Add tooltip when mouse hover the <g> element that contains shape/label/icon (everything that compose a node)
   const gg_nodes = d3.selectAll(' .opensankey .gg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>
@@ -161,7 +162,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   // Gestion de la tooltip
   filtered_gg_nodes.on('mouseover', function (event, d) {
     d3.select(this).attr('cursor', (ref_getter_mode_selection.current == 's')? 'pointer' : 'unset')
-    if ( (window.SankeyToolsStatic ||event.shiftKey)) {
+    if ( (event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
       sankeyTooltip
         .style('opacity', 1)
@@ -170,7 +171,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   })
   filtered_gg_nodes.on('mousemove', function (event) {
     // Triggered when the mouse move over the node
-    if ((window.SankeyToolsStatic ||event.shiftKey)) {
+    if ((event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
