@@ -20,7 +20,7 @@ import {
   OSTooltip
 } from '../types/Utils'
 import { default_value_label_unit } from '../types/Link'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
 
@@ -61,7 +61,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const value_update = updated_selected_links[0]?.value
 
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
+    ref_set_data_value_input.current(String(value_update?.data_value??''))
   }
 
   // Function used to force this component to reload
@@ -151,7 +151,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         </Box>
         <ConfigMenuNumberInput
           ref_to_set_value={ref_set_data_value_input}
-          default_value={value?.data_value ?? null}
+          default_value={value?.data_value as number | undefined}
           function_on_blur={(_) => {
             // Update data for links
             selected_links.forEach(link => {

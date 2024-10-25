@@ -242,7 +242,6 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
   const [value, setValue] = useState<string | null | undefined>(String(default_value ?? ''))
   ref_to_set_value.current = setValue
-
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
     <NumberIncrementStepper />
@@ -288,7 +287,79 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
             clearTimeout(is_modifying.current)
           }
           // Update selected elements value
-          function_on_blur(Number(value))
+          // Use functionOnBlur with either value null or value casted as number
+          function_on_blur(value===null?value:Number(value))
+        }}
+      />
+      {stepperBtn}
+    </NumberInput>
+    {input_unit}
+  </InputGroup>
+}
+
+export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMenuNumberOrUndefinedInput> = ({
+  default_value,
+  ref_to_set_value,
+  function_on_blur,
+  menu_for_style = false,
+  minimum_value = Number.MIN_SAFE_INTEGER,
+  maximum_value = Number.MAX_SAFE_INTEGER,
+  stepper = false,
+  step = 1,
+  unit_text = undefined,
+}) => {
+  const ref_input = useRef<HTMLInputElement>(null)
+  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
+  const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
+  const [value, setValue] = useState<number | undefined>(default_value)
+  ref_to_set_value.current = setValue
+
+  // Add stepper addon if specified
+  const stepperBtn = stepper ? <NumberInputStepper>
+    <NumberIncrementStepper />
+    <NumberDecrementStepper />
+  </NumberInputStepper> : <></>
+
+  // Add unit addon if specified
+  const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
+  return <InputGroup>
+    <NumberInput
+      allowMouseWheel
+      variant={variant}
+      min={minimum_value}
+      max={maximum_value}
+      step={step}
+      value={value??''}
+      onChange={(_,value_as_number) => {
+        // Launch/reset timeout before the input auto blur (and update the value in data)
+        if (!menu_for_style) {
+          // reset timeout if exist
+          if (is_modifying.current) {
+            clearTimeout(is_modifying.current)
+          }
+          // launch timeout that automatically blur the input
+          is_modifying.current = setTimeout(() => {
+            ref_input.current?.blur()
+          }, 3000)
+        }
+        // Update displayed value_as_number
+        setValue(isNaN(value_as_number)?undefined:value_as_number)
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') {
+          ref_input.current?.blur()
+        }
+      }}
+    >
+      <NumberInputField
+        ref={ref_input}
+        onBlur={() => {
+          if (!menu_for_style) {
+            clearTimeout(is_modifying.current)
+          }
+          // Update selected elements value
+          function_on_blur(value)
+
         }}
       />
       {stepperBtn}
@@ -301,6 +372,18 @@ export type FCType_ConfigMenuNumberInput = {
   default_value: number | null | undefined,
   ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_on_blur: (val: number | null | undefined) => void,
+  menu_for_style?: boolean,
+  minimum_value?: number,
+  maximum_value?: number,
+  stepper?: boolean,
+  step?: number,
+  unit_text?: string
+}
+
+export type FCType_ConfigMenuNumberOrUndefinedInput = {
+  default_value: number | undefined,
+  ref_to_set_value: MutableRefObject<(_: number | undefined) => void>,
+  function_on_blur: (val: number | undefined) => void,
   menu_for_style?: boolean,
   minimum_value?: number,
   maximum_value?: number,

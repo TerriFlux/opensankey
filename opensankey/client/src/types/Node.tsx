@@ -2538,9 +2538,40 @@ export abstract class Class_NodeElement
   public get value_label() {
     let input_val = 0
     let output_val = 0
-    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.data_value ?? 0)
-    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.data_value ?? 0)
-    return String(Math.max(input_val, output_val))
+
+    // To avoid float problem (sometime when we add float we have additional not wanted digit)
+    // we multiply float by a power of 10 to have an Interger then addition these Integer between them to avoid previous problem
+    // & finally we divide the sum by the power of 10 used to get Integer out of Float.
+
+    // It's probably not the most optimized way to resolve this problem but it work for now
+
+
+    let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
+    const link_in = this.input_links_list.filter(link => link.is_visible).map(link => {
+      const decimal_digit = String(link.value?.data_value).split('.')[1]
+      if (decimal_digit !== undefined) { // sometime link value are already integer so we don't count their decimal digit
+        max_digit_in = Math.max(max_digit_in, decimal_digit.length)
+      }
+      return link
+    })
+
+    const pow_in=Math.pow(10,max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value 
+    link_in.forEach(link => input_val += (link.value?.data_value ?? 0)*pow_in)
+
+
+    // Do the same we did for input links to output links
+    let max_digit_out = 0
+    const link_out = this.output_links_list.filter(link => link.is_visible).map(link => {
+      const decimal_digit = String(link.value?.data_value).split('.')[1]
+      if (decimal_digit !== undefined) {
+        max_digit_out = Math.max(max_digit_out, decimal_digit.length)
+      }
+      return link
+    })
+
+    const pow_out=Math.pow(10,max_digit_out)
+    link_out.forEach(link => output_val += (link.value?.data_value ?? 0) * pow_out)
+    return String(Math.max(input_val/pow_in, output_val/pow_out))
   }
 
   /**

@@ -346,7 +346,7 @@ export class Class_MenuConfig {
   public addToAccordionsToShow(_: string) {
     if (!this.isGivenAccordionShowed(_)) {
       this._accordions_to_show.push(_)
-      this._ref_to_menu_config_updater.current()
+      this.updateAllMenuComponents()
     }
   }
 
@@ -359,7 +359,7 @@ export class Class_MenuConfig {
     if (this.isGivenAccordionShowed(_)) {
       this._accordions_to_show = this._accordions_to_show
         .filter(to_show => to_show !== _)
-      this._ref_to_menu_config_updater.current()
+      this.updateAllMenuComponents()
     }
   }
 
@@ -542,8 +542,7 @@ export class Class_MenuConfig {
     this._add_waiting_process(
       'updateMenuConfigNodeApparence',
       (_this: Class_MenuConfig) => {
-        _this._ref_to_menu_config_nodes_apparence_updater.current()
-        
+        _this._updateComponentRelatedToNodesApparence()
       }
     )
   }
@@ -685,12 +684,17 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllMenuComponents() {
+    this.updateMenuConfigComponent()
     this.updateComponentRelatedToLayoutApparence()
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
     this.updateAllComponentsRelatedToToolbar()
     Object.values(this._ref_to_menu_config_tags_updater)
       .forEach(ref => ref.current())
+  }
+
+  public updateMenuConfigComponent(){
+    this._ref_to_menu_config_updater.current()
   }
 
   /**
@@ -875,6 +879,10 @@ export class Class_MenuConfig {
       clearTimeout(this._waiting_processes[process_id])
   }
 
+  protected _updateComponentRelatedToNodesApparence(){
+    this._ref_to_menu_config_nodes_apparence_updater.current()
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   // Main menu component ----------------------------------------------------------------
@@ -903,7 +911,7 @@ export class Class_MenuConfig {
 
   public set accordions_to_show(_: string[]) {
     this._accordions_to_show = _
-    this._ref_to_menu_config_updater.current()
+    this.updateAllMenuComponents()
   }
 
   public get ref_to_btn_toogle_menu(): RefObject<HTMLButtonElement> {
