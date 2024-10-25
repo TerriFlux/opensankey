@@ -21,7 +21,7 @@ import './css/Login.css'
 import './css/Register.css'
 // External imports ===============================================================================
 
-import React from 'react'
+import React, { FunctionComponent } from 'react'
 import { createRoot } from 'react-dom/client'
 // import { BrowserRouter } from 'react-router-dom'
 // import { Routes } from 'react-router-dom'
@@ -44,6 +44,7 @@ import i18next from './traduction'
 // import Dashboard from './components/UserPages/Dashboard'
 import { SankeyAppSA } from './SankeyAppSA'
 import { ExempleMenuTypes } from './ModulesSA'
+import { Class_ApplicationDataSA } from './ApplicationData'
 
 // Global variables ==============================================================================
 
@@ -105,10 +106,17 @@ fetch(url, fetchData)
       })
   })
 
+const App: FunctionComponent = () => {
+  const new_data_app = new Class_ApplicationDataSA(false)
+  return <SankeyAppSA
+    example_menu={exemple_menu}
+    formations_menu={formations_menu}
+    new_data_app={new_data_app}
+  />
+}
 
 const renderPage = () => {
-  root.render(
-    <SankeyAppSA example_menu={exemple_menu} formations_menu={formations_menu} />
+  root.render(<App />
   )
 }
 

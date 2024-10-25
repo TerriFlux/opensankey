@@ -45,15 +45,16 @@ import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Pai
 
 type SankeyAppSAType = {
   example_menu: ExempleMenuTypes,
-  formations_menu: ExempleMenuTypes
+  formations_menu: ExempleMenuTypes,
+  new_data_app:Class_ApplicationDataSA
 }
 export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
-  { example_menu, formations_menu }
+  { example_menu, formations_menu,new_data_app }
 ) => {
 
   // Minimal app ------------------------------------------------------------------------------------
 
-  const new_data_app = new Class_ApplicationDataSA(false)
+  
 
   const reinit = initializeReinitializationOSP(new_data_app)
   const sankeyApp =
