@@ -448,7 +448,7 @@ export const DragElements: DragElementsFuncType = (
   if (multi_selected_nodes.current.length > 1) {
     // We redraw each arrows linked to a selected nodes after shifting it
     multi_selected_nodes.current.forEach(n => {
-      DrawArrows(n as SankeyNode, applicationData, scale, inv_scale, GetLinkValue, data.display_style);
+      DrawArrows(n as SankeyNode, applicationData, GetLinkValue, data.display_style);
       // Redraw link linked to dragged nodes
       [...n.outputLinksId, ...n.inputLinksId].filter(idLink => Object.keys(applicationData.display_links).includes(idLink)).forEach(idLink => {
         const link = applicationData.data.links[idLink]
@@ -459,10 +459,10 @@ export const DragElements: DragElementsFuncType = (
             applicationContext,
             data.display_style,
             data.nodeTags, link, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
-            DrawArrows, ComponentUpdater, scale, inv_scale
+            DrawArrows, ComponentUpdater
           )
         )
-        DrawLinkStartSabot(applicationData, (n as SankeyNode), scale, inv_scale, GetLinkValue, LinkSabotColor)
+        DrawLinkStartSabot(applicationData, (n as SankeyNode), GetLinkValue, LinkSabotColor)
 
       })
     }
@@ -470,7 +470,7 @@ export const DragElements: DragElementsFuncType = (
     )
 
   } else if (Object.keys(node).length > 0 || (multi_selected_nodes.current.length == 1 && multi_selected_nodes.current[0] == node)) {
-    DrawArrows(node as SankeyNode, applicationData, scale, inv_scale, GetLinkValue, data.display_style);
+    DrawArrows(node as SankeyNode, applicationData, GetLinkValue, data.display_style);
     // Redraw link linked to dragged nodes
     [...node.outputLinksId, ...node.inputLinksId].filter(idLink => Object.keys(applicationData.display_links).includes(idLink)).forEach(idLink => {
       const link = applicationData.data.links[idLink]
@@ -481,10 +481,10 @@ export const DragElements: DragElementsFuncType = (
           applicationContext,
           data.display_style,
           data.nodeTags, link, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
-          DrawArrows, ComponentUpdater, scale, inv_scale
+          DrawArrows, ComponentUpdater
         )
       )
-      DrawLinkStartSabot(applicationData, (node as SankeyNode), scale, inv_scale, GetLinkValue, LinkSabotColor)
+      DrawLinkStartSabot(applicationData, (node as SankeyNode), GetLinkValue, LinkSabotColor)
 
     })
   }

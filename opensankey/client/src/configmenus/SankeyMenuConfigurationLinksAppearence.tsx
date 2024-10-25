@@ -88,8 +88,9 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
     //updateComponentMenuConfigLink.current()
     setForceUpdate(!forceUpdate)
   }
-  const list_key:(keyof SankeyLinkAttrLocal)[]=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible','color',
-    'label_visible','font_family','recycling','arrow','curved',
+  const list_key:(keyof SankeyLinkAttrLocal)[]=[
+    'dashed','label_on_path','to_precision','custom_digit','label_unit_visible','color',
+    'label_visible','font_family','recycling','arrow','curved', 'user_scale',
     'text_color','label_position','orthogonal_label_position','label_pos_auto']
   const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
 

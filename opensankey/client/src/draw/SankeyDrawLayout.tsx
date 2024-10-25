@@ -341,14 +341,7 @@ export const nodeHeight : nodeHeightFType = (
   GetLinkValue:GetLinkValueFuncType
 ) => {
   const {data}=applicationData
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   const res = ComputeTotalOffsets(
-    inv_scale,
     node,
     applicationData,
     TestLinkValue,
@@ -356,7 +349,7 @@ export const nodeHeight : nodeHeightFType = (
     GetLinkValue)
   const [total_offset_height_left, total_offset_height_right] = res
   let node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
-  node_size_s_height = Math.max(node_size_s_height,inv_scale(+ReturnValueNode(data,node,'node_height')))
+  node_size_s_height = Math.max(node_size_s_height,+ReturnValueNode(data,node,'node_height'))
 
   //Hauteur des noeuds
   if ((res[0] === 0) &&
@@ -367,7 +360,7 @@ export const nodeHeight : nodeHeightFType = (
     // return data.node_height
     return ReturnValueNode(data, node, 'node_height') as number
   }
-  return scale(node_size_s_height)
+  return node_size_s_height
 }
 
 /**
@@ -387,14 +380,7 @@ export const nodeWidth : nodeWidthFType = (
   GetLinkValue:GetLinkValueFuncType
 ) => {
   const {data}=applicationData
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   const res = ComputeTotalOffsets(
-    inv_scale,
     node,
     applicationData,
     TestLinkValue,
@@ -403,7 +389,7 @@ export const nodeWidth : nodeWidthFType = (
   const [, , total_offset_width_top, total_offset_width_bottom] = res
 
   let width = Math.max(total_offset_width_top, total_offset_width_bottom)
-  width = Math.max(width,inv_scale(+ReturnValueNode(data,node,'node_width')))
+  width = Math.max(width,+ReturnValueNode(data,node,'node_width'))
 
   //Hauteur des noeuds
   if ((res[0] === 0) &&
@@ -414,7 +400,7 @@ export const nodeWidth : nodeWidthFType = (
     // return data.node_height
     return ReturnValueNode(data, node, 'node_width') as number
   }
-  return scale(width)
+  return width
 }
 
 /**

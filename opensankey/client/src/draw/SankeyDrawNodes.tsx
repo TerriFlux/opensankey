@@ -252,7 +252,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
       const k_angle = ReturnValueNode(data, d, 'node_arrow_angle_factor') as number
       const angle_direction = ReturnValueNode(data, d, 'node_arrow_angle_direction') as string
       // const path='M0,0L'+n_w*(1-k_angle)+',0L'+n_w+','+n_h/2+'L'+n_w*(1-k_angle)+','+n_h+'L0,'+n_h+'L'+n_w*k_angle+','+n_h/2
-      const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction,scale)
+      const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction)
       return path
     })
   // Apply node's parameters to each node
@@ -269,7 +269,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
 
  
   node_to_update.forEach(n=>{
-    SetNodeHeight(n,applicationData,scale,inv_scale,GetLinkValue)
+    SetNodeHeight(n,applicationData,GetLinkValue)
     d3.select(' .opensankey #gg_' + n.idNode)
       .style('display', () => {
         return 'inline'

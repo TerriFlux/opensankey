@@ -201,12 +201,11 @@ export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
 }
 
 export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
-  inv_scale:(t:number)=>number,
-  node: SankeyNode,
-  applicationData:applicationDataType,
-  TestLinkValue: TestLinkValueFuncType,
-  ref_link: SankeyLink | undefined = undefined,
-  GetLinkValue:GetLinkValueFuncType
+  node,
+  applicationData,
+  TestLinkValue,
+  ref_link,
+  GetLinkValue
 ): number[] => {
   if (node == undefined) {
     return [0,0,0,0]
@@ -347,7 +346,13 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
+      const local_user_scale = ReturnLocalLinkValue(links[the_id],'user_scale') as number
+      const user_scale = local_user_scale ? local_user_scale : data.user_scale
+      const scale = d3.scaleLinear()
+        .range([0, 100])
+        .domain([0, user_scale])
+
+      v=((v!=='' && +v==0)||(scale(+v)>=applicationData.min_link_thickness))?scale(+v):applicationData.min_link_thickness
 
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
@@ -359,7 +364,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free && +v!==0) {
         // if flux is displayed thin
-        offset_width_top += inv_scale(applicationData.min_link_thickness)
+        offset_width_top += applicationData.min_link_thickness
       } else {
         offset_width_top += +v
       }
@@ -382,7 +387,13 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
+      const local_user_scale = ReturnLocalLinkValue(links[the_id],'user_scale') as number
+      const user_scale = local_user_scale ? local_user_scale : data.user_scale
+      const scale = d3.scaleLinear()
+        .range([0, 100])
+        .domain([0, user_scale])
+
+      v=((v!=='' && +v==0)||(scale(+v)>=applicationData.min_link_thickness))?scale(+v):applicationData.min_link_thickness
 
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
@@ -394,7 +405,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free && +v!==0) {
         // if flux is displayed thin
-        offset_width_bottom += inv_scale(applicationData.min_link_thickness)
+        offset_width_bottom += applicationData.min_link_thickness
       } else {
         offset_width_bottom += +v
       }
@@ -418,7 +429,13 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
+      const local_user_scale = ReturnLocalLinkValue(links[the_id],'user_scale') as number
+      const user_scale = local_user_scale ? local_user_scale : data.user_scale
+      const scale = d3.scaleLinear()
+        .range([0, 100])
+        .domain([0, user_scale])
+
+      v=((v!=='' && +v==0)||(scale(+v)>=applicationData.min_link_thickness))?scale(+v):applicationData.min_link_thickness
 
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
@@ -430,7 +447,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free&& +v!==0) {
         // if flux is displayed thin
-        offset_height_left += inv_scale(applicationData.min_link_thickness)
+        offset_height_left += applicationData.min_link_thickness
       } else {
         offset_height_left += +v
       }
@@ -454,7 +471,13 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
+      const local_user_scale = ReturnLocalLinkValue(links[the_id],'user_scale') as number
+      const user_scale = local_user_scale ? local_user_scale : data.user_scale
+      const scale = d3.scaleLinear()
+        .range([0, 100])
+        .domain([0, user_scale])
+
+      v=((v!=='' && +v==0)||(scale(+v)>=applicationData.min_link_thickness))?scale(+v):applicationData.min_link_thickness
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -465,7 +488,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       !(ReturnValueNode(data,nodes[links[the_id].idTarget],'position') == 'relative')
       if (extension.display_thin || is_free && +v!==0) {
         // if flux is displayed thin
-        offset_height_right += inv_scale(applicationData.min_link_thickness)
+        offset_height_right += applicationData.min_link_thickness
       } else {
         offset_height_right += +v
       }
@@ -552,12 +575,15 @@ export const TestLinkValue:TestLinkValueFuncType = (
 ) => {
   const {data}=applicationData
   const { dataTags } = data
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
+  const local_user_scale = ReturnLocalLinkValue(d,'user_scale') as number
+  const user_scale = local_user_scale ? local_user_scale : data.user_scale
   const scale = d3.scaleLinear()
     .range([0, 100])
-    .domain([0, data.user_scale])
+    .domain([0, user_scale])
+  const inv_scale = d3.scaleLinear()
+    .range([0, user_scale])
+    .domain([0, 100])
+
   if (data.show_structure == 'structure' ) {
     return inv_scale(applicationData.min_link_thickness)
   }

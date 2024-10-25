@@ -13,6 +13,7 @@ import {
   AssignLinkLocalAttribute,
   LinkColor,
   LinkVisible,
+  ReturnLocalLinkValue,
   ReturnValueLink,
   ReturnValueNode,
   TestLinkValue
@@ -85,16 +86,20 @@ const TextLinkSide=(link:SankeyLink,data:SankeyData)=>{
 const TextLinkPosDY:TextLinkPosDYFType=(
   l,
   applicationData,
-  scale,
-  inv_scale,
   GetLinkValue
 )=>{
   const {data}=applicationData
   let pos=ReturnValueLink(data,l,'orthogonal_label_position') as string
   const label_size=ReturnValueLink(data,l,'label_font_size') as number
 
+  const local_user_scale = ReturnLocalLinkValue(l,'user_scale') as number
+  const user_scale = local_user_scale ? local_user_scale : data.user_scale
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, user_scale])
+
   // If the link has label_pos_auto at true and le link stroke width is thinnier than the label font size then we put the label above the link
-  if(ReturnValueLink(data, l, 'label_pos_auto') && (LinkStrokeWidth(l,applicationData,scale,inv_scale,GetLinkValue) < label_size)){
+  if(ReturnValueLink(data, l, 'label_pos_auto') && (LinkStrokeWidth(l,applicationData,GetLinkValue) < label_size)){
     pos= 'above'
   }
   if (pos === 'middle') {
@@ -308,13 +313,12 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   const{ data,display_nodes } = applicationData
   const { display_style } = data
   const {t}=applicationContext
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
-
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
 
   const dragLinkTextEvent=(
     alt_key_pressed:MutableRefObject<boolean>,
@@ -328,7 +332,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
             const link_value = TestLinkValue(applicationData, link,GetLinkValue)
             const source_node=data.nodes[link.idSource]
             const target_node=data.nodes[link.idTarget]
-            const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node,applicationData, link, scale,inv_scale,GetLinkValue)
+            const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node,applicationData, link, GetLinkValue)
             DrawLinkText(applicationData, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
           }
 
@@ -384,7 +388,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   paths
     .on('mouseover', function (event, d) {
       // Quand on survole des flux petit : aggrandi la taille du flux pour être plus facile sélectionnable
-      if(+LinkStrokeWidth(d,applicationData,scale,inv_scale,GetLinkValue)<15){
+      if(+LinkStrokeWidth(d,applicationData,GetLinkValue)<15){
         d3.select('.link#path_'+d.idLink).attr('stroke-width','15')
         if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
           d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
@@ -416,8 +420,8 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
     })
     .on('mouseout', function (event, d) {
       // Quand on quitte le survole des flux petit : remet la taille du flux a sa valeur originel
-      if(+LinkStrokeWidth(d,applicationData,scale,inv_scale,GetLinkValue)<15){
-        d3.select('.link#path_'+d.idLink).attr('stroke-width',LinkStrokeWidth(d,applicationData,scale,inv_scale,GetLinkValue))
+      if(+LinkStrokeWidth(d,applicationData,GetLinkValue)<15){
+        d3.select('.link#path_'+d.idLink).attr('stroke-width',LinkStrokeWidth(d,applicationData,GetLinkValue))
         if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
           d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
         }
@@ -563,12 +567,6 @@ export const drawLinkShape:drawLinkShapeFType  = (
   const{ data, display_nodes} = applicationData
   const { ref_getter_mode_selection} = applicationState
   const max_filter_label=Math.max(data.display_style.filter, data.display_style.filter_label)
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-  const scale = d3.scaleLinear()
-    .range([0, 100])
-    .domain([0, data.user_scale])
   const { display_style } = data
   const gg_links = d3
     .select('.opensankey #g_links')
@@ -638,7 +636,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
       d =>ReturnValueLink(data,d,'label_on_path') === true
     )
     .select('text')
-    .attr('dy', l =>TextLinkPosDY(l,applicationData,scale,inv_scale,GetLinkValue))
+    .attr('dy', l =>TextLinkPosDY(l,applicationData,GetLinkValue))
     .append('textPath')
     .attr('id', d => 'text_' + d.idLink)
     .attr('side', link => TextLinkSide(link,data))
@@ -656,13 +654,13 @@ export const drawLinkShape:drawLinkShapeFType  = (
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
       return  tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(GetLinkValue(data, d.idLink).display_value).includes('[')) ? ReturnValueLink(data,d,'opacity') : ReturnValueLink(data,d,'opacity')) : 0})
-    .attr('stroke-width', l =>LinkStrokeWidth(l,applicationData,scale,inv_scale,GetLinkValue))
+    .attr('stroke-width', l =>LinkStrokeWidth(l,applicationData,GetLinkValue))
     .attr('stroke', l => LinkStroke(l,data,GetLinkValue))
 
   //Creation des Arrows associés au link
   d3.selectAll(' .opensankey .ggg_nodes')
     .each( (n) => {
-      DrawArrows(n as SankeyNode,applicationData,scale,inv_scale,GetLinkValue,display_style)
+      DrawArrows(n as SankeyNode,applicationData,GetLinkValue,display_style)
     })
 
   // Create des coins de départ des flux si le noeud source est en forme de flêche
@@ -672,7 +670,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
       return ReturnValueNode(data,(n as SankeyNode),'shape')==='arrow'
     })
     .each(n => {
-      DrawLinkStartSabot(applicationData,(n as SankeyNode),scale,inv_scale,GetLinkValue,LinkSabotColor)
+      DrawLinkStartSabot(applicationData,(n as SankeyNode),GetLinkValue,LinkSabotColor)
     })
 
   paths.attr('d', d => {
@@ -682,7 +680,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
       display_style,
       data.nodeTags, d, error_msg,
       LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
-      DrawArrows,ComponentUpdater,scale,inv_scale
+      DrawArrows,ComponentUpdater
     )
   })
 

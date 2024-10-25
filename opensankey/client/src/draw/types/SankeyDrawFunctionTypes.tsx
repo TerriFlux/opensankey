@@ -1,5 +1,5 @@
 import { LinkFunctionTypes, SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, applicationDataType, display_styleType } from '../../types/Types'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { TFunction } from 'i18next'
 
 
@@ -12,16 +12,12 @@ export type ValueSelectedParameterFuncType = (
 export type SetNodeHeightFuncType = (
   n: SankeyNode, 
   applicationData:applicationDataType,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
 ) => void
 
 export type DrawArrowsType = (
   n: SankeyNode,
   applicationData:applicationDataType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
   display_style: display_styleType
 ) => void
@@ -44,8 +40,6 @@ export type StrokeDasharrayFType =(
 export type TextLinkPosDYFType = (
   l:SankeyLink,
   applicationData:applicationDataType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 )=> string
  
@@ -97,17 +91,14 @@ export type SetNodesHeightFType = (
   applicationData:applicationDataType,
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
+  scale:(t:number)=>number
 ) => void
  
 export type PathNodeArrowShapeFType = (
   node_width:number,
   node_height:number,
   k_angle:number,
-  direction:string,
-  scale:(t:number)=>number,
-  
+  direction:string
 )=> string
 
 // Function that change the scale of the graph
@@ -153,8 +144,6 @@ export type SelectVisualyNodesFType = (n:SankeyNode)=> void
 // Function that compute the link width
 export type LinkStrokeWidthFType = (l:SankeyLink,
   applicationData:applicationDataType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
 )=> number
 

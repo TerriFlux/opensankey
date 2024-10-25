@@ -163,8 +163,6 @@ export type bezier_link_classic_recyclingFType = (
 export type DrawLinkStartSabotFType = (
   applicationData:applicationDataType,
   n: SankeyNode,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType,
   LinkSabotColor: (
     l: SankeyLink,
@@ -178,9 +176,6 @@ export type ComputeEndPointsFType = (
   target_node: SankeyNode,
   applicationData:applicationDataType,
   link: SankeyLink,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
-
 ) => [number, number, number, number];
 
