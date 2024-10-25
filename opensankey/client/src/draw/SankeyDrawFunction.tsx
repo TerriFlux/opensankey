@@ -459,7 +459,7 @@ export const DrawArrows : DrawArrowsType = (
       continue
     }
     const is_link_unvalued=link_value===''||link_value==0
-    link_value=(( !is_link_unvalued)&&(scale(+link_value)>=applicationData.min_link_thickness))?scale(+link_value):applicationData.min_link_thickness
+    link_value=(( !is_link_unvalued)&&(scale(+link_value)>=applicationData.min_link_thickness))?+link_value:applicationData.min_link_thickness
     const extension = GetLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
