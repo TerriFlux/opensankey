@@ -190,6 +190,7 @@ export type SankeyLinkAttrLocal ={
   label_unit?:string,
   custom_digit?:boolean,
   nb_digit?:number
+  user_scale?:number
 }
 
 export type SankeyLinkStyle ={
@@ -364,9 +365,7 @@ export type SankeyDrawCurve={
     GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
     GetLinkValue : GetLinkValueFuncType,
     DrawArrows:DrawArrowsType,
-    ComponentUpdater:ComponentUpdaterType,
-    scale:(t:number)=>number,
-    inv_scale:(t:number)=>number,
+    ComponentUpdater:ComponentUpdaterType
   ) => string | number | boolean | readonly (string | number)[] | null
 }
 

@@ -21,7 +21,8 @@ import { ComputeTotalOffsets,
   ReturnValueNode,
   ReturnValueLink,
   AssignLinkLocalAttribute,
-  ToPrecision
+  ToPrecision,
+  ReturnLocalLinkValue
 } from '../configmenus/SankeyUtils'
 import {
   DragLinkCenterHandleEvent,
@@ -293,41 +294,39 @@ export const TextNodeWrap : TextNodeWrapFType = (
 export const SetNodeHeight:SetNodeHeightFuncType = (
   n: SankeyNode,
   applicationData,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 
 ) => {
   const {data}=applicationData
-  const res = ComputeTotalOffsets(inv_scale,n, applicationData, TestLinkValue,undefined,GetLinkValue)
+  const res = ComputeTotalOffsets(n, applicationData, TestLinkValue,undefined,GetLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   const n_w=ReturnValueNode(data,n,'node_width') as number
   const n_h=ReturnValueNode(data,n,'node_height') as number
   let node_size_s_height = Math.max(
-    inv_scale(n_h), total_offset_height_left, total_offset_height_right
+    n_h, total_offset_height_left, total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale(n_w), total_offset_width_top, total_offset_width_bottom
+    n_w, total_offset_width_top, total_offset_width_bottom
   )
   //Hauteur des noeuds
   if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale(n_h)
-    node_size_s_width = inv_scale(n_w)
+    node_size_s_height = n_h
+    node_size_s_width = n_w
   }
-  d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
-  d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
+  d3.select(' .opensankey #shape_' + n.idNode).attr('width', node_size_s_width)
+  d3.select(' .opensankey #shape_' + n.idNode).attr('height', node_size_s_height)
   const shape=ReturnValueNode(data, n, 'shape')
   if( shape=== 'ellipse'){
     d3.select(' .opensankey #shape_' + n.idNode)
-      .attr('cx', () => scale(node_size_s_width) / 2)
-      .attr('cy', () =>scale(node_size_s_height)/ 2)
-      .attr('rx', () => scale(node_size_s_width) / 2)
-      .attr('ry', () => scale(node_size_s_height)/ 2)
+      .attr('cx', () => node_size_s_width / 2)
+      .attr('cy', () => node_size_s_height/ 2)
+      .attr('rx', () => node_size_s_width / 2)
+      .attr('ry', () => node_size_s_height/ 2)
 
   }else if(shape==='arrow'){
     const k_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
     const angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
-    const path = PathNodeArrowShape(node_size_s_width, node_size_s_height, k_angle, angle_direction,scale)
+    const path = PathNodeArrowShape(node_size_s_width, node_size_s_height, k_angle, angle_direction)
     d3.select(' .opensankey #shape_' + n.idNode).attr('d',path)
   }
 }
@@ -391,12 +390,10 @@ export const clip : clipFType = (
 
 // Function that add marker at the end of links, those marker are arrow
 export const DrawArrows : DrawArrowsType = (
-  n: SankeyNode,
+  n,
   applicationData,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  GetLinkValue:GetLinkValueFuncType,
-  display_style: display_styleType
+  GetLinkValue,
+  display_style
 ) => {
   const {data,display_nodes}=applicationData
   let cum_v_left = 0
@@ -413,7 +410,7 @@ export const DrawArrows : DrawArrowsType = (
     node_angle=ReturnValueNode(data,n,'node_arrow_angle_factor') as number
     node_angle_direction=ReturnValueNode(data,n,'node_arrow_angle_direction') as string
   }
-  const res = ComputeTotalOffsets(inv_scale,n, applicationData, TestLinkValue,undefined,GetLinkValue)
+  const res = ComputeTotalOffsets(n, applicationData, TestLinkValue,undefined,GetLinkValue)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   for (let i = 0; i < n.inputLinksId.length; i++) {
@@ -421,6 +418,15 @@ export const DrawArrows : DrawArrowsType = (
     if (l==undefined) {
       continue
     }
+    const local_user_scale = ReturnLocalLinkValue(l,'user_scale') as number
+    const user_scale = local_user_scale ? local_user_scale : data.user_scale
+    const scale = d3.scaleLinear()
+      .range([0, 100])
+      .domain([0, user_scale])
+    const inv_scale = d3.scaleLinear()
+      .range([0, user_scale])
+      .domain([0, 100])
+
     // Suppression de noeud (si il est present)
     d3.select('#gg_' + l.idLink + ' .arrow').remove()
 
@@ -453,7 +459,7 @@ export const DrawArrows : DrawArrowsType = (
       continue
     }
     const is_link_unvalued=link_value===''||link_value==0
-    link_value=(( !is_link_unvalued)&&(+link_value>=inv_scale(applicationData.min_link_thickness)))?+link_value:inv_scale(applicationData.min_link_thickness)
+    link_value=(( !is_link_unvalued)&&(scale(+link_value)>=applicationData.min_link_thickness))?scale(+link_value):applicationData.min_link_thickness
     const extension = GetLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
@@ -497,7 +503,7 @@ export const DrawArrows : DrawArrowsType = (
           node_face_size=total_width_top
           break
         }
-        node_arrow_shift= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size/2))
+        node_arrow_shift= Math.tan(node_angle*Math.PI/180)*(node_face_size/2)
 
         let node_face_size2=total_height_left
         switch(node_angle_direction){
@@ -511,7 +517,7 @@ export const DrawArrows : DrawArrowsType = (
           node_face_size2=total_width_top
           break
         }
-        arrows_adjustment= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size2/2))
+        arrows_adjustment= Math.tan(node_angle*Math.PI/180)*(node_face_size2/2)
         arrows_adjustment = node_arrow_shift - arrows_adjustment
       }
     }
@@ -545,7 +551,7 @@ export const DrawArrows : DrawArrowsType = (
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow_part(
-                scale(total_height_left) / 2,
+                total_height_left / 2,
                 p5,
                 scale(+link_value),
                 scale(cum_v_left),
@@ -563,7 +569,7 @@ export const DrawArrows : DrawArrowsType = (
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow_part(
-                scale(total_height_right) / 2,
+                total_height_right / 2,
                 p5,
                 scale(+link_value),
                 scale(cum_v_right),
@@ -589,7 +595,7 @@ export const DrawArrows : DrawArrowsType = (
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow_part(
-                scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false,
+                total_width_top / 2, p5, scale(+link_value), scale(cum_h_top), false, false,
                 arrow_length,node_arrow_shift,arrows_adjustment,
                 node_shape==='arrow'
               )
@@ -600,7 +606,7 @@ export const DrawArrows : DrawArrowsType = (
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow_part(
-                scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true,
+                total_width_bottom / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true,
                 arrow_length,node_arrow_shift,arrows_adjustment,
                 node_shape==='arrow'
               )
@@ -645,9 +651,7 @@ export const SetNodesHeight : SetNodesHeightFType = (
   applicationData,
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType,
-  scale,
-  inv_scale
-
+  scale
 ) => {
   const {data,display_nodes}=applicationData
   const source_node = display_nodes[d.idSource]
@@ -659,35 +663,35 @@ export const SetNodesHeight : SetNodesHeightFType = (
     return
   }
 
-  const res_source = ComputeTotalOffsets(inv_scale,source_node, applicationData, TestLinkValue,undefined,GetLinkValue)
+  const res_source = ComputeTotalOffsets(source_node, applicationData, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
-  const res_target = ComputeTotalOffsets(inv_scale,target_node, applicationData, TestLinkValue,undefined,GetLinkValue)
+  const res_target = ComputeTotalOffsets(target_node, applicationData, TestLinkValue,undefined,GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
-    inv_scale((ReturnValueNode(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+    ReturnValueNode(data,source_node,'node_height') as number, s_total_offset_height_left, s_total_offset_height_right
   )
   let node_size_t_height = Math.max(
-    inv_scale((ReturnValueNode(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+    ReturnValueNode(data,target_node,'node_height') as number, t_total_offset_height_left, t_total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale((ReturnValueNode(data,source_node,'node_width') as number)), s_total_offset_width_top, s_total_offset_width_bottom
+    ReturnValueNode(data,source_node,'node_width') as number, s_total_offset_width_top, s_total_offset_width_bottom
   )
   let node_size_t_width = Math.max(
-    inv_scale(ReturnValueNode(data,target_node,'node_width') as number), t_total_offset_width_top, t_total_offset_width_bottom
+    ReturnValueNode(data,target_node,'node_width') as number, t_total_offset_width_top, t_total_offset_width_bottom
   )
   // Hauteur des noeuds
   if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale((ReturnValueNode(data,source_node,'node_height') as number))
-    node_size_s_width = inv_scale((ReturnValueNode(data,source_node,'node_width') as number))
+    node_size_s_height = ReturnValueNode(data,source_node,'node_height') as number
+    node_size_s_width = ReturnValueNode(data,source_node,'node_width') as number
   }
   if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure == 'structure') {
-    node_size_t_height = inv_scale((ReturnValueNode(data,target_node,'node_height') as number))
-    node_size_t_width = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
+    node_size_t_height = ReturnValueNode(data,target_node,'node_height') as number
+    node_size_t_width = ReturnValueNode(data,target_node,'node_width') as number
   }
 
-  d3.select(' .opensankey #shape_' + source_node.idNode).attr('width', scale(node_size_s_width))
-  d3.select(' .opensankey #shape_' + source_node.idNode).attr('height', scale(node_size_s_height))
+  d3.select(' .opensankey #shape_' + source_node.idNode).attr('width', node_size_s_width)
+  d3.select(' .opensankey #shape_' + source_node.idNode).attr('height', node_size_s_height)
 
 
   // Is the node shape ellipse defined by the shape associated to it ?
@@ -695,87 +699,85 @@ export const SetNodesHeight : SetNodesHeightFType = (
   const source_angle_direction=ReturnValueNode(data,source_node,'node_arrow_angle_direction') as string
 
   if ( source_shape==='ellipse' ) {
-    d3.select(' .opensankey #shape_' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #shape_' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #shape_' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
-    d3.select(' .opensankey #shape_' + source_node.idNode).attr('cy', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('rx', node_size_s_width / 2)
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('cx', node_size_s_width / 2)
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('ry', node_size_s_height / 2)
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('cy', node_size_s_height / 2)
   }
   if(source_shape==='arrow'){
     const k_angle=ReturnValueNode(data,source_node,'node_arrow_angle_factor') as number
-    const path_s=PathNodeArrowShape(node_size_s_width,node_size_s_height,k_angle,source_angle_direction,
-      scale)
+    const path_s=PathNodeArrowShape(node_size_s_width,node_size_s_height,k_angle,source_angle_direction)
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('d', path_s)
   }
 
-  d3.select(' .opensankey #shape_' + target_node.idNode).attr('width', scale(node_size_t_width))
-  d3.select(' .opensankey #shape_' + target_node.idNode).attr('height', scale(node_size_t_height))
+  d3.select(' .opensankey #shape_' + target_node.idNode).attr('width', node_size_t_width)
+  d3.select(' .opensankey #shape_' + target_node.idNode).attr('height', node_size_t_height)
 
   // Is the node shape ellipse defined by the shape associated to it ?
   const target_shape=(ReturnValueNode(data,target_node,'shape'))
   const target_angle_direction=ReturnValueNode(data,target_node,'node_arrow_angle_direction') as string
 
   if (target_shape==='ellipse') {
-    d3.select(' .opensankey #shape_' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
-    d3.select(' .opensankey #shape_' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
-    d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
-    d3.select(' .opensankey #shape_' + target_node.idNode).attr('cy', scale(node_size_t_height / 2))
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('rx', node_size_t_width / 2)
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('cx', node_size_t_width / 2)
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', node_size_t_height / 2)
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('cy', node_size_t_height / 2)
   }
 
   if(target_shape==='arrow'){
     const k_angle=ReturnValueNode(data,target_node,'node_arrow_angle_factor') as number
-    const path_t=PathNodeArrowShape(node_size_t_width,node_size_t_height,k_angle,target_angle_direction,scale)
+    const path_t=PathNodeArrowShape(node_size_t_width,node_size_t_height,k_angle,target_angle_direction)
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('d', path_t)
   }
 }
 
 export const PathNodeArrowShape : PathNodeArrowShapeFType = (
-  node_width:number,
-  node_height:number,
-  k_angle:number,
-  direction:string,
-  scale
+  node_width,
+  node_height,
+  k_angle,
+  direction
 )=>{
   let path=''
   if(direction==='right'){
     const opp=Math.tan((k_angle*Math.PI/180))*(node_height/2)
     const p0='0,0'
-    const p1=scale(node_width)+',0'
-    const p2=scale(node_width+opp)+','+scale(node_height/2)
-    const p3=scale(node_width)+','+scale(node_height)
-    const p4='0,'+scale(node_height)
-    const p5=scale(opp)+','+scale(node_height/2)
+    const p1=node_width+',0'
+    const p2=node_width+opp+','+node_height/2
+    const p3=node_width+','+node_height
+    const p4='0,'+node_height
+    const p5=opp+','+node_height/2
     path='M'+p0+'L'+p1+'L'+p2+'L'+p3+'L'+p4+'L'+p5+'z'
 
   }else if(direction==='left'){
     const opp=Math.tan((k_angle*Math.PI/180))*(node_height/2)
 
     const p0='0,0'
-    const p1=scale(node_width)+',0'
-    const p2=scale(node_width-opp)+','+scale(node_height/2)
-    const p3=scale(node_width)+','+scale(node_height)
-    const p4='0,'+scale(node_height)
-    const p5=scale(-opp)+','+scale(node_height/2)
+    const p1=node_width+',0'
+    const p2=node_width-opp+','+node_height/2
+    const p3=node_width+','+node_height
+    const p4='0,'+node_height
+    const p5=-opp+','+node_height/2
     path='M'+p0+'L'+p1+'L'+p2+'L'+p3+'L'+p4+'L'+p5+'z'
 
   }else if(direction==='top'){
     const opp=Math.tan((k_angle*Math.PI/180))*(node_width/2)
 
-    const p0='0,'+scale(opp)
-    const p1=scale(node_width/2)+',0'
-    const p2=scale(node_width)+','+scale(opp)
-    const p3=scale(node_width)+','+scale(node_height)
-    const p4=scale(node_width/2)+','+scale(node_height-opp)
-    const p5='0,'+scale(node_height)
+    const p0='0,'+opp
+    const p1=node_width/2+',0'
+    const p2=node_width+','+opp
+    const p3=node_width+','+node_height
+    const p4=node_width/2+','+(node_height-opp)
+    const p5='0,'+node_height
     path='M'+p0+'L'+p1+'L'+p2+'L'+p3+'L'+p4+'L'+p5+'z'
 
   }else if(direction==='bottom'){
     const opp=Math.tan((k_angle*Math.PI/180))*(node_width/2)
     const p0='0,0'
-    const p1=scale(node_width/2)+','+scale(opp)
-    const p2=scale(node_width)+',0'
-    const p3=scale(node_width)+','+scale(node_height-opp)
-    const p4=scale(node_width/2)+','+scale(node_height)
-    const p5='0,'+scale(node_height-opp)
+    const p1=node_width/2+','+opp
+    const p2=node_width+',0'
+    const p3=node_width+','+(node_height-opp)
+    const p4=node_width/2+','+node_height
+    const p5='0,'+(node_height-opp)
     path='M'+p0+'L'+p1+'L'+p2+'L'+p3+'L'+p4+'L'+p5+'z'
   }
 
@@ -818,7 +820,7 @@ export const DrawLinkText = (
     let orth_lab_pos= ReturnValueLink(data, link, 'orthogonal_label_position') as string
 
     // If the link has label_pos_auto at true and le link stroke width is thinnier than the label font size then we put the label above the link
-    if(ReturnValueLink(data, link, 'label_pos_auto') && (LinkStrokeWidth(link,applicationData,scale,inv_scale,GetLinkValue) < label_size)){
+    if(ReturnValueLink(data, link, 'label_pos_auto') && (LinkStrokeWidth(link,applicationData,GetLinkValue) < label_size)){
       orth_lab_pos= 'above'
     }
     let x_pos = 0
@@ -936,8 +938,6 @@ const AddCenterHandle=(
       target_node,
       applicationData,
       link,
-      scale,
-      inv_scale,
       GetLinkValue
     )
     const [, ys, xt, ] = res
@@ -1128,14 +1128,22 @@ const DrawCurve = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
-  ComponentUpdater:ComponentUpdaterType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
+  ComponentUpdater:ComponentUpdaterType
 ): string => {
   const {data,display_nodes}=applicationData
   if (!LinkVisible(link, data, display_nodes)) {
     return ''
   }
+
+  const local_user_scale = ReturnLocalLinkValue(link,'user_scale') as number
+  const user_scale = local_user_scale ? local_user_scale : data.user_scale
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, user_scale])
+  const inv_scale = d3.scaleLinear()
+    .range([0, user_scale])
+    .domain([0, 100])
+
   const link_value = TestLinkValue(applicationData, link, GetLinkValue)
   const recy = ReturnValueLink(data, link, 'recycling') as boolean
   const curved= ReturnValueLink(data,link, 'curved') as boolean
@@ -1167,7 +1175,7 @@ const DrawCurve = (
     return ''
   }
 
-  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, applicationData,link,scale,inv_scale,GetLinkValue)
+  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, applicationData,link,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
     add_shift_handles(applicationData,applicationState,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
     AddDragLinkZone(link,applicationData,applicationState,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,DrawArrows,ComponentUpdater)
@@ -1303,7 +1311,7 @@ const HandlesPositions = (
       AssignLinkLocalAttribute(link,'vert_shift',0)
 
     }
-    const thickness=LinkStrokeWidth(link,applicationData,scale,inv_scale,GetLinkValue)
+    const thickness=LinkStrokeWidth(link,applicationData,GetLinkValue)
     if (xt < xs) {
       const x_left = xt - default_horiz_shift + l_h_s - (thickness) // x14
       const x_right = xs + default_horiz_shift + r_h_s  + (thickness) // x2
@@ -1688,15 +1696,22 @@ export const RepositionneSidebar:RepositionneSidebarFuncType =(show_nav:boolean)
 
 // Function that compute the link width
 export const LinkStrokeWidth : LinkStrokeWidthFType = (
-  l:SankeyLink,
+  l,
   applicationData,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  GetLinkValue:GetLinkValueFuncType,
+  GetLinkValue,
 )=>{
   const {data}=applicationData
   const node = data.nodes[l.idSource]
   const nodes = data.nodes
+
+  const local_user_scale = ReturnLocalLinkValue(l, 'user_scale') as number
+  const user_scale = local_user_scale ? local_user_scale : data.user_scale
+  const scale = d3.scaleLinear()
+      .range([0, 100])
+      .domain([0, user_scale])
+  const inv_scale = d3.scaleLinear()
+      .range([0, user_scale])
+      .domain([0, 100])
   //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
   //position noeud source ou target
   const scale_svg=returnScaleOfDrawArea()

@@ -10,7 +10,8 @@ import {
   ComputeTotalOffsets,
   TestLinkValue,
   ReturnValueLink,
-  LinkVisible
+  LinkVisible,
+  ReturnLocalLinkValue
 } from '../configmenus/SankeyUtils'
 import {
   GetLinkValueFuncType,
@@ -593,8 +594,6 @@ export const bezier_link_classic_recycling = (
 export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   applicationData,
   n: SankeyNode,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType,
   LinkSabotColor: LinkColorFuncType
 ) => {
@@ -617,7 +616,6 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     node_angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
   }
   const res = ComputeTotalOffsets(
-    inv_scale,
     n,
     applicationData,
     TestLinkValue,
@@ -669,7 +667,16 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     if (link_value === undefined) {
       continue
     }
-    link_value = ((+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
+    const local_user_scale = ReturnLocalLinkValue(l,'user_scale') as number
+    const user_scale = local_user_scale ? local_user_scale : data.user_scale
+    const scale = d3.scaleLinear()
+      .range([0, 100])
+      .domain([0, user_scale])
+    const inv_scale = d3.scaleLinear()
+      .range([0, user_scale])
+      .domain([0, 100])
+
+    link_value = ((scale(+link_value) >= applicationData.min_link_thickness)) ? scale(+link_value) : applicationData.min_link_thickness
     const extension = GetLinkValue(data, n.outputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
@@ -731,7 +738,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     if (!data.display_style.filter || link_value >= data.display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .start_corner').remove() // supression dans le cas du drag notamment
-      SetNodeHeight(n, applicationData, scale, inv_scale, GetLinkValue)
+      SetNodeHeight(n, applicationData, GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'start_corner')
@@ -789,19 +796,26 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   }
 }// Function that compute th position of the begining of the link and the position of where it end
 export const ComputeEndPoints: ComputeEndPointsFType = (
-  source_node: SankeyNode,
-  target_node: SankeyNode,
+  source_node,
+  target_node,
   applicationData,
-  link: SankeyLink,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
-  GetLinkValue: GetLinkValueFuncType
+  link,
+  GetLinkValue
 
 ) => {
   const { data, display_links } = applicationData
   if (!display_links) {
     return [0, 0, 0, 0]
   }
+  const local_user_scale = ReturnLocalLinkValue(link,'user_scale') as number
+  const user_scale = local_user_scale ? local_user_scale : data.user_scale
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, user_scale])
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, user_scale])
+    
   let link_value = TestLinkValue(applicationData, link, GetLinkValue)
   if (link_value === undefined) {
     return [0, 0, 0, 0]
@@ -832,33 +846,33 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     link_value = inv_scale(applicationData.min_link_thickness)
   }
 
-  let res = ComputeTotalOffsets(inv_scale, source_node, applicationData, TestLinkValue, undefined, GetLinkValue)
+  let res = ComputeTotalOffsets(source_node, applicationData, TestLinkValue, undefined, GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, applicationData, TestLinkValue, undefined, GetLinkValue)
+  res = ComputeTotalOffsets(target_node, applicationData, TestLinkValue, undefined, GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
-  let node_size_s_width = inv_scale((ReturnValueNode(data, source_node, 'node_width') as number))
-  let node_size_t_width = inv_scale(ReturnValueNode(data, target_node, 'node_width') as number)
+  let node_size_s_width = ReturnValueNode(data, source_node, 'node_width') as number
+  let node_size_t_width = ReturnValueNode(data, target_node, 'node_width') as number
   if (data.show_structure !== 'structure') {
     node_size_s_width = Math.max(
-      inv_scale((ReturnValueNode(data, source_node, 'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
+      ReturnValueNode(data, source_node, 'node_width') as number, s_total_offset_width_bottom, s_total_offset_width_top
     )
     node_size_t_width = Math.max(
-      inv_scale(ReturnValueNode(data, target_node, 'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
+      ReturnValueNode(data, target_node, 'node_width') as number, t_total_offset_width_bottom, t_total_offset_width_top
     )
   }
-  let node_size_s_height = inv_scale((ReturnValueNode(data, source_node, 'node_height') as number))
-  let node_size_t_height = inv_scale((ReturnValueNode(data, target_node, 'node_height') as number))
+  let node_size_s_height = ReturnValueNode(data, source_node, 'node_height') as number
+  let node_size_t_height = ReturnValueNode(data, target_node, 'node_height') as number
   if (data.show_structure !== 'structure') {
     node_size_s_height = Math.max(
-      inv_scale((ReturnValueNode(data, source_node, 'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+      ReturnValueNode(data, source_node, 'node_height') as number, s_total_offset_height_left, s_total_offset_height_right
     )
     node_size_t_height = Math.max(
-      inv_scale((ReturnValueNode(data, target_node, 'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+      ReturnValueNode(data, target_node, 'node_height') as number, t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = ComputeTotalOffsets(inv_scale, source_node, applicationData, TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(source_node, applicationData, TestLinkValue, link, GetLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, applicationData, TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(target_node, applicationData, TestLinkValue, link, GetLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)
@@ -889,7 +903,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     const node_face_size = Math.max(s_total_offset_height_left, s_total_offset_height_right)
     const node_angle_direction = ReturnValueNode(data, source_node, 'node_arrow_angle_direction') as string
     const node_angle = ReturnValueNode(data, source_node, 'node_arrow_angle_factor') as number
-    const node_arrow_shift = scale(Math.tan(node_angle * Math.PI / 180) * (node_face_size / 2))
+    const node_arrow_shift = Math.tan(node_angle * Math.PI / 180) * (node_face_size / 2)
     if (node_angle_direction === 'right') {
       xs += node_arrow_shift
     } else if (node_angle_direction === 'left') {
@@ -904,19 +918,19 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     if (source_node_x > target_node_x && !recy || source_node_x < target_node_x && recy) {
       // source is after target arrow point leftward. Start is on the left of side of source
       // source -> left
-      ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
+      ys += delta_s_height_left + s_offset_height_left + scale(link_value) / 2
       // target -> right
-      xt += scale(node_size_t_width)
-      yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
+      xt += node_size_t_width
+      yt += delta_t_height_right + t_offset_height_right + scale(link_value) / 2
       if (l_arrow ) {
         xt = xt + l_arrow_size
       }
     } else {
       // source is before target arrow point rightward. Start is on the right of side of source
       const delta_s_height_right = Math.max(0, (node_size_s_height - s_total_offset_height_right) / 2)
-      xs += scale(node_size_s_width)
-      ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
-      yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
+      xs += node_size_s_width
+      ys += delta_s_height_right + s_offset_height_right + scale(link_value) / 2
+      yt += delta_t_height_left + t_offset_height_left + scale(link_value) / 2
       if (l_arrow ) {
         xt = xt - l_arrow_size
       }
@@ -926,17 +940,17 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     //side to side
     if (source_node_y > target_node_y) {
       // source is bottom target. Flux goes up
-      xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
-      xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
-      yt += scale(node_size_t_height)
+      xs += delta_s_width_top + s_offset_width_top + scale(link_value) / 2
+      xt += delta_t_width_bottom + t_offset_width_bottom + scale(link_value) / 2
+      yt += node_size_t_height
       if (l_arrow ) {
         yt = yt + l_arrow_size
       }
     } else {
       // source is top target. Flux goes down
-      xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
-      ys += scale(node_size_s_height)
-      xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
+      xs += delta_s_width_bottom + s_offset_width_bottom + scale(link_value) / 2
+      ys += node_size_s_height
+      xt += delta_t_width_top + t_offset_width_top + scale(link_value) / 2
       if (l_arrow ) {
         yt = yt - l_arrow_size
       }
@@ -947,16 +961,16 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     if (source_node_x > target_node_x) {
       if (source_node_y > target_node_y) {
         //source is bottom right target. left and up
-        ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
-        xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
-        yt += scale(node_size_t_height)
+        ys += delta_s_height_left + s_offset_height_left + scale(link_value) / 2
+        xt += delta_t_width_bottom + t_offset_width_bottom + link_value / 2
+        yt += node_size_t_height
         if (l_arrow ) {
           yt = yt + l_arrow_size
         }
       } else {
         //source is top right target. left and down
-        ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
-        xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
+        ys += delta_s_height_left + s_offset_height_left + scale(link_value) / 2
+        xt += delta_t_width_top + t_offset_width_top + scale(link_value) / 2
         if (l_arrow ) {
           yt = yt - 30
         }
@@ -964,18 +978,18 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     } else {
       if (source_node_y > target_node_y) {
         //source is bottom left target. right and up
-        xs += scale(node_size_s_width)
-        ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
-        xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
-        yt += scale(node_size_t_height)
+        xs += node_size_s_width
+        ys += delta_s_height_right + s_offset_height_right + scale(link_value) / 2
+        xt += delta_t_width_bottom + t_offset_width_bottom + scale(link_value) / 2
+        yt += node_size_t_height
         if (l_arrow ) {
           yt = yt + l_arrow_size
         }
       } else {
         //source is top left target. right and down
-        xs += scale(node_size_s_width)
-        ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
-        xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
+        xs += node_size_s_width
+        ys += delta_s_height_right + s_offset_height_right + scale(link_value) / 2
+        xt += delta_t_width_top + t_offset_width_top + scale(link_value) / 2
         if (l_arrow ) {
           yt = yt - l_arrow_size
         }
@@ -987,18 +1001,18 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     if (source_node_x > target_node_x) {
       if (source_node_y > target_node_y) {
         //source is bottom right target. up and left
-        xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
-        xt += scale(node_size_t_width)
-        yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
+        xs += delta_s_width_top + s_offset_width_top + scale(link_value) / 2
+        xt += node_size_t_width
+        yt += delta_t_height_right + t_offset_height_right + scale(link_value) / 2
         if (l_arrow ) {
           xt += l_arrow_size
         }
       } else {
         //source is top right target. down and left
-        xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
-        ys += scale(node_size_s_height)
-        xt += scale(node_size_t_width)
-        yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
+        xs += delta_s_width_bottom + s_offset_width_bottom + scale(link_value) / 2
+        ys += node_size_s_height
+        xt += node_size_t_width
+        yt += delta_t_height_right + t_offset_height_right + scale(link_value) / 2
         if (l_arrow ) {
           xt += l_arrow_size
         }
@@ -1006,16 +1020,16 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     } else {
       if (source_node_y > target_node_y) {
         //source is bottom left target. Arrow goes left and go down to the top side
-        xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
-        yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
+        xs += delta_s_width_top + s_offset_width_top + scale(link_value) / 2
+        yt += delta_t_height_left + t_offset_height_left + scale(link_value) / 2
         if (l_arrow ) {
           xt = xt - l_arrow_size
         }
       } else {
         //source is top left target. Arrow goes left and go down to the top side
-        xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
-        ys += scale(node_size_s_height)
-        yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
+        xs += delta_s_width_bottom + s_offset_width_bottom + scale(link_value) / 2
+        ys += node_size_s_height
+        yt += delta_t_height_left + t_offset_height_left + scale(link_value) / 2
         if (l_arrow ) {
           xt = xt - l_arrow_size
         }

@@ -110,8 +110,7 @@ export const DragLinkEvent : DragLinkEventFType =(
                   display_style,
                   data.nodeTags, link,
                   error_msg,
-                  LinkText,GetSankeyMinWidthAndHeight,GetLinkValue, DrawArrows,ComponentUpdater,
-                  scale,inv_scale
+                  LinkText,GetSankeyMinWidthAndHeight,GetLinkValue, DrawArrows,ComponentUpdater
                 )
               }
             )
@@ -212,7 +211,7 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
                 error_msg,LinkText,
                 GetSankeyMinWidthAndHeight,GetLinkValue,
                 DrawArrows,
-                ComponentUpdater,scale,inv_scale
+                ComponentUpdater
               )
             }
             )
@@ -506,7 +505,7 @@ const drag_link = (
         }
       }
     }
-    DrawArrows(node as SankeyNode,applicationData,scale,inv_scale,GetLinkValue,display_style)
+    DrawArrows(node as SankeyNode,applicationData,GetLinkValue,display_style)
   }
 }
 
@@ -586,9 +585,8 @@ export const DragHandle : DragHandleFType = (
     target_node,
     applicationData,
     link,
-    scale,
-    inv_scale,
-    GetLinkValue)
+    GetLinkValue
+  )
   if (!d_recy) {
     if (d_ori === 'hh') {
       const link_x_length = Math.abs(xt - xs)
@@ -666,8 +664,7 @@ export const DragHandle : DragHandleFType = (
       GetSankeyMinWidthAndHeight,
       GetLinkValue,
       DrawArrows,
-      ComponentUpdater,
-      scale,inv_scale
+      ComponentUpdater
     )
   })
 }
@@ -812,7 +809,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
     if (isNaN(target_node.y)) {
       target_node.y = 100
     }
-    const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node,applicationData,link,scale,inv_scale,GetLinkValue)
+    const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node,applicationData,link,GetLinkValue)
     const pos_d=drag_zone_position(link,xs,ys,xt,yt,applicationData,default_handle_size,default_horiz_shift,scale,GetLinkValue)
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')

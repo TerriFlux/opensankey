@@ -27,7 +27,7 @@ export type TestLinkValueFuncType = (
   GetLinkValue: GetLinkValueFuncType
 ) => string | number | SankeyLinkValue
 
-export type ComputeTotalOffsetsFuncType=(inv_scale:(t:number)=>number,
+export type ComputeTotalOffsetsFuncType=(
 node: SankeyNode,
 applicationData:applicationDataType,
 TestLinkValue: TestLinkValueFuncType,

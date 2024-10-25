@@ -278,14 +278,8 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
   const {data} = applicationData
   const LinkSabotColor=LinkColor
   const OSDrawLinkStartSabot=(node_to_update:SankeyNode[])=>{
-    const scale = d3.scaleLinear()
-      .domain([0, data.user_scale])
-      .range([0, 100])
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, data.user_scale])
     node_to_update.forEach(n=>{
-      DrawLinkStartSabot(applicationData,n,scale,inv_scale,GetLinkValue,LinkSabotColor)
+      DrawLinkStartSabot(applicationData,n,GetLinkValue,LinkSabotColor)
     })
   }
   const _ = {
