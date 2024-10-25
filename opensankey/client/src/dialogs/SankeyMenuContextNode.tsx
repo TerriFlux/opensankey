@@ -372,7 +372,7 @@ export const ContextMenuNode: FunctionComponent<ContextMenuNodeFType> = ({
   </Button>
 
   const btn_aggregate = multi_selected_nodes.current.filter(n => n != contextualised_node).length == 0 && contextualised_node && NodeContextHasAggregate(contextualised_node, data) ? <Button variant='contextmenu_button' onClick={() => {
-    Aggregate(contextualised_node, data, agregation)
+    Aggregate(contextualised_node, applicationData, agregation)
     multi_selected_nodes.current = []
     node_function.recomputeDisplayedElement()
     set_data({ ...data })

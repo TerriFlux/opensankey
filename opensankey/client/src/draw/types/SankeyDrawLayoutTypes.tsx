@@ -169,7 +169,7 @@ export type desagregationFType = (
  * @param {string} cur_dimension Dimension on which we desagregage node
  */
 export type agregationFType = (
-  data : SankeyData,
+  applicationData:applicationDataType,
   idNode: string,
   cur_dimension: string,
 ) =>  void
@@ -185,8 +185,11 @@ export type reorganize_node_outputLinksIdFuncType = (data: SankeyData,
 ) => void
 export type synchronizeNodesandLinksIdFuncType = (dataModify: SankeyData, dataRef: SankeyData) => void
 export type updateLayoutFuncType = (data: SankeyData, new_layout: SankeyData, mode: string[], synchronize?: boolean) => void
+
 export type AggregateFuncType = (
-    n: SankeyNode, data: SankeyData, agregation: agregationType
+    n: SankeyNode, 
+    applicationData:applicationDataType, 
+    agregation: agregationType
 ) => void
 
 export type DesaggregateFuncType = (

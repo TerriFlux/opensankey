@@ -1102,53 +1102,89 @@ const hasAggregationLinkToNode:hasAggregationLinkToNodeFuncType=(
  * @param {string} cur_dimension Dimension on which we aggregate node
  */
 export const agregation : agregationFType = (
-  data : SankeyData,
+  applicationData,
   idNode: string,
   cur_dimension: string,
 ) =>  {
+  const {data,display_links}=applicationData
   if ( !(cur_dimension in data.nodes[idNode].dimensions)) {
     return
   }
+
   const desagregated_node = data.nodes[idNode]
+
+  let nodes_to_recalculate = new Set()
+  desagregated_node.inputLinksId.filter(lid => lid in display_links).forEach(lid => nodes_to_recalculate.add(data.links[lid].idSource))
+  desagregated_node.outputLinksId.filter(lid => lid in display_links).forEach(lid => nodes_to_recalculate.add(data.links[lid].idTarget))
+  
+
   const parent_node = data.nodes[desagregated_node.dimensions[cur_dimension].parent_name??'']
+  nodes_to_recalculate.add(parent_node.idNode)
   if (!parent_node) {
     return
   }
-  const cur_parentId = desagregated_node.dimensions[cur_dimension].parent_name
+  if (!parent_node.v) {
+    parent_node.v = desagregated_node.v
+    parent_node.x = desagregated_node.x
+    parent_node.u = desagregated_node.u
+  }
   const dim_desagregated_nodes = Object.values(data.nodes).filter( n => {
-    const cur_n_dim = n.dimensions[cur_dimension]
-    if ((cur_n_dim && cur_n_dim.parent_name && !data.nodes[cur_n_dim.parent_name]) || cur_parentId===undefined) {
-      return
-    }
-    return hasAggregationLinkToNode(data,cur_parentId,n.idNode,cur_dimension)
+    let is_desagregation = false
+    Object.values(data.levelTags).forEach(tagg=>{
+      if (is_desagregation) {
+        return
+      }
+      if (!n.dimensions[tagg.group_name]) {
+        return
+      }
+      if (n.dimensions[tagg.group_name].parent_name == parent_node.idNode) {
+        is_desagregation = true
+      }
+    })
+    return is_desagregation
   })
   if (dim_desagregated_nodes.length === 0) {
     return
   }
 
-  // let mean_x = 0
-  // let mean_y = 0
   dim_desagregated_nodes.forEach(n => {
-    // if (n.x) {
-    //   mean_x += n.x
-    //   mean_y += n.y
-    // }
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
     }
     setLocalAgregation(n, data, false)
   })
-  // mean_x = mean_x/dim_desagregated_nodes.length
-  // mean_y = mean_y/dim_desagregated_nodes.length
 
-  // if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0) ) {
-  //   parent_node.x = mean_x
-  //   parent_node.y = mean_y
-  // }
   if(parent_node.local==undefined || parent_node.local==null){
     parent_node.local={} as SankeyNodeAttrLocal
   }
   setLocalAgregation(parent_node, data, true)
+
+  const import_nodes = desagregated_node.inputLinksId.filter(lid=>{
+    if (!(lid in display_links)) {
+      return false
+    }
+    const inputNode = data.nodes[data.links[lid].idSource]
+    if ('Type de noeud' in inputNode.tags &&  inputNode.tags['Type de noeud'][0] == 'echange') {
+      return true
+    }
+    return false
+  }).map(lid=>data.nodes[data.links[lid].idSource])
+  import_nodes.forEach(n=>agregation(applicationData,n.idNode,cur_dimension))
+
+  const export_nodes = desagregated_node.outputLinksId.filter(lid=>{
+    if (!(lid in display_links)) {
+      return false
+    }
+    const outputNode = data.nodes[data.links[lid].idTarget]
+    if ('Type de noeud' in outputNode.tags &&  outputNode.tags['Type de noeud'][0] == 'echange') {
+      return true
+    }
+    return false
+  }).map(lid=>data.nodes[data.links[lid].idTarget])
+  import_nodes.forEach(n=>agregation(applicationData,n.idNode,cur_dimension))
+  export_nodes.forEach(n=>agregation(applicationData,n.idNode,cur_dimension))
+
+  nodes_to_recalculate.forEach(nid=>reorganize_inputLinksId(data,data.nodes[nid as string], true, true, data.nodes, data.links))
 }
 
 export type AgregationModalTypes = {
@@ -1223,7 +1259,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
             <Button
               variant="menuconfigpanel_option_button_secondary"
               onClick={()=> {
-                agregation(data,n.idNode,dim_name)
+                agregation(applicationData,n.idNode,dim_name)
                 set_data({...data})
                 set_show_agregation(false)
                 set_dim_name('')
@@ -1993,9 +2029,11 @@ export const updateLayout: updateLayoutFuncType = (
 }
 
 export const Aggregate: AggregateFuncType = (
-  n: SankeyNode, data: SankeyData,
+  n: SankeyNode, 
+  applicationData: applicationDataType,
   agregationRef
 ) => {
+  const {data} = applicationData
   const parent_names: string[] = []
   const dim_names: string[] = []
   Object.keys(n.dimensions).forEach(
@@ -2019,7 +2057,7 @@ export const Aggregate: AggregateFuncType = (
     agregationRef.isAgregationRef.current = true
     agregationRef.showAgregationRef.current![0][1](true)
   } else {
-    agregation(data, n.idNode, dim_names[0])
+    agregation(applicationData, n.idNode, dim_names[0])
   }
 }
 
