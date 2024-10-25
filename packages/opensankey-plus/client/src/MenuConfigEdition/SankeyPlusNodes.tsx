@@ -59,22 +59,23 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const [forceUpdate, setForceUpdate] = useState(false)
   const selected_nodes = new_data_plus.drawing_area.selected_nodes_list
   new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
+  new_data_plus.menu_configuration.ref_to_menu_config_node_icon_updater.current = () => setForceUpdate(b => !b)
 
+  // Update only this component
   const redrawIllustrationAndRefresh = () => {
     selected_nodes.forEach(zdt => zdt.drawIllustration())
     setForceUpdate(!forceUpdate)
   }
 
+  // Update this component & component node appareance because we modify shape visibility
   const redrawAndRefresh = () => {
-    new_data_plus.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current()
+    new_data_plus.menu_configuration.updateComponentRelatedToNodesApparence()
     selected_nodes.forEach(zdt => zdt.draw())
-    setForceUpdate(!forceUpdate)
   }
 
 
   const _load_image = useRef<HTMLInputElement>(null)
 
-  // const isAllNodeVisible = IsAllNodeAttrSameValue(data, selected_nodes, ['shape_visible'], false)['shape_visible'] as boolean[]
   const isAllNodeVisible = (selected_nodes[0]?.shape_visible ?? default_shape_visible)
 
   let all_are_icons = (

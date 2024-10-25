@@ -112,17 +112,19 @@ export abstract class Class_DrawingAreaPlus
   }
 
 
-  public delete() {
-    super.delete()
-    // Override also relations with views
-    this.application_data.deleteView(this.id)
-  }
 
   // ABSTRACT METHODS ===================================================================
 
   protected abstract createNewSelectionZone(): Class_ZoneSelectionPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PUBLIC METHODS =====================================================================
+
+
+  public delete() {
+    super.delete()
+    // Override also relations with views
+    this.application_data.deleteView(this.id)
+  }
 
   /**
  * Override switchMode to setEvent listener when changing drawing area mode (in selection mode drag event are enabled)
@@ -428,6 +430,40 @@ export abstract class Class_DrawingAreaPlus
         this.removeContainerFromSelection(zdt)
       })
     this.application_data.menu_configuration.updateComponentRelatedToContainers()
+  }
+
+
+  /**
+   * Function used to move selected nodes from another element drag event, 
+   * we created this function and moveSelectedContainerFromDragEvent to avoid recursive call of eventMouseDrag
+   *
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_DrawingAreaPlus
+   */
+  public moveSelectedNodesFromDragEvent(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    this.selected_nodes_list
+      .forEach(n => {
+        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+      })
+  }
+
+  /**
+   * Function used to move selected containers from another element drag event, 
+   * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
+   *
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_DrawingAreaPlus
+   */
+  public moveSelectedContainerFromDragEvent(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    this.selected_containers_list
+      .forEach(n => {
+        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+        n.drawDragHandlers()
+      })
   }
 
   // GETTERS / SETTERS ==================================================================

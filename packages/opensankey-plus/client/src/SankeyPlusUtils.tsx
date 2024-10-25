@@ -101,13 +101,16 @@ export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = 
 export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag> = ({
   new_data_plus
 }) => {
+
+  const [,setUpdate]=useState(0)
   const { t } = new_data_plus
   const show_menu_config_tag = (
     new_data_plus.menu_configuration.isGivenAccordionShowed('EN') ||
     new_data_plus.menu_configuration.isGivenAccordionShowed('EF') ||
     new_data_plus.menu_configuration.isGivenAccordionShowed('ED')
   )
-
+  
+  new_data_plus.menu_configuration.ref_to_accordion_edition_tag_updater.current=()=>setUpdate(a=>a+1);
   return show_menu_config_tag ?
     <AccordionItem>
       {
@@ -193,7 +196,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
             </AccordionPanel>
           </AccordionItem>
           <AccordionItem
-            isDisabled={new_data_plus.has_sankey_plus}
+            isDisabled={!new_data_plus.has_sankey_plus}
             style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('ED')) ? 'initial' : 'none' }}
           >
             {

@@ -284,6 +284,25 @@ export abstract class Class_NodeElementPlus
     this._add_waiting_process('drawIllustration', () => { this._drawIllustration() })
   }
 
+/**
+ * Override eventMouseDrag so when the DA is in selection mode we also drag selected containers when we drag nodes
+ *
+ * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+ * @memberof Class_NodeElementPlus
+ */
+eventMouseDrag(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseDrag(event)
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // SELECTION MODE =========================================================
+    if (drawing_area.isInSelectionMode()) {
+      this.drawing_area.moveSelectedContainerFromDragEvent(event)
+      this.drawing_area.checkAndUpdateAreaSize()
+    }
+  }
 
   private _drawFO() {
     this.d3_selection?.select('.node_fo').remove()
@@ -467,7 +486,7 @@ export abstract class Class_NodeElementPlus
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', this.shape_visible ? this.iconColor : this.getShapeColorToUse())
+      .style('fill', (this.shape_visible || this._iconColorSustainable) ? this.iconColor : this.getShapeColorToUse())
       .attr('d', this.sankey.getIconFromCatalog(this.iconName))
   }
   /**
@@ -577,7 +596,7 @@ export abstract class Class_NodeElementPlus
 
     // Launch a timeout that will activate at the end of the animation to reset drawing_area
     setTimeout(
-      () => {this.drawing_area.reset()},
+      () => { this.drawing_area.reset() },
       time_to_animate)
 
   }
