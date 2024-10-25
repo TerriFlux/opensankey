@@ -1356,7 +1356,8 @@ export const convert_links:convert_linksFuncType = (
 
       font_family: '',
       label_unit_visible:true,
-      label_unit:''
+      label_unit:'',
+      label_unit_factor:1
     }
 
     // Assign missing variable
