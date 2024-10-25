@@ -217,6 +217,13 @@ export abstract class Class_ApplicationDataPlus
 
   // PUBLIC METHODS =====================================================================
 
+  private deleteCurrentOriginalView() {
+    if (this._original_current_view !== undefined){
+      this._original_current_view.delete()
+      this._original_current_view = undefined
+    }
+  }
+
   /**
    * Extract application data attribute from JSON then extract info for  views
    *
@@ -227,7 +234,7 @@ export abstract class Class_ApplicationDataPlus
     this._drawing_area.bypass_timeout = true
     if (this._drawtimeout !== null) clearTimeout(this._drawtimeout)
     const views = getJSONOrUndefinedFromJSON(json_object, 'views')
-    this._original_current_view = undefined
+    this.deleteCurrentOriginalView()
     if (views) {
       // Save master in view
       this._views[default_main_sankey_id] = this._drawing_area
@@ -328,9 +335,9 @@ export abstract class Class_ApplicationDataPlus
         this._views_order.filter((id, i) => i !== 0).forEach(id => {
           json_entry_views[id] = this._views[id].toJSON()
         })
+        // Set current DA to active view before toJSON
+        this._drawing_area = this._views[current_view]
       }
-      // Set current DA to active view before toJSON
-      this._drawing_area = this._views[current_view]
     }
     // Add var to remember active view when saved
     json_entry['current_view'] = current_view
@@ -369,12 +376,16 @@ export abstract class Class_ApplicationDataPlus
   public setCurrentView(id: string) {
     if (id in this._views) {
 
-      if (!this.is_view_master && this._original_current_view !== undefined && !this.menu_configuration.ref_to_save_in_cache_indicator_value.current) {
+      if (
+        !this.is_view_master && 
+        this._original_current_view !== undefined && 
+        !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
+      ) {
         // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
         this._waiting_to_set_view = id
         this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
-      } else {
-
+      } 
+      else {
         // Hide previous diplayed sankey
         this._drawing_area.sankey.setInvisible()
         const was_mode_edition = this._drawing_area.isInEditionMode()
@@ -397,8 +408,8 @@ export abstract class Class_ApplicationDataPlus
           clone_drawing_area.bypass_timeout = true
           clone_drawing_area.copyFrom(this._drawing_area)
           this._original_current_view = clone_drawing_area
+          this._drawing_area.reset()
         }
-        this._drawing_area.reset()
 
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
@@ -454,7 +465,7 @@ export abstract class Class_ApplicationDataPlus
       this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
       // Got to master
       if (!this.is_view_master) {
-        this._original_current_view = undefined // delete copy
+        this.deleteCurrentOriginalView()
         this._drawing_area.delete() // Delete view
         this.setCurrentViewToMaster()
       }
@@ -493,7 +504,6 @@ export abstract class Class_ApplicationDataPlus
     }
   }
 
-
   /**
    * Reset current view with the one in the temporary variable
    *
@@ -503,14 +513,12 @@ export abstract class Class_ApplicationDataPlus
     if (!this.is_view_master && this._original_current_view !== undefined && this._original_current_view.id in this._views) {
       this._views[this._original_current_view.id].delete()
       this._views[this._original_current_view.id] = this._original_current_view
-
-      delete this._original_current_view
+      this._original_current_view = undefined
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
       delete this._waiting_to_set_view
     }
   }
-
 
   /**
    * Function to save the current view before changing active view to another one

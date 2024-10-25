@@ -307,6 +307,26 @@ export class Class_ContainerElement
     this._label_width = _._label_width
     this._label_height = _._label_height
   }
+
+    /**
+   * Draw all control points
+   *
+   * @private
+   * @memberof Class_ContainerElement
+   */
+    public drawDragHandlers() {
+
+      this.computeTopHandlerPos()
+      this.computeBottomHandlerPos()
+      this.computeLeftHandlerPos()
+      this.computeRightHandlerPos()
+  
+      // Draw control handler
+      this._drag_handler.top.draw()
+      this._drag_handler.bottom.draw()
+      this._drag_handler.left.draw()
+      this._drag_handler.right.draw()
+    }
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -465,25 +485,7 @@ export class Class_ContainerElement
     this._drag_handler.right.position_y = this.position_y + this._label_height / 2
   }
 
-  /**
-   * Draw all control points
-   *
-   * @private
-   * @memberof Class_ContainerElement
-   */
-  private drawDragHandlers() {
 
-    this.computeTopHandlerPos()
-    this.computeBottomHandlerPos()
-    this.computeLeftHandlerPos()
-    this.computeRightHandlerPos()
-
-    // Draw control handler
-    this._drag_handler.top.draw()
-    this._drag_handler.bottom.draw()
-    this._drag_handler.left.draw()
-    this._drag_handler.right.draw()
-  }
 
   // PROTECTED METHODS ==================================================================
 
@@ -670,6 +672,7 @@ export class Class_ContainerElement
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
             n.drawDragHandlers()
           })
+          this.drawing_area.moveSelectedNodesFromDragEvent(event)
       }
     }
   }

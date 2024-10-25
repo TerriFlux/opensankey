@@ -55,8 +55,8 @@ export const MenuPreferenceLabelsOSP: FunctionComponent<FCType_MenuPreferenceLab
   const [, setCount] = useState(0)
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
-    defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('MEP')} onChange={() => {
-      new_data_plus.menu_configuration.toggleGivenAccordion('MEP')
+    defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('LL')} onChange={() => {
+      new_data_plus.menu_configuration.toggleGivenAccordion('LL')
       setCount(a => a + 1)
     }}>
     {new_data_plus.t('Menu.LL')}

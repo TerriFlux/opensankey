@@ -40,6 +40,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
 
+  private _ref_to_accordion_edition_tag_updater:MutableRefObject<(() => void)>
+
   /* ========================================
     Updater of component for toolbar tags related menus
     ========================================*/
@@ -65,6 +67,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
   private _ref_to_menu_config_link_scientific_precision_updater: MutableRefObject<(() => void)>
 
+  // Updater of config node icon 
+  private _ref_to_menu_config_node_icon_updater: MutableRefObject<(() => void)>
 
 
   // config ref related to node FO elements
@@ -97,7 +101,10 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_toolbar_link_tag_updater=useRef(()=>null)
     this._ref_to_toolbar_data_tag_updater=useRef(()=>null)
 
+    this._ref_to_accordion_edition_tag_updater=useRef(()=>null)
+
     this._ref_to_toolbar_link_visual_filter_updater=useRef(()=>null)
+    this._ref_to_menu_config_node_icon_updater=useRef(()=>null)
 
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
@@ -255,9 +262,17 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   }
 
 
+  public override updateMenuConfigComponent(){
+    this.ref_to_accordion_edition_tag_updater.current()
+    super.updateMenuConfigComponent()
+  }
+
   // PROTECTED METHODS ==================================================================
 
-
+protected override _updateComponentRelatedToNodesApparence(): void {
+  super._updateComponentRelatedToNodesApparence()
+  this._ref_to_menu_config_node_icon_updater.current()
+}
 
   // GETTERS / SETTERS ==================================================================
 
@@ -291,5 +306,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_data_tag_updater}
 
   public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_visual_filter_updater}
+  public get ref_to_accordion_edition_tag_updater(){return this._ref_to_accordion_edition_tag_updater}
+  
+  public get ref_to_menu_config_node_icon_updater(){return this._ref_to_menu_config_node_icon_updater}
 
 }
