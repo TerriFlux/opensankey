@@ -89,7 +89,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
     setForceUpdate(!forceUpdate)
   }
   const list_key:(keyof SankeyLinkAttrLocal)[]=[
-    'dashed','label_on_path','to_precision','custom_digit','label_unit_visible','color',
+    'dashed','label_on_path','to_precision','custom_digit','label_unit_visible','label_unit_factor','color',
     'label_visible','font_family','recycling','arrow','curved', 'user_scale',
     'text_color','label_position','orthogonal_label_position','label_pos_auto']
   const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
@@ -516,6 +516,34 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
     </Checkbox>
 
 
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'>
+      {t('MEP.links_size')}
+    </Box>
+
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.Echelle')}
+      </Box>
+      <Box>
+        <ConfigLinkAttributeNumberInput
+            data={applicationData.data}
+            local_var_of_node={'user_scale'}
+            parameter_to_modify={parameter_to_modify}
+            selected_parameter={selected_parameter}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            stepper={true}
+            function_onBlur={updateMenuConfigLink}
+        />
+      </Box>
+    </Box>
+
+
     {additional_link_appearence_items}
 
   </Box>
@@ -642,26 +670,24 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
 
       {/* Ajout une unité au label de flux */}
 
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        iconColor={list_value['label_unit_visible'][1]?'#78C2AD':'white'}
-        icon={list_value['label_unit_visible'][0] as boolean?<FaEye/>:<FaEyeSlash/>}
-        isChecked={list_value['label_unit_visible'][0] as boolean}
-        onChange={(evt) => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-            AssignLinkValueToCorrectVar(d,'label_unit_visible',evt.target.checked,menu_for_style)
-          })
-          updateMenuConfigLink()
-        }}>      
-        <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
-          {t('Flux.label.l_u_v')+' '}
-        </OSTooltip>
-        {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?
-          TooltipValueSurcharge('link_var_',t):<></>)}
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          iconColor={list_value['label_unit_visible'][1]?'#78C2AD':'white'}
+          icon={list_value['label_unit_visible'][0] as boolean?<FaEye/>:<FaEyeSlash/>}
+          isChecked={list_value['label_unit_visible'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              AssignLinkValueToCorrectVar(d,'label_unit_visible',evt.target.checked,menu_for_style)
+            })
+            updateMenuConfigLink()
+          }}>      
+          <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
+            {t('Flux.label.l_u_v')+' '}
+          </OSTooltip>
+          {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?
+            TooltipValueSurcharge('link_var_',t):<></>)}
 
-      </Checkbox>
-
-
+        </Checkbox>
       {/* Modifie l'unité du label de flux */}
       {list_value['label_unit_visible'][0]?<>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -677,7 +703,22 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                 updateMenuConfigLink()
               }}/>
           </OSTooltip>
-        </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name'>
+                {'Factor'}
+              </Box>
+          <ConfigLinkAttributeNumberInput
+                  data={applicationData.data}
+                  local_var_of_node={'label_unit_factor'}
+                  parameter_to_modify={parameter_to_modify}
+                  selected_parameter={selected_parameter}
+                  menu_for_style={menu_for_style}
+                  minimum_value={0}
+                  stepper={true}
+                  function_onBlur={updateMenuConfigLink}
+                />
+      </Box>
       </>:<></>}
       <Box
         layerStyle='menuconfigpanel_grid'

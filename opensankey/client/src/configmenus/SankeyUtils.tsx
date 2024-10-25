@@ -551,6 +551,9 @@ export const LinkText:LinkTextFuncType = (
   if(isNaN(the_link_value as number)){
     return the_link_value as string
   }else{
+    const unit=ReturnValueLink(data,d,'label_unit_visible')?ReturnValueLink(data,d,'label_unit') as string:''
+    const factor=ReturnValueLink(data,d,'label_unit_factor')?ReturnValueLink(data,d,'label_unit_factor') as number:1
+    the_link_value = +the_link_value/factor
     const nb_sign=(ReturnValueLink(data,d,'scientific_precision') as number)
     if(nb_sign>0){
       the_link_value=parseFloat((the_link_value as number).toPrecision(nb_sign as number))
@@ -561,8 +564,8 @@ export const LinkText:LinkTextFuncType = (
     }else if (ReturnValueLink(data,d,'custom_digit')){
       the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
-    const unit=ReturnValueLink(data,d,'label_unit_visible')?ReturnValueLink(data,d,'label_unit') as string:''
-    return (String(the_link_value).replace('.',t('sep_decimal')))+unit
+
+    return (String(the_link_value).replace('.',t('sep_decimal')))+' '+unit
   }
 }
 
@@ -1081,6 +1084,7 @@ export const DefaultLinkStyle:DefaultLinkStyleFuncType=()=>{
     font_family: 'Arial,serif',
     label_unit_visible:false,
     label_unit:'',
+    label_unit_factor:1,
     custom_digit:false,
     nb_digit:0,
     dashed:false
