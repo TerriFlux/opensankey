@@ -129,7 +129,7 @@ export abstract class Class_Sankey
 
   // Existing styles
   protected abstract _link_styles: { [_: string]: Class_LinkStyle }
-  protected abstract _node_styles: { [_: string]: Class_NodeStyle } 
+  protected abstract _node_styles: { [_: string]: Class_NodeStyle }
 
   // Tags
   private _node_taggs: { [_: string]: Class_TagGroup } = {}
@@ -615,12 +615,12 @@ export abstract class Class_Sankey
     json_object['style_node'] = json_object_styles_nodes
     this.node_styles_list.forEach(style => {
       json_object_styles_nodes[style.id] = style.toJSON();
-      (json_object_styles_nodes[style.id] as Type_JSON)['name']=style.name
+      (json_object_styles_nodes[style.id] as Type_JSON)['name'] = style.name
     })
     json_object['style_link'] = json_object_styles_links
     this.link_styles_list.forEach(style => {
       json_object_styles_links[style.id] = style.toJSON();
-      (json_object_styles_links[style.id] as Type_JSON)['name']=style.name
+      (json_object_styles_links[style.id] as Type_JSON)['name'] = style.name
 
     })
     // Add nodes
@@ -1132,16 +1132,21 @@ export abstract class Class_Sankey
       }
 
       // Update nodes ref to node_taggs
-      if (sync_nodes_tags || all) {
+      if ((sync_nodes_tags) || all) {
         to_update
           .forEach(id => {
             this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
           })
 
+
+      // Update nodes ref to node added
+        if ((add_nodes) || all)   {
           to_add
-          .forEach(id => {
-            this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
-          })
+            .forEach(id => {
+              this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
+            })
+        }
+
       }
 
       // Update node position from other sankey
@@ -1214,25 +1219,28 @@ export abstract class Class_Sankey
           })
       }
 
-      // Update links ordering
-      to_update.concat(to_add)
-        .forEach(id => {
-          // Source node
-          const source = this._nodes[this._links[id].source.id]
-          const other_source = other_sankey._nodes[other_sankey._links[id].source.id]
-          source.copyLinkOrderingFrom(other_source)
-          // Target node
-          const target = this._nodes[this._links[id].target.id]
-          const other_target = other_sankey._nodes[other_sankey._links[id].target.id]
-          target.copyLinkOrderingFrom(other_target)
-        })
+      if (add_flux || remove_flux || all) {
+        // Update links ordering
+        to_update.concat(to_add)
+          .forEach(id => {
+            // Source node
+            const source = this._nodes[this._links[id].source.id]
+            const other_source = other_sankey._nodes[other_sankey._links[id].source.id]
+            source.copyLinkOrderingFrom(other_source)
+            // Target node
+            const target = this._nodes[this._links[id].target.id]
+            const other_target = other_sankey._nodes[other_sankey._links[id].target.id]
+            target.copyLinkOrderingFrom(other_target)
+          })
+
+      }
 
       // Values  ------------------------------------------------------------------------
       // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
-      if (sync_flux_tags || sync_flux_values || all){
+      if (((sync_flux_tags || sync_flux_values)) || all) {
         // To speed up matching process between values ids (that are random)
         // We compute corresp value ids for sync_flux_tags & sync_flux_values
-        const values_corresp_ids: {[id_flux: string]: {[id_value: string]: string}} = {}
+        const values_corresp_ids: { [id_flux: string]: { [id_value: string]: string } } = {}
         to_update.concat(to_add)
           .forEach(id_flux => {
             // avoid recomputation
@@ -1262,7 +1270,7 @@ export abstract class Class_Sankey
                           else
                             return false // Should never be the case
                         })
-                        .forEach(([id_other_value, ]) => {
+                        .forEach(([id_other_value,]) => {
                           values_corresp_ids[id_flux][id_value] = id_other_value
                         })
                     }
@@ -1272,7 +1280,7 @@ export abstract class Class_Sankey
           })
 
         // Update refs between values and flux_tags
-        if (sync_flux_tags || all) {
+        if ((sync_flux_tags && (add_flux || remove_flux)) || all) {
           to_update.concat(to_add)
             .forEach(id_flux => {
               // Avid recomputation
@@ -1282,7 +1290,7 @@ export abstract class Class_Sankey
               const other_values = other_link.getAllValues()
               // Loop on all current values for given flux id_flux
               Object.entries(values)
-                .forEach(([id_value, [value, ]]) => {
+                .forEach(([id_value, [value,]]) => {
                   // Remove all tags for all current fluxs
                   value.flux_tags_list
                     .forEach(tag => {
@@ -1290,7 +1298,7 @@ export abstract class Class_Sankey
                     })
                   // Get corresponding value to copy
                   const id_other_value = values_corresp_ids[id_flux][id_value]
-                  if (id_other_value !== undefined){
+                  if (id_other_value !== undefined) {
                     const other_value = other_values[id_other_value][0]
                     // Apply same flux-tag relationship from new_layout to current sankey's fluxs
                     other_value.flux_tags_list
@@ -1313,10 +1321,10 @@ export abstract class Class_Sankey
               const other_values = other_link.getAllValues()
               // Loop on all current values for given flux id_flux
               Object.entries(values)
-                .forEach(([id_value, [value, ]]) => {
+                .forEach(([id_value, [value,]]) => {
                   // Get corresponding value to copy
                   const id_other_value = values_corresp_ids[id_flux][id_value]
-                  if (id_other_value !== undefined){
+                  if (id_other_value !== undefined) {
                     value.copyFrom(other_values[id_other_value][0])
                   }
                 })

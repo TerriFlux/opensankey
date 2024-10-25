@@ -91,7 +91,9 @@ export const default_value_label_orthogonal_position: Type_PathLabelVPosition = 
 export const default_value_label_scientific_precision = 5
 export const default_value_label_to_precision = false
 export const default_value_label_unit = ''
+export const default_value_label_unit_factor = 1
 export const default_value_label_unit_visible = false
+export const default_shape_local_scale: number | undefined = undefined
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -337,6 +339,15 @@ export abstract class Class_LinkElement
   // Boolean var only used when enlarging thickness when mouse hovering link
   private _artifical_enlargement: boolean = false
 
+  /**
+   * _scaleValueToPx transform a value to a proportional size in px according to data scale
+   *
+   * @private
+   * @memberof Class_DrawingArea
+   */
+  private _scaleValueToPx = d3.scaleLinear()
+    .domain([0, 1])
+    .range([0, 100])
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -477,8 +488,8 @@ export abstract class Class_LinkElement
     this._drawPath()
     this._drawLabel()
   }
-  public drawElements(){
-    this._add_waiting_process('drawElements', ()=>this._drawElements())
+  public drawElements() {
+    this._add_waiting_process('drawElements', () => this._drawElements())
 
   }
 
@@ -746,6 +757,8 @@ export abstract class Class_LinkElement
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
+      // If local attribute have key local_scale then update local scale domain
+      if ('local_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
     }
     // Get dragged label pos if defined
     this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
@@ -849,11 +862,17 @@ export abstract class Class_LinkElement
   public getAllValues() {
     return this._values.getAllValues()
   }
-  public drawPath(){
-    this._add_waiting_process('drawPath', ()=>this._drawPath())
+  public drawPath() {
+    this._add_waiting_process('drawPath', () => this._drawPath())
   }
-  public drawLabel(){
-    this._add_waiting_process('drawLabel', ()=>this._drawLabel())
+  public drawLabel() {
+    this._add_waiting_process('drawLabel', () => this._drawLabel())
+  }
+
+  public setDomainLocalScale(_: number | undefined) {
+    if (_ !== undefined) {
+      this._scaleValueToPx.domain([0, _])
+    }
   }
 
   // PROTECTED METHODS ==================================================================
@@ -923,7 +942,7 @@ export abstract class Class_LinkElement
     }
   }
 
-  protected addOrRemoveLinkFromSelection(){
+  protected addOrRemoveLinkFromSelection() {
     if (this.drawing_area.selected_links_list.includes(this)) {
       // Remove link from selection
       this.drawing_area.removeLinkFromSelection(this)
@@ -994,6 +1013,14 @@ export abstract class Class_LinkElement
 
   }
 
+  protected scaleValueToPx(_: number) {
+    if (this.local_link_scale !== undefined) {
+      return this._scaleValueToPx(_)
+    } else {
+      return this.drawing_area.scaleValueToPx(_)
+    }
+  }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -1026,7 +1053,7 @@ export abstract class Class_LinkElement
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.drawing_area.show_structure!=='structure'  && this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
+    if (this.drawing_area.show_structure !== 'structure' && this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -1145,11 +1172,9 @@ export abstract class Class_LinkElement
       // offset attributes when dragged
       label_anchor = offset > 50 ? 'end' : 'start'
       label_position = offset
-      // orthogonal attributes when dragged
-      label_ortho_position = 0
-      label_dominant_baseline = 'middle'
+
     } else {
-      // offset attributes
+      // offset attributes 
       if (this.value_label_position === 'middle') {
         label_anchor = 'middle'
         label_position = 50
@@ -1158,23 +1183,21 @@ export abstract class Class_LinkElement
         label_anchor = 'end'
         label_position = 99
       }
-
-      // orthogonal attributes
-      if (this.value_label_orthogonal_position === 'middle') {
-        label_ortho_position = 0
-        label_dominant_baseline = 'middle'
-      }
-      else if (this.value_label_orthogonal_position === 'below') {
-        label_ortho_position = this.thickness / 2 + this.value_label_font_size
-        label_dominant_baseline = 'text-top'
-      }
-
+    }
+    // orthogonal attributes
+    if (this.value_label_orthogonal_position === 'middle') {
+      label_ortho_position = 0
+      label_dominant_baseline = 'middle'
+    }
+    else if (this.value_label_orthogonal_position === 'below') {
+      label_ortho_position = this.thickness / 2 + this.value_label_font_size
+      label_dominant_baseline = 'text-top'
     }
     return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
   }
 
 
-  
+
   /**
    * Function triggered when we start dragging node name label when it follow the link path, it initialise relative position if undefined
    *
@@ -1210,7 +1233,6 @@ export abstract class Class_LinkElement
   private dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
   }
-
 
   //================= Functions for link label if it is a simple text  =================
 
@@ -1595,33 +1617,14 @@ export abstract class Class_LinkElement
     // Get raw value // data tags selected
     const value = this.value
     let text_value = value?.text_value
-    let data_value = value?.data_value
+
     // If present, text value is prioritaire
     if (text_value) {
       return text_value
     }
-    // Value can be null if not specified by user
-    if (data_value) {
-      text_value = data_value.toString()
+    if (this.data_value !== null)
+      text_value = this.data_label
 
-      // Do we need to keep only N significant numbers ?
-      if (this.value_label_to_precision && this.value_label_scientific_precision > 0) {
-        // 12345.67 avec nb_sign = 4 devient 12340
-        text_value = data_value.toPrecision(this.value_label_scientific_precision)
-        data_value = parseFloat(text_value)
-      }
-      //
-      // if (this.value_label_to_precision) {
-      //   // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-      //   text_value = data_value.toPrecision()
-      // }
-      else if (this.value_label_custom_digit) {
-        text_value = data_value.toFixed(this.value_label_nb_digit)
-      }
-      // Add unit suffix
-      if (text_value && this.value_label_unit_visible)
-        text_value = text_value + this.value_label_unit
-    }
     // Output
     return text_value
   }
@@ -2026,6 +2029,23 @@ export abstract class Class_LinkElement
     }
   }
 
+  private redrawNodesSourceTarget() {
+
+    this.source.draw()
+    this.target.draw()
+
+    if (this.source.position_type == 'parametric') {
+      // if the positioning mode of source is parametric we need to reposition all nodes below
+      const same_source_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.source.position_u && n.position_v > this.source.position_v)
+      same_source_u.forEach(n => n.draw())
+    }
+    if (this.target.position_type == 'parametric') {
+      // if the positioning mode of target is parametric we need to reposition all nodes below
+      const same_target_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.target.position_u && n.position_v > this.target.position_v)
+      same_target_u.forEach(n => n.draw())
+    }
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   /**
@@ -2218,7 +2238,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public get data_value() {
-    if(this.drawing_area.show_structure==='structure')
+    if (this.drawing_area.show_structure === 'structure')
       return null
 
     const value = this.value
@@ -2237,17 +2257,7 @@ export abstract class Class_LinkElement
     // Cast as number
     if (value !== null) {
       value.data_value = _
-
-      if (this.source.position_type == 'parametric') {
-        // if the positioning mode of source is parametric we need to reposition all nodes below
-        const same_source_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.source.position_u && n.position_v > this.source.position_v)
-        same_source_u.forEach(n => n.draw())
-      }
-      if (this.target.position_type == 'parametric') {
-        // if the positioning mode of target is parametric we need to reposition all nodes below
-        const same_target_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.target.position_u && n.position_v > this.target.position_v)
-        same_target_u.forEach(n => n.draw())
-      }
+      this.redrawNodesSourceTarget()
     }
   }
 
@@ -2284,6 +2294,11 @@ export abstract class Class_LinkElement
     let text_value = '-'
     // Create data label
     if (data_value) {
+      // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
+      if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
+        data_value /= this.value_label_unit_factor
+      }
+
       // Do we need to keep only N significant numbers ?
       if (this.value_label_scientific_precision > 0) {
         // 12345.67 avec nb_sign = 4 devient 12340
@@ -2303,7 +2318,7 @@ export abstract class Class_LinkElement
       }
       // Add unit suffix
       if (text_value && this.value_label_unit_visible)
-        text_value = text_value + this.value_label_unit
+        text_value = text_value + ' ' + this.value_label_unit
     }
     return text_value
   }
@@ -2397,7 +2412,7 @@ export abstract class Class_LinkElement
     // Get link value for current dataTaggs selected
     const data_value = this.data_value
     // Scale this value for the drawing area
-    const linkValueInPx = this.drawing_area.scaleValueToPx((data_value !== null) ? data_value : 1)
+    const linkValueInPx = this.scaleValueToPx((data_value !== null) ? data_value : 1)
 
     // If link processed size is inferior to min. limit return min. limit
     if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
@@ -2654,6 +2669,7 @@ export abstract class Class_LinkElement
     this._display.attributes.shape_is_recycling = _
     // Need to redraw from nodes
     this.drawWithNodes()
+    this.drawControlPoint()
   }
 
   /**
@@ -2990,6 +3006,25 @@ export abstract class Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
+  public get value_label_unit_factor() {
+    if (this._display.attributes.value_label_unit_factor !== undefined) {
+      return this._display.attributes.value_label_unit_factor
+    } else if (this._display.style.value_label_unit_factor !== undefined) {
+      return this._display.style.value_label_unit_factor
+    }
+    return default_value_label_unit_factor
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawLabel() }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
   public get value_label_custom_digit() {
     if (this._display.attributes.value_label_custom_digit !== undefined) {
       return this._display.attributes.value_label_custom_digit
@@ -3023,6 +3058,23 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel() }
+
+  public get local_link_scale(): number | undefined {
+    if ('_local_link_scale' in this._display.attributes) {
+      return this._display.attributes.local_link_scale
+    } else {
+
+      return this._display.style.local_link_scale
+    }
+  }
+
+  public set local_link_scale(value: number | undefined) {
+    this._display.attributes.local_link_scale = value
+    this.setDomainLocalScale(value)
+    this.redrawNodesSourceTarget()
+  }
+
+
 
   // PRIVATE GETTER / SETTER =============================================================
 
@@ -3180,6 +3232,9 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   protected _value_label_nb_digit?: number
   protected _value_label_unit_visible?: boolean
   protected _value_label_unit?: string
+  protected _value_label_unit_factor?: number
+  protected _local_link_scale?: number
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -3200,7 +3255,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
     if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
     if (this._shape_arrow_size !== undefined) json_object['arrow_size'] = this._shape_arrow_size
-
+    if ('_local_link_scale' in this) (json_object['local_scale'] as number | undefined) = this._local_link_scale
     // Geometry link labels
     if (this._value_label_position !== undefined) json_object['label_position'] = this._value_label_position
     if (this._value_label_orthogonal_position !== undefined) json_object['orthogonal_label_position'] = this._value_label_orthogonal_position
@@ -3222,6 +3277,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._value_label_font_family !== undefined) json_object['font_family'] = this._value_label_font_family
     if (this._value_label_unit_visible !== undefined) json_object['label_unit_visible'] = this._value_label_unit_visible
     if (this._value_label_unit !== undefined) json_object['label_unit'] = this._value_label_unit
+    if (this._value_label_unit_factor !== undefined) json_object['label_unit_factor'] = this._value_label_unit_factor
     if (this._value_label_custom_digit !== undefined) json_object['custom_digit'] = this._value_label_custom_digit
     if (this._value_label_nb_digit !== undefined) json_object['nb_digit'] = this._value_label_nb_digit
 
@@ -3233,12 +3289,14 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['orientation'] !== undefined) this._shape_orientation = getStringFromJSON(json_local_object, 'orientation', default_shape_orientation) as Type_Orientation
     if (json_local_object['left_horiz_shift'] !== undefined) this._shape_starting_curve = getNumberFromJSON(json_local_object, 'left_horiz_shift', default_shape_starting_curve)
     if (json_local_object['starting_tangeant'] !== undefined) this._shape_starting_tangeant = getNumberFromJSON(json_local_object, 'starting_tangeant', default_shape_starting_tangeant)
-      if (json_local_object['ending_tangeant'] !== undefined) this._shape_ending_tangeant = getNumberFromJSON(json_local_object, 'ending_tangeant', default_shape_ending_tangeant)
+    if (json_local_object['ending_tangeant'] !== undefined) this._shape_ending_tangeant = getNumberFromJSON(json_local_object, 'ending_tangeant', default_shape_ending_tangeant)
     if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
     if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
     if (json_local_object['arrow_size'] !== undefined) this._shape_arrow_size = getNumberFromJSON(json_local_object, 'arrow_size', default_shape_arrow_size)
+    // Since local_scale can be undefined we don't test the value but if the object have the key
+    if ('local_scale' in json_local_object) this.local_link_scale = getNumberOrUndefinedFromJSON(json_local_object, 'local_scale')
 
     // Geometry link labels
     if (json_local_object['label_position'] !== undefined) this._value_label_position = getStringFromJSON(json_local_object, 'label_position', default_value_label_position) as Type_PathLabelHPosition
@@ -3261,11 +3319,14 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_value_label_font_family)
     if (json_local_object['label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_local_object, 'label_unit_visible', default_value_label_unit_visible)
     if (json_local_object['label_unit'] !== undefined) this._value_label_unit = getStringFromJSON(json_local_object, 'label_unit', default_value_label_unit)
+    if (json_local_object['label_unit_factor'] !== undefined) this._value_label_unit_factor = getNumberFromJSON(json_local_object, 'label_unit_factor', default_value_label_unit_factor)
     if (json_local_object['custom_digit'] !== undefined) this._value_label_custom_digit = getBooleanFromJSON(json_local_object, 'custom_digit', default_value_label_custom_digit)
     if (json_local_object['nb_digit'] !== undefined) this._value_label_nb_digit = getNumberFromJSON(json_local_object, 'nb_digit', default_value_label_nb_digit)
   }
 
   public copyFrom(element: Class_LinkAttribute) {
+
+    this._local_link_scale = element._local_link_scale
 
     // Shape type
     this._shape_is_curved = element._shape_is_curved
@@ -3306,11 +3367,14 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     this._value_label_nb_digit = element._value_label_nb_digit
     this._value_label_unit_visible = element._value_label_unit_visible
     this._value_label_unit = element._value_label_unit
+    this._value_label_unit_factor = element._value_label_unit_factor
   }
 
   // PROTECTED METHODS ==================================================================
 
   protected update() { }
+
+  protected updateLinkAndSourceTarget() { }
 
   // GETTERS ============================================================================
 
@@ -3320,6 +3384,8 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
    * @memberof Class_LinkAttributes
    */
   public get id() { return 'undefined' }
+
+  public get local_link_scale() { return this._local_link_scale }
 
   // Shape type
   public get shape_is_curved() { return this._shape_is_curved }
@@ -3360,8 +3426,11 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public get value_label_nb_digit() { return this._value_label_nb_digit }
   public get value_label_unit_visible() { return this._value_label_unit_visible }
   public get value_label_unit() { return this._value_label_unit }
+  public get value_label_unit_factor() { return this._value_label_unit_factor }
 
   // SETTERS ============================================================================
+
+  public set local_link_scale(_: number | undefined) { this._local_link_scale = _; this.updateLinkAndSourceTarget() }
 
   // Shape type
   public set shape_is_curved(_: boolean | undefined) { this._shape_is_curved = _; this.update() }
@@ -3454,6 +3523,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _; this.update() }
   public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _; this.update() }
   public set value_label_unit(_: string | undefined) { this._value_label_unit = _; this.update() }
+  public set value_label_unit_factor(_: number | undefined) { this._value_label_unit_factor = _; this.update() }
 }
 
 // CLASS LINK STYLE *********************************************************************
@@ -3524,7 +3594,10 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     this._value_label_scientific_precision = default_value_label_scientific_precision
     this._value_label_to_precision = default_value_label_to_precision
     this._value_label_unit = default_value_label_unit
+    this._value_label_unit_factor = default_value_label_unit_factor
     this._value_label_unit_visible = default_value_label_unit_visible
+
+    this._local_link_scale = default_shape_local_scale
   }
 
   public delete() {
@@ -3556,12 +3629,25 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   protected update() {
     this.updateReferencesDraw()
   }
+  protected updateLinkAndSourceTarget() {
+    this.updateNodeReferencesDraw()
+  }
 
   // PRIVATE METHODS ====================================================================
 
   private updateReferencesDraw() {
     Object.values(this._references)
       .forEach(ref => ref.drawElements())
+  }
+
+  private updateNodeReferencesDraw() {
+    Object.values(this._references)
+      .forEach(ref => {
+        ref.setDomainLocalScale(ref.local_link_scale)
+        ref.source.draw()
+        ref.target.draw()
+
+      })
   }
 
   // GETTERS ============================================================================
@@ -4152,8 +4238,8 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    */
   public removeTag(tag: Class_Tag) {
     if (this.hasGivenTag(tag)) {
-      const idx=this._flux_tags.indexOf(tag)
-      this._flux_tags.splice(idx,1)
+      const idx = this._flux_tags.indexOf(tag)
+      this._flux_tags.splice(idx, 1)
       tag.removeReference(this)
       this.draw()
     }
@@ -4238,11 +4324,11 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     const flux_taggs_dict = ((this.link?.drawing_area as Class_AbstractDrawingArea).sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([_id_tagg, list]) => {
-        if(matching_tags_id[_id_tagg]===undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view) 
+        if (matching_tags_id[_id_tagg] === undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view) 
           return false
 
         const tagg_id = matching_taggs_id[_id_tagg] ?? _id_tagg
-        const tag_ids = (list as string[]).map(_ =>  (matching_tags_id[_id_tagg][_] ?? _))
+        const tag_ids = (list as string[]).map(_ => (matching_tags_id[_id_tagg][_] ?? _))
         return (
           (tagg_id in flux_taggs_dict) &&
           (tag_ids.length > 0))
@@ -4408,7 +4494,7 @@ export class Class_GhostLinkElement
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
     this.computeControlPoints()
-    this.has_timeout=false
+    this.has_timeout = false
   }
 
 

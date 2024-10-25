@@ -367,17 +367,16 @@ export abstract class Class_DrawingArea
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
     // Init drawing area
+    const x = this._fit_margin / 2
+    const y = this._fit_margin / 2 + this.getNavBarHeight()
     this.d3_selection = this.d3_selection_zoom_area
       .append('g')
       .attr('id', 'g_drawing')
+      .attr('transform', 'translate(' + x + ',' + y + ')') // init drawing area zone with a margin for taking into account the navbar
+
 
     // Add specific groups for nodes, link and others
-    const x = this._fit_margin / 2
-    const y = this._fit_margin / 2 + this.getNavBarHeight()
-    this.d3_selection_bg_group = this.d3_selection
-      .append('g')
-      .attr('id', 'g_background')
-      .attr('transform', 'translate(' + x + ',' + y + ')') // init drawing area zone with a margin for taking into account the navbar
+    this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
 
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
@@ -2061,7 +2060,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
-    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 0
+    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 6 * 16 // 16 because we set size in rem in css 1 rem = 16px
   }
 
   /**
@@ -2071,7 +2070,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public getBottomBarHeight() {
-    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 0
+    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * 16 // 16 because we set size in rem in css 1 rem = 16px
   }
 
   /**
@@ -2081,7 +2080,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public getSideBarWidth() {
-    return (document.getElementsByClassName('openMenu')[0]?.getBoundingClientRect().width) ?? 0
+    return (document.getElementsByClassName('openMenu')[0]?.getBoundingClientRect().width) ?? 50
   }
 
   // Color
