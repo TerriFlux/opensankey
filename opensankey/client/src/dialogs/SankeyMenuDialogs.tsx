@@ -513,7 +513,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
                     .forEach(style=>style.position = 'parametric')
-                  ComputeParametrization(applicationData,false)
+                  ComputeParametrization(applicationData,true)
                 } else {
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
@@ -548,7 +548,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                         }
                       }
                     )
-                  ComputeParametrization(applicationData,false)
+                  ComputeParametrization(applicationData,true)
                 } else {
                   Object.values(data.style_node)
                     .filter(style=>style.idNode !== 'NodeExportStyle' && style.idNode !== 'NodeImportStyle')
