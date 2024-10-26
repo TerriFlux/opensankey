@@ -1170,6 +1170,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   let menutop_grid_template = 'minmax(7vw, 150px) minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
   if (window.SankeyToolsStatic) {
     menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem + ' ' + excel_rem
+    // Cartofob menutop_grid_template = '400px 30fr auto '+ data_rem + ' ' + unit_rem + ' ' + excel_rem
   }
   if (show_data && Object.keys(data_tags).length <=2) {
     DDDT = <DataTagSelector
