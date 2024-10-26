@@ -2143,7 +2143,7 @@ const  getDesagregationNodes = (
 export const ComputeParametricV = (applicationData: applicationDataType) => {
   const { data } = applicationData
 
-  Object.values(applicationData.data.nodes).forEach(n=>delete (n as unknown as {v?:string}).v )
+  //Object.values(applicationData.data.nodes).forEach(n=>delete (n as unknown as {v?:string}).v )
 
   const columns : {[_:number]:SankeyNode[]} = {}
   Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && ReturnValueNode(data,n,'position') !== 'relative' ).forEach(n=>{
