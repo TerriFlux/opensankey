@@ -420,6 +420,27 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
+   * Special purge to use before launching sankey animation from node,
+   * it cancel timeout of all visible elements so the purge doesn't redraw element while animation is launched
+   *
+   * @memberof Class_DrawingAreaPlus
+   */
+  public purgeSelectionBeforeAnimation() {
+    // Gets all visible elements that can be affected by the purge & the animation
+    const visible_element = [...this._sankey.visible_nodes_list, ...this._sankey.visible_links_list]
+
+    // Cancel timeout of all visible elements
+    visible_element
+      .forEach((element) => element.has_timeout = false)
+
+    this.purgeSelection() //purge selection without timeout
+
+    // Reset timeout of all visible elements
+    visible_element
+      .forEach((element) => element.has_timeout = true)
+  }
+
+  /**
    * Remove all container selected
    * @memberof Class_DrawingArea
    */
