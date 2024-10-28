@@ -23,6 +23,7 @@ export abstract class Class_AbstractApplicationData {
   // Mandatory getters
   public abstract get t(): TFunction
   public abstract get menu_configuration(): Class_MenuConfig
+  public abstract get node_label_separator(): string
 }
 
 export abstract class Class_AbstractDrawingArea {

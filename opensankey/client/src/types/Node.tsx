@@ -177,9 +177,6 @@ export abstract class Class_NodeElement
   // Name
   private _name: string
 
-  // Name Labels
-  // TODO get from application data
-  private _name_label_separator: string = ''
 
   // Related IO links
   private _input_links: { [id: string]: Type_GenericLinkElement } = {}
@@ -253,7 +250,6 @@ export abstract class Class_NodeElement
     // Copy attributes ------------------------------------------------------------------
     // Name
     this._name = node_to_copy.name
-    this._name_label_separator = node_to_copy._name_label_separator
     // Display
     this._display.position = structuredClone(node_to_copy._display.position)
     this._display.position_x_label = node_to_copy._display.position_x_label
@@ -2414,8 +2410,8 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public get name_label() {
-    if (this._name_label_separator !== '') {
-      return this._name.split(this._name_label_separator)[0]
+    if (this.drawing_area.application_data.node_label_separator !== '') {
+      return this._name.split(this.drawing_area.application_data.node_label_separator)[0]
     }
     return this._name
   }
