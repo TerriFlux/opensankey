@@ -1164,7 +1164,7 @@ export abstract class Class_LinkElement
     let label_anchor = 'start'
     let label_position = 1
     // Ortogonal position from path
-    let label_ortho_position = -this.thickness / 2
+    let label_ortho_position = 0
     let label_dominant_baseline = 'text-after-edge'
 
     if (this._display.position_offset_label !== undefined) {
@@ -1184,8 +1184,12 @@ export abstract class Class_LinkElement
         label_position = 99
       }
     }
+
+    if (this.value_label_orthogonal_position === 'above' || (this.value_label_pos_auto && this.value_label_font_size > this.thickness)) {
+      label_ortho_position = -this.thickness / 2
+    }
     // orthogonal attributes
-    if (this.value_label_orthogonal_position === 'middle') {
+    else if (this.value_label_orthogonal_position === 'middle') {
       label_ortho_position = 0
       label_dominant_baseline = 'middle'
     }
@@ -1293,7 +1297,7 @@ export abstract class Class_LinkElement
       label_ortho_pos = this._display.position_y_label
     } else {
       // Then we apply a relative vertical shift depending of the value_label_orthogonal_position
-      if (this.value_label_orthogonal_position === 'above') {
+      if (this.value_label_orthogonal_position === 'above' || (this.value_label_pos_auto && this.value_label_font_size > this.thickness)) {
         label_ortho_pos -= (this.value_label_font_size / 2)
       } else if (this.value_label_orthogonal_position === 'middle') {
         label_ortho_pos += (this.value_label_font_size / 3)
@@ -2293,7 +2297,7 @@ export abstract class Class_LinkElement
     let data_value = this.data_value
     let text_value = '-'
     // Create data label
-    if (data_value) {
+    if (data_value!==null) {
       // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
       if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
         data_value /= this.value_label_unit_factor

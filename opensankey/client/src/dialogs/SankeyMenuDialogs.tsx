@@ -107,6 +107,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       const delta = n[attr] - min
       n[attr] = min + (delta * stretchFactor)
     })
+    new_data.drawing_area.checkAndUpdateAreaSize()
   }
 
   const content_modal_layout = <Tabs>
@@ -536,7 +537,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 onClick={() => {
                   new_data.menu_configuration.function_on_wait.current = () => {
                     new_data.drawing_area.computeAutoSankey(false)
-                    // set_data({ ...data })
                   }
                   new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
                 }}>

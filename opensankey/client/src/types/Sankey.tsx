@@ -1139,8 +1139,8 @@ export abstract class Class_Sankey
           })
 
 
-      // Update nodes ref to node added
-        if ((add_nodes) || all)   {
+        // Update nodes ref to node added
+        if ((add_nodes) || all) {
           to_add
             .forEach(id => {
               this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
@@ -1184,14 +1184,15 @@ export abstract class Class_Sankey
             const link = other_sankey._links[id]
             const similar_src_curr = this._nodes[link.source.id]
             const similar_trgt_curr = this._nodes[link.target.id]
-            if (similar_src_curr && similar_trgt_curr)
+            if (similar_src_curr && similar_trgt_curr) {
               // Copy with exactly the same atributs, source, targets, id, ...
               this._addNewLink(
                 id,
                 similar_src_curr as Type_GenericNodeElement,
                 similar_trgt_curr as Type_GenericNodeElement
               )
-            this._links[id].copyFrom(link)
+              this._links[id].copyFrom(link)
+            }
           })
       }
 
@@ -1220,8 +1221,10 @@ export abstract class Class_Sankey
       }
 
       if (add_flux || remove_flux || all) {
+        const list_link_post_update=this.links_list.map(l=>l.id)
         // Update links ordering
         to_update.concat(to_add)
+        .filter(id=>list_link_post_update.includes(id)) // only keep link really added
           .forEach(id => {
             // Source node
             const source = this._nodes[this._links[id].source.id]
