@@ -313,21 +313,24 @@ export class Class_Legend
     all_tags
       .filter(tag_group => tag_group.show_legend)
       .forEach(tag_group => {
+        // Tag froup id can have caracter that 'break' html id selection so we normalize it
+        const id_to_use=tag_group.id.replaceAll(' ','_').replaceAll('\'','_')
+
         // Ajout du tagGroup.name
         this.d3_selection?.append('text')
-          .attr('id', 'GrpTag_title_' + tag_group.id)
+          .attr('id', 'GrpTag_title_' + id_to_use)
           .attr('transform', 'translate(' + this._dx + ',' + this._dy + ' )')
           .attr('x', 0)
-          .attr('y', 5 + this._legend_police)
+          .attr('y', this._legend_police)
           .text(tag_group.name)
           .attr('style', 'font-weight:bold;font-size:' + this._legend_police + 'px')
           .call(this._wrapper)
 
-        if (document.getElementById('GrpTag_title_' + tag_group.id)?.getElementsByTagName('tspan')[0].innerHTML === '') {
-          document.getElementById('GrpTag_title_' + tag_group.id)?.setAttribute('y', '5')
+        if (document.getElementById('GrpTag_title_' + id_to_use)?.getElementsByTagName('tspan')[0].innerHTML === '') {
+          document.getElementById('GrpTag_title_' + id_to_use)?.setAttribute('y', '5')
         }
 
-        this._dy += ((this.d3_selection?.select('#GrpTag_title_' + tag_group.id).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 4
+        this._dy += ((this.d3_selection?.select('#GrpTag_title_' + id_to_use).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 4
 
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 

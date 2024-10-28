@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useRef, RefObject } from 'react'
+import React, { FunctionComponent, useRef, RefObject, useState } from 'react'
 import { Box, Button, Checkbox, Input, Select } from '@chakra-ui/react'
 
 // Internal types / classes
@@ -11,6 +11,7 @@ import {
 // Internal components / functions
 import { OSTooltip } from '../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
+import { ConfigMenuTextInput } from '../configmenus/SankeyMenuConfiguration'
 
 
 // COMPONENTS ===========================================================================
@@ -41,6 +42,11 @@ export const OpenSankeyDefaultModalePreferenceContent: FType_OpenSankeyDefaultMo
       }
     })
   }
+
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+  // Update input data value
+  ref_set_text_value_input.current(new_data.node_label_separator)
+
 
   // JSX Component ----------------------------------------------------------------------
 
@@ -153,12 +159,14 @@ export const OpenSankeyDefaultModalePreferenceContent: FType_OpenSankeyDefaultMo
     'node_label_sep': <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
       <Box layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
-        <Input
-          variant='menuconfigpanel_option_input' value={new_data.node_label_separator}
-          onChange={evt => {
-            new_data.node_label_separator = evt.target.value
+        <ConfigMenuTextInput
+          ref_to_set_value={ref_set_text_value_input}
+          function_get_value={() => { return new_data.node_label_separator}}
+          function_on_blur={(_) => {
+            if(_)
+              new_data.node_label_separator=_
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
           }}
-          onBlur={() => new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())}
         />
       </Box>
     </OSTooltip>,

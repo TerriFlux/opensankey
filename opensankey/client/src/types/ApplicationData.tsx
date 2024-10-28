@@ -416,7 +416,7 @@ export abstract class Class_ApplicationData
   public set app_name(value: string) { this._app_name = value }
 
   public get node_label_separator() { return this._node_label_separator }
-  public set node_label_separator(_: string) { this._node_label_separator = _; this._drawing_area.sankey.draw() }
+  public set node_label_separator(_: string) { this._node_label_separator = _ }
 
   public get processFunction(): FType_ProcessFunctions {return this._processFunction}
 }
