@@ -395,8 +395,7 @@ eventMouseDrag(
         if (!nodeDisplay.includes(Target)) {
           nodeDisplay.push(Target)
           let max = 0
-          const tmp = Target.direct_son_as_distant_sibling(new_data, this as unknown as Class_NodeElementOSP, 0, [link_animated], node_visible)
-
+          const tmp = Target.direct_son_as_distant_sibling(new_data, Target, 0, [link_animated], node_visible)
           max = (tmp > max) ? tmp : max
           setTimeout(() => {
             Target.branchAnimate(new_data, nodeDisplay, node_visible)
