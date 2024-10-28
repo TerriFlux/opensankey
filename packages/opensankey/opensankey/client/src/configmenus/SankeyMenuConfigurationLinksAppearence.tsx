@@ -964,7 +964,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             elements.forEach(element => {
               const orth_pos = element.value_label_orthogonal_position
               element.value_label_pos_auto = evt.target.checked
-              element.value_label_position = 'start'
               element.value_label_orthogonal_position = (orth_pos === 'dragged') ? 'middle' : orth_pos
             })
             selected_links.forEach(link => link.deleteRelativeLabelPos())
