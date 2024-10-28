@@ -190,6 +190,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   }
   // Assign default value to missing variable
   const defaut_data = DefaultSankeyData()
+  if (data_to_convert.style_link === undefined) {
+    data_to_convert.style_link = {}
+  }
   Object.entries(data_to_convert.style_link).forEach(s => {
     s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
     data_to_convert.style_link[s[0]] = s[1]
@@ -197,6 +200,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
       s[1].idLink = 'default'
     }
   })
+  if (data_to_convert.style_node === undefined) {
+    data_to_convert.style_node = {}
+  }
   Object.entries(data_to_convert.style_node).forEach(s => {
     s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_node['default'])), s[1])
     data_to_convert.style_node[s[0]] = s[1]
@@ -233,8 +239,8 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     data_to_convert.node_label_separator = ' - '
   }
   // Convert name variable for data version>0.9
-  data_to_convert.filter_link_value=data_to_convert.display_style.filter
-  data_to_convert.filter_label=data_to_convert.display_style.filter_label
+  data_to_convert.filter_link_value = data_to_convert.display_style.filter
+  data_to_convert.filter_label = data_to_convert.display_style.filter_label
   clean_data_local(data_to_convert)
 }
 
@@ -1187,6 +1193,8 @@ const convert_nodes: convert_nodesFuncType = (
       n.local.label_horiz_valeur = n_depreciated.display_style?.label_horiz_valeur
       n.local.label_vert_valeur = n_depreciated.display_style?.label_vert_valeur
 
+      n.local.label_box_width==0?n.local.label_box_width=150:n.local.label_box_width
+
 
       delete n_depreciated.display_style
     }
@@ -1362,15 +1370,15 @@ const convert_nodes: convert_nodesFuncType = (
     Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
       const dim_level = nt[1]
       if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
-        if(dim_level.length==1){
+        if (dim_level.length == 1) {
           // If node has only 1 tag for this levelTag then save it in level
           n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
-        }else{
+        } else {
           // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
-          n.dimensions[nt[0]].children_tags =dim_level
-          let possible_parent='' 
-          possible_parent=Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
-          n.dimensions[nt[0]].parent_tag =possible_parent
+          n.dimensions[nt[0]].children_tags = dim_level
+          let possible_parent = ''
+          possible_parent = Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
+          n.dimensions[nt[0]].parent_tag = possible_parent
         }
 
       }
@@ -1387,11 +1395,11 @@ const convert_nodes: convert_nodesFuncType = (
       delete n.tags[nt[0]]
     });
     // Add links_order to node by combining input/outputs id (for version>=0.9) 
-    (n as Type_JSON).links_order=n.inputLinksId.concat(n.outputLinksId)
+    (n as Type_JSON).links_order = n.inputLinksId.concat(n.outputLinksId)
+
   }
 
   )
-
 
 
 }
@@ -1499,6 +1507,8 @@ const convert_links: convert_linksFuncType = (
           tmp = (v.display_value as string).split('-')
         } else if ((v.display_value as string).includes(',')) {
           tmp = (v.display_value as string).split(',')
+        } else if ((v.display_value as string).includes(';')) {
+          tmp = (v.display_value as string).split(';')
         } else if ((v.display_value as string).includes('...')) {
           tmp = (v.display_value as string).split('...')
         } else if ((v.display_value as string).includes('  ')) {
@@ -1559,6 +1569,7 @@ const convert_links: convert_linksFuncType = (
       }
     }
   }
+  const defaultLinkStyle = DefaultLinkStyle()
 
   Object.values(data.links).forEach(l => {
     if (((l as unknown) as { source_name: string }).source_name) {
@@ -1581,6 +1592,21 @@ const convert_links: convert_linksFuncType = (
     if (!source_node || !target_node) {
       return
     }
+
+
+
+    const l_depreciated = (l as Type_JSON)
+    // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
+    l.local = (l.local != undefined && l.local !== null) ? l.local : {} as SankeyLinkStyle;
+    Object.entries(defaultLinkStyle).filter(ent => ent[0] != 'idLink').forEach(ent => {
+      if (l_depreciated[ent[0]] !== undefined) {
+        AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), ent[1])//either take value link attr directly from link to put it in local attr
+      }else{
+        AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), defaultLinkStyle[ent[0] as keyof SankeyLinkStyle])// or take value link attr from link default style to put it in local attr
+      }
+    })
+
+
     if (l && l.local && !('orientation' in l.local)) {
       AssignLinkLocalAttribute(l, 'orientation', 'hh')
       if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
@@ -1725,13 +1751,13 @@ const convert_links: convert_linksFuncType = (
       }
     })
 
-    if(l.local && l.local.recycling){
-      l.local.left_horiz_shift=0.05
-      l.local.right_horiz_shift=0.95;
+    if (l.local && l.local.recycling) {
+      l.local.left_horiz_shift = 0.05
+      l.local.right_horiz_shift = 0.95;
       // Add variable in legacy JSOn
-      (l.local as Type_JSON).starting_tangeant=0.05; // special assignement for attr not present in legacy but usefull in current Class_link
-      (l.local as Type_JSON).ending_tangeant=0.05 // special assignement for attr not present in legacy but usefull in current Class_link    
-      
+      (l.local as Type_JSON).starting_tangeant = 0.05; // special assignement for attr not present in legacy but usefull in current Class_link
+      (l.local as Type_JSON).ending_tangeant = 0.05 // special assignement for attr not present in legacy but usefull in current Class_link    
+
     }
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
       delete l.local.color

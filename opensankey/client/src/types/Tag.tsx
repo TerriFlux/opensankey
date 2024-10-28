@@ -245,6 +245,7 @@ export class Class_Tag extends Class_ProtoTag {
       .forEach(element => {
         element.draw()
       })
+    this._ref_sankey.drawing_area.legend.draw()
   }
 
   public hasGivenReference(_: Type_TagReference) {
@@ -353,6 +354,7 @@ export class Class_DataTag extends Class_ProtoTag {
       .forEach(element => {
         element.drawWithNodes()
       })
+    this._ref_sankey.drawing_area.legend.draw()
   }
 
   /**
@@ -1287,7 +1289,6 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     if (this._show_legend !== value) {
       this._show_legend = value
       this.updateTagsReferences()
-      this._ref_sankey.drawing_area.legend.draw()
     }
   }
 }
@@ -1746,7 +1747,7 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   public sibling_activated() {
     return this._siblings.filter(tagg => {
       return this._ref_sankey.level_taggs_dict[tagg].activated
-    }).map(tagg=>this._ref_sankey.level_taggs_dict[tagg])
+    }).map(tagg => this._ref_sankey.level_taggs_dict[tagg])
   }
   public fromJSON(
     json_object: Type_JSON,
