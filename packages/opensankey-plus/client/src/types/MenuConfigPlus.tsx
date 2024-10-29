@@ -269,10 +269,10 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   // PROTECTED METHODS ==================================================================
 
-protected override _updateComponentRelatedToNodesApparence(): void {
-  super._updateComponentRelatedToNodesApparence()
-  this._ref_to_menu_config_node_icon_updater.current()
-}
+  protected override _updateComponentRelatedToNodesApparence(): void {
+    super._updateComponentRelatedToNodesApparence()
+    this._ref_to_menu_config_node_icon_updater.current()
+  }
 
   // GETTERS / SETTERS ==================================================================
 

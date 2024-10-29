@@ -110,7 +110,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
     new_data_plus.menu_configuration.isGivenAccordionShowed('ED')
   )
   
-  new_data_plus.menu_configuration.ref_to_accordion_edition_tag_updater.current=()=>setUpdate(a=>a+1);
+  new_data_plus.menu_configuration.ref_to_accordion_edition_tag_updater.current=()=>setUpdate(a=>a+1)
   return show_menu_config_tag ?
     <AccordionItem>
       {

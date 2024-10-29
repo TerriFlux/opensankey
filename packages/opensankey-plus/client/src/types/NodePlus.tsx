@@ -24,7 +24,7 @@ import {
 } from '../deps/OpenSankey/types/Utils'
 import { Class_NodeAttribute, Class_NodeStyle } from '../deps/OpenSankey/types/Node'
 import { default_label_background } from '../MenuConfigEdition/SankeyPlusNodes'
-import { Class_NodeElementOSP, Type_GenericApplicationDataOSP, Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './TypesOSP'
+import { Type_GenericApplicationDataOSP, Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './TypesOSP'
 import * as d3 from 'd3'
 
 export function isAttributeOverloaded(
@@ -284,13 +284,13 @@ export abstract class Class_NodeElementPlus
     this._add_waiting_process('drawIllustration', () => { this._drawIllustration() })
   }
 
-/**
+  /**
  * Override eventMouseDrag so when the DA is in selection mode we also drag selected containers when we drag nodes
  *
  * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
  * @memberof Class_NodeElementPlus
  */
-eventMouseDrag(
+  eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     // Apply parent behavior first

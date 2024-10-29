@@ -308,25 +308,25 @@ export class Class_ContainerElement
     this._label_height = _._label_height
   }
 
-    /**
+  /**
    * Draw all control points
    *
    * @private
    * @memberof Class_ContainerElement
    */
-    public drawDragHandlers() {
+  public drawDragHandlers() {
 
-      this.computeTopHandlerPos()
-      this.computeBottomHandlerPos()
-      this.computeLeftHandlerPos()
-      this.computeRightHandlerPos()
+    this.computeTopHandlerPos()
+    this.computeBottomHandlerPos()
+    this.computeLeftHandlerPos()
+    this.computeRightHandlerPos()
   
-      // Draw control handler
-      this._drag_handler.top.draw()
-      this._drag_handler.bottom.draw()
-      this._drag_handler.left.draw()
-      this._drag_handler.right.draw()
-    }
+    // Draw control handler
+    this._drag_handler.top.draw()
+    this._drag_handler.bottom.draw()
+    this._drag_handler.left.draw()
+    this._drag_handler.right.draw()
+  }
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -672,7 +672,7 @@ export class Class_ContainerElement
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
             n.drawDragHandlers()
           })
-          this.drawing_area.moveSelectedNodesFromDragEvent(event)
+        this.drawing_area.moveSelectedNodesFromDragEvent(event)
       }
     }
   }
