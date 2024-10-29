@@ -38,7 +38,6 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   const { t } = new_data
   const {
     ref_setter_show_menu_node_apparence,
-    ref_setter_show_menu_node_tooltip,
     ref_setter_show_menu_node_io,
   } = new_data.menu_configuration.dict_setter_show_dialog
 
@@ -50,7 +49,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   let is_top = true
   let pos_x = 0
   let pos_y = 0
-  
+
   const size_Button=40
   const size_context_menu=(additionalMenu.context_node_order.filter(key=>!key.includes('sep_')).length)*size_Button // Get approx. height of context menu
   // The limit value of the mouse position that engages the shift of the context menu
@@ -63,7 +62,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     pos_y = new_data.drawing_area.pointer_pos[1]
 
     if (new_data.drawing_area.pointer_pos[1] + size_context_menu > window.innerHeight) {
-      pos_y = ((new_data.drawing_area.pointer_pos[1]-(new_data.drawing_area.pointer_pos[1] + size_context_menu-window.innerHeight))) 
+      pos_y = ((new_data.drawing_area.pointer_pos[1]-(new_data.drawing_area.pointer_pos[1] + size_context_menu-window.innerHeight)))
       is_top = false
     }
     style_c_n = pos_y + 'px auto auto ' + pos_x + 'px'
@@ -567,7 +566,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
     'style': dropdown_c_n_style,
     'mask_shape': btn_mask_shape,
-    'mask_label': btn_mask_label,   
+    'mask_label': btn_mask_label,
     'sep_3': sep,
 
     'reorg': btn_reorganise_link_io,

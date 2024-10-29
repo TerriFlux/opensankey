@@ -712,10 +712,10 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
             />
           </Box>
 
-              {/* Additional input to modify attr from submodule */}
-            {additional_menus.additional_node_label_layout_content.map((content,idx)=>{
-              return <React.Fragment key={idx}>{content}</React.Fragment>
-            })}
+          {/* Additional input to modify attr from submodule */}
+          {additional_menus.additional_node_label_layout_content.map((content,idx)=>{
+            return <React.Fragment key={idx}>{content}</React.Fragment>
+          })}
 
           <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
             {t('MEP.leg_pos')}

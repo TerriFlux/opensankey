@@ -1,6 +1,6 @@
 // External imports
-import React, { FunctionComponent, useRef, RefObject, useState } from 'react'
-import { Box, Button, Checkbox, Input, Select } from '@chakra-ui/react'
+import React, { FunctionComponent, useRef, RefObject } from 'react'
+import { Box, Button, Checkbox, Select } from '@chakra-ui/react'
 
 // Internal types / classes
 import {
