@@ -38,8 +38,6 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
   const {
     ref_setter_show_menu_link_appearence,
     ref_setter_show_menu_link_data,
-    ref_setter_show_menu_link_tooltip,
-    ref_setter_show_menu_link_tags
   } = new_data.menu_configuration.dict_setter_show_dialog
 
   // Link on which this menu applies ----------------------------------------------------
@@ -281,7 +279,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       style={{ maxWidth: '100%', position: 'absolute', inset: style_c_l }}
     >
       <ButtonGroup orientation='vertical' isAttached>
-      {additionalMenus.context_link_order.map((key, id) => {
+        {additionalMenus.context_link_order.map((key, id) => {
           return <React.Fragment key={id}>{content_context_link[key]}</React.Fragment>
         })}
       </ButtonGroup>

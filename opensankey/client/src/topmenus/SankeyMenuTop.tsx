@@ -1601,12 +1601,12 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
 export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) => {
   new_data.drawing_area.purgeSelection()
   const svg = new_data.drawing_area.d3_selection
-  const svg_with_header = "<svg version=\"1.1\" " +
-    " height=" + new_data.drawing_area.height.toString() +
-    " width=" + new_data.drawing_area.width.toString() +
-    " xmlns=\"http://www.w3.org/2000/svg\">" +
+  const svg_with_header = '<svg version="1.1" ' +
+    ' height=' + new_data.drawing_area.height.toString() +
+    ' width=' + new_data.drawing_area.width.toString() +
+    ' xmlns="http://www.w3.org/2000/svg">' +
     (svg?.html() ?? '') +
-    "</svg>"
+    '</svg>'
   return svg_with_header
 }
 

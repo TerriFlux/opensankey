@@ -25,7 +25,6 @@ import {
   launchToastConstructor
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
-import { opensankey_theme } from './chakra/Theme'
 import { Type_JSON } from './types/Utils'
 
 import { FCType_SankeyApp } from './types/FunctionTypes'
@@ -233,103 +232,103 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
   /*************************************************************************************************/
   return <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
-      <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
-        {
-          moduleDialogs(
-            new_data,
-            additionalMenus,
-            menu_configuration_nodes_attributes,
-            new_data.processFunction
-          ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
-        }
-        {
-          <ModalWelcome
-            new_data={new_data}
-          />
-        }
-        <>
-          <Menu
-            new_data={new_data}
-            processFunctions={new_data.processFunction}
-            configurations_menus={menu_configuration}
-            menus={sankey_menus}
-            cardsTemplate={additionalMenus.cards_template}
-            external_modal={[
-              <React.Fragment key={'modale_style_link'}>
-                <SankeyModalStyleLink
-                  new_data={new_data}
-                  additionalMenus={additionalMenus}
-                />
-              </React.Fragment>,
-              <React.Fragment key={'modale_style_node'}>
-                <SankeyModalStyleNode
-                  new_data={new_data}
-                  node_attribute_tab={
-                    <OpenSankeyConfigurationNodesAttributes
-                      new_data={new_data}
-                      menu_for_style={true}
-                      additional_menus={additionalMenus}
-                    />
-                  }
-                />
-              </React.Fragment>,
-              <React.Fragment key={'modale_preference'}>
-                <ModalPreference
-                  new_data={new_data}
-                  ui={Object.values(regular_ui).map(d => {
-                    // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
-                    let content
-                    if (Array.isArray(d)) {
-                      content = <React.Fragment>{d.map((el, i) => {
-                        return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
-                      })}</React.Fragment>
-                    } else {
-                      content = <React.Fragment key={'content_ui_pref'}>{d}</React.Fragment>
-                    }
-                    return <>
-                      {content}
-                      <hr
-                        style={{
-                          borderStyle: 'none',
-                          margin: '10px',
-                          color: 'grey',
-                          backgroundColor: 'grey',
-                          height: 1
-                        }}
-                      />
-                    </>
-                  })}
-                />
-              </React.Fragment>,
-              <></>
-            ]}
-            reinitialization={reinitialization}
-            formations_menu={additionalMenus.formations_menu}
-            additional_nav_item={
-              additionalMenus.additional_nav_item
-            }
-            apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
-            diagramSelector={initializeDiagrammSelector(new_data)}
-          />
-        </>
-        <ApplySaveJSONDialog
+    <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
+      {
+        moduleDialogs(
+          new_data,
+          additionalMenus,
+          menu_configuration_nodes_attributes,
+          new_data.processFunction
+        ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
+      }
+      {
+        <ModalWelcome
           new_data={new_data}
-          additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
-          ClickSaveDiagram={ClickSaveDiagram}
         />
-      </div>
-      <ContextMenuNode
+      }
+      <>
+        <Menu
+          new_data={new_data}
+          processFunctions={new_data.processFunction}
+          configurations_menus={menu_configuration}
+          menus={sankey_menus}
+          cardsTemplate={additionalMenus.cards_template}
+          external_modal={[
+            <React.Fragment key={'modale_style_link'}>
+              <SankeyModalStyleLink
+                new_data={new_data}
+                additionalMenus={additionalMenus}
+              />
+            </React.Fragment>,
+            <React.Fragment key={'modale_style_node'}>
+              <SankeyModalStyleNode
+                new_data={new_data}
+                node_attribute_tab={
+                  <OpenSankeyConfigurationNodesAttributes
+                    new_data={new_data}
+                    menu_for_style={true}
+                    additional_menus={additionalMenus}
+                  />
+                }
+              />
+            </React.Fragment>,
+            <React.Fragment key={'modale_preference'}>
+              <ModalPreference
+                new_data={new_data}
+                ui={Object.values(regular_ui).map(d => {
+                  // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
+                  let content
+                  if (Array.isArray(d)) {
+                    content = <React.Fragment>{d.map((el, i) => {
+                      return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
+                    })}</React.Fragment>
+                  } else {
+                    content = <React.Fragment key={'content_ui_pref'}>{d}</React.Fragment>
+                  }
+                  return <>
+                    {content}
+                    <hr
+                      style={{
+                        borderStyle: 'none',
+                        margin: '10px',
+                        color: 'grey',
+                        backgroundColor: 'grey',
+                        height: 1
+                      }}
+                    />
+                  </>
+                })}
+              />
+            </React.Fragment>,
+            <></>
+          ]}
+          reinitialization={reinitialization}
+          formations_menu={additionalMenus.formations_menu}
+          additional_nav_item={
+            additionalMenus.additional_nav_item
+          }
+          apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
+          diagramSelector={initializeDiagrammSelector(new_data)}
+        />
+      </>
+      <ApplySaveJSONDialog
         new_data={new_data}
-        additionalMenu={additionalMenus}
-      />
-      <ContextMenuLink
-        new_data={new_data}
-        additionalMenus={additionalMenus}
-      />
-      <ContextMenuZdd
-        new_data={new_data}
+        additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
+        ClickSaveDiagram={ClickSaveDiagram}
       />
     </div>
+    <ContextMenuNode
+      new_data={new_data}
+      additionalMenu={additionalMenus}
+    />
+    <ContextMenuLink
+      new_data={new_data}
+      additionalMenus={additionalMenus}
+    />
+    <ContextMenuZdd
+      new_data={new_data}
+    />
+  </div>
 
 }
 

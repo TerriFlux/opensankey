@@ -39,7 +39,6 @@ import {
   getStringOrUndefinedFromJSON,
   default_main_sankey_id,
   default_style_id,
-  default_style_name,
   Type_MacroTagGroup
 } from './Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
@@ -1224,7 +1223,7 @@ export abstract class Class_Sankey
         const list_link_post_update=this.links_list.map(l=>l.id)
         // Update links ordering
         to_update.concat(to_add)
-        .filter(id=>list_link_post_update.includes(id)) // only keep link really added
+          .filter(id=>list_link_post_update.includes(id)) // only keep link really added
           .forEach(id => {
             // Source node
             const source = this._nodes[this._links[id].source.id]

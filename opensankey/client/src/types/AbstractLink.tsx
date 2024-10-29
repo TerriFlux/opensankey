@@ -11,7 +11,7 @@ import {
   Class_AbstractSankey,
   Class_AbstractTag
 } from './Abstract'
-import { Class_AbstractNodeElement } from './AbstractNode';
+import { Class_AbstractNodeElement } from './AbstractNode'
 import { Class_ProtoElement } from './Element'
 
 

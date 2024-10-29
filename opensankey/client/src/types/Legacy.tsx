@@ -1597,7 +1597,7 @@ const convert_links: convert_linksFuncType = (
 
     const l_depreciated = (l as Type_JSON)
     // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
-    l.local = (l.local != undefined && l.local !== null) ? l.local : {} as SankeyLinkStyle;
+    l.local = (l.local != undefined && l.local !== null) ? l.local : {} as SankeyLinkStyle
     Object.entries(defaultLinkStyle).filter(ent => ent[0] != 'idLink').forEach(ent => {
       if (l_depreciated[ent[0]] !== undefined) {
         AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), ent[1])//either take value link attr directly from link to put it in local attr

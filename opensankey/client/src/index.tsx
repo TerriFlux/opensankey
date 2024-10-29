@@ -48,33 +48,33 @@ const root=createRoot(container)
 // RENDERING ==========================================================================================
 root.render(
   <ChakraProvider theme={opensankey_theme}>
-  <SankeyApp
-    initializeReinitialization={initializeReinitialization}
+    <SankeyApp
+      initializeReinitialization={initializeReinitialization}
 
-    //- Data
-    initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
+      //- Data
+      initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
 
-    //- UI
-    initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
+      //- UI
+      initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
 
-    // Ref to some key ui element in the application
-    initializeAdditionalMenus={initializeAdditionalMenus}
+      // Ref to some key ui element in the application
+      initializeAdditionalMenus={initializeAdditionalMenus}
 
-    // Input data used for updateLayout
-    // (OS only use data from imported file
-    // but OSP can use its view as imported data
-    // )
-    initializeDiagrammSelector={initializeDiagrammSelector}
+      // Input data used for updateLayout
+      // (OS only use data from imported file
+      // but OSP can use its view as imported data
+      // )
+      initializeDiagrammSelector={initializeDiagrammSelector}
 
-    // Submenus to add in the application
-    moduleDialogs={moduleDialogs}
+      // Submenus to add in the application
+      moduleDialogs={moduleDialogs}
 
-    // Welcome modal
-    ModalWelcome={ModalWelcomeBuilder}
+      // Welcome modal
+      ModalWelcome={ModalWelcomeBuilder}
 
-    // BackEnd
-    ClickSaveDiagram={ClickSaveDiagram}
-  />
+      // BackEnd
+      ClickSaveDiagram={ClickSaveDiagram}
+    />
   </ChakraProvider>
 )
 
