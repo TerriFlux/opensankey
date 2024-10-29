@@ -1,8 +1,4 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useRef
-} from 'react'
+import React from 'react'
 
 /*************************************************************************************************/
 
@@ -12,7 +8,6 @@ import {
   FType_InitializeMenuConfiguration,
   FType_InitializeReinitialization,
   FType_ModuleDialogs,
-  FType_ProcessFunctions
 } from './types/FunctionTypes'
 import {
   Class_ApplicationDataOS,
@@ -25,7 +20,6 @@ import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfig
 import { OpenSankeyMenuConfigurationLayout } from './configmenus/SankeyMenuConfigurationLayout'
 import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
 
-import { retrieveExcelResults } from './dialogs/SankeyPersistence'
 import { FType_InitializeDiagrammSelector } from './dialogs/types/SankeyMenuDialogsTypes'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 

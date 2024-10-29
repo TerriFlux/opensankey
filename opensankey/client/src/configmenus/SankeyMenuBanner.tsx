@@ -14,15 +14,8 @@ import {
   PopoverTrigger,
   PopoverCloseButton,
   Box,
-  NumberInput,
-  NumberInputField,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
   Select,
   Switch,
-  Input,
   useBoolean
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -33,10 +26,8 @@ import {
   faDiagramProject,
   faArrowsLeftRight,
   faArrowsUpDown,
-  faSliders,
   faExpand,
   faCompress,
-  faDatabase
 } from '@fortawesome/free-solid-svg-icons'
 
 // Internal Types / Classes
@@ -460,7 +451,7 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
                     if (evt.target.checked) {
                       flux_tagg.show_legend = true
                     }
-                    // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated 
+                    // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
                     // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
                     new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.drawLinksArrow())
                     // Update related components (includes this)
@@ -774,14 +765,14 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
 
   const init_toolbar_elements: { [_: string]: JSX.Element } = {
 
-  'mode_souris': btn_mouse_mode_edition,
-  'node_type': btn_show_data_type,
-  'strectch_zdd': stretchButtons(new_data),
-  'help': btn_show_help_in_static,
-  'fullscreen': button_fullscreen,
+    'mode_souris': btn_mouse_mode_edition,
+    'node_type': btn_show_data_type,
+    'strectch_zdd': stretchButtons(new_data),
+    'help': btn_show_help_in_static,
+    'fullscreen': button_fullscreen,
 
-  ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
-}
+    ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
+  }
 
 
 
@@ -808,11 +799,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-        <FontAwesomeIcon icon={faArrowsUpDown} />
-      </Button>
-    </OSTooltip></>
+  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+      <FontAwesomeIcon icon={faArrowsUpDown} />
+    </Button>
+  </OSTooltip></>
 }
 
 
