@@ -411,12 +411,18 @@ def handle_invoice_created(session):
     item = lines['data'][0]
     if (item['quantity'] != 1):
         return 'Item quantity mismatch', False
+    # Get product id
+    prod_id = item['price']['product']
+    # Check if it's about a subscription
+    sub_id = item['subscription']
+    if sub_id is None:
+        sub_id = object['id']
     # Create / update user_license object
     return set_license_invoice_created(
         object['customer_email'],
         object['customer'],
-        item['plan']['product'],
-        object['id'])
+        prod_id,
+        sub_id)
 
 
 def handle_invoice_paid(session):
@@ -434,11 +440,31 @@ def handle_invoice_paid(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
+    # Check if it has been paid
     object = session['object']
     if (object['paid'] is True):
-        return set_licence_invoice_paid(
-            object['customer'],
-            object['id'])
+        # Check number of lines in invoice
+        lines = object['lines']
+        if (lines['total_count'] != 1):
+            return 'Total lines mismatch', False
+        # Check number of items for given line
+        item = lines['data'][0]
+        if (item['quantity'] != 1):
+            return 'Item quantity mismatch', False
+        # Get product id
+        prod_id = item['price']['product']
+        # Check if it's about a subscription
+        sub_id = item['subscription']
+        if (sub_id is not None):
+            return set_licence_invoice_paid(
+                object['customer'],
+                prod_id,
+                sub_id)
+        else:
+            return set_licence_invoice_paid(
+                object['customer'],
+                prod_id,
+                object['id'])
     return 'Not paid', False
 
 
