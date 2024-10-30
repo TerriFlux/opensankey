@@ -9,6 +9,7 @@ export const modal_account = definePartsStyle({
     background: 'blackAlpha.500'
   },
   dialog:{
+    display: 'inherit',
     minWidth: '33vw',
     maxWidth: '66vw',
     width: 'fit-content',
@@ -22,7 +23,8 @@ export const modal_account = definePartsStyle({
   body: {
     display: 'grid',
     gridAutoFlow: 'row',
-    gridRowGap: '6px !important'
+    gridRowGap: '6px !important',
+    width: '100%',
   },
   footer: {
   }

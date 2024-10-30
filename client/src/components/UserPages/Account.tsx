@@ -128,7 +128,8 @@ const Account: FunctionComponent<AccountTypes> = ({
     onOpen: onEmailChangeModalOpen,
     onClose: onEmailChangeModalClose
   } = useDisclosure()
-  const [err_email, setErrEmail] = useState(false)
+  const [user_new_email, setUserNewEmail] = useState('')
+  const [user_new_email_valid, setUserNewEmailValid] = useState(true)
   const [password, setPassword] = useState('')
   const [show_password, setShowPassword] = useState(false)
 
@@ -138,7 +139,7 @@ const Account: FunctionComponent<AccountTypes> = ({
     onOpen: onPwdChangeModalOpen,
     onClose: onPwdChangeModalClose
   } = useDisclosure()
-  const [err_password, setErrPassword] = useState(false)
+  const [new_password_valid, setNewPasswordValid] = useState(true)
   const [new_password, setNewPassword] = useState('')
   const [show_new_password, setShowNewPassword] = useState(false)
   const [secret, setSecret] = useState('')
@@ -155,10 +156,10 @@ const Account: FunctionComponent<AccountTypes> = ({
 
   // User informations
   const [user_data, setUserData] = useState(user_data_default)
-  const [user_new_email, setUserNewEmail] = useState('')
   const [user_new_firstname, setUserNewFirstName] = useState('')
+  const [user_new_firstname_valid, setUserNewFirstNameValid] = useState(true)
   const [user_new_lastname, setUserNewLastName] = useState('')
-
+  const [user_new_lastname_valid, setUserNewLastNameValid] = useState(true)
   // Messages
   const [msgs_login_modification, setMsgsLoginModification] = useState(structuredClone(log_default))
   const [msgs_userdata_modification, setMsgsUserdataModification] = useState(structuredClone(log_default))
@@ -221,8 +222,6 @@ const Account: FunctionComponent<AccountTypes> = ({
     msgs_login_modification.info = s
     msgs_login_modification.err = ''
     setMsgsLoginModification(msgs_login_modification)
-    setErrPassword(false)
-    setErrEmail(false)
   }
 
   /**
@@ -243,8 +242,6 @@ const Account: FunctionComponent<AccountTypes> = ({
     msgs_login_modification.info = ''
     msgs_login_modification.err = ''
     setMsgsLoginModification(msgs_login_modification)
-    setErrPassword(false)
-    setErrEmail(false)
   }
 
 
@@ -284,12 +281,18 @@ const Account: FunctionComponent<AccountTypes> = ({
    * Trigger current user email modification
    */
   const verifyEmail = () => {
+    // Clear logs
     clearMsgsForLoginModification()
-    if (user_new_email.match(email_regex_str) != null) {
+    setUserNewEmailValid(true)
+    // Protection against unecessary msgs
+    if (user_new_email.length === 0)
+      return
+    // Check modif
+    if (user_new_email.match(email_regex_str) !== null) {
       onEmailChangeModalOpen()
     }
     else {
-      setErrEmail(true)
+      setUserNewEmailValid(false)
       setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_email_regex'))
     }
   }
@@ -298,37 +301,46 @@ const Account: FunctionComponent<AccountTypes> = ({
    * Submit Email modification
    */
   const submitEmail = () => {
-    if (user_new_email.match(email_regex_str) != null) {
-      fetch(window.location.origin + '/user/infos/modify/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: user_data.email,
-          new_email: user_new_email,
-          password: password
+    // Clear logs
+    clearMsgsForLoginModification()
+    setUserNewEmailValid(true)
+    // Protection against unecessary msgs
+    if (user_new_email.length === 0)
+      return
+    // Check modif
+    if ((user_new_email.match(email_regex_str) !== null)) {
+      if ((user_new_email !== user_data.email)) {
+        fetch(window.location.origin + '/user/infos/modify/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user_data.email,
+            new_email: user_new_email,
+            password: password
+          })
         })
-      })
-        .then(response => {
-          if (response.ok) {
-            setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_email'))
-            // Reset password on modal
-            setPassword('')
-            setShowPassword(false)
-            // Update user_data
-            user_data.email = user_new_email
-            setUserData(user_data)
-          }
-          else {
-            setErrEmail(true)
-            setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_email_failed'))
-          }
-        })
-      setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.prs_email'))
+          .then(response => {
+            if (response.ok) {
+              setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.ok_email'))
+              // Reset password on modal
+              setPassword('')
+              setShowPassword(false)
+              // Update user_data
+              user_data.email = user_new_email
+              setUserData(user_data)
+            }
+            else {
+              setUserNewEmailValid(false)
+              setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_email_failed'))
+            }
+          })
+        setInfoMsgForLoginModification(t('UserPages.login_modify.msgs.prs_email'))
+      }
     }
     else {
-      setErrEmail(true)
+      setUserNewEmailValid(false)
       setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_email_regex'))
     }
     // Close modal and update
@@ -339,8 +351,14 @@ const Account: FunctionComponent<AccountTypes> = ({
    * Trigger Password change - send email with token
    */
   const triggerPasswordChange = () => {
+    // Clear logs
     clearMsgsForLoginModification()
-    if (new_password.match(pwd_regex_str) != null) {
+    setNewPasswordValid(true)
+    // Protection against unecessary msgs
+    if (new_password.length === 0)
+      return
+    // Check modif
+    if (new_password.match(pwd_regex_str) !== null) {
       const lang = i18next.language
       const email = user_data.email
       const path = window.location.origin
@@ -360,7 +378,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             return response
           }
           else {
-            setErrPassword(true)
+            setNewPasswordValid(false)
             setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_pwd_failed'))
             return Promise.reject(response)
           }
@@ -378,13 +396,17 @@ const Account: FunctionComponent<AccountTypes> = ({
         })
     }
     else {
-      setErrPassword(true)
+      setNewPasswordValid(false)
       setErrMsgForLoginModification(t('Register.account.pwd.error'))
     }
   }
 
   const submitPassword = () => {
     clearMsgsForLoginModification()
+    // Protection against unecessary msgs
+    if (new_password.length === 0)
+      return
+    // Set modif
     const path = window.location.origin
     const url = path + '/user/infos/modify/pwd'
     return fetch(url, {
@@ -393,7 +415,7 @@ const Account: FunctionComponent<AccountTypes> = ({
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        new_password: password,
+        new_password: new_password,
         token: secret
       })
     })
@@ -402,7 +424,6 @@ const Account: FunctionComponent<AccountTypes> = ({
           return response
         }
         else {
-          setErrPassword(true)
           setErrMsgForLoginModification(t('UserPages.login_modify.msgs.err_pwd_failed'))
           return Promise.reject(response)
         }
@@ -496,53 +517,73 @@ const Account: FunctionComponent<AccountTypes> = ({
   }
 
   const submitFirstnameChange = () => {
+    // Clear logs
     clearMsgsForUserDataModification()
-    if (user_new_firstname.match(name_regex_str) != null) {
-      fetch(window.location.origin + '/user/infos/modify/firstname', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstname: user_new_firstname
+    setUserNewFirstNameValid(true)
+    // Protection against unecessary msgs
+    if (user_new_firstname.length === 0)
+      return
+    // Check modif
+    if (user_new_firstname.match(name_regex_str) !== null) {
+      if (user_new_firstname !== user_data.firstname) {
+        fetch(window.location.origin + '/user/infos/modify/firstname', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstname: user_new_firstname
+          })
         })
-      })
-        .then(response => {
-          if (response.ok) {
-            setInfoMsgForUserDataModification(t('UserPages.infos_modify.msgs.ok_firstname'))
-          }
-          else {
-            setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_firstname'))
-          }
-        })
+          .then(response => {
+            if (response.ok) {
+              setInfoMsgForUserDataModification(t('UserPages.infos_modify.msgs.ok_firstname'))
+            }
+            else {
+              setUserNewFirstNameValid(false)
+              setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_firstname'))
+            }
+          })
+      }
     }
     else {
+      setUserNewFirstNameValid(false)
       setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_firstname'))
     }
   }
 
   const submitLastnameChange = () => {
+    // Clear logs
     clearMsgsForUserDataModification()
-    if (user_new_lastname.match(name_regex_str) != null) {
-      fetch(window.location.origin + '/user/infos/modify/lastname', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lastname: user_new_lastname
+    setUserNewLastNameValid(true)
+    // Protection against unecessary msgs
+    if (user_new_lastname.length === 0)
+      return
+    // Check modif
+    if (user_new_lastname.match(name_regex_str) !== null) {
+      if (user_new_lastname !== user_data.name) {
+        fetch(window.location.origin + '/user/infos/modify/lastname', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            lastname: user_new_lastname
+          })
         })
-      })
-        .then(response => {
-          if (response.ok) {
-            setInfoMsgForUserDataModification(t('UserPages.infos_modify.msgs.ok_lastname'))
-          }
-          else {
-            setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_lastname'))
-          }
-        })
+          .then(response => {
+            if (response.ok) {
+              setInfoMsgForUserDataModification(t('UserPages.infos_modify.msgs.ok_lastname'))
+            }
+            else {
+              setUserNewLastNameValid(false)
+              setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_lastname'))
+            }
+          })
+      }
     }
     else {
+      setUserNewLastNameValid(false)
       setErrMsgForUserDataModification(t('UserPages.infos_modify.msgs.err_lastname'))
     }
   }
@@ -776,6 +817,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Input
                           type='text'
+                          isInvalid={!user_new_firstname_valid}
                           placeholder={user_data.firstname}
                           onChange={e => setUserNewFirstName(e.target.value)}
                           onBlur={submitFirstnameChange}
@@ -795,6 +837,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Input
                           type='text'
+                          isInvalid={!user_new_lastname_valid}
                           placeholder={user_data.name}
                           onChange={e => setUserNewLastName(e.target.value)}
                           onBlur={submitLastnameChange}
@@ -883,7 +926,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                   {/* Id modification ---------------------------------------------------------------- */}
 
                   <FormControl
-                    isInvalid={err_email || err_password}
+                    isInvalid={!user_new_email_valid || !new_password_valid}
                     variant='form_account_page'
                   >
                     <FormLabel
@@ -907,7 +950,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Input
                           type='email'
-                          isInvalid={err_email}
+                          isInvalid={!user_new_email_valid}
                           placeholder={user_data.email}
                           onChange={e => setUserNewEmail(e.target.value)}
                           onBlur={verifyEmail}
@@ -929,7 +972,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         >
                           <Input
                             type={show_new_password ? 'text' : 'password'}
-                            isInvalid={err_password}
+                            isInvalid={!new_password_valid}
                             onChange={e => setNewPassword(e.target.value)}
                             onBlur={triggerPasswordChange}
                           />
@@ -1082,8 +1125,8 @@ const Account: FunctionComponent<AccountTypes> = ({
                 <ModalCloseButton />
                 <ModalBody>
                   <FormControl
-                    variant='form_account_page'>
-
+                    variant='form_account_page'
+                  >
                     <InputGroup variant='register_input'>
                       <InputLeftAddon>
                         {t('UserPages.login_modify.pwd_modal.input_token')}
@@ -1123,7 +1166,6 @@ const Account: FunctionComponent<AccountTypes> = ({
                     isInvalid={err_delete}
                     variant='form_account_page'
                   >
-
                     <Box
                       layerStyle='account_card_content'
                     >

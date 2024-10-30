@@ -74,7 +74,8 @@ export const Theme_SA = {
     account_grid_row: {
       display: 'grid',
       gridRowGap: '12px',
-      gridAutoFlow: 'row'
+      gridAutoFlow: 'row',
+      height: 'max-content'
     },
     account_card_title: {
       backgroundColor: 'tertiaire.2',
