@@ -99,14 +99,15 @@ export async function userValidate(
       logInfo(i18next.t('Register.validation.msg.' + response['message']))
     })
     .then(() => {
-      return new_data_app.checkTokens()
+      return new_data_app.checkTokens(true)
     })
     .then(() => {
       let next_page
       if (new_data_app.has_account) {
         logInfo(i18next.t('Register.validation.msg.redirect'))
         next_page = '/license/checkout'
-      } else {
+      }
+      else {
         next_page = '/login'
       }
       setTimeout(

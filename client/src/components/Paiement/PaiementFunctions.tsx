@@ -27,7 +27,7 @@ export async function getStripePublishableKey(){
 export async function createSubscription(){
   // Get server api url
   const path = window.location.origin
-  const url = path + '/stripe/create-checkout-session'
+  const url = path + '/stripe/create-checkout-session/osplus'
   // use server as proxy to fetch informations
   // -> Avoid "Same-Origin" problem with CORS
   return fetch(url, { method: 'POST' })

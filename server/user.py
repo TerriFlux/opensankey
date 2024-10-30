@@ -63,7 +63,7 @@ def user_infos():
     - 'license_opensankeyplus_expiry' (String): Expiration date for license
     """
     # Parse expiration date
-    license_exp = current_user.get_license_expiry('opensankeyplus')
+    license_exp = current_user.get_license_expiry()
     try:
         license_exp = datetime\
             .fromisoformat(license_exp)\
@@ -77,27 +77,11 @@ def user_infos():
         'firstname': current_user.firstname,
         'license_legacy_opensankeyplus': current_user.license_opensankeyplus,
         'license_legacy_sankeysuite': current_user.license_sankeysuite,
-        'license_opensankeyplus_validity':
-            current_user.is_license_valid('opensankeyplus'),
+        'license_opensankeyplus_validity': current_user.has_valid_license(),
         'license_opensankeyplus_expiry': license_exp
     }
     # Send back response
     return jsonify(response)
-
-
-@connected_user.route('/user/infos/license_expiry/<license_name>')
-@login_required
-def get_license_expiry(license_name):
-    expiry = current_user.get_license_expiry(license_name)
-    if expiry is None:
-        return 'No license', 401
-    return expiry, 200
-
-
-@connected_user.route('/user/infos/license_validity/<license_name>')
-@license_required
-def get_license_validity(license_name):
-    'ok : {}'.format(license_name), 200
 
 
 @connected_user.route('/user/infos/modify/email', methods=['POST'])
@@ -284,16 +268,16 @@ def delete_account():
             return 'request_error', 400
 
         # Unsubscribe to licenses
+        msg = ''
         for user_license in current_user.user_licenses:
-            if user_license.license.name != 'terriflux':
-                ok_cancel = cancel_subscription(
+            try:
+                cancel_subscription(
                     user_license.stripe_id,
                     request.json.get('comment'),
                     request.json.get('feedback'))
-                if not ok_cancel:
-                    return 'failed_to_cancel:  {}'.format(
-                        user_license.license.name), 500
-                user_license.activate = False
+            except Exception as e:
+                msg += 'Could not delete sub - {}.'.format(e)
+            user_license.activated = False
 
         # Delete account
         current_user.delete()
@@ -306,7 +290,7 @@ def delete_account():
     return 'ok', 200
 
 
-@connected_user.route('/user/infos/license_opensankeyplus')
+@connected_user.route('/user/infos/legacy/license_opensankeyplus')
 @login_required
 def user_infos_license_opensankeyplus():
     """
@@ -323,7 +307,9 @@ def user_infos_license_opensankeyplus():
     return jsonify(response)
 
 
-@connected_user.route('/user/infos/license_opensankeyplus', methods=['POST'])
+@connected_user.route(
+    '/user/infos/legacy/license_opensankeyplus',
+    methods=['POST'])
 @login_required
 def user_set_license_opensankeyplus():
     """
@@ -346,7 +332,7 @@ def user_set_license_opensankeyplus():
     return jsonify(response)
 
 
-@connected_user.route('/user/infos/license_sankeysuite')
+@connected_user.route('/user/infos/legacy/license_sankeysuite')
 @login_required
 def user_infos_license_mfasankey():
     """
@@ -363,7 +349,9 @@ def user_infos_license_mfasankey():
     return jsonify(response)
 
 
-@connected_user.route('/user/infos/license_sankeysuite', methods=['POST'])
+@connected_user.route(
+    '/user/infos/legacy/license_sankeysuite',
+    methods=['POST'])
 @login_required
 def user_set_license_mfasankey():
     """
@@ -386,7 +374,7 @@ def user_set_license_mfasankey():
     return jsonify(response)
 
 
-@connected_user.route('/user/infos/is_developer')
+@connected_user.route('/user/infos/legacy/is_developer')
 @login_required
 def user_infos_is_developer():
     """

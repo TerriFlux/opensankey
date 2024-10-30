@@ -12,6 +12,11 @@ cd $SCRIPT_DIR
 export $(cat ./env)
 
 sudo docker stop stripe_dev
-sudo docker run --name stripe_dev --rm -d stripe/stripe-cli --api-key $STRIPE_SECRET_KEY listen --forward-to 0.0.0.0:${INTERNAL_HTTP_PORT}/stripe/webhook
+sudo docker run --rm -d \
+    --name stripe_dev \
+    --network=host \
+    -v ~/.config/stripe:/root/.config/stripe \
+    stripe/stripe-cli --api-key $STRIPE_SECRET_KEY \
+    listen --forward-to localhost:${INTERNAL_HTTP_PORT}/stripe/webhook
 
 python -m flask run
