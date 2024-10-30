@@ -49,7 +49,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
           this._has_account = has_account
           // Check licenses
           if (has_account)
-            return fetch(window.location.origin + '/auth/license/opensankeyplus')
+            return fetch(window.location.origin + '/auth/license')
               .then((response) => {
                 let has_license = false
                 if (response.ok)

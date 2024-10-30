@@ -167,7 +167,8 @@ def signup_confirm():
             user_infos['password'],
             method='sha256'),
         firstname=user_infos['firstname'],
-        name=user_infos['lastname'])
+        name=user_infos['lastname'],
+        creation=datetime.now().isoformat())
 
     # add the new user to the database
     db.session.add(new_user)
@@ -255,10 +256,10 @@ def is_connected():
     return 'ok', 200
 
 
-@auth_blueprint.route('/auth/license/<license_name>')
+@auth_blueprint.route('/auth/license')
 @license_required
-def has_license(license_name):
-    return 'ok : {}'.format(license_name), 200
+def has_license():
+    return 'ok', 200
 
 
 @auth_blueprint.route('/auth/forgot_pw', methods=['POST'])

@@ -172,7 +172,7 @@ const Account: FunctionComponent<AccountTypes> = ({
         .then(() => {
           // Save in db
           const path = window.location.origin
-          const url = path + '/user/infos/license_opensankeyplus'
+          const url = path + '/user/infos/legacy/license_opensankeyplus'
           fetch(url, {
             method: 'POST',
             headers: {
@@ -190,7 +190,7 @@ const Account: FunctionComponent<AccountTypes> = ({
               }
             })
             .then(() => {
-              // console.log('POST /user/infos/license_opensankeyplus : SUCCESS - ', data.message)
+              // console.log('POST /user/infos/legacy/license_opensankeyplus : SUCCESS - ', data.message)
               const userData_ = user_data
               userData_.loading_legacy_opensankeyplus = true
               userData_.license_legacy_opensankeyplus_id = newLicenseOpenOSP

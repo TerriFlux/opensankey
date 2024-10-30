@@ -23,9 +23,16 @@ from flask_login import current_user
 # ---------------------------------------------------------------
 # Local imports
 from .models import login_required
-from .models import set_licence_subscription
+from .models import create_user_from_stripe
+from .models import delete_user_from_stripe
+from .models import update_license_name_from_stripe
+from .models import delete_license_from_stripe
+from .models import create_user_license_subscription
+from .models import update_user_license_subscription
+from .models import create_license_from_stripe
 from .models import set_licence_checkout_completed
-from .models import set_or_update_licence_subscription
+from .models import set_license_invoice_created
+from .models import set_licence_invoice_paid
 
 
 # ---------------------------------------------------------------
@@ -61,7 +68,9 @@ def get_publishable_key():
     return jsonify(stripe_config)
 
 
-@stripe_blueprint.route('/stripe/create-checkout-session', methods=['POST'])
+@stripe_blueprint.route(
+    '/stripe/create-checkout-session/osplus',
+    methods=['POST'])
 def create_checkout_session():
     """
     Create and return a checkout object for stripe client.
@@ -141,9 +150,11 @@ def stripe_webhook():
     :return: _description_
     :rtype: _type_
     """
+    # Get data
     payload = request.get_data(as_text=True)
     sig_header = request.headers.get('Stripe-Signature')
 
+    # Stripe checks
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, STRIPE_KEYS['endpoint_secret'])
@@ -154,33 +165,82 @@ def stripe_webhook():
         # Invalid signature
         return 'Invalid signature', 400
 
-    # Handle all events
+    # Defaut outputs
     msg, ok = 'ok', True
-    if (event['type'] == 'customer.subscription.created'):
-        session = event['data']['object']
-        try:
-            msg, ok = handle_subscription_creation_session(session)
-        except Exception as e:
-            return 'Error subscription creation : {}'.format(e), 400
-    # Handle checkout completed
-    elif (event['type'] == 'checkout.session.completed'):
-        session = event['data']['object']
-        try:
-            msg, ok = handle_checkout_session(session)
-        except Exception as e:
-            return 'Error checkout handler : {}'.format(e), 400
-    # Handle subscription
-    elif (event['type'] == 'customer.subscription.updated'):
-        session = event['data']['object']
-        try:
-            msg, ok = handle_subscription_update_session(session)
-        except Exception as e:
-            return 'Error subscription handler : {}'.format(e), 400
 
-    if (ok):
-        return msg, 200
-    else:
-        return msg, 400
+    # Defaut function
+    def pass_defaut(_session):
+        return msg, ok
+
+    # Event dispatcher
+    event_dispatcher = {
+        'customer.created': handle_customer_creation,
+        'customer.updated': pass_defaut,
+        'customer.deleted': handle_customer_deletion,
+        'customer.subscription.created': handle_subscription_creation_session,
+        'customer.subscription.updated': handle_subscription_update_session,
+        'product.created': handle_product_creation,
+        'product.updated': handle_product_update,
+        'product.deleted': handle_product_deletion,
+        'checkout.session.completed': handle_checkout_session,
+        'invoice.created': handle_invoice_created,
+        'invoice.paid': handle_invoice_paid}
+
+    # Dispatch events
+    if (event['type'] in event_dispatcher):
+        try:
+            f = event_dispatcher[event['type']]
+            msg, ok = f(event['data'])
+        except Exception as e:
+            return 'Error dispatching {0} : {1}'.format(event['type'], e), 400
+
+    # Return
+    return msg, 200 if ok else 400
+
+
+def handle_customer_creation(session):
+    """
+    _summary_
+
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    user_name = object['name'].split()
+    return create_user_from_stripe(
+        object['email'],
+        user_name[0],
+        ' '.join(user_name[1:]),
+        object['id'])
+
+
+def handle_customer_deletion(session):
+    """
+    _summary_
+
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    return delete_user_from_stripe(
+        object['email'],
+        object['id'])
 
 
 def handle_subscription_creation_session(session):
@@ -190,7 +250,7 @@ def handle_subscription_creation_session(session):
     Parameters
     ----------
     :param session: Session object stripe
-    :type session: _type_
+    :type session: {}
 
     Returns
     -------
@@ -198,7 +258,8 @@ def handle_subscription_creation_session(session):
     :rtype: (str, boolean)
     """
     # Check associated product
-    items = session['items']
+    object = session['object']
+    items = object['items']
     if (items['total_count'] != 1):
         return 'Total items mismatch', False
     item = items['data'][0]
@@ -207,33 +268,10 @@ def handle_subscription_creation_session(session):
     if (item['object'] != 'subscription_item'):
         return 'Item type mismatch', False
     # Add subscription
-    return set_licence_subscription(
+    return create_user_license_subscription(
         item['plan']['product'],
-        session['id'],
-        datetime.fromtimestamp(session['created']).isoformat())
-
-
-def handle_checkout_session(session):
-    """
-    Handle checkout session on webhook trigger
-
-    Parameters
-    ----------
-    :param session: Session object stripe
-    :type session: _type_
-
-    Returns
-    -------
-    :return: msg, ok
-    :rtype: (str, boolean)
-    """
-    if (session['payment_status'] == 'paid'):
-        return set_licence_checkout_completed(
-            session['client_reference_id'],
-            session['customer_email'],
-            session['customer'],
-            session['subscription'])
-    return 'Not paid', False
+        object['id'],
+        datetime.fromtimestamp(object['created']).isoformat())
 
 
 def handle_subscription_update_session(session):
@@ -243,18 +281,165 @@ def handle_subscription_update_session(session):
     Parameters
     ----------
     :param session: Session object stripe
-    :type session: _type_
+    :type session: {}
 
     Returns
     -------
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    if (session['object'] == 'subscription'):
-        return set_or_update_licence_subscription(
-            session['id'],
-            datetime.fromtimestamp(session['current_period_end']).isoformat())
+    object = session['object']
+    if (object['object'] == 'subscription'):
+        return update_user_license_subscription(
+            object['id'],
+            datetime.fromtimestamp(object['current_period_end']).isoformat())
     return 'Nothing done', False
+
+
+def handle_product_creation(session):
+    """
+    Handle product creation on webhook trigger
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    return create_license_from_stripe(
+        object['name'],
+        object['id'])
+
+
+def handle_product_update(session):
+    """
+    Handle product update on webhook trigger
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    if ('name' in session['previous_attributes']):
+        object = session['object']
+        return update_license_name_from_stripe(
+            object['name'],
+            object['id'])
+    if ('active' in session['previous_attributes']):
+        object = session['object']
+        if (object['active'] is False):
+            # TODO : deactivate instead ?
+            return delete_license_from_stripe(
+                object['id'])
+    return 'Nothing done', True
+
+
+def handle_product_deletion(session):
+    """
+    Handle product deletion on webhook trigger
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    return delete_license_from_stripe(
+        object['id'])
+
+
+def handle_checkout_session(session):
+    """
+    Handle checkout session on webhook trigger
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    if (object['payment_status'] == 'paid'):
+        return set_licence_checkout_completed(
+            object['client_reference_id'],
+            object['customer_email'],
+            object['customer'],
+            object['subscription'])
+    return 'Not paid', False
+
+
+def handle_invoice_created(session):
+    """
+    Handle invoice creation session on webhook trigger
+
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    # Check number of lines in invoice
+    lines = object['lines']
+    if (lines['total_count'] != 1):
+        return 'Total lines mismatch', False
+    # Check number of items for given line
+    item = lines['data'][0]
+    if (item['quantity'] != 1):
+        return 'Item quantity mismatch', False
+    # Create / update user_license object
+    return set_license_invoice_created(
+        object['customer_email'],
+        object['customer'],
+        item['plan']['product'],
+        object['id'])
+
+
+def handle_invoice_paid(session):
+    """
+    Handle paid invoice session on webhook trigger
+
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    if (object['paid'] is True):
+        return set_licence_invoice_paid(
+            object['customer'],
+            object['id'])
+    return 'Not paid', False
 
 
 def cancel_subscription(

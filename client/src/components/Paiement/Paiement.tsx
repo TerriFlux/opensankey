@@ -42,6 +42,7 @@ export const PaiementCheckout = () => {
     const key = await getStripePublishableKey()
     setPublishableKey(key)
   }
+
   useEffect(() => {
     fetchPublishableKey()
   }, [])
