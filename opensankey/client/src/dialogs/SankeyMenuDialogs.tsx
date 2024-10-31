@@ -3,7 +3,7 @@ import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultLink, DefaultNode, OSTooltip, ReturnValueNode } from '../configmenus/SankeyUtils'
-import { arrangeNodes, ComputeAutoSankey, ComputeParametrization } from '../draw/SankeyDrawLayout'
+import { arrangeNodes, ArrangeTrade, ComputeAutoSankey, ComputeParametrization, reorganize_all_input_outputLinksId } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -76,7 +76,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
       data.style_node['NodeImportStyle'].shape_visible = false
       data.style_node['NodeImportStyle'].node_height = 40
       data.style_node['NodeImportStyle'].label_visible = false
-      data.style_node['NodeImportStyle'].show_value = true
+      data.style_node['NodeImportStyle'].show_value = false
       data.style_node['NodeImportStyle'].label_horiz_valeur = 'middle'
       data.style_node['NodeImportStyle'].label_vert_valeur = 'top'
   
@@ -84,11 +84,12 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
       data.style_node['NodeExportStyle'].shape_visible = false
       data.style_node['NodeExportStyle'].node_height = 40
       data.style_node['NodeExportStyle'].label_visible = false
-      data.style_node['NodeExportStyle'].show_value = true
+      data.style_node['NodeExportStyle'].show_value = false
       data.style_node['NodeExportStyle'].label_horiz_valeur = 'middle'
       data.style_node['NodeExportStyle'].label_vert_valeur = 'bottom'
   
       data.style_link['LinkImportStyle'].orientation = 'vh'
+
       data.style_link['LinkExportStyle'].orientation = 'hv'
       set_data({ ...data })
     } else {
@@ -96,28 +97,34 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
       data.style_node['NodeImportStyle'].shape_visible = false
       data.style_node['NodeImportStyle'].node_height = 1
       data.style_node['NodeImportStyle'].label_visible = true
-      data.style_node['NodeImportStyle'].label_horiz = 'right'
+      data.style_node['NodeImportStyle'].label_horiz = 'left'
       data.style_node['NodeImportStyle'].label_horiz_shift = -200
       data.style_node['NodeImportStyle'].show_value = true
       data.style_node['NodeImportStyle'].label_horiz_valeur = 'left'
       data.style_node['NodeImportStyle'].label_vert_valeur = 'middle'
-      data.style_node['NodeImportStyle'].label_horiz_valeur_shift = -20
+      data.style_node['NodeImportStyle'].label_horiz_valeur_shift = -10
+      data.style_node['NodeImportStyle'].label_box_width = 1000
   
       data.style_node['NodeExportStyle'].position = 'parametric'
       data.style_node['NodeExportStyle'].shape_visible = false
       data.style_node['NodeExportStyle'].node_height = 1
       data.style_node['NodeExportStyle'].label_visible = true
-      data.style_node['NodeExportStyle'].label_horiz = 'left'
+      data.style_node['NodeExportStyle'].label_horiz = 'right'
       data.style_node['NodeExportStyle'].label_horiz_shift = 200
       data.style_node['NodeExportStyle'].show_value = true
       data.style_node['NodeExportStyle'].label_horiz_valeur = 'right'
       data.style_node['NodeExportStyle'].label_vert_valeur = 'middle'
-      data.style_node['NodeExportStyle'].label_horiz_valeur_shift = 20
-  
+      data.style_node['NodeExportStyle'].label_horiz_valeur_shift = 10
+      data.style_node['NodeExportStyle'].label_box_width = 1000
+
       data.style_link['LinkImportStyle'].orientation = 'hh'
       data.style_link['LinkImportStyle'].label_visible = false
       data.style_link['LinkExportStyle'].orientation = 'hh'
       data.style_link['LinkExportStyle'].label_visible = false
+      data.style_link['LinkExportStyle'].right_horiz_shift = 0.8
+      data.style_link['LinkExportStyle'].left_horiz_shift = 0.2
+      data.style_link['LinkImportStyle'].right_horiz_shift = 0.8
+      data.style_link['LinkImportStyle'].left_horiz_shift = 0.2
       set_data({ ...data })
     }
   }
@@ -503,7 +510,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
           </OSTooltip></Box>
         <Box layerStyle='menuconfigpanel_grid' >
           <h5><center>{t('MEP.positioningMode')}</center></h5>
-          <Box as='span' layerStyle='menuconfigpanel_row_4cols'>
+          <Box as='span'>
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={parametric}
@@ -586,11 +593,20 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   setTrade(evt.target.checked)
                   if (parametric) {
                     Object.values(applicationData.data.nodes)
-                      .filter(node=> node.style === 'NodeExportStyle' || node.style === 'NodeImportStyle')
-                      .forEach(node=>{if (node.local) delete node.local})
+                    .filter(node=> node.style === 'NodeExportStyle' || node.style === 'NodeImportStyle')
+                      .forEach(node=>{if (node.local) {
+                        const local_agregation = node.local.local_aggregation 
+                        delete node.local
+                        if (local_agregation) {
+                          node.local = {local_aggregation:local_agregation}
+                        }
+                      }})
                     Object.values(applicationData.data.links)
                       .filter(link=> link.style === 'LinkExportStyle' || link.style === 'LinkImportStyle')
                       .forEach(link=>{if (link.local) delete link.local})
+                    ArrangeTrade(applicationData,true)
+                    reorganize_all_input_outputLinksId(data,data.nodes,data.links)
+                    set_data({ ...data })
                   }
                 }}
               >
@@ -608,10 +624,19 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
                   if (parametric) {
                     Object.values(applicationData.data.nodes)
                     .filter(node=> node.style === 'NodeExportStyle' || node.style === 'NodeImportStyle')
-                      .forEach(node=>{if (node.local) delete node.local})
+                      .forEach(node=>{if (node.local) {
+                        const local_agregation = node.local.local_aggregation 
+                        delete node.local
+                        if (local_agregation) {
+                          node.local = {local_aggregation:local_agregation}
+                        }
+                      }})
                     Object.values(applicationData.data.links)
                       .filter(link=> link.style === 'LinkExportStyle' || link.style === 'LinkImportStyle')
                       .forEach(link=>{if (link.local) delete link.local})
+                    ArrangeTrade(applicationData,true)
+                    reorganize_all_input_outputLinksId(data,data.nodes,data.links)
+                    set_data({ ...data })
                   }
                 }}
               >

@@ -724,8 +724,9 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_opacity:0,
     legend_show_dataTags:true,
     node_label_separator:' - ',
-    node_label_separator_first:true
+    node_label_separator_first:true,
 
+    tooltip_names: []
     //parametric_mode : false
   }
   const node_style_sect=DefaultNodeSectorStyle()
@@ -1172,7 +1173,8 @@ export const DefaultLink :DefaultLinkFuncType= (data: SankeyData): SankeyLink =>
 
     colorTag: '',
     style:'default',
-    local:{}
+    local:{},
+    tooltips: []
   }
 }
 /**
@@ -2171,6 +2173,41 @@ export const deleteSelectedNodeFromData=(
 }
 
 
+export type format_link_valueFType=(
+  data:SankeyData,
+  d:SankeyLink,
+  the_link_value:number|string,
+  t:TFunction
+)=> string | number
+
+export const format_link_value: format_link_valueFType = (
+  data, 
+  d, 
+  the_link_value, 
+  t
+) => {
+  const nb_sign = (ReturnValueLink(data, d, 'scientific_precision') as number)
+  if (nb_sign > 0) {
+    // 12345.67 avec nb_sign = 4 devient 12340
+    the_link_value = parseFloat(parseFloat((the_link_value as string)).toPrecision(nb_sign))
+  }
+  const unit_factor = +ReturnValueLink(data,d,'label_unit_factor')
+  if (unit_factor) {
+    the_link_value = +the_link_value/unit_factor
+  }
+  if ((ReturnValueLink(data, d, 'to_precision'))) {
+    // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+    the_link_value = ToPrecision(Number(the_link_value), t, nb_sign)
+  } else if (ReturnValueLink(data, d, 'custom_digit')) {
+    the_link_value = (the_link_value as number).toFixed((ReturnValueLink(data, d, 'nb_digit') as number))
+  }
+  the_link_value = String(the_link_value).replace('.', t('sep_decimal'))
+  const unit=ReturnValueLink(data,d,'label_unit_visible')?ReturnValueLink(data,d,'label_unit') as string:''
+  if (unit) {
+    return the_link_value+' '+unit
+  }
+  return the_link_value
+}
 
 export const OSTooltip:FunctionComponent<OSTooltpFuncType>=(
   {

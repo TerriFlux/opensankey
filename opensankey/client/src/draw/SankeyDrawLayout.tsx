@@ -24,6 +24,7 @@ import {
   ArrangeTradeType,
   ComputeParametrizationType,
   DesaggregateFuncType,
+  RecomputeTradeType,
   computeHorizontalIndexFuncType,
   hasAggregationLinkToNodeFuncType,
   nodeWidthFType,
@@ -798,11 +799,175 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
   Object.values(columns).forEach(column=>{
     column.sort((n1,n2)=>n1.y-n2.y)
-    Object.values(data.levelTags).forEach( tagGroup=> {
-      let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
-    })
+    //Object.values(data.levelTags).forEach( tagGroup=> {
+    let current_v = 0
+    column.forEach(n=>current_v = apply_v(applicationData,n,current_v))
+    //})
   })
+  reorganize_all_input_outputLinksId(data,data.nodes, data.links)
+}
+
+// Fonctions d'individualisation des imports/exports
+export const SplitIOrE = (
+  node: SankeyNode,
+  importation: boolean,
+  data: SankeyData
+) => {
+  //const originalIdNode = node.idNode
+  let tmp: string[] = []
+  let tmp1: keyof SankeyLink
+  let tmp2: keyof SankeyLink
+  let tmp3: keyof SankeyNode
+  let tmp4: string
+  let tmp5: string
+  if (importation) {
+    tmp = node.outputLinksId.slice() // clone
+    tmp1 = 'idTarget'
+    tmp2 = 'idSource'
+    tmp3 = 'outputLinksId'
+    tmp4 = 'NodeImportStyle'
+    tmp5 = 'LinkImportStyle'
+  } else {
+    tmp = node.inputLinksId.slice() // clone
+    tmp1 = 'idSource'
+    tmp2 = 'idTarget'
+    tmp3 = 'inputLinksId'
+    tmp4 = 'NodeExportStyle'
+    tmp5 = 'LinkExportStyle'
+  }
+
+  tmp.forEach((idLink)=>{
+    const input_or_output_link = data.links[idLink] as SankeyLink
+    const le_nom = node.name + ' - ' + (importation?'Importations':'Exportations') + ' - ' + data.nodes[input_or_output_link[tmp1] as string].name
+    let idTrade = data.nodes[input_or_output_link[tmp1] as string].idNode + '-' + node.idNode+ (importation?'Importations':'Exportations')
+    idTrade = idTrade.replaceAll(' ','');
+
+    const new_node = Object.assign(
+      {},
+      DefaultNode(data),
+      {
+        name:le_nom,
+        idNode:idTrade,
+        tags:JSON.parse(JSON.stringify(node.tags)),
+        dimensions:JSON.parse(JSON.stringify(node.dimensions))
+      }
+    )
+    data.additional_nodes![idTrade] = new_node
+
+    const link =  data.links[idLink]
+    if (!link) {
+      return
+    }
+    new_node.style=tmp4
+    link.style=tmp5
+    const extremity_node = data.nodes[link[tmp1]]
+    new_node.local = {local_aggregation : extremity_node.local?.local_aggregation}
+    Object.entries(data.additional_nodes![idTrade]['dimensions']).forEach(dim=>{
+      if (node.dimensions[dim[0]].parent_name === undefined) {
+        return
+      }
+      dim[1].parent_name = extremity_node.idNode + '-' + node.dimensions[dim[0]].parent_name+(importation?'Importations':'Exportations')
+    })
+    Object.keys(extremity_node.dimensions).forEach(dim_key => {
+      new_node.dimensions[dim_key] = JSON.parse(JSON.stringify(extremity_node.dimensions[dim_key]))
+      if (extremity_node.dimensions[dim_key].parent_name === undefined) {
+        return
+      }
+      new_node.dimensions[dim_key].parent_name = extremity_node.dimensions[dim_key].parent_name + '-' + node.idNode+(importation?'Importations':'Exportations')
+    })
+    Object.keys(extremity_node.tags).forEach(tag_key => {
+      if ( tag_key === 'Type de noeud' ) {
+        return
+      }
+      const tags = [...extremity_node.tags[tag_key]]
+      new_node.tags[tag_key] = JSON.parse(JSON.stringify(tags))
+    })
+
+    // Création des flux
+    const new_link = JSON.parse(JSON.stringify(link)) as SankeyLink
+    AssignLinkLocalAttribute(new_link, 'recycling', false)
+    data.additional_links![new_node.idNode] = new_link
+    new_link.idLink = new_node.idNode
+    new_link[tmp2] = new_node.idNode
+    new_node[tmp3].push(new_node.idNode)
+
+  })
+}
+
+export type processTradeFType = (
+  applicationData : applicationDataType
+)=> void
+
+export const processTrade: processTradeFType = (
+  applicationData
+) => {
+  const { data } = applicationData
+  SplitTrade(data as SankeyData)
+  ArrangeTrade(applicationData, true)
+}
+
+export const SplitTrade = (
+  data: SankeyData
+) => {
+  let { initial_nodes } = data as SankeyData
+  if (Object.values(initial_nodes!).length==0) {
+    data.initial_nodes = JSON.parse(JSON.stringify(data.nodes))
+    initial_nodes = data.initial_nodes
+    data.initial_links = JSON.parse(JSON.stringify(data.links))
+  }
+  // e.g. "International"
+  let trade_nodes = Object.values(initial_nodes!).filter(n=>n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'][0].includes('echange'))
+  trade_nodes.forEach(node=>{
+    if (node.outputLinksId.length>0) { // Imports
+      SplitIOrE(node as SankeyNode, true,data)
+
+    }
+    if (node.inputLinksId.length>0){ // Exports
+      SplitIOrE(node as SankeyNode, false,data)
+    }
+    data.removed_nodes![node.idNode] = node
+    node.inputLinksId.forEach(lId=>data.removed_links![lId] = data.links[lId])
+    node.outputLinksId.forEach(lId=>data.removed_links![lId] = data.links[lId])
+  });
+  (data as SankeyData).nodes = Object.assign({},data.initial_nodes,data.additional_nodes)
+  Object.keys(data.removed_nodes!).forEach(idNode=>delete (data as SankeyData).nodes[idNode]);
+  (data as SankeyData).links = Object.assign({},data.initial_links,data.additional_links)
+  Object.keys(data.removed_links!).forEach(idLink=>delete (data as SankeyData).links[idLink])
+}
+
+export const RecomputeTrade: RecomputeTradeType = (
+  data
+) => {
+  const {nodes,links } = data
+  let import_nodes = Object.values(nodes).filter(n=>(('Type de noeud'in n.tags)) && n.tags['Type de noeud'][0]=='echange' && n.outputLinksId.length > 0)
+  let export_nodes = Object.values(nodes).filter(n=>(('Type de noeud'in n.tags)) && n.tags['Type de noeud'][0]=='echange' && n.inputLinksId.length > 0 )
+  if (import_nodes.length > 0) {
+    const node = JSON.parse(JSON.stringify(import_nodes[0]))
+    // node.name = node.name.replace('- - - Importations', '').replace('- - Importations', '').replace('- Importations', '').replace('-Importations', '').replace('Importations', '')
+    // node.name = node.name.split(' ')[1]
+    node.idNode = node.idNode.replace('Importations', '')
+    node.idNode = node.idNode.split('-')[1]
+    node.name = node.idNode 
+    nodes[node.idNode] = node
+    import_nodes.forEach(n => {
+        if (!node.outputLinksId.includes(n.outputLinksId[0])) {
+          node.outputLinksId.push(n.outputLinksId[0])
+        }
+        data.links[n.outputLinksId[0]].idSource = node.idNode
+        delete nodes[n.idNode]
+    });
+    export_nodes.forEach(n => {
+        if (!node.inputLinksId.includes(n.inputLinksId[0])) {
+          node.inputLinksId.push(n.inputLinksId[0])
+        }
+        data.links[n.inputLinksId[0]].idTarget = node.idNode
+        delete nodes[n.idNode]
+    })
+  }
+  //export_nodes.forEach(n=>delete nodes[n.idNode])
+  data.initial_nodes = {}
+  data.initial_links = {}
+  SplitTrade(data)
 }
 
 export const ArrangeTrade : ArrangeTradeType = (
@@ -822,7 +987,7 @@ export const ArrangeTrade : ArrangeTradeType = (
     if ('Type de noeud' in node.tags && node.tags['Type de noeud'] && node.tags['Type de noeud'][0] == 'echange' && node.inputLinksId.length > 0) {
       return
     }
-    max_vertical_offset = Math.max(node.y, max_vertical_offset)
+    max_vertical_offset = Math.max(node.y+nodeHeight(node,applicationData,GetLinkValue), max_vertical_offset)
   }
 
   Object.values(nodes).filter(n=>NodeDisplayed(data,n)).forEach(compute_offset)
@@ -832,10 +997,11 @@ export const ArrangeTrade : ArrangeTradeType = (
     const output_link = links[node.outputLinksId[0]]
     const target_node = nodes[output_link.idTarget]
     node.u = target_node.u
+    node.v = target_node.v + 2000
     if (compute_xy) {
       const x = Math.round(target_node.x/data.style_node['default'].dx)*data.style_node['default'].dx - data.style_node['default'].dx
       node.x = x
-      node.y = 20
+      node.y = 200
     }
   })
 
@@ -843,46 +1009,12 @@ export const ArrangeTrade : ArrangeTradeType = (
     const input_link = links[node.inputLinksId[0]]
     const source_node = nodes[input_link.idSource]
     node.u = source_node.u
+    node.v = source_node.v + 2000
     if (compute_xy) {
       const x = Math.round(source_node.x/data.style_node['default'].dx)*data.style_node['default'].dx+data.style_node['default'].dx
       node.x = x
       node.y = max_vertical_offset
     }
-  })
-
-  let columns : {[_:number]:SankeyNode[]} = {}
-  Object.values(import_nodes).forEach(n=>{
-    if (columns[n.u]) {
-      columns[n.u].push(n)
-    } else {
-      columns[n.u] = [n]
-    }
-  })
-
-
-    Object.values(columns).forEach(column=>{
-      column.sort((n1,n2)=>n1.y-n2.y)
-      Object.values(data.levelTags).forEach( tagGroup=> {
-        let current_v = -100
-        column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
-      }
-    )
-  })
-  columns = {}
-  Object.values(export_nodes).forEach(n=>{
-    if (columns[n.u]) {
-      columns[n.u].push(n)
-    } else {
-      columns[n.u] = [n]
-    }
-  })
-
-  Object.values(columns).forEach(column=>{
-    column.sort((n1,n2)=>n1.y-n2.y)
-    Object.values(data.levelTags).forEach( tagGroup=> {
-      let current_v = 1000
-      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
-    })
   })
 }
 
@@ -1063,6 +1195,31 @@ export const desagregation : desagregationFType = (
     clicked_node.local = {} as SankeyNodeAttrLocal
   }
   setLocalAgregation(clicked_node, data, false)
+
+  const import_nodes = node.inputLinksId.filter(lid=>{
+    if (!(lid in display_links)) {
+      return false
+    }
+    const inputNode = data.nodes[data.links[lid].idSource]
+    if ('Type de noeud' in inputNode.tags &&  inputNode.tags['Type de noeud'][0] == 'echange') {
+      return true
+    }
+    return false
+  }).map(lid=>data.nodes[data.links[lid].idSource])
+  import_nodes.forEach(n=>desagregation(applicationData,link_function,n.idNode,cur_dimension))
+
+  const export_nodes = node.outputLinksId.filter(lid=>{
+    if (!(lid in display_links)) {
+      return false
+    }
+    const outputNode = data.nodes[data.links[lid].idTarget]
+    if ('Type de noeud' in outputNode.tags &&  outputNode.tags['Type de noeud'][0] == 'echange') {
+      return true
+    }
+    return false
+  }).map(lid=>data.nodes[data.links[lid].idTarget])
+  import_nodes.forEach(n=>desagregation(applicationData,link_function,n.idNode,cur_dimension))
+  export_nodes.forEach(n=>desagregation(applicationData,link_function,n.idNode,cur_dimension))
   // if (to_compute_auto_sankey && nb_desagregated > 0) {
   //   agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
   // }
@@ -2181,5 +2338,7 @@ export const ComputeParametricV = (applicationData: applicationDataType) => {
   Object.values(columns).forEach(column => {
     column.forEach(n => apply_v_agregate(applicationData.data, n))
   })
+  ArrangeTrade(applicationData,true)
+  reorganize_all_input_outputLinksId(applicationData.data,applicationData.data.nodes,applicationData.data.links)
 }
 

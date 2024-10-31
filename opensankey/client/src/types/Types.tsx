@@ -249,6 +249,8 @@ export type SankeyLink = {
   //style
   style:string,
 
+  tooltips : string[]
+
   local?:SankeyLinkAttrLocal
 }
 
@@ -338,8 +340,9 @@ export type SankeyData = {
 
   legend_width:number,
   node_label_separator:string
-  node_label_separator_first:boolean
+  node_label_separator_first:boolean,
   //parametric_mode: boolean
+  tooltip_names : string[]
 }
 
 export interface SankeyMenuState {

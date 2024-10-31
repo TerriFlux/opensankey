@@ -12,7 +12,7 @@ import { SankeyData, SankeyLink, SankeyNode } from '../../types/Types'
  */
 export type  LinkTooltipsContentFType = (
   data : SankeyData,
-  d : SankeyLink | SankeyNode,
+  d : SankeyLink,
   GetLinkValue:GetLinkValueFuncType,
   t:TFunction
 ) => string

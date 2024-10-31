@@ -6,6 +6,10 @@ export type ArrangeTradeType = (
   compute_xy: boolean
 ) => void
 
+export type RecomputeTradeType = (
+  data : SankeyData
+) => void
+
 export type ComputeAutoSankeyFuncType = (
   applicationData:applicationDataType,
   launched_from_process:boolean
