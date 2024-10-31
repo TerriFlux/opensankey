@@ -456,8 +456,10 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
     // We use a function to max value for each link because
     // each link can have multiple values
     max_link_value = FindMaxLinkValue(
+      data,
       max_link_value,
-      link.value
+      link.value,
+      link
     )
   })
   max_link_value += 1 // Protection if all values are at 0
