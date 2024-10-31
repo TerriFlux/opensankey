@@ -20,9 +20,6 @@ from flask import request
 from flask_login import current_user
 from flask_login import logout_user
 
-# SQLAlchemy
-from flask_sqlalchemy import SQLAlchemy
-
 # Werkzeug
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
@@ -42,6 +39,7 @@ from .stripe import cancel_subscription
 # Shared variables
 
 connected_user = Blueprint('connected_user', __name__)
+
 
 # ---------------------------------------------------------------
 # Routes
@@ -194,7 +192,6 @@ def modify_firstname():
     - 'firstname' (String) : User's new firstname
     """
     # Apply modif
-    import pdb; pdb.set_trace()
     current_user.firstname = request.json.get('firstname')
     db.session.commit()
     return 'ok', 200
