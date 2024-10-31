@@ -109,6 +109,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
             } else {
               const same_u = Object.values(applicationData.display_nodes)
                 .filter(n=>ReturnValueNode(data,n,'position') === 'parametric')
+                .filter(n=>!n.tags || !n.tags['Type de noeud'] || !n.tags['Type de noeud'].includes('echange'))
                 .filter(n=>n.u === node.u)
               same_u.sort((n1,n2)=>n1.v-n2.v)
               const nodes_below = same_u.filter(n=>n.v>node.v).reverse()

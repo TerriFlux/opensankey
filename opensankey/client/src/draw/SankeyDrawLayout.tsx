@@ -2304,7 +2304,7 @@ export const ComputeParametricV = (applicationData: applicationDataType) => {
   //Object.values(applicationData.data.nodes).forEach(n=>delete (n as unknown as {v?:string}).v )
 
   const columns : {[_:number]:SankeyNode[]} = {}
-  Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && ReturnValueNode(data,n,'position') !== 'relative' ).forEach(n=>{
+  Object.values(applicationData.display_nodes).filter(n => NodeDisplayed(data, n) && !('Type de noeud'in n.tags && n.tags['Type de noeud'][0]=='echange')).forEach(n=>{
     if (columns[n.u]) {
       columns[n.u].push(n)
     } else {

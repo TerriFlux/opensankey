@@ -2186,6 +2186,21 @@ export const deleteSelectedNodeFromData=(
   })
 }
 
+// export const DisplayData = (data:SankeyData) => {
+//   Object.values(data.links).forEach(l => {
+//       const val = GetLinkValue(data, l.idLink)
+//       if (val.extension !== undefined && val.extension.data_value) {
+//           if (data.nodes[l.idSource].local) {
+//               data.nodes[l.idSource].local = {}
+//           }
+//           if (data.nodes[l.idTarget].local) {
+//               data.nodes[l.idTarget].local = {}
+//           }
+//           data.nodes[l.idSource].local!.local_aggregation = true;
+//           data.nodes[l.idTarget].local!.local_aggregation = true;
+//       }
+//   })
+// }
 
 export type format_link_valueFType=(
   data:SankeyData,

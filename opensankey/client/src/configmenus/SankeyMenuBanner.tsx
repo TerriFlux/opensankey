@@ -18,7 +18,7 @@ import {
   AdjustSankeyZone,
   RecursionDataTag,
   OSTooltip,
-  windowSankey
+  //DisplayData
 } from './SankeyUtils'
 import * as d3 from 'd3'
 import {
@@ -669,6 +669,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
                 sIsDataTypeReconcilied(false)
               }
               setForceUpdate(!forceUpdate)
+              // if ( evt.target.value === 'data' ) {
+              //   DisplayData(data)
+              //   redrawSankeyWithSelectedTag(applicationData, applicationDraw, node_function, link_function)
+              // }
               redrawNodeLinkLegend(applicationData, node_function, link_function, ComponentUpdater, applicationDraw)
             }}>
             <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
