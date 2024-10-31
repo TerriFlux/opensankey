@@ -5,6 +5,7 @@
 
 # ---------------------------------------------------------------
 # External imports
+import requests
 
 # System
 from datetime import datetime
@@ -214,6 +215,116 @@ class User(UserMixin, db.Model):
                 ok_license = True
                 break
         return ok_license
+
+    def replace_legacy_opensankeyplus_license(self):
+        """
+        TODO _summary_
+        """
+        if (self.license_opensankeyplus is not None):
+            req_dict = {
+                'edd_action': 'check_license',
+                'license': self.license_opensankeyplus,  # License key
+                'item_name': "OpenSankey+",  # Product ID
+                'url': 'open-sankey.fr'  # Domain the request is coming from.
+            }
+            # Send POST request
+            res = requests.post(
+                'https://terriflux.com/edd-sl/',
+                req_dict).json()
+            # If valid set license
+            if (res['success'] is True) and (res['license'] == 'valid'):
+                # Get corrsponding new license
+                license = License.query\
+                    .filter_by(name='opensankeyplus_legacy')\
+                    .first()
+                if (license is None):
+                    license = License(name='opensankeyplus_legacy')
+                    db.session.add(license)
+                # Check if user have license
+                if (license not in self.licenses):
+                    expiry = (
+                        'never'
+                        if (res['expires'] == 'lifetime')
+                        else datetime
+                        .fromisoformat(res['expires'])
+                        .isoformat())
+                    user_license = UserLicences(
+                        license=license,
+                        user=self,
+                        creation=datetime.now(),
+                        activated=True,
+                        expiry=expiry)
+                    db.session.add(user_license)
+                # Remove legacy license
+                self.license_opensankeyplus = None
+                db.session.commit()
+
+    def replace_legacy_sankeysuite_license(self):
+        """
+        TODO _summary_
+        """
+        if (self.license_sankeysuite is not None):
+            req_dict = {
+                'edd_action': 'check_license',
+                'license': self.license_sankeysuite,  # License key
+                'item_name': "SankeySuite",  # Product ID
+                'url': 'open-sankey.fr'  # Domain the request is coming from.
+            }
+            # Send POST request
+            res = requests.post(
+                'https://terriflux.com/edd-sl/',
+                req_dict).json()
+            # If valid set license
+            if (res['success'] is True) and (res['license'] == 'valid'):
+                # Get corrsponding new license
+                license = License.query\
+                    .filter_by(name='sankeysuite_legacy')\
+                    .first()
+                if (license is None):
+                    license = License(name='sankeysuite_legacy')
+                    db.session.add(license)
+                # Check if user have license
+                if (license not in self.licenses):
+                    expiry = (
+                        'never'
+                        if (res['expires'] == 'lifetime')
+                        else datetime
+                        .fromisoformat(res['expires'])
+                        .isoformat())
+                    user_license = UserLicences(
+                        license=license,
+                        user=self,
+                        creation=datetime.now(),
+                        activated=True,
+                        expiry=expiry)
+                    db.session.add(user_license)
+                # Remove legacy license
+                self.license_sankeysuite = None
+                db.session.commit()
+
+    def replace_developper_token(self):
+        """
+        """
+        if (self.is_developer is not None):
+            # Get corrsponding new license
+            license = License.query\
+                .filter_by(name='terriflux')\
+                .first()
+            if (license is None):
+                license = License(name='terriflux')
+                db.session.add(license)
+            # Check if user have license
+            if (license not in self.licenses):
+                user_license = UserLicences(
+                    license=license,
+                    user=self,
+                    creation=datetime.now(),
+                    activated=True,
+                    expiry='never')
+                db.session.add(user_license)
+            # Remove legacy license
+            self.is_developer = None
+            db.session.commit()
 
     def get_pwd_reset_token(self):
         """

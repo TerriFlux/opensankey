@@ -234,6 +234,11 @@ def login_post():
             user.secret_expiry = None
             db.session.commit()
 
+    # Switch automatically to new license system
+    user.replace_legacy_opensankeyplus_license()
+    user.replace_legacy_sankeysuite_license()
+    user.replace_developper_token()
+
     # Return
     return jsonify(response), 200
 
