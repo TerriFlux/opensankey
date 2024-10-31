@@ -186,16 +186,18 @@ export const nodeTransform : nodeTransformFType = (
   } else if (ReturnValueNode(data,d,'position') == 'absolute' || drag /*|| !data.parametric_mode*/) {
     return 'translate(' + d.x + ', ' + d.y + ')'
   } else {
-    const same_u = Object.values(display_nodes)
+    let same_u = Object.values(display_nodes)
       .filter(n=>ReturnValueNode(data,n,'position') == 'parametric')
       .filter(n=>n.u === d.u)
 
     if (d.v == 0) {
       return 'translate(' + d.x + ', ' + d.y + ')'
     }
-    if (d.v>=0) {
-      same_u.sort((n1,n2)=>n1.v-n2.v)
-      const nodes_above = same_u.filter(n=>n.v<d.v && n.v >=0 )
+    if ( ('Type de noeud' in d.tags) && d.tags['Type de noeud'][0] === 'echange' && d.inputLinksId.length>0) {
+      // export
+      same_u = same_u.filter(n=>('Type de noeud' in n.tags) && n.tags['Type de noeud'][0] === 'echange' && n.inputLinksId.length>0)
+      same_u.sort((n1,n2)=>data.nodes[data.links[n1.inputLinksId[0]].idSource].v-data.nodes[data.links[n2.inputLinksId[0]].idSource].v)
+      const nodes_above = same_u.filter(n=>data.nodes[data.links[n.inputLinksId[0]].idSource].v<data.nodes[data.links[d.inputLinksId[0]].idSource].v)
       const node_above = nodes_above.pop()
       if (node_above) {
         d.y = node_above.y + 
@@ -205,26 +207,42 @@ export const nodeTransform : nodeTransformFType = (
         const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
         d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
       }*/
-      return 'translate(' + d.x + ', ' + d.y + ')'
-    } else {
-      same_u.sort((n1,n2)=>n2.v-n1.v)
-      const nodes_below = same_u.filter(n=>n.v>d.v)
-      const node_below = nodes_below.pop()
-      if (node_below) {
-        d.y = node_below.y 
-        - nodeHeight(d, applicationData, link_function.GetLinkValue) 
-        - +ReturnValueNode(data,node_below,'dy')
-      } /*else {
-        const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
-        d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
-      }*/
-      if (d.y < 0) {
-        Object.values(data.nodes).forEach(n=>n.y = n.y - d.y+20)
+      return 'translate(' + d.x + ', ' + d.y + ')'      
+    } else if ( ('Type de noeud' in d.tags) && d.tags['Type de noeud'][0] === 'echange' && d.outputLinksId.length>0) {
+      const u_below = same_u.filter(n=>n.v < 2000 ).sort((n1,n2)=> n1.v-n2.v)[0]
+      same_u = same_u.filter(n=>('Type de noeud' in n.tags) && n.tags['Type de noeud'][0] === 'echange' && n.outputLinksId.length>0 )
+      same_u.sort((n1,n2)=>data.nodes[data.links[n1.outputLinksId[0]].idTarget].v-data.nodes[data.links[n2.outputLinksId[0]].idTarget].v)
+      const nodes_above = same_u.filter(n=>data.nodes[data.links[n.outputLinksId[0]].idTarget].v<data.nodes[data.links[d.outputLinksId[0]].idTarget].v)
+      const node_above = nodes_above.pop()
+      if (node_above) {
+        d.y = node_above.y 
+        + nodeHeight(node_above, applicationData, link_function.GetLinkValue) 
+        + +ReturnValueNode(data,node_above,'dy')
+      } else {
+        d.y = 200
+        //const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
+        //d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
+      }
+      if (u_below && u_below.y < d.y+200) {
+        const shift = 200 +d.y - u_below.y
+        Object.values(data.nodes).filter(d=>!('Type de noeud' in d.tags) || d.tags['Type de noeud'][0] !== 'echange' || d.outputLinksId.length==0).forEach(n=>n.y += shift)
         const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
         ggg_nodes.attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')')
       } 
       return 'translate(' + d.x + ', ' + d.y + ')'
     }
+    same_u.sort((n1,n2)=>n1.v-n2.v)
+    const nodes_above = same_u.filter(n=>n.v<d.v && n.v >=0 )
+    const node_above = nodes_above.pop()
+    if (node_above) {
+      d.y = node_above.y + 
+      nodeHeight(node_above, applicationData, link_function.GetLinkValue) + 
+      + +ReturnValueNode(data,d,'dy')
+    } /*else {
+      const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
+      d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
+    }*/
+    return 'translate(' + d.x + ', ' + d.y + ')' 
   }
 }
 
