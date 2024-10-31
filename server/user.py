@@ -31,6 +31,7 @@ from werkzeug.security import generate_password_hash
 # ---------------------------------------------------------------
 # Local imports
 
+from .models import db
 from .models import User
 from .models import login_required
 from .models import license_required
@@ -41,8 +42,6 @@ from .stripe import cancel_subscription
 # Shared variables
 
 connected_user = Blueprint('connected_user', __name__)
-db = SQLAlchemy()
-
 
 # ---------------------------------------------------------------
 # Routes
@@ -195,6 +194,7 @@ def modify_firstname():
     - 'firstname' (String) : User's new firstname
     """
     # Apply modif
+    import pdb; pdb.set_trace()
     current_user.firstname = request.json.get('firstname')
     db.session.commit()
     return 'ok', 200

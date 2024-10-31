@@ -1070,6 +1070,7 @@ const Account: FunctionComponent<AccountTypes> = ({
               isOpen={isEmailChangeModalOpen}
               onClose={onEmailChangeModalClose}
               variant='modal_account'
+              trapFocus={false}
             >
               <ModalContent>
                 <ModalHeader>{t('UserPages.login_modify.email_modal.title')}</ModalHeader>
