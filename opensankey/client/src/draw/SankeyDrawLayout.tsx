@@ -61,7 +61,8 @@ import {
   ReturnValueLink,
   DeleteNode,
   DeleteLink,
-  AddDataTags
+  AddDataTags,
+  DefaultNode
 } from '../configmenus/SankeyUtils'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,Text } from '@chakra-ui/react'
 
@@ -799,10 +800,10 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
   Object.values(columns).forEach(column=>{
     column.sort((n1,n2)=>n1.y-n2.y)
-    //Object.values(data.levelTags).forEach( tagGroup=> {
-    let current_v = 0
-    column.forEach(n=>current_v = apply_v(applicationData,n,current_v))
-    //})
+    Object.values(data.levelTags).forEach( tagGroup=> {
+      let current_v = 0
+      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
+    })
   })
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
 }
