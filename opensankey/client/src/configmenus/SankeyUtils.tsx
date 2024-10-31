@@ -1665,9 +1665,16 @@ export const NodeDisplayed:NodeDisplayedFuncType = (
   node:SankeyNode
 ): boolean=>{
   const has_links = !HasLinksZero(data,node)
-  const has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
-  const local_level=has_local_level ?? NodeHasDisplayedLevel(data,node)
-  return NodeHasDisplayedTags(data,node) && local_level && has_links
+  let has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
+  if (('Type de noeud'in node.tags) && node.tags['Type de noeud'][0]=='echange' && node.outputLinksId.length > 0) {
+    has_local_level = ReturnLocalNodeValue(data.nodes[data.links[node.outputLinksId[0]].idTarget],'local_aggregation') as boolean | undefined
+  }
+  if (('Type de noeud'in node.tags) && node.tags['Type de noeud'][0]=='echange' && node.inputLinksId.length > 0 ) {
+    has_local_level = ReturnLocalNodeValue(data.nodes[data.links[node.inputLinksId[0]].idSource],'local_aggregation') as boolean | undefined
+  }
+  //const has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
+  const is_visible=has_local_level ?? NodeHasDisplayedLevel(data,node)
+  return NodeHasDisplayedTags(data,node) && is_visible && has_links
 }
 
 export const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
