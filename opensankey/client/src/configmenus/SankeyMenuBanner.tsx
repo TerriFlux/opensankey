@@ -500,8 +500,10 @@ export const ToolbarBuilder: FunctionComponent<ToolbarBuilderFType> = ({
   let max_link_value = 0
   Object.values(display_links).forEach(link => {
     const new_max_link_value = FindMaxLinkValue(
+      data,
       max_link_value,
-      link.value
+      link.value,
+      link
     )
     max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })

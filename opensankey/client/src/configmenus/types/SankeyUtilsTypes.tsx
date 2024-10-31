@@ -37,7 +37,12 @@ GetLinkValue:GetLinkValueFuncType
 
 export type AddDataTagsFuncType=(dataTags: TagsGroup[], v: {[key: string]: SankeyLinkValue | SankeyLinkValueDict }, depth: number) => void
 
-export type FindMaxLinkValueFuncType = (max_node_value: number,value_dict: SankeyLinkValue | SankeyLinkValueDict)=> number
+export type FindMaxLinkValueFuncType = (
+  data:SankeyData,
+  max_node_value: number,
+  value_dict: SankeyLinkValue | SankeyLinkValueDict,
+  l:SankeyLink
+)=> number
 
 export type DefaultSankeyDataFuncType = ()=>SankeyData
 

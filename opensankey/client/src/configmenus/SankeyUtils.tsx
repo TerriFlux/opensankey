@@ -168,8 +168,10 @@ export const GetLinkValue:GetLinkValueFuncType = (
  * @returns {number}
  */
 export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
-  max_node_value: number,
-  value_dict: SankeyLinkValueDict | SankeyLinkValue
+  data,
+  max_node_value,
+  value_dict,
+  l
 ): number => {
   let new_max_node_value = max_node_value
   // If input does not exist or does not contain any info, return
@@ -189,12 +191,17 @@ export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
   if (typeof child === 'object') {
     // Each link can contain multiple values, so we loop on each dict entry
     Object.values(value_dict).forEach(v => {
-      const cur_max_value = FindMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
+      const cur_max_value = FindMaxLinkValue(data,new_max_node_value, (v as unknown) as SankeyLinkValueDict,l)
       new_max_node_value = (cur_max_value > new_max_node_value) ? cur_max_value : new_max_node_value
     })
   }
   else { // If we reached the value, we can compare with ref max value
-    const tmp=(value_dict as SankeyLinkValue).value as number
+    const local_user_scale = ReturnLocalLinkValue(l,'user_scale') as number
+    let ratio = 1
+    if (local_user_scale) {
+      ratio = local_user_scale/data.user_scale
+    }
+    const tmp=(value_dict as SankeyLinkValue).value as number / ratio
     new_max_node_value = (tmp && (tmp > new_max_node_value)) ? tmp : new_max_node_value
   }
   return new_max_node_value
