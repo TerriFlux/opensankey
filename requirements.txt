@@ -1,5 +1,5 @@
 alembic
-flask
+flask==2.3.3
 flask_cors
 flask_login
 flask-mail
@@ -8,6 +8,6 @@ sphinx
 sphinx_rtd_theme
 sphinx-multibuild
 SQLAlchemy==1.4.25
-werkzeug
+werkzeug==2.2.3
 itsdangerous
 stripe
