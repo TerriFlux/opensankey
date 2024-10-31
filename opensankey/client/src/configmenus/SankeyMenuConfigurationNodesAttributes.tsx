@@ -644,6 +644,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           menu_for_style={menu_for_style}
           local_var_of_node='u'
           function_onBlur={()=>{
+            Object.values(applicationData.data.nodes).forEach(n=>delete (n as unknown as {v?:string}).v )
             ComputeParametricV(applicationData)
             updateMenuConfigNode()
             updateLinkAttachedToNodes()

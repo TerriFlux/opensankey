@@ -802,10 +802,10 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
   Object.values(columns).forEach(column=>{
     column.sort((n1,n2)=>n1.y-n2.y)
-    Object.values(data.levelTags).forEach( tagGroup=> {
-      let current_v = 0
-      column.forEach(n=>current_v = apply_v(applicationData,n,current_v,tagGroup))
-    })
+    //Object.values(data.levelTags).forEach( tagGroup=> {
+    let current_v = 0
+    column.forEach(n=>current_v = apply_v(applicationData,n,current_v))
+    //})
   })
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
 }
@@ -1051,30 +1051,34 @@ export const ComputeParametrization:ComputeParametrizationType = (
       columns[n.u].push(n)
     }
   })
-  ArrangeTrade(applicationData,compute_xy)
+  Object.values(applicationData.data.nodes).forEach(n=>delete (n as unknown as {v?:string}).v )
   ComputeParametricV(applicationData)
 }
 
 export const apply_v = (
   applicationData:applicationDataType,
   node:SankeyNode,
-  current_v:number,
-  tagGroup:TagsGroup|undefined
+  current_v:number
+  //tagGroup:TagsGroup|undefined
 ) => {
   const {data} = applicationData
   const all_nodes = data.nodes //Object.assign({},data.nodes,data.additional_nodes)
   //node.position = 'parametric'
-  node.v = current_v
-  if (!tagGroup) {
-    return current_v+1    
+  if (!node.v) {
+    node.v = current_v
   }
+  // if (!tagGroup) {
+  //   return current_v+1    
+  // }
   //node.y == undefined
   const dim_desagregate_nodes = Object.values(all_nodes).filter( 
     nn => {
       let is_children = false
-      if (nn.dimensions[tagGroup.group_name] && nn.dimensions[tagGroup.group_name].parent_name === node.idNode) {
-        is_children = true
-      }
+      Object.values(data.levelTags).forEach(tagg=>{
+        if (nn.dimensions[tagg.group_name] && nn.dimensions[tagg.group_name].parent_name === node.idNode) {
+          is_children = true
+        }
+      })
       return is_children
     }
   )
@@ -1086,7 +1090,9 @@ export const apply_v = (
     nn.y = current_y
     current_y = current_y+20
     nn.u = node.u
-    new_current_v = apply_v(applicationData,nn,new_current_v,tagGroup)
+    //Object.values(data.levelTags).forEach( tagGroup=> {
+    new_current_v = apply_v(applicationData,nn,new_current_v)
+    //})
   })
   return new_current_v+1
 }
@@ -1886,7 +1892,7 @@ export const updateLayout: updateLayoutFuncType = (
       differences = differences.filter(
         (difference) =>
           (difference.kind === 'E') &&
-          (['x', 'y', 'x_label', 'y_label'].includes(difference.path![1])))
+          (['x', 'y','u','v', 'x_label', 'y_label'].includes(difference.path![1])))
       differences.forEach((difference) => applyChange(data.nodes, {}, difference))
     }
   }
@@ -2329,14 +2335,8 @@ export const ComputeParametricV = (applicationData: applicationDataType) => {
   })
   Object.values(columns).forEach(column => {
     column.sort((n1, n2) => n1.y - n2.y)
-    if (Object.values(data.levelTags).length == 0) {
-      let current_v = 0
-      column.forEach(n => current_v = apply_v(applicationData, n, current_v, undefined))
-    }
     let current_v = 0
-    Object.values(data.levelTags).forEach(tagGroup => {
-      column.forEach(n => current_v = apply_v(applicationData, n, current_v, tagGroup))
-    })
+    column.forEach(n => current_v = apply_v(applicationData, n, current_v))
   })
   Object.values(columns).forEach(column => {
     column.forEach(n => apply_v_agregate(applicationData.data, n))
