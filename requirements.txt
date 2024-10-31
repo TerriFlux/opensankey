@@ -8,6 +8,6 @@ sphinx
 sphinx_rtd_theme
 sphinx-multibuild
 SQLAlchemy==1.4.25
-werkzeug==2.2.3
+werkzeug==2.3.7
 itsdangerous
 stripe
