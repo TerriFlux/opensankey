@@ -6,6 +6,7 @@ import {
   btn_accountpage,
   btn_accountpage_danger,
   btn_accountpage_embedded,
+  btn_accountpage_negative,
   btn_lone_navigation,
   btn_lone_navigation_primary,
   btn_lone_navigation_secondary,
@@ -38,8 +39,9 @@ export const Theme_SA = {
         btn_lone_navigation_tertiary,
         btn_lone_navigation_tertiary_negative,
         btn_accountpage,
-        btn_accountpage_embedded,
         btn_accountpage_danger,
+        btn_accountpage_embedded,
+        btn_accountpage_negative,
         menutop_button_logout,
         menutop_button_goto_dashboard
       }

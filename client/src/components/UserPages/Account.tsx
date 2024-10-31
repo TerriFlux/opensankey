@@ -112,7 +112,7 @@ const Account: FunctionComponent<AccountTypes> = ({
 }) => {
 
   // Initialise traduction function
-  const { t, logo } = new_data_app
+  const { t, logo, logo_sankey_plus } = new_data_app
 
   // Define navigation behaviour to return to App
   const navigate = useNavigate()
@@ -606,6 +606,10 @@ const Account: FunctionComponent<AccountTypes> = ({
       })
   }
 
+  const openCheckoutPage = () => {
+    navigate('/license/checkout')
+  }
+
   // Hooks
   const [reqCount, setReqCount] = useState(1)
   const [newLicenseOpenOSP, setNewLicenseOpenOSP] = useState('')
@@ -898,19 +902,39 @@ const Account: FunctionComponent<AccountTypes> = ({
                               >
                                 {t('UserPages.license.btns.mng_sub')}
                               </Button>
-                              {/* <Button
-                                variant='btn_accountpage_danger'
-                                onClick={onDeleteAccountModalOpen}
-                                isDisabled={!user_data.license_opensankeyplus_active}
-                                maxWidth='inherit'
-                                width='fit-content'
-                                justifySelf='right'
-                              >
-                                {t('UserPages.license.btns.stop_sub')}
-                              </Button> */}
                             </>
                             :
-                            <></>
+                            <Button
+                              variant='btn_accountpage_negative'
+                              onClick={openCheckoutPage}
+                              maxWidth='inherit'
+                              width='fit-content'
+                              height='50px'
+                              justifySelf='right'
+                              textStyle='h2'
+                            >
+                              <Box
+                                width='max-content'
+                                height='90%'
+                                display='grid'
+                                gridAutoFlow='column'
+                                gridColumnGap='6px'
+                                alignItems='center'
+                              >
+                                <Image
+                                  justifySelf='left'
+                                  width='70px'
+                                  src={logo_sankey_plus}
+                                  alt='logo_osp'
+                                />
+                                <Text
+                                  justifySelf='right'
+                                  margin='0'
+                                >
+                                  {t('UserPages.license.btns.add_sub')}
+                                </Text>
+                              </Box>
+                            </Button>
                         }
                       </Box>
                     </Box>

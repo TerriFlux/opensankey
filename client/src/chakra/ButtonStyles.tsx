@@ -126,6 +126,21 @@ export const btn_accountpage = defineStyle({
   ..._btn_accountpage
 })
 
+export const btn_accountpage_negative = defineStyle({
+  ..._btn_accountpage,
+  bg: 'gray.50',
+  bgColor: 'gray.50',
+  borderColor: 'primaire.2',
+  border: '2px solid',
+  color: 'primaire.2',
+  _hover: {
+    bg: 'gray.50',
+    bgColor: 'gray.50',
+    borderColor: 'secondaire.2',
+    color: 'secondaire.2'
+  }
+})
+
 export const btn_accountpage_embedded = defineStyle({
   ..._btn_accountpage,
   height: '90%',
