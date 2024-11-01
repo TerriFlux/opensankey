@@ -313,15 +313,8 @@ export type SankeyData = {
   legend_bg_border:boolean,
   legend_show_dataTags:boolean,
 
-  initial_nodes?: {[_:string]:SankeyNode},
   nodes: {[_:string]:SankeyNode},
-  additional_nodes?: {[_:string]:SankeyNode},
-  removed_nodes?: {[_:string]:SankeyNode},
-
-  initial_links?: {[_:string]:SankeyLink},
   links: {[_:string]:SankeyLink},
-  additional_links?: {[_:string]:SankeyLink},
-  removed_links?: {[_:string]:SankeyLink},
   
   display_style : display_styleType,
 
@@ -491,7 +484,6 @@ export type MenuTypes = {
   apply_transformation_additional_elements: JSX.Element[],
   additional_nav_item:JSX.Element[],
   formations_menu: object,
-  postProcessLoadExcel:postProcessLoadExcelFuncType,
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
@@ -499,7 +491,6 @@ export type MenuTypes = {
   node_function:NodeFunctionTypes
 }
 
-export type postProcessLoadExcelFuncType = (applicationData: applicationDataType) => void
 /*****************************************************************************/
 // Application
 // Logo, names, licences
@@ -628,7 +619,6 @@ export type NodeFunctionTypes = {
   RedrawNodesLabels:RedrawNodesFType,
   recomputeDisplayedElement:()=>void,
   OpposingDragElements:opposing_DragElementsFuncType
-  postProcessLoadExcel:()=>void
 }
 export type initializeNodeFunctionsType = (
   applicationData: applicationDataType,

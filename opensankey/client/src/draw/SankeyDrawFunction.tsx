@@ -22,7 +22,8 @@ import { ComputeTotalOffsets,
   ReturnValueLink,
   AssignLinkLocalAttribute,
   ToPrecision,
-  ReturnLocalLinkValue
+  ReturnLocalLinkValue,
+  NodeDisplayed
 } from '../configmenus/SankeyUtils'
 import {
   DragLinkCenterHandleEvent,
@@ -193,6 +194,7 @@ export const nodeTransform : nodeTransformFType = (
     if (d.v == 0) {
       return 'translate(' + d.x + ', ' + d.y + ')'
     }
+
     if ( ('Type de noeud' in d.tags) && d.tags['Type de noeud'][0] === 'echange' && d.inputLinksId.length>0) {
       // export
       same_u = same_u.filter(n=>('Type de noeud' in n.tags) && n.tags['Type de noeud'][0] === 'echange' && n.inputLinksId.length>0)
@@ -203,10 +205,21 @@ export const nodeTransform : nodeTransformFType = (
         d.y = node_above.y + 
         nodeHeight(node_above, applicationData, link_function.GetLinkValue) + 
         + +ReturnValueNode(data,d,'dy')
-      } /*else {
-        const tmp = Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)
-        d.y = tmp.length > 0 ? Object.values(display_nodes).filter(n=>n.u===d.u && n.v===0)[0].y : 20
-      }*/
+      } else {
+        let max_vertical_offset = 0
+        const compute_offset = (node:SankeyNode) => {
+          if (!node.y) {
+            return
+          }
+          if ('Type de noeud' in node.tags && node.tags['Type de noeud'] && node.tags['Type de noeud'][0] == 'echange' && node.inputLinksId.length > 0) {
+            return
+          }
+          max_vertical_offset = Math.max(node.y+nodeHeight(node,applicationData,link_function.GetLinkValue), max_vertical_offset)
+        }
+      
+        Object.values(data.nodes).filter(n=>NodeDisplayed(data,n)).forEach(compute_offset)
+        d.y = max_vertical_offset+200
+      }
       return 'translate(' + d.x + ', ' + d.y + ')'      
     } else if ( ('Type de noeud' in d.tags) && d.tags['Type de noeud'][0] === 'echange' && d.outputLinksId.length>0) {
       const u_below = same_u.filter(n=>n.v < 2000 ).sort((n1,n2)=> n1.v-n2.v)[0]

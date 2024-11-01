@@ -364,7 +364,6 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
     recomputeDisplayedElement,
     CreateNodesOnSVG:(()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
     OpposingDragElements:OpposingDragElements,
-    postProcessLoadExcel: (()=>null)
   } as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(applicationData,link_function,applicationState.multi_selected_nodes,nodes_to_update)

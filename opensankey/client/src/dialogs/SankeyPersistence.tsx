@@ -1,5 +1,5 @@
 import React,{ FunctionComponent, useEffect, useState, } from 'react'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, postProcessLoadExcelFuncType, SankeyLink } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, SankeyLink } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, CounterType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
@@ -8,7 +8,7 @@ import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink,
 import FileSaver from 'file-saver'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { ComputeAutoSankey, compute_default_input_outputLinksId, reorganize_all_input_outputLinksId } from '../draw/SankeyDrawLayout'
+import { ArrangeTrade, ComputeAutoSankey, RecomputeTrade, SplitTrade, compute_default_input_outputLinksId, reorganize_all_input_outputLinksId } from '../draw/SankeyDrawLayout'
 import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { Box, Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Spinner } from '@chakra-ui/react'
 
@@ -20,8 +20,7 @@ interface SankeyLoadProdTypes {
   successAction: () => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType,
-  convert_data:ConvertDataFuncType,
-  postProcessLoadExcel:postProcessLoadExcelFuncType
+  convert_data:ConvertDataFuncType
 }
 
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
@@ -31,8 +30,7 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   successAction,
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
-  convert_data,
-  postProcessLoadExcel
+  convert_data
 }) => {
   const { t,url_prefix } = applicationContext
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
@@ -82,7 +80,6 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
           applicationData,
           text,
           applicationDraw.updateLayout,
-          postProcessLoadExcel,
           applicationDraw.GetSankeyMinWidthAndHeight,
           convert_data,
           applicationData.get_default_data
@@ -255,7 +252,6 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   applicationData,
   text: string,
   updateLayout,
-  postProcessLoadExcel,
   GetSankeyMinWidthAndHeight,
   convert_data,
   defaultData
@@ -275,7 +271,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }
   const new_data = Object.assign(default_data, server_data) as SankeyData
   applicationData.data=new_data
-  ProcessExample(applicationData, updateLayout, convert_data, postProcessLoadExcel, DefaultSankeyData)
+  ProcessExample(applicationData, updateLayout, convert_data, DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   delete (new_data as SankeyData & { layout?: SankeyData} ).layout
@@ -339,12 +335,8 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
     (cpy as unknown as {view:[]}).view=[]
   }
-  delete cpy.initial_nodes
-  delete cpy.initial_links
-  delete cpy.additional_nodes
-  delete cpy.additional_links
-  delete cpy.removed_nodes
-  delete cpy.removed_links
+  RecomputeTrade(cpy)
+
 
   const str_data = JSON.stringify(cpy)
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
@@ -362,7 +354,6 @@ export const ProcessExample: ProcessExampleFuncType = (
   applicationData,
   updateLayout,
   convert_data,
-  postProcessLoadExcel,
   DefaultSankeyData
 
 ): SankeyData => {
@@ -402,7 +393,8 @@ export const ProcessExample: ProcessExampleFuncType = (
       ComputeAutoSankey(applicationData,true)
 
     }
-    postProcessLoadExcel(applicationData)
+    SplitTrade(applicationData.data)
+    ArrangeTrade(applicationData,true)
     
     compute_default_input_outputLinksId(data.nodes, data.links)
     reorganize_all_input_outputLinksId(data,data.nodes, data.links)
@@ -415,7 +407,8 @@ export const ProcessExample: ProcessExampleFuncType = (
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
     updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','tagLevel','icon_catalog'], true)
-    postProcessLoadExcel(applicationData)
+    SplitTrade(applicationData.data)
+    ArrangeTrade(applicationData,true)
   }
   d3.select('.loading_auto_compute').remove()
 
@@ -526,19 +519,7 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data:
   let url = root + url_prefix + 'sankey/save_excel'
 
   const cpy = JSON.parse(JSON.stringify(data)) as SankeyData
-  // Object.values(cpy.links).forEach(d=>{
-  //   (d as SankeyLink).value={}
-  // })
-  if ( data.additional_nodes && Object.values(data.additional_nodes).length > 0) {
-    cpy.nodes = JSON.parse(JSON.stringify(data.initial_nodes))
-    cpy.links = JSON.parse(JSON.stringify(data.initial_links))  
-  }
-  delete cpy.initial_nodes
-  delete cpy.initial_links
-  delete cpy.additional_nodes
-  delete cpy.additional_links
-  delete cpy.removed_nodes
-  delete cpy.removed_links
+  RecomputeTrade(cpy)
 
   const fetchData = {
     method: 'POST',

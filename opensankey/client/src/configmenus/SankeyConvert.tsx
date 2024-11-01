@@ -121,7 +121,13 @@ interface ConvertSankeyData {
   trade_hspace?: number
   trade_close_hspace?: number
   trade_close_vspace?: number
+  initial_nodes?: {[_:string]:SankeyNode},
+  additional_nodes?: {[_:string]:SankeyNode},
+  removed_nodes?: {[_:string]:SankeyNode},
 
+  initial_links?: {[_:string]:SankeyLink},
+  additional_links?: {[_:string]:SankeyLink},
+  removed_links?: {[_:string]:SankeyLink},
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
   agregated_level?: number
@@ -1691,12 +1697,12 @@ export const convert_data:ConvertDataFuncType = (
     data.node_label_separator=' - '
   }
 
-  if (!data.additional_nodes) {
-    data.additional_nodes = {}
-    data.additional_links = {}
-    data.removed_nodes = {}
-    data.removed_links = {}
-  }
+  delete data_to_convert.initial_nodes
+  delete data_to_convert.initial_links
+  delete data_to_convert.additional_nodes
+  delete data_to_convert.additional_links
+  delete data_to_convert.removed_nodes
+  delete data_to_convert.removed_links
 
   clean_data_local(data)
 }
