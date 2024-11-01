@@ -855,7 +855,7 @@ export const SplitIOrE = (
         dimensions:JSON.parse(JSON.stringify(node.dimensions))
       }
     )
-    data.additional_nodes![idTrade] = new_node
+    data.nodes![idTrade] = new_node
 
     const link =  data.links[idLink]
     if (!link) {
@@ -865,7 +865,7 @@ export const SplitIOrE = (
     link.style=tmp5
     const extremity_node = data.nodes[link[tmp1]]
     new_node.local = {local_aggregation : extremity_node.local?.local_aggregation}
-    Object.entries(data.additional_nodes![idTrade]['dimensions']).forEach(dim=>{
+    Object.entries(data.nodes![idTrade]['dimensions']).forEach(dim=>{
       if (node.dimensions[dim[0]].parent_name === undefined) {
         return
       }
@@ -887,11 +887,13 @@ export const SplitIOrE = (
     })
 
     // Création des flux
-    const new_link = JSON.parse(JSON.stringify(link)) as SankeyLink
-    AssignLinkLocalAttribute(new_link, 'recycling', false)
-    data.additional_links![new_node.idNode] = new_link
-    new_link.idLink = new_node.idNode
-    new_link[tmp2] = new_node.idNode
+    //const new_link = JSON.parse(JSON.stringify(link)) as SankeyLink
+    AssignLinkLocalAttribute(link, 'recycling', false)
+    //data.links![new_node.idNode] = new_link
+    delete data.links[link.idLink]
+    link.idLink = new_node.idNode;
+    data.links[link.idLink] = link
+    link[tmp2] = new_node.idNode
     new_node[tmp3].push(new_node.idNode)
 
   })
@@ -912,14 +914,10 @@ export const processTrade: processTradeFType = (
 export const SplitTrade = (
   data: SankeyData
 ) => {
-  let { initial_nodes } = data as SankeyData
-  if (Object.values(initial_nodes!).length==0) {
-    data.initial_nodes = JSON.parse(JSON.stringify(data.nodes))
-    initial_nodes = data.initial_nodes
-    data.initial_links = JSON.parse(JSON.stringify(data.links))
-  }
+  let { nodes } = data as SankeyData
+
   // e.g. "International"
-  let trade_nodes = Object.values(initial_nodes!).filter(n=>n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'][0].includes('echange'))
+  let trade_nodes = Object.values(nodes!).filter(n=>n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'][0].includes('echange'))
   trade_nodes.forEach(node=>{
     if (node.outputLinksId.length>0) { // Imports
       SplitIOrE(node as SankeyNode, true,data)
@@ -928,49 +926,68 @@ export const SplitTrade = (
     if (node.inputLinksId.length>0){ // Exports
       SplitIOrE(node as SankeyNode, false,data)
     }
-    data.removed_nodes![node.idNode] = node
-    node.inputLinksId.forEach(lId=>data.removed_links![lId] = data.links[lId])
-    node.outputLinksId.forEach(lId=>data.removed_links![lId] = data.links[lId])
-  });
-  (data as SankeyData).nodes = Object.assign({},data.initial_nodes,data.additional_nodes)
-  Object.keys(data.removed_nodes!).forEach(idNode=>delete (data as SankeyData).nodes[idNode]);
-  (data as SankeyData).links = Object.assign({},data.initial_links,data.additional_links)
-  Object.keys(data.removed_links!).forEach(idLink=>delete (data as SankeyData).links[idLink])
+    delete data.nodes![node.idNode]
+    // node.inputLinksId.forEach(lId=>data.removed_links![lId] = data.links[lId])
+    // node.outputLinksId.forEach(lId=>data.removed_links![lId] = data.links[lId])
+  })
+  // (data as SankeyData).nodes = Object.assign({},data.initial_nodes,data.additional_nodes)
+  // Object.keys(data.removed_nodes!).forEach(idNode=>delete (data as SankeyData).nodes[idNode]);
+  // (data as SankeyData).links = Object.assign({},data.initial_links,data.additional_links)
+  // Object.keys(data.removed_links!).forEach(idLink=>delete (data as SankeyData).links[idLink])
 }
 
 export const RecomputeTrade: RecomputeTradeType = (
   data
 ) => {
-  const {nodes,links } = data
-  let import_nodes = Object.values(nodes).filter(n=>(('Type de noeud'in n.tags)) && n.tags['Type de noeud'][0]=='echange' && n.outputLinksId.length > 0)
-  let export_nodes = Object.values(nodes).filter(n=>(('Type de noeud'in n.tags)) && n.tags['Type de noeud'][0]=='echange' && n.inputLinksId.length > 0 )
-  if (import_nodes.length > 0) {
-    const node = JSON.parse(JSON.stringify(import_nodes[0]))
-    // node.name = node.name.replace('- - - Importations', '').replace('- - Importations', '').replace('- Importations', '').replace('-Importations', '').replace('Importations', '')
-    // node.name = node.name.split(' ')[1]
-    node.idNode = node.idNode.replace('Importations', '')
-    node.idNode = node.idNode.split('-')[1]
-    node.name = node.idNode 
-    nodes[node.idNode] = node
-    import_nodes.forEach(n => {
-        if (!node.outputLinksId.includes(n.outputLinksId[0])) {
-          node.outputLinksId.push(n.outputLinksId[0])
-        }
-        data.links[n.outputLinksId[0]].idSource = node.idNode
-        delete nodes[n.idNode]
-    });
-    export_nodes.forEach(n => {
-        if (!node.inputLinksId.includes(n.inputLinksId[0])) {
-          node.inputLinksId.push(n.inputLinksId[0])
-        }
-        data.links[n.inputLinksId[0]].idTarget = node.idNode
-        delete nodes[n.idNode]
-    })
-  }
-  //export_nodes.forEach(n=>delete nodes[n.idNode])
-  data.initial_nodes = {}
-  data.initial_links = {}
-  SplitTrade(data)
+    const { nodes, links } = data;
+    let import_nodes = Object.values(nodes).filter(n => (('Type de noeud' in n.tags)) && n.tags['Type de noeud'][0] == 'echange' && n.outputLinksId.length > 0)
+    let export_nodes = Object.values(nodes).filter(n => (('Type de noeud' in n.tags)) && n.tags['Type de noeud'][0] == 'echange' && n.inputLinksId.length > 0)
+    if (import_nodes.length > 0 && import_nodes[0].idNode.includes('-')) {
+        const node = JSON.parse(JSON.stringify(import_nodes[0])) as SankeyNode
+        node.outputLinksId = []
+        node.inputLinksId = []
+        node.tags= {'Type de noeud':['echange']}
+        node.idNode = node.idNode.replace('Importations', '')
+        node.idNode = node.idNode.split('-')[1]
+        node.name = node.idNode
+        nodes[node.idNode] = node
+        import_nodes.forEach(n => {
+            let newIdLink = links[n.outputLinksId[0]].idLink
+            const tmp = n.outputLinksId[0].split('---')
+            if (tmp.length>1) {
+                newIdLink = tmp[0]
+            }
+            if (!node.outputLinksId.includes(newIdLink)) {
+                node.outputLinksId.push(newIdLink)
+            }
+            if (tmp.length>1) {
+              const l = JSON.parse(JSON.stringify(links[n.outputLinksId[0]]))
+                delete links[n.outputLinksId[0]]
+                links[newIdLink] = l
+                l.idLink = newIdLink
+            }
+            data.links[newIdLink].idSource = node.idNode
+            delete nodes[n.idNode]
+        })
+        export_nodes.forEach(n => {
+            let newIdLink = links[n.inputLinksId[0]].idLink
+            const tmp = n.inputLinksId[0].split('---')
+            if (tmp.length>1) {
+                newIdLink = tmp[1]
+            }
+            if (!node.inputLinksId.includes(newIdLink)) {
+                node.inputLinksId.push(newIdLink)
+            }
+            if (tmp.length>1) {
+                const l = JSON.parse(JSON.stringify(links[n.inputLinksId[0]]))
+                delete links[n.inputLinksId[0]]
+                links[newIdLink] = l
+                l.idLink = newIdLink
+            }
+            data.links[newIdLink].idTarget = node.idNode
+            delete nodes[n.idNode]
+        })
+    }
 }
 
 export const ArrangeTrade : ArrangeTradeType = (
