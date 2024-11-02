@@ -1735,6 +1735,8 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   private _activated: boolean = false
   private _siblings: string[] = []
 
+  private _antitag =  new Class_LevelTag('0',this,this._ref_sankey,'0')
+
   // PUBLIC METHODS =====================================================================
 
   public toJSON() {
@@ -1743,6 +1745,8 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     json_object['siblings'] = this._siblings
     return json_object
   }
+
+  public get antitag() {return this._antitag}
 
   public sibling_activated() {
     return this._siblings.filter(tagg => {
