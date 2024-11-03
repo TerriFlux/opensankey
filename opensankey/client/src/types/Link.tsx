@@ -758,7 +758,7 @@ export abstract class Class_LinkElement
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
       // If local attribute have key local_scale then update local scale domain
-      if ('local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
+      if ('local_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
     }
     // Get dragged label pos if defined
     this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
@@ -3259,7 +3259,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
     if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
     if (this._shape_arrow_size !== undefined) json_object['arrow_size'] = this._shape_arrow_size
-    if ('_local_link_scale' in this) (json_object['user_scale'] as number | undefined) = this._local_link_scale!
+    if ('_local_link_scale' in this) (json_object['local_scale'] as number | undefined) = this._local_link_scale
     // Geometry link labels
     if (this._value_label_position !== undefined) json_object['label_position'] = this._value_label_position
     if (this._value_label_orthogonal_position !== undefined) json_object['orthogonal_label_position'] = this._value_label_orthogonal_position
@@ -3300,10 +3300,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
     if (json_local_object['arrow_size'] !== undefined) this._shape_arrow_size = getNumberFromJSON(json_local_object, 'arrow_size', default_shape_arrow_size)
     // Since local_scale can be undefined we don't test the value but if the object have the key
-    const user_scale = getNumberOrUndefinedFromJSON(json_local_object, 'user_scale')
-    if (user_scale) {
-      this._local_link_scale = user_scale
-    }
+    if ('local_scale' in json_local_object) this.local_link_scale = getNumberOrUndefinedFromJSON(json_local_object, 'local_scale')
 
     // Geometry link labels
     if (json_local_object['label_position'] !== undefined) this._value_label_position = getStringFromJSON(json_local_object, 'label_position', default_value_label_position) as Type_PathLabelHPosition
