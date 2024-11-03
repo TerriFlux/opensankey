@@ -634,7 +634,7 @@ export abstract class Class_NodeElement
   public removeDimensionAsParent(_: Class_NodeDimension) {
     if (this._dimensions_as_parent[_.id]) {
       delete this._dimensions_as_parent[_.id]
-      _.removeNodeAsParent(this)
+      //_.removeNodeAsParent(this)
     }
   }
 
@@ -1061,11 +1061,13 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public dimensionsFromJSON(
-    json_node_object: Type_JSON,
+    json_nodes_object: Type_JSON,
+    node_id:string,
     matching_nodes_id: { [_: string]: string } = {},
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
+    const json_node_object = json_nodes_object[node_id] as Type_JSON
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
@@ -1084,6 +1086,7 @@ export abstract class Class_NodeElement
               if (parent_id) {
                 parent_id = matching_nodes_id[parent_id] ?? parent_id
                 const parent = this.sankey.nodes_dict[parent_id]
+                let keep_parent_dimension = true
                 if (parent) {
                   // Read infos from dimension json struct
                   // Get child & parent tags
@@ -1112,13 +1115,30 @@ export abstract class Class_NodeElement
                       if (tagg.tags_list.length < level)
                         tagg.addTag(String(level)) // Create child tag
                       children_tags = [tagg.tags_list[level - 1]]
-                      parent_tag = tagg.tags_list[level - 2]
+                      parent_tag = tagg.tags_list[level - 2];
+                    } else if (level == 0) {
+                      const parent_node_json = getJSONOrUndefinedFromJSON(json_nodes_object, parent.id) as Type_JSON
+                      const parent_dimensions_as_JSON = getJSONOrUndefinedFromJSON(parent_node_json, 'dimensions')!
+                      // const sibling = tagg.siblings[0]
+                      // const sibling_tagg = this.sankey.level_taggs_dict[sibling] as Class_LevelTagGroup
+                      //const parent_level_tags = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).level_tags_list
+                      //const parent_level_taggs = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).level_taggs_list
+                      const parent_dimension = parent_dimensions_as_JSON[tagg.name]
+                      //const parent_level_taggs_names = parent_level_taggs.map(tagg=>tagg.name)
+                      if (parent_dimension === undefined) {
+                        keep_parent_dimension = false
+                      }
+                      parent_tag = tagg.tags_list[0]
+                      children_tags = [tagg.antitag]
                     }
                   }
                   // If tags has been found,
                   // create a new dimension OR add parent & child relation to an existing dimension
                   if (children_tags && parent_tag) {
-                    parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                    const dim = parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                    if (!keep_parent_dimension) {
+                      parent.removeDimensionAsParent(dim!)
+                    }
                   }
                 }
               }
@@ -3482,32 +3502,32 @@ export abstract class Class_NodeElement
     if (!this.is_child && !this.is_parent)
       return true
     // If there is any dimension - check them
-    let ok_dimension: boolean = false
+    let ok_dimension: boolean = true
     // Check dimensions where node is tagged as a child
-    Object.values(this._dimensions_as_child)
-      .forEach(dim => ok_dimension = (ok_dimension || (dim.children_level_tagg.activated && dim.show_children)))
+    Object.values(this._dimensions_as_child).filter(dim=>dim.children_level_tagg.activated)
+      .forEach(dim => ok_dimension = (ok_dimension && dim.show_children))
     // Check dimensions where node is tagged as a parent
-    if (!ok_dimension) {
-      Object.values(this._dimensions_as_parent)
-        .forEach(dim => ok_dimension = ok_dimension || (dim.parent_level_tag.group.activated && dim.show_parent))
+    if (ok_dimension) {
+      Object.values(this._dimensions_as_parent).filter(dim=>dim.parent_level_tag.group.activated)
+        .forEach(dim => ok_dimension = ok_dimension && dim.show_parent)
     }
     // Specific cas : No dimension activated 
-    if (!ok_dimension) {
-      Object.values(this._dimensions_as_parent)
-        .forEach(dim => {
-          if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
-            const siblings_activated = dim.parent_level_tag.group.sibling_activated()
-            if (siblings_activated.length > 0) {
-              const taggs = this.level_taggs_list
-              const siblings_activated_with_this = siblings_activated
-                .filter(sib => taggs.includes(sib as Class_LevelTagGroup))
-              if (siblings_activated_with_this.length == 0) {
-                ok_dimension = true
-              }
-            }
-          }
-        })
-    }
+    // if (!ok_dimension) {
+    //   Object.values(this._dimensions_as_parent)
+    //     .forEach(dim => {
+    //       if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
+    //         const siblings_activated = dim.parent_level_tag.group.sibling_activated()
+    //         if (siblings_activated.length > 0) {
+    //           const taggs = this.level_taggs_list
+    //           const siblings_activated_with_this = siblings_activated
+    //             .filter(sib => taggs.includes(sib as Class_LevelTagGroup))
+    //           if (siblings_activated_with_this.length == 0) {
+    //             ok_dimension = true
+    //           }
+    //         }
+    //       }
+    //     })
+    // }
     return ok_dimension
   }
 
