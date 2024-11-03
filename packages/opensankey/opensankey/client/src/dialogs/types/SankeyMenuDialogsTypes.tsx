@@ -14,7 +14,7 @@ export type FType_InitializeDiagrammSelector = (
  * @type {{ ref_setter_show_modal_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
 export type FCType_ApplyLayoutDialog = {
-  new_data: Type_GenericApplicationDataOS,
+  applicationData: Type_GenericApplicationDataOS,
   diagramSelector: FType_DiagramSelector,
   apply_transformation_additional_elements: JSX.Element[],
 }

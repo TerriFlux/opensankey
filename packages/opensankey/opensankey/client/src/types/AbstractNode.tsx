@@ -17,7 +17,8 @@ import {
   Class_AbstractLevelTag
 } from './Abstract'
 import { Class_Element } from './Element'
-import { Class_TagGroup } from './Tag'
+import { Class_LevelTagGroup, Class_TagGroup } from './Tag'
+import { Class_NodeDimension } from './NodeDimension'
 
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
@@ -57,6 +58,7 @@ export abstract class Class_AbstractNodeElement
   public abstract removeInputLink(_: Type_AbstractLinkElement):void
   public abstract removeOutputLink(_: Type_AbstractLinkElement):void
   public abstract getShapeColorToUse():string
+  public abstract nodeDimensionAsParent(tagGroup:Class_LevelTagGroup) : Class_NodeDimension | null
 }
 
 export abstract class Class_AbstractNodeDimension {
