@@ -123,9 +123,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         <NumberInput
           variant='menuconfigpanel_option_numberinput_with_right_addon'
           min={0}
-          value={new_data.drawing_area.horizontal_spacing}
+          value={new_data.drawing_area.sankey.default_node_style !== undefined ? new_data.drawing_area.sankey.default_node_style.position.dx! : 200}
           onChange={evt => {
-            new_data.drawing_area.horizontal_spacing = +evt
+            new_data.drawing_area.sankey.default_node_style.position.dx = +evt
             indicateSankeyToSaveInCache()
             setForceUpdate(!forceUpdate)
           }}>
@@ -142,9 +142,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         <NumberInput
           variant='menuconfigpanel_option_numberinput_with_right_addon'
           min={0}
-          value={new_data.drawing_area.vertical_spacing}
+          value={new_data.drawing_area.sankey.default_node_style.position.dy!}
           onChange={evt => {
-            new_data.drawing_area.vertical_spacing = +evt
+            new_data.drawing_area.sankey.default_node_style.position.dy! = +evt
             indicateSankeyToSaveInCache()
             setForceUpdate(!forceUpdate)
           }}>

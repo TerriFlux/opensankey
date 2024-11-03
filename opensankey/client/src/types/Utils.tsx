@@ -22,7 +22,7 @@ import type { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
  * @type Type_ElementPosition
  */
 export type Type_ElementPosition = {
-  type: Type_Position
+  type?: Type_Position
   x: number
   y: number
   u: number
@@ -120,7 +120,6 @@ export const default_main_sankey_id = 'sankey_maitre'
 export const const_default_position_x = 50
 export const const_default_position_y = 50
 export const default_element_position: Type_ElementPosition = {
-  type: 'absolute',
   x: const_default_position_x,
   y: const_default_position_y,
   u: 0,

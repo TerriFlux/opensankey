@@ -4475,14 +4475,12 @@ export class Class_GhostLinkElement
       sankey: drawing_area.sankey as Type_GenericSankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
-        type: 'absolute',
         x: 0,
         y: 0,
         u: 0,
         v: 0
       },
       position_ending: {
-        type: 'absolute',
         x: 0,
         y: 0,
         u: 0,
