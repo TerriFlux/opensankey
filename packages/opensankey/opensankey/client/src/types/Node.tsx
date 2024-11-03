@@ -1113,11 +1113,6 @@ export abstract class Class_NodeElement
                         tagg.addTag(String(level)) // Create child tag
                       children_tags = [tagg.tags_list[level - 1]]
                       parent_tag = tagg.tags_list[level - 2]
-                    } else if (level == 0) {
-                      // const sibling = tagg.siblings[0]
-                      // const sibling_tagg = this.sankey.level_taggs_dict[sibling] as Class_LevelTagGroup
-                      parent_tag = tagg.tags_list[0]
-                      children_tags = [tagg.antitag] 
                     }
                   }
                   // If tags has been found,
@@ -3487,16 +3482,32 @@ export abstract class Class_NodeElement
     if (!this.is_child && !this.is_parent)
       return true
     // If there is any dimension - check them
-    let ok_dimension: boolean = true
+    let ok_dimension: boolean = false
     // Check dimensions where node is tagged as a child
-    const tmp = Object.values(this._dimensions_as_child).filter(dim=>dim.children_level_tagg.activated)
-    tmp.forEach(dim => ok_dimension = (ok_dimension && dim.show_children))
+    Object.values(this._dimensions_as_child)
+      .forEach(dim => ok_dimension = (ok_dimension || (dim.children_level_tagg.activated && dim.show_children)))
     // Check dimensions where node is tagged as a parent
-    if (ok_dimension) {
-      const tmp2 =Object.values(this._dimensions_as_parent).filter(dim=>dim.parent_level_tag.group.activated)
-      tmp2.forEach(dim => ok_dimension = ok_dimension && dim.show_parent)
+    if (!ok_dimension) {
+      Object.values(this._dimensions_as_parent)
+        .forEach(dim => ok_dimension = ok_dimension || (dim.parent_level_tag.group.activated && dim.show_parent))
     }
-
+    // Specific cas : No dimension activated 
+    if (!ok_dimension) {
+      Object.values(this._dimensions_as_parent)
+        .forEach(dim => {
+          if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
+            const siblings_activated = dim.parent_level_tag.group.sibling_activated()
+            if (siblings_activated.length > 0) {
+              const taggs = this.level_taggs_list
+              const siblings_activated_with_this = siblings_activated
+                .filter(sib => taggs.includes(sib as Class_LevelTagGroup))
+              if (siblings_activated_with_this.length == 0) {
+                ok_dimension = true
+              }
+            }
+          }
+        })
+    }
     return ok_dimension
   }
 
