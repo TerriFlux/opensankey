@@ -1369,10 +1369,16 @@ const convert_nodes: convert_nodesFuncType = (
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
       const dim_level = nt[1]
-      if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
+      if (n.dimensions[nt[0]] /*&& Object.keys(n.dimensions[nt[0]]).length > 0*/) {
         if (dim_level.length == 1) {
           // If node has only 1 tag for this levelTag then save it in level
           n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
+          if (n.dimensions[nt[0]].level == 0 && n.dimensions[nt[0]].parent_name ==undefined) {
+            const sibling = data_to_convert.levelTags[nt[0]].siblings[0]
+            if (n.dimensions[sibling] ) {
+              n.dimensions[nt[0]].parent_name = n.dimensions[sibling].parent_name
+            }
+          }
         } else {
           // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
           n.dimensions[nt[0]].children_tags = dim_level
