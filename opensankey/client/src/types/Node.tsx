@@ -1084,17 +1084,15 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public dimensionsFromJSON(
-    json_nodes_object: Type_JSON,
-    node_id: string,
+    json_node_object: Type_JSON,
     matching_nodes_id: { [_: string]: string } = {},
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
-    const json_node_object = json_nodes_object[node_id] as Type_JSON
     let local_aggregation : boolean
     if (json_node_object.local) {
       local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
-    } 
+    }
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
@@ -1142,40 +1140,12 @@ export abstract class Class_NodeElement
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
-                      parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
-                    }
-                    if (local_aggregation) {
-                      dim?.forceShowChildren()
+                      const dim = parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                      if (local_aggregation) {
+                        dim?.forceShowChildren()
+                      }
                     }
                   }
-                  // // If no tags ids - use level to find matchin tags
-                  // else {
-                  //   const level = getNumberOrUndefinedFromJSON(dimension_as_json, 'level')
-                  //   if (level && level > 1) {
-                  //     // Careful here : levels start from 1
-                  //     if (tagg.tags_list.length < level - 1)
-                  //       tagg.addTag(String(level - 1)) // Create parent tag
-                  //     if (tagg.tags_list.length < level)
-                  //       tagg.addTag(String(level)) // Create child tag
-                  //     children_tags = [tagg.tags_list[level - 1]]
-                  //     parent_tag = tagg.tags_list[level - 2];
-                  //   }
-                  //   // else if (level == 0) {
-                  //   //   const parent_node_json = getJSONOrUndefinedFromJSON(json_nodes_object, parent.id) as Type_JSON
-                  //   //   const parent_dimensions_as_JSON = getJSONOrUndefinedFromJSON(parent_node_json, 'dimensions')!
-                  //   //   // const sibling = tagg.siblings[0]
-                  //   //   // const sibling_tagg = this.sankey.level_taggs_dict[sibling] as Class_LevelTagGroup
-                  //   //   //const parent_level_tags = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).level_tags_list
-                  //   //   //const parent_level_taggs = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).level_taggs_list
-                  //   //   const parent_dimension = parent_dimensions_as_JSON[tagg.name]
-                  //   //   //const parent_level_taggs_names = parent_level_taggs.map(tagg=>tagg.name)
-                  //   //   if (parent_dimension === undefined) {
-                  //   //     keep_parent_dimension = false
-                  //   //   }
-                  //   //   parent_tag = tagg.tags_list[0]
-                  //   //   children_tags = [tagg.antitag]
-                  //   // }
-                  // }
                 }
               }
               // Case 2 : We only found anti-tag

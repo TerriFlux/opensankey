@@ -773,8 +773,7 @@ export abstract class Class_Sankey
       .forEach(([_, node_json]) => {
         const node_id = matching_nodes_id[_] ?? _
         this._nodes[node_id].dimensionsFromJSON(
-          json_node_object as Type_JSON,
-          node_id,
+          node_json as Type_JSON,
           matching_nodes_id,
           matching_taggs_id['levelTags'] ?? {},
           matching_tags_id['levelTags'] ?? {}
