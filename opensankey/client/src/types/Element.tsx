@@ -312,7 +312,7 @@ export abstract class Class_ProtoElement
     process_id: string,
     process_func: () => void
   ) {
-    if(this._display.drawing_area.bypass_timeout)
+    if (this._display.drawing_area.bypass_timeout)
       return
     this._cancel_waiting_process(process_id)
     if (this.has_timeout)
