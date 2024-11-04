@@ -267,8 +267,7 @@ const clean_data_local = (data: SankeyData) => {
       Object.keys(l.local).forEach((k_l: string) => {
         const k_l_c = k_l as keyof SankeyLinkAttrLocal
         const k_s_c = k_l as keyof SankeyLinkStyle
-
-        if (l.local && l.local[k_l_c] == data.style_link[l.style][k_s_c]) {
+        if (l.local && (l.local[k_l_c] == data.style_link[l.style][k_s_c])) {
           delete l.local[k_l_c]
         }
       })
@@ -1369,10 +1368,16 @@ const convert_nodes: convert_nodesFuncType = (
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
       const dim_level = nt[1]
-      if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
+      if (n.dimensions[nt[0]] /*&& Object.keys(n.dimensions[nt[0]]).length > 0*/) {
         if (dim_level.length == 1) {
           // If node has only 1 tag for this levelTag then save it in level
           n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
+          if (n.dimensions[nt[0]].level == 0 && n.dimensions[nt[0]].parent_name ==undefined) {
+            const sibling = data_to_convert.levelTags[nt[0]].siblings[0]
+            if (n.dimensions[sibling] ) {
+              n.dimensions[nt[0]].parent_name = n.dimensions[sibling].parent_name
+            }
+          }
         } else {
           // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
           n.dimensions[nt[0]].children_tags = dim_level
@@ -1601,8 +1606,6 @@ const convert_links: convert_linksFuncType = (
     Object.entries(defaultLinkStyle).filter(ent => ent[0] != 'idLink').forEach(ent => {
       if (l_depreciated[ent[0]] !== undefined) {
         AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), ent[1])//either take value link attr directly from link to put it in local attr
-      }else{
-        AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), defaultLinkStyle[ent[0] as keyof SankeyLinkStyle])// or take value link attr from link default style to put it in local attr
       }
     })
 

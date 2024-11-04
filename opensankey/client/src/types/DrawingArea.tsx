@@ -776,7 +776,7 @@ export abstract class Class_DrawingArea
 
     let max_node_pos_x = 0
     let max_node_pos_y = 0
-    this.sankey.visible_nodes_list.filter(node => node.position_type === 'absolute').map(node => {
+    this.sankey.visible_nodes_list.map(node => {
       const node_rightest_pos = node.position_x + node.getShapeWidthToUse()
       const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()
       max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
@@ -918,7 +918,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-        (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+      (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1635,6 +1635,25 @@ export abstract class Class_DrawingArea
    */
   public removeMaximumLinkThickness() {
     delete this._maximum_flux
+  }
+
+  /**
+   * Function that fit DA in screen, it determine if it have to fit it vertically or horizontally by processing ratio
+   * 
+   * Function generally use at opening of file to automatically fit sankey on screen
+   *
+   * @memberof Class_DrawingArea
+   */
+  public areaAutoFit() {
+
+    const ratio_v = this._height / this.window_fitting_height // get ration of sankey height / screen height
+    const ratio_h = this._width / this.window_fitting_width // get ration of sankey width / screen width
+
+    if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
+      this.areaFitHorizontally()
+    } else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
+      this.areaFitVertically()
+    }
   }
 
 
