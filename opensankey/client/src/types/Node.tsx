@@ -1091,6 +1091,10 @@ export abstract class Class_NodeElement
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     const json_node_object = json_nodes_object[node_id] as Type_JSON
+    let local_aggregation : boolean
+    if (json_node_object.local) {
+      local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
+    } 
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
@@ -1139,6 +1143,9 @@ export abstract class Class_NodeElement
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
                       parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                    }
+                    if (local_aggregation) {
+                      dim?.forceShowChildren()
                     }
                   }
                   // // If no tags ids - use level to find matchin tags
