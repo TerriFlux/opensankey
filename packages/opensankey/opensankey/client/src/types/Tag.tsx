@@ -1736,7 +1736,6 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   private _activated: boolean = false
   private _siblings: string[] = []
   private _antitagged_refs: Type_AbstractNodeElement[] = []
-  // private _antitag = new Class_LevelTag('0', this, this._ref_sankey, '0')
 
   // PUBLIC METHODS =====================================================================
 
@@ -1751,7 +1750,6 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
       // Unref antitags
       this._antitagged_refs.forEach(ref => this.removeAntiTaggedRef(ref))
       this._antitagged_refs = []
-      // this._antitag.delete()
     }
   }
 
@@ -1825,8 +1823,6 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     this._siblings = value
     this.updateTagsReferences()
   }
-
-  // public get antitag() { return this._antitag }
 
   /**
    * Return dict tag from the current group
