@@ -911,8 +911,8 @@ export abstract class Class_NodeElement
     json_object['name'] = this._name
     // Fill displaying values
     json_object['position'] = this.position_type
-    json_object['x'] = this.position_x
-    json_object['y'] = this.position_y
+    json_object['x'] = this._display.position.x
+    json_object['y'] = this._display.position.y
     json_object['u'] = this.position_u
     json_object['v'] = this.position_v
     if (this._display.position.dx) json_object['dx'] = this._display.position.dx
@@ -1095,7 +1095,7 @@ export abstract class Class_NodeElement
                   // Use tags id in priority if existing
                   const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-                  if (children_tags_ids && parent_tag_id ) {
+                  if (children_tags_ids && parent_tag_id) {
                     children_tags = children_tags_ids
                       .map(_ => {
                         const child_tag_id = matching_tags_id[tagg_id][_] ?? _
@@ -1165,47 +1165,8 @@ export abstract class Class_NodeElement
    * @return {*}
    * @memberof Class_Node
    */
-  protected applyPosition() {
-    if (this.d3_selection !== null) {
-      // Default positions
-      let x = this.position_x
-      let y = this.position_y
-      // Deal with import / export nodes
-      if (this.position_type === 'relative') {
-        if (this.hasInputLinks()) {
-          // Node is export
-          const input_link = this.getFirstInputLink()
-          // if (!input_link?.display.shape_type.getVisible()) {
-          //   return 'translate(0, 0)'
-          // }
-
-          // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
-          const source_node = input_link!.source
-          // if (!source_node.display.shape_type.getVisible()) {
-          if (!source_node.shape_visible) {
-            return 'translate(0, 0)'
-          }
-          x = source_node.position_x + this.position_x
-          y = source_node.position_y + this.position_y
-        }
-        else if (this.hasOutputLinks()) {
-          // Node is import
-          const output_link = this.getFirstOutputLink()
-          // if (!output_link?.display.shape_type.getVisible()) {
-          //   return 'translate(0,0)'
-          // }
-
-          // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
-          const target_node = output_link!.target
-          if (!target_node.shape_visible) {
-            return 'translate(0,0)'
-          }
-          x = target_node.position_x + this.position_x
-          y = target_node.position_y + this.position_y
-        }
-      }
-      this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
-    }
+  protected _applyPosition() {
+    super._applyPosition()
     // Update also position for links
     this.drawLinks()
   }
@@ -1284,7 +1245,7 @@ export abstract class Class_NodeElement
 
     if (nodes_selected.length == 0) {
       if (drawing_area.isInSelectionMode()) {
-        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+        this.setPosXY(this._display.position.x + event.dx, this._display.position.y + event.dy)
         this.drawing_area.checkAndUpdateAreaSize()
       }
     } else if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
@@ -1298,7 +1259,7 @@ export abstract class Class_NodeElement
         // Update node position
         nodes_selected
           .forEach(n => {
-            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            n.setPosXY(n.display.position.x + event.dx, n.display.position.y + event.dy)
           })
         this.drawing_area.checkAndUpdateAreaSize()
       }
@@ -1325,7 +1286,7 @@ export abstract class Class_NodeElement
       // redraw node on target of output links
       nodes_selected
         .forEach(n => {
-          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          n.setPosXY(n._display.position.x + event.dx, n._display.position.x + event.dy)
           n.output_links_list.forEach(link => {
             link.target.applyPosition()
           })
@@ -1334,8 +1295,6 @@ export abstract class Class_NodeElement
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
       this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-
     }
   }
 
@@ -1955,29 +1914,29 @@ export abstract class Class_NodeElement
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            break
-          case 'top':
-            node_face_size = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size = sumLinkTop
-            break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size2 = sumLinkRight
-            break
-          case 'top':
-            node_face_size2 = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size2 = sumLinkTop
-            break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2571,8 +2530,8 @@ export abstract class Class_NodeElement
       return link
     })
 
-    const pow_in=Math.pow(10,max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value 
-    link_in.forEach(link => input_val += (link.value?.data_value ?? 0)*pow_in)
+    const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value 
+    link_in.forEach(link => input_val += (link.value?.data_value ?? 0) * pow_in)
 
 
     // Do the same we did for input links to output links
@@ -2585,9 +2544,9 @@ export abstract class Class_NodeElement
       return link
     })
 
-    const pow_out=Math.pow(10,max_digit_out)
+    const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(link => output_val += (link.value?.data_value ?? 0) * pow_out)
-    return String(Math.max(input_val/pow_in, output_val/pow_out))
+    return String(Math.max(input_val / pow_in, output_val / pow_out))
   }
 
   /**
@@ -2661,6 +2620,71 @@ export abstract class Class_NodeElement
     _.addReference(this)
     this.draw()
   }
+
+  /**
+   * Override position_x of element because node can be have a position relative to another node
+   *
+   * @memberof Class_NodeElement
+   */
+  public override get position_x(): number {
+    if (this.position_type === 'relative') {
+      if (this.hasInputLinks()) {
+        // Node is export
+        const input_link = this.getFirstInputLink()
+        // if (!input_link?.display.shape_type.getVisible()) {
+        //   return 'translate(0, 0)'
+        // }
+
+        // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
+        const source_node = input_link!.source
+
+        return source_node.position_x + this._display.position.x
+      }
+      else if (this.hasOutputLinks()) {
+        // Node is import
+        const output_link = this.getFirstOutputLink()
+
+        // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
+        const target_node = output_link!.target
+
+        return target_node.position_x + this._display.position.x
+      }
+      return 0
+    }
+    return this._display.position.x
+  }
+
+  /**
+ * Override position_y of element because node can be have a position relative to another node
+ *
+ * @memberof Class_NodeElement
+ */
+  public override get position_y(): number {
+    if (this.position_type === 'relative') {
+      if (this.hasInputLinks()) {
+        // Node is export
+        const input_link = this.getFirstInputLink()
+
+        // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
+        const source_node = input_link!.source
+
+        return source_node.position_y + this._display.position.y
+      }
+      else if (this.hasOutputLinks()) {
+        // Node is import
+        const output_link = this.getFirstOutputLink()
+        // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
+        const target_node = output_link!.target
+
+        return target_node.position_y + this._display.position.y
+      }
+    }
+    return this._display.position.y
+  }
+
+  public override set position_x(_: number) { super.position_x = _ }
+  public override set position_y(_: number) { super.position_y = _ }
+
 
   /**
    * Position type can be parametric absolute or relative
