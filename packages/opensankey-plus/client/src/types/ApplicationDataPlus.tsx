@@ -218,7 +218,7 @@ export abstract class Class_ApplicationDataPlus
   // PUBLIC METHODS =====================================================================
 
   private deleteCurrentOriginalView() {
-    if (this._original_current_view !== undefined){
+    if (this._original_current_view !== undefined) {
       this._original_current_view.delete()
       this._original_current_view = undefined
     }
@@ -377,14 +377,14 @@ export abstract class Class_ApplicationDataPlus
     if (id in this._views) {
 
       if (
-        !this.is_view_master && 
-        this._original_current_view !== undefined && 
+        !this.is_view_master &&
+        this._original_current_view !== undefined &&
         !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
       ) {
         // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
         this._waiting_to_set_view = id
         this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
-      } 
+      }
       else {
         // Hide previous diplayed sankey
         this._drawing_area.sankey.setInvisible()
@@ -408,8 +408,10 @@ export abstract class Class_ApplicationDataPlus
           clone_drawing_area.bypass_timeout = true
           clone_drawing_area.copyFrom(this._drawing_area)
           this._original_current_view = clone_drawing_area
-          this._drawing_area.reset()
         }
+        this._drawing_area.reset()
+        this.drawing_area.areaAutoFit()
+
 
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
@@ -547,6 +549,17 @@ export abstract class Class_ApplicationDataPlus
     if (!this._views_order.includes(id)) {
       this._views_order.push(id)
     }
+  }
+
+  /**
+   * Override function from Class_ApplicationData, to reset views before reseting normally
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
+  reset(): void {
+    this._views = {}
+    this._views_order = []
+    super.reset()
   }
 
   // GETTERS / SETTERS ==================================================================
