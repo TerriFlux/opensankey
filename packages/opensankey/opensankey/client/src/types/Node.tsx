@@ -643,7 +643,7 @@ export abstract class Class_NodeElement
   public removeDimensionAsParent(_: Class_NodeDimension) {
     if (this._dimensions_as_parent[_.id]) {
       delete this._dimensions_as_parent[_.id]
-      _.removeNodeAsParent(this)
+      //_.removeNodeAsParent(this)
     }
   }
 
@@ -1073,11 +1073,17 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public dimensionsFromJSON(
-    json_node_object: Type_JSON,
+    json_nodes_object: Type_JSON,
+    node_id:string,
     matching_nodes_id: { [_: string]: string } = {},
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
+    const json_node_object = json_nodes_object[node_id] as Type_JSON
+    let local_aggregation : boolean
+    if (json_node_object.local) {
+      local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
+    } 
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
@@ -1097,6 +1103,7 @@ export abstract class Class_NodeElement
               if (parent_id) {
                 parent_id = matching_nodes_id[parent_id] ?? parent_id
                 const parent = this.sankey.nodes_dict[parent_id]
+                let keep_parent_dimension = true
                 if (parent) {
                   // Read infos from dimension json struct
                   // Get child & parent tags
@@ -1105,7 +1112,7 @@ export abstract class Class_NodeElement
                   // Use tags id in priority if existing
                   const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-                  if (children_tags_ids && parent_tag_id ) {
+                  if (children_tags_ids && parent_tag_id) {
                     children_tags = children_tags_ids
                       .map(_ => {
                         const child_tag_id = matching_tags_id[tagg_id][_] ?? _
@@ -1125,36 +1132,40 @@ export abstract class Class_NodeElement
                       if (tagg.tags_list.length < level)
                         tagg.addTag(String(level)) // Create child tag
                       children_tags = [tagg.tags_list[level - 1]]
-                      parent_tag = tagg.tags_list[level - 2]
+                      parent_tag = tagg.tags_list[level - 2];
+                    } else if (level == 0) {
+                      const parent_node_json = getJSONOrUndefinedFromJSON(json_nodes_object, parent.id) as Type_JSON
+                      const parent_dimensions_as_JSON = getJSONOrUndefinedFromJSON(parent_node_json, 'dimensions')!
+                      // const sibling = tagg.siblings[0]
+                      // const sibling_tagg = this.sankey.level_taggs_dict[sibling] as Class_LevelTagGroup
+                      //const parent_level_tags = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).level_tags_list
+                      //const parent_level_taggs = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).level_taggs_list
+                      const parent_dimension = parent_dimensions_as_JSON[tagg.name]
+                      //const parent_level_taggs_names = parent_level_taggs.map(tagg=>tagg.name)
+                      if (parent_dimension === undefined) {
+                        keep_parent_dimension = false
+                      }
+                      parent_tag = tagg.tags_list[0]
+                      children_tags = [tagg.antitag]
                     }
                   }
                   // If tags has been found,
                   // create a new dimension OR add parent & child relation to an existing dimension
                   if (children_tags && parent_tag) {
-                    parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
-                    // const parent_aggregation = (parent as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>).local_aggregation
-                    // if (parent_aggregation !== undefined) {
-                    //   if (parent_aggregation) {
-                    //     dim?.forceShowParent()
-                    //     dim?.forceHideChildren()
-                    //   } else {
-                    //     dim?.forceHideParent()
-                    //   }
-                    // if (this.local_aggregation !== undefined) {
-                    //   if (this.local_aggregation) {
-                    //     dim?.forceShowChildren()
-                    //     dim?.forceHideParent()
-                    //   } else {
-                    //     dim?.forceHideChildren()
-                    //   }
-                    // }
-                  //}
+                    const dim = parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                    if (!keep_parent_dimension) {
+                      parent.removeDimensionAsParent(dim!)
+                    }
+                    if (local_aggregation) {
+                      dim?.forceShowChildren()
+                    }
+                  }
                 }
               }
             }
 
           }
-        }
+        //}
     })
     }
   }
@@ -2068,29 +2079,29 @@ export abstract class Class_NodeElement
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            break
-          case 'top':
-            node_face_size = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size = sumLinkTop
-            break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size2 = sumLinkRight
-            break
-          case 'top':
-            node_face_size2 = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size2 = sumLinkTop
-            break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2711,8 +2722,8 @@ export abstract class Class_NodeElement
       return link
     })
 
-    const pow_in=Math.pow(10,max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value 
-    link_in.forEach(link => input_val += (link.value?.data_value ?? 0)*pow_in)
+    const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value 
+    link_in.forEach(link => input_val += (link.value?.data_value ?? 0) * pow_in)
 
 
     // Do the same we did for input links to output links
@@ -2725,9 +2736,9 @@ export abstract class Class_NodeElement
       return link
     })
 
-    const pow_out=Math.pow(10,max_digit_out)
+    const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(link => output_val += (link.value?.data_value ?? 0) * pow_out)
-    return String(Math.max(input_val/pow_in, output_val/pow_out))
+    return String(Math.max(input_val / pow_in, output_val / pow_out))
   }
 
   /**
@@ -2967,17 +2978,6 @@ export abstract class Class_NodeElement
       return this._display.style.shape_min_height
     }
     return default_shape_min_height
-  }
-
-  /**
-   * TODO Description
-   * @memberof Class_NodeElement
-   */
-  public get local_aggregation() {
-    if (this._display.attributes.local_aggregation !== undefined) {
-      return this._display.attributes.local_aggregation
-    } 
-    return undefined
   }
 
   /**
@@ -3653,32 +3653,32 @@ export abstract class Class_NodeElement
     if (!this.is_child && !this.is_parent)
       return true
     // If there is any dimension - check them
-    let ok_dimension: boolean = false
+    let ok_dimension: boolean = true
     // Check dimensions where node is tagged as a child
-    Object.values(this._dimensions_as_child)
-      .forEach(dim => ok_dimension = (ok_dimension || (dim.children_level_tagg.activated && dim.show_children)))
+    Object.values(this._dimensions_as_child).filter(dim=>dim.children_level_tagg.activated)
+      .forEach(dim => ok_dimension = (ok_dimension && dim.show_children))
     // Check dimensions where node is tagged as a parent
-    if (!ok_dimension) {
-      Object.values(this._dimensions_as_parent)
-        .forEach(dim => ok_dimension = ok_dimension || (dim.parent_level_tag.group.activated && dim.show_parent))
+    if (ok_dimension) {
+      Object.values(this._dimensions_as_parent).filter(dim=>dim.parent_level_tag.group.activated)
+        .forEach(dim => ok_dimension = ok_dimension && dim.show_parent)
     }
     // Specific cas : No dimension activated 
-    if (!ok_dimension) {
-      Object.values(this._dimensions_as_parent)
-        .forEach(dim => {
-          if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
-            const siblings_activated = dim.parent_level_tag.group.sibling_activated()
-            if (siblings_activated.length > 0) {
-              const taggs = this.level_taggs_list
-              const siblings_activated_with_this = siblings_activated
-                .filter(sib => taggs.includes(sib as Class_LevelTagGroup))
-              if (siblings_activated_with_this.length == 0) {
-                ok_dimension = true
-              }
-            }
-          }
-        })
-    }
+    // if (!ok_dimension) {
+    //   Object.values(this._dimensions_as_parent)
+    //     .forEach(dim => {
+    //       if ((!dim.parent_level_tag.group.activated) && (!dim.parent_level_tag.has_upper_dimensions)) {
+    //         const siblings_activated = dim.parent_level_tag.group.sibling_activated()
+    //         if (siblings_activated.length > 0) {
+    //           const taggs = this.level_taggs_list
+    //           const siblings_activated_with_this = siblings_activated
+    //             .filter(sib => taggs.includes(sib as Class_LevelTagGroup))
+    //           if (siblings_activated_with_this.length == 0) {
+    //             ok_dimension = true
+    //           }
+    //         }
+    //       }
+    //     })
+    // }
     return ok_dimension
   }
 
