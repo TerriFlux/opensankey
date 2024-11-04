@@ -228,6 +228,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
     new_data.drawing_area?.reset()
+    new_data.drawing_area.areaAutoFit()
+
   })
 
   /*************************************************************************************************/
