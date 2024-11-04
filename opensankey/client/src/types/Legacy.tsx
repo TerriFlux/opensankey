@@ -267,8 +267,7 @@ const clean_data_local = (data: SankeyData) => {
       Object.keys(l.local).forEach((k_l: string) => {
         const k_l_c = k_l as keyof SankeyLinkAttrLocal
         const k_s_c = k_l as keyof SankeyLinkStyle
-
-        if (l.local && l.local[k_l_c] == data.style_link[l.style][k_s_c]) {
+        if (l.local && (l.local[k_l_c] == data.style_link[l.style][k_s_c])) {
           delete l.local[k_l_c]
         }
       })
@@ -1607,8 +1606,6 @@ const convert_links: convert_linksFuncType = (
     Object.entries(defaultLinkStyle).filter(ent => ent[0] != 'idLink').forEach(ent => {
       if (l_depreciated[ent[0]] !== undefined) {
         AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), ent[1])//either take value link attr directly from link to put it in local attr
-      }else{
-        AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), defaultLinkStyle[ent[0] as keyof SankeyLinkStyle])// or take value link attr from link default style to put it in local attr
       }
     })
 
