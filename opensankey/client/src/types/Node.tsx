@@ -1108,7 +1108,7 @@ export abstract class Class_NodeElement
               let parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
               const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
               const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-              const anti_tag = getStringOrUndefinedFromJSON(dimension_as_json, 'antitag')
+              const anti_tag = getBooleanFromJSON(dimension_as_json, 'antitag', false)
               // Case 1 : We found parent and level ids -> get or create related tags
               if (
                 (parent_id !== undefined) &&
