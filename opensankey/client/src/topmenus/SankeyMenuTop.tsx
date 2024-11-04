@@ -1133,7 +1133,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = 'minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
+  let menutop_grid_template = 'minmax(7vw, 150px) minmax(51rem, 70vw) auto auto auto'
   if (new_data.is_static) {
     menutop_grid_template = '100px 30fr auto ' + data_rem + ' ' + unit_rem
   }
@@ -1260,6 +1260,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
+            width='min-content'
           >
             {DDDT}
           </Box>
@@ -1267,9 +1268,9 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
+            width='min-content'
           >
             {content_menu_unity}
-
           </Box>
 
           <Box
@@ -1279,6 +1280,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             display='grid'
             gridTemplateColumns='1fr 1fr'
             gridColumnGap='0.25rem'
+            width='min-content'
           >
             {constent_additional_nav_item}
           </Box>
