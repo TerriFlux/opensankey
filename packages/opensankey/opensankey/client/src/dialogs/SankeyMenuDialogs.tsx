@@ -453,7 +453,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 allowMouseWheel
                 value={new_data.drawing_area.vertical_spacing}
                 onChange={evt => {
-                  new_data.drawing_area.horizontal_spacing = +evt
+                  new_data.drawing_area.vertical_spacing = +evt
                   setForceUpdate(!forceUpdate)
                 }}>
                 <NumberInputField />
