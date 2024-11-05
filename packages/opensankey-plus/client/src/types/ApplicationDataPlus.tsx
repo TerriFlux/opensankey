@@ -413,7 +413,6 @@ export abstract class Class_ApplicationDataPlus
         this._drawing_area.reset()
         this.drawing_area.areaAutoFit()
 
-
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
