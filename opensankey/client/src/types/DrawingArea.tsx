@@ -1411,7 +1411,6 @@ export abstract class Class_DrawingArea
     redraw: boolean = true,
     match_and_update: boolean = true,
   ) {
-    // this._draw_timeout=1000
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     // Only legacy convert old sankey
     if (
@@ -1438,12 +1437,10 @@ export abstract class Class_DrawingArea
     this._legend.fromJSON(json_object)
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
-
     if (redraw) {
       // Draw
       this.reset()
     }
-    // this._draw_timeout = 50
   }
 
   /**
