@@ -884,7 +884,6 @@ export const ModalViewNotSavedOSP: FunctionComponent<FCType_ModalViewNotSavedOSP
             onClick={() => {
               new_data_plus.saveBeforeChangingView()
               setShowModal(false)
-
             }}
           >
             {t('view.save')}

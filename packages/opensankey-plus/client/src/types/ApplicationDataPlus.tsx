@@ -526,12 +526,14 @@ export abstract class Class_ApplicationDataPlus
   public resetViewWithOriginal() {
     if (
       (!this.is_view_master) &&
-      (this._original_current_view !== undefined) &&
-      (this._original_current_view.id in this._views)
+      (this._original_current_view !== undefined)
     ) {
+      // Reset drawing area
+      this._drawing_area.sankey.delete() // delete to avoid conflicts
       this._drawing_area.copyFrom(this._original_current_view)
-      this.deleteCurrentOriginalView()
+      // Update indicator
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+      // Send to new view
       this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
       delete this._waiting_to_set_view
     }
@@ -549,9 +551,7 @@ export abstract class Class_ApplicationDataPlus
     }
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
-
   }
-
 
   /**
    * Function used to push view id in order array,
