@@ -453,7 +453,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 allowMouseWheel
                 value={new_data.drawing_area.vertical_spacing}
                 onChange={evt => {
-                  new_data.drawing_area.horizontal_spacing = +evt
+                  new_data.drawing_area.vertical_spacing = +evt
                   setForceUpdate(!forceUpdate)
                 }}>
                 <NumberInputField />
@@ -535,10 +535,11 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  new_data.menu_configuration.function_on_wait.current = () => {
+                  new_data.menu_configuration.function_on_wait.current=()=>{
                     new_data.drawing_area.computeAutoSankey(false)
                   }
-                  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
+                  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Nodes positions computed',loading:'Computing nodes position'})
+
                 }}>
                 {t('MEP.PA')}
               </Button>
