@@ -1194,7 +1194,7 @@ export const desagregation : desagregationFType = (
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
     }
-    setLocalAgregation(n, data, true)
+    setLocalAgregation(n, data, true,cur_dimension)
     n.y = new_y
     node_above = n
     new_y= node_above.y + 
@@ -1220,7 +1220,7 @@ export const desagregation : desagregationFType = (
   if(clicked_node.local==undefined || clicked_node.local==null) {
     clicked_node.local = {} as SankeyNodeAttrLocal
   }
-  setLocalAgregation(clicked_node, data, false)
+  setLocalAgregation(clicked_node, data, false,cur_dimension)
 
   const import_nodes = node.inputLinksId.filter(lid=>{
     if (!(lid in display_links)) {
@@ -1334,13 +1334,13 @@ export const agregation : agregationFType = (
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
     }
-    setLocalAgregation(n, data, false)
+    setLocalAgregation(n, data, false,'')
   })
 
   if(parent_node.local==undefined || parent_node.local==null){
     parent_node.local={} as SankeyNodeAttrLocal
   }
-  setLocalAgregation(parent_node, data, true)
+  setLocalAgregation(parent_node, data, true,cur_dimension)
 
   const import_nodes = desagregated_node.inputLinksId.filter(lid=>{
     if (!(lid in display_links)) {
@@ -1534,12 +1534,18 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
 const setLocalAgregation = (
   n: SankeyNode,
   data: SankeyData,
-  local_aggregation: boolean
+  local_aggregation: boolean,
+  group_name:string
 ) => {
   if (!n.local) {
     n.local={} as SankeyNodeAttrLocal
   }
   n.local['local_aggregation'] = local_aggregation
+  if (local_aggregation) {
+    n.local['local_aggregation_group_name'] = group_name
+  } else {
+    delete n.local['local_aggregation_group_name']
+  }
 }
 
 export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType = (
@@ -2219,6 +2225,10 @@ export const Aggregate: AggregateFuncType = (
   const {data} = applicationData
   const parent_names: string[] = []
   const dim_names: string[] = []
+  if (n.local?.local_aggregation && n.local?.local_aggregation_group_name) {
+    agregation(applicationData, n.idNode, n.local?.local_aggregation_group_name)
+    return
+  }
   Object.keys(n.dimensions).forEach(
     dim => {
       if (dim === 'Primaire') {
