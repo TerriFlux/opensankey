@@ -101,7 +101,7 @@ export abstract class Class_ApplicationData
    */
   protected _logo: string // path to logo
 
-  protected _drawtimeout: NodeJS.Timeout | null = null 
+  protected _drawtimeout: NodeJS.Timeout | null = null
 
   // PRIVATE ATTRIBUTES =================================================================
 
