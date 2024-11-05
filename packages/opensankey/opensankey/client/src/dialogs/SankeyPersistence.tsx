@@ -371,7 +371,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   }
 
   new_data.menu_configuration.function_on_wait.current = () => {
-    new_data.drawing_area.computeAutoSankey(false)
+    new_data.drawing_area.computeAutoSankey(true)
     new_data.drawing_area.areaAutoFit()
   }
   new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
