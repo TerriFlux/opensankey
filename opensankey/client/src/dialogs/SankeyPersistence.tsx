@@ -335,7 +335,7 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 
     (cpy as unknown as {view:[]}).view=[]
   }
-  RecomputeTrade(cpy)
+  //RecomputeTrade(cpy)
 
 
   const str_data = JSON.stringify(cpy)

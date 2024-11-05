@@ -1704,6 +1704,8 @@ export const convert_data:ConvertDataFuncType = (
   delete data_to_convert.removed_nodes
   delete data_to_convert.removed_links
 
+  //RecomputeTrade(data)
+
   clean_data_local(data)
 }
 const has_not_converted_nodeTags_as_levelTags=(data:SankeyData)=>{

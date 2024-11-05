@@ -464,6 +464,11 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                       margin_top = test[0].getBoundingClientRect().height
                       d3.select(' .opensankey #svg-container').style('margin-top', margin_top + 'px')
                     }
+                    
+                    // SplitTrade(new_data)
+                    // applicationData.data = new_data
+                    // ArrangeTrade(applicationData,true)
+                    // set_data(new_data)
                   }
                 })()
                 reader.readAsText(files[0])
