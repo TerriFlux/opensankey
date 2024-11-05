@@ -267,8 +267,7 @@ const clean_data_local = (data: SankeyData) => {
       Object.keys(l.local).forEach((k_l: string) => {
         const k_l_c = k_l as keyof SankeyLinkAttrLocal
         const k_s_c = k_l as keyof SankeyLinkStyle
-
-        if (l.local && l.local[k_l_c] == data.style_link[l.style][k_s_c]) {
+        if (l.local && (l.local[k_l_c] == data.style_link[l.style][k_s_c])) {
           delete l.local[k_l_c]
         }
       })
@@ -1367,34 +1366,32 @@ const convert_nodes: convert_nodesFuncType = (
 
 
     // Convert dimension for application version >= 0.9
-    Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
-      const dim_level = nt[1]
-      if (n.dimensions[nt[0]] && Object.keys(n.dimensions[nt[0]]).length > 0) {
-        if (dim_level.length == 1) {
-          // If node has only 1 tag for this levelTag then save it in level
-          n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
-        } else {
-          // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
-          n.dimensions[nt[0]].children_tags = dim_level
-          let possible_parent = ''
-          possible_parent = Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
-          n.dimensions[nt[0]].parent_tag = possible_parent
+    Object.entries(n.tags)
+      .filter(nt => nt[0] in data_to_convert.levelTags)
+      .forEach(nt => {
+        const leveltagg_tags_ids = nt[1]
+        const leveltagg_id = nt[0]
+        if (n.dimensions[leveltagg_id]) {
+          // Dimension detection
+          if (Object.keys(n.dimensions[leveltagg_id]).includes('parent_name')) {
+              n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
+              let possible_parent_tag = ''
+              const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
+              possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
+              n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
+          }
+          else {
+            // Antitag detection
+            if (leveltagg_tags_ids.includes('0')) {
+              n.dimensions[leveltagg_id] = {}
+              n.dimensions[leveltagg_id].antitag = true
+            }
+          }
         }
-
-      }
-      // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
-
-      // const dim_level_list=nt[1]
-      // dim_level_list.forEach(node_dim=>{
-      //   n.dimensions[nt[0]].level=Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(node_dim)+1
-      // })
-      // if(n.dimensions[nt[0]]){
-      //   n.dimensions[nt[0].level=Object.keys(data_to_convert.levelTags[nt[0]]).indexOf(dim_level)+1]
-      // }
-
-      delete n.tags[nt[0]]
-    });
-    // Add links_order to node by combining input/outputs id (for version>=0.9) 
+        // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
+        delete n.tags[leveltagg_id]
+      });
+    // Add links_order to node by combining input/outputs id (for version>=0.9)
     (n as Type_JSON).links_order = n.inputLinksId.concat(n.outputLinksId)
 
   }
@@ -1601,8 +1598,6 @@ const convert_links: convert_linksFuncType = (
     Object.entries(defaultLinkStyle).filter(ent => ent[0] != 'idLink').forEach(ent => {
       if (l_depreciated[ent[0]] !== undefined) {
         AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), ent[1])//either take value link attr directly from link to put it in local attr
-      }else{
-        AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), defaultLinkStyle[ent[0] as keyof SankeyLinkStyle])// or take value link attr from link default style to put it in local attr
       }
     })
 
@@ -1756,7 +1751,7 @@ const convert_links: convert_linksFuncType = (
       l.local.right_horiz_shift = 0.95;
       // Add variable in legacy JSOn
       (l.local as Type_JSON).starting_tangeant = 0.05; // special assignement for attr not present in legacy but usefull in current Class_link
-      (l.local as Type_JSON).ending_tangeant = 0.05 // special assignement for attr not present in legacy but usefull in current Class_link    
+      (l.local as Type_JSON).ending_tangeant = 0.05 // special assignement for attr not present in legacy but usefull in current Class_link
 
     }
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
