@@ -1210,14 +1210,15 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             <Box
               alignSelf='center'
               justifySelf='center'
-              display='block'
+              display='inline-grid'
               height='100%'
             >
               {
                 !new_data.is_static ?
                   <Image
                     height='80%'
-                    margin='5% 0'
+                    justifySelf='center'
+                    alignSelf='center'
                     src={logo}
                   /> :
                   <Image
