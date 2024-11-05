@@ -978,8 +978,8 @@ class SankeyToJson(object):
                                 dimension = {}
                                 parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
                                 dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
-                                dimension['child_tags'] = [tag.name for tag in tags]
-                                dimension['parent_name'] = upper_tag.name
+                                dimension['children_tags'] = [tag.name for tag in tags]
+                                dimension['parent_tag'] = upper_tag.name
                                 node_json['dimensions'][tagg.name] = dimension
                                 # Break the loop
                                 break
