@@ -818,7 +818,7 @@ export abstract class Class_DrawingArea
         this.window_fitting_width / this.width)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [0, this.getNavBarHeight()])
+        [this._fit_margin/2, this._fit_margin/2 + this.getNavBarHeight()])
     }
   }
 
@@ -835,7 +835,7 @@ export abstract class Class_DrawingArea
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, this.window_fitting_height / this.height)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [0, this.getNavBarHeight()])
+        [this._fit_margin/2, this._fit_margin/2 + this.getNavBarHeight()])
     }
   }
 
@@ -1532,7 +1532,7 @@ export abstract class Class_DrawingArea
 
   /**
    * Function that fit DA in screen, it determine if it have to fit it vertically or horizontally by processing ratio
-   * 
+   *
    * Function generally use at opening of file to automatically fit sankey on screen
    *
    * @memberof Class_DrawingArea
