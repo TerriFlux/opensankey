@@ -23,7 +23,7 @@ export const DrawLegend : DrawLegendFType= (
   reDrawLegend,
   resizeCanvas
 ) => {
-  const {data,display_nodes}=applicationData
+  const {data,display_nodes,display_links}=applicationData
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   // Function that add legend of tags
@@ -180,22 +180,17 @@ export const DrawLegend : DrawLegendFType= (
                 return n[1].show_legend
               })
 
-              let link_tied_to_node_hovered=([] as string[])
               const tmp2=(tmp.length>0)?tmp[0][0]:''
 
               if(tmp.length>0){
               //Récupère les flux entrant/sortant  des noeuds dont on survole l'étiquette
-                Object.values(data.nodes).filter(n=>{
-                  return (n.tags[tmp2] && n.tags[tmp2].includes(tag[0]))
-                }).forEach(el=>{
-                  link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.outputLinksId)
-                  link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.inputLinksId)
+                const link_tied_to_node_hovered = Object.values(display_links).filter(l=>{
+                  return (!data.nodes[l.idSource].tags[tmp2] || (data.nodes[l.idSource].tags[tmp2].length == 0 || data.nodes[l.idSource].tags[tmp2].includes(tag[0])))
+                  && (!data.nodes[l.idTarget].tags[tmp2] || (data.nodes[l.idTarget].tags[tmp2].length == 0 || data.nodes[l.idTarget].tags[tmp2].includes(tag[0])))
                 })
 
                 //Reduit l'opacité de tous les flux qui ne sont pas rattaché à un noeuds survolé par l'étiquette
-                Object.values(data.links).filter(l=>{
-                  return link_tied_to_node_hovered.includes(l.idLink)
-                }).forEach(el=>{
+                link_tied_to_node_hovered.forEach(el=>{
                   d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.85)
                   d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.85)
                   d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.85)
