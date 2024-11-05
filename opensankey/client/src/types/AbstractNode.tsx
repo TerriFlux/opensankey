@@ -14,7 +14,8 @@ import {
   Class_AbstractSankey,
   Class_AbstractTag,
   Class_AbstractDrawingArea,
-  Class_AbstractLevelTag
+  Class_AbstractLevelTag,
+  Class_AbstractLevelTagGroup
 } from './Abstract'
 import { Class_Element } from './Element'
 import { Class_TagGroup } from './Tag'
@@ -23,15 +24,15 @@ type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingA
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
 export abstract class Class_AbstractNodeElement
-<
-  Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-  Type_GenericSankey extends Class_AbstractSankey
->
+  <
+    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
+    Type_GenericSankey extends Class_AbstractSankey
+  >
   extends Class_Element
-<
-  Type_GenericDrawingArea,
-  Type_GenericSankey
->{
+  <
+    Type_GenericDrawingArea,
+    Type_GenericSankey
+  > {
   // Mandatory getters
   public abstract get name(): string
   public abstract get position_type(): string
@@ -54,9 +55,11 @@ export abstract class Class_AbstractNodeElement
   public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
-  public abstract removeInputLink(_: Type_AbstractLinkElement):void
-  public abstract removeOutputLink(_: Type_AbstractLinkElement):void
-  public abstract getShapeColorToUse():string
+  public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
+  public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
+  public abstract removeInputLink(_: Type_AbstractLinkElement): void
+  public abstract removeOutputLink(_: Type_AbstractLinkElement): void
+  public abstract getShapeColorToUse(): string
 }
 
 export abstract class Class_AbstractNodeDimension {

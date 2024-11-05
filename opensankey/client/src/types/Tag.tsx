@@ -786,7 +786,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     let same_group = true
     child_tags
       .forEach(_ => {
-        same_group = (same_group && this.group === _.group)})
+        same_group = (same_group && this.group === _.group)
+      })
     if (same_group) {
       // Try to find matching dimension with :
       // - this as parent tag
@@ -1450,19 +1451,19 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
   // Type of banne
   private _banner: tag_banner_type = 'one'
 
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected abstract _tags: { [id: string]: Class_ProtoLevelTag }
+
+  protected _ref_sankey: Class_AbstractSankey
+
   /**
    * True if tag is currently on a deletion process
    * Avoid infinite calls of delete() method
    * @private
    * @memberof Class_TagGroup
    */
-  private _is_currently_deleted = false
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  protected abstract _tags: { [id: string]: Class_ProtoLevelTag }
-
-  protected _ref_sankey: Class_AbstractSankey
+  protected _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
 
@@ -1734,8 +1735,23 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
 
   private _activated: boolean = false
   private _siblings: string[] = []
+  private _antitagged_refs: Type_AbstractNodeElement[] = []
 
   // PUBLIC METHODS =====================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_ProtoTagGroup
+   */
+  public delete() {
+    if (!this._is_currently_deleted) {
+      // Super deletion
+      super.delete()
+      // Unref antitags
+      this._antitagged_refs.forEach(ref => this.removeAntiTaggedRef(ref))
+      this._antitagged_refs = []
+    }
+  }
 
   public toJSON() {
     const json_object = super.toJSON()
@@ -1749,6 +1765,22 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
       return this._ref_sankey.level_taggs_dict[tagg].activated
     }).map(tagg => this._ref_sankey.level_taggs_dict[tagg])
   }
+
+  public addAntiTaggedRef(_: Type_AbstractNodeElement) {
+    if (!this._antitagged_refs.includes(_)) {
+      this._antitagged_refs.push(_)
+      _.addAsAntiTagged(this)
+    }
+  }
+
+  public removeAntiTaggedRef(_: Type_AbstractNodeElement) {
+    if (this._antitagged_refs.includes(_)) {
+      const idx = this._antitagged_refs.indexOf(_)
+      this._antitagged_refs.splice(idx, 1)
+      _.removeAsAntiTagged(this)
+    }
+  }
+
   public fromJSON(
     json_object: Type_JSON,
     matching_tags_id: { [_: string]: string } = {}

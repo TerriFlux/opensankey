@@ -777,7 +777,7 @@ export abstract class Class_DrawingArea
 
     let max_node_pos_x = 0
     let max_node_pos_y = 0
-    this.sankey.visible_nodes_list.filter(node => node.position_type === 'absolute').map(node => {
+    this.sankey.visible_nodes_list.map(node => {
       const node_rightest_pos = node.position_x + node.getShapeWidthToUse()
       const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()
       max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
