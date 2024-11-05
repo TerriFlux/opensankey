@@ -394,6 +394,9 @@ export abstract class Class_DrawingArea
 
     // Added events listeners
     this.setEventsListeners()
+
+    // Unset saving indicator
+    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
