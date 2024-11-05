@@ -2065,7 +2065,8 @@ export abstract class Class_LinkElement
     return (
       super.is_visible &&
       this.are_source_and_target_displayed &&
-      this.are_related_tags_selected
+      this.are_related_tags_selected &&
+      this.is_not_null
     )
   }
 
@@ -3111,6 +3112,17 @@ export abstract class Class_LinkElement
    */
   private get are_related_tags_selected() {
     return this.flux_tags_list.filter(t => !t.is_selected).length === 0
+  }
+
+  /**
+   * If link value for current dataTagg parameter is different of 0 then pass the check, 
+   *
+   * @readonly
+   * @private
+   * @memberof Class_LinkElement
+   */
+  private get is_not_null() {
+    return this.data_value !== 0
   }
 
   /**
