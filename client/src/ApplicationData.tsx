@@ -36,19 +36,20 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   public async checkTokens(force=false) {
     if (this._ok_to_check_account || force) {
+      // Default token
+      this._has_account = false
+      this._has_sankey_plus = false
+      // Update token
       await fetch(window.location.origin + '/auth/connected')
         .then((response) => {
           // Update booleans
-          let has_account = false
           if (response.ok)
-            has_account = true
-          return has_account
+            this._has_account = true
         })
-        .then((has_account) => {
+        .then(() => {
           // Update account token
-          this._has_account = has_account
           // Check licenses
-          if (has_account)
+          if (this._has_account)
             return fetch(window.location.origin + '/auth/license')
               .then((response) => {
                 let has_license = false
