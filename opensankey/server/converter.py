@@ -1129,9 +1129,7 @@ class JsonToSankey(object):
             # Check siblings tag groups
             if 'siblings' in tagg_json.keys():
                 for sib_tagg_id in tagg_json['siblings']:
-                    sib_tagg = self.sankey.get_or_create_tagg(
-                        tagg_json[sib_tagg_id]['name'],
-                        tagg_type)
+                    sib_tagg = self.sankey.get_or_create_tagg(sib_tagg_id, tagg_type)
                     tagg.add_antagonist_tagg(sib_tagg)
 
     def parse_nodes(self):
