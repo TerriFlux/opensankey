@@ -1379,6 +1379,20 @@ const convert_nodes: convert_nodesFuncType = (
               const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
               possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
               n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
+          } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
+            let parent_tag : number | undefined
+            if ( data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level) {
+              parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
+            } else if (data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags) {
+              parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
+            }
+            if (parent_tag) {
+              n.dimensions[leveltagg_id] = {
+                parent_tag : String(parent_tag),
+                parent_name : n.dimensions['Primaire'].parent_name,
+                children_tags: [String(+parent_tag+1)]//n.tags[parent_tag]
+              }
+            }
           }
           else {
             // Antitag detection
