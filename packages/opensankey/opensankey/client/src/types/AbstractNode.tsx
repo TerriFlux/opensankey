@@ -60,6 +60,10 @@ export abstract class Class_AbstractNodeElement
   public abstract removeInputLink(_: Type_AbstractLinkElement): void
   public abstract removeOutputLink(_: Type_AbstractLinkElement): void
   public abstract getShapeColorToUse(): string
+
+  public abstract forceShow():void
+  public abstract forceHide():void
+  public abstract forceLevelTag():void
 }
 
 export abstract class Class_AbstractNodeDimension {
