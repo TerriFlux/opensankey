@@ -1210,14 +1210,15 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             <Box
               alignSelf='center'
               justifySelf='center'
-              display='block'
+              display='inline-grid'
               height='100%'
             >
               {
                 !new_data.is_static ?
                   <Image
                     height='80%'
-                    margin='5% 0'
+                    justifySelf='center'
+                    alignSelf='center'
                     src={logo}
                   /> :
                   <Image
@@ -1504,25 +1505,26 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
   new_data
 }) => {
   const last_save = localStorage.getItem('last_save')
-  const has_save_in_cache = last_save !== undefined && last_save !== null
+  // const has_save_in_cache = (last_save !== undefined) && (last_save !== null)
   const { t } = new_data
 
-  const [forceUpdate, setForceUpdate] = useState(true)
-  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => { new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = b; setForceUpdate(b) }
-  new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = forceUpdate
-  let indicator_saved_data = <></>
-
-  if (has_save_in_cache) {
-    const color_icon = forceUpdate ? 'tertiaire.3' : 'tertiaire.1'
-    indicator_saved_data = <Box
-      color={color_icon}
-    >
-      <FontAwesomeIcon
-        style={{ 'height': '0.75em', 'width': '0.75rem' }}
-        icon={forceUpdate ? faCheck : faExclamation}
-      />
-    </Box>
+  const [save_boolean, setSaveBoolean] = useState(true)
+  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
+    new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = b;
+    setSaveBoolean(b)
   }
+  new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = save_boolean
+
+  const ok_saved = save_boolean
+  const color_icon = ok_saved ? 'tertiaire.3' : 'tertiaire.1'
+  const indicator_saved_data = <Box
+    color={color_icon}
+  >
+    <FontAwesomeIcon
+      style={{ 'height': '0.75em', 'width': '0.75rem' }}
+      icon={(ok_saved) ? faCheck : faExclamation}
+    />
+  </Box>
 
   return <OSTooltip
     placement='bottom'
