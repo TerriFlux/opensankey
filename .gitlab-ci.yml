@@ -132,7 +132,7 @@ test_sankeysuite:
     - git submodule foreach --recursive git clean -fdx
     - git submodule update --recursive
     # Build client & server
-    - source $ROOT_FOLDER/dev_opensankey/bin/activate
+    - source $ROOT_FOLDER/test_opensankey/bin/activate
     - bash deploy_SankeyApp.sh
     # Update db
     - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
