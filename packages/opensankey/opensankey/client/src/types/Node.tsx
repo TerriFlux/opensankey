@@ -191,6 +191,9 @@ export abstract class Class_NodeElement
   // Node tags
   private _tags: Class_Tag[] = []
 
+  // Sorted tag by group
+  private _taggs_dict: { [x: string]: Class_Tag[] } = {}
+
   // Dimensions (level tags)
   private _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   private _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
@@ -578,6 +581,7 @@ export abstract class Class_NodeElement
   public addTag(tag: Class_Tag) {
     if (!this.hasGivenTag(tag)) {
       this._tags.push(tag)
+      this.addTagToGroupTagDict(tag)
       tag.addReference(this)
       this.draw()
     }
@@ -593,6 +597,7 @@ export abstract class Class_NodeElement
     if (this.hasGivenTag(tag)) {
       const idx = this._tags.indexOf(tag)
       this._tags.splice(idx, 1)
+      this.removeTagToGroupTagDict(tag)
       tag.removeReference(this)
       this.draw()
     }
@@ -1536,6 +1541,7 @@ export abstract class Class_NodeElement
     // Remove dims
     this._leveltaggs_as_antitagged.forEach(tag => tag.removeAntiTaggedRef(this))
     this._leveltaggs_as_antitagged = []
+    this._taggs_dict = {}
     // Remove reference of self in style
     this.style.removeReference(this)
   }
@@ -2370,6 +2376,39 @@ export abstract class Class_NodeElement
 
   private getLinkFromHandler(handler: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
     return handler.ref_element_optional
+  }
+
+
+/**
+ * Add tag to dict of tag sorted by group
+ *
+ * @private
+ * @param {Class_Tag} tag
+ * @memberof Class_NodeElement
+ */
+private addTagToGroupTagDict(tag: Class_Tag) {
+    const grp_name = tag.group.name
+    if (grp_name in this._taggs_dict) {
+      if (!(this._taggs_dict[tag.group.name].includes(tag)))
+        this._taggs_dict[tag.group.name].push(tag)
+    } else {
+      this._taggs_dict[tag.group.name] = [tag]
+    }
+  }
+
+  /**
+   * Remove tag from dict of tag sorted by group
+   *
+   * @private
+   * @param {Class_Tag} tag
+   * @memberof Class_NodeElement
+   */
+  private removeTagToGroupTagDict(tag: Class_Tag) {
+    const grp_name = tag.group.name
+    if (grp_name in this._taggs_dict) {
+      const idx = this._taggs_dict[grp_name].indexOf(tag)
+      this._taggs_dict[grp_name].splice(idx, 1)
+    }
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -3531,11 +3570,17 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private get are_related_tags_selected() {
-    // Check if all node tags are selected = ok to display
-    let to_display = true
-    this.tags_list
-      .forEach(tag => to_display = (to_display && tag.is_selected))
-    return to_display
+    const list_tag = this.tags_list
+    if (list_tag.length > 0) {
+      let display = true
+      // Check if at least one node tag is selected in each group = ok to display
+      Object.values(this._taggs_dict).forEach(tag_list => {
+        display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
+      })
+      return display
+    } else {
+      return true // if no tag associated to node then ok to display
+    }
   }
 
   private get is_related_level_selected() {
