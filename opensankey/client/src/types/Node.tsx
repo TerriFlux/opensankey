@@ -664,15 +664,36 @@ export abstract class Class_NodeElement
     }
   }
 
+  private _show : boolean | undefined
+
+  public show() {
+    return this._show
+  }
+
+  public forceShow() {
+    this._show = true
+  }
+
+  public forceHide() {
+    this._show = false
+  }
+
+  public forceLevelTag() {
+    delete this._show
+  }
+
+  
   public drawParent() {
     if (this.is_child) {
-      Object.values(this._dimensions_as_child)[0].forceShowParent()
+      Object.values(this._dimensions_as_child)[0].parent.forceShow()
+      Object.values(this._dimensions_as_child)[0].children.forEach(n=>n.forceHide())
     }
   }
 
   public drawChildren() {
     if (this.is_parent) {
-      Object.values(this._dimensions_as_parent)[0].forceShowChildren()
+      Object.values(this._dimensions_as_parent)[0].parent.forceHide()
+      Object.values(this._dimensions_as_parent)[0].children.forEach(n=>n.forceShow())
     }
   }
 
@@ -1094,9 +1115,16 @@ export abstract class Class_NodeElement
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
-    let local_aggregation : boolean
+    let local_aggregation : boolean | undefined
     if (json_node_object.local) {
       local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
+    }
+    if (local_aggregation != undefined) {
+      if (local_aggregation) {
+        this.forceShow()
+      } else {
+        this.forceHide()
+      }
     }
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
@@ -1145,10 +1173,7 @@ export abstract class Class_NodeElement
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
-                      const dim = parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
-                      if (local_aggregation) {
-                        dim?.forceShowChildren()
-                      }
+                      parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
                     }
                   }
                 }
@@ -3591,6 +3616,12 @@ private addTagToGroupTagDict(tag: Class_Tag) {
       (this._leveltaggs_as_antitagged.length === 0)
     )
       return true
+
+    if (this.show()) {
+      return true
+    } else if (this.show() == false) { 
+      return false
+    }
     // First check if activated tag group is in antitaggs
     const activated_antitaggs = this._leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
