@@ -1,6 +1,6 @@
 if [[ $# > 0 ]]
 then
-    if [ $1 == "dev" ] #|| [ $1 == "test" ] || [ $1 == "prod" ]
+    if [ $1 == "dev" ] || [ $1 == "test" ] || [ $1 == "prod" ]
     then
         export prefix=$1
     else
