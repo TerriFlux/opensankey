@@ -749,20 +749,12 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     this._group.tags_list
       .filter(tag => tag !== this)
       .forEach(tag => tag.setUnSelected())
-    this.dimensions_list_as_tag_for_children
-      .forEach(dim => dim.showFromLevelTags())
-    this.dimensions_list_as_tag_for_parent
-      .forEach(dim => dim.showFromLevelTags())
     // Apply selection
     super.setSelected()
   }
 
   public setUnSelected() {
     // Reinit dimension to default dehavior
-    this.dimensions_list_as_tag_for_children
-      .forEach(dim => dim.showFromLevelTags())
-    this.dimensions_list_as_tag_for_parent
-      .forEach(dim => dim.showFromLevelTags())
     // Apply unselection
     super.setUnSelected()
   }
