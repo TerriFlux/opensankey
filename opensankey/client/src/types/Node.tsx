@@ -645,7 +645,7 @@ export abstract class Class_NodeElement
   public removeDimensionAsParent(_: Class_NodeDimension) {
     if (this._dimensions_as_parent[_.id]) {
       delete this._dimensions_as_parent[_.id]
-      //_.removeNodeAsParent(this)
+      _.removeNodeAsParent(this)
     }
   }
 
