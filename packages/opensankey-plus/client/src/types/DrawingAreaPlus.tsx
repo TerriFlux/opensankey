@@ -111,14 +111,11 @@ export abstract class Class_DrawingAreaPlus
     this.application_data = application_data
   }
 
-
-
   // ABSTRACT METHODS ===================================================================
 
   protected abstract createNewSelectionZone(): Class_ZoneSelectionPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PUBLIC METHODS =====================================================================
-
 
   public delete() {
     super.delete()
@@ -127,10 +124,10 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
- * Override switchMode to setEvent listener when changing drawing area mode (in selection mode drag event are enabled)
- *
- * @memberof Class_DrawingAreaPlus
- */
+   * Override switchMode to setEvent listener when changing drawing area mode (in selection mode drag event are enabled)
+   *
+   * @memberof Class_DrawingAreaPlus
+   */
   public override switchMode() {
     super.switchMode()
     this.sankey.containers_list.forEach(lab => lab.setEventsListeners())
@@ -327,7 +324,7 @@ export abstract class Class_DrawingAreaPlus
     // New attributes
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
-    this.name = getStringFromJSON(json_object, 'name', this.id)
+    this.name = getStringFromJSON(json_object, 'name', this.name)
     this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]
   }
 
@@ -455,7 +452,7 @@ export abstract class Class_DrawingAreaPlus
 
 
   /**
-   * Function used to move selected nodes from another element drag event, 
+   * Function used to move selected nodes from another element drag event,
    * we created this function and moveSelectedContainerFromDragEvent to avoid recursive call of eventMouseDrag
    *
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
@@ -471,7 +468,7 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * Function used to move selected containers from another element drag event, 
+   * Function used to move selected containers from another element drag event,
    * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
    *
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event

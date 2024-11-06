@@ -119,6 +119,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to create a view ------------------------------------------------------------
 
+  const activate_button_to_create_view = has_sankey_plus
   const button_to_create_view = <OSTooltip
     placement='bottom'
     label={
@@ -129,7 +130,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!has_sankey_plus}
+        isDisabled={!activate_button_to_create_view}
         onClick={() => {
           const evt = document
           const evt_ctrl_x = new KeyboardEvent('keydown', { key: 'x', ctrlKey: true })
@@ -149,7 +150,6 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
               style={{
                 'height': '2rem',
                 'width': '3rem',
-                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
               }}
               icon={faPlus}
             />
@@ -179,6 +179,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to delete actual view -------------------------------------------------------
 
+  const activate_button_to_delete_actual_view = has_sankey_plus && has_views && !is_view_master
   const button_to_delete_actual_view = <OSTooltip
     placement='bottom'
     label={
@@ -190,7 +191,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
+        isDisabled={!activate_button_to_delete_actual_view}
         onClick={
           // Delete the view
           () => {
@@ -208,8 +209,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
             <FontAwesomeIcon
               style={{
                 'height': '2rem',
-                'width': '3rem',
-                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
+                'width': '3rem'
               }}
               icon={faMinus}
             />
@@ -239,17 +239,15 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to fallback to master -------------------------------------------------------
 
+  const activate_button_to_return_to_master = has_views && !is_view_master
   const button_to_return_to_master = <OSTooltip
     placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        t('Menu.sankeyOSPDisabled') :
-        t('view.tooltips.home')}
+    label={t('view.tooltips.home')}
   >
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
+        isDisabled={!activate_button_to_return_to_master}
         onClick={() => {
           const evt = document
           const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
@@ -273,19 +271,6 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
               }}
               icon={faHome}
             />
-            {
-              (!has_sankey_plus) ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} />
-                : <></>
-            }
           </Box>
           <Box
             gridRow="2"
@@ -299,18 +284,15 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to go to next view ----------------------------------------------------------
 
+  const activate_button_to_prev_view = has_views && has_view_before
   const button_to_prev_view = <OSTooltip
     placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        t('Menu.sankeyOSPDisabled') :
-        t('view.tooltips.PrevViewButton')
-    }
+    label={t('view.tooltips.PrevViewButton')}
   >
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views && has_view_before)}
+        isDisabled={!activate_button_to_prev_view}
         onClick={() => {
           const ev = document
           const tmp = new KeyboardEvent('keydown', { key: 'F8' })
@@ -334,19 +316,6 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
               }}
               icon={faCaretSquareLeft}
             />
-            {
-              (!has_sankey_plus) ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} />
-                : <></>
-            }
           </Box>
           <Box
             gridRow="2"
@@ -360,17 +329,15 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to previous view ------------------------------------------------------------
 
+  const activate_button_to_next_view = has_views && has_view_after
   const button_to_next_view = <OSTooltip
     placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.NextViewButton')}
+    label={t('view.tooltips.NextViewButton')}
   >
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views && has_view_after)}
+        isDisabled={!activate_button_to_next_view}
         onClick={() => {
           const ev = document
           const tmp = new KeyboardEvent('keydown', { key: 'F9' })
@@ -390,23 +357,9 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
               style={{
                 'height': '2rem',
                 'width': '3rem',
-                // 'opacity': (next_button_disabled || !has_views) ? '0.6' : '1'
               }}
               icon={faCaretSquareRight}
             />
-            {
-              (!has_sankey_plus) ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} />
-                : <></>
-            }
           </Box>
           <Box
             gridRow="2"
@@ -420,6 +373,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to display attributes transfert modal ---------------------------------------
 
+  const activate_button_to_show_view_attr_transfert_modal = has_sankey_plus && has_views && !is_view_master
   const button_to_show_view_attr_transfert_modal = <OSTooltip
     placement='bottom'
     label={
@@ -430,7 +384,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus && has_views && !is_view_master)}
+        isDisabled={!activate_button_to_show_view_attr_transfert_modal}
         onClick={
           () => {
             new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current(true)
@@ -478,6 +432,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to load views as a catalog of view (ie  JSON containing only views) ---------
 
+  const activate_create_data_catalog = has_sankey_plus // TODO need only license ?
   const create_data_catalog = <OSTooltip
     placement='bottom'
     label={
@@ -489,7 +444,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     <Box>
       <Button
         variant='menutop_button'
-        isDisabled={!(has_sankey_plus)}
+        isDisabled={!activate_create_data_catalog}
         onClick={
           () => {
             if (ref_to_input_loader_json_catalog.current) {
@@ -659,7 +614,6 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
     </option>
     {
       new_data_plus.views
-        .filter(view => view.id !== default_main_sankey_id)
         .map(view => {
           return <option
             key={view.id}
@@ -682,11 +636,12 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
       // Update this menu
       sSelectOrEdit('select')
       // Update views components
-      new_data_plus.menu_configuration.updateComponentRelatedToViews()      
+      new_data_plus.menu_configuration.updateComponentRelatedToViews()
     }}
+    disabled={!has_views}
   />
 
-  return (has_sankey_plus && s_select_or_edit === 'edit') ? text_input : selecteur
+  return ((s_select_or_edit === 'edit') || (!has_views)) ? text_input : selecteur
 }
 
 /**
@@ -929,7 +884,6 @@ export const ModalViewNotSavedOSP: FunctionComponent<FCType_ModalViewNotSavedOSP
             onClick={() => {
               new_data_plus.saveBeforeChangingView()
               setShowModal(false)
-
             }}
           >
             {t('view.save')}

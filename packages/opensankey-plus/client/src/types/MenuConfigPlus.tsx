@@ -67,7 +67,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
   private _ref_to_menu_config_link_scientific_precision_updater: MutableRefObject<(() => void)>
 
-  // Updater of config node icon 
+  // Updater of config node icon
   private _ref_to_menu_config_node_icon_updater: MutableRefObject<(() => void)>
 
 
@@ -182,7 +182,6 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
         _this._ref_to_accordion_views_updater.current()
       }
     )
-
   }
 
   /**
@@ -295,7 +294,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
 
   public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
- 
+
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
   public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> {return this._ref_to_menu_config_link_data_text_updater}
@@ -307,7 +306,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_visual_filter_updater}
   public get ref_to_accordion_edition_tag_updater(){return this._ref_to_accordion_edition_tag_updater}
-  
+
   public get ref_to_menu_config_node_icon_updater(){return this._ref_to_menu_config_node_icon_updater}
 
 }

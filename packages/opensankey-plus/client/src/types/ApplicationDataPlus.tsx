@@ -302,22 +302,27 @@ export abstract class Class_ApplicationDataPlus
     let current_view = default_main_sankey_id
     let json_entry: Type_JSON = {}
 
-    if (this.has_views && this.options_save_json.only_current_view && !this.is_view_master) {
+    if (
+      this.has_views &&
+      this.options_save_json.only_current_view &&
+      !this.is_view_master
+    ) {
       // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
       json_entry = super.toJSON()
       json_entry.id = default_main_sankey_id
-    } else {
+    }
+    else {
       // Else save master then views in a variable in JSON
-
       if (this.has_views && !this.is_view_master) {
         // Update _original_current_view
         // Since we update the view in master data the view become the 'original_view'
-        if (this._original_current_view != undefined) {
-          const copy = this._drawing_area.toJSON()
-          const new_DA = this.createNewDrawingArea(copy.id as string)
-          new_DA.fromJSON(copy, false)
-          this._original_current_view = new_DA
-        }
+        this.deleteCurrentOriginalView()
+
+        // Create & save a clone of current view's DA
+        const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
+        clone_drawing_area.bypass_timeout = true
+        clone_drawing_area.copyFrom(this._drawing_area)
+        this._original_current_view = clone_drawing_area
 
         // Save current view id so it we can reset active view as the current one before toJSON
         // It is done so we save first the master then the views in a JSON
@@ -325,6 +330,7 @@ export abstract class Class_ApplicationDataPlus
         // Set current DA to master so master is save in first
         this._drawing_area = this._views[default_main_sankey_id]
       }
+
       // Herited toJSON to save master data
       json_entry = super.toJSON()
 
@@ -340,6 +346,7 @@ export abstract class Class_ApplicationDataPlus
         this._drawing_area = this._views[current_view]
       }
     }
+
     // Add var to remember active view when saved
     json_entry['current_view'] = current_view
     return json_entry
@@ -376,49 +383,53 @@ export abstract class Class_ApplicationDataPlus
 
   public setCurrentView(id: string) {
     if (id in this._views) {
-
+      // Case 1 :
+      // Trigger saving view pop-up if changes have been made on a view
+      // that is not master view
       if (
         !this.is_view_master &&
-        this._original_current_view !== undefined &&
+        (this._original_current_view !== undefined) &&
         !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
       ) {
         // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
         this._waiting_to_set_view = id
         this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
       }
+      // Case 2 : Otherwise, just set new view
       else {
         // Hide previous diplayed sankey
         this._drawing_area.sankey.setInvisible()
+        // Keep current mode in memory
         const was_mode_edition = this._drawing_area.isInEditionMode()
         // Purge selections to avoid modifying unvisible view
         this._drawing_area.purgeSelection()
+        // Undraw prev sankey
         this._drawing_area.unDraw()
-
-        // SHow new sankey
+        // Set-up new sankey
         this._drawing_area = this._views[id]
         this._drawing_area.sankey.setVisible()
-
-        // Set original view in temporary var so it can be used when we change view and don't want to save current modification
+        // Set original view in temporary var so it can be used when
+        // we change view and don't want to save current modification
         if (id !== default_main_sankey_id) {
           // Update view with attr heredited from master
           this._drawing_area.updateFrom(this._views[default_main_sankey_id], this._drawing_area.heredited_attr)
-
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
-          const clone_drawing_area = this.createNewDrawingArea(this._drawing_area.id)
+          const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
           clone_drawing_area.bypass_timeout = true
           clone_drawing_area.copyFrom(this._drawing_area)
+          // Save clone
+          this.deleteCurrentOriginalView()
           this._original_current_view = clone_drawing_area
         }
+        // Draw new-sankey
         this._drawing_area.reset()
         this.drawing_area.areaAutoFit()
-
-
+        // Set view mode_edition to previous value
+        this._drawing_area.setToModeEdition(was_mode_edition)
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
-        // Set view mode_edition to previous value
-        this._drawing_area.setToModeEdition(was_mode_edition)
         // Update menu save diagram JSON
         this.menu_configuration.updateComponentSaveDiagramJSON()
       }
@@ -513,11 +524,16 @@ export abstract class Class_ApplicationDataPlus
    * @memberof Class_ApplicationDataPlus
    */
   public resetViewWithOriginal() {
-    if (!this.is_view_master && this._original_current_view !== undefined && this._original_current_view.id in this._views) {
-      this._views[this._original_current_view.id].delete()
-      this._views[this._original_current_view.id] = this._original_current_view
-      this._original_current_view = undefined
+    if (
+      (!this.is_view_master) &&
+      (this._original_current_view !== undefined)
+    ) {
+      // Reset drawing area
+      this._drawing_area.sankey.delete() // delete to avoid conflicts
+      this._drawing_area.copyFrom(this._original_current_view)
+      // Update indicator
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+      // Send to new view
       this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
       delete this._waiting_to_set_view
     }
@@ -535,9 +551,7 @@ export abstract class Class_ApplicationDataPlus
     }
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
-
   }
-
 
   /**
    * Function used to push view id in order array,
