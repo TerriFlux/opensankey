@@ -902,6 +902,9 @@ class SankeyToJson(object):
         {
             'parent_name': '<parent node id>'
             'level': int
+            'parent_tag': '<level tag 1>'
+            'children_tags': ['<level tag 2>', ...]
+            'antitag': bool
         }
 
         Parameters
@@ -938,8 +941,9 @@ class SankeyToJson(object):
         if (node.has_parents()):
             node_json['dimensions']['Primaire']['parent_name'] = node.parents[0].id
             node_json['dimensions']['Primaire']['parent_tag'] = str(node.parents[0].level)
-            node_json['dimensions']['Primaire']['child_tag'] = str(node.level)
+            node_json['dimensions']['Primaire']['children_tags'] = [str(node.level)]
             node_json['dimensions']['Primaire']['level'] = int(node.level)
+            node_json['dimensions']['Primaire']['antitag'] = False
         # Level tag parent relations
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
             # Check all current node level tags groups
@@ -976,10 +980,12 @@ class SankeyToJson(object):
                                 # I do a sort here to be sure that we always have the same id
                                 # if multiple parent nodes are found
                                 dimension = {}
+                                tags_names = [tag.name for tag in tags]
                                 parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
                                 dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
-                                dimension['children_tags'] = [tag.name for tag in tags]
+                                dimension['children_tags'] = tags_names
                                 dimension['parent_tag'] = upper_tag.name
+                                dimension['antitag'] = ANTI_TAGS_NAME in tags_names
                                 node_json['dimensions'][tagg.name] = dimension
                                 # Break the loop
                                 break
@@ -1166,6 +1172,9 @@ class JsonToSankey(object):
         {
             'parent_name': '<parent node id>'
             'level': int
+            'parent_tag': '<level tag 1>'
+            'children_tags': ['<level tag 2>', ...]
+            'antitag': bool
         }
 
         Parameters
@@ -1215,11 +1224,20 @@ class JsonToSankey(object):
                     if level_tagg not in parent_children_per_levels.keys():
                         parent_children_per_levels[level_tagg] = {}
                     # Apply tag to node
-                    if 'tag' in level_attr.keys():
-                        level_tag = self._leveltags_corresp[level_attr['tag']]
-                        node.add_tag(level_tag)
-                    elif 'level' in level_attr.keys():
-                        level_tag = level_tagg.get_or_create_tag(str(level_attr['level']))
+                    ok_tag = False
+                    # - Check antitag
+                    if (not ok_tag) and ('antitag' in level_attr.keys()):
+                        if level_attr['antitag'] is True:
+                            level_tag = level_tagg.get_or_create_tag(ANTI_TAGS_NAME)
+                            node.add_tag(level_tag)
+                            ok_tag = True
+                    if (not ok_tag) and ('children_tags' in level_attr.keys()):
+                        for level_tag_id in level_attr['children_tags']:
+                            level_tag = level_tagg.get_or_create_tag(level_tag_id)
+                            node.add_tag(level_tag)
+                            ok_tag = True
+                    if (not ok_tag):
+                        level_tag = next(iter(level_tagg.tags.values()))  # Get first tag
                         node.add_tag(level_tag)
                 # Save parent name for latter
                 if 'parent_name' in level_attr.keys():
