@@ -3104,14 +3104,24 @@ export abstract class Class_LinkElement
 
   /**
    * If link has tags :
-   * - check if any of them is selected at false
+   * - check for each tag group if the flow has at least one selected tag that isn't filtered out 
    * else if the link doesn't have tag it isn't filtered by them
    * @readonly
    * @private
    * @memberof Class_LinkElement
    */
   private get are_related_tags_selected() {
-    return this.flux_tags_list.filter(t => !t.is_selected).length === 0
+    const list_tag = this.flux_taggs_list
+    if (list_tag.length > 0) {
+      let display = true
+      // Check if at least one flux tag is selected in each group = ok to display
+      Object.values(this.value?.taggs_dict ?? {}).forEach(tag_list => {
+        display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
+      })
+      return display
+    } else {
+      return true // if no tag associated to flux then ok to display
+    }
   }
 
   /**
@@ -4171,6 +4181,9 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    */
   private _flux_tags: Class_Tag[] = []
 
+  // Sorted tag by group
+  private _taggs_dict: { [x: string]: Class_Tag[] } = {}
+
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
@@ -4196,6 +4209,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
       // Remove reference of self in related tags
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
       this._flux_tags = []
+      this._taggs_dict={}
     }
   }
 
@@ -4246,6 +4260,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   public addTag(tag: Class_Tag) {
     if (!this.hasGivenTag(tag)) {
       this._flux_tags.push(tag)
+      this.addTagToGroupTagDict(tag)
       tag.addReference(this)
       this.draw()
     }
@@ -4260,6 +4275,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     if (this.hasGivenTag(tag)) {
       const idx = this._flux_tags.indexOf(tag)
       this._flux_tags.splice(idx, 1)
+      this.removeTagToGroupTagDict(tag)
       tag.removeReference(this)
       this.draw()
     }
@@ -4363,6 +4379,39 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
       })
   }
 
+  // PRIVATE ===================================================
+  /**
+   * Add tag to dict of tag sorted by group
+   *
+   * @private
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkValue
+   */
+  private addTagToGroupTagDict(tag: Class_Tag) {
+    const grp_name = tag.group.name
+    if (grp_name in this._taggs_dict) {
+      if (!(this._taggs_dict[tag.group.name].includes(tag)))
+        this._taggs_dict[tag.group.name].push(tag)
+    } else {
+      this._taggs_dict[tag.group.name] = [tag]
+    }
+  }
+
+  /**
+   * Remove tag from dict of tag sorted by group
+   *
+   * @private
+   * @param {Class_Tag} tag
+   * @memberof Class_LinkValue
+   */
+  private removeTagToGroupTagDict(tag: Class_Tag) {
+    const grp_name = tag.group.name
+    if (grp_name in this._taggs_dict) {
+      const idx = this._taggs_dict[grp_name].indexOf(tag)
+      this._taggs_dict[grp_name].splice(idx, 1)
+    }
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   /**
@@ -4416,6 +4465,10 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
           taggs[tag.group.id] = tag.group
       })
     return taggs
+  }
+
+  public get taggs_dict() {
+    return this._taggs_dict
   }
 
   /**
