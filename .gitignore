@@ -19,6 +19,7 @@ server/__pycache__
 db.sqlite
 instance/db.sqlite*
 server/db.sqlite
+server/db.sqlite.bk
 
 # misc
 client/pnpm-lock.yaml
