@@ -976,20 +976,33 @@ export abstract class Class_NodeElement
             .map(tag => tag.id)
         ])
     )
-    // Dimension
-    const dimensions: { [_: string]: Type_JSON } = Object.fromEntries(
-      Object.values(this._dimensions_as_child)
-        .map(dimension => [
-          dimension.parent_level_tag.group.id,
-          {
-            'parent_name': dimension.parent.id,
-            'parent_tag': dimension.parent_level_tag.id,
-            'children_tags': dimension.children_level_tags.map(_ => _.id),
-            'antitag': false,
-            'level': dimension.getLevel()
-          }
-        ])
-    )
+    // Dimension - relations
+    let dimensions: { [_: string]: Type_JSON }
+    if (this.is_child) {
+      dimensions = Object.fromEntries(
+          Object.values(this._dimensions_as_child)
+            .map(dimension => [
+              dimension.parent_level_tag.group.id,
+              {
+                'parent_name': dimension.parent.id,
+                'parent_tag': dimension.parent_level_tag.id,
+                'children_tags': dimension.children_level_tags.map(_ => _.id),
+                'antitag': false,
+                'level': dimension.getLevel()
+              }
+            ])
+        )
+    }
+    else {
+      dimensions = Object.fromEntries(
+          Object.values(this._dimensions_as_parent)
+            .map(dimension => [
+              dimension.parent_level_tag.group.id,
+              {}
+            ])
+        )
+    }
+    // Dimensions - antitag
     this._leveltaggs_as_antitagged
       .forEach(leveltagg => {
         if (!dimensions[leveltagg.id]) {
@@ -997,6 +1010,7 @@ export abstract class Class_NodeElement
         }
         dimensions[leveltagg.id]['antitag'] = true
       })
+    // Dimension
     json_object['dimensions'] = dimensions
     // Links
     json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
