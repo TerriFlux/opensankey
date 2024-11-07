@@ -1192,7 +1192,7 @@ const convert_nodes: convert_nodesFuncType = (
       n.local.label_horiz_valeur = n_depreciated.display_style?.label_horiz_valeur
       n.local.label_vert_valeur = n_depreciated.display_style?.label_vert_valeur
 
-      n.local.label_box_width==0?n.local.label_box_width=150:n.local.label_box_width
+      n.local.label_box_width == 0 ? n.local.label_box_width = 150 : n.local.label_box_width
 
 
       delete n_depreciated.display_style
@@ -1364,7 +1364,7 @@ const convert_nodes: convert_nodesFuncType = (
 
     data.nodes[n.idNode] = n
 
-
+    // ================================================
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags)
       .filter(nt => nt[0] in data_to_convert.levelTags)
@@ -1404,6 +1404,10 @@ const convert_nodes: convert_nodesFuncType = (
         // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
         delete n.tags[leveltagg_id]
       });
+
+      //Inverse link input order because in version > 0.9 inputLink order is inverted   
+      n.inputLinksId.reverse();
+      
     // Add links_order to node by combining input/outputs id (for version>=0.9)
     (n as Type_JSON).links_order = n.inputLinksId.concat(n.outputLinksId)
 

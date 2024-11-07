@@ -1344,7 +1344,6 @@ export abstract class Class_NodeElement
       // redraw node on target of output links
       nodes_selected
         .forEach(n => {
-          n.setPosXY(n._display.position.x + event.dx, n._display.position.x + event.dy)
           n.output_links_list.forEach(link => {
             link.target.applyPosition()
           })
@@ -1499,6 +1498,9 @@ export abstract class Class_NodeElement
 
   /**
    * Select the right color to use for this node (attribute / style / tags / ...)
+   * 
+   * If node tag color palette is activated then search if the node has 1 tag of the group displayed and apply tag color
+   *  if the node has more than 1 tag associated then return default color
    * @public
    * @return {*}
    * @memberof Class_NodeElement
@@ -1517,8 +1519,11 @@ export abstract class Class_NodeElement
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
         .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length > 0)
+      if (tags_for_colormap.length == 1) {
         shape_color = tags_for_colormap[0].color
+      } else {
+        shape_color = default_element_color
+      }
     }
     return shape_color
   }
@@ -1683,6 +1688,7 @@ export abstract class Class_NodeElement
       let box_pos_y = label_pos_y
       if (this.name_label_vert == 'top') {
         box_pos_y -= this.name_label_font_size
+        label_text?.attr('y', -(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
       } else if (this.name_label_vert == 'middle') {
         box_pos_y -= this.name_label_font_size / 2
       }
@@ -1933,6 +1939,7 @@ export abstract class Class_NodeElement
         && link.shape_is_arrow
         && link.d3_selection !== undefined
     })
+      .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
 
     let cum_v_left = 0
     let cum_h_top = 0
@@ -2418,14 +2425,14 @@ export abstract class Class_NodeElement
   }
 
 
-/**
- * Add tag to dict of tag sorted by group
- *
- * @private
- * @param {Class_Tag} tag
- * @memberof Class_NodeElement
- */
-private addTagToGroupTagDict(tag: Class_Tag) {
+  /**
+   * Add tag to dict of tag sorted by group
+   *
+   * @private
+   * @param {Class_Tag} tag
+   * @memberof Class_NodeElement
+   */
+  private addTagToGroupTagDict(tag: Class_Tag) {
     const grp_name = tag.group.name
     if (grp_name in this._taggs_dict) {
       if (!(this._taggs_dict[tag.group.name].includes(tag)))
@@ -2456,7 +2463,8 @@ private addTagToGroupTagDict(tag: Class_Tag) {
     return (
       super.is_visible &&
       this.are_related_tags_selected &&
-      this.is_related_level_selected
+      this.is_related_level_selected &&
+      this.no_zero_io_links
     )
   }
 
@@ -3654,6 +3662,18 @@ private addTagToGroupTagDict(tag: Class_Tag) {
         .forEach(dim => ok_dimension = (ok_dimension && dim.show_parent))
     }
     return ok_dimension
+  }
+
+  /**
+   * Filter for node visibility, if node has IO links then check if at least one is visible
+   *
+   * @readonly
+   * @private
+   * @memberof Class_NodeElement
+   */
+  private get no_zero_io_links() {
+    const io_links = this._links_order
+    return io_links.length == 0 || io_links.filter(link => link.is_not_null && link.are_related_tags_selected).length > 0
   }
 
   private get tooltip_html() {
