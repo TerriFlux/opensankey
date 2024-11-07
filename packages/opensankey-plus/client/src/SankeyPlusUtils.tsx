@@ -744,6 +744,28 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
     Object.values(containers).forEach(el => {
       const cont = el as Type_JSON
 
+      if(cont.name!==undefined){
+        cont.content=cont.name as string
+        if (!cont.content.includes('<p')) {
+          if (cont.font_uppercase && !cont.content.includes('ql-align-center')) {
+            cont.content = cont.content.toUpperCase()
+          }
+
+          if (cont.font_weight) {
+            cont.content=cont.content?'<strong>'+cont.content+'</strong>':''
+          }
+          if (cont.position_horiz === 'gauche' ) {
+            cont.content=cont.content?'<p class="ql-align-left">'+cont.content+'</p>':''
+          }
+          if (cont.position_horiz === 'centre' ) {
+            cont.content=cont.content?'<p class="ql-align-center">'+cont.content+'</p>':''
+          }
+          if (cont.position_horiz === 'droite' ) {
+            cont.content=cont.content?'<p class="ql-align-right">'+cont.content+'</p>':''
+          }
+        }
+      }
+
       const container_name = getStringOrUndefinedFromJSON(cont, 'name')
       const container_content = getStringFromJSON(cont, 'content', default_container_content)
       const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
