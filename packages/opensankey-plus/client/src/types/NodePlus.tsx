@@ -529,8 +529,8 @@ export abstract class Class_NodeElementPlus
       else if (label_anchor === 'middle') {
         box_pos_x = box_pos_x - box_width / 2
       }
-      const box_height = this.name_label_font_size
-
+      const element_BBox=(this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect()??{x:0,y:0,height:0,width:0}
+      const box_height = element_BBox.height/this.drawing_area.getZoomScale()
       this.d3_selection?.insert('g', '.name_label_text')
         .attr('class', 'node_label_bg')
         .append('rect')
