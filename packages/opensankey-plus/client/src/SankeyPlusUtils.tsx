@@ -243,7 +243,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
 export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisualFilter> = ({ new_data_plus }) => {
   const { t } = new_data_plus
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()))) + 1
+  const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())/(l.local_link_scale??1))) + 1
   const [, setCount] = useState(0)
   new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
   {/* Popover to display the link-filter */ }
