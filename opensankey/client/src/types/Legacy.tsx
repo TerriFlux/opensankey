@@ -1405,8 +1405,6 @@ const convert_nodes: convert_nodesFuncType = (
         delete n.tags[leveltagg_id]
       });
 
-      //Inverse link input order because in version > 0.9 inputLink order is inverted   
-      n.inputLinksId.reverse();
       
     // Add links_order to node by combining input/outputs id (for version>=0.9)
     (n as Type_JSON).links_order = n.inputLinksId.concat(n.outputLinksId)
