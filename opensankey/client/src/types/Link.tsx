@@ -803,7 +803,7 @@ export abstract class Class_LinkElement
       if (src_taggs_activated.length > 0) {
         // If source has a tag from a group of which we display the palette
         shape_color = this._source.getShapeColorToUse()
-      } else if (trgt_taggs_activated) {
+      } else if (trgt_taggs_activated.length>0) {
         // If target has a tag from a group of which we display the palette
         shape_color = this._target.getShapeColorToUse()
       }
@@ -3107,10 +3107,9 @@ export abstract class Class_LinkElement
    * - check for each tag group if the flow has at least one selected tag that isn't filtered out 
    * else if the link doesn't have tag it isn't filtered by them
    * @readonly
-   * @private
    * @memberof Class_LinkElement
    */
-  private get are_related_tags_selected() {
+  public get are_related_tags_selected() {
     const list_tag = this.flux_taggs_list
     if (list_tag.length > 0) {
       let display = true
@@ -3128,10 +3127,9 @@ export abstract class Class_LinkElement
    * If link value for current dataTagg parameter is different of 0 then pass the check, 
    *
    * @readonly
-   * @private
    * @memberof Class_LinkElement
    */
-  private get is_not_null() {
+  public get is_not_null() {
     return this.data_value !== 0
   }
 
