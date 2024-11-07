@@ -62,7 +62,7 @@ export class Class_Legend
   private _legend_police: number = 16
   private _legend_bg_border: boolean = true
   private _legend_bg_color: string = default_element_color
-  private _legend_bg_opacity: number = 100
+  private _legend_bg_opacity: number = 0
   private _legend_show_dataTags: boolean = false
   private _node_label_separator: string = ''
   private _width: number = 180

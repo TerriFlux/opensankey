@@ -202,7 +202,7 @@ export type TagsGroup = {
   siblings: string[]
 }
 
-type TagsCatalog = { [_: string]: TagsGroup }
+export type TagsCatalog = { [_: string]: TagsGroup }
 
 //-------------------------
 

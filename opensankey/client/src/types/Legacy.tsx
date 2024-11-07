@@ -37,7 +37,8 @@ import {
   SetNodeStyleToTypeNodeFuncType,
   ConvertSankeyLink,
   ConvertSankeyNode,
-  ConvertSankeyValue
+  ConvertSankeyValue,
+  TagsCatalog
 } from './LegacyType'
 
 const default_element_color = '#a9a9a9'
@@ -241,6 +242,15 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   // Convert name variable for data version>0.9
   data_to_convert.filter_link_value = data_to_convert.display_style.filter
   data_to_convert.filter_label = data_to_convert.display_style.filter_label
+
+  // If data doesn't have var mask legend but show color palette of some grp tag then show legend
+  if(data_to_convert.mask_legend===undefined){
+    const super_grp_tag={...data_to_convert.nodeTags, ...data_to_convert.fluxTags, ...data_to_convert.dataTags} as TagsCatalog
+    if(Object.values(super_grp_tag).filter(grp=>grp.show_legend).length>0){
+      data_to_convert.mask_legend=false
+    }
+  }
+
   clean_data_local(data_to_convert)
 }
 
