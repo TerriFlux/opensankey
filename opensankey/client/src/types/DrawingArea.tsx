@@ -285,6 +285,14 @@ export abstract class Class_DrawingArea
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
+
+    public getZoomScale(){
+      const tmp =this.d3_selection_zoom_area?.node()
+      if(tmp && tmp !== null)
+        return d3.zoomTransform(tmp).k
+      else
+        return 1
+    }
   // CONSTRUCTOR ========================================================================
 
   /**
