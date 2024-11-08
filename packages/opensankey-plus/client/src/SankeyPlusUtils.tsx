@@ -766,7 +766,6 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
         }
       }
 
-      const container_name = getStringOrUndefinedFromJSON(cont, 'name')
       const container_content = getStringFromJSON(cont, 'content', default_container_content)
       const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
       const container_opacity_int = getNumberOrUndefinedFromJSON(cont, 'opacity')
@@ -777,7 +776,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       } else {
         cont['opacity'] = 100
       }
-      cont['content'] = container_name ?? container_content
+      cont['content'] = container_content
 
     })
   }
