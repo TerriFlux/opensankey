@@ -1688,7 +1688,6 @@ export abstract class Class_NodeElement
       let box_pos_y = label_pos_y
       if (this.name_label_vert == 'top') {
         box_pos_y -= this.name_label_font_size
-        label_text?.attr('y', -(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
       } else if (this.name_label_vert == 'middle') {
         box_pos_y -= this.name_label_font_size / 2
       }
