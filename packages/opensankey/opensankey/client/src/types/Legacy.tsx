@@ -1144,7 +1144,7 @@ const convert_nodes: convert_nodesFuncType = (
 
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
-
+  const list_links=Object.values(data.links)
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
 
@@ -1414,10 +1414,14 @@ const convert_nodes: convert_nodesFuncType = (
         // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
         delete n.tags[leveltagg_id]
       });
-
-      
     // Add links_order to node by combining input/outputs id (for version>=0.9)
-    (n as Type_JSON).links_order = n.inputLinksId.concat(n.outputLinksId)
+    const n_tmp=(n as Type_JSON)
+    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
+    
+    // Add in links_order links not in links_order but that reference this node
+    list_links
+      .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
+      .forEach(l=>(n_tmp.links_order as string[]).push(l.idLink))
 
   }
 
