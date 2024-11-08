@@ -249,6 +249,8 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     if(Object.values(super_grp_tag).filter(grp=>grp.show_legend).length>0){
       data_to_convert.mask_legend=false
     }
+  } else {
+    data_to_convert.mask_legend = !data_to_convert.mask_legend
   }
 
   clean_data_local(data_to_convert)
