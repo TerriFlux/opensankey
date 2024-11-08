@@ -1649,7 +1649,7 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
-  private _drawNameLabel() {
+  protected _drawNameLabel() {
     // Clean previous label
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
@@ -3907,7 +3907,6 @@ export class Class_NodeAttribute {
     // if (this._name_label_horiz !== undefined) json_object['name_label_horiz'] = this._name_label_horiz
     if (this._name_label_horiz !== undefined) json_object['label_horiz'] = this._name_label_horiz
     if (this._name_label_horiz_shift !== undefined) json_object['name_label_horiz_shift'] = this._name_label_horiz_shift
-    // if (this._name_label_background !== undefined) json_object['name_label_background'] = this._name_label_background
 
     // Parameter of node value label
     // if (this._value_label_visible !== undefined) json_object['value_label_visible'] = this._value_label_visible
