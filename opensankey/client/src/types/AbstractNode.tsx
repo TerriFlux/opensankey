@@ -18,7 +18,7 @@ import {
   Class_AbstractLevelTagGroup
 } from './Abstract'
 import { Class_Element } from './Element'
-import { Class_TagGroup } from './Tag'
+import { Class_Tag, Class_TagGroup } from './Tag'
 
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
@@ -39,6 +39,7 @@ export abstract class Class_AbstractNodeElement
   public abstract get input_links_list(): Type_AbstractLinkElement[]
   public abstract get output_links_list(): Type_AbstractLinkElement[]
   public abstract get taggs_list(): Class_TagGroup[]
+  public abstract get grouped_taggs_dict():{[x:string]:Class_Tag[]}
   // Mandatory methods
   public abstract addTag(_: Class_AbstractTag): void
   public abstract hasGivenTag(_: Class_AbstractTag): boolean
