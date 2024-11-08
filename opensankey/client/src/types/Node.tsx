@@ -2510,6 +2510,15 @@ export abstract class Class_NodeElement
 
   // Tags related -----------------------------------------------------------------------
 
+  /**
+   * Function that return tag list grouped by groupTag
+   *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get grouped_taggs_dict(){
+    return this._taggs_dict
+  }
 
   /**
    * Array of tags related to node
