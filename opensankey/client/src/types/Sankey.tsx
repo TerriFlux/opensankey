@@ -675,7 +675,7 @@ export abstract class Class_Sankey
       Object.entries(json_object['style_node'])
         .forEach(([style_id, style_json]) => {
           // Create a node style
-          const new_style = new Class_NodeStyle(style_id, style_id, true)
+          const new_style = this.createNewNodeStyle(style_id, style_id, true)  
           // Set node style value to node from JSON
           new_style.fromJSON(style_json as Type_JSON)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
