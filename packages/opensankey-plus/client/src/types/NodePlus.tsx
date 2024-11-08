@@ -138,9 +138,13 @@ export abstract class Class_NodeElementPlus
 
   public override _draw() {
     super._draw()
-    this._drawNodeLabelBg()
     this._drawIllustration()
     this._drawFO()
+  }
+
+  public override _drawNameLabel() {
+    super._drawNameLabel()
+    this._drawNodeLabelBg()
   }
 
   /**
@@ -510,11 +514,8 @@ export abstract class Class_NodeElementPlus
 
     // Draw label BG if attr is at true but also if we display label
     if (this.name_label_visible && this.name_label_background) {
-      const box_width = Math.min(
-        this.name_label.length * this.name_label_font_size,
-        this.name_label_box_width)
 
-      const [label_pos_x, label_pos_y, label_anchor] = this.getNameLabelPos()
+      const [label_pos_x, label_pos_y] = this.getNameLabelPos()
 
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
@@ -523,14 +524,17 @@ export abstract class Class_NodeElementPlus
       } else if (this.name_label_vert == 'middle') {
         box_pos_y -= this.name_label_font_size / 2
       }
-      if (label_anchor === 'end') {
-        box_pos_x = box_pos_x - box_width
+      const DA_scale = this.drawing_area.getZoomScale()
+      const element_BBox = (this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect() ?? { x: 0, y: 0, height: 0, width: 0 }
+      const box_height = element_BBox.height / DA_scale
+      const box_width = element_BBox.width / DA_scale
+
+      if (this.name_label_horiz == 'left') {
+        box_pos_x -= box_width
+      } else if (this.name_label_horiz == 'middle') {
+        box_pos_x -= box_width / 2
       }
-      else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width / 2
-      }
-      const element_BBox=(this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect()??{x:0,y:0,height:0,width:0}
-      const box_height = element_BBox.height/this.drawing_area.getZoomScale()
+
       this.d3_selection?.insert('g', '.name_label_text')
         .attr('class', 'node_label_bg')
         .append('rect')
@@ -692,13 +696,11 @@ export class Class_NodeAttributePlus extends Class_NodeAttribute {
   public fromJSON(json_local_object: Type_JSON) {
     super.fromJSON(json_local_object)
     if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
-
   }
 
   public copyFrom(element: Class_NodeAttributePlus) {
     super.copyFrom(element)
     this._name_label_background = element._name_label_background
-
   }
 
   // PROTECTED METHODS ==================================================================
@@ -729,6 +731,26 @@ export class Class_NodeStylePlus extends Class_NodeStyle {
     super(id, name, is_deletable)
     // Update new attributes
     this._name_label_background = default_label_background
+  }
+
+
+  // PUBLIC METHODS ==================================================================
+
+  public toJSON() {
+    const json_object = super.toJSON()
+    if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
+
+    return json_object
+  }
+
+  public fromJSON(json_local_object: Type_JSON) {
+    super.fromJSON(json_local_object)
+    if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
+  }
+
+  public copyFrom(element: Class_NodeStylePlus) {
+    super.copyFrom(element)
+    this._name_label_background = element._name_label_background
   }
 
   // PROTECTED METHODS ==================================================================
