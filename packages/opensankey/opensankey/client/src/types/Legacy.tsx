@@ -1383,6 +1383,7 @@ const convert_nodes: convert_nodesFuncType = (
       .forEach(nt => {
         const leveltagg_tags_ids = nt[1]
         const leveltagg_id = nt[0]
+
         if (leveltagg_tags_ids.includes('0')) {
           // if level is 0 we craate the dimension with antitag set_to_true.
           // in old version the dimensions was not existing as the visibility was
@@ -1390,11 +1391,14 @@ const convert_nodes: convert_nodesFuncType = (
           n.dimensions[leveltagg_id] = {}
           n.dimensions[leveltagg_id].antitag = true
         } else if (n.dimensions[leveltagg_id]) {
+          const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
+          if (all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) == -1) {
+            leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0]-1)
+          }
           // Dimension detection
           if (Object.keys(n.dimensions[leveltagg_id]).includes('parent_name')) {
               n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
               let possible_parent_tag = ''
-              const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
               possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
               n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
           } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
