@@ -795,17 +795,27 @@ export abstract class Class_LinkElement
     } else {
       // Do we apply colors of node source/target tags ?
       const src_taggs_activated = this._source.taggs_list
-        .filter(tagg => tagg.show_legend)
+        .filter(tagg => tagg.show_legend).filter(grp => this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1)
 
       const trgt_taggs_activated = this._target.taggs_list
-        .filter(tagg => tagg.show_legend)
+        .filter(tagg => tagg.show_legend).filter(grp => this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1)
 
-      if (src_taggs_activated.length > 0) {
-        // If source has a tag from a group of which we display the palette
+      const trgt_node_type = this._target.grouped_taggs_dict['Type de noeud']
+      const src_node_type = this._source.grouped_taggs_dict['Type de noeud']
+
+      // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt 
+      if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
         shape_color = this._source.getShapeColorToUse()
-      } else if (trgt_taggs_activated.length>0) {
-        // If target has a tag from a group of which we display the palette
+      } else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
         shape_color = this._target.getShapeColorToUse()
+      } else {
+        if (trgt_taggs_activated.length > 0) {
+          // If target has a tag from a group of which we display the palette
+          shape_color = this._target.getShapeColorToUse()
+        } else if (src_taggs_activated.length > 0) {
+          // If source has a tag from a group of which we display the palette
+          shape_color = this._source.getShapeColorToUse()
+        }
       }
     }
     return shape_color
@@ -2298,7 +2308,7 @@ export abstract class Class_LinkElement
     let data_value = this.data_value
     let text_value = '-'
     // Create data label
-    if (data_value!==null) {
+    if (data_value !== null) {
       // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
       if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
         data_value /= this.value_label_unit_factor
@@ -4207,7 +4217,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
       // Remove reference of self in related tags
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
       this._flux_tags = []
-      this._taggs_dict={}
+      this._taggs_dict = {}
     }
   }
 
