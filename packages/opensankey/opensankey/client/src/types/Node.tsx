@@ -279,17 +279,23 @@ export abstract class Class_NodeElement
       })
   }
 
-  public copyTagsReferencingFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyTagsReferencingFrom(
+    node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    matching_tagg:{[_:string]:string},
+    matching_tags:{ [_: string]: { [_: string]: string } }
+  ) {
     // Copy tags ------------------------------------------------------------------------
     // Clear all tags
     this.tags_list
       .forEach(tag => this.removeTag(tag))
     // Add missing tags
     node_to_copy.tags_list
-      .filter(tag => tag.group.id in this.sankey.node_taggs_dict)
-      .filter(tag => tag.id in this.sankey.node_taggs_dict[tag.group.id].tags_dict)
+      .filter(tag => (matching_tagg[tag.group.id]??tag.group.id) in this.sankey.node_taggs_dict)
+      .filter(tag => tag.id in this.sankey.node_taggs_dict[matching_tagg[tag.group.id]??tag.group.id].tags_dict)
       .forEach(tag => {
-        this.addTag(this.sankey.node_taggs_dict[tag.group.id].tags_dict[tag.id] as Class_Tag)
+        const tag_group_id = matching_tagg[tag.group.id]??tag.group.id
+        const tag_id = matching_tags[tag.group.id] ? matching_tags[tag.group.id][tag.id]??tag.id : tag.id
+        this.addTag(this.sankey.node_taggs_dict[tag_group_id].tags_dict[tag_id] as Class_Tag)
       })
   }
 
