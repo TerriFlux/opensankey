@@ -967,6 +967,13 @@ class SankeyToJson(object):
                             break
                         else:
                             upper_tag = None
+                    tags_names = [tag.name for tag in tags]
+
+                    if ANTI_TAGS_NAME in tags_names:
+                        dimension = {}
+                        dimension['antitag'] = ANTI_TAGS_NAME in tags_names
+                        node_json['dimensions'][tagg.name] = dimension
+                        continue
                     # We found an upper tag
                     if upper_tag is not None:
                         # Try to find parent nodes that have given upper tag
@@ -980,12 +987,11 @@ class SankeyToJson(object):
                                 # I do a sort here to be sure that we always have the same id
                                 # if multiple parent nodes are found
                                 dimension = {}
-                                tags_names = [tag.name for tag in tags]
+
                                 parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
                                 dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
                                 dimension['children_tags'] = tags_names
                                 dimension['parent_tag'] = upper_tag.name
-                                dimension['antitag'] = ANTI_TAGS_NAME in tags_names
                                 node_json['dimensions'][tagg.name] = dimension
                                 # Break the loop
                                 break
