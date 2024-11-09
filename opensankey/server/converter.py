@@ -992,7 +992,6 @@ class SankeyToJson(object):
                                 dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
                                 dimension['children_tags'] = tags_names
                                 dimension['parent_tag'] = upper_tag.name
-                                #dimension['antitag'] = ANTI_TAGS_NAME in tags_names
                                 node_json['dimensions'][tagg.name] = dimension
                                 # Break the loop
                                 break
