@@ -1146,6 +1146,7 @@ export abstract class Class_NodeElement
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
         .forEach(_ => {
+          const original_tagg_id = _
           const tagg_id = matching_taggs_id[_] ?? _
           const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, _)
           if (dimension_as_json) {
@@ -1178,12 +1179,12 @@ export abstract class Class_NodeElement
                   if (children_tags_ids && parent_tag_id) {
                     children_tags = children_tags_ids
                       .map(_ => {
-                        const child_tag_id = matching_tags_id[tagg_id][_] ?? _
+                        const child_tag_id = matching_tags_id[original_tagg_id][_] ?? _
                         if (tagg.tags_dict[child_tag_id] === undefined)
                           tagg.addTag(child_tag_id, child_tag_id)
                         return tagg.tags_dict[child_tag_id]
                       })
-                    parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id)]
+                    parent_tag = tagg.tags_dict[(matching_tags_id[original_tagg_id][parent_tag_id] ?? parent_tag_id)]
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
@@ -2432,12 +2433,12 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private addTagToGroupTagDict(tag: Class_Tag) {
-    const grp_name = tag.group.name
-    if (grp_name in this._taggs_dict) {
-      if (!(this._taggs_dict[tag.group.name].includes(tag)))
-        this._taggs_dict[tag.group.name].push(tag)
+    const grp_id = tag.group.id
+    if (grp_id in this._taggs_dict) {
+      if (!(this._taggs_dict[tag.group.id].includes(tag)))
+        this._taggs_dict[tag.group.id].push(tag)
     } else {
-      this._taggs_dict[tag.group.name] = [tag]
+      this._taggs_dict[tag.group.id] = [tag]
     }
   }
 
@@ -2449,10 +2450,10 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private removeTagToGroupTagDict(tag: Class_Tag) {
-    const grp_name = tag.group.name
-    if (grp_name in this._taggs_dict) {
-      const idx = this._taggs_dict[grp_name].indexOf(tag)
-      this._taggs_dict[grp_name].splice(idx, 1)
+    const grp_id = tag.group.id
+    if (grp_id in this._taggs_dict) {
+      const idx = this._taggs_dict[grp_id].indexOf(tag)
+      this._taggs_dict[grp_id].splice(idx, 1)
     }
   }
 
