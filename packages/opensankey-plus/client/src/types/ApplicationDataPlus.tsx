@@ -401,7 +401,7 @@ export abstract class Class_ApplicationDataPlus
         // Hide previous diplayed sankey
         this._drawing_area.sankey.setInvisible()
         // Keep current mode in memory
-        const was_mode_edition = this._drawing_area.isInEditionMode()
+        //const was_mode_edition = this._drawing_area.isInEditionMode()
         // Purge selections to avoid modifying unvisible view
         this._drawing_area.purgeSelection()
         // Undraw prev sankey
@@ -427,7 +427,7 @@ export abstract class Class_ApplicationDataPlus
         this._drawing_area.reset()
         this.drawing_area.areaAutoFit()
         // Set view mode_edition to previous value
-        this._drawing_area.setToModeEdition(was_mode_edition)
+        this._drawing_area.setToModeEdition(false)
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
