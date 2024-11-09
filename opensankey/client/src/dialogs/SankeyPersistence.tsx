@@ -551,6 +551,7 @@ export const UploadExemple: FType_UploadExemple = (
       }
     })
   })
+  new_data.drawing_area.setToModeEdition(false)
 }
 
 
