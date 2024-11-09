@@ -306,6 +306,7 @@ export class Class_ContainerElement
     this._image_src = _._image_src
     this._label_width = _._label_width
     this._label_height = _._label_height
+    this._display.position = _._display.position
   }
 
   /**
