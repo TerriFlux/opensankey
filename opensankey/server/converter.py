@@ -887,7 +887,7 @@ class SankeyToJson(object):
                 tags = node.get_tags_from_taggroup(tagg)
                 if tags is not None:
                     # Levels taggs are applied instead of primary
-                    node_json['dimensions']['Primaire'] = {}
+                    # node_json['dimensions']['Primaire'] = {}
                     # Get the upper level tag if it exists :
                     # ie if tag = 2, upper_tag = 1
                     # ie if tags = 3:4, upper_tag = 2

@@ -254,12 +254,12 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
             })
             val.value = +displayed_value
           })
-          const scale = d3.scaleLinear()
-            .domain([0, data.user_scale])
-            .range([0, 100])
-          if (scale(+displayed_value) > 500) {
-            data.user_scale = +displayed_value
-          }
+          // const scale = d3.scaleLinear()
+          //   .domain([0, data.user_scale])
+          //   .range([0, 100])
+          // if (scale(+displayed_value) > 500) {
+          //   data.user_scale = +displayed_value
+          // }
         }
         else if(displayed_value=='') {
           let val = Object(multi_selected_links.current[0].value)
