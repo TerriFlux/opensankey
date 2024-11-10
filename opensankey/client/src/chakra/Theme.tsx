@@ -433,10 +433,10 @@ export const opensankey_theme = extendTheme({
     menutop_layout_style: {
       display: 'grid',
       gridColumnGap: '0.25rem',
-      height: '6rem',
+      height: 'max-content',
       width: 'auto',
       padding: '0',
-      margin: '0',
+      margin: '0px 3px 0px 3px',
       alignItems: 'center',
       background: 'gray.50',
       color: 'gray.600'

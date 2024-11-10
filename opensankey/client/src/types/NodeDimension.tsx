@@ -37,10 +37,6 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   private _parent_level_tag: Class_AbstractLevelTag
   private _children_level_tags: Class_AbstractLevelTag[]
 
-  // Dimension selected
-  private _show_parent: boolean = false
-  private _show_children: boolean = false
-
   /**
    * True if element is currently on a deletion process
    * Avoid cross calls of delete() method
@@ -124,6 +120,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._parent.removeDimensionAsParent(this)
       this._children
         .forEach(_ => _.removeDimensionAsChild(this))
+      this._children
+        .forEach(_ => this.removeNodeFromChildren(_))        
       this._children = []
       // Remove cross references with leveltags
       this._parent_level_tag.removeParentLevel(this)
@@ -227,23 +225,6 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     }
   }
 
-  public forceShowParent() {
-    this._show_parent = true
-    this._show_children = false
-    this.drawElements()
-  }
-
-  public forceShowChildren() {
-    this._show_parent = false
-    this._show_children = true
-    this.drawElements()
-  }
-
-  public showFromLevelTags() {
-    this._show_parent = false
-    this._show_children = false
-    this.drawElements()
-  }
 
   // PRIVATE METHODS ====================================================================
   private drawElements() {
@@ -284,18 +265,12 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   public get children() { return this._children }
 
   public get show_parent() {
-    return (
-      (!this._show_children) &&
-      ((this._show_parent) || (this.parent_level_tag.is_selected))
-    )
+    return this.parent_level_tag.is_selected
   }
   public get show_children() {
     let ok_children_level_tags = false
     this.children_level_tags
       .forEach(tag => ok_children_level_tags = (ok_children_level_tags || tag.is_selected))
-    return (
-      (!this._show_parent) &&
-      ((this._show_children) || (ok_children_level_tags))
-    )
+    return ok_children_level_tags
   }
 }

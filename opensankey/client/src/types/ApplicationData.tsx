@@ -101,7 +101,7 @@ export abstract class Class_ApplicationData
    */
   protected _logo: string // path to logo
 
-  protected _drawtimeout: NodeJS.Timeout | null = null 
+  protected _drawtimeout: NodeJS.Timeout | null = null
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -224,7 +224,7 @@ export abstract class Class_ApplicationData
     this.menu_configuration.updateAllMenuComponents()
     this.drawing_area.bypass_timeout = false
     this._drawtimeout = setTimeout(
-      () => {this._drawing_area.drawElements();this._drawing_area.areaAutoFit()},
+      () => {this._drawing_area.drawElements();this._drawing_area.checkAndUpdateAreaSize();this._drawing_area.areaAutoFit()},
       10
     )
   }

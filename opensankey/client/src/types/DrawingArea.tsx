@@ -284,6 +284,14 @@ export abstract class Class_DrawingArea
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
+
+    public getZoomScale(){
+      const tmp =this.d3_selection_zoom_area?.node()
+      if(tmp && tmp !== null)
+        return d3.zoomTransform(tmp).k
+      else
+        return 1
+    }
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -393,6 +401,9 @@ export abstract class Class_DrawingArea
 
     // Added events listeners
     this.setEventsListeners()
+
+    // Unset saving indicator
+    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
@@ -812,12 +823,13 @@ export abstract class Class_DrawingArea
   public areaFitHorizontally() {
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
-      this.zoomListener.scaleTo(
-        this.d3_selection_zoom_area,
-        this.window_fitting_width / this.width)
+      const k = this.window_fitting_width / this.width
+      const x0 = this._fit_margin/2
+      const y0 = Math.max(this._fit_margin/2, (this.window_fitting_height - this.height*k)/2) + this.getNavBarHeight()
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [0, this.getNavBarHeight()])
+        [x0, y0])
     }
   }
 
@@ -831,10 +843,13 @@ export abstract class Class_DrawingArea
   public areaFitVertically() {
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, this.window_fitting_height / this.height)
+      const k = this.window_fitting_height / this.height
+      const x0 = Math.max(this._fit_margin/2, (this.window_fitting_width - k*this.width)/2)
+      const y0 = this._fit_margin/2 + this.getNavBarHeight()
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [0, this.getNavBarHeight()])
+        [x0, y0])
     }
   }
 
@@ -1515,7 +1530,6 @@ export abstract class Class_DrawingArea
     redraw: boolean = true,
     match_and_update: boolean = true,
   ) {
-    // this._draw_timeout=1000
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     // Only legacy convert old sankey
     if (
@@ -1540,12 +1554,10 @@ export abstract class Class_DrawingArea
     this._legend.fromJSON(json_object)
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
-
     if (redraw) {
       // Draw
       this.reset()
     }
-    // this._draw_timeout = 50
   }
 
   /**
@@ -1639,7 +1651,7 @@ export abstract class Class_DrawingArea
 
   /**
    * Function that fit DA in screen, it determine if it have to fit it vertically or horizontally by processing ratio
-   * 
+   *
    * Function generally use at opening of file to automatically fit sankey on screen
    *
    * @memberof Class_DrawingArea

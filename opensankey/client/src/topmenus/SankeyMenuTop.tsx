@@ -1133,7 +1133,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
-  let menutop_grid_template = 'minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
+  let menutop_grid_template = 'minmax(7vw, 150px) minmax(51rem, 70vw) auto auto auto'
   if (new_data.is_static) {
     menutop_grid_template = '100px 30fr auto ' + data_rem + ' ' + unit_rem
   }
@@ -1210,14 +1210,15 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             <Box
               alignSelf='center'
               justifySelf='center'
-              display='block'
+              display='inline-grid'
               height='100%'
             >
               {
                 !new_data.is_static ?
                   <Image
                     height='80%'
-                    margin='5% 0'
+                    justifySelf='center'
+                    alignSelf='center'
                     src={logo}
                   /> :
                   <Image
@@ -1260,6 +1261,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
+            width='min-content'
           >
             {DDDT}
           </Box>
@@ -1267,9 +1269,9 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
+            width='min-content'
           >
             {content_menu_unity}
-
           </Box>
 
           <Box
@@ -1279,6 +1281,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             display='grid'
             gridTemplateColumns='1fr 1fr'
             gridColumnGap='0.25rem'
+            width='min-content'
           >
             {constent_additional_nav_item}
           </Box>
@@ -1502,25 +1505,26 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
   new_data
 }) => {
   const last_save = localStorage.getItem('last_save')
-  const has_save_in_cache = last_save !== undefined && last_save !== null
+  // const has_save_in_cache = (last_save !== undefined) && (last_save !== null)
   const { t } = new_data
 
-  const [forceUpdate, setForceUpdate] = useState(true)
-  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => { new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = b; setForceUpdate(b) }
-  new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = forceUpdate
-  let indicator_saved_data = <></>
-
-  if (has_save_in_cache) {
-    const color_icon = forceUpdate ? 'tertiaire.3' : 'tertiaire.1'
-    indicator_saved_data = <Box
-      color={color_icon}
-    >
-      <FontAwesomeIcon
-        style={{ 'height': '0.75em', 'width': '0.75rem' }}
-        icon={forceUpdate ? faCheck : faExclamation}
-      />
-    </Box>
+  const [save_boolean, setSaveBoolean] = useState(true)
+  new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
+    new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = b;
+    setSaveBoolean(b)
   }
+  new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = save_boolean
+
+  const ok_saved = save_boolean
+  const color_icon = ok_saved ? 'tertiaire.3' : 'tertiaire.1'
+  const indicator_saved_data = <Box
+    color={color_icon}
+  >
+    <FontAwesomeIcon
+      style={{ 'height': '0.75em', 'width': '0.75rem' }}
+      icon={(ok_saved) ? faCheck : faExclamation}
+    />
+  </Box>
 
   return <OSTooltip
     placement='bottom'

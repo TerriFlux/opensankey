@@ -542,6 +542,11 @@ export const ApplyLayoutDialog : FunctionComponent<FCType_ApplyLayoutDialog> = (
                   if ( node_styles_dict['NodeProductStyle'] ) {
                     node_styles_dict['NodeProductStyle'].position.dy = +evt
                   }
+                // value={new_data.drawing_area.vertical_spacing}
+                // onChange={evt => {
+                //   new_data.drawing_area.vertical_spacing = +evt
+                //   setForceUpdate(!forceUpdate)
+                //}
                 }}>
                 <NumberInputField/>
                 <NumberInputStepper>
@@ -658,11 +663,10 @@ export const ApplyLayoutDialog : FunctionComponent<FCType_ApplyLayoutDialog> = (
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  applicationData.menu_configuration.function_on_wait.current=()=>{
-                    applicationData.drawing_area.computeAutoSankey(false)
-                    //set_data({ ...data })
+                  new_data.menu_configuration.function_on_wait.current=()=>{
+                    new_data.drawing_area.computeAutoSankey(false)
                   }
-                  //applicationData.menu_configuration.ref_lauchToast.current()
+                  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Nodes positions computed',loading:'Computing nodes position'})
 
                 }}>
                 {t('MEP.PA')}
