@@ -2209,14 +2209,14 @@ export const format_link_value: format_link_valueFType = (
   the_link_value, 
   t
 ) => {
+  const unit_factor = +ReturnValueLink(data,d,'label_unit_factor')
+  if (unit_factor) {
+    the_link_value = +the_link_value/unit_factor
+  }
   const nb_sign = (ReturnValueLink(data, d, 'scientific_precision') as number)
   if (nb_sign > 0) {
     // 12345.67 avec nb_sign = 4 devient 12340
     the_link_value = parseFloat(parseFloat((the_link_value as string)).toPrecision(nb_sign))
-  }
-  const unit_factor = +ReturnValueLink(data,d,'label_unit_factor')
-  if (unit_factor) {
-    the_link_value = +the_link_value/unit_factor
   }
   if ((ReturnValueLink(data, d, 'to_precision'))) {
     // 12345.67 avec nb_sign = 4 devient 1,234*e+04

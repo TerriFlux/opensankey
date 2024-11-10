@@ -1237,6 +1237,7 @@ export const convert_links:convert_linksFuncType = (
     //     AssignLinkLocalAttribute(l,'orientation','hv')
     //   }
     // }
+  
     if ('link_reverse' in l) {
       delete l_convert.link_reverse
     }
@@ -1245,6 +1246,14 @@ export const convert_links:convert_linksFuncType = (
       l_convert.natural_unit = l_convert.display_unit
       delete l_convert.display_unit
     }
+
+    if ('natural_unit' in l_convert) {
+      l.local!.label_unit_visible = true
+      l.local!.label_unit = l_convert.natural_unit
+      delete l_convert.display_unit
+      l.local!.label_unit_factor = l_convert.conv![1]
+    }
+
     if (('agregated_data_value' in l_convert)) {
       l_convert.data_value = l_convert.agregated_data_value
       delete l_convert.agregated_data_value
