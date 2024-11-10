@@ -363,18 +363,24 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   new_data.fromJSON(data_as_json)
   // Apply extracted layout if present
   if (data_as_json['layout']) {
-    new_data.drawing_area.fromJSON(
-      data_as_json['layout'] as Type_JSON,
-      true,
-      true
-    )
+    const layout = data_as_json['layout'] as Type_JSON
+    const tmp_DA = new_data.createNewDrawingArea()
+    tmp_DA.fromJSON(layout, false)
+    new_data.menu_configuration.function_on_wait.current = () => {
+      new_data.drawing_area.updateFrom(
+        tmp_DA,
+        ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+      )
+      new_data.drawing_area.areaAutoFit()
+    }
+    new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
+  } else {
+    new_data.menu_configuration.function_on_wait.current = () => {
+      new_data.drawing_area.computeAutoSankey(true)
+      new_data.drawing_area.areaAutoFit()
+    }
+    new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   }
-
-  new_data.menu_configuration.function_on_wait.current = () => {
-    new_data.drawing_area.computeAutoSankey(false)
-    new_data.drawing_area.areaAutoFit()
-  }
-  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   // TODO adjust sankey zone
 }
 
@@ -545,6 +551,7 @@ export const UploadExemple: FType_UploadExemple = (
       }
     })
   })
+  new_data.drawing_area.setToModeEdition(false)
 }
 
 

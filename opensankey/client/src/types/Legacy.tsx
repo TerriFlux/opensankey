@@ -37,7 +37,8 @@ import {
   SetNodeStyleToTypeNodeFuncType,
   ConvertSankeyLink,
   ConvertSankeyNode,
-  ConvertSankeyValue
+  ConvertSankeyValue,
+  TagsCatalog
 } from './LegacyType'
 
 const default_element_color = '#a9a9a9'
@@ -241,6 +242,17 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   // Convert name variable for data version>0.9
   data_to_convert.filter_link_value = data_to_convert.display_style.filter
   data_to_convert.filter_label = data_to_convert.display_style.filter_label
+
+  // If data doesn't have var mask legend but show color palette of some grp tag then show legend
+  if(data_to_convert.mask_legend===undefined){
+    const super_grp_tag={...data_to_convert.nodeTags, ...data_to_convert.fluxTags, ...data_to_convert.dataTags} as TagsCatalog
+    if(Object.values(super_grp_tag).filter(grp=>grp.show_legend).length>0){
+      data_to_convert.mask_legend=false
+    }
+  } else {
+    data_to_convert.mask_legend = !data_to_convert.mask_legend
+  }
+
   clean_data_local(data_to_convert)
 }
 
@@ -1134,7 +1146,7 @@ const convert_nodes: convert_nodesFuncType = (
 
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
-
+  const list_links=Object.values(data.links)
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
 
@@ -1192,7 +1204,7 @@ const convert_nodes: convert_nodesFuncType = (
       n.local.label_horiz_valeur = n_depreciated.display_style?.label_horiz_valeur
       n.local.label_vert_valeur = n_depreciated.display_style?.label_vert_valeur
 
-      n.local.label_box_width==0?n.local.label_box_width=150:n.local.label_box_width
+      n.local.label_box_width == 0 ? n.local.label_box_width = 150 : n.local.label_box_width
 
 
       delete n_depreciated.display_style
@@ -1364,43 +1376,58 @@ const convert_nodes: convert_nodesFuncType = (
 
     data.nodes[n.idNode] = n
 
-
+    // ================================================
     // Convert dimension for application version >= 0.9
-    Object.entries(n.tags).filter(nt => nt[0] in data_to_convert.levelTags).forEach(nt => {
-      const dim_level = nt[1]
-      if (n.dimensions[nt[0]] /*&& Object.keys(n.dimensions[nt[0]]).length > 0*/) {
-        if (dim_level.length == 1) {
-          // If node has only 1 tag for this levelTag then save it in level
-          n.dimensions[nt[0]].level = Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) + 1
-          if (n.dimensions[nt[0]].level == 0 && n.dimensions[nt[0]].parent_name ==undefined) {
-            const sibling = data_to_convert.levelTags[nt[0]].siblings[0]
-            if (n.dimensions[sibling] ) {
-              n.dimensions[nt[0]].parent_name = n.dimensions[sibling].parent_name
+    Object.entries(n.tags)
+      .filter(nt => nt[0] in data_to_convert.levelTags)
+      .forEach(nt => {
+        const leveltagg_tags_ids = nt[1]
+        const leveltagg_id = nt[0]
+
+        if (leveltagg_tags_ids.includes('0')) {
+          // if level is 0 we craate the dimension with antitag set_to_true.
+          // in old version the dimensions was not existing as the visibility was
+          // handled with the tag mechanism
+          n.dimensions[leveltagg_id] = {}
+          n.dimensions[leveltagg_id].antitag = true
+        } else if (n.dimensions[leveltagg_id]) {
+          const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
+          if (all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) == -1) {
+            leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0]-1)
+          }
+          // Dimension detection
+          if (Object.keys(n.dimensions[leveltagg_id]).includes('parent_name')) {
+              n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
+              let possible_parent_tag = ''
+              possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
+              n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
+          } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
+            let parent_tag : number | undefined
+            if ( data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level) {
+              parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
+            } else if (data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags) {
+              parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
+            }
+            if (parent_tag) {
+              n.dimensions[leveltagg_id] = {
+                parent_tag : String(parent_tag),
+                parent_name : n.dimensions['Primaire'].parent_name,
+                children_tags: [String(+parent_tag+1)]//n.tags[parent_tag]
+              }
             }
           }
-        } else {
-          // If node has only mutiple tags for this levelTag then save it's parent_tag & all his child_tag
-          n.dimensions[nt[0]].children_tags = dim_level
-          let possible_parent = ''
-          possible_parent = Object.keys(data_to_convert.levelTags[nt[0]].tags)[Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(dim_level[0]) - 1]
-          n.dimensions[nt[0]].parent_tag = possible_parent
         }
-
-      }
-      // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
-
-      // const dim_level_list=nt[1]
-      // dim_level_list.forEach(node_dim=>{
-      //   n.dimensions[nt[0]].level=Object.keys(data_to_convert.levelTags[nt[0]].tags).indexOf(node_dim)+1
-      // })
-      // if(n.dimensions[nt[0]]){
-      //   n.dimensions[nt[0].level=Object.keys(data_to_convert.levelTags[nt[0]]).indexOf(dim_level)+1]
-      // }
-
-      delete n.tags[nt[0]]
-    });
-    // Add links_order to node by combining input/outputs id (for version>=0.9) 
-    (n as Type_JSON).links_order = n.inputLinksId.concat(n.outputLinksId)
+        // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
+        delete n.tags[leveltagg_id]
+      });
+    // Add links_order to node by combining input/outputs id (for version>=0.9)
+    const n_tmp=(n as Type_JSON)
+    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
+    
+    // Add in links_order links not in links_order but that reference this node
+    list_links
+      .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
+      .forEach(l=>(n_tmp.links_order as string[]).push(l.idLink))
 
   }
 
@@ -1759,7 +1786,7 @@ const convert_links: convert_linksFuncType = (
       l.local.right_horiz_shift = 0.95;
       // Add variable in legacy JSOn
       (l.local as Type_JSON).starting_tangeant = 0.05; // special assignement for attr not present in legacy but usefull in current Class_link
-      (l.local as Type_JSON).ending_tangeant = 0.05 // special assignement for attr not present in legacy but usefull in current Class_link    
+      (l.local as Type_JSON).ending_tangeant = 0.05 // special assignement for attr not present in legacy but usefull in current Class_link
 
     }
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {

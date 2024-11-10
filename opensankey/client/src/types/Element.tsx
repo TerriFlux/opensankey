@@ -157,9 +157,12 @@ export abstract class Class_ProtoElement
     menu_config: Class_MenuConfig,
     svg_group: string,
   ) {
+    // Set values
     this._id = id
     this._svg_group = svg_group
     this._menu_config = menu_config
+    // Element created -> set save indicator
+    this._menu_config.ref_to_save_in_cache_indicator.current(false)
   }
 
 
@@ -178,6 +181,8 @@ export abstract class Class_ProtoElement
       this.unDraw()
       // Abstract method for cleaning relations between elements
       this.cleanForDeletion()
+      // Element cleaned -> set save indicator
+      this._menu_config.ref_to_save_in_cache_indicator.current(false)
     }
   }
 
