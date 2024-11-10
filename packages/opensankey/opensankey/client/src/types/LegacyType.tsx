@@ -73,17 +73,18 @@ export type SankeyNode = {
     [_: string]: {
       parent_name?: string,
       level?: number,
-      children_tags?:string[],
-      parent_tag?:string
+      children_tags?: string[],
+      parent_tag?: string,
+      antitag?: boolean
     }
-  },  local?: SankeyNodeAttrLocal,  colorParameter: string,
+  }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
   // geometry
   position: 'absolute' | 'relative',
   x: number,
   y: number,
   x_label?: number,
-  y_label?: number,  tooltip_text?: string,
+  y_label?: number, tooltip_text?: string,
   // topology
   inputLinksId: string[],
   outputLinksId: string[],
@@ -156,7 +157,7 @@ export type SankeyLinkStyle = {
   label_position: string,
   orthogonal_label_position: string,
   label_on_path: boolean,
-  label_pos_auto: boolean,  label_visible: boolean,
+  label_pos_auto: boolean, label_visible: boolean,
   label_font_size: number,
   text_color: string,
   to_precision: boolean,
@@ -181,7 +182,7 @@ export type SankeyLink = {
   y_label?: number,
   drag_label_offset?: number
   //style
-  style: string,  local?: SankeyLinkAttrLocal
+  style: string, local?: SankeyLinkAttrLocal
 }
 
 export type TagsGroup = {
@@ -201,7 +202,7 @@ export type TagsGroup = {
   siblings: string[]
 }
 
-type TagsCatalog = { [_: string]: TagsGroup }
+export type TagsCatalog = { [_: string]: TagsGroup }
 
 //-------------------------
 
@@ -338,7 +339,8 @@ export interface ConvertSankeyNode {
     label_horiz_valeur: string,
     value_font_size: number,
     label_box_width: number,
-    label_color: boolean,  }
+    label_color: boolean,
+  }
 }
 
 export interface ConvertSankeyLink {
@@ -410,8 +412,8 @@ export interface ConvertSankeyData {
   show_structure: boolean | string
   show_data?: boolean
   view: { id: string, view_data: object, nom: string, details: string }[]
-  filter_link_value:number,
-  filter_label:number
+  filter_link_value: number,
+  filter_label: number
 }
 
 export type ConvertDataLegacyFuncType = (
