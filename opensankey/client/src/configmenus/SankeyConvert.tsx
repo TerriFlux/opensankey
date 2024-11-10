@@ -1251,7 +1251,7 @@ export const convert_links:convert_linksFuncType = (
       l.local!.label_unit_visible = true
       l.local!.label_unit = l_convert.natural_unit
       delete l_convert.display_unit
-      l.local!.label_unit_factor = l_convert.conv![1]
+      l.local!.label_unit_factor = 1/l_convert.conv![1]
     }
 
     if (('agregated_data_value' in l_convert)) {
