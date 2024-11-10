@@ -142,8 +142,6 @@ const ExempleItem = (
           key={index}
           onClick={() => {
       // Set app in selection mode
-            if (new_data.drawing_area.isInEditionMode())
-              new_data.drawing_area.switchMode()
             new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
