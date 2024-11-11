@@ -1244,7 +1244,7 @@ export abstract class Class_NodeElement
    * @return {*}
    * @memberof Class_Node
    */
-  public applyPosition() {
+  protected _applyPosition() {
     if (this.d3_selection !== null) {
       // Default positions
       let x = this.position_x
@@ -1265,9 +1265,9 @@ export abstract class Class_NodeElement
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          x = source_node.position_x + this.position_relative_dx
-          y = source_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+          this.position_x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
+          this.position_y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
 
         }
         else if (this.hasOutputLinks()) {
@@ -1283,9 +1283,9 @@ export abstract class Class_NodeElement
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          x = target_node.position_x + this.position_relative_dx
-          y = target_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+          this.position_x = target_node.position_x + this.position_relative_dx
+          this.position_y = target_node.position_y + this.position_relative_dy
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         }
       } else if (this.position_type === 'parametric' /*&& !this._drag*/) {
         if (this.position_v>=0) {
@@ -2833,30 +2833,6 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public override get position_x(): number {
-    if (this.position_type === 'relative') {
-      if (this.hasInputLinks()) {
-        // Node is export
-        const input_link = this.getFirstInputLink()
-        // if (!input_link?.display.shape_type.getVisible()) {
-        //   return 'translate(0, 0)'
-        // }
-
-        // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
-        const source_node = input_link!.source
-
-        return source_node.position_x + this._display.position.x
-      }
-      else if (this.hasOutputLinks()) {
-        // Node is import
-        const output_link = this.getFirstOutputLink()
-
-        // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
-        const target_node = output_link!.target
-
-        return target_node.position_x + this._display.position.x
-      }
-      return 0
-    }
     return this._display.position.x
   }
 
@@ -2866,25 +2842,6 @@ export abstract class Class_NodeElement
  * @memberof Class_NodeElement
  */
   public override get position_y(): number {
-    if (this.position_type === 'relative') {
-      if (this.hasInputLinks()) {
-        // Node is export
-        const input_link = this.getFirstInputLink()
-
-        // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
-        const source_node = input_link!.source
-
-        return source_node.position_y + this._display.position.y
-      }
-      else if (this.hasOutputLinks()) {
-        // Node is import
-        const output_link = this.getFirstOutputLink()
-        // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
-        const target_node = output_link!.target
-
-        return target_node.position_y + this._display.position.y
-      }
-    }
     return this._display.position.y
   }
 
