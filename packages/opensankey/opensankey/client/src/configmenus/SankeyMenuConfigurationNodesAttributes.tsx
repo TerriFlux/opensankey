@@ -63,7 +63,13 @@ import {
   default_shape_min_width,
   default_shape_type,
   default_shape_visible,
-  isAttributeOverloaded
+  isAttributeOverloaded,
+  default_dx,
+  default_dy,
+  default_position_type,
+  default_relative_dx,
+  default_relative_dy,
+  isPositionOverloaded
 } from '../types/Node'
 import {
   CustomFaEyeCheckIcon,
@@ -172,6 +178,25 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   const name_label_horiz = (elements[0]?.name_label_horiz ?? default_name_label_horiz)
   const name_label_horiz_shift = (elements[0]?.name_label_horiz_shift ?? default_name_label_horiz_shift)
 
+
+  const position_type = menu_for_style ?
+    ((elements[0] as  Class_NodeStyle)?.position.type ?? default_position_type) :
+    ((elements[0] as Type_GenericNodeElementOS)?.position_type ?? default_position_type)
+    const position_u = !menu_for_style ?
+    ((elements[0] as  Type_GenericNodeElementOS)?.position_u ?? 0) :0
+  const position_dx = menu_for_style ?
+    ((elements[0] as  Class_NodeStyle)?.position.dx ?? default_dx) :
+    ((elements[0] as  Type_GenericNodeElementOS)?.display.position.dx ?? default_dx)
+  const position_dy = menu_for_style ?
+    ((elements[0] as  Class_NodeStyle)?.position.dy ?? default_dy) :
+    ((elements[0] as  Type_GenericNodeElementOS)?.display.position.dy ?? default_dy)
+  const position_relative_dx = menu_for_style ?
+    ((elements[0] as  Class_NodeStyle)?.position.relative_dx ?? default_relative_dx) :
+    ((elements[0] as  Type_GenericNodeElementOS)?.display.position.relative_dx ?? default_relative_dx)
+  const position_relative_dy = menu_for_style ?
+    ((elements[0] as  Class_NodeStyle)?.position.relative_dy ?? default_relative_dy) :
+    ((elements[0] as  Type_GenericNodeElementOS)?.display.position.relative_dy ?? default_relative_dy)
+
   /**
    * Get style name to display for style selector
    * @return {*}
@@ -222,7 +247,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   }
 
   // Node to ConfigMenuNumberInput state variable
-  const number_of_input = 7
+  const number_of_input = 11
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
@@ -234,8 +259,11 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   ref_set_number_inputs[4].current(String(name_label_box_width))
   ref_set_number_inputs[5].current(String(name_label_horiz_shift))
   ref_set_number_inputs[6].current(String(name_label_vert_shift))
-
-
+  ref_set_number_inputs[7].current(String(position_u))
+  ref_set_number_inputs[8].current(String(position_dy))
+  ref_set_number_inputs[9].current(String(position_relative_dx))
+  ref_set_number_inputs[10].current(String(position_relative_dy))
+  
 
   // JSX menu components ---------------------------------------------------------------
 
@@ -557,6 +585,176 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         />
       </Box>
     </OSTooltip>
+    { !menu_for_style && position_type == 'parametric' ? <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+      {t('Noeud.position')}
+    </Box>:<></>}
+
+    {/* Position du noeud */}
+    {/* {menu_for_style ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry')}
+          {((!menu_for_style) &&
+            isPositionOverloaded(selected_nodes,'type')?
+            <>{TooltipValueSurcharge('node_var_',t)}</>:
+            <></>)}
+        </Box>
+        <Box layerStyle='options_3cols' >
+          <Button
+            value="absolute"
+            variant={
+              position_type==='absolute'?
+                'menuconfigpanel_option_button_activated':
+                'menuconfigpanel_option_button'}
+            onClick={() => {
+                elements.forEach(element =>  (element as Class_NodeStyle).position.type = 'absolute')
+                refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {t('Noeud.apparence.geometry_absolute')}
+          </Button>
+
+          <Button
+            variant={
+              position_type==='parametric'?
+                'menuconfigpanel_option_button_activated':
+                'menuconfigpanel_option_button'}
+            onClick={() => {
+                elements.forEach(element =>  (element as Class_NodeStyle).position.type = 'parametric')
+                refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {t('Noeud.apparence.geometry_parametric')}
+          </Button>
+
+          { elements[0].id == 'NodeExportStyle' || elements[0].id == 'NodeImportStyle' ? <Button
+            variant={
+              position_type==='relative'?
+                'menuconfigpanel_option_button_activated':
+                'menuconfigpanel_option_button'
+            }
+            onClick={() => {
+              elements.forEach(element =>  {
+                  (element as Class_NodeStyle).position.type = 'relative'
+                })
+                refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {t('Noeud.apparence.geometry_relative')}
+          </Button> : <></>}
+        </Box>
+      </Box>
+    </OSTooltip>:<></>} */}
+    {/* Ecarts horizontal des noeuds */}
+    {!menu_for_style && position_type == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_u')}
+        </Box>
+
+        <ConfigMenuNumberInput
+          default_value={position_u}
+          ref_to_set_value={ref_set_number_inputs[7]}
+          menu_for_style={menu_for_style}
+          function_on_blur={() => {
+            new_data.drawing_area.computeParametricV()
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          minimum_value={1}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
+    {/* Ecarts horizontal des noeuds
+    {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_dx')}
+        </Box>
+        <ConfigMenuNumberInput
+          data={applicationData.data}
+          parameter_to_modify={parameter_to_modify}
+          selected_parameter={selected_parameter}
+          menu_for_style={menu_for_style}
+          local_var_of_node='dx'
+          function_on_blur={()=>{
+            updateMenuConfigNode()
+            updateLinkAttachedToNodes()
+          }}
+          stepper={true}
+          unitText='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>} */}
+    {/* Ecarts vertical des noeuds */}
+    {menu_for_style && position_type == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_dy')}
+        </Box>
+        <ConfigMenuNumberInput
+          default_value={position_dy}
+          ref_to_set_value={ref_set_number_inputs[8]}
+          menu_for_style={menu_for_style}
+          function_on_blur={val=>{
+             elements.forEach(element => (element as Class_NodeStyle).position.dy = val as number)
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
+    {/* Ecarts vertical des noeuds */}
+    {menu_for_style && position_type == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dx')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_relative_dx')}
+        </Box>
+        <ConfigMenuNumberInput
+          default_value={position_relative_dx}
+          ref_to_set_value={ref_set_number_inputs[9]}
+          menu_for_style={menu_for_style}
+          function_on_blur={()=>{
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
+    {menu_for_style && position_type == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_relative_dy')}
+        </Box>
+        <ConfigMenuNumberInput
+          default_value={position_relative_dy}
+          ref_to_set_value={ref_set_number_inputs[10]}
+          menu_for_style={menu_for_style}
+          function_on_blur={()=>{
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
+    {/* Positionnement vertical automatique
+    <Box as='span' >
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={multi_selected_nodes.current.length > 0 && multi_selected_nodes.current[0].position === 'parametric'}
+        onChange={(evt) => {
+          multi_selected_nodes.current[0].position = evt.target.checked ? 'parametric' : 'absolute'
+          setForceUpdate(!forceUpdate)
+        }}>
+        <OSTooltip label={t('Noeud.apparence.parametric')}>
+        {t('Noeud.apparence.parametric')}
+        </OSTooltip>
+      </Checkbox>
+    </Box> */}
     {additional_menus.advanced_appearence_content}
   </Box>
 
