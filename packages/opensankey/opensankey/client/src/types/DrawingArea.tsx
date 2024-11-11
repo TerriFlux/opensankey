@@ -41,20 +41,17 @@ import { convert_data_legacy } from './Legacy'
 import {
   Class_AbstractDrawingArea,
   Class_AbstractApplicationData,
-  Class_AbstractSankey,
 } from './Abstract'
 import { Class_ProtoElement } from './Element'
-import { Class_LevelTagGroup } from './Tag'
-import { Class_AbstractNodeElement } from './AbstractNode'
 
 // CONSTANTS ****************************************************************************
 
 const initial_show_structure = 'reconciled'
 const default_grid_size = 50
 const default_grid_visible = true
+const default_horizontal_spacing = 200
+const default_vertical_spacing = 50
 const default_scale = 50
-
-type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
 // CLASS DRAWING AREA *******************************************************************
 /**
@@ -214,6 +211,10 @@ export abstract class Class_DrawingArea
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, this._scale])
     .range([0, 100])
+
+  // Positionning
+  private _horizontal_spacing: number = default_horizontal_spacing
+  private _vertical_spacing: number = default_vertical_spacing
 
   // Limitations of link thickness
   private _maximum_flux?: number
@@ -1206,9 +1207,8 @@ export abstract class Class_DrawingArea
     }
 
     // Loop on all index "columns"
-    let h_left_margin = this.sankey.default_node_style.position.dx!
-    let h_right_margin = this.sankey.default_node_style.position.dx!
-
+    let h_left_margin = this._horizontal_spacing
+    let h_right_margin = this._horizontal_spacing
     const height_cumul_per_indexes: number[] = []
     const height_per_nodes_ids: { [node_id: string]: number } = {}
     const node_id_per_hxv_indexes: string[][] = []
@@ -1315,7 +1315,7 @@ export abstract class Class_DrawingArea
 
       // Get horizontal index that need the most of vertical space
       // with vertical spacing between nodes in account
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * (this.sankey.default_node_style.position.dy!)
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * (this.vertical_spacing)
       if (height_cumul_for_index > max_height_cumul) {
         max_height_cumul = height_cumul_for_index
       }
@@ -1330,7 +1330,7 @@ export abstract class Class_DrawingArea
     // Update horizontal and vertical position of nodes
     // compute total height of nodes that belong to the same column,
     // then compute the spaces between them and their positions.
-    const v_margin = this.sankey.default_node_style.position.dy!
+    const v_margin = this.vertical_spacing
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       // Pass if no nodes for this horizontal_index
       // TODO : if it is the case -> something was wrong before
@@ -1340,7 +1340,7 @@ export abstract class Class_DrawingArea
 
       // Loop on horizontal_index node
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = h_left_margin + horizontal_index * this.sankey.default_node_style.position.dx!
+      const h_position_for_index = h_left_margin + horizontal_index * this.horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
       let upper_node_height_and_margin = v_margin_for_index
       if (center_biggest_nodes === true) {
@@ -1385,7 +1385,7 @@ export abstract class Class_DrawingArea
       }
     }
 
-    const possible_witdh = (h_left_margin + max_horizontal_index * this.sankey.default_node_style.position.dx! + h_right_margin)
+    const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
     const possible_height = (v_margin * 2 + max_height_cumul)
 
     this.width = (this.window_fitting_width < possible_witdh) ? possible_witdh : this.window_fitting_width
@@ -1543,7 +1543,9 @@ export abstract class Class_DrawingArea
     this._width = getNumberFromJSON(json_object, 'width', this._width)
     this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
     this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
-    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
+    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
+    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
+    this.scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
     this._scaleValueToPx.domain([0, this._scale])
     this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
@@ -1580,6 +1582,8 @@ export abstract class Class_DrawingArea
     json_object['width'] = this._width
     json_object['grid_visible'] = this._grid_visible
     json_object['grid_square_size'] = this._grid_size
+    json_object['h_space'] = this._horizontal_spacing
+    json_object['v_space'] = this._vertical_spacing
     json_object['user_scale'] = this._scale
     json_object['couleur_fond_sankey'] = this._color
     if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
@@ -2250,6 +2254,12 @@ export abstract class Class_DrawingArea
   // Grid size
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
+
+  // Horizontal spacing
+  public get horizontal_spacing() { return this._horizontal_spacing }
+  public set horizontal_spacing(_: number) { this._horizontal_spacing = _ }
+  public get vertical_spacing() { return this._vertical_spacing }
+  public set vertical_spacing(_: number) { this._vertical_spacing = _ }
 
   public get selection_zone(): Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._selection_zone }
 

@@ -1072,6 +1072,11 @@ export abstract class Class_NodeElement
     if (this._display.position.relative_dx == undefined && json_local_object!=undefined) {
       this._display.position.relative_dx = json_local_object!.relative_dx as number
       this._display.position.relative_dy = json_local_object!.relative_dy as number
+      if (json_local_object!.position != undefined) {
+        this._display.position.type = json_local_object!.position as Type_Position
+      } else {
+        this._display.position.type = this._display.style.position.type
+      }
     }
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -1164,7 +1169,6 @@ export abstract class Class_NodeElement
     }
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
-    const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
@@ -1227,8 +1231,7 @@ export abstract class Class_NodeElement
               }
             }
           }
-        //}
-    })
+        })
     }
   }
 
@@ -1248,7 +1251,7 @@ export abstract class Class_NodeElement
    * @return {*}
    * @memberof Class_Node
    */
-  public applyPosition() {
+  protected _applyPosition() {
     if (this.d3_selection !== null) {
       // Default positions
       let x = this.position_x
@@ -1269,9 +1272,9 @@ export abstract class Class_NodeElement
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          x = source_node.position_x + this.position_relative_dx
-          y = source_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+          this.position_x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
+          this.position_y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
 
         }
         else if (this.hasOutputLinks()) {
@@ -1287,9 +1290,9 @@ export abstract class Class_NodeElement
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          x = target_node.position_x + this.position_relative_dx
-          y = target_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+          this.position_x = target_node.position_x + this.position_relative_dx
+          this.position_y = target_node.position_y + this.position_relative_dy
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         }
       } else if (this.position_type === 'parametric' && !this._drag) {
         if (this.position_v>=0) {
@@ -4318,6 +4321,25 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._value_label_horiz_shift = default_value_label_horiz_shift
     this._value_label_background = false
   }
+
+/**
+   * Assign to node implementation values from json,
+   * Does not assign links -> need to read links from JSON before
+   *
+   * @param {Type_JSON} json_node_object
+   * @memberof Class_NodeElement
+   */
+public fromJSON(
+  json_node_object: Type_JSON,
+  matching_taggs_id: { [_: string]: string } = {},
+  matching_tags_id: { [_: string]: { [_: string]: string } } = {},
+) {
+  super.fromJSON(json_node_object)
+
+  this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+  this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
+  this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
+}
 
   // CLEANING ===========================================================================
 
