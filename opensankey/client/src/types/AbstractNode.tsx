@@ -18,6 +18,8 @@ import {
   Class_AbstractLevelTagGroup
 } from './Abstract'
 import { Class_Element } from './Element'
+import { Class_LevelTagGroup } from './Tag'
+import { Class_NodeDimension } from './NodeDimension'
 import { Class_Tag, Class_TagGroup } from './Tag'
 
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
@@ -56,6 +58,7 @@ export abstract class Class_AbstractNodeElement
   public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
+  public abstract nodeDimensionAsParent(tagGroup:Class_LevelTagGroup) : Class_NodeDimension | null
   public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeInputLink(_: Type_AbstractLinkElement): void

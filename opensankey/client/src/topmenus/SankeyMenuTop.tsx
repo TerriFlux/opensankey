@@ -1399,7 +1399,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
-        new_data={new_data}
+        applicationData={new_data}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={diagramSelector}
       />
