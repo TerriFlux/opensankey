@@ -141,6 +141,7 @@ const ExempleItem = (
         <MenuItem
           key={index}
           onClick={() => {
+      // Set app in selection mode
             new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               launch(path)
