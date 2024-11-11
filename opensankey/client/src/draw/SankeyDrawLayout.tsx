@@ -416,7 +416,8 @@ export const nodeWidth : nodeWidthFType = (
  */
 export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   applicationData,
-  launched_from_process
+  launched_from_process,
+  sort_vertically = true
 ) => {
   const {data}=applicationData
   //data.parametric_mode = true
@@ -623,39 +624,40 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
           node,
           applicationData,
           GetLinkValue)
-        // Coef to verticaly sort nodes - highest coef is upper
-        // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
-        const node_sortcoef = node_height * (0.8 + 0.2/(node.outputLinksId.length + node.inputLinksId.length))
-
-        // Verticaly sort nodes accordingly to their height
-        height_per_nodes_ids[node.idNode] = node_height
-        sortcoef_per_nodes_ids[node.idNode] = node_sortcoef
-        vertical_indexes_per_node_id[node.idNode] = max_vertical_index
-        node.v = max_vertical_index
-        delete node.local!.dy
-        nodes_ids_per_vertical_index.push(node.idNode)
-        if (max_vertical_index > 0) {
-          // Bubble sort algo
-          for (let v_index=max_vertical_index; v_index>0; v_index--) {
-            // Prev node infos
-            const prev_v_index = v_index-1
-            const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
-            const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
-            if (prev_node_sortcoef < node_sortcoef) {
-              // Update referencing for bubble node
-              vertical_indexes_per_node_id[node.idNode] = prev_v_index
-              nodes_ids_per_vertical_index[prev_v_index] = node.idNode
-              //node.v = prev_v_index
-              //node.dy = 0
-              // Update referencing for prev node
-              vertical_indexes_per_node_id[prev_node_id] = v_index
-              nodes_ids_per_vertical_index[v_index] = prev_node_id
-            }
-            else {
-              break
+          vertical_indexes_per_node_id[node.idNode] = max_vertical_index
+          node.v = max_vertical_index
+          // Coef to verticaly sort nodes - highest coef is upper
+          // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
+          const node_sortcoef = node_height * (0.8 + 0.2/(node.outputLinksId.length + node.inputLinksId.length))
+          // Verticaly sort nodes accordingly to their height
+          height_per_nodes_ids[node.idNode] = node_height
+          sortcoef_per_nodes_ids[node.idNode] = node_sortcoef
+          if (node.local) {
+            delete node.local!.dy
+          }
+          nodes_ids_per_vertical_index.push(node.idNode)
+          if (sort_vertically && max_vertical_index > 0) {
+            // Bubble sort algo
+            for (let v_index=max_vertical_index; v_index>0; v_index--) {
+              // Prev node infos
+              const prev_v_index = v_index-1
+              const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
+              const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
+              if (prev_node_sortcoef < node_sortcoef) {
+                // Update referencing for bubble node
+                vertical_indexes_per_node_id[node.idNode] = prev_v_index
+                nodes_ids_per_vertical_index[prev_v_index] = node.idNode
+                //node.v = prev_v_index
+                //node.dy = 0
+                // Update referencing for prev node
+                vertical_indexes_per_node_id[prev_node_id] = v_index
+                nodes_ids_per_vertical_index[v_index] = prev_node_id
+              }
+              else {
+                break
+              }
             }
           }
-        }
         max_vertical_index += 1
 
         // Compute cumulative height for given index
@@ -733,6 +735,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   // compute total height of nodes that belong to the same column,
   // then compute the spaces between them and their positions.
   const v_margin = data.style_node['default'].dy
+  let index_nodes_width = 0
   for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
     // Pass if no nodes for this horizontal_index
     // TODO : if it is the case -> something was wrong before
@@ -742,7 +745,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
 
     // Loop on horizontal_index node
     const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-    const h_position_for_index = h_left_margin + horizontal_index*data.style_node['default'].dx
+    const h_position_for_index = h_left_margin + horizontal_index*data.style_node['default'].dx + index_nodes_width
     const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index])/2
     let upper_node_height_and_margin = v_margin_for_index
     if (center_biggest_nodes === true) {
@@ -767,7 +770,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
       for (let index=last_index; index<node_id_per_hxv_indexes[horizontal_index].length; index+=2) {
         const node_id = node_id_per_hxv_indexes[horizontal_index][index]
         // Node position
-        data.nodes[node_id].x = h_position_for_index
+        data.nodes[node_id].x = h_position_for_index 
         data.nodes[node_id].y = upper_node_height_and_margin
         // Update upper margin for next node
         const node_height = height_per_nodes_ids[node_id]
@@ -775,11 +778,16 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
       }
     }
     else {
+      index_nodes_width = 0
       node_id_per_hxv_indexes[horizontal_index]
         .forEach(node_id => {
           // Node position
           data.nodes[node_id].x = h_position_for_index
           data.nodes[node_id].y = upper_node_height_and_margin
+          const node_width = nodeWidth(data.nodes[node_id],applicationData,GetLinkValue)
+          if (index_nodes_width< nodeWidth(data.nodes[node_id],applicationData,GetLinkValue)) {
+            index_nodes_width = node_width
+          }
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
@@ -790,7 +798,10 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   data.width = h_left_margin + max_horizontal_index * data.style_node['default'].dx + h_right_margin
   data.height = v_margin*2 + max_height_cumul
 
+  data.style_node['default'].position = 'absolute'
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
+  data.style_node['default'].position = 'parametric'
+
   const columns : {[_:number]:SankeyNode[]} = {}
   Object.values(display_nodes).filter(n => NodeDisplayed(data, n) && (!('Type de noeud' in n.tags) ||n.tags['Type de noeud'][0] !== 'echange')).forEach(n=>{
     if (columns[n.u]) {
@@ -1977,9 +1988,13 @@ export const updateLayout: updateLayoutFuncType = (
       if (!layoutNode.local) {
         layoutNode.local = {}
       }
+      const local_aggregation = node.local.local_aggregation
       const differences = getDiff(node.local, layoutNode.local)
       if (differences) {
         differences.forEach((difference) => applyChange(node.local, {}, difference))
+      }
+      if ( local_aggregation) {
+        node.local.local_aggregation = local_aggregation
       }
       node.style = layoutNode.style
     })
@@ -2030,10 +2045,10 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('tagLevel')) {
-    const differences = getDiff(data.levelTags, new_layout.levelTags)
-    if (differences) {
-      differences.forEach((difference) => applyChange(data.levelTags, {}, difference))
-    }
+    // const differences = getDiff(data.levelTags, new_layout.levelTags)
+    // if (differences) {
+    //   differences.forEach((difference) => applyChange(data.levelTags, {}, difference))
+    // }
     // Finds the corresponding tag group by name and apply the "dynamic" attributes
     // activate, show_legend and selected.
     // Object.values(data.levelTags).forEach(nodeTag=>{
@@ -2063,6 +2078,14 @@ export const updateLayout: updateLayoutFuncType = (
     //     }
     //   })
     // })
+    Object.keys(new_layout.levelTags).forEach(tagGroup=>{
+      Object.values(data.nodes).forEach(n=>{
+        if (new_layout.nodes[n.idNode] == undefined ) {
+          return
+        }
+        n.dimensions[tagGroup] = new_layout.nodes[n.idNode].dimensions[tagGroup]
+      })
+    })
   }
 
   if (mode.includes('tagNode')) {
@@ -2094,19 +2117,19 @@ export const updateLayout: updateLayoutFuncType = (
         })
       }
     }
-    Object.keys(new_layout.nodeTags).forEach(tagGroup=>{
-      if (!(tagGroup in data.nodeTags)) {
-        data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
-      }
-      Object.values(data.nodes).forEach(n=>{
-        if (!n.tags[tagGroup]) {
-          n.tags[tagGroup] = []
-        }
-        if (new_layout.nodes[n.idNode]?.tags[tagGroup] ?? false) {
-          n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
-        }
-      })
-    })
+    // Object.keys(new_layout.nodeTags).forEach(tagGroup=>{
+    //   if (!(tagGroup in data.nodeTags)) {
+    //     data.nodeTags[tagGroup] = {...new_layout.nodeTags[tagGroup]}
+    //   }
+    //   Object.values(data.nodes).forEach(n=>{
+    //     if (!n.tags[tagGroup]) {
+    //       n.tags[tagGroup] = []
+    //     }
+    //     if (new_layout.nodes[n.idNode]?.tags[tagGroup] ?? false) {
+    //       n.tags[tagGroup] = [...new Set([...n.tags[tagGroup],...new_layout.nodes[n.idNode].tags[tagGroup]])]
+    //     }
+    //   })
+    // })
 
   }
 
