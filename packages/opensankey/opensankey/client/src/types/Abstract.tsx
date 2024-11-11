@@ -47,6 +47,8 @@ export abstract class Class_AbstractDrawingArea {
   public abstract purgeSelection(): void
   public abstract closeAllMenus(): void
   public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
+
+  public abstract computeParametricV():void
   // Mandatory getters
   public abstract get sankey(): Class_AbstractSankey
   public abstract get legend(): Class_Legend<Type_GenericDrawingArea,Type_GenericSankeyOS>

@@ -808,6 +808,8 @@ export abstract class Class_Sankey
             matching_links_id
           )
         })
+
+    this.sortNodes()
   }
 
   public matchAndModifyJSONIds(
@@ -1450,16 +1452,20 @@ export abstract class Class_Sankey
     return this._nodes
   }
 
-  // public sortNodes() {
-  //   const sorted_nodes = Object.values(this._nodes).sort((n1,n2)=>{
-  //     if (n1.position_v>=0 || n2.position_v>=0) {
-  //       return n1.position_v - n2.position_v
-  //     } else {
-  //       return n2.position_v - n1.position_v
-  //     }
-  //   })
-  //   this._nodes = Object.assign({}, ...sorted_nodes.map((n) => ({[n.id]: n})))
-  // }
+  /**
+   * Sorts nodes from lower v coordinates to higher v
+   * @memberof Class_Sankey
+   */
+  public sortNodes() {
+    const sorted_nodes = Object.values(this._nodes).sort((n1,n2)=>{
+      if (n1.position_v>=0 || n2.position_v>=0) {
+        return n1.position_v - n2.position_v
+      } else {
+        return n2.position_v - n1.position_v
+      }
+    })
+    this._nodes = Object.assign({}, ...sorted_nodes.map((n) => ({[n.id]: n})))  
+  }
 
   /**
    * Get all nodes as a list
