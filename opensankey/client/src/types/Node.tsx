@@ -456,6 +456,9 @@ export abstract class Class_NodeElement
   public isPositionOverloaded(attr: keyof Type_ElementPosition) {
     return this._display.position[attr] !== undefined
   }
+  public resetPositionAttribute(attr: keyof Type_ElementPosition) {
+    delete this._display.position[attr]
+  }
 
   public isEqual(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
 
@@ -956,8 +959,8 @@ export abstract class Class_NodeElement
     json_object['name'] = this._name
     // Fill displaying values
     json_object['position'] = this.position_type
-    json_object['x'] = this._display.position.x
-    json_object['y'] = this._display.position.y
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
     json_object['u'] = this.position_u
     json_object['v'] = this.position_v
     if (this._display.position.dx) json_object['dx'] = this._display.position.dx
@@ -1041,7 +1044,10 @@ export abstract class Class_NodeElement
     super.fromJSON(json_node_object)
     this._name = getStringFromJSON(json_node_object, 'name', this._name)
     // Update displaying values
-    this._display.position.type = getStringFromJSON(json_node_object, 'position', this.position_type) as Type_Position
+    const position_type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+    if (position_type && position_type != this.style.position.type) {
+      this._display.position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+    }
     this._display.position.x = getNumberFromJSON(json_node_object, 'x', this._display.position.x)
     this._display.position.y = getNumberFromJSON(json_node_object, 'y', this._display.position.y)
     this._display.position.u = getNumberFromJSON(json_node_object, 'u', this._display.position.u)
@@ -1059,6 +1065,11 @@ export abstract class Class_NodeElement
     if (this._display.position.relative_dx == undefined && json_local_object!=undefined) {
       this._display.position.relative_dx = json_local_object!.relative_dx as number
       this._display.position.relative_dy = json_local_object!.relative_dy as number
+      if (json_local_object!.position != undefined) {
+        this._display.position.type = json_local_object!.position as Type_Position
+      } else {
+        this._display.position.type = this._display.style.position.type
+      }
     }
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -1229,12 +1240,86 @@ export abstract class Class_NodeElement
 
   /**
    * Apply node position to it shape in d3
-   * @protected
+   * @public
    * @return {*}
    * @memberof Class_Node
    */
-  protected _applyPosition() {
-    super._applyPosition()
+  public applyPosition() {
+    if (this.d3_selection !== null) {
+      // Default positions
+      let x = this.position_x
+      let y = this.position_y
+      // Deal with import / export nodes
+      if (this.position_type === 'relative' /*&& !this._drag*/) {
+        if (this.hasInputLinks()) {
+          // Node is export
+          const input_link = this.getFirstInputLink()
+          // if (!input_link?.display.shape_type.getVisible()) {
+          //   return 'translate(0, 0)'
+          // }
+
+          // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
+          const source_node = input_link!.source
+          // if (!source_node.display.shape_type.getVisible()) {
+          if (!source_node.shape_visible) {
+            this.d3_selection.attr('transform', 'translate(0,0)')
+            return
+          }
+          x = source_node.position_x + this.position_relative_dx
+          y = source_node.position_y + this.position_relative_dy
+          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+
+        }
+        else if (this.hasOutputLinks()) {
+          // Node is import
+          const output_link = this.getFirstOutputLink()
+          // if (!output_link?.display.shape_type.getVisible()) {
+          //   return 'translate(0,0)'
+          // }
+
+          // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
+          const target_node = output_link!.target
+          if (!target_node.shape_visible) {
+            this.d3_selection.attr('transform', 'translate(0,0)')
+            return
+          }
+          x = target_node.position_x + this.position_relative_dx
+          y = target_node.position_y + this.position_relative_dy
+          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+        }
+      } else if (this.position_type === 'parametric' /*&& !this._drag*/) {
+        if (this.position_v>=0) {
+          const same_u = this.sankey.visible_nodes_list.filter(n=>n.position_u === this.position_u)
+          const nodeAbove = same_u[same_u.indexOf(this)-1]
+          if (nodeAbove) {
+            this._display.position.y = nodeAbove.position_y 
+            + nodeAbove.getShapeHeightToUse()
+            + this.position_dy
+          } else {
+            const tmp = this.sankey.nodes_list.filter(n=>n.position_u===this.position_u && this.position_v===0)
+            this._display.position.y = tmp.length > 0 ? tmp[0].position_y : 20
+          }
+          const nodeBelow = same_u[same_u.indexOf(this)+1] as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+          if (nodeBelow) {
+            nodeBelow.applyPosition()
+          }
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')          
+        } else {
+          const nodeBelow = this.sankey.visible_nodes_list[this.sankey.visible_nodes_list.indexOf(this)+1]
+          if (nodeBelow) {
+            this._display.position.y = nodeBelow.position_y 
+            - nodeBelow.getShapeHeightToUse()
+            - this.position_dy
+          } else {
+            const tmp = this.sankey.nodes_list.filter(n=>n.position_u===this.position_u && this.position_v===0)
+            this._display.position.y = tmp.length > 0 ? tmp[0].position_y : 20
+          }
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
+        }
+      } else {
+        this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')        
+      }
+    }
     // Update also position for links
     this.drawLinks()
   }
@@ -4196,6 +4281,25 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._value_label_horiz_shift = default_value_label_horiz_shift
     this._value_label_background = false
   }
+
+/**
+   * Assign to node implementation values from json,
+   * Does not assign links -> need to read links from JSON before
+   *
+   * @param {Type_JSON} json_node_object
+   * @memberof Class_NodeElement
+   */
+public fromJSON(
+  json_node_object: Type_JSON,
+  matching_taggs_id: { [_: string]: string } = {},
+  matching_tags_id: { [_: string]: { [_: string]: string } } = {},
+) {
+  super.fromJSON(json_node_object)
+
+  this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+  this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
+  this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
+}
 
   // CLEANING ===========================================================================
 
