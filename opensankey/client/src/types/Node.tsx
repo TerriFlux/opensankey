@@ -184,6 +184,13 @@ export abstract class Class_NodeElement
   // Ordering for related IO Links
   private _links_order: Type_GenericLinkElement[] = []
 
+  // Set to true when we are in a dragging process
+  private _drag: boolean = false
+
+  // Value of node
+  private _input_data_value: number = 0
+  private _output_data_value: number = 0
+
   // Handles used to move related IO links relativly to eachother
   private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
   private _handle_output_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
@@ -1250,7 +1257,7 @@ export abstract class Class_NodeElement
       let x = this.position_x
       let y = this.position_y
       // Deal with import / export nodes
-      if (this.position_type === 'relative' /*&& !this._drag*/) {
+      if (this.position_type === 'relative' && !this._drag) {
         if (this.hasInputLinks()) {
           // Node is export
           const input_link = this.getFirstInputLink()
@@ -1287,7 +1294,7 @@ export abstract class Class_NodeElement
           this.position_y = target_node.position_y + this.position_relative_dy
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         }
-      } else if (this.position_type === 'parametric' /*&& !this._drag*/) {
+      } else if (this.position_type === 'parametric' && !this._drag) {
         if (this.position_v>=0) {
           const same_u = this.sankey.visible_nodes_list.filter(n=>n.position_u === this.position_u)
           const nodeAbove = same_u[same_u.indexOf(this)-1]
@@ -1384,8 +1391,27 @@ export abstract class Class_NodeElement
   /**
    * Define event when mouse drag element
    * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElement
+   */
+    protected eventMouseDragStart(
+      event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+    ) {
+      // Apply parent behavior first
+      super.eventMouseDrag(event)
+      if (event.sourceEvent.shiftKey) {
+        return
+      }
+      const drawing_area = this.drawing_area
+      drawing_area.addNodeToSelection(this)
+      this._drag = true
+    }
+
+  /**
+   * Define event when mouse drag element
+   * @protected
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElement
    */
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -1398,7 +1424,7 @@ export abstract class Class_NodeElement
 
     if (nodes_selected.length == 0) {
       if (drawing_area.isInSelectionMode()) {
-        this.setPosXY(this._display.position.x + event.dx, this._display.position.y + event.dy)
+        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
         this.drawing_area.checkAndUpdateAreaSize()
       }
     } else if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
@@ -1412,13 +1438,19 @@ export abstract class Class_NodeElement
         // Update node position
         nodes_selected
           .forEach(n => {
-            n.setPosXY(n.display.position.x + event.dx, n.display.position.y + event.dy)
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
         this.drawing_area.checkAndUpdateAreaSize()
       }
     }
   }
 
+  /**
+   * Define event when mouse drag element
+   * @protected
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElement
+   */
   protected eventMouseDragEnd(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Apply parent behavior first
@@ -1439,14 +1471,60 @@ export abstract class Class_NodeElement
       // redraw node on target of output links
       nodes_selected
         .forEach(n => {
-          n.output_links_list.forEach(link => {
-            link.target.applyPosition()
+          if (this.position_type === 'parametric') {
+            let smaller_x : number = Number.MAX_VALUE
+            this.sankey.visible_nodes_list.forEach(n=>{
+              if (smaller_x === undefined) {
+                smaller_x = n.position_x
+              }
+              if (n.position_x < smaller_x) {
+                smaller_x = n.position_x
+              }
+            })
+            const previous_u = n.position_u
+            n.position_u = Math.floor((n.position_x-smaller_x/3)/(n.sankey.node_styles_dict['default'] as Class_NodeStyle).position.dx!)
+            if (n.position_u !== previous_u) {
+              this.drawing_area.computeParametricV()
+            } else {
+              const same_u = this.sankey.visible_nodes_list
+                .filter(nn=>nn.position_type === 'parametric')
+                .filter(nn=>nn.position_u === n.position_u)
+              same_u.sort((n1,n2)=>n1.position_v-n2.position_v)
+              const nodes_below = same_u.filter(nn=>nn.position_v>n.position_v).reverse()
+              const node_below= nodes_below.pop()
+              if (node_below) {
+                if (n.position_y > node_below.position_y) {
+                  const tmp = node_below.position_v
+                  node_below.position_v = n.position_v
+                  n.position_v = tmp
+                } else {
+                  node_below.position_dy = node_below.position_y - n.position_y - n.getShapeHeightToUse()
+                }
+              }
+              const nodes_above = same_u.filter(nn=>nn.position_v<n.position_v)
+              const node_above = nodes_above.pop()
+              if (node_above) {
+                if (n.position_y < node_above.position_y) {
+                  const tmp = node_above.position_v
+                  node_above.position_v = n.position_v
+                  n.position_v = tmp
+                }
+                  n.position_dy = n.position_y - node_above.position_y - node_above.getShapeHeightToUse()
+              }
+            }
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            n.output_links_list.forEach(link => {
+              link.target.applyPosition()
           })
-        })
+        }
+      })
 
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
       this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+
+      this._drag = false
     }
   }
 
@@ -2258,23 +2336,31 @@ export abstract class Class_NodeElement
       if (link.source === this) {
         if (link.source_side === 'right') {
           link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          this._handle_output_links[link.id].setPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
-          dy_right = dy_right + thickness
+          if (this._handle_output_links[link.id] !== undefined) {
+            this._handle_output_links[link.id].setPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
+            dy_right = dy_right + thickness
+          }
         }
         else if (link.source_side === 'left') {
           link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
-          this._handle_output_links[link.id].setPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
-          dy_left = dy_left + thickness
+          if (this._handle_output_links[link.id] !== undefined) {
+            this._handle_output_links[link.id].setPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
+            dy_left = dy_left + thickness
+          }
         }
         else if (link.source_side === 'top') {
           link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
-          this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
-          dx_top = dx_top + thickness
+          if (this._handle_output_links[link.id] !== undefined) {
+            this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
+            dx_top = dx_top + thickness
+          }
         }
         else {  // link.source_side === 'bottom'
           link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
-          dx_bottom = dx_bottom + thickness
+          if (this._handle_output_links[link.id] !== undefined) {
+            this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
+            dx_bottom = dx_bottom + thickness
+          }
         }
 
         this._handle_output_links[link.id].d3_selection?.attr('class', 'node_io ' + link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
@@ -2287,23 +2373,31 @@ export abstract class Class_NodeElement
 
         if (link.target_side === 'right') {
           link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          this._handle_input_links[link.id].setPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
-          dy_right = dy_right + thickness
+          if (this._handle_input_links[link.id] !== undefined) {
+            this._handle_input_links[link.id].setPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
+            dy_right = dy_right + thickness
+          }
         }
         else if (link.target_side === 'left') {
           link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
-          this._handle_input_links[link.id].setPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
-          dy_left = dy_left + thickness
+          if (this._handle_input_links[link.id] !== undefined) {
+            this._handle_input_links[link.id].setPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
+            dy_left = dy_left + thickness
+          }
         }
         else if (link.target_side === 'top') {
           link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
-          this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
-          dx_top = dx_top + thickness
+          if (this._handle_input_links[link.id] !== undefined) {
+            this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
+            dx_top = dx_top + thickness
+          }
         }
         else {  // link.target_side === 'bottom'
           link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
-          dx_bottom = dx_bottom + thickness
+          if (this._handle_input_links[link.id] !== undefined) {
+            this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
+            dx_bottom = dx_bottom + thickness
+          }
         }
         this._handle_input_links[link.id].d3_selection?.attr('class', 'node_io ' + link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
       }
@@ -2648,7 +2742,18 @@ export abstract class Class_NodeElement
   }
 
   // Level related ----------------------------------------------------------------------
-
+  /**
+   * For a given tagGroup return the corresponding parent Class_NodeDimension
+   * @memberof Class_NodeElement
+   */
+  public nodeDimensionAsParent(tagGroup:Class_LevelTagGroup) {
+    const _ = Object.values(this._dimensions_as_parent)
+      .filter(dimension => {
+        dimension.parent_level_tag.group.id == tagGroup.id
+      })
+    return _.length > 0 ? _[0] : null
+  }
+  
   /**
    * List of level tags related to node
    * @readonly
@@ -2826,28 +2931,6 @@ export abstract class Class_NodeElement
     _.addReference(this)
     this.draw()
   }
-
-  /**
-   * Override position_x of element because node can be have a position relative to another node
-   *
-   * @memberof Class_NodeElement
-   */
-  public override get position_x(): number {
-    return this._display.position.x
-  }
-
-  /**
- * Override position_y of element because node can be have a position relative to another node
- *
- * @memberof Class_NodeElement
- */
-  public override get position_y(): number {
-    return this._display.position.y
-  }
-
-  public override set position_x(_: number) { super.position_x = _ }
-  public override set position_y(_: number) { super.position_y = _ }
-
 
   /**
    * Position type can be parametric absolute or relative
