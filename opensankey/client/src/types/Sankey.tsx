@@ -48,19 +48,22 @@ import { default_save_only_visible_elements, default_save_with_values } from './
 
 export function get_sync_lists(
   to_sync: { [id: string]: unknown },
-  as_ref: { [id: string]: unknown }
+  as_ref: { [id: string]: unknown },
+  matching_id: { [id: string]: string }
 ) {
+  const revert_matching_id : { [id: string]: string } = {}
+  Object.entries(matching_id).forEach(([k,v])=>revert_matching_id[v]=k)
   // Transfer node style from new_layout style node  to corresponding style in current
   const to_sync_ids = Object.keys(to_sync)
   const as_ref_ids = Object.keys(as_ref)
 
   // Styles can be to remove, to add or to update
   const to_remove = to_sync_ids
-    .filter(id => !(as_ref_ids.includes(id)))
+    .filter(id => !(as_ref_ids.includes(matching_id[id]??id)))
   const to_add = as_ref_ids
-    .filter(id => !to_sync_ids.includes(id))
+    .filter(id => !to_sync_ids.includes(revert_matching_id[id]??id))
   const to_update = to_sync_ids
-    .filter(id => as_ref_ids.includes(id))
+    .filter(id => as_ref_ids.includes(matching_id[id]??id))
 
   return [
     to_remove,
@@ -805,6 +808,8 @@ export abstract class Class_Sankey
             matching_links_id
           )
         })
+
+    this.sortNodes()
   }
 
   public matchAndModifyJSONIds(
@@ -871,7 +876,9 @@ export abstract class Class_Sankey
             })
           // Save results
           matching_taggs_id[tagg_type] = curr_matching_taggs_id
-          matching_tags_id[tagg_type] = curr_matching_tags_id
+          if (Object.keys(curr_matching_tags_id).length > 0) {
+            matching_tags_id[tagg_type] = curr_matching_tags_id
+          }
         }
       })
     // Loop on all nodes ------------------------------------------------------------
@@ -905,7 +912,7 @@ export abstract class Class_Sankey
           .filter(link => {
             let source_id = getStringFromJSON(link_json, 'idSource', '')
             source_id = matching_nodes_id[source_id] ?? source_id
-            let target_id = getStringFromJSON(link_json, 'idSource', '')
+            let target_id = getStringFromJSON(link_json, 'idTarget', '')
             target_id = matching_nodes_id[target_id] ?? target_id
             return (
               (link.source.id === source_id) &&
@@ -935,6 +942,17 @@ export abstract class Class_Sankey
     other_sankey: Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
     mode: string[],
   ) {
+    const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
+    const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
+    const matching_nodes_id: { [_: string]: string } = {}
+    const matching_links_id: { [_: string]: string } = {}
+    other_sankey.matchAndModifyJSONIds(
+      this.toJSON(),
+      matching_taggs_id,
+      matching_tags_id,
+      matching_nodes_id,
+      matching_links_id
+    )
     // Local variables to avoid recomputations ------------------------------------------
 
     const all = mode.includes('*')
@@ -944,7 +962,7 @@ export abstract class Class_Sankey
     if (mode.includes('attrDrawingArea') || all) {
 
       // Nodes styles can be to remove, to add or to update
-      const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(this._node_styles, other_sankey._node_styles)
+      const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(this._node_styles, other_sankey._node_styles,{})
 
       // Update styles
       ns_to_remove
@@ -963,7 +981,7 @@ export abstract class Class_Sankey
         })
 
       // Link styles can be to remove, to add or to update
-      const [ls_to_remove, ls_to_add, ls_to_update] = get_sync_lists(this._link_styles, other_sankey._link_styles)
+      const [ls_to_remove, ls_to_add, ls_to_update] = get_sync_lists(this._link_styles, other_sankey._link_styles,{})
 
       // Update styles
       ls_to_remove
@@ -986,7 +1004,7 @@ export abstract class Class_Sankey
 
     if (mode.includes('tagLevel') || all) {
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._level_taggs, other_sankey._level_taggs)
+      const [to_remove, to_add, to_update] = get_sync_lists(this._level_taggs, other_sankey._level_taggs,matching_taggs_id['levelTags'])
 
       // Update taggs
       to_remove
@@ -995,20 +1013,20 @@ export abstract class Class_Sankey
         })
       to_add
         .forEach(id => {
-          const ltagg = other_sankey._level_taggs[id]
+          const ltagg = other_sankey._level_taggs[matching_taggs_id['levelTags'][id]??id]
           this.addLevelTagGroup(ltagg.id, ltagg.name)
           this._level_taggs[id].copyFrom(ltagg)
         })
       to_update
         .forEach(id => {
-          this._level_taggs[id].copyFrom(other_sankey._level_taggs[id])
+          this._level_taggs[id].copyFrom(other_sankey._level_taggs[matching_taggs_id['levelTags'][id]??id])
         })
     }
 
     // Update node_tag_dict ------------------------------------------------------------
     if (mode.includes('tagNode') || all) {
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._node_taggs, other_sankey._node_taggs)
+      const [to_remove, to_add, to_update] = get_sync_lists(this._node_taggs, other_sankey._node_taggs,matching_taggs_id['nodeTags'])
 
       // Update taggs
       to_remove
@@ -1017,20 +1035,20 @@ export abstract class Class_Sankey
         })
       to_add
         .forEach(id => {
-          const ntagg = other_sankey._node_taggs[id]
+          const ntagg = other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]??id]
           this.addNodeTagGroup(ntagg.id, ntagg.name)
           this._node_taggs[id].copyFrom(ntagg)
         })
       to_update
         .forEach(id => {
-          this._node_taggs[id].copyFrom(other_sankey._node_taggs[id])
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]]??id)
         })
     }
 
     // Update flux_tag_dict ------------------------------------------------------------
     if (mode.includes('tagFlux') || all) {
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._flux_taggs, other_sankey._flux_taggs)
+      const [to_remove, to_add, to_update] = get_sync_lists(this._flux_taggs, other_sankey._flux_taggs,matching_taggs_id['fluxTags'])
 
       // Update taggs
       to_remove
@@ -1039,13 +1057,13 @@ export abstract class Class_Sankey
         })
       to_add
         .forEach(id => {
-          const ftagg = other_sankey._flux_taggs[id]
+          const ftagg = other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id]??id]
           this.addFluxTagGroup(ftagg.id, ftagg.name)
           this._flux_taggs[id].copyFrom(ftagg)
         })
       to_update
         .forEach(id => {
-          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[id])
+          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id]??id])
         })
     }
 
@@ -1054,7 +1072,7 @@ export abstract class Class_Sankey
     if (mode.includes('tagData') || all) {
 
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._data_taggs, other_sankey._data_taggs)
+      const [to_remove, to_add, to_update] = get_sync_lists(this._data_taggs, other_sankey._data_taggs,matching_taggs_id['dataTags'])
 
       // Update taggs
       to_remove
@@ -1063,13 +1081,13 @@ export abstract class Class_Sankey
         })
       to_add
         .forEach(id => {
-          const dtagg = other_sankey._data_taggs[id]
+          const dtagg = other_sankey._data_taggs[matching_taggs_id['dataTags'][id]??id]
           this.addDataTagGroup(dtagg.id, dtagg.name)
           this._data_taggs[id].copyFrom(dtagg)
         })
       to_update
         .forEach(id => {
-          this._data_taggs[id].copyFrom(other_sankey._data_taggs[id])
+          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id]??id])
         })
     }
 
@@ -1089,19 +1107,19 @@ export abstract class Class_Sankey
       sync_nodes_attr ||
       all
     ) {
-      const [to_remove, to_add, to_update] = get_sync_lists(this._nodes, other_sankey._nodes)
+      const [to_remove, to_add, to_update] = get_sync_lists(this._nodes, other_sankey._nodes,matching_nodes_id)
 
       // Add nodes that are in other sankey but not in this sankey
       if (add_nodes || all) {
         to_add
           .map(id => {
-            const n = other_sankey._nodes[id]
+            const n = other_sankey._nodes[matching_nodes_id[id]]
             this.addNewNode(n.id, n.name)
             this._nodes[id].copyAttrFrom(n)
             return id
           })
           .forEach(id => {
-            this._nodes[id].copyDimensionsFrom(other_sankey._nodes[id])
+            this._nodes[id].copyDimensionsFrom(other_sankey._nodes[matching_nodes_id[id]??id])
           })
       }
 
@@ -1120,21 +1138,21 @@ export abstract class Class_Sankey
           .map(id => {
             const n = this._nodes[id]
             const pn = structuredClone(n.display.position) // Save position
-            const on = other_sankey._nodes[id]
+            const on = other_sankey._nodes[matching_nodes_id[id]??id]
             n.copyAttrFrom(on) // Copy attributes
             n.display.position = pn // Reapply position
             return id
           })
-          .forEach(id => {
-            this._nodes[id].copyDimensionsFrom(other_sankey._nodes[id])
-          })
+          // .forEach(id => {
+          //   this._nodes[id].copyDimensionsFrom(other_sankey._nodes[matching_nodes_id[id]??id])
+          // })
       }
 
       // Update nodes ref to node_taggs
       if ((sync_nodes_tags) || all) {
         to_update
           .forEach(id => {
-            this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
+            this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[matching_nodes_id[id]??id],matching_taggs_id['nodeTags'],matching_tags_id['nodeTags'])
           })
 
 
@@ -1142,7 +1160,7 @@ export abstract class Class_Sankey
         if ((add_nodes) || all) {
           to_add
             .forEach(id => {
-              this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[id])
+              this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[matching_nodes_id[id]??id],matching_taggs_id['nodeTags'],matching_tags_id['nodeTags'])
             })
         }
 
@@ -1152,7 +1170,7 @@ export abstract class Class_Sankey
       if (sync_nodes_positions || all) {
         to_update
           .forEach(id => {
-            const n = other_sankey._nodes[id]
+            const n = other_sankey._nodes[matching_nodes_id[id]??id]
             this._nodes[id].setPosXY(n.position_x, n.position_y)
           })
       }
@@ -1174,13 +1192,13 @@ export abstract class Class_Sankey
       sync_flux_attr ||
       all
     ) {
-      const [to_remove, to_add, to_update] = get_sync_lists(this._links, other_sankey._links)
+      const [to_remove, to_add, to_update] = get_sync_lists(this._links, other_sankey._links,matching_links_id)
 
       // Add link in new that are not in current then add them
       if (add_flux || all) {
         to_add
           .forEach(id => {
-            const link = other_sankey._links[id]
+            const link = other_sankey._links[matching_links_id[id]??id]
             const similar_src_curr = this._nodes[link.source.id]
             const similar_trgt_curr = this._nodes[link.target.id]
             if (similar_src_curr && similar_trgt_curr) {
@@ -1212,7 +1230,7 @@ export abstract class Class_Sankey
             const sp = structuredClone(link.source.display.position)
             const tp = structuredClone(link.target.display.position)
             // Copy all attributes
-            link.copyFrom(other_sankey._links[id])
+            link.copyFrom(other_sankey._links[matching_links_id[id]??id])
             // Keep positions
             link.source.display.position = sp
             link.target.display.position = tp
@@ -1227,11 +1245,11 @@ export abstract class Class_Sankey
           .forEach(id => {
             // Source node
             const source = this._nodes[this._links[id].source.id]
-            const other_source = other_sankey._nodes[other_sankey._links[id].source.id]
+            const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id]??id].source.id]
             source.copyLinkOrderingFrom(other_source)
             // Target node
             const target = this._nodes[this._links[id].target.id]
-            const other_target = other_sankey._nodes[other_sankey._links[id].target.id]
+            const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id]??id].target.id]
             target.copyLinkOrderingFrom(other_target)
           })
 
@@ -1247,7 +1265,7 @@ export abstract class Class_Sankey
           .forEach(id_flux => {
             // avoid recomputation
             const values = this._links[id_flux].getAllValues()
-            const other_values = other_sankey._links[id_flux].getAllValues()
+            const other_values = other_sankey._links[matching_links_id[id_flux]??id_flux].getAllValues()
             // Init corresps list
             values_corresp_ids[id_flux] = {}
             if (Object.keys(values).length > 0) {
@@ -1288,7 +1306,7 @@ export abstract class Class_Sankey
               // Avid recomputation
               const link = this._links[id_flux]
               const values = link.getAllValues()
-              const other_link = other_sankey._links[id_flux]
+              const other_link = other_sankey._links[matching_links_id[id_flux]??id_flux]
               const other_values = other_link.getAllValues()
               // Loop on all current values for given flux id_flux
               Object.entries(values)
@@ -1319,7 +1337,7 @@ export abstract class Class_Sankey
               // Avid recomputation
               const link = this._links[id_flux]
               const values = link.getAllValues()
-              const other_link = other_sankey._links[id_flux]
+              const other_link = other_sankey._links[matching_links_id[id_flux]??id_flux]
               const other_values = other_link.getAllValues()
               // Loop on all current values for given flux id_flux
               Object.entries(values)
@@ -1434,16 +1452,20 @@ export abstract class Class_Sankey
     return this._nodes
   }
 
-  // public sortNodes() {
-  //   const sorted_nodes = Object.values(this._nodes).sort((n1,n2)=>{
-  //     if (n1.position_v>=0 || n2.position_v>=0) {
-  //       return n1.position_v - n2.position_v
-  //     } else {
-  //       return n2.position_v - n1.position_v
-  //     }
-  //   })
-  //   this._nodes = Object.assign({}, ...sorted_nodes.map((n) => ({[n.id]: n})))
-  // }
+  /**
+   * Sorts nodes from lower v coordinates to higher v
+   * @memberof Class_Sankey
+   */
+  public sortNodes() {
+    const sorted_nodes = Object.values(this._nodes).sort((n1,n2)=>{
+      if (n1.position_v>=0 || n2.position_v>=0) {
+        return n1.position_v - n2.position_v
+      } else {
+        return n2.position_v - n1.position_v
+      }
+    })
+    this._nodes = Object.assign({}, ...sorted_nodes.map((n) => ({[n.id]: n})))  
+  }
 
   /**
    * Get all nodes as a list

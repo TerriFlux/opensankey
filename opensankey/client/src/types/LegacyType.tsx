@@ -31,6 +31,10 @@ export type SankeyNodeAttrLocal = {
   label_vert_valeur?: string,
   label_horiz_valeur?: string,
   value_font_size?: number,
+
+  position?: 'absolute' | 'relative' | 'parametric',
+  relative_dy?:number,
+  relative_dx?:number
 }
 
 export type SankeyNodeStyle = {
@@ -62,6 +66,10 @@ export type SankeyNodeStyle = {
   label_vert_valeur: string,
   label_horiz_valeur: string,
   value_font_size: number,
+
+  relative_dx: number
+  relative_dy: number
+  position: 'absolute' | 'relative',  
 }
 
 export type SankeyNode = {
@@ -81,6 +89,9 @@ export type SankeyNode = {
   colorTag: string,
   // geometry
   position: 'absolute' | 'relative',
+  relative_dx?: number | undefined
+  relative_dy?: number | undefined
+
   x: number,
   y: number,
   x_label?: number,

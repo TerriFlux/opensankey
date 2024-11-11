@@ -795,10 +795,14 @@ export abstract class Class_LinkElement
     } else {
       // Do we apply colors of node source/target tags ?
       const src_taggs_activated = this._source.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1)
+        .filter(tagg => tagg.show_legend).filter(grp => {
+          this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
+        })
 
       const trgt_taggs_activated = this._target.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1)
+        .filter(tagg => tagg.show_legend).filter(grp => {
+          this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
+      })
 
       const trgt_node_type = this._target.grouped_taggs_dict['Type de noeud']
       const src_node_type = this._source.grouped_taggs_dict['Type de noeud']
@@ -4398,10 +4402,10 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   private addTagToGroupTagDict(tag: Class_Tag) {
     const grp_name = tag.group.name
     if (grp_name in this._taggs_dict) {
-      if (!(this._taggs_dict[tag.group.name].includes(tag)))
-        this._taggs_dict[tag.group.name].push(tag)
+      if (!(this._taggs_dict[tag.group.id].includes(tag)))
+        this._taggs_dict[tag.group.id].push(tag)
     } else {
-      this._taggs_dict[tag.group.name] = [tag]
+      this._taggs_dict[tag.group.id] = [tag]
     }
   }
 
@@ -4413,10 +4417,10 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * @memberof Class_LinkValue
    */
   private removeTagToGroupTagDict(tag: Class_Tag) {
-    const grp_name = tag.group.name
-    if (grp_name in this._taggs_dict) {
-      const idx = this._taggs_dict[grp_name].indexOf(tag)
-      this._taggs_dict[grp_name].splice(idx, 1)
+    const grp_id = tag.group.id
+    if (grp_id in this._taggs_dict) {
+      const idx = this._taggs_dict[grp_id].indexOf(tag)
+      this._taggs_dict[grp_id].splice(idx, 1)
     }
   }
 
@@ -4552,14 +4556,12 @@ export class Class_GhostLinkElement
       sankey: drawing_area.sankey as Type_GenericSankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
-        type: 'absolute',
         x: 0,
         y: 0,
         u: 0,
         v: 0
       },
       position_ending: {
-        type: 'absolute',
         x: 0,
         y: 0,
         u: 0,

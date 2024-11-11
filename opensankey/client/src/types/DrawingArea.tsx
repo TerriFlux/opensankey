@@ -41,8 +41,11 @@ import { convert_data_legacy } from './Legacy'
 import {
   Class_AbstractDrawingArea,
   Class_AbstractApplicationData,
+  Class_AbstractSankey,
 } from './Abstract'
 import { Class_ProtoElement } from './Element'
+import { Class_AbstractNodeElement } from './AbstractNode'
+import { Class_LevelTagGroup } from './Tag'
 
 // CONSTANTS ****************************************************************************
 
@@ -52,6 +55,8 @@ const default_grid_visible = true
 const default_horizontal_spacing = 200
 const default_vertical_spacing = 50
 const default_scale = 50
+
+type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
 // CLASS DRAWING AREA *******************************************************************
 /**
@@ -1392,6 +1397,117 @@ export abstract class Class_DrawingArea
     this.height = (this.window_fitting_height < possible_height) ? possible_height : this.window_fitting_height
 
     this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+    this.ComputeParametrization()
+  }
+
+  public ComputeParametrization() {
+
+    let smaller_x : number
+    this.sankey.visible_nodes_list.forEach(n=>{
+      if (smaller_x === undefined) {
+        smaller_x = n.position_x
+      }
+      if (n.position_x < smaller_x) {
+        smaller_x = n.position_x
+      }
+    })
+  
+    // this.sankey.node_styles_dict['default'].position_type = 'parametric'
+    // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
+    // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
+  
+    this.sankey.visible_nodes_list.forEach(n=>{
+      if (n.position_type === 'relative' ) {
+        return
+      }
+      //n.position_type = 'parametric'
+      n.display.position.u = Math.floor((n.position_x-smaller_x/3)/this.sankey.default_node_style.position.dx!)
+    })
+
+    this.computeParametricV()
+  }
+
+  public computeParametricV() {
+    const columns: { [_: number]: Type_AbstractNodeElement[]}  = {}
+    this.sankey.visible_nodes_list.forEach(n => {
+      if (n.position_type === 'relative') {
+        return
+      }
+      if (!(n.position_u in columns)) {
+        columns[n.position_u] = [n]
+      } else {
+        columns[n.position_u].push(n)
+      }
+    })
+    Object.values(columns).forEach(column => {
+      column.sort((n1, n2) => n1.position_y - n2.position_y)
+      column.forEach((n, i) => {
+        if (i == 0) {
+          return
+        }
+        const dy = n.position_y - column[i - 1].position_y - column[i - 1].getShapeHeightToUse()
+        if (dy !== 0) {
+          //AssignNodeLocalAttribute(n,'dy',dy)
+          n.position_dy = dy
+        } else {
+          //delete n.local!.dy
+        }
+      })
+    })
+    Object.values(columns).forEach(column => {
+      column.sort((n1, n2) => n1.position_y - n2.position_y)
+      if (this.sankey.level_taggs_list.length == 0) {
+        let current_v = 0
+        column.forEach(n => current_v = this.apply_v(n, current_v, undefined))
+      }
+      this.sankey.level_taggs_list.forEach(tagGroup => {
+        let current_v = 0
+        column.forEach(n => current_v = this.apply_v(n, current_v, tagGroup))
+        //column.forEach(n=>apply_v_agregate(data,n,n.v))
+      })
+    })
+    this.sankey.sortNodes()
+  }
+
+  public apply_v(
+    node:Type_AbstractNodeElement,
+    current_v:number,
+    tagGroup:Class_LevelTagGroup|undefined
+  ) {
+    //const {data} = applicationData
+    //const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
+    const all_nodes = this.sankey.nodes_dict
+    //node.position = 'parametric'
+    node.display.position.v = current_v
+    if (!tagGroup) {
+      return current_v+1    
+    }
+    //node.y == undefined
+    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+    if (!nodeDimParent) {
+      return current_v+1
+    }
+
+    let new_current_v = current_v
+    //let cur_relative_dx = ReturnLocalNodeValue(node,'relative_dx') as number
+    let cur_relative_dx = node.position_relative_dx as number
+    if (!cur_relative_dx) {
+      cur_relative_dx = 0
+    }
+    let current_node_width = 0
+    nodeDimParent.children.forEach(nn=>{
+      // parametric
+      nn.display.position.x = node.position_x
+      nn.display.position.u = node.position_u
+      // relative
+      //AssignNodeLocalAttribute(nn,'relative_dx',cur_relative_dx+current_node_width)
+      node.position_relative_dx = cur_relative_dx+current_node_width
+      current_node_width += nn.getShapeWidthToUse()//nodeWidth(nn, applicationData, inv_scale, scale, GetLinkValue)
+      cur_relative_dx = cur_relative_dx + nn.position_relative_dx!+current_node_width
+
+      new_current_v = this.apply_v(nn,new_current_v,tagGroup)
+    })
+    return new_current_v+1
   }
 
 

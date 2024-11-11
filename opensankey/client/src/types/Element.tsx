@@ -643,7 +643,7 @@ export abstract class Class_Element
  * @return {*}
  * @memberof Class_Node
  */
-  protected applyPosition() {
+  public applyPosition() {
     this._add_waiting_process('applyPos', () => { this._applyPosition() })
   }
 

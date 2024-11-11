@@ -144,7 +144,7 @@ export abstract class Class_ZoneSelection
 
   // PROTECTED METHOD ==================================================================
 
-  protected override applyPosition(): void {
+  public override applyPosition(): void {
     this._applyPosition()
   }
 

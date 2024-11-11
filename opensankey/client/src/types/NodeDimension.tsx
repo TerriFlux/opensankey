@@ -120,6 +120,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._parent.removeDimensionAsParent(this)
       this._children
         .forEach(_ => _.removeDimensionAsChild(this))
+      this._children
+        .forEach(_ => this.removeNodeFromChildren(_))        
       this._children = []
       // Remove cross references with leveltags
       this._parent_level_tag.removeParentLevel(this)

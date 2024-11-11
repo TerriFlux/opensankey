@@ -40,6 +40,7 @@ import {
   ConvertSankeyValue,
   TagsCatalog
 } from './LegacyType'
+import { default_relative_dx,  default_relative_dy} from './Node'
 
 const default_element_color = '#a9a9a9'
 
@@ -106,6 +107,9 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
     label_box_width: 150,
     label_color: false,
 
+    position: 'absolute',
+    relative_dx: default_relative_dx,
+    relative_dy: default_relative_dy    
   }
 }
 
@@ -1428,6 +1432,12 @@ const convert_nodes: convert_nodesFuncType = (
     list_links
       .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
       .forEach(l=>(n_tmp.links_order as string[]).push(l.idLink))
+
+    if (n.local && n.local.position == 'relative') {
+      n.position = 'relative'
+      n.relative_dx = n.local.relative_dx
+      n.relative_dy = n.local.relative_dy      
+    }
 
   }
 
