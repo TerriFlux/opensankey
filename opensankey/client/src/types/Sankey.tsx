@@ -42,6 +42,7 @@ import {
   Type_MacroTagGroup
 } from './Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
+import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
 
 
 // LOCAL FUNCTIONS **********************************************************************
@@ -685,6 +686,28 @@ export abstract class Class_Sankey
           // Add node style to sankey
           this._node_styles[style_id] = new_style
         })
+    }
+    if (Object.keys(json_object.nodeTags).includes('type de noeud')) {
+      Object.entries({ 'NodeProductStyle': DefaultNodeProductStyle,
+        'NodeSectorStyle' :  DefaultNodeSectorStyle,
+        'NodeImportStyle' :  DefaultNodeImportStyle,
+        'NodeExportStyle' :  DefaultNodeExportStyle}).forEach(([style_id,fn])=>{
+        const json_style = fn()
+        const new_style = this.createNewNodeStyle(style_id, json_style.name, true)  
+        // Set node style value to node from JSON
+        new_style.fromJSON(json_style)
+        // Add node style to sankey
+        this._node_styles[style_id] = new_style
+      })
+      Object.entries({ 'LinkImportStyle': DefaultLinkImportStyle,
+        'LinkExportStyle' :  DefaultLinkExportStyle}).forEach(([style_id,fn])=>{
+        const json_style = fn()
+        const new_style = this.createNewLinkStyle(style_id, json_style.name, true)  
+        // Set node style value to node from JSON
+        new_style.fromJSON(fn())
+        // Add node style to sankey
+        this._link_styles[style_id] = new_style
+      })      
     }
     if (json_object['style_link'] !== undefined) {
       // Set link styles from json data

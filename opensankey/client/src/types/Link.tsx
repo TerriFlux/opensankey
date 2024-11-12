@@ -2416,6 +2416,7 @@ export abstract class Class_LinkElement
   * @memberof Class_Node
   */
   public set style(_: Class_LinkStyle) {
+    if(!_) return
     this._display.style.removeReference(this)
     this._display.style = _
     _.addReference(this)

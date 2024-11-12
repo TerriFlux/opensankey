@@ -376,7 +376,16 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   } else {
     new_data.menu_configuration.function_on_wait.current = () => {
+      // First compute position of nodes which are not trade
       new_data.drawing_area.computeAutoSankey(true)
+      // Initially there is only one node per type of exchanges.
+      // it must be splitted to have one import and one export per product
+      // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation 
+      new_data.drawing_area.SplitTrade()
+      // Computes u v,x and initial y for trade nodes
+      new_data.drawing_area.ArrangeTrade(true)
+      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+
       new_data.drawing_area.areaAutoFit()
     }
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
