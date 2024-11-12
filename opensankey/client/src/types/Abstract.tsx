@@ -108,6 +108,7 @@ export abstract class Class_AbstractSankey {
   public abstract get level_taggs_list(): Class_AbstractLevelTagGroup[]
   // Mandatory methods
   public abstract addNewDefaultNode(): Type_AbstractNodeElement
+  public abstract addNewNode(id: string, name: string): Type_AbstractNodeElement
 }
 
 export abstract class Class_AbstractTagGroup {

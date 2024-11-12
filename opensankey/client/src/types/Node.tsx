@@ -14,6 +14,7 @@ import type {
   Class_AbstractSankey
 } from './Abstract'
 import type {
+  Class_LinkStyle,
   Type_Side
 } from './Link'
 import {
@@ -1103,7 +1104,17 @@ export abstract class Class_NodeElement
         const tagg = this.sankey.node_taggs_dict[tagg_id] as Class_TagGroup
         tagg.tags_list
           .filter(tag => tag_ids.includes(tag.id))
-          .forEach(tag => this.addTag(tag))
+          .forEach(tag => {
+            this.addTag(tag)
+            if (tagg_id == 'type de noeud' && tag.name == 'produit') {
+              // associate node of type produit with style produit
+              this.style= this.sankey.node_styles_dict['NodeProductStyle'] as Class_NodeStyle
+            } else if (tagg_id == 'type de noeud' && tag.name == 'sector') {
+              // associate node of type sector with style sector
+              this.style= this.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle
+            }
+          })
+
       })
   }
 
@@ -2926,6 +2937,7 @@ export abstract class Class_NodeElement
   * @memberof Class_Node
   */
   public set style(_: Class_NodeStyle) {
+    if (!_) return
     this._display.style.removeReference(this)
     this._display.style = _
     _.addReference(this)
@@ -3929,6 +3941,72 @@ export abstract class Class_NodeElement
     }
     tooltip_html += '</div>'
     return tooltip_html
+  }
+
+  // Fonctions d'individualisation des imports/exports
+  public SplitIOrE (
+    importation: boolean
+  ) {
+    (importation?this.output_links_list:this.input_links_list).forEach((input_or_output_link)=>{
+      const extremity_node = importation?input_or_output_link.target:input_or_output_link.source
+      const le_nom = this.name + ' - ' + (importation?'Importations':'Exportations') + ' - ' + extremity_node.name
+      let idTrade = extremity_node.id + '-' + this.id+ (importation?'Importations':'Exportations')
+      idTrade = idTrade.replaceAll(' ','')
+
+      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade,le_nom)
+
+      this.tags_list.forEach(tag => {
+        new_node.addTag(tag)
+      });
+
+      (new_node as Type_AnyNodeElement).style=importation?new_node.sankey.node_styles_dict['NodeImportStyle']as Class_NodeStyle:new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle
+      input_or_output_link.style=importation?new_node.sankey.link_styles_dict['LinkImportStyle']as Class_LinkStyle:new_node.sankey.link_styles_dict['LinkExportStyle']as Class_LinkStyle
+      (new_node as Type_AnyNodeElement).show = extremity_node.show;
+
+      input_or_output_link.shape_is_recycling = false
+
+      extremity_node.tags_list.forEach(tag => {
+        if ( tag.group.id === 'type de noeud' ) {
+          return
+        }
+        new_node.addTag(tag)
+      })
+      
+      if (importation) {
+        input_or_output_link.source = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+      } else {
+        input_or_output_link.target = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+      }
+    })
+  }
+
+  public setTradeDimensions(
+    importation: boolean
+  ) {
+    (importation?this.output_links_list:this.input_links_list).forEach((input_or_output_link)=>{
+      const extremity_node = importation?input_or_output_link.target:input_or_output_link.source
+      Object.values(extremity_node._dimensions_as_child)
+      .forEach(dim => {
+        (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
+          this.sankey.nodes_dict[extremity_node.id+'-'+dim.parent.id+(importation?'Importations':'Exportations')], 
+          this, 
+          dim.children_level_tags as Class_LevelTag[]
+        )        
+      })
+      // Object.entries(data.nodes![idTrade]['dimensions']).forEach(dim=>{
+      //   if (node.dimensions[dim[0]].parent_name === undefined) {
+      //     return
+      //   }
+      //   dim[1].parent_name = extremity_node.idNode + '-' + node.dimensions[dim[0]].parent_name+(importation?'Importations':'Exportations')
+      // })
+      // Object.keys(extremity_node.dimensions).forEach(dim_key => {
+      //   new_node.dimensions[dim_key] = JSON.parse(JSON.stringify(extremity_node.dimensions[dim_key]))
+      //   if (extremity_node.dimensions[dim_key].parent_name === undefined) {
+      //     return
+      //   }
+      //   new_node.dimensions[dim_key].parent_name = extremity_node.dimensions[dim_key].parent_name + '-' + node.idNode+(importation?'Importations':'Exportations')
+      // })
+    })
   }
 }
 
