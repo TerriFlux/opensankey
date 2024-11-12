@@ -40,7 +40,7 @@ import {
   ConvertSankeyValue,
   TagsCatalog
 } from './LegacyType'
-import { default_relative_dx,  default_relative_dy} from './Node'
+import { default_dy, default_relative_dx,  default_relative_dy} from './Node'
 
 const default_element_color = '#a9a9a9'
 
@@ -109,11 +109,12 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
 
     position: 'absolute',
     relative_dx: default_relative_dx,
-    relative_dy: default_relative_dy    
+    relative_dy: default_relative_dy,
+    dy: default_dy    
   }
 }
 
-const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
+export const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = DefaultNodeStyle()
   node_style.idNode = 'NodeSectorStyle'
   node_style.name = 'Noeud de type secteur'
@@ -121,12 +122,79 @@ const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
 }
 
 
-const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): SankeyNodeStyle => {
+export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): SankeyNodeStyle => {
   const node_style = DefaultNodeStyle()
   node_style.shape = 'ellipse'
   node_style.idNode = 'NodeProductStyle'
   node_style.name = 'Noeud de type produit'
   return node_style
+}
+
+export const DefaultNodeImportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode='NodeImportStyle'
+  node_style.name='Noeuds de type importations'
+  // relative
+  node_style.position = 'relative'
+  node_style.relative_dx = -100
+  node_style.relative_dy = -50
+  // parametric
+  node_style.dy = 20
+  // common import export
+  node_style.label_visible = false
+  node_style.shape_visible = false
+  node_style.node_width = 1
+  node_style.label_box_width = 300
+  node_style.label_vert = 'middle'
+  // label
+  node_style.label_horiz = 'left'
+  return node_style
+}
+
+export const DefaultNodeExportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
+  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode='NodeExportStyle'
+  node_style.name='Noeuds de type exportations'
+  // relative  
+  node_style.position = 'relative'
+  node_style.relative_dx = 100
+  node_style.relative_dy = 50
+  // parametric
+  node_style.dy = 20
+  // common import export
+  node_style.label_visible = false
+  node_style.shape_visible = false
+  node_style.label_vert = 'middle'
+  node_style.node_width = 0
+  node_style.label_box_width = 300
+  // label
+  node_style.label_horiz = 'right'
+
+  return node_style
+}
+
+export const DefaultLinkExportStyle:DefaultLinkStyleFuncType=()=>{
+  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'hv'
+  link_style.label_visible = true
+  link_style.label_position = 'end'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink='LinkExportStyle'
+  link_style.name='Flux de type exportations'
+  return link_style
+}
+
+export const DefaultLinkImportStyle:DefaultLinkStyleFuncType=()=>{
+  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'vh'
+  link_style.label_visible = true
+  link_style.label_position = 'beginning'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink='LinkImportStyle'
+  link_style.name='Flux de type importations'
+  return link_style
 }
 
 // Return default style configuration for link
@@ -907,6 +975,18 @@ const convert_tags: convert_tagsFuncType = (
     }
     if (!Object.keys(data.style_node).includes('NodeSectorStyle')) {
       data.style_node['NodeSectorStyle'] = DefaultNodeSectorStyle()
+    }
+    if(!Object.keys(data.style_node).includes('NodeImportStyle')){
+      data.style_node['NodeImportStyle']=DefaultNodeImportStyle()
+      // if (!has_relative) {
+      //   data.style_node['NodeImportStyle'].position = 'absolute'
+      // }
+    }
+    if(!Object.keys(data.style_node).includes('NodeExportStyle')){
+      data.style_node['NodeExportStyle']=DefaultNodeExportStyle()
+      // if (!has_relative) {
+      //   data.style_node['NodeExportStyle'].position = 'absolute'
+      // }
     }
   }
 

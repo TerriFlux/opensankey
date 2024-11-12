@@ -69,7 +69,8 @@ export type SankeyNodeStyle = {
 
   relative_dx: number
   relative_dy: number
-  position: 'absolute' | 'relative',  
+  position: 'absolute' | 'relative',
+  dy: number 
 }
 
 export type SankeyNode = {

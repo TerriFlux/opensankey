@@ -1061,6 +1061,44 @@ export abstract class Class_DrawingArea
     }
   }
 
+  /**
+   * Initially there is only one node per type of exchanges.
+   * it must be splitted to have one import and one export per product
+   * International will be split to give InternationalProduct1Importation InternationalProduc1Exportation 
+   *
+   * @memberof Class_DrawingArea
+   */
+  public SplitTrade (
+  ) {
+    if (!this.sankey.node_taggs_dict['type de noeud']) {
+      return
+    }
+
+    let trade_nodes = this.sankey.nodes_list.filter(n=>
+      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])  && n.input_links_list.length > 0 
+    )
+    // first split the nodes
+    trade_nodes.forEach(node=>{
+      if (node.output_links_list.length > 0) {
+        (node as Type_GenericNodeElement).SplitIOrE(true)
+      }
+      if (node.input_links_list.length > 0) {
+        (node as Type_GenericNodeElement).SplitIOrE(false)
+      }
+      this.sankey.deleteNode(node)
+    })
+    // the set dimensions. It must be done after each trade node has been split
+    trade_nodes.forEach(node=>{
+      (node as Type_GenericNodeElement).setTradeDimensions(true)
+    })
+  }
+
+  /**
+   * Compute the position of the nodes which are not trade nodes
+   * TODO write more
+   *
+   * @memberof Class_DrawingArea
+   */
   public computeAutoSankey(
     launched_from_process: boolean
   ) {
@@ -1400,6 +1438,70 @@ export abstract class Class_DrawingArea
     this.ComputeParametrization()
   }
 
+  /**
+   * Computes u,v,x and initial y for trade nodes
+   *
+   * @memberof Class_DrawingArea
+   */
+  public ArrangeTrade (
+    compute_xy : boolean
+  ) {
+    if (!this.sankey.node_taggs_dict['type de noeud']) {
+      return
+    }
+    let import_nodes = this.sankey.nodes_list.filter(n=>
+      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']) && n.output_links_list.length > 0
+    )
+    let export_nodes = this.sankey.nodes_list.filter(n=>
+      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])  && n.input_links_list.length > 0 
+    )
+  
+    let max_vertical_offset = 0
+    const compute_offset = (node:Type_GenericNodeElement) => {
+      if (!node.position_y) {
+        return
+      }
+      if (node.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']) ) {
+        return
+      }
+      max_vertical_offset = Math.max(node.position_y+node.getShapeHeightToUse(), max_vertical_offset)
+    }
+  
+    this.sankey.nodes_list.filter(n=>n.is_visible).forEach(compute_offset)
+    max_vertical_offset = max_vertical_offset + 200
+  
+    const default_style = this.sankey.node_styles_dict['default']
+    const h_space = default_style.position.dx!
+    import_nodes.forEach(node => {
+      const output_link = node.output_links_list[0]
+      const target_node = output_link.target
+      node.position_u = target_node.position_u
+      node.position_v = target_node.position_v + 2000
+      if (compute_xy) {
+        const x = Math.round(target_node.position_x/h_space)*h_space - h_space
+        node.position_x = x
+        node.position_y = 100
+      }
+    })
+  
+    export_nodes.forEach(node => {
+      const input_link = node.input_links_list[0]
+      const source_node = input_link.source
+      node.position_u = source_node.position_u
+      node.position_v = source_node.position_v + 4000
+      if (compute_xy) {
+        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
+        node.position_x = x
+        node.position_y = max_vertical_offset
+      }
+    })
+  }
+
+  /**
+   * Computes u,v for nodes in the drawing area
+   *
+   * @memberof Class_DrawingArea
+   */
   public ComputeParametrization() {
 
     let smaller_x : number
@@ -1412,21 +1514,21 @@ export abstract class Class_DrawingArea
       }
     })
   
-    // this.sankey.node_styles_dict['default'].position_type = 'parametric'
-    // AssignNodeStyleAttribute(data.style_node['NodeImportStyle'],'position','parametric')
-    // AssignNodeStyleAttribute(data.style_node['NodeExportStyle'],'position','parametric')
-  
     this.sankey.visible_nodes_list.forEach(n=>{
       if (n.position_type === 'relative' ) {
         return
       }
-      //n.position_type = 'parametric'
       n.display.position.u = Math.floor((n.position_x-smaller_x/3)/this.sankey.default_node_style.position.dx!)
     })
 
     this.computeParametricV()
   }
 
+  /**
+   * Computes v for nodes in the drawing area
+   *
+   * @memberof Class_DrawingArea
+   */
   public computeParametricV() {
     const columns: { [_: number]: Type_AbstractNodeElement[]}  = {}
     this.sankey.visible_nodes_list.forEach(n => {
@@ -1447,7 +1549,6 @@ export abstract class Class_DrawingArea
         }
         const dy = n.position_y - column[i - 1].position_y - column[i - 1].getShapeHeightToUse()
         if (dy !== 0) {
-          //AssignNodeLocalAttribute(n,'dy',dy)
           n.position_dy = dy
         } else {
           //delete n.local!.dy
@@ -1469,6 +1570,11 @@ export abstract class Class_DrawingArea
     this.sankey.sortNodes()
   }
 
+  /**
+   * Computes v for nodes in the drawing area
+   *
+   * @memberof Class_DrawingArea
+   */
   public apply_v(
     node:Type_AbstractNodeElement,
     current_v:number,
