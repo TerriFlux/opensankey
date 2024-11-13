@@ -703,6 +703,34 @@ export abstract class Class_NodeElement
   public drawParent() {
     if (this.is_child) {
       Object.values(this._dimensions_as_child)[0].parent.forceShow()
+      if (!this.sankey.node_taggs_dict['type de noeud']) {
+        return
+      }
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
+      const import_nodes = this.input_links_list.filter(lid=>{
+        // if (!(lid.is_visible)) {
+        //   return false
+        // }
+        const inputNode = lid.source
+        if (inputNode.hasGivenTag(echangeTag)) {
+          return true
+        }
+        return false
+      }).map(lid=>lid.source)
+      import_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())
+
+      const export_nodes = this.output_links_list.filter(lid=>{
+        // if (!(lid.is_visible)) {
+        //   return false
+        // }
+        const outputNode = lid.target
+        if (outputNode.hasGivenTag(echangeTag)) {
+          return true
+        }
+        return false
+      }).map(lid=>lid.target)
+      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())  
+
       Object.values(this._dimensions_as_child)[0].children.forEach(n=>n.forceHide())
     }
   }
@@ -710,7 +738,36 @@ export abstract class Class_NodeElement
   public drawChildren() {
     if (this.is_parent) {
       Object.values(this._dimensions_as_parent)[0].parent.forceHide()
-      Object.values(this._dimensions_as_parent)[0].children.forEach(n => n.forceShow())
+      Object.values(this._dimensions_as_parent)[0].children.forEach(n => {
+        n.forceShow()
+      })
+      if (!this.sankey.node_taggs_dict['type de noeud']) {
+        return
+      }
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
+      const import_nodes = this.input_links_list.filter(lid=>{
+        // if (!(lid.is_visible)) {
+        //   return false
+        // }
+        const inputNode = lid.source
+        if (inputNode.hasGivenTag(echangeTag)) {
+          return true
+        }
+        return false
+      }).map(lid=>lid.source)
+      import_nodes.forEach(n=>(n as Type_AnyNodeElement).drawChildren())
+
+      const export_nodes = this.output_links_list.filter(lid=>{
+        // if (!(lid.is_visible)) {
+        //   return false
+        // }
+        const outputNode = lid.target
+        if (outputNode.hasGivenTag(echangeTag)) {
+          return true
+        }
+        return false
+      }).map(lid=>lid.target)
+      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawChildren())  
     }
   }
 
@@ -1281,6 +1338,11 @@ export abstract class Class_NodeElement
     this._add_waiting_process('drawLinksArrow', () => this._drawLinksArrow())
   }
 
+  public shiftVertically(
+    shift:number
+  ) {
+    this._display.position.y += shift
+  }
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1299,67 +1361,75 @@ export abstract class Class_NodeElement
         if (this.hasInputLinks()) {
           // Node is export
           const input_link = this.getFirstInputLink()
-          // if (!input_link?.display.shape_type.getVisible()) {
-          //   return 'translate(0, 0)'
-          // }
-
           // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
           const source_node = input_link!.source
-          // if (!source_node.display.shape_type.getVisible()) {
           if (!source_node.shape_visible) {
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          this.position_x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
-          this.position_y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
+          this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
+          this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-
         }
         else if (this.hasOutputLinks()) {
           // Node is import
           const output_link = this.getFirstOutputLink()
-          // if (!output_link?.display.shape_type.getVisible()) {
-          //   return 'translate(0,0)'
-          // }
-
           // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
           const target_node = output_link!.target
           if (!target_node.shape_visible) {
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          this.position_x = target_node.position_x + this.position_relative_dx
-          this.position_y = target_node.position_y + this.position_relative_dy
+          this._display.position.x = target_node.position_x + this.position_relative_dx
+          this._display.position.y = target_node.position_y + this.position_relative_dy
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         }
       } else if (this.position_type === 'parametric' && !this._drag) {
-        if (this.position_v>=0) {
-          const same_u = this.sankey.visible_nodes_list.filter(n=>n.position_u === this.position_u)
+        const process_nodes = this.sankey.visible_nodes_list
+        let same_u = process_nodes.filter(n=>n.position_u === this.position_u)
+        const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']as Class_Tag:undefined
+        if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0 ) {
+          // Importations
+          const firstNonEchangeNodeBelow = process_nodes.filter(n=>!n.hasGivenTag(echangeTag)).sort((n1,n2)=> n1.position_y-n2.position_y)[0]
+          same_u = same_u.filter(n=>n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
           const nodeAbove = same_u[same_u.indexOf(this)-1]
           if (nodeAbove) {
             this._display.position.y = nodeAbove.position_y 
             + nodeAbove.getShapeHeightToUse()
             + this.position_dy
           } else {
-            const tmp = this.sankey.nodes_list.filter(n=>n.position_u===this.position_u && this.position_v===0)
-            this._display.position.y = tmp.length > 0 ? tmp[0].position_y : 20
+            this._display.position.y = 200
           }
-          const nodeBelow = same_u[same_u.indexOf(this)+1] as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-          if (nodeBelow) {
-            nodeBelow.applyPosition()
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')          
-        } else {
-          const nodeBelow = this.sankey.visible_nodes_list[this.sankey.visible_nodes_list.indexOf(this)+1]
-          if (nodeBelow) {
-            this._display.position.y = nodeBelow.position_y 
-            - nodeBelow.getShapeHeightToUse()
-            - this.position_dy
-          } else {
-            const tmp = this.sankey.nodes_list.filter(n=>n.position_u===this.position_u && this.position_v===0)
-            this._display.position.y = tmp.length > 0 ? tmp[0].position_y : 20
-          }
+          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y+200) {
+            const shift = 200 +this.position_y - firstNonEchangeNodeBelow.position_y
+            this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag) ).forEach(n=>n.shiftVertically(shift));
+            this.drawing_area.reset()
+          } 
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
+        } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0 ) {
+          // Exportations
+          same_u = same_u.filter(n=>n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
+          const nodeAbove = same_u[same_u.indexOf(this)-1]
+          if (nodeAbove) {
+            this._display.position.y = nodeAbove.position_y 
+            + nodeAbove.getShapeHeightToUse()
+            + this.position_dy
+          } else {
+            let max_vertical_offset = 0
+            this.sankey.visible_nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>{
+              max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)            
+            })
+            this._display.position.y = max_vertical_offset+200
+          }
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')  
+        } else {
+          const nodeAbove = same_u[same_u.indexOf(this)-1]
+          if (nodeAbove) {
+            this._display.position.y = nodeAbove.position_y 
+            + nodeAbove.getShapeHeightToUse()
+            + this.position_dy
+          } 
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')          
         }
       } else {
         this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')        
@@ -2776,9 +2846,7 @@ export abstract class Class_NodeElement
    */
   public nodeDimensionAsParent(tagGroup:Class_LevelTagGroup) {
     const _ = Object.values(this._dimensions_as_parent)
-      .filter(dimension => {
-        dimension.parent_level_tag.group.id == tagGroup.id
-      })
+      .filter(dimension => dimension.parent_level_tag.group.id == tagGroup.id)
     return _.length > 0 ? _[0] : null
   }
   
@@ -4034,8 +4102,10 @@ export abstract class Class_NodeElement
       
       if (importation) {
         input_or_output_link.source = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+        new_node.output_links_list.push(input_or_output_link)
       } else {
         input_or_output_link.target = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+        new_node.input_links_list.push(input_or_output_link)
       }
     })
   }
@@ -4043,29 +4113,32 @@ export abstract class Class_NodeElement
   public setTradeDimensions(
     importation: boolean
   ) {
+    const root_name = this.name.split(' - ')[0];
     (importation?this.output_links_list:this.input_links_list).forEach((input_or_output_link)=>{
       const extremity_node = importation?input_or_output_link.target:input_or_output_link.source
       Object.values(extremity_node._dimensions_as_child)
       .forEach(dim => {
+        const extremity_node_parent = dim.parent;
         (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
-          this.sankey.nodes_dict[extremity_node.id+'-'+dim.parent.id+(importation?'Importations':'Exportations')], 
+          this.sankey.nodes_dict[extremity_node_parent.id+'-'+root_name+(importation?'Importations':'Exportations')], 
           this, 
           dim.children_level_tags as Class_LevelTag[]
         )        
       })
-      // Object.entries(data.nodes![idTrade]['dimensions']).forEach(dim=>{
-      //   if (node.dimensions[dim[0]].parent_name === undefined) {
-      //     return
-      //   }
-      //   dim[1].parent_name = extremity_node.idNode + '-' + node.dimensions[dim[0]].parent_name+(importation?'Importations':'Exportations')
-      // })
-      // Object.keys(extremity_node.dimensions).forEach(dim_key => {
-      //   new_node.dimensions[dim_key] = JSON.parse(JSON.stringify(extremity_node.dimensions[dim_key]))
-      //   if (extremity_node.dimensions[dim_key].parent_name === undefined) {
-      //     return
-      //   }
-      //   new_node.dimensions[dim_key].parent_name = extremity_node.dimensions[dim_key].parent_name + '-' + node.idNode+(importation?'Importations':'Exportations')
-      // })
+      Object.values(extremity_node._dimensions_as_parent)
+      .forEach(dim => {
+        const extremity_node_children = dim.children.filter(n=>
+          this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]!=undefined
+        ).map(n=>
+          this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]
+        )
+        new Class_NodeDimension(
+          this,
+          extremity_node_children,
+          dim.parent_level_tag,
+          dim.children_level_tags
+        )       
+      })
     })
   }
 }

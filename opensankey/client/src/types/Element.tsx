@@ -600,7 +600,9 @@ export abstract class Class_Element
     // Draw element on D3
     super._draw()
     // Add apply position
-    this._applyPosition()
+    if (this.is_visible) {
+      this._applyPosition()
+    }
   }
 
   // Positioning

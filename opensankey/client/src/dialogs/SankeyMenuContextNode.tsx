@@ -492,6 +492,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before aggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
+          new_data.drawing_area.areaAutoFit()
           refreshThisAndToggleSaving()
         }
 
@@ -517,6 +518,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
+          new_data.drawing_area.areaAutoFit()
           refreshThisAndToggleSaving()
         }
 
