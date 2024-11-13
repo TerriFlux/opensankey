@@ -2,7 +2,6 @@ import React, {
   FunctionComponent,
   useEffect,
 } from 'react'
-import i18next from 'i18next'
 import LZString from 'lz-string'
 import { useToast } from '@chakra-ui/react'
 import * as d3 from 'd3'
@@ -13,12 +12,11 @@ import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfig
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
 import { OpenSankeyConfigurationNodesAttributes } from './configmenus/SankeyMenuConfigurationNodesAttributes'
 import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
-import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
+import { DisaggregationModal, ContextMenuNode, AggregationModal } from './dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
 import { ApplySaveJSONDialog } from './dialogs/SankeyMenuDialogs'
 import {
   ModalPreference,
-  OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
 import {
   OpenSankeyMenus, Menu,
@@ -200,12 +198,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
 
   Object.assign(sankey_menus, additionalMenus.sankey_menus)
 
-  const regular_ui = OpenSankeyDefaultModalePreferenceContent(
-    new_data,
-    i18next,
-  )
-  regular_ui['form'] = [...regular_ui['form'], ...additionalMenus.additional_preferences]
-
   const menu_configuration = initializeMenuConfiguration(
     new_data,
     additionalMenus,
@@ -277,29 +269,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
             <React.Fragment key={'modale_preference'}>
               <ModalPreference
                 new_data={new_data}
-                ui={Object.values(regular_ui).map(d => {
-                  // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
-                  let content
-                  if (Array.isArray(d)) {
-                    content = <React.Fragment>{d.map((el, i) => {
-                      return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
-                    })}</React.Fragment>
-                  } else {
-                    content = <React.Fragment key={'content_ui_pref'}>{d}</React.Fragment>
-                  }
-                  return <>
-                    {content}
-                    <hr
-                      style={{
-                        borderStyle: 'none',
-                        margin: '10px',
-                        color: 'grey',
-                        backgroundColor: 'grey',
-                        height: 1
-                      }}
-                    />
-                  </>
-                })}
+                additionalMenus={additionalMenus}
               />
             </React.Fragment>,
             <></>
@@ -329,6 +299,12 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     />
     <ContextMenuZdd
       new_data={new_data}
+    />
+    <DisaggregationModal 
+    new_data={new_data}
+    />
+    <AggregationModal
+    new_data={new_data}
     />
   </div>
 

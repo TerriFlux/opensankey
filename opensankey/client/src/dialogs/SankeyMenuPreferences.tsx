@@ -1,10 +1,10 @@
 // External imports
-import React, { FunctionComponent, useRef, RefObject } from 'react'
+import React, { FunctionComponent, useRef, RefObject, useState } from 'react'
 import { Box, Button, Checkbox, Select } from '@chakra-ui/react'
+import i18next from 'i18next'
 
 // Internal types / classes
 import {
-  FType_OpenSankeyDefaultModalePreferenceContent,
   FCType_ModalPreference
 } from './types/SankeyMenuPreferencesTypes'
 
@@ -16,16 +16,19 @@ import { ConfigMenuTextInput } from '../configmenus/SankeyMenuConfiguration'
 
 // COMPONENTS ===========================================================================
 
-export const OpenSankeyDefaultModalePreferenceContent: FType_OpenSankeyDefaultModalePreferenceContent = (
-  new_data,
-  trad,
+
+export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
+  {
+    new_data,
+    additionalMenus
+  }
 ) => {
   // Data -------------------------------------------------------------------------------
 
   const { t } = new_data
 
   // Component updater ------------------------------------------------------------------
-
+  const [, setUpdate] = useState(0)
   const menus = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
   const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
   menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
@@ -49,16 +52,57 @@ export const OpenSankeyDefaultModalePreferenceContent: FType_OpenSankeyDefaultMo
 
 
   // JSX Component ----------------------------------------------------------------------
+  const node_label_sep = <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+    <Box layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
+      <ConfigMenuTextInput
+        ref_to_set_value={ref_set_text_value_input}
+        function_get_value={() => { return new_data.node_label_separator }}
+        function_on_blur={(_) => {
+          const tmp = _ ? _ : ''
+          new_data.node_label_separator = tmp
+          new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+        }}
+      />
+    </Box>
+  </OSTooltip>
 
+  const node_label_sep_pos = <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
+    <Box layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
+      <Box layerStyle='options_2cols'>
+        <Button variant={new_data.isLabelSeparatorPartBefore() ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+          onClick={() => {
+            new_data.setLabelSeparatorPartBefore()
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+            setUpdate(a => a + 1)
+          }
+          }
+        >
+          {t('Menu.before')}
+        </Button>
+        <Button variant={!new_data.isLabelSeparatorPartBefore() ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+          onClick={() => {
+            new_data.setLabelSeparatorPartAfter()
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+            setUpdate(a => a + 1)
+          }
+          }
+        >
+          {t('Menu.after')}
+        </Button>
+      </Box>
+    </Box>
+  </OSTooltip>
   const ui = {
     'lang': <Box layerStyle='menuconfigpanel_row_2cols' >
 
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.lang')}</Box>
       <Select
         variant='menuconfigpanel_option_select'
-        value={trad.language}
+        value={i18next.language}
         onChange={evt => {
-          trad.changeLanguage((evt.target.value))
+          i18next.changeLanguage((evt.target.value))
         }}
       >
         <option key={'francais'} value={'fr'}>Français</option>
@@ -155,36 +199,32 @@ export const OpenSankeyDefaultModalePreferenceContent: FType_OpenSankeyDefaultMo
         }}>
         {t('Menu.ED')}
       </Checkbox>,
+      additionalMenus.additional_preferences
+
     ],
-    'node_label_sep': <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
-      <Box layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
-        <ConfigMenuTextInput
-          ref_to_set_value={ref_set_text_value_input}
-          function_get_value={() => { return new_data.node_label_separator}}
-          function_on_blur={(_) => {
-            if(_)
-              new_data.node_label_separator=_
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-          }}
-        />
-      </Box>
-    </OSTooltip>,
+    'node_label_sep': <>{node_label_sep}{node_label_sep_pos}</>,
   }
-  return ui
-}
 
 
-export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
-  {
-    new_data,
-    ui
-  }
-) => {
-  const { t } = new_data
+
+
+
+
+
+
+
+
   const content = <>
     {Object.values(ui).map((d, i) => {
-      return <React.Fragment key={i}>{d}</React.Fragment>
+      return <><React.Fragment key={i}>{d}</React.Fragment><hr
+        style={{
+          borderStyle: 'none',
+          margin: '10px',
+          color: 'grey',
+          backgroundColor: 'grey',
+          height: 1
+        }}
+      /></>
     })}
   </>
 
