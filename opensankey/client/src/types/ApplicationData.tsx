@@ -112,7 +112,7 @@ export abstract class Class_ApplicationData
   private _logo_width: number = 100
   private _app_name: string = 'SankeySuite'
   private _url_prefix: string = '/opensankey/' // path for server call
-  
+
   // Variable to modify node name label displayed, 
   // it can contain separator (special caracter) that split label between what we want tot display and what not
   private _node_label_separator = '-'
@@ -208,8 +208,8 @@ export abstract class Class_ApplicationData
     this.drawing_area.delete()
     this.drawing_area = this.createNewDrawingArea()
     this.drawing_area.reset()
-    this._node_label_separator='-'
-    this._node_label_separator_part='before'
+    this._node_label_separator = '-'
+    this._node_label_separator_part = 'before'
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -226,8 +226,8 @@ export abstract class Class_ApplicationData
     this.reset()
 
     // Set node label separator attribute from json
-    this._node_label_separator = getStringFromJSON(json_object,'node_label_separator',this._node_label_separator)
-    this._node_label_separator_part = getStringFromJSON(json_object,'node_label_separator_part',this._node_label_separator_part) as 'before'|'after'
+    this._node_label_separator = getStringFromJSON(json_object, 'node_label_separator', this._node_label_separator)
+    this._node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', this._node_label_separator_part) as 'before' | 'after'
 
     // Update drawing area
     this.drawing_area.bypass_timeout = true
@@ -235,10 +235,9 @@ export abstract class Class_ApplicationData
     this.menu_configuration.updateAllMenuComponents()
     this.drawing_area.bypass_timeout = false
     this._drawtimeout = setTimeout(
-      () => { this._drawing_area.drawElements(); this._drawing_area.checkAndUpdateAreaSize(); this._drawing_area.areaAutoFit() },
+      () => { this.functionAfterFromJSON() },
       10
     )
-    this._drawing_area.setToModeEdition(false)
   }
 
   public toJSON() {
@@ -294,6 +293,13 @@ export abstract class Class_ApplicationData
     app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
   ) {
     return (evt: KeyboardEvent) => { this.keyboardEventProcessing(evt, app_ref) }
+  }
+
+  protected functionAfterFromJSON() {
+    this._drawing_area.drawElements();
+    this._drawing_area.checkAndUpdateAreaSize();
+    this._drawing_area.areaAutoFit()
+    this._drawing_area.setToModeEdition(false)
   }
 
   // PROTECTED METHODS ==================================================================

@@ -18,7 +18,7 @@ import {
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
-import { GetRandomInt } from '../types/Utils'
+import { GetRandomInt, list_palette_color } from '../types/Utils'
 
 const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -35,10 +35,6 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
-  const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
-    d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
-    d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
-    d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
 
   let style_c_zdd = '0px 0px auto auto'
   let is_top = true
@@ -77,7 +73,6 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   </>
   const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-
     const size_color = new_data.drawing_area.sankey.nodes_list.length
 
     for (const i in d3.range(size_color)) {
