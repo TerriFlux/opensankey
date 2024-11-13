@@ -790,33 +790,54 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public checkAndUpdateAreaSize() {
+    const [max_x,max_y]=this.getElementsPosInDA()
 
-    let max_node_pos_x = 0
-    let max_node_pos_y = 0
-    this.sankey.visible_nodes_list.map(node => {
-      const node_rightest_pos = node.position_x + node.getShapeWidthToUse()
-      const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()
-      max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
-      max_node_pos_y = Math.max(max_node_pos_y, node_bottomest_pos)
-    })
 
     // If righest node is too close to right drawing area border then enlarege DA
     // else reduce DA until window init witdh
     // (init DA size is computed with a sankey at scale 1 )
-    if ((max_node_pos_x > this._width - this.grid_size) || ((max_node_pos_x + this._grid_size <= this._width) && (this._width > this.window_fitting_width))) {
-      this.width = (max_node_pos_x + this._grid_size)
+    if ((max_x > this._width - this.grid_size) || ((max_x + this._grid_size <= this._width) && (this._width > this.window_fitting_width))) {
+      this.width = (max_x + this._grid_size)
       this.drawGrid()
     }
 
     // If bottomiest node is too close to the bottom of drawing area border then enlarege DA
     // else reduce DA until window init height
     // (init DA size is computed with a sankey at scale 1 )
-    if (max_node_pos_y > this._height - this.grid_size || ((max_node_pos_y + this._grid_size <= this._height) && (this._height > this.window_fitting_height))) {
-      this.height = (max_node_pos_y + this._grid_size)
+    if ((max_y > this._height - this.grid_size) || ((max_y + this._grid_size <= this._height) && (this._height > this.window_fitting_height))) {
+      this.height = (max_y + this._grid_size)
       this.drawGrid()
     }
 
-    return [max_node_pos_x, max_node_pos_y]
+  }
+
+  protected getElementsPosInDA(){
+    let max_node_pos_x = 0
+    let max_node_pos_y = 0
+    this.sankey.visible_nodes_list.map(node => {
+
+      let label_node_width = 0
+      let label_node_height = 0
+      const is_lab_r = node.name_label_horiz == 'right'
+      const is_lab_b = node.name_label_vert == 'bottom'
+      if (is_lab_r) {
+        const box_label = (node.d3_selection?.select('text').node() as SVGTextElement)?.getBoundingClientRect()
+        label_node_width = (box_label?.width ?? 0) / this.getZoomScale()
+      }
+
+      if(is_lab_b){
+        const box_label = (node.d3_selection?.select('text').node() as SVGTextElement)?.getBoundingClientRect()
+        label_node_height = (box_label?.height ?? 0) / this.getZoomScale()
+      }
+
+      const node_rightest_pos = node.position_x + node.getShapeWidthToUse()+label_node_width
+      const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()+label_node_height
+
+      max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
+      max_node_pos_y = Math.max(max_node_pos_y, node_bottomest_pos)
+    })
+
+    return [max_node_pos_x,max_node_pos_y]
   }
 
   /**

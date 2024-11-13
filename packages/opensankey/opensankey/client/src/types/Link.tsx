@@ -796,13 +796,12 @@ export abstract class Class_LinkElement
       // Do we apply colors of node source/target tags ?
       const src_taggs_activated = this._source.taggs_list
         .filter(tagg => tagg.show_legend).filter(grp => {
-          this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
-        })
-
+          return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
+        }).length > 0
       const trgt_taggs_activated = this._target.taggs_list
         .filter(tagg => tagg.show_legend).filter(grp => {
-          this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
-      })
+          return this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
+        }).length > 0
 
       const trgt_node_type = this._target.grouped_taggs_dict['Type de noeud']
       const src_node_type = this._source.grouped_taggs_dict['Type de noeud']
@@ -813,10 +812,10 @@ export abstract class Class_LinkElement
       } else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
         shape_color = this._target.getShapeColorToUse()
       } else {
-        if (trgt_taggs_activated.length > 0) {
+        if (trgt_taggs_activated) {
           // If target has a tag from a group of which we display the palette
           shape_color = this._target.getShapeColorToUse()
-        } else if (src_taggs_activated.length > 0) {
+        } else if (src_taggs_activated) {
           // If source has a tag from a group of which we display the palette
           shape_color = this._source.getShapeColorToUse()
         }
