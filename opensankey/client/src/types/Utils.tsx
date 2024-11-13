@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
-
+import * as d3 from 'd3'
 // Local type imports
 import type { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
 
@@ -324,3 +324,7 @@ export const GetRandomInt = (max: number) => {
 }
 
 
+export const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
+  d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
+  d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
+  d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]

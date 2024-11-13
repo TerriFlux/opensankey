@@ -21,6 +21,7 @@ import {
   faImage,
   faPenToSquare,
   faPlus,
+  faRightFromBracket,
   faShapes,
   faShareNodes,
   faTable,
@@ -628,7 +629,38 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             </Box>
           </Button>
         </Box>
-      </OSTooltip>
+      </OSTooltip>,
+      <OSTooltip
+      placement='bottom'
+      label={t('Menu.tooltips.old_app')}>
+      <Box>
+        <Button
+          variant='menutop_button'
+          onClick={() => {
+            window.open('old.open-sankey.fr')
+          }}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow='1'
+              padding='0.1rem 0 0.1rem 0'
+            >
+              <FontAwesomeIcon
+                style={{ 'height': '2rem', 'width': '3rem' }}
+                icon={faRightFromBracket}
+              />
+            </Box>
+            <Box
+              gridRow='2'
+            >
+              {t('Menu.old_app')}
+            </Box>
+          </Box>
+        </Button>
+      </Box>
+    </OSTooltip>
     ]
 
     ui['edition'] = [
