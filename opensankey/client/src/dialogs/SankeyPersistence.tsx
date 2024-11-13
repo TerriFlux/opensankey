@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useEffect, useState, } from 'react'
-
+import * as d3 from 'd3'
 import {
   Box,
   Button,
@@ -30,7 +30,7 @@ import type {
   FType_UploadExemple
 } from './types/SankeyPersistenceTypes'
 
-import type { Type_JSON } from '../types/Utils'
+import { GetRandomInt, list_palette_color, type Type_JSON } from '../types/Utils'
 import type { Type_GenericApplicationDataOS } from '../types/TypesOS'
 import { FCType_SankeyLoad } from '../types/FunctionTypes'
 
@@ -384,7 +384,17 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       new_data.drawing_area.SplitTrade()
       // Computes u v,x and initial y for trade nodes
       new_data.drawing_area.ArrangeTrade(true)
-      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+      const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+      new_data.drawing_area.sankey.visible_nodes_list.forEach((n,i,a)=> {
+        n.reorganizeIOLinks();
+        new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
+      })
+      new_data.drawing_area.sankey.links_list.forEach(l=>{
+        if(l.shape_is_recycling){
+          l.shape_starting_tangeant=0.01
+          l.shape_ending_tangeant=0.01
+        }
+      })
 
       new_data.drawing_area.areaAutoFit()
     }
