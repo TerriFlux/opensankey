@@ -20,6 +20,8 @@ type Type_GenericDrawingArea = Class_AbstractDrawingArea
 export abstract class Class_AbstractApplicationData {
   // Mandatory attributes
   public abstract version: string
+  // Mandatory methods
+  public abstract isLabelSeparatorPartBefore():boolean
   // Mandatory getters
   public abstract get t(): TFunction
   public abstract get menu_configuration(): Class_MenuConfig
