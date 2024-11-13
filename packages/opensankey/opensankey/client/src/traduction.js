@@ -171,6 +171,7 @@ export const open_resources = {
         input_file_excel: 'Input file',
         no_input_file_detected: 'No file has been selected',
         waiting: 'Please wait',
+        old_app:'Old app.',
         Transformation: {
           amp_short: 'Layout',
           amp: 'Change the layout',
@@ -253,6 +254,8 @@ export const open_resources = {
           LegBgOpacity: 'Choose background color',
           LegBgBorder: 'Add a border to the legend area',
           LegBgColor: 'Choose background color opacity',
+          old_app:'Redirect to the old app',
+
         },
       },
       MEP: {
@@ -946,6 +949,8 @@ export const open_resources = {
         input_file_excel: 'Fichier d\'entrée excel',
         no_input_file_detected: 'Aucun fichier n\'a été sélectionné',
         waiting: 'Veuillez patienter',
+        old_app:'Ancienne app.',
+
         Transformation: {
           amp_short: 'M.E.P',
           amp: 'Modifier la mise en page',
@@ -1027,6 +1032,8 @@ export const open_resources = {
           LegBgOpacity: 'Modifie l\'opacité de la couleur de fond de la légende',
           LegBgBorder: 'Ajoute une bordure à la légende',
           LegBgColor: 'Moddifie la couleur de fond de la légende',
+          old_app:'Redirige vers l\'ancienne version de l\'application',
+
 
         },
       },
