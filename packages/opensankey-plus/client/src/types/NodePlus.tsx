@@ -585,10 +585,13 @@ export abstract class Class_NodeElementPlus
     // Launch animation of output links from clicked node, the rest is done recursively from there
     this.branchAnimate(this.drawing_area.application_data as Type_GenericApplicationDataOSP, [], this.drawing_area.sankey.visible_nodes_list as unknown as Type_GenericNodeElementOSP[])
 
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
+    const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
+
     // Compute longest possible path from clicked node (number of link before we get to a node without output link)
     // so we can determinate a timeout before reseting the sankey
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    this.drawing_area.computeHorizontalIndex(this, 0, [], [], horizontal_indexes_per_nodes_ids)
+    this.drawing_area.computeHorizontalIndex(this,nodes_to_process,0, [], [], horizontal_indexes_per_nodes_ids)
 
     // Compute time to animate the whole sankey from clicked node
     let time_to_animate = 500

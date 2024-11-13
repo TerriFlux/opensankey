@@ -261,7 +261,7 @@ export abstract class Class_ApplicationDataPlus
     }
     this._drawing_area.bypass_timeout = false
     this._drawing_area.drawElements()
-    this._drawing_area.checkAndUpdateAreaSize()
+    //this._drawing_area.checkAndUpdateAreaSize()
     this._drawing_area.areaAutoFit()
   }
 
