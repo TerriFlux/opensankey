@@ -304,7 +304,6 @@ export abstract class Class_NodeElementPlus
     // SELECTION MODE =========================================================
     if (drawing_area.isInSelectionMode()) {
       this.drawing_area.moveSelectedContainerFromDragEvent(event)
-      this.drawing_area.checkAndUpdateAreaSize()
     }
   }
 
