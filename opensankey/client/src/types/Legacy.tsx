@@ -1881,9 +1881,10 @@ const convert_links: convert_linksFuncType = (
     if (l.local && l.local.recycling) {
       l.local.left_horiz_shift = 0.05
       l.local.right_horiz_shift = 0.95;
+      
       // Add variable in legacy JSOn
-      (l.local as Type_JSON).starting_tangeant = 0.05; // special assignement for attr not present in legacy but usefull in current Class_link
-      (l.local as Type_JSON).ending_tangeant = 0.05 // special assignement for attr not present in legacy but usefull in current Class_link
+      (l.local as Type_JSON).starting_tangeant = 0.01; // special assignement for attr not present in legacy but usefull in current Class_link
+      (l.local as Type_JSON).ending_tangeant = 0.01 // special assignement for attr not present in legacy but usefull in current Class_link
 
     }
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
