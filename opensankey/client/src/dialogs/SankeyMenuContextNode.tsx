@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
@@ -11,6 +11,15 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Select,
+  Text,
   useBoolean
 } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
@@ -18,6 +27,8 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
+import { Type_GenericApplicationDataOS } from '../types/TypesOS'
+import { Class_NodeDimension } from '../types/NodeDimension'
 
 /*************************************************************************************************/
 
@@ -50,8 +61,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   let pos_x = 0
   let pos_y = 0
 
-  const size_Button=40
-  const size_context_menu=(additionalMenu.context_node_order.filter(key=>!key.includes('sep_')).length)*size_Button // Get approx. height of context menu
+  const size_Button = 40
+  const size_context_menu = (additionalMenu.context_node_order.filter(key => !key.includes('sep_')).length) * size_Button // Get approx. height of context menu
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (contextualised_node) {
@@ -62,7 +73,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     pos_y = new_data.drawing_area.pointer_pos[1]
 
     if (new_data.drawing_area.pointer_pos[1] + size_context_menu > window.innerHeight) {
-      pos_y = ((new_data.drawing_area.pointer_pos[1]-(new_data.drawing_area.pointer_pos[1] + size_context_menu-window.innerHeight)))
+      pos_y = ((new_data.drawing_area.pointer_pos[1] - (new_data.drawing_area.pointer_pos[1] + size_context_menu - window.innerHeight)))
       is_top = false
     }
     style_c_n = pos_y + 'px auto auto ' + pos_x + 'px'
@@ -474,11 +485,16 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     <Button
       variant='contextmenu_button'
       onClick={() => {
-        contextualised_node.drawParent()
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())//Redraw all node visible because some link position where not computed before aggregation
-        new_data.drawing_area.purgeSelection()
-        new_data.drawing_area.node_contextualised = undefined
-        refreshThisAndToggleSaving()
+        if (contextualised_node.is_multi_children) {
+          new_data.menu_configuration.ref_to_updater_node_agregate.current(true)
+        } else {
+          contextualised_node.drawParent()
+          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before aggregation
+          new_data.drawing_area.purgeSelection()
+          new_data.drawing_area.node_contextualised = undefined
+          refreshThisAndToggleSaving()
+        }
+
       }}
     >
       {t('Noeud.context_agregate')}
@@ -494,11 +510,16 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     <Button
       variant='contextmenu_button'
       onClick={() => {
-        contextualised_node.drawChildren()
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())//Redraw all node visible because some link position where not computed before disaggregation
-        new_data.drawing_area.purgeSelection()
-        new_data.drawing_area.node_contextualised = undefined
-        refreshThisAndToggleSaving()
+        if (contextualised_node.is_multi_parent) {
+          new_data.menu_configuration.ref_to_updater_node_disagregate.current(true)
+        } else {
+          contextualised_node.drawChildren()
+          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+          new_data.drawing_area.purgeSelection()
+          new_data.drawing_area.node_contextualised = undefined
+          refreshThisAndToggleSaving()
+        }
+
       }}
     >
       {t('Noeud.context_desagregate')}
@@ -600,4 +621,148 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       </ButtonGroup>
     </Box> :
     <></>
+}
+
+export type AgregationModalTypes = {
+  new_data: Type_GenericApplicationDataOS,
+}
+
+export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
+  { new_data }
+) => {
+  const [, setForce] = useState(0)
+  const [show_agregation, set_show_agregation] = useState(false)
+  const selected_grp = useRef<Class_NodeDimension | undefined>()
+  const closeModal = () => {
+    new_data.drawing_area.node_contextualised = undefined
+    new_data.drawing_area.purgeSelection()
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    set_show_agregation(false)
+  }
+  new_data.menu_configuration.ref_to_updater_node_disagregate.current = (b: boolean) => set_show_agregation(b)
+  if (new_data.drawing_area.node_contextualised) {
+    const list_child_dim = new_data.drawing_area.node_contextualised.get_children_dim.filter(dim => dim.children_level_tagg.id != 'Primaire')
+    if (selected_grp.current == null || selected_grp.current == undefined) {
+      selected_grp.current = list_child_dim[0]
+      setForce(a => a + 1)
+    }
+    return (
+      <Modal
+        isOpen={show_agregation}
+        onClose={closeModal}
+      >
+        <ModalOverlay />
+        <ModalContent
+          maxWidth='inherit'
+        >
+          <ModalHeader>
+            {new_data.t('Noeud.title_desaggreg')}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Box>
+              <Select
+                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  const idx_new_selected_grp = list_child_dim.map(dim => dim.id).indexOf(evt.target.value)
+                  selected_grp.current = (list_child_dim[idx_new_selected_grp])
+                  setForce(a => a + 1)
+                }}
+                value={selected_grp.current?.id}
+              >
+                {list_child_dim.map(
+                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.children_level_tagg.name}</option>
+                )}
+              </Select>
+              <Text>{new_data.t('Noeud.text_agreg')}</Text>
+              {selected_grp.current?.children.map(child_name => <Text>{child_name.name}</Text>)}
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="menuconfigpanel_option_button_secondary"
+              onClick={() => {
+                new_data.drawing_area.node_contextualised?.drawChildrenOfGrp((selected_grp.current?.id ?? ''))
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+                closeModal()
+              }}
+            >{new_data.t('Noeud.desaggreg')}</Button>
+            <Button variant="menuconfigpanel_del_button" onClick={() => {
+              closeModal()
+            }}>{new_data.t('Menu.annuler')}</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    )
+  }
+
+}
+
+
+export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
+  { new_data }
+) => {
+  const [, setForce] = useState(0)
+  const [show_agregation, set_show_agregation] = useState(false)
+  const selected_grp = useRef<Class_NodeDimension | undefined>()
+  const closeModal = () => {
+    new_data.drawing_area.node_contextualised = undefined
+    new_data.drawing_area.purgeSelection()
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    set_show_agregation(false)
+  }
+  new_data.menu_configuration.ref_to_updater_node_agregate.current = (b: boolean) => set_show_agregation(b)
+  if (new_data.drawing_area.node_contextualised) {
+    const list_parent_dim = new_data.drawing_area.node_contextualised.get_parent_dim.filter(dim => dim.parent_level_tag.group.id != 'Primaire')
+    if (selected_grp.current == null || selected_grp.current == undefined) {
+      selected_grp.current = list_parent_dim[0]
+      setForce(a => a + 1)
+    }
+    return (
+      <Modal
+        isOpen={show_agregation}
+        onClose={closeModal}
+      >
+        <ModalOverlay />
+        <ModalContent
+          maxWidth='inherit'
+        >
+          <ModalHeader>
+            {new_data.t('Noeud.title_aggreg')}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Box>
+              <Select
+                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  const idx_new_selected_grp = list_parent_dim.map(dim => dim.id).indexOf(evt.target.value)
+                  selected_grp.current = (list_parent_dim[idx_new_selected_grp])
+                  setForce(a => a + 1)
+                }}
+                value={selected_grp.current?.id}
+              >
+                {list_parent_dim.map(
+                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.children_level_tagg.name}</option>
+                )}
+              </Select>
+              <Text>{new_data.t('Noeud.text_agreg')}</Text>
+              {<Text>{selected_grp.current?.parent.name}</Text>}
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="menuconfigpanel_option_button_secondary"
+              onClick={() => {
+                new_data.drawing_area.node_contextualised?.drawParentOfGrp((selected_grp.current?.id ?? ''))
+                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+                closeModal()
+              }}
+            >{new_data.t('Noeud.aggreg')}</Button>
+            <Button variant="menuconfigpanel_del_button" onClick={() => {
+              closeModal()
+            }}>{new_data.t('Menu.annuler')}</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    )
+  }
 }
