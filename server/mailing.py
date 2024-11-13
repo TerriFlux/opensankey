@@ -15,17 +15,28 @@ from flask import render_template
 
 # ---------------------------------------------------------------
 # CONSTANTS FROM ENV
+if 'MAIL_SENDING_ADRESS' in  os.environ:
+    MAIL_SENDING_ADRESS = os.environ['MAIL_SENDING_ADRESS']
+    MAIL_SENDING_PWD = os.environ['MAIL_SENDING_PWD']
+    MAIL_SERVER = os.environ['MAIL_SERVER']
+    MAIL_PORT = os.environ['MAIL_PORT']
+    MAIL_USE_TLS = (os.environ['MAIL_USE_TLS'] == 'True')
+    MAIL_USE_SSL = (os.environ['MAIL_USE_SSL'] == 'True')
 
-MAIL_SENDING_ADRESS = os.environ['MAIL_SENDING_ADRESS']
-MAIL_SENDING_PWD = os.environ['MAIL_SENDING_PWD']
-MAIL_SERVER = os.environ['MAIL_SERVER']
-MAIL_PORT = os.environ['MAIL_PORT']
-MAIL_USE_TLS = (os.environ['MAIL_USE_TLS'] == 'True')
-MAIL_USE_SSL = (os.environ['MAIL_USE_SSL'] == 'True')
+    DBG_MODE = (os.environ['MAIL_DBG_MODE'] == 'Activate')
 
-DBG_MODE = (os.environ['MAIL_DBG_MODE'] == 'Activate')
+    CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
+else:
+    MAIL_SENDING_ADRESS = None
+    MAIL_SENDING_PWD = None
+    MAIL_SERVER = None
+    MAIL_PORT = None
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
 
-CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
+    DBG_MODE = True
+
+    CLIENT_ROOT_URL = None 
 
 
 # ---------------------------------------------------------------

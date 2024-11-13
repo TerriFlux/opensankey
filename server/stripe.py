@@ -38,11 +38,18 @@ from .models import set_licence_invoice_paid
 # ---------------------------------------------------------------
 # Constants
 STRIPE_KEYS = {
-    'secret_key': os.environ['STRIPE_SECRET_KEY'],
-    'publishable_key': os.environ['STRIPE_PUBLISHABLE_KEY'],
-    'price_id_osplusmensuel': os.environ['STRIPE_PRICE_ID_OSPLUSMENSUEL'],
-    'endpoint_secret': os.environ['STRIPE_ENDPOINT_SECRET']}
-CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
+    'secret_key': None,
+    'publishable_key': None,
+    'price_id_osplusmensuel': None,
+    'endpoint_secret': None}
+CLIENT_ROOT_URL=None
+if 'STRIPE_SECRET_KEY' in os.environ:
+    STRIPE_KEYS = {
+        'secret_key': os.environ['STRIPE_SECRET_KEY'],
+        'publishable_key': os.environ['STRIPE_PUBLISHABLE_KEY'],
+        'price_id_osplusmensuel': os.environ['STRIPE_PRICE_ID_OSPLUSMENSUEL'],
+        'endpoint_secret': os.environ['STRIPE_ENDPOINT_SECRET']}
+    CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
 
 
 # ---------------------------------------------------------------
