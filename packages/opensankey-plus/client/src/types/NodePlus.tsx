@@ -519,9 +519,10 @@ export abstract class Class_NodeElementPlus
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
       if (this.name_label_vert == 'top') {
-        box_pos_y -= this.name_label_font_size
+        box_pos_y -= this.name_label_font_size -(((this.d3_selection?.select('name_label_text')?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
       } else if (this.name_label_vert == 'middle') {
-        box_pos_y -= this.name_label_font_size / 2
+        const label_text=this.d3_selection?.select('.name_label_text')
+        box_pos_y = Number(label_text?.attr('y'))-this.name_label_font_size/2
       }
       const DA_scale = this.drawing_area.getZoomScale()
       const element_BBox = (this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect() ?? { x: 0, y: 0, height: 0, width: 0 }

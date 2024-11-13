@@ -41,7 +41,7 @@ import { ConfigMenuNumberInput } from '../deps/OpenSankey/configmenus/SankeyMenu
 import { svg_label_top, svg_label_center, svg_label_bottom } from '../deps/OpenSankey/configmenus/SankeyMenuConfigurationNodesAttributes'
 import { icon_open_modal } from '../deps/OpenSankey/dialogs/SankeyMenuContextNode'
 
-export const default_label_background = false
+export const default_label_background = true
 
 
 declare const window: Window &
