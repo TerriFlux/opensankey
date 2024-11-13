@@ -223,6 +223,11 @@ export class Class_MenuConfig {
   // Ref to style of currently selected link(s)
   private _ref_selected_style_link: MutableRefObject<string> = useRef('default')
 
+  // Ref to updater show modal multi aggregate/disaggregate
+  private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(()=>null)
+  private _ref_to_updater_node_agregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
+ 
+
   // Var to hide welcome menu when we relaucnh application
   private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAggainWelcome') === '1'))
 
@@ -977,6 +982,14 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_context_nodes_updater(): MutableRefObject<(() => void)> {
     return this._ref_to_menu_context_nodes_updater
+  }
+
+  public get ref_to_updater_node_disagregate(): MutableRefObject<(b:boolean)=>void> {
+    return this._ref_to_updater_node_disagregate
+  }
+
+  public get ref_to_updater_node_agregate(): MutableRefObject<(b: boolean) => void> {
+    return this._ref_to_updater_node_agregate
   }
 
   // Links menus ------------------------------------------------------------------------
