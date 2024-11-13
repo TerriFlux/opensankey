@@ -1480,14 +1480,37 @@ export abstract class Class_Sankey
    * @memberof Class_Sankey
    */
   public sortNodes() {
-    const sorted_nodes = Object.values(this._nodes).sort((n1,n2)=>{
+    const echangeTag = this.node_taggs_dict['type de noeud']?this.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
+    const sorted_nodes = this.nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
+    sorted_nodes.sort((n1,n2)=>{
       if (n1.position_v>=0 || n2.position_v>=0) {
         return n1.position_v - n2.position_v
       } else {
         return n2.position_v - n1.position_v
       }
     })
-    this._nodes = Object.assign({}, ...sorted_nodes.map((n) => ({[n.id]: n})))  
+    let import_nodes = this.nodes_list.filter(n=>
+      echangeTag && n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+    )
+    import_nodes.sort((n1,n2)=>{
+      if (n1.position_v>=0 || n2.position_v>=0) {
+        return n1.position_v - n2.position_v
+      } else {
+        return n2.position_v - n1.position_v
+      }
+    })
+    let export_nodes = this.nodes_list.filter(n=>
+      echangeTag && n.hasGivenTag(echangeTag)  && n.input_links_list.length > 0 
+    )
+    export_nodes.sort((n1,n2)=>{
+      if (n1.position_v>=0 || n2.position_v>=0) {
+        return n1.position_v - n2.position_v
+      } else {
+        return n2.position_v - n1.position_v
+      }
+    })
+    const all_nodes = [...sorted_nodes,...import_nodes,...export_nodes]
+    this._nodes = Object.assign({}, ...all_nodes.map((n) => ({[n.id]: n})))  
   }
 
   /**

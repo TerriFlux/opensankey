@@ -49,6 +49,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract purgeSelection(): void
   public abstract closeAllMenus(): void
   public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
+  public abstract reset():void
 
   public abstract computeParametricV():void
   // Mandatory getters

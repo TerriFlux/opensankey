@@ -848,6 +848,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public areaFitHorizontally() {
+    this.checkAndUpdateAreaSize()
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
@@ -868,6 +869,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public areaFitVertically() {
+    this.checkAndUpdateAreaSize()
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
@@ -939,6 +941,7 @@ export abstract class Class_DrawingArea
    */
   public computeHorizontalIndex(
     node: Type_GenericNodeElement,
+    nodes_to_process: Type_GenericNodeElement[],
     starting_index: number,
     visited_nodes_ids: string[],
     recycling_links_ids: string[],
@@ -960,7 +963,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-      (this.sankey.visible_nodes_list.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+      (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -970,6 +973,7 @@ export abstract class Class_DrawingArea
           // Recursive calling
           this.computeHorizontalIndex(
             next_node,
+            nodes_to_process,
             starting_index + 1,
             [...visited_nodes_ids, node.id],
             recycling_links_ids,
@@ -1031,6 +1035,7 @@ export abstract class Class_DrawingArea
    * @param {object} nodes
    */
   public computeRecyclingHorizontalIndex(
+    nodes_to_process: Type_GenericNodeElement[],    
     link: Type_GenericLinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
@@ -1071,6 +1076,7 @@ export abstract class Class_DrawingArea
           // TODO faut un forçage des indexs à suivre.
           this.computeHorizontalIndex(
             this.sankey.nodes_dict[source_node_id],
+            nodes_to_process,
             index,
             [],
             recycling_links_ids,
@@ -1096,7 +1102,7 @@ export abstract class Class_DrawingArea
     }
 
     let trade_nodes = this.sankey.nodes_list.filter(n=>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])  && n.input_links_list.length > 0 
+      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
     )
     // first split the nodes
     trade_nodes.forEach(node=>{
@@ -1108,9 +1114,13 @@ export abstract class Class_DrawingArea
       }
       this.sankey.deleteNode(node)
     })
+    trade_nodes = this.sankey.nodes_list.filter(n=>
+      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
+    )
     // the set dimensions. It must be done after each trade node has been split
     trade_nodes.forEach(node=>{
-      (node as Type_GenericNodeElement).setTradeDimensions(true)
+      (node as Type_GenericNodeElement).setTradeDimensions(true);
+      (node as Type_GenericNodeElement).setTradeDimensions(false)
     })
   }
 
@@ -1140,28 +1150,13 @@ export abstract class Class_DrawingArea
     if (launched_from_process) {
       this.scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue) : linksMaxValue
     }
-    // this.sankey.node_styles_dict['default'].position_type = 'parametric'
-    // if ('NodeSectorStyle' in this.sankey.node_styles_dict) {
-    //   this.sankey.node_styles_dict['NodeSectorStyle'].position_type = 'parametric'
-    // }
-    // if ('NodeProductStyle' in this.sankey.node_styles_dict) {
-    //   this.sankey.node_styles_dict['NodeProductStyle'].position_type = 'parametric'
-    // }
-
-    // // Reset input / ouput links id for each node
-    // compute_default_input_outputLinksId(data.nodes, this.sankey.links_dict)
-
-    // // Get list of all visible nodes
-    // //  /!\ the nodes of this list will be the only nodes
-    // //      that are going to be positionned
-    // const visible_nodes_ids = Object.values(data.nodes)
-    //   .filter(n => NodeDisplayed(data, n) && (n.position !== 'relative'))
-    //   .map(n=>n.idNode)
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
+    const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
 
     // // Compute positionning indexes
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
     const possible_recycling_links_ids: string[] = []
-    this.sankey.visible_nodes_list
+    nodes_to_process
       .forEach(node => {
         //     const node = data.nodes[node_id]
         if (!node.hasInputLinks() && node.hasOutputLinks()) {
@@ -1169,6 +1164,7 @@ export abstract class Class_DrawingArea
           const starting_index = 0
           this.computeHorizontalIndex(
             node,
+            nodes_to_process,
             starting_index,
             [],
             possible_recycling_links_ids,
@@ -1188,6 +1184,7 @@ export abstract class Class_DrawingArea
     Object.values(possible_recycling_links_ids)
       .forEach(link_id =>
         this.computeRecyclingHorizontalIndex(
+          nodes_to_process,
           this.sankey.links_dict[link_id],
           checked_recycling_links_ids,
           horizontal_indexes_per_nodes_ids
@@ -1470,38 +1467,38 @@ export abstract class Class_DrawingArea
     if (!this.sankey.node_taggs_dict['type de noeud']) {
       return
     }
-    let import_nodes = this.sankey.nodes_list.filter(n=>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']) && n.output_links_list.length > 0
+    const process_nodes = this.sankey.nodes_list
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
+    let import_nodes = process_nodes.filter(n=>
+      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
-    let export_nodes = this.sankey.nodes_list.filter(n=>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])  && n.input_links_list.length > 0 
+    let export_nodes = process_nodes.filter(n=>
+      n.hasGivenTag(echangeTag)  && n.input_links_list.length > 0 
     )
+    let other_nodes = process_nodes.filter(n=>!n.hasGivenTag(echangeTag))
   
-    let max_vertical_offset = 0
-    const compute_offset = (node:Type_GenericNodeElement) => {
-      if (!node.position_y) {
-        return
-      }
-      if (node.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']) ) {
-        return
-      }
-      max_vertical_offset = Math.max(node.position_y+node.getShapeHeightToUse(), max_vertical_offset)
-    }
-  
-    this.sankey.nodes_list.filter(n=>n.is_visible).forEach(compute_offset)
+    let max_vertical_offset = 0  
+    other_nodes.forEach(n=>
+      max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)
+    )
     max_vertical_offset = max_vertical_offset + 200
-  
+    const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
+
     const default_style = this.sankey.node_styles_dict['default']
     const h_space = default_style.position.dx!
     import_nodes.forEach(node => {
       const output_link = node.output_links_list[0]
       const target_node = output_link.target
       node.position_u = target_node.position_u
-      node.position_v = target_node.position_v + 2000
+      node.position_v = target_node.position_v
       if (compute_xy) {
         const x = Math.round(target_node.position_x/h_space)*h_space - h_space
         node.position_x = x
-        node.position_y = 100
+        node.position_y = 50
+        // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < node.position_y+200) {
+        //   const shift = 200 +node.position_y - firstNonEchangeNodeBelow.position_y
+        //   this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>n.shiftVertically(shift))
+        // }         
       }
     })
   
@@ -1509,13 +1506,14 @@ export abstract class Class_DrawingArea
       const input_link = node.input_links_list[0]
       const source_node = input_link.source
       node.position_u = source_node.position_u
-      node.position_v = source_node.position_v + 4000
+      node.position_v = source_node.position_v
       if (compute_xy) {
         const x = Math.round(source_node.position_x/h_space)*h_space+h_space
         node.position_x = x
         node.position_y = max_vertical_offset
       }
     })
+    this.sankey.sortNodes()
   }
 
   /**
@@ -1578,15 +1576,8 @@ export abstract class Class_DrawingArea
     })
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
-      if (this.sankey.level_taggs_list.length == 0) {
-        let current_v = 0
-        column.forEach(n => current_v = this.apply_v(n, current_v, undefined))
-      }
-      this.sankey.level_taggs_list.forEach(tagGroup => {
-        let current_v = 0
-        column.forEach(n => current_v = this.apply_v(n, current_v, tagGroup))
-        //column.forEach(n=>apply_v_agregate(data,n,n.v))
-      })
+      let current_v = 0
+      column.forEach(n => current_v = this.apply_v(n, current_v))
     })
     this.sankey.sortNodes()
   }
@@ -1598,41 +1589,28 @@ export abstract class Class_DrawingArea
    */
   public apply_v(
     node:Type_AbstractNodeElement,
-    current_v:number,
-    tagGroup:Class_LevelTagGroup|undefined
+    current_v:number
   ) {
-    //const {data} = applicationData
-    //const all_nodes = Object.assign({},data.nodes,data.additional_nodes)
-    const all_nodes = this.sankey.nodes_dict
-    //node.position = 'parametric'
-    node.display.position.v = current_v
-    if (!tagGroup) {
-      return current_v+1    
+    if (!node.display.position.v) {
+      node.display.position.v = current_v
     }
-    //node.y == undefined
-    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-    if (!nodeDimParent) {
-      return current_v+1
-    }
-
     let new_current_v = current_v
-    //let cur_relative_dx = ReturnLocalNodeValue(node,'relative_dx') as number
-    let cur_relative_dx = node.position_relative_dx as number
-    if (!cur_relative_dx) {
-      cur_relative_dx = 0
-    }
-    let current_node_width = 0
-    nodeDimParent.children.forEach(nn=>{
-      // parametric
+    let desagregated_nodes : Type_GenericNodeElement[] = []
+    this.sankey.level_taggs_list.forEach(tagGroup => {
+      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+      if (!nodeDimParent) {
+        return
+      }   
+      desagregated_nodes = [...desagregated_nodes,...(nodeDimParent.children as Type_GenericNodeElement[])]
+      desagregated_nodes = [...new Set(desagregated_nodes)]
+    })
+    let current_y = node.position_y
+    desagregated_nodes.forEach(nn=>{
       nn.display.position.x = node.position_x
       nn.display.position.u = node.position_u
-      // relative
-      //AssignNodeLocalAttribute(nn,'relative_dx',cur_relative_dx+current_node_width)
-      node.position_relative_dx = cur_relative_dx+current_node_width
-      current_node_width += nn.getShapeWidthToUse()//nodeWidth(nn, applicationData, inv_scale, scale, GetLinkValue)
-      cur_relative_dx = cur_relative_dx + nn.position_relative_dx!+current_node_width
-
-      new_current_v = this.apply_v(nn,new_current_v,tagGroup)
+      nn.display.position.y = current_y
+      current_y += 20
+      new_current_v = this.apply_v(nn,new_current_v)
     })
     return new_current_v+1
   }
@@ -1793,6 +1771,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public areaAutoFit() {
+    this.checkAndUpdateAreaSize()
 
     const ratio_v = this._height / this.window_fitting_height // get ration of sankey height / screen height
     const ratio_h = this._width / this.window_fitting_width // get ration of sankey width / screen width
