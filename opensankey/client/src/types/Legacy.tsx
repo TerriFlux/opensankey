@@ -324,6 +324,13 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   } else {
     data_to_convert.mask_legend = !data_to_convert.mask_legend
   }
+  const data_cast=(data_to_convert as unknown as Type_JSON)
+  if(data_cast.legend_position_x==undefined){
+    data_cast.legend_position_x=data_to_convert.legend_position[0]
+  }
+  if(data_cast.legend_position_y==undefined){
+    data_cast.legend_position_y=data_to_convert.legend_position[1]
+  }
 
   clean_data_local(data_to_convert)
 }

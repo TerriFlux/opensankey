@@ -16,7 +16,7 @@ import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialo
 import { Class_MenuConfig } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_JSON } from './Utils'
+import { getStringFromJSON, Type_JSON } from './Utils'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
@@ -63,7 +63,7 @@ export abstract class Class_ApplicationData
   public version: string = '0.9'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
-  public options: {[_: string]: boolean | string } = {}
+  public options: { [_: string]: boolean | string } = {}
 
   private _processFunction: FType_ProcessFunctions
 
@@ -112,7 +112,11 @@ export abstract class Class_ApplicationData
   private _logo_width: number = 100
   private _app_name: string = 'SankeySuite'
   private _url_prefix: string = '/opensankey/' // path for server call
+  
+  // Variable to modify node name label displayed, 
+  // it can contain separator (special caracter) that split label between what we want tot display and what not
   private _node_label_separator = '-'
+  private _node_label_separator_part: 'before' | 'after' = 'before'
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -128,7 +132,7 @@ export abstract class Class_ApplicationData
     */
   constructor(
     published_mode: boolean,
-    options: {[_: string]: boolean | string} = {}
+    options: { [_: string]: boolean | string } = {}
   ) {
     super()
     // Options for application
@@ -172,7 +176,7 @@ export abstract class Class_ApplicationData
     // Default logo for app
     this._logo = logo_opensankey
 
-    this._processFunction= {
+    this._processFunction = {
       ref_processing: useRef(false),
       ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       failure: useRef(false),
@@ -204,6 +208,8 @@ export abstract class Class_ApplicationData
     this.drawing_area.delete()
     this.drawing_area = this.createNewDrawingArea()
     this.drawing_area.reset()
+    this._node_label_separator='-'
+    this._node_label_separator_part='before'
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -218,22 +224,29 @@ export abstract class Class_ApplicationData
   public fromJSON(json_object: Type_JSON) {
     // Reset everything
     this.reset()
+
+    // Set node label separator attribute from json
+    this._node_label_separator = getStringFromJSON(json_object,'node_label_separator',this._node_label_separator)
+    this._node_label_separator_part = getStringFromJSON(json_object,'node_label_separator_part',this._node_label_separator_part) as 'before'|'after'
+
     // Update drawing area
     this.drawing_area.bypass_timeout = true
     this.drawing_area.fromJSON(json_object)
     this.menu_configuration.updateAllMenuComponents()
     this.drawing_area.bypass_timeout = false
     this._drawtimeout = setTimeout(
-      () => {this._drawing_area.drawElements();this._drawing_area.checkAndUpdateAreaSize();this._drawing_area.areaAutoFit()},
+      () => { this._drawing_area.drawElements(); this._drawing_area.checkAndUpdateAreaSize(); this._drawing_area.areaAutoFit() },
       10
     )
+    this._drawing_area.setToModeEdition(false)
   }
 
   public toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
-    // TODO dump application data attributes
-    json_object['node_label_separator'] = '' // TODO get node label separator when implemented in class
+
+    json_object['node_label_separator'] = this._node_label_separator
+    json_object['node_label_separator_part'] = this._node_label_separator_part
     // Dump with drawing area & its content in json struct
     return {
       ...json_object,
@@ -244,6 +257,27 @@ export abstract class Class_ApplicationData
     }
   }
 
+  public isLabelSeparatorPartBefore() {
+    return this._node_label_separator_part == 'before'
+  }
+
+  /**
+   *Set node name label separator part to before
+   *
+   * @memberof Class_ApplicationData
+   */
+  public setLabelSeparatorPartBefore() {
+    this._node_label_separator_part = 'before'
+  }
+
+  /**
+   *Set node name label separator part to after
+   *
+   * @memberof Class_ApplicationData
+   */
+  public setLabelSeparatorPartAfter() {
+    this._node_label_separator_part = 'after'
+  }
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -418,6 +452,6 @@ export abstract class Class_ApplicationData
   public get node_label_separator() { return this._node_label_separator }
   public set node_label_separator(_: string) { this._node_label_separator = _ }
 
-  public get processFunction(): FType_ProcessFunctions {return this._processFunction}
+  public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 }
 

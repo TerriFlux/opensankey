@@ -692,6 +692,7 @@ export abstract class Class_NodeElement
 
   public forceHide() {
     this._show = false
+    this.draw() //Will hide node because we generally loop one visible node to draw them so this node won't be taking into account
   }
 
   public forceLevelTag() {
@@ -709,7 +710,33 @@ export abstract class Class_NodeElement
   public drawChildren() {
     if (this.is_parent) {
       Object.values(this._dimensions_as_parent)[0].parent.forceHide()
-      Object.values(this._dimensions_as_parent)[0].children.forEach(n=>n.forceShow())
+      Object.values(this._dimensions_as_parent)[0].children.forEach(n => n.forceShow())
+    }
+  }
+
+  /**
+   *Choose wich node dimensions we have to disagregate
+   *
+   * @param {string} id
+   * @memberof Class_NodeElement
+   */
+  public drawChildrenOfGrp(id: string) {
+    if (this.is_parent && id in this._dimensions_as_parent) {
+      this._dimensions_as_parent[id].parent.forceHide()
+      this._dimensions_as_parent[id].children.forEach(n => n.forceShow())
+    }
+  }
+
+  /**
+   *Choose wich node dimensions we have to agregate
+   *
+   * @param {string} id
+   * @memberof Class_NodeElement
+   */
+  public drawParentOfGrp(id: string) {
+    if (this.is_child && id in this._dimensions_as_child) {
+      this._dimensions_as_child[id].parent.forceShow()
+      this._dimensions_as_child[id].children.forEach(n => n.forceHide())
     }
   }
 
@@ -1405,18 +1432,18 @@ export abstract class Class_NodeElement
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
    * @memberof Class_NodeElement
    */
-    protected eventMouseDragStart(
-      event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-    ) {
-      // Apply parent behavior first
-      super.eventMouseDrag(event)
-      if (event.sourceEvent.shiftKey) {
-        return
-      }
-      const drawing_area = this.drawing_area
-      drawing_area.addNodeToSelection(this)
-      this._drag = true
+  protected eventMouseDragStart(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseDragStart(event)
+    if (event.sourceEvent.shiftKey) {
+      return
     }
+    const drawing_area = this.drawing_area
+    drawing_area.addNodeToSelection(this)
+    this._drag = true
+  }
 
   /**
    * Define event when mouse drag element
@@ -1433,12 +1460,7 @@ export abstract class Class_NodeElement
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
 
-    if (nodes_selected.length == 0) {
-      if (drawing_area.isInSelectionMode()) {
-        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
-        this.drawing_area.checkAndUpdateAreaSize()
-      }
-    } else if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
+    if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
       if (drawing_area.isInEditionMode()) {
         // /* TODO définir  */
@@ -1451,7 +1473,6 @@ export abstract class Class_NodeElement
           .forEach(n => {
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
-        this.drawing_area.checkAndUpdateAreaSize()
       }
     }
   }
@@ -1469,15 +1490,7 @@ export abstract class Class_NodeElement
     // Get related elements in drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list as this[]
-    if (nodes_selected.length == 0) {
-      this.output_links_list.forEach(link => {
-        link.target.applyPosition()
-      })
-      // Move all elements so none of them are outside the DA
-      this.drawing_area.recenterElements()
-      this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-    } else if (nodes_selected.includes(this)) {
+    if (nodes_selected.includes(this)) {
       // Only trigger the drag if we drag a selected node
       // redraw node on target of output links
       nodes_selected
@@ -1838,11 +1851,12 @@ export abstract class Class_NodeElement
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
     if (this.name_label_visible) {
+      const label_to_display=this.name_label
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
       // - Shape : ref point if top-left corner
       const box_width = Math.min(
-        this.name_label.length * this.name_label_font_size,
+        label_to_display.length * this.name_label_font_size,
         this.name_label_box_width)
       const box_height = this.name_label_font_size
 
@@ -1862,7 +1876,8 @@ export abstract class Class_NodeElement
         .style('font-family', this.name_label_font_family)
         .style('stroke', 'none')
         .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
-        .text(this.name_label)
+        .text(label_to_display)
+        .filter(()=>label_to_display.split(' ').length>1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
         .call(wrapper)
 
       // Position label & return it coord_x, coord_y & it text anchor for use in other element (label bg, label fo)
@@ -2692,7 +2707,9 @@ export abstract class Class_NodeElement
    */
   public get name_label() {
     if (this.drawing_area.application_data.node_label_separator !== '') {
-      return this._name.split(this.drawing_area.application_data.node_label_separator)[0]
+      // If separator affect name label & the separator part is after then return label after separator else return first part
+      const splitted_label=this._name.split(this.drawing_area.application_data.node_label_separator)
+      return (splitted_label.length>1 && !this.drawing_area.application_data.isLabelSeparatorPartBefore()) ? splitted_label[1] : splitted_label[0];
     }
     return this._name
   }
@@ -2824,6 +2841,49 @@ export abstract class Class_NodeElement
   public get is_parent() {
     return (Object.values(this._dimensions_as_parent).length > 0)
   }
+
+  /**
+   *Return ture if nod eis in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get is_multi_parent() {
+    return (Object.values(this._dimensions_as_parent).filter(dim => dim.children_level_tagg.id != 'Primaire').length > 1)
+  }
+
+  /**
+   * Retun list of dimensions where this node is the parent
+   *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get get_children_dim() {
+    return Object.values(this._dimensions_as_parent)
+  }
+
+
+  /**
+   *Return ture if node is in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get is_multi_children() {
+    return (Object.values(this._dimensions_as_child).filter(dim => dim.parent_level_tag.group.id != 'Primaire').length > 1)
+  }
+
+
+  /**
+   * Retun list of dimensions where this node is a child
+   *
+   * @readonly
+   * @memberof Class_NodeElement
+   */
+  public get get_parent_dim() {
+    return Object.values(this._dimensions_as_child)
+  }
+
 
   // Links related ----------------------------------------------------------------------
 
