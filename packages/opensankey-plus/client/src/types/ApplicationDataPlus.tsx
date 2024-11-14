@@ -117,7 +117,134 @@ export abstract class Class_ApplicationDataPlus
     this._logo = this._logo_sankey_plus
   }
 
-  // PROTECTED METHODS =====================================================================
+  // CLEANING METHODS ===================================================================
+
+  /**
+   * Override function from Class_ApplicationData, to reset views before reseting normally
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
+  reset(): void {
+    this._views = {}
+    this._views_order = []
+    super.reset()
+  }
+
+  private deleteCurrentOriginalView() {
+    if (this._original_current_view !== undefined) {
+      this._original_current_view.delete()
+      this._original_current_view = undefined
+    }
+  }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Convert application_data to JSON format,
+   * if we are in a view switch to master then save master then the view
+   *
+   * @param {boolean} [with_view=true]
+   * @return {*}
+   * @memberof Class_ApplicationDataPlus
+   */
+  public toJSON() {
+    let current_view = default_main_sankey_id
+    let json_entry: Type_JSON = {}
+
+    if (
+      this.has_views &&
+      this.options_save_json.only_current_view &&
+      !this.is_view_master
+    ) {
+      // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
+      json_entry = super.toJSON()
+      json_entry.id = default_main_sankey_id
+    }
+    else {
+      // Else save master then views in a variable in JSON
+      if (this.has_views && !this.is_view_master) {
+        // Update _original_current_view
+        // Since we update the view in master data the view become the 'original_view'
+        this.deleteCurrentOriginalView()
+
+        // Create & save a clone of current view's DA
+        const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
+        clone_drawing_area.bypass_redraws = true
+        clone_drawing_area.copyFrom(this._drawing_area)
+        this._original_current_view = clone_drawing_area
+
+        // Save current view id so it we can reset active view as the current one before toJSON
+        // It is done so we save first the master then the views in a JSON
+        current_view = this._drawing_area.id
+        // Set current DA to master so master is save in first
+        this._drawing_area = this._views[default_main_sankey_id]
+      }
+
+      // Herited toJSON to save master data
+      json_entry = super.toJSON()
+
+      if (this.has_views) {
+        // If application_data has views then we save them in the JSON
+        json_entry['views'] = {}
+        const json_entry_views = json_entry['views']
+        // Go throught all view (except first since it's master data & already parsed in JSON)
+        this._views_order.filter((id, i) => i !== 0).forEach(id => {
+          json_entry_views[id] = this._views[id].toJSON()
+        })
+        // Set current DA to active view before toJSON
+        this._drawing_area = this._views[current_view]
+      }
+    }
+
+    // Add var to remember active view when saved
+    json_entry['current_view'] = current_view
+    return json_entry
+  }
+
+  protected _fromJSON(json_object: Type_JSON): void {
+    // Read main json
+    super._fromJSON(json_object)
+    // Save master in view
+    this._views[default_main_sankey_id] = this._drawing_area
+    this.pushViewIdInViewOrder(default_main_sankey_id)
+    // Read views parts
+    // this.deleteCurrentOriginalView() // TODO est-ce vraiment necessaire ?
+    this.extractViewsFromJSON(json_object)
+    // Set view to the one active when saved
+    const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+    if (
+      (active_view_id !== default_main_sankey_id) &&
+      (active_view_id in this._views)
+    ) {
+      this._drawing_area = this._views[active_view_id]
+    }
+  }
+
+  /**
+   * Function to add views from a JSON file to current application data
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationDataPlus
+   */
+  public extractViewsFromJSON(json_object: Type_JSON) {
+    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    if (views) {
+      // Create other views
+      Object.entries(views)
+        .forEach(([view_id, view_json]) => {
+          if (view_id !== default_main_sankey_id) {
+            // Create and populate drawing area
+            const drawing_area_view = this.createNewDrawingArea(view_id)
+            drawing_area_view.fromJSON(view_json as Type_JSON)
+            // Add new drawing area to views
+            this._views[view_id] = drawing_area_view
+            this.pushViewIdInViewOrder(view_id)
+          }
+        })
+    }
+  }
+
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Function to create custom application behavior when we press a key,
@@ -217,144 +344,6 @@ export abstract class Class_ApplicationDataPlus
 
   // PUBLIC METHODS =====================================================================
 
-  private deleteCurrentOriginalView() {
-    if (this._original_current_view !== undefined) {
-      this._original_current_view.delete()
-      this._original_current_view = undefined
-    }
-  }
-
-  /**
-   * Extract application data attribute from JSON then extract info for  views
-   *
-   * @memberof Class_ApplicationDataPlus
-   */
-  public override fromJSON(json_object: Type_JSON): void {
-    super.fromJSON(json_object)
-    this._drawing_area.bypass_timeout = true
-    if (this._drawtimeout !== null) clearTimeout(this._drawtimeout)
-    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
-    this.deleteCurrentOriginalView()
-    if (views) {
-      // Save master in view
-      this._views[default_main_sankey_id] = this._drawing_area
-      this.pushViewIdInViewOrder(default_main_sankey_id)
-
-      // Create other views
-      Object.entries(views).forEach(ent_view => {
-        const tmp = this.createNewDrawingArea(ent_view[0])
-        tmp.bypass_timeout = true
-        tmp.fromJSON(ent_view[1] as Type_JSON, false)
-        tmp.bypass_timeout = false
-        // Add new sankey to views
-        this._views[ent_view[0]] = tmp
-        this.pushViewIdInViewOrder(ent_view[0])
-      })
-
-      // Set view to the one active when saved
-      const active_view = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
-      if (active_view != default_main_sankey_id && active_view in this._views) {
-        this._drawing_area.bypass_timeout = false
-        const idx = this._views_order.indexOf(active_view)
-        this.setCurrentView(this._views_order[idx])
-      }
-    }
-    this._drawing_area.bypass_timeout = false
-
-    this._drawtimeout = setTimeout(
-      () => { this.functionAfterFromJSON() },
-      10
-    )
-  }
-
-  /**
-   * Function to add views from a JSON file to current application data
-   *
-   * @param {Type_JSON} json_object
-   * @return {*}  {{ [id: string]: Type_GenericDrawingArea }}
-   * @memberof Class_ApplicationDataPlus
-   */
-  public extractViewsFromJSON(json_object: Type_JSON): { [id: string]: Type_GenericDrawingArea } {
-    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
-    const dict_of_view: { [id: string]: Type_GenericDrawingArea } = {}
-
-    if (views) {
-      // Create other views
-      Object.entries(views).filter(ent => ent[0] !== default_main_sankey_id).forEach(ent_view => {
-        const tmp = this.createNewDrawingArea(ent_view[0])
-        tmp.fromJSON(ent_view[1] as Type_JSON, false)
-        // Add new DA to views
-        this._views[ent_view[0]] = tmp
-        this.pushViewIdInViewOrder(ent_view[0])
-      })
-
-      this._views_order = Array.from(new Set([...this._views_order]))
-    }
-    return dict_of_view
-  }
-
-  /**
-   * Convert application_data to JSON format,
-   * if we are in a view switch to master then save master then the view
-   *
-   * @param {boolean} [with_view=true]
-   * @return {*}
-   * @memberof Class_ApplicationDataPlus
-   */
-  public toJSON() {
-    let current_view = default_main_sankey_id
-    let json_entry: Type_JSON = {}
-
-    if (
-      this.has_views &&
-      this.options_save_json.only_current_view &&
-      !this.is_view_master
-    ) {
-      // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
-      json_entry = super.toJSON()
-      json_entry.id = default_main_sankey_id
-    }
-    else {
-      // Else save master then views in a variable in JSON
-      if (this.has_views && !this.is_view_master) {
-        // Update _original_current_view
-        // Since we update the view in master data the view become the 'original_view'
-        this.deleteCurrentOriginalView()
-
-        // Create & save a clone of current view's DA
-        const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
-        clone_drawing_area.bypass_timeout = true
-        clone_drawing_area.copyFrom(this._drawing_area)
-        this._original_current_view = clone_drawing_area
-
-        // Save current view id so it we can reset active view as the current one before toJSON
-        // It is done so we save first the master then the views in a JSON
-        current_view = this._drawing_area.id
-        // Set current DA to master so master is save in first
-        this._drawing_area = this._views[default_main_sankey_id]
-      }
-
-      // Herited toJSON to save master data
-      json_entry = super.toJSON()
-
-      if (this.has_views) {
-        // If application_data has views then we save them in the JSON
-        json_entry['views'] = {}
-        const json_entry_views = json_entry['views']
-        // Go throught all view (except first since it's master data & already parsed in JSON)
-        this._views_order.filter((id, i) => i !== 0).forEach(id => {
-          json_entry_views[id] = this._views[id].toJSON()
-        })
-        // Set current DA to active view before toJSON
-        this._drawing_area = this._views[current_view]
-      }
-    }
-
-    // Add var to remember active view when saved
-    json_entry['current_view'] = current_view
-    return json_entry
-  }
-
   /**
    * Create a new view (sankey) from given sankey
    *
@@ -378,8 +367,6 @@ export abstract class Class_ApplicationDataPlus
     // Add new sankey to views
     this._views[new_drawing_area.id] = new_drawing_area
     this.pushViewIdInViewOrder(new_drawing_area.id)
-    // In case we add a new view with an existing key it automatically change in the dict but we need to delete all duplicate in _views_order
-
     // Shown sankey = new sanke
     this.setCurrentView(new_drawing_area.id)
   }
@@ -419,15 +406,13 @@ export abstract class Class_ApplicationDataPlus
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
-          clone_drawing_area.bypass_timeout = true
           clone_drawing_area.copyFrom(this._drawing_area)
           // Save clone
           this.deleteCurrentOriginalView()
           this._original_current_view = clone_drawing_area
         }
         // Draw new-sankey
-        this._drawing_area.reset()
-        this.drawing_area.areaAutoFit()
+        this._drawing_area.draw()
         // Set view mode_edition to previous value
         this._drawing_area.setToModeEdition(false)
         // Update components related to viewss
@@ -532,8 +517,8 @@ export abstract class Class_ApplicationDataPlus
       (this._original_current_view !== undefined)
     ) {
       // Reset drawing area
-      this._drawing_area.sankey.delete() // delete to avoid conflicts
-      this._drawing_area.copyFrom(this._original_current_view)
+      this._drawing_area.sankey.copyFrom(this._original_current_view.sankey)
+      this._drawing_area.legend.copyFrom(this._original_current_view.legend)
       // Update indicator
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       // Send to new view
@@ -564,20 +549,10 @@ export abstract class Class_ApplicationDataPlus
    * @memberof Class_ApplicationDataPlus
    */
   public pushViewIdInViewOrder(id: string) {
-    if (!this._views_order.includes(id)) {
-      this._views_order.push(id)
+    if (this._views_order.includes(id)) {
+      this._views_order.splice(this._views_order.indexOf(id), 1)
     }
-  }
-
-  /**
-   * Override function from Class_ApplicationData, to reset views before reseting normally
-   *
-   * @memberof Class_ApplicationDataPlus
-   */
-  reset(): void {
-    this._views = {}
-    this._views_order = []
-    super.reset()
+    this._views_order.push(id)
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -634,5 +609,4 @@ export abstract class Class_ApplicationDataPlus
     else
       return false
   }
-
 }

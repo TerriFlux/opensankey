@@ -18,7 +18,6 @@ import {
   getJSONOrUndefinedFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
-  getStringOrUndefinedFromJSON,
   OSTooltip,
   Type_JSON
 } from './deps/OpenSankey/types/Utils'
@@ -109,7 +108,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
     new_data_plus.menu_configuration.isGivenAccordionShowed('EF') ||
     new_data_plus.menu_configuration.isGivenAccordionShowed('ED')
   )
-  
+
   new_data_plus.menu_configuration.ref_to_accordion_edition_tag_updater.current=()=>setUpdate(a=>a+1)
   return show_menu_config_tag ?
     <AccordionItem>
@@ -238,7 +237,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
  * A button for the toolbar that allow to filter displayed link based on their link value
  *
  * @param {*} {new_data_plus}
- * @return {*} 
+ * @return {*}
  */
 export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisualFilter> = ({ new_data_plus }) => {
   const { t } = new_data_plus
@@ -580,13 +579,13 @@ export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
   const [, setCount] = useState(0)
   new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
-  
+
   const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
   const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primaire'
   const mutli_level = new_data_plus.drawing_area.sankey.level_taggs_list.length > 0
   let content_popover = <></>
 
-  if (only_primary) { // Only have primary level group tag 
+  if (only_primary) { // Only have primary level group tag
     content_popover = <AddSimpleLevelDropDown
       new_data={new_data_plus}
     />
@@ -740,7 +739,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
 export const convert_data_plus_legacy = (json_object: Type_JSON) => {
   const containers = getJSONOrUndefinedFromJSON(json_object, 'labels')
   if (containers) {
-    // Convert name of variable from legacy Free label to variable name of new Free labels 
+    // Convert name of variable from legacy Free label to variable name of new Free labels
     Object.values(containers).forEach(el => {
       const cont = el as Type_JSON
 
@@ -785,7 +784,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
   const old_views = getOldViewsFromJSON(json_object, 'view') as ViewType[]
   if (old_views && old_views.length > 0) {
     json_object.views = {} as Type_JSON
-    // Convert old views 
+    // Convert old views
     old_views.forEach((v) => {
       if (v.heredited_attr_from_master === undefined) {
         v.heredited_attr_from_master = []
@@ -796,7 +795,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
         (json_object.views as Type_JSON)[v.id] = d_view as unknown as Type_JSON
       }
 
-      // Set Name of view 
+      // Set Name of view
       ((json_object.views as Type_JSON)[v.id] as Type_JSON).name = v.nom;
       // Set heredited from master attr
       ((json_object.views as Type_JSON)[v.id] as Type_JSON).heredited_attr = v.heredited_attr_from_master

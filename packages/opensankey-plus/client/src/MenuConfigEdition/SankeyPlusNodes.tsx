@@ -894,7 +894,7 @@ export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNod
 
   return <Button
     onClick={() => {
-      new_data.drawing_area.purgeSelectionBeforeAnimation()
+      new_data.drawing_area.purgeSelection()
       new_data.drawing_area.node_contextualised?.launchAnimation() //launch sankey animation form contextualised node
       closeContextMenu()
     }}

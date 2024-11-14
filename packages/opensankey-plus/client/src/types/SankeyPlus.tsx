@@ -11,7 +11,6 @@
 import { Type_JSON, default_main_sankey_id, default_style_id, getJSONFromJSON } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
-import type { ViewType } from './LegacyTypes'
 import type { Class_MenuConfigPlus } from './MenuConfigPlus'
 import type { Class_NodeElementPlus, Class_NodeStylePlus } from './NodePlus'
 import type { Class_LinkElementPlus, Class_LinkStylePlus } from './LinkPlus'
@@ -78,12 +77,6 @@ export abstract class Class_SankeyPlus
 
   private _icon_catalog: { [x: string]: string } = {}
 
-  private _view: ViewType[] = []
-  private _current_view: string = 'none'
-  private _background_image: string = ''
-  private _show_background_image: boolean = false
-  private _is_catalog: boolean = false
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -106,55 +99,41 @@ export abstract class Class_SankeyPlus
     this._icon_catalog = {}
   }
 
-  // PUBLIC METHODS =====================================================================
+  // CLEANING METHODS ===================================================================
+
+  public delete() {
+    super.delete()
+    // Properly delete containers
+    this.containers_list.forEach(container => container.delete())
+    this._containers = {}
+  }
+
+  // COPY METHODS =======================================================================
+
   /**
-   * Extract sankey as a JSON struct
-   *
-   * @param {Type_JSON} json_object
-   * @param {boolean} [match_and_update]
+   * Copy all attributes values from given sankey to copy
+   * @param {Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} sankey_to_copy
    * @memberof Class_SankeyPlus
    */
-  public fromJSON(json_object: Type_JSON, match_and_update?: boolean): void {
-    super.fromJSON(json_object, match_and_update)
-
-    // Class container
-    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    Object.entries(json_container_object)
-      .forEach(([_, container_json]) => {
-        const container = this.addNewFreeLabel(_)
-        // Set container value to node from JSON
-        container.fromJSON(container_json as Type_JSON)
+  public copyFrom(
+    sankey_to_copy: Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>
+  ) {
+    // Herited methods
+    super.copyFrom(sankey_to_copy)
+    // Add container copy
+    Object.entries(sankey_to_copy._containers)
+      .forEach(([idx, container_to_copy]) => {
+        this.addNewFreeLabel(idx)
+          .copyFrom(container_to_copy)
       })
-
-    // Icon catalog
-    this._icon_catalog = getJSONFromJSON(json_object, 'icon_catalog', this._icon_catalog) as { [x: string]: string }
   }
 
   /**
-   * Setting value of sankey and substructur from JSON
-   *
-   * @param {boolean} [only_visible_elements]
-   * @param {boolean} [with_values]
-   * @return {*}  {Type_JSON}
+   * Update somes attributes values from a given other sankey
+   * @param {Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} other_sankey
+   * @param {string[]} mode
    * @memberof Class_SankeyPlus
    */
-  public toJSON(only_visible_elements?: boolean, with_values?: boolean): Type_JSON {
-    const json_entry = super.toJSON(only_visible_elements, with_values)
-    const json_object_labels = {} as Type_JSON
-
-    // Class container
-    json_entry['labels'] = json_object_labels
-    this.containers_list.forEach(obj => {
-      json_object_labels[obj.id] = obj.toJSON()
-    })
-
-    // Icon catalog
-    json_entry['icon_catalog'] = this._icon_catalog as Type_JSON
-
-
-    return json_entry
-  }
-
   public updateFrom(
     other_sankey: Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
     mode: string[]
@@ -163,7 +142,7 @@ export abstract class Class_SankeyPlus
     super.updateFrom(other_sankey, mode)
 
     // Add specifities from OSP
-    const all=mode.includes('*')
+    const all = mode.includes('*')
 
     // Update Containers
     const list_curr_container = this.containers_list
@@ -196,6 +175,63 @@ export abstract class Class_SankeyPlus
       })
     }
   }
+
+  // SAVING METHODS ====================================================================
+
+  /**
+   * Setting value of sankey and substructur from JSON
+   *
+   * @param {boolean} [only_visible_elements]
+   * @param {boolean} [with_values]
+   * @return {*}  {Type_JSON}
+   * @memberof Class_SankeyPlus
+   */
+  public toJSON(
+    only_visible_elements?: boolean,
+    with_values?: boolean
+  ): Type_JSON {
+    const json_entry = super.toJSON(only_visible_elements, with_values)
+
+    // Class container
+    const json_object_labels = {} as Type_JSON
+    json_entry['labels'] = json_object_labels
+    this.containers_list.forEach(obj => {
+      json_object_labels[obj.id] = obj.toJSON()
+    })
+
+    // Icon catalog
+    json_entry['icon_catalog'] = this._icon_catalog as Type_JSON
+
+    return json_entry
+  }
+
+  /**
+   * Extract sankey as a JSON struct
+   *
+   * @param {Type_JSON} json_object
+   * @param {boolean} [match_and_update]
+   * @memberof Class_SankeyPlus
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    match_and_update?: boolean
+  ): void {
+    super.fromJSON(json_object, match_and_update)
+
+    // Class container
+    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
+    Object.entries(json_container_object)
+      .forEach(([_, container_json]) => {
+        const container = this.addNewFreeLabel(_)
+        // Set container value to node from JSON
+        container.fromJSON(container_json as Type_JSON)
+      })
+
+    // Icon catalog
+    this._icon_catalog = getJSONFromJSON(json_object, 'icon_catalog', this._icon_catalog) as { [x: string]: string }
+  }
+
+  // PUBLIC METHODS =====================================================================
 
   // New --------------------------------------------------------------------------------
 
@@ -311,14 +347,6 @@ export abstract class Class_SankeyPlus
       return icon
     }
     return ''
-  }
-
-  public copyFrom(
-    other: Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>
-  ) {
-    // First clean self
-    this.delete()
-    this.updateFrom(other ,['*'])
   }
 
   // GETTERS / SETTERS ==================================================================

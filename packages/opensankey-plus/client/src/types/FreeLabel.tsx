@@ -41,6 +41,7 @@ export const default_container_opacity = 100
 export const default_container_transparent_border = false
 export const default_container_is_image = false
 export const default_container_image_src = ''
+
 // CLASS FREE LABEL ELEMENT *************************************************************
 
 export class Class_ContainerElement
@@ -178,6 +179,91 @@ export class Class_ContainerElement
     }
   }
 
+
+  // CLEANING METHODS ===================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_LinkElement
+   */
+  protected cleanForDeletion() {
+    // Delete control points
+    this._drag_handler.top.delete()
+    this._drag_handler.bottom.delete()
+    this._drag_handler.right.delete()
+    this._drag_handler.left.delete()
+  }
+
+  // COPY METHODS =======================================================================
+
+  /**
+   * Extract attribute from another Class_ContainerElement
+   *
+   * @param {Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>} container_to_copy
+   * @memberof Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>
+   */
+  protected _copyFrom(container_to_copy: Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+    super._copyFrom(container_to_copy)
+    this._title = container_to_copy._title
+    this._content = container_to_copy._content
+    this._opacity = container_to_copy._opacity
+    this._color = container_to_copy._color
+    this._color_border = container_to_copy._color_border
+    this._transparent_border = container_to_copy._transparent_border
+    this._is_image = container_to_copy._is_image
+    this._image_src = container_to_copy._image_src
+    this._label_width = container_to_copy._label_width
+    this._label_height = container_to_copy._label_height
+  }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Setting value of container from JSON
+   *
+   * @return {*}
+   * @memberof Class_ContainerElement
+   */
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    json_object['title'] = this._title
+    json_object['content'] = this._content
+    json_object['opacity'] = this._opacity
+    json_object['color'] = this._color
+    json_object['color_border'] = this._color_border
+    json_object['transparent_border'] = this._transparent_border
+    json_object['is_image'] = this._is_image
+    json_object['image_src'] = this._image_src
+    json_object['label_width'] = this._label_width
+    json_object['label_height'] = this._label_height
+  }
+
+  /**
+   * Extract container attributes form JSON
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_ContainerElement
+   */
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super._fromJSON(json_object, kwargs)
+    this._title = getStringFromJSON(json_object, 'title', this.title)
+    this._content = getStringFromJSON(json_object, 'content', this.content)
+    this._opacity = getNumberFromJSON(json_object, 'opacity', this.opacity)
+    this._color = getStringFromJSON(json_object, 'color', this.color)
+    this._color_border = getStringFromJSON(json_object, 'color_border', this.color_border)
+    this._transparent_border = getBooleanFromJSON(json_object, 'transparent_border', this.transparent_border)
+    this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
+    this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
+    this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
+    this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
+  }
+
   // PUBLIC METHODS =====================================================================
 
   protected _draw() {
@@ -240,94 +326,24 @@ export class Class_ContainerElement
   }
 
   /**
-   * Extract container attributes form JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_ContainerElement
-   */
-  public fromJSON(json_object: Type_JSON) {
-    this._title = getStringFromJSON(json_object, 'title', this.title)
-    this._content = getStringFromJSON(json_object, 'content', this.content)
-    this._opacity = getNumberFromJSON(json_object, 'opacity', this.opacity)
-    this._color = getStringFromJSON(json_object, 'color', this.color)
-    this._color_border = getStringFromJSON(json_object, 'color_border', this.color_border)
-    this._transparent_border = getBooleanFromJSON(json_object, 'transparent_border', this.transparent_border)
-    this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
-    this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
-    this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
-    this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
-
-    this._display.position.x = getNumberFromJSON(json_object, 'x', 0)
-    this._display.position.y = getNumberFromJSON(json_object, 'y', 0)
-  }
-
-  /**
-   * Setting value of container from JSON
-   *
-   * @return {*}
-   * @memberof Class_ContainerElement
-   */
-  public toJSON() {
-    const json_object: Type_JSON = {}
-
-    json_object['title'] = this._title
-    json_object['content'] = this._content
-    json_object['opacity'] = this._opacity
-    json_object['color'] = this._color
-    json_object['color_border'] = this._color_border
-    json_object['transparent_border'] = this._transparent_border
-    json_object['is_image'] = this._is_image
-    json_object['image_src'] = this._image_src
-    json_object['label_width'] = this._label_width
-    json_object['label_height'] = this._label_height
-
-    json_object['x'] = this.position_x
-    json_object['y'] = this.position_y
-
-
-    return json_object
-  }
-
-  /**
- * Extract attribute from another Class_ContainerElement
- *
- * @param {Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>} _
- * @memberof Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>
- */
-  public copyFrom(_: Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>) {
-    // Since container attributes are primary type (number,string,boolean) there is no need to do deep clone
-    this._title = _._title
-    this._content = _._content
-    this._opacity = _._opacity
-    this._color = _._color
-    this._color_border = _._color_border
-    this._transparent_border = _._transparent_border
-    this._is_image = _._is_image
-    this._image_src = _._image_src
-    this._label_width = _._label_width
-    this._label_height = _._label_height
-    this._display.position = _._display.position
-  }
-
-  /**
    * Draw all control points
    *
    * @private
    * @memberof Class_ContainerElement
    */
   public drawDragHandlers() {
-
+    // Compute positions
     this.computeTopHandlerPos()
     this.computeBottomHandlerPos()
     this.computeLeftHandlerPos()
     this.computeRightHandlerPos()
-  
-    // Draw control handler
+    // Draw
     this._drag_handler.top.draw()
     this._drag_handler.bottom.draw()
     this._drag_handler.left.draw()
     this._drag_handler.right.draw()
   }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -341,8 +357,8 @@ export class Class_ContainerElement
   private drawContentText() {
     this.d3_selection?.append('foreignObject')
       .classed('content', true)
-      .style('width', this._label_width+'px')
-      .style('height', this._label_height+'px')
+      .style('width', this._label_width + 'px')
+      .style('height', this._label_height + 'px')
       .attr('id', this.id + '_text')
       .append('xhtml:div')
       .attr('class', 'ql-editor')
@@ -485,8 +501,6 @@ export class Class_ContainerElement
     this._drag_handler.right.position_x = this.position_x + this._label_width
     this._drag_handler.right.position_y = this.position_y + this._label_height / 2
   }
-
-
 
   // PROTECTED METHODS ==================================================================
 
