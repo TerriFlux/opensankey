@@ -1875,6 +1875,7 @@ export abstract class Class_LinkElement
       this._control_points.is_dragged = false
       this.drawControlPoint()
       this.menu_config.updateComponentRelatedToLinksApparence()
+      this.drawing_area.checkAndUpdateAreaSize()
     }
   }
 
@@ -3093,6 +3094,15 @@ export abstract class Class_LinkElement
     this.redrawNodesSourceTarget()
   }
 
+  public get control_points_position() {
+    return {
+      'starting_curve': [this._control_points.starting_curve_point.display.position.x, this._control_points.starting_curve_point.display.position.y],
+      'ending_curve': [this._control_points.ending_curve_point.display.position.x, this._control_points.ending_curve_point.display.position.y],
+      'starting_bezier': [this._control_points.starting_bezier_point.display.position.x, this._control_points.starting_bezier_point.display.position.y],
+      'ending_bezier': [this._control_points.ending_bezier_point.display.position.x, this._control_points.ending_bezier_point.display.position.y],
+      'middle_recycling': [this._control_points.middle_recycling_point.display.position.x, this._control_points.middle_recycling_point.display.position.y],
+    }
+  }
 
 
   // PRIVATE GETTER / SETTER =============================================================

@@ -812,9 +812,9 @@ export abstract class Class_DrawingArea
   }
 
   protected getElementsPosInDA(){
-    let max_node_pos_x = 0
-    let max_node_pos_y = 0
-    this.sankey.visible_nodes_list.map(node => {
+    let max_element_pos_x = 0
+    let max_element_pos_y = 0
+    this.sankey.visible_nodes_list.forEach(node => {
 
       let label_node_width = 0
       let label_node_height = 0
@@ -833,11 +833,26 @@ export abstract class Class_DrawingArea
       const node_rightest_pos = node.position_x + node.getShapeWidthToUse()+label_node_width
       const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()+label_node_height
 
-      max_node_pos_x = Math.max(max_node_pos_x, node_rightest_pos)
-      max_node_pos_y = Math.max(max_node_pos_y, node_bottomest_pos)
+      max_element_pos_x = Math.max(max_element_pos_x, node_rightest_pos)
+      max_element_pos_y = Math.max(max_element_pos_y, node_bottomest_pos)
     })
 
-    return [max_node_pos_x,max_node_pos_y]
+    this.sankey.visible_links_list.forEach(l=>{
+      // Only recyling link can have controle point over src/trt nodes, so we just check their control point
+      if(l.shape_is_recycling){
+        const cp_pos=l.control_points_position
+        // Depending on their orientation we either take x pos or y pos to search for max pos
+        if(l.is_horizontal){
+          max_element_pos_x = Math.max(max_element_pos_x,cp_pos.starting_bezier[0], cp_pos.ending_bezier[0])
+          max_element_pos_y = Math.max(max_element_pos_y, cp_pos.middle_recycling[1])
+        }else if(l.is_vertical){
+          max_element_pos_x = Math.max(max_element_pos_x, cp_pos.middle_recycling[0])
+          max_element_pos_y = Math.max(max_element_pos_y, cp_pos.starting_bezier[1],cp_pos.ending_bezier[1])
+        }
+      }
+    })
+
+    return [max_element_pos_x,max_element_pos_y]
   }
 
   /**
