@@ -469,7 +469,7 @@ export abstract class Class_LinkElement
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links').datum(this)
     // Setup order
-    //this.drawing_area.orderElements()
+    this.drawing_area.orderElements()
     // Draw elements
     this._drawElements()
   }
