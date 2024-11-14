@@ -637,7 +637,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           <Button
             variant='menutop_button'
             onClick={() => {
-              window.open('old.open-sankey.fr')
+              window.open('https://old.open-sankey.fr')
             }}
           >
             <Box
