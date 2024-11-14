@@ -460,8 +460,8 @@ export default SankeyNodeEdition
 // export const check_node_has_node_type : check_node_has_node_typeFType =(
 //   n:SankeyNode,filter_node_selector:string[]
 // )=>{
-//   if(n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].length>0 && filter_node_selector.length>0){
-//     return (filter_node_selector.includes(n.tags['Type de noeud'][0]))
+//   if(n.tags && n.tags['type de noeud'] && n.tags['type de noeud'].length>0 && filter_node_selector.length>0){
+//     return (filter_node_selector.includes(n.tags['type de noeud'][0]))
 //   }else{
 //     return true
 //   }

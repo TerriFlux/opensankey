@@ -326,7 +326,7 @@ export abstract class Class_ProtoElement
         this._draw_timeout
       )
     else
-    process_func()
+      process_func()
   }
 
   protected _draw() {

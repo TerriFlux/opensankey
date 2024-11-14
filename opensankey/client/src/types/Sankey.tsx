@@ -697,7 +697,9 @@ export abstract class Class_Sankey
         // Set node style value to node from JSON
         new_style.fromJSON(json_style)
         // Add node style to sankey
-        this._node_styles[style_id] = new_style
+        if (!this._node_styles[style_id]) {
+          this._node_styles[style_id] = new_style
+        }
       })
       Object.entries({ 'LinkImportStyle': DefaultLinkImportStyle,
         'LinkExportStyle' :  DefaultLinkExportStyle}).forEach(([style_id,fn])=>{
@@ -706,7 +708,9 @@ export abstract class Class_Sankey
         // Set node style value to node from JSON
         new_style.fromJSON(fn())
         // Add node style to sankey
-        this._link_styles[style_id] = new_style
+        if (!this._link_styles[style_id]) {
+          this._link_styles[style_id] = new_style
+        }
       })      
     }
     if (json_object['style_link'] !== undefined) {

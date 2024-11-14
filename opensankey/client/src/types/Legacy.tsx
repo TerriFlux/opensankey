@@ -16,7 +16,7 @@ import {
   compute_initial_colorsFType,
   convert_booleanFType,
   SankeyLinkStyle,
-  complete_sankey_dataFunctType,
+  //complete_sankey_dataFunctType,
   convert_linksFuncType,
   convert_nodesFuncType,
   convert_tagsFuncType,
@@ -34,7 +34,7 @@ import {
   ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType,
   ReturnValueLinkFuncType,
-  SetNodeStyleToTypeNodeFuncType,
+  //SetNodeStyleToTypeNodeFuncType,
   ConvertSankeyLink,
   ConvertSankeyNode,
   ConvertSankeyValue,
@@ -366,86 +366,86 @@ const clean_data_local = (data: SankeyData) => {
   })
 }
 
-export const complete_sankey_data: complete_sankey_dataFunctType = (
-  data: SankeyData,
-  DefaultSankeyData: DefaultSankeyDataFuncType,
-  DefaultNode: (data: SankeyData) => SankeyNode,
-  DefaultLink: (data: SankeyData) => SankeyLink
-): void => {
-  const { nodes, links } = data
-  const the_data = DefaultSankeyData()
-  Object.assign(the_data, data)
-  Object.assign(data, the_data)
-  Object.values(nodes).forEach(
-    n => {
-      const nn = DefaultNode(data);
-      (nn as unknown as { x: undefined }).x = undefined;
-      (nn as unknown as { y: undefined }).y = undefined
-      Object.assign(nn, n)
-      Object.assign(n, nn)
-    }
-  )
+// export const complete_sankey_data: complete_sankey_dataFunctType = (
+//   data: SankeyData,
+//   DefaultSankeyData: DefaultSankeyDataFuncType,
+//   DefaultNode: (data: SankeyData) => SankeyNode,
+//   DefaultLink: (data: SankeyData) => SankeyLink
+// ): void => {
+//   const { nodes, links } = data
+//   const the_data = DefaultSankeyData()
+//   Object.assign(the_data, data)
+//   Object.assign(data, the_data)
+//   Object.values(nodes).forEach(
+//     n => {
+//       const nn = DefaultNode(data);
+//       (nn as unknown as { x: undefined }).x = undefined;
+//       (nn as unknown as { y: undefined }).y = undefined
+//       Object.assign(nn, n)
+//       Object.assign(n, nn)
+//     }
+//   )
 
-  Object.values(links).forEach(
-    l => {
-      const ll = DefaultLink(data)
-      Object.assign(ll, l)
-      Object.assign(l, ll)
-    }
-  )
+//   Object.values(links).forEach(
+//     l => {
+//       const ll = DefaultLink(data)
+//       Object.assign(ll, l)
+//       Object.assign(l, ll)
+//     }
+//   )
 
-  Object.values(data.nodeTags).forEach(
-    tags_group => {
-      if (tags_group.activated == undefined) {
-        tags_group.activated = true
-      }
-      if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
-      if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
-    }
-  )
+//   Object.values(data.nodeTags).forEach(
+//     tags_group => {
+//       if (tags_group.activated == undefined) {
+//         tags_group.activated = true
+//       }
+//       if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
+//       if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
+//     }
+//   )
 
-  Object.values(data.fluxTags).forEach(
-    tags_group => {
-      if (tags_group.activated == undefined) {
-        tags_group.activated = true
-      }
-      if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
-      if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
-    }
-  )
-  Object.values(data.dataTags).forEach(
-    tags_group => {
-      if (tags_group.activated == undefined) {
-        tags_group.activated = true
-      }
-      if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
-      if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
-    }
-  )
-  if (data.nodeTags['Type de noeud']) {
-    data.nodeTags['Type de noeud'].banner = 'none'
-    if (data.nodeTags['Type de noeud'].tags.produit && !data.nodeTags['Type de noeud'].tags.produit.shape) {
-      data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
-    }
-    if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
-      data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
-    }
-    if ('echange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['echange'].shape) {
-      data.nodeTags['Type de noeud'].tags['echange'].shape = 'rect'
-    }
-    if ('échange' in data.nodeTags['Type de noeud'].tags) {
-      data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
-      delete data.nodeTags['Type de noeud'].tags['échange']
-    }
-  }
-  compute_initial_colors(data)
-  convert_boolean(data)
-  compute_flux_max(data)
+//   Object.values(data.fluxTags).forEach(
+//     tags_group => {
+//       if (tags_group.activated == undefined) {
+//         tags_group.activated = true
+//       }
+//       if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
+//       if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
+//     }
+//   )
+//   Object.values(data.dataTags).forEach(
+//     tags_group => {
+//       if (tags_group.activated == undefined) {
+//         tags_group.activated = true
+//       }
+//       if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
+//       if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
+//     }
+//   )
+//   if (data.nodeTags['Type de noeud']) {
+//     data.nodeTags['Type de noeud'].banner = 'none'
+//     if (data.nodeTags['Type de noeud'].tags.produit && !data.nodeTags['Type de noeud'].tags.produit.shape) {
+//       data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
+//     }
+//     if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
+//       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
+//     }
+//     if ('echange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['echange'].shape) {
+//       data.nodeTags['Type de noeud'].tags['echange'].shape = 'rect'
+//     }
+//     if ('échange' in data.nodeTags['Type de noeud'].tags) {
+//       data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
+//       delete data.nodeTags['Type de noeud'].tags['échange']
+//     }
+//   }
+//   compute_initial_colors(data)
+//   convert_boolean(data)
+//   compute_flux_max(data)
 
-  if ((data as unknown as ConvertSankeyData).show_structure == 'free') {
-    data.show_structure = 'free_interval'
-  }
-}
+//   if ((data as unknown as ConvertSankeyData).show_structure == 'free') {
+//     data.show_structure = 'free_interval'
+//   }
+// }
 
 export const GetLinkValue: GetLinkValueFuncType = (
   data: SankeyData,
@@ -649,19 +649,19 @@ export const DefaultLink: DefaultLinkFuncType = (data: SankeyData): SankeyLink =
   }
 }
 
-export const SetNodeStyleToTypeNode: SetNodeStyleToTypeNodeFuncType = (data: SankeyData): void => {
-  if (Object.keys(data.nodeTags).includes('Type de noeud')) {
-    Object.values(data.nodes).forEach(node => {
-      if (node.tags['Type de noeud']) {
-        if (node.tags['Type de noeud'].includes('secteur')) {
-          node.style = 'NodeSectorStyle'
-        } else if (node.tags['Type de noeud'].includes('produit')) {
-          node.style = 'NodeProductStyle'
-        }
-      }
-    })
-  }
-}
+// export const SetNodeStyleToTypeNode: SetNodeStyleToTypeNodeFuncType = (data: SankeyData): void => {
+//   if (Object.keys(data.nodeTags).includes('Type de noeud')) {
+//     Object.values(data.nodes).forEach(node => {
+//       if (node.tags['Type de noeud']) {
+//         if (node.tags['Type de noeud'].includes('secteur')) {
+//           node.style = 'NodeSectorStyle'
+//         } else if (node.tags['Type de noeud'].includes('produit')) {
+//           node.style = 'NodeProductStyle'
+//         }
+//       }
+//     })
+//   }
+// }
 
 // Return the value of an attribute from node :
 // - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
@@ -1222,6 +1222,27 @@ const convert_tags: convert_tagsFuncType = (
     data.nodesColorMap = list_nodeTag[0][0]
   }
 
+  if (data.nodeTags['Type de noeud'] != undefined) {
+    data.nodeTags['type de noeud'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud']))
+    delete data.nodeTags['Type de noeud']
+    Object.values(data.nodes).forEach(n=>{
+      n.tags['type de noeud']=n.tags['Type de noeud']
+      delete n.tags['Type de noeud']
+      if (n.tags['type de noeud'][0]=='echange') {
+        if (n.style == 'default') {
+          if (n.inputLinksId.length === 0) {
+            n.style = 'NodeImportStyle'
+          } else if (n.outputLinksId.length === 0) {
+            n.style = 'NodeExportStyle'
+          }
+          // if (has_relative && has_position) {
+          //   AssignNodeLocalAttribute(n,'relative_dx',n.x)
+          //   AssignNodeLocalAttribute(n,'relative_dy',n.y)
+          // }
+        }
+      }
+    })
+  }
 }
 
 const convert_nodes: convert_nodesFuncType = (
@@ -1494,9 +1515,10 @@ const convert_nodes: convert_nodesFuncType = (
               n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
           } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
             let parent_tag : number | undefined
-            if ( data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level) {
+            let parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
+            if ( leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
               parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
-            } else if (data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags) {
+            } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
               parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
             }
             if (parent_tag) {

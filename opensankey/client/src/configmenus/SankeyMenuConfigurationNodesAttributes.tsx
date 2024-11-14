@@ -267,7 +267,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
 
   // JSX menu components ---------------------------------------------------------------
 
-  // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
+  // Check if the 1st selected node has a tag selected from the group tag 'type de noeud' so we can disable the selection of the node shape
   const content_appearence = <Box layerStyle='menuconfigpanel_grid' >
 
     {/* Visibilite du noeud */}

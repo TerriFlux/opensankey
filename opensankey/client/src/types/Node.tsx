@@ -1152,7 +1152,8 @@ export abstract class Class_NodeElement
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
     const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-    this._display.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
+    //this._display.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
+    this.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (this._display.position.relative_dx == undefined && json_local_object!=undefined) {
       this._display.position.relative_dx = json_local_object!.relative_dx as number
