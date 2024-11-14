@@ -101,8 +101,6 @@ export abstract class Class_ApplicationData
    */
   protected _logo: string // path to logo
 
-  protected _drawtimeout: NodeJS.Timeout | null = null
-
   // PRIVATE ATTRIBUTES =================================================================
 
   // General attributes for the application
@@ -113,7 +111,7 @@ export abstract class Class_ApplicationData
   private _app_name: string = 'SankeySuite'
   private _url_prefix: string = '/opensankey/' // path for server call
 
-  // Variable to modify node name label displayed, 
+  // Variable to modify node name label displayed,
   // it can contain separator (special caracter) that split label between what we want tot display and what not
   private _node_label_separator = '-'
   private _node_label_separator_part: 'before' | 'after' = 'before'
@@ -200,50 +198,25 @@ export abstract class Class_ApplicationData
   public abstract createNewDrawingArea(id?: string): Type_GenericDrawingArea
   public abstract createNewMenuConfiguration(): Class_MenuConfig
 
-  // PUBLIC METHODS =====================================================================
+  // CLEANING METHODS ===================================================================
 
   public reset() {
-    // Reset values of attributes
-    // Recreate drawing area
-    this.drawing_area.delete()
-    this.drawing_area = this.createNewDrawingArea()
-    this.drawing_area.reset()
+    // Reset drawing area
+    // this._drawing_area.delete() // TODO : lent sur gros SANkey
+    this._drawing_area.unDraw()
+    this._drawing_area = this.createNewDrawingArea()
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
 
-  /**
-   * Reset value of drawing_area and substructur with data from JSON
-   * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_ApplicationData
-   */
-  public fromJSON(json_object: Type_JSON) {
-    // Reset everything
-    this.reset()
-
-    // Set node label separator attribute from json
-    this._node_label_separator = getStringFromJSON(json_object, 'node_label_separator', this._node_label_separator)
-    this._node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', this._node_label_separator_part) as 'before' | 'after'
-
-    // Update drawing area
-    this.drawing_area.bypass_timeout = true
-    this.drawing_area.fromJSON(json_object)
-    this.menu_configuration.updateAllMenuComponents()
-    this.drawing_area.bypass_timeout = false
-    this._drawtimeout = setTimeout(
-      () => { this.functionAfterFromJSON() },
-      10
-    )
-  }
+  // SAVING METHODS =====================================================================
 
   public toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
-
+    // Node label separator attribute
     json_object['node_label_separator'] = this._node_label_separator
     json_object['node_label_separator_part'] = this._node_label_separator_part
     // Dump with drawing area & its content in json struct
@@ -255,6 +228,40 @@ export abstract class Class_ApplicationData
       )
     }
   }
+
+  /**
+   * Reset value of drawing_area and substructur with data from JSON
+   * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  public fromJSON(json_object: Type_JSON) {
+    // Read json file
+    this._fromJSON(json_object)
+    // Update menus
+    this.menu_configuration.updateAllMenuComponents()
+    // Draw drawing area
+    this._drawing_area.draw()
+  }
+
+  /**
+   * Overridable method to read JSON
+   * @protected
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  protected _fromJSON(json_object: Type_JSON) {
+    // Reset everything
+    this.reset()
+    // Set node label separator attribute from json
+    this._node_label_separator = getStringFromJSON(json_object,'node_label_separator',this._node_label_separator)
+    this._node_label_separator_part = getStringFromJSON(json_object,'node_label_separator_part',this._node_label_separator_part) as 'before'|'after'
+    // Update drawing area
+    this._drawing_area.fromJSON(json_object)
+  }
+
+  // PUBLIC METHODS =====================================================================
 
   public isLabelSeparatorPartBefore() {
     return this._node_label_separator_part == 'before'
@@ -277,6 +284,7 @@ export abstract class Class_ApplicationData
   public setLabelSeparatorPartAfter() {
     this._node_label_separator_part = 'after'
   }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -296,8 +304,8 @@ export abstract class Class_ApplicationData
   }
 
   protected functionAfterFromJSON() {
-    this._drawing_area.drawElements();
-    this._drawing_area.checkAndUpdateAreaSize();
+    this._drawing_area.drawElements()
+    this._drawing_area.checkAndUpdateAreaSize()
     this._drawing_area.areaAutoFit()
     this._drawing_area.setToModeEdition(false)
   }

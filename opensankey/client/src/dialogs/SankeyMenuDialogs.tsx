@@ -19,8 +19,6 @@ import {
   NumberIncrementStepper,
   NumberInputField,
   NumberInputStepper,
-  InputGroup,
-  InputRightAddon,
   TabList,
   Tab,
   Tabs,
@@ -71,7 +69,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   applicationData,
   diagramSelector,
   apply_transformation_additional_elements
-}: FCType_ApplyLayoutDialog): any => {
+}: FCType_ApplyLayoutDialog) => {
   const { data_var_to_update } = applicationData
   const { t } = applicationData
   const { node_styles_dict, link_styles_dict } = applicationData.drawing_area.sankey
@@ -576,8 +574,8 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={parametric}
-              onChange={(evt: { target: { checked: any } }) => {
-                node_styles_dict['default'].position.type = evt.target.checked
+              onChange={(evt: { target: { checked: boolean } }) => {
+                node_styles_dict['default'].position.type = evt.target.checked ? 'parametric' : 'absolute'
                 set_parametric(evt.target.checked)
                 if (evt.target.checked) {
                   Object.values(node_styles_dict)
@@ -599,7 +597,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={!parametric}
-              onChange={(evt: { target: { checked: any } }) => {
+              onChange={(evt: { target: { checked: boolean } }) => {
                 set_parametric(!evt.target.checked)
                 if (!evt.target.checked) {
                   Object.values(node_styles_dict)
@@ -631,7 +629,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                       }
                     })
                 }
-                applicationData.drawing_area.reset()
+                applicationData.drawing_area.draw()
               }}>
               {t('MEP.reInitDY')}
             </Button> : <></>}
@@ -656,7 +654,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 isDisabled={!parametric}
                 variant='menuconfigpanel_option_checkbox'
                 isChecked={!trade_close}
-                onChange={(evt: { target: { checked: any } }) => {
+                onChange={(evt: { target: { checked: boolean } }) => {
                   set_trade_close(!evt.target.checked)
                   setTrade(!evt.target.checked)
                 }}
@@ -874,10 +872,11 @@ export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
                 (e: ProgressEvent<FileReader>) => {
                   let result = (e.target as FileReader).result
                   if (result) {
+                    // TODO verifier fonctionnement de ce qui suit
                     result = String(result)
                     const new_layout = JSON.parse(result)
                     const tmp_DA = new_data.createNewDrawingArea()
-                    tmp_DA.fromJSON(new_layout, false)
+                    tmp_DA.fromJSON(new_layout)
                     new_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
                     new_data.drawing_area.drawElements()
                     new_data.menu_configuration.updateAllMenuComponents()
