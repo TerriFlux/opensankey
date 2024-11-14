@@ -631,36 +631,36 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
         </Box>
       </OSTooltip>,
       <OSTooltip
-      placement='bottom'
-      label={t('Menu.tooltips.old_app')}>
-      <Box>
-        <Button
-          variant='menutop_button'
-          onClick={() => {
-            window.open('old.open-sankey.fr')
-          }}
-        >
-          <Box
-            layerStyle='menutop_button_style'
+        placement='bottom'
+        label={t('Menu.tooltips.old_app')}>
+        <Box>
+          <Button
+            variant='menutop_button'
+            onClick={() => {
+              window.open('old.open-sankey.fr')
+            }}
           >
             <Box
-              gridRow='1'
-              padding='0.1rem 0 0.1rem 0'
+              layerStyle='menutop_button_style'
             >
-              <FontAwesomeIcon
-                style={{ 'height': '2rem', 'width': '3rem' }}
-                icon={faRightFromBracket}
-              />
+              <Box
+                gridRow='1'
+                padding='0.1rem 0 0.1rem 0'
+              >
+                <FontAwesomeIcon
+                  style={{ 'height': '2rem', 'width': '3rem' }}
+                  icon={faRightFromBracket}
+                />
+              </Box>
+              <Box
+                gridRow='2'
+              >
+                {t('Menu.old_app')}
+              </Box>
             </Box>
-            <Box
-              gridRow='2'
-            >
-              {t('Menu.old_app')}
-            </Box>
-          </Box>
-        </Button>
-      </Box>
-    </OSTooltip>
+          </Button>
+        </Box>
+      </OSTooltip>
     ]
 
     ui['edition'] = [
@@ -1536,13 +1536,13 @@ export const MenuDraggable: FunctionComponent<FCType_MenuDraggable> = ({
 export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton> = ({
   new_data
 }) => {
-  const last_save = localStorage.getItem('last_save')
+  // const last_save = localStorage.getItem('last_save')
   // const has_save_in_cache = (last_save !== undefined) && (last_save !== null)
   const { t } = new_data
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
-    new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = b;
+    new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = b
     setSaveBoolean(b)
   }
   new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = save_boolean

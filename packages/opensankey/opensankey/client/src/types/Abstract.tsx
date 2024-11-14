@@ -33,7 +33,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract application_data: Class_AbstractApplicationData
   public abstract d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract static: boolean
-  public abstract bypass_timeout:boolean
+  public abstract bypass_redraws:boolean
   // Mandatory methods
   public abstract isInSelectionMode(): boolean
   public abstract isInEditionMode(): boolean
@@ -49,7 +49,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract purgeSelection(): void
   public abstract closeAllMenus(): void
   public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
-  public abstract reset():void
+  public abstract draw(): void
   public abstract orderElements():void
 
   public abstract computeParametricV():void
@@ -113,6 +113,10 @@ export abstract class Class_AbstractSankey {
   // Mandatory methods
   public abstract addNewDefaultNode(): Type_AbstractNodeElement
   public abstract addNewNode(id: string, name: string): Type_AbstractNodeElement
+  public abstract addNewLink(s: Type_AbstractNodeElement, t: Type_AbstractNodeElement) : Type_AbstractLinkElement
+  public abstract addNewLinkWithId(i: string, s: Type_AbstractNodeElement, t: Type_AbstractNodeElement) : Type_AbstractLinkElement
+  public abstract addNewNodeStyle(id: string, name: string): Class_AbstractNodeStyle
+  public abstract addNewLinkStyle(id: string, name: string): Class_AbstractLinkStyle
 }
 
 export abstract class Class_AbstractTagGroup {

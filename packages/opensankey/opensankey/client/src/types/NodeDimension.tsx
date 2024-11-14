@@ -5,7 +5,6 @@
 // ==================================================================================================
 
 // Internal imports
-import { makeId } from './Utils'
 import {
   Class_AbstractLevelTagGroup,
   Class_AbstractLevelTag,
@@ -67,12 +66,14 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._id = id
 
     else
-      this._id = makeId(
+      this._id = (
+        parent.id +
+        '_' +
         parent_level_tag.id +
         '_' +
         children_level_tags
           .map(_ => _.id)
-          .join('')
+          .join('-')
       )
     // Set parenthood reference
     this._parent = parent
@@ -133,6 +134,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   }
 
   // PUBLIC METHODS =====================================================================
+
   public synchroWith(dim: Class_NodeDimension) {
     // Get list of all nodes
     const nodes_dict = this.parent.sankey.nodes_dict
